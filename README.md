@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://neuroshard.com/static/logo.png" alt="NeuroShard Logo" width="120" height="120">
+  <img src="https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/assets/logo.png" alt="NeuroShard Logo" width="120" height="120">
 </p>
 
 <h1 align="center">NeuroShard</h1>
@@ -194,7 +194,7 @@ See [full CLI reference](https://docs.neuroshard.com/guide/cli-reference) for al
 | Whitepaper | [PDF](docs/whitepaper/neuroshard_whitepaper.pdf) |
 | Discord | [discord.gg/4R49xpj7vn](https://discord.gg/4R49xpj7vn) |
 | Twitter | [@shardneuro](https://x.com/shardneuro) |
-| PyPI | [pypi.org/project/neuroshard](https://pypi.org/project/neuroshard/) |
+| PyPI | [pypi.org/project/neuroshard-ai](https://pypi.org/project/neuroshard-ai/) |
 
 ---
 
