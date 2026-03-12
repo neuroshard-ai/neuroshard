@@ -1,0 +1,18 @@
+# torch is installed separately in build.yml (CPU or CUDA variant)
+# For CPU: pip install torch
+# For GPU: pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0
+transformers>=4.30.0
+fastapi
+uvicorn
+requests
+pydantic
+Pillow
+pystray
+psutil
+grpcio
+protobuf
+safetensors
+cryptography>=41.0.0
+customtkinter>=5.2.0
+mnemonic>=0.20

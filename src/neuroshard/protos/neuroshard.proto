@@ -1,0 +1,963 @@
+syntax = "proto3";
+
+package neuroshard;
+
+// Service definition for Node-to-Node and Client-to-Node communication
+service NeuroShardService {
+    // Streaming inference: Client/Node sends a stream of requests, receives a stream of tokens/updates
+    rpc StreamInference (stream InferenceRequest) returns (stream InferenceResponse);
+    
+    // Simple unary call for single-step (legacy/fallback)
+    rpc UnaryInference (InferenceRequest) returns (InferenceResponse);
+    
+    // Gossip weights for training
+    rpc GetWeights (WeightRequest) returns (WeightResponse);
+
+    // Gossip Proof of Uptime
+    rpc GossipProof (GossipProofRequest) returns (GossipProofResponse);
+    
+    // Gossip Transaction
+    rpc GossipTransaction (GossipTransactionRequest) returns (GossipTransactionResponse);
+    
+    // Gossip Stake Update
+    rpc GossipStake (GossipStakeRequest) returns (GossipStakeResponse);
+    
+    // Request Proof Validation from Validators
+    rpc RequestProofValidation (ProofValidationRequest) returns (ProofValidationResponse);
+    
+    // Gossip Validation Vote
+    rpc GossipValidationVote (ValidationVoteRequest) returns (ValidationVoteResponse);
+
+    // --- Distributed Training RPCs ---
+    
+    // Gossip gradients for distributed training
+    rpc GossipGradient (GossipGradientRequest) returns (GossipGradientResponse);
+    
+    // Request checkpoint from peer
+    rpc GetCheckpoint (GetCheckpointRequest) returns (GetCheckpointResponse);
+    
+    // Get checkpoint info (version, hash) without downloading
+    rpc GetCheckpointInfo (GetCheckpointInfoRequest) returns (GetCheckpointInfoResponse);
+    
+    // --- Pipeline Parallelism RPCs ---
+    
+    // Forward hidden states through this node's layers
+    rpc PipelineForward (PipelineForwardRequest) returns (PipelineForwardResponse);
+
+    // Backward pass: propagate gradients back to previous node
+    rpc PipelineBackward (PipelineBackwardRequest) returns (PipelineBackwardResponse);
+    
+    // Get shard info from this node
+    rpc GetShardInfo (GetShardInfoRequest) returns (GetShardInfoResponse);
+
+    // --- Data Swarm RPCs (P2P Dataset) ---
+    
+    // Request a chunk of a data shard
+    rpc GetShardChunk (GetShardChunkRequest) returns (GetShardChunkResponse);
+
+    // --- DHT RPCs ---
+    rpc DHTPing (DHTPingRequest) returns (DHTPingResponse);
+    rpc DHTStore (DHTStoreRequest) returns (DHTStoreResponse);
+    rpc DHTFindNode (DHTFindNodeRequest) returns (DHTFindNodeResponse);
+    rpc DHTFindValue (DHTFindValueRequest) returns (DHTFindValueResponse);
+    
+    // --- Phase 4: Tensor Parallelism RPCs ---
+    
+    // Exchange tensor chunks during ring all-reduce
+    rpc TensorExchange (TensorExchangeRequest) returns (TensorExchangeResponse);
+    
+    // Send partial results for async aggregation
+    rpc SendPartialResult (PartialResultRequest) returns (PartialResultResponse);
+    
+    // Announce tensor shard availability
+    rpc AnnounceTensorShard (AnnounceShardRequest) returns (AnnounceShardResponse);
+    
+    // Find peer shards for all-reduce coordination
+    rpc FindTensorShardPeers (FindShardPeersRequest) returns (FindShardPeersResponse);
+    
+    // --- Phase 4: Model Registry RPCs ---
+    
+    // List available models in network
+    rpc ListModels (ListModelsRequest) returns (ListModelsResponse);
+    
+    // Get status of a specific model
+    rpc GetModelStatus (GetModelStatusRequest) returns (GetModelStatusResponse);
+    
+    // --- Swarm Routing RPCs (Phase 2) ---
+    
+    // Async activation forward (non-blocking, buffers locally)
+    rpc SwarmForward (SwarmForwardRequest) returns (SwarmForwardResponse);
+    
+    // Get swarm node status (buffer fill rates, capacity)
+    rpc GetSwarmStatus (SwarmStatusRequest) returns (SwarmStatusResponse);
+    
+    // Update peer capacity (TCP fallback for UDP heartbeat)
+    rpc UpdatePeerCapacity (UpdatePeerCapacityRequest) returns (UpdatePeerCapacityResponse);
+    
+    // --- Chained Epoch System RPCs ---
+    
+    // Announce a finalized epoch to peers
+    rpc AnnounceEpoch (EpochAnnouncementRequest) returns (EpochAnnouncementResponse);
+    
+    // Request a specific epoch from peer
+    rpc GetEpoch (EpochRequest) returns (EpochResponse);
+    
+    // Get latest finalized epoch ID
+    rpc GetLatestEpoch (Empty) returns (LatestEpochResponse);
+    
+    // Submit spot-check challenge for gradient commitment
+    rpc SpotCheckChallenge (SpotCheckChallengeRequest) returns (SpotCheckChallengeResponse);
+    
+    // --- Quorum Formation RPCs ---
+    
+    // Propose forming a pipeline quorum with this node
+    rpc ProposeQuorum (ProposeQuorumRequest) returns (ProposeQuorumResponse);
+    
+    // --- Mixture of Experts (MoE) RPCs ---
+    
+    // Forward activations to a remote expert
+    rpc ExpertForward (ExpertForwardRequest) returns (ExpertForwardResponse);
+    
+    // Get expert status for routing decisions
+    rpc GetExpertStatus (ExpertStatusRequest) returns (ExpertStatusResponse);
+    
+    // Announce expert availability to network
+    rpc AnnounceExpert (AnnounceExpertRequest) returns (AnnounceExpertResponse);
+}
+
+message InferenceRequest {
+    string session_id = 1;
+    string request_id = 2;
+    
+    // Serialized tensor data (compressed/quantized)
+    bytes tensor_data = 3;
+    
+    // Speculative decoding
+    repeated int32 draft_tokens = 4;
+    
+    float sender_reputation = 5;
+    
+    // Routing metadata
+    int32 source_layer = 6;
+}
+
+message InferenceResponse {
+    string request_id = 1;
+    
+    // Status codes
+    bool success = 2;
+    string error_message = 3;
+    
+    // Output data
+    bytes tensor_data = 4; // Serialized logits or activations
+    
+    // Speculative decoding results
+    bool is_speculative = 5;
+    int32 valid_count = 6;
+    int32 next_token = 7;
+}
+
+message WeightRequest {
+    string shard_range = 1;
+}
+
+message WeightResponse {
+    bytes weights_data = 1; // Serialized state_dict
+}
+
+message GossipProofRequest {
+    string node_id = 1;
+    double timestamp = 2;
+    double uptime = 3;           // uptime_seconds
+    string signature = 4;
+    int64 token_count = 5;       // tokens_processed (inference)
+    int32 training_batches = 6;  // training_batches (training)
+    int32 layers_held = 7;       // Number of layers this node holds
+    bool has_embedding = 8;      // Is this node a Driver (has embedding layer)?
+    bool has_lm_head = 9;        // Is this node a Validator (has LM head)?
+    string proof_type = 10;      // "UPTIME", "INFERENCE", "TRAINING", "DATA"
+    string nonce = 11;           // Unique nonce for replay prevention
+    string public_key = 12;      // ECDSA public key for trustless verification
+    int32 data_samples = 13;     // Data samples processed (for canonical_payload)
+    string model_hash = 14;      // Model hash (for canonical_payload)
+    string request_id = 15;      // Request ID for inference proofs (for canonical_payload)
+    double current_loss = 16;    // Current training loss (for aggregation on website)
+    
+    // Version fields for network compatibility
+    int32 arch_version = 17;     // Architecture version (increments on layer growth)
+    int32 vocab_version = 18;    // Vocabulary version (increments on vocab expansion)
+    string speed_tier = 19;      // Node's speed tier (tier1, tier2, etc.)
+    string quorum_id = 20;       // Current quorum ID (if in a quorum)
+    string contribution_mode = 21; // Current contribution mode (pipeline, async, etc.)
+    
+    // Chained PoNW fields - CRITICAL for canonical_payload signature verification
+    int64 epoch_id = 22;              // Epoch ID (timestamp / 60)
+    string model_hash_start = 23;     // Model hash before training
+    string model_hash_end = 24;       // Model hash after training
+    string gradient_commitment = 25;  // Hash of gradient norms (proof of work)
+    string data_hash = 26;            // Hash of training data used
+    double gradient_norm = 27;        // Average gradient norm
+}
+
+message GossipProofResponse {
+    bool accepted = 1;
+}
+
+message GossipTransactionRequest {
+    string sender_id = 1;
+    string recipient_id = 2;
+    double amount = 3;
+    double timestamp = 4;
+    string signature = 5;
+    string tx_hash = 6;
+}
+
+message GossipTransactionResponse {
+    bool accepted = 1;
+    string reason = 2;
+}
+
+// Stake gossip - sync stakes across P2P network
+message GossipStakeRequest {
+    string node_id = 1;              // Node that staked (SHA256(public_key)[:32])
+    double amount = 2;               // Total staked amount
+    double locked_until = 3;         // Lock expiry timestamp
+    double timestamp = 4;            // When this stake update occurred
+    string signature = 5;            // ECDSA signature for verification
+    string public_key = 6;           // Compressed public key (hex) - REQUIRED for verification
+}
+
+message GossipStakeResponse {
+    bool accepted = 1;
+    string reason = 2;
+}
+
+// Proof Validation Request - Ask validators to validate a proof
+message ProofValidationRequest {
+    string proof_signature = 1;       // Signature of the proof to validate
+    string submitter_id = 2;          // Node that submitted the proof
+    double timestamp = 3;             // Proof timestamp
+    double uptime_seconds = 4;        // Claimed uptime
+    int64 tokens_processed = 5;       // Claimed tokens
+    int32 training_batches = 6;       // Claimed training batches
+    int32 layers_held = 7;            // Claimed layers
+    bool has_embedding = 8;           // Is Driver
+    bool has_lm_head = 9;             // Is Validator
+    string proof_type = 10;           // UPTIME, INFERENCE, TRAINING, DATA
+    string nonce = 11;                // Unique nonce
+}
+
+message ProofValidationResponse {
+    bool accepted = 1;                // Whether validation request was accepted
+    string reason = 2;                // Reason if not accepted
+    string validator_id = 3;          // Validator that will process
+    double validator_stake = 4;       // Validator's stake
+}
+
+// Validation Vote - Validator's vote on a proof
+message ValidationVoteRequest {
+    string proof_signature = 1;       // Proof being voted on
+    string validator_id = 2;          // Validator casting vote
+    double validator_stake = 3;       // Validator's stake (for weighting)
+    bool vote = 4;                    // true = valid, false = invalid
+    string details = 5;               // Optional validation details
+    double timestamp = 6;             // When vote was cast
+    string signature = 7;             // Validator's signature on vote
+}
+
+message ValidationVoteResponse {
+    bool accepted = 1;
+    string reason = 2;
+    double total_valid_stake = 3;     // Current valid stake tally
+    double total_invalid_stake = 4;   // Current invalid stake tally
+    bool consensus_reached = 5;       // Whether consensus has been reached
+    bool consensus_result = 6;        // The consensus result (if reached)
+}
+
+// --- Distributed Training Messages ---
+
+message GossipGradientRequest {
+    string node_id = 1;              // Sender node ID
+    int32 round_id = 2;              // Training round ID
+    string model_hash = 3;           // Model hash for consistency check
+    double timestamp = 4;
+    
+    int32 batch_size = 5;            // Batch size used for this gradient
+    double loss = 6;                 // Training loss
+    
+    // Compressed gradients per layer
+    map<string, bytes> layer_gradients = 7;
+    
+    string signature = 8;            // Proof signature
+    int32 ttl = 9;                   // Time-to-live for forwarding
+}
+
+message GossipGradientResponse {
+    bool accepted = 1;
+    string reason = 2;
+    int32 current_round = 3;         // Receiver's current round (for sync)
+}
+
+message GetCheckpointRequest {
+    string model_hash = 1;           // Optional: specific checkpoint hash
+    int32 min_version = 2;           // Optional: minimum version number
+}
+
+message GetCheckpointResponse {
+    bool success = 1;
+    string error_message = 2;
+    
+    int32 version = 3;               // Checkpoint version (training round)
+    string model_hash = 4;           // Model hash
+    string phase = 5;                // Model phase (bootstrap, early, etc.)
+    
+    bytes checkpoint_data = 6;       // Serialized checkpoint (compressed)
+    int64 total_size = 7;            // Total size in bytes
+}
+
+message GetCheckpointInfoRequest {
+    // Empty - just get current info
+}
+
+message GetCheckpointInfoResponse {
+    int32 version = 1;               // Current training round
+    string model_hash = 2;           // Current model hash
+    string phase = 3;                // Model phase
+    int64 params = 4;                // Number of parameters
+    double loss = 5;                 // Current loss
+}
+
+// --- Pipeline Parallelism Messages ---
+
+message PipelineForwardRequest {
+    string session_id = 1;
+    string request_id = 2;
+    
+    // Hidden states from previous node
+    bytes hidden_states = 3;         // Serialized tensor [batch, seq, hidden]
+    repeated int64 hidden_shape = 4; // Shape of hidden states
+    
+    // Attention mask (optional)
+    bytes attention_mask = 5;
+    
+    // Position IDs
+    bytes position_ids = 6;
+    
+    // KV cache (optional, for incremental decoding)
+    repeated bytes past_key_values = 7;
+    bool use_cache = 8;
+    
+    // Shard info
+    int32 source_shard = 9;          // Shard that sent this
+    int32 target_shard = 10;         // Shard to process (this node)
+    
+    // Training data (only sent by Driver)
+    bytes training_labels = 11;      // Serialized labels [batch, seq]
+    
+    // Backward pass routing
+    string sender_url = 12;          // URL to send gradients back to
+}
+
+message PipelineForwardResponse {
+    string request_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    
+    // Output hidden states
+    bytes hidden_states = 4;
+    repeated int64 hidden_shape = 5;
+    
+    // Updated KV cache
+    repeated bytes past_key_values = 6;
+    
+    // If this is the final shard, include logits
+    bool is_final = 7;
+    bytes logits = 8;                // Only if is_final
+    repeated int64 logits_shape = 9;
+    
+    // Training feedback
+    double loss = 10;                // Returned by Validator
+}
+
+message PipelineBackwardRequest {
+    string session_id = 1;
+    string request_id = 2;
+    
+    // Gradients w.r.t the OUTPUT of the previous layer
+    bytes grad_output = 3;           // Serialized tensor
+    repeated int64 grad_shape = 4;
+    
+    int32 target_shard = 5;          // Shard we are sending back TO
+}
+
+message PipelineBackwardResponse {
+    bool success = 1;
+    string error_message = 2;
+}
+
+message GetShardInfoRequest {
+    // Empty - just get current shard info
+}
+
+message GetShardInfoResponse {
+    int32 shard_id = 1;
+    int32 total_shards = 2;
+    int32 start_layer = 3;
+    int32 end_layer = 4;
+    bool has_embedding = 5;
+    bool has_lm_head = 6;
+    
+    int32 version = 7;
+    string model_hash = 8;
+    
+    // Capacity
+    float available_memory_mb = 9;
+    float current_load = 10;
+}
+
+// --- Data Swarm Messages ---
+
+message GetShardChunkRequest {
+    int32 shard_id = 1;      // Which shard (e.g., 42)
+    int32 chunk_index = 2;   // Which 1MB chunk
+    string requester_id = 3; // Who is asking
+}
+
+message GetShardChunkResponse {
+    bool success = 1;
+    bytes data = 2;          // The chunk data
+    string error_message = 3;
+    int64 total_size = 4;    // Total size of shard
+    int32 total_chunks = 5;  // Total chunks in shard
+}
+
+// --- DHT Messages ---
+
+message DHTNodeInfo {
+    bytes node_id = 1; // 20-byte ID (160 bits)
+    string ip = 2;
+    int32 port = 3;
+}
+
+message DHTPingRequest {
+    DHTNodeInfo sender = 1;
+}
+
+message DHTPingResponse {
+    DHTNodeInfo responder = 1;
+}
+
+message DHTStoreRequest {
+    DHTNodeInfo sender = 1;
+    bytes key = 2;
+    string value = 3; // For now, simple string (e.g., "ip:port")
+}
+
+message DHTStoreResponse {
+    DHTNodeInfo responder = 1;
+    bool success = 2;
+}
+
+message DHTFindNodeRequest {
+    DHTNodeInfo sender = 1;
+    bytes target_id = 2;
+}
+
+message DHTFindNodeResponse {
+    DHTNodeInfo responder = 1;
+    repeated DHTNodeInfo nodes = 2; // K closest nodes
+}
+
+message DHTFindValueRequest {
+    DHTNodeInfo sender = 1;
+    bytes key = 2;
+}
+
+message DHTFindValueResponse {
+    DHTNodeInfo responder = 1;
+    string value = 2; // If found
+    repeated DHTNodeInfo nodes = 3; // If not found (K closest nodes)
+    bool found = 4;
+}
+
+// --- Phase 4: Tensor Parallelism Messages ---
+
+// Tensor exchange for all-reduce operations
+message TensorExchangeRequest {
+    string operation_id = 1;        // Unique operation ID
+    int32 layer_id = 2;             // Layer being processed
+    int32 step = 3;                 // Ring all-reduce step
+    int32 chunk_idx = 4;            // Chunk index in ring
+    
+    int32 sender_shard_id = 5;      // Sender's tensor shard ID
+    int32 total_shards = 6;         // Total tensor shards
+    
+    bytes tensor_data = 7;          // Serialized tensor chunk
+    repeated int64 tensor_shape = 8; // Original tensor shape
+    string dtype = 9;               // Tensor dtype (float32, float16, etc.)
+    
+    string reduce_op = 10;          // Reduction operation (sum, mean, max, min)
+}
+
+message TensorExchangeResponse {
+    string operation_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    
+    bytes tensor_data = 4;          // Response tensor (for bidirectional exchange)
+    repeated int64 tensor_shape = 5;
+}
+
+// Partial result aggregation (for async all-reduce)
+message PartialResultRequest {
+    string session_id = 1;
+    string operation_id = 2;
+    int32 layer_id = 3;
+    
+    int32 sender_shard_id = 4;
+    int32 total_shards = 5;
+    
+    bytes partial_tensor = 6;
+    repeated int64 tensor_shape = 7;
+    string dtype = 8;
+    
+    bool is_final = 9;              // True if this is the final partial
+}
+
+message PartialResultResponse {
+    bool accepted = 1;
+    string error_message = 2;
+    
+    // If all partials received, return combined result
+    bool all_received = 3;
+    bytes combined_tensor = 4;
+    repeated int64 tensor_shape = 5;
+}
+
+// Model registry messages
+message ModelInfo {
+    string model_id = 1;
+    string name = 2;
+    string family = 3;              // gpt2, llama, mistral, mixtral
+    string version = 4;
+    
+    int32 num_layers = 5;
+    int32 hidden_dim = 6;
+    int32 num_heads = 7;
+    int32 vocab_size = 8;
+    
+    float total_size_mb = 9;
+    float layer_size_mb = 10;
+    
+    bool supports_tensor_parallel = 11;
+    bool supports_pipeline_parallel = 12;
+    
+    float required_stake = 13;      // Minimum NEURO stake to serve
+    bool approved = 14;             // Community approved
+}
+
+message ListModelsRequest {
+    bool approved_only = 1;
+    string family_filter = 2;       // Optional family filter
+}
+
+message ListModelsResponse {
+    repeated ModelInfo models = 1;
+}
+
+message ModelNetworkStatus {
+    string model_id = 1;
+    int32 total_nodes = 2;
+    bool is_fully_covered = 3;
+    bool is_inference_ready = 4;
+    float avg_latency_ms = 5;
+    float total_stake = 6;
+    map<int32, int32> layer_coverage = 7;  // layer_id -> node_count
+}
+
+message GetModelStatusRequest {
+    string model_id = 1;
+}
+
+message GetModelStatusResponse {
+    ModelNetworkStatus status = 1;
+}
+
+// Tensor shard announcement
+message TensorShardAnnouncement {
+    string model_id = 1;
+    int32 layer_id = 2;
+    int32 shard_id = 3;
+    int32 total_shards = 4;
+    
+    string node_url = 5;
+    string grpc_addr = 6;
+    
+    float available_memory_mb = 7;
+    float current_load = 8;         // 0-1 load factor
+}
+
+message AnnounceShardRequest {
+    TensorShardAnnouncement shard = 1;
+}
+
+message AnnounceShardResponse {
+    bool accepted = 1;
+    string error_message = 2;
+}
+
+// Find tensor shard peers for all-reduce
+message FindShardPeersRequest {
+    string model_id = 1;
+    int32 layer_id = 2;
+    int32 total_shards = 3;
+    int32 exclude_shard_id = 4;     // Our own shard ID to exclude
+}
+
+message FindShardPeersResponse {
+    repeated TensorShardAnnouncement peers = 1;
+}
+
+// --- Swarm Routing Messages (Phase 2) ---
+
+message SwarmForwardRequest {
+    string session_id = 1;
+    string request_id = 2;
+    
+    // Activation data
+    bytes hidden_states = 3;
+    repeated int64 hidden_shape = 4;
+    
+    // Routing
+    int32 target_layer = 5;
+    string sender_url = 6;
+    
+    // Priority (0=highest)
+    int32 priority = 7;
+    int32 micro_batch_id = 8;
+    bool is_backward = 9;
+    
+    // Training metadata
+    bool requires_grad = 10;
+    bytes grad_output = 11;
+    repeated int64 grad_shape = 12;
+}
+
+message SwarmForwardResponse {
+    string request_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    int32 buffer_depth = 4;  // For backpressure signaling
+}
+
+message SwarmStatusRequest {
+    // Empty - just get status
+}
+
+message SwarmStatusResponse {
+    string node_id = 1;
+    int32 layer_start = 2;
+    int32 layer_end = 3;
+    
+    // Buffer status
+    float inbound_fill_rate = 4;
+    float outbound_fill_rate = 5;
+    int32 inbound_queue_depth = 6;
+    int32 outbound_queue_depth = 7;
+    
+    // Capacity
+    int32 available_memory_mb = 8;
+    float gpu_utilization = 9;
+    
+    // Status
+    bool is_training = 10;
+    bool is_accepting_activations = 11;
+    
+    // Compute stats
+    int64 total_steps = 12;
+    float local_only_rate = 13;
+    
+    string error_message = 14;
+}
+
+message UpdatePeerCapacityRequest {
+    string node_id = 1;
+    string grpc_addr = 2;
+    int32 layer_start = 3;
+    int32 layer_end = 4;
+    int32 queue_depth = 5;
+    int32 available_memory_mb = 6;
+    float gpu_utilization = 7;
+    
+    // Version and tier info
+    int32 arch_version = 8;
+    int32 vocab_version = 9;
+    string speed_tier = 10;
+}
+
+message UpdatePeerCapacityResponse {
+    bool success = 1;
+    string error_message = 2;
+}
+
+// =============================================================================
+// Network State and Quorum Messages
+// =============================================================================
+
+// Network state stored in DHT
+message NetworkStateInfo {
+    int32 arch_version = 1;
+    int32 vocab_version = 2;
+    int32 num_layers = 3;
+    int32 hidden_dim = 4;
+    int32 vocab_size = 5;
+    int32 total_nodes = 6;
+    int32 active_quorums = 7;
+    int64 current_step = 8;
+    double last_updated = 9;
+}
+
+// Quorum member information
+message QuorumMemberInfo {
+    string node_id = 1;
+    string endpoint = 2;
+    int32 layer_start = 3;
+    int32 layer_end = 4;
+    string speed_tier = 5;
+    string role = 6;           // initiator, processor, finisher
+    double last_heartbeat = 7;
+    int32 batches_processed = 8;
+}
+
+// Quorum information
+message QuorumInfo {
+    string quorum_id = 1;
+    string speed_tier = 2;
+    string lifecycle = 3;      // forming, active, renewing, dissolved
+    repeated QuorumMemberInfo members = 4;
+    double session_start = 5;
+    double session_end = 6;
+    int32 total_batches = 7;
+    int32 arch_version = 8;
+    int32 vocab_version = 9;
+}
+
+// Challenge request for optimistic verification
+message ChallengeProofRequest {
+    string proof_signature = 1;
+    string challenger_id = 2;
+    double challenger_stake = 3;
+    double timestamp = 4;
+    string public_key = 5;
+    string signature = 6;      // Challenger's signature
+}
+
+message ChallengeProofResponse {
+    bool success = 1;
+    string reason = 2;
+    bool fraud_detected = 3;
+    double challenger_reward = 4;
+    double prover_slashed = 5;
+}
+
+// Layer growth announcement
+message LayerGrowthAnnouncement {
+    string upgrade_id = 1;
+    int32 target_layers = 2;
+    int32 target_hidden_dim = 3;
+    string phase = 4;          // announcement, preparation, activation, reformation, warmup
+    double phase_start_time = 5;
+    int32 current_arch_version = 6;
+    int32 new_arch_version = 7;
+}
+
+// Gradient contribution with weighting info
+message WeightedGradientContribution {
+    string node_id = 1;
+    int32 batches_processed = 2;
+    double timestamp = 3;
+    double freshness = 4;
+    double weight = 5;         // sqrt(batches) * freshness
+    map<string, bytes> gradients = 6;
+    string quorum_id = 7;
+    string signature = 8;
+}
+
+// =============================================================================
+// CHAINED EPOCH SYSTEM - Blockchain-like Epoch Chain
+// =============================================================================
+
+// Epoch announcement - gossiped when an epoch is finalized
+message EpochAnnouncementRequest {
+    int64 epoch_id = 1;
+    string epoch_hash = 2;
+    string prev_epoch_hash = 3;
+    string proposer_node_id = 4;
+    string proposer_signature = 5;
+    int32 proof_count = 6;
+    double total_reward = 7;
+    double timestamp_start = 8;
+    double timestamp_end = 9;
+    string model_state_hash_start = 10;
+    string model_state_hash_end = 11;
+    string proofs_merkle_root = 12;
+    string gradient_commitments_root = 13;
+}
+
+message EpochAnnouncementResponse {
+    bool accepted = 1;
+    string reason = 2;
+}
+
+// Request a specific epoch from a peer
+message EpochRequest {
+    int64 epoch_id = 1;
+}
+
+message EpochResponse {
+    bool found = 1;
+    int64 epoch_id = 2;
+    string epoch_hash = 3;
+    string prev_epoch_hash = 4;
+    double timestamp_start = 5;
+    double timestamp_end = 6;
+    string model_state_hash_start = 7;
+    string model_state_hash_end = 8;
+    string proofs_merkle_root = 9;
+    int32 proof_count = 10;
+    double total_reward = 11;
+    int32 total_batches = 12;
+    double average_loss = 13;
+    string gradient_commitments_root = 14;
+    string proposer_node_id = 15;
+    string proposer_signature = 16;
+}
+
+// Get latest finalized epoch
+message Empty {}
+
+message LatestEpochResponse {
+    int64 epoch_id = 1;
+    string epoch_hash = 2;
+}
+
+// Gradient commitment for spot-check verification
+message GradientCommitmentMessage {
+    string commitment_hash = 1;
+    string model_hash_start = 2;
+    string model_hash_end = 3;
+    string data_hash = 4;
+    repeated double gradient_norms = 5;
+    string gradient_hash = 6;
+    double final_loss = 7;
+    int32 batch_size = 8;
+    int32 sequence_length = 9;
+}
+
+// Spot-check challenge for gradient verification
+message SpotCheckChallengeRequest {
+    string commitment_hash = 1;
+    string challenger_id = 2;
+    double challenger_stake = 3;
+    double timestamp = 4;
+    string signature = 5;
+}
+
+message SpotCheckChallengeResponse {
+    bool accepted = 1;
+    string challenge_id = 2;
+    string reason = 3;
+}
+
+// =============================================================================
+// MIXTURE OF EXPERTS (MoE) MESSAGES
+// =============================================================================
+
+// Request to forward activations through a remote expert
+message ExpertForwardRequest {
+    string request_id = 1;
+    int32 layer_id = 2;              // Which transformer layer
+    int32 expert_id = 3;             // Which expert in the layer
+    
+    bytes activations = 4;           // Serialized input tensor
+    repeated int64 shape = 5;        // Tensor shape [num_tokens, hidden_dim]
+    string dtype = 6;                // float32, float16, bfloat16
+    
+    bool requires_grad = 7;          // For training
+    string sender_url = 8;           // For gradient routing
+    string session_id = 9;           // Training session
+}
+
+message ExpertForwardResponse {
+    string request_id = 1;
+    bool success = 2;
+    string error_message = 3;
+    
+    bytes output = 4;                // Serialized output tensor
+    repeated int64 shape = 5;
+    
+    float utilization = 6;           // Current expert utilization (0-1)
+    int32 queue_depth = 7;           // Pending requests
+}
+
+// Request expert status for routing decisions
+message ExpertStatusRequest {
+    int32 layer_id = 1;
+    int32 expert_id = 2;
+}
+
+message ExpertStatusResponse {
+    bool available = 1;
+    float utilization = 2;           // 0-1 current load
+    int32 queue_depth = 3;           // Pending requests
+    float capacity = 4;              // Tokens/second capacity
+    int32 replicas = 5;              // Number of replicas in network
+}
+
+// Announce expert availability
+message AnnounceExpertRequest {
+    string node_id = 1;
+    string node_url = 2;
+    string grpc_addr = 3;
+    
+    int32 layer_id = 4;
+    int32 expert_id = 5;
+    
+    float capacity = 6;              // Tokens/second
+    float utilization = 7;           // Current load 0-1
+    double timestamp = 8;
+}
+
+message AnnounceExpertResponse {
+    bool accepted = 1;
+    string reason = 2;
+    int32 total_replicas = 3;        // How many nodes have this expert
+    float scarcity_bonus = 4;        // Reward multiplier for holding
+}
+
+// =============================================================================
+// QUORUM FORMATION MESSAGES
+// =============================================================================
+
+// Propose forming a pipeline quorum — sent to candidate peers
+message ProposeQuorumRequest {
+    string quorum_id = 1;            // Proposed quorum ID
+    string proposer_node_id = 2;     // Real node ID of proposer
+    string proposer_endpoint = 3;    // gRPC endpoint of proposer
+    int32 proposer_layer_start = 4;  // Proposer's layer range start
+    int32 proposer_layer_end = 5;    // Proposer's layer range end (exclusive)
+    string speed_tier = 6;           // Required speed tier
+    int32 total_layers = 7;          // Total layers in the model
+}
+
+// Response to quorum proposal
+message ProposeQuorumResponse {
+    bool accepted = 1;               // Whether this node accepts the proposal
+    string node_id = 2;              // Real node ID of responder
+    string endpoint = 3;             // gRPC endpoint of responder
+    int32 layer_start = 4;           // Responder's layer range start
+    int32 layer_end = 5;             // Responder's layer range end (exclusive)
+    string speed_tier = 6;           // Responder's speed tier
+    string reason = 7;               // Reason if rejected
+    string current_quorum_id = 8;    // Current quorum (if already in one)
+}

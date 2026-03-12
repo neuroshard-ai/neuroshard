@@ -1,0 +1,28 @@
+# Include package data
+include LICENSE
+include README.md
+include requirements.txt
+include pyproject.toml
+
+# Include all proto files
+recursive-include src/protos *.proto *.py
+
+# Include UI templates and static files
+recursive-include src/neuroshard/ui/templates *.html
+recursive-include src/neuroshard/ui/static *
+
+# Exclude compiled Python files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+
+# Exclude development files
+global-exclude .DS_Store
+prune .git
+prune __pycache__
+prune venv*
+prune *.egg-info
+
+# Exclude documentation and whitepaper (website only)
+prune docs
+prune docs-site

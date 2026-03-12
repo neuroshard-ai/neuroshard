@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroShard Node Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neuro: {
+                            50: '#e6fff9',
+                            100: '#b3ffed',
+                            200: '#80ffe0',
+                            300: '#4dffd4',
+                            400: '#1affc7',
+                            500: '#00d4aa',
+                            600: '#00a888',
+                            700: '#007d66',
+                            800: '#005244',
+                            900: '#002922',
+                        },
+                        dark: {
+                            50: '#f7f7f8',
+                            100: '#eeeef0',
+                            200: '#d9d9de',
+                            300: '#b8b8c1',
+                            400: '#91919f',
+                            500: '#737384',
+                            600: '#5d5d6c',
+                            700: '#4c4c58',
+                            800: '#1a1a1f',
+                            900: '#0f0f12',
+                            950: '#09090b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1f; }
+        ::-webkit-scrollbar-thumb { background: #4c4c58; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5d5d6c; }
+        
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); }
+        }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        
+        /* Log colors */
+        .log-error { color: #ef4444; }
+        .log-warning { color: #f59e0b; }
+        .log-success { color: #22c55e; }
+        .log-neuro { color: #00d4aa; }
+        .log-training { color: #a855f7; }
+        .log-info { color: #94a3b8; }
+        .log-timestamp { color: #64748b; }
+    </style>
+</head>
+<body class="bg-dark-950 text-gray-100 font-sans h-screen overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-72 bg-dark-900 border-r border-dark-700 flex flex-col overflow-y-auto">
+            <!-- Logo -->
+            <div class="p-6 border-b border-dark-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neuro-400 to-neuro-600 flex items-center justify-center">
+                        <span class="text-dark-950 font-bold text-xl">N</span>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-tight">NEUROSHARD</h1>
+                        <p class="text-xs text-dark-400" id="version">v0.1.0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="p-4">
+                <div class="bg-dark-800 rounded-xl p-4">
+                    <div class="flex items-center gap-2">
+                        <div id="status-dot" class="w-2.5 h-2.5 rounded-full bg-dark-500"></div>
+                        <span id="status-text" class="font-semibold text-dark-400">CONNECTING</span>
+                    </div>
+                    <p id="status-detail" class="text-sm text-dark-500 mt-2">Initializing node...</p>
+                </div>
+            </div>
+            
+            <!-- Balance -->
+            <div class="px-4 pb-4">
+                <div class="bg-dark-800 rounded-xl p-4">
+                    <p class="text-xs text-dark-500 uppercase tracking-wider">NEURO Balance (Local)</p>
+                    <p id="balance" class="text-3xl font-bold text-neuro-500 mt-1">0.0000</p>
+                    <p class="text-xs text-dark-500 mt-2">
+                        Earned: <span id="total-earned" class="text-neuro-400">0.0000</span>
+                    </p>
+                    <p id="balance-note" class="text-xs text-dark-600 mt-2 hidden">
+                        <span class="text-yellow-500">⚠</span> Solo proofs pending network confirmation
+                    </p>
+                </div>
+            </div>
+            
+            <!-- System Resources -->
+            <div class="px-4 pb-4">
+                <p class="text-xs text-dark-500 uppercase tracking-wider mb-3 px-1">System Resources</p>
+                
+                <!-- CPU -->
+                <div class="bg-dark-800 rounded-xl p-3 mb-2">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-dark-400">CPU Usage</span>
+                        <span id="cpu-percent" class="font-mono font-medium">0%</span>
+                    </div>
+                    <div class="h-2 bg-dark-700 rounded-full overflow-hidden">
+                        <div id="cpu-bar" class="h-full bg-neuro-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- RAM -->
+                <div class="bg-dark-800 rounded-xl p-3">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-dark-400">Memory</span>
+                        <span id="ram-percent" class="font-mono font-medium text-xs">0 / 0 GB</span>
+                    </div>
+                    <div class="h-2 bg-dark-700 rounded-full overflow-hidden">
+                        <div id="ram-bar" class="h-full bg-neuro-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DiLoCo Progress -->
+            <div class="px-4 pb-4" id="diloco-section" style="display: none;">
+                <div class="bg-dark-800 rounded-xl p-3">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-dark-400">DiLoCo Sync</span>
+                        <span id="diloco-progress" class="font-mono font-medium text-xs">0/500</span>
+                    </div>
+                    <div class="h-2 bg-dark-700 rounded-full overflow-hidden">
+                        <div id="diloco-bar" class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-dark-500 mt-2">Outer step: <span id="diloco-outer">0</span></p>
+                </div>
+            </div>
+            
+            <!-- Spacer -->
+            <div class="flex-1"></div>
+            
+            <!-- Stop Button -->
+            <div class="px-4 pb-4">
+                <button onclick="stopNode()" id="stop-btn" class="w-full px-4 py-3 bg-red-600/20 hover:bg-red-600/30 border border-red-600/50 rounded-xl text-red-400 font-medium transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="6" width="12" height="12" rx="2" stroke-width="2"/>
+                    </svg>
+                    Stop Node
+                </button>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-4 border-t border-dark-700">
+                <p class="text-xs text-dark-500 text-center">Decentralized AI Network</p>
+                <p class="text-xs text-dark-600 text-center mt-1">
+                    <a href="https://neuroshard.com" target="_blank" class="hover:text-neuro-500 transition-colors">neuroshard.com</a>
+                </p>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <!-- Tab Navigation -->
+            <nav class="bg-dark-900 border-b border-dark-700 px-6 flex-shrink-0">
+                <div class="flex gap-1">
+                    <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-btn px-5 py-4 text-sm font-medium border-b-2 border-neuro-500 text-neuro-500">
+                        Dashboard
+                    </button>
+                    <button onclick="showTab('logs')" id="tab-logs" class="tab-btn px-5 py-4 text-sm font-medium border-b-2 border-transparent text-dark-400 hover:text-dark-200 transition-colors">
+                        Logs
+                    </button>
+                    <button onclick="showTab('settings')" id="tab-settings" class="tab-btn px-5 py-4 text-sm font-medium border-b-2 border-transparent text-dark-400 hover:text-dark-200 transition-colors">
+                        Settings
+                    </button>
+                </div>
+            </nav>
+            
+            <!-- Tab Content -->
+            <div id="tab-content-area" class="flex-1 flex flex-col overflow-hidden">
+                <!-- Dashboard Tab -->
+                <div id="content-dashboard" class="p-6 animate-slide-up overflow-auto flex-1">
+                    <!-- Stats Grid - Architecture V2 -->
+                    <div class="grid grid-cols-5 gap-4 mb-6">
+                        <!-- Contribution Mode -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Mode</p>
+                            <p id="stat-mode" class="text-xl font-bold mt-1 text-neuro-400">IDLE</p>
+                            <p id="stat-mode-desc" class="text-xs text-dark-500 mt-1">Waiting...</p>
+                        </div>
+                        <!-- Speed Tier -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Speed Tier</p>
+                            <p id="stat-tier" class="text-2xl font-bold mt-1">-</p>
+                            <p id="stat-tier-desc" class="text-xs text-dark-500 mt-1">-</p>
+                        </div>
+                        <!-- Layers -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Layers</p>
+                            <p id="stat-layers" class="text-2xl font-bold mt-1">0</p>
+                        </div>
+                        <!-- Parameters -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Parameters</p>
+                            <p id="stat-params" class="text-2xl font-bold mt-1">0M</p>
+                        </div>
+                        <!-- Device -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Device</p>
+                            <p id="stat-device" class="text-2xl font-bold mt-1">CPU</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Quorum Status (Architecture V2) -->
+                    <div class="bg-dark-800 rounded-xl p-4 mb-6" id="quorum-section">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold flex items-center gap-2">
+                                <span id="quorum-dot" class="w-2.5 h-2.5 rounded-full bg-dark-500"></span>
+                                Quorum Status
+                            </h3>
+                            <span id="quorum-id" class="text-xs font-mono text-dark-500">No quorum</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Lifecycle</p>
+                                <p id="quorum-lifecycle" class="text-lg font-semibold mt-1 text-dark-400">-</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Members</p>
+                                <p id="quorum-members" class="text-lg font-mono mt-1">0</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Sync Round</p>
+                                <p id="quorum-sync" class="text-lg font-mono mt-1">0</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Batches</p>
+                                <p id="quorum-batches" class="text-lg font-mono mt-1">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Training Stats -->
+                    <div class="grid grid-cols-4 gap-4 mb-6">
+                        <!-- Tokens -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Tokens Processed</p>
+                            <p id="stat-tokens" class="text-2xl font-bold mt-1">0</p>
+                        </div>
+                        <!-- Training Rounds -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Training Rounds</p>
+                            <p id="stat-training" class="text-2xl font-bold mt-1">0</p>
+                        </div>
+                        <!-- Loss -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Current Loss</p>
+                            <p id="stat-loss" class="text-2xl font-bold mt-1">∞</p>
+                        </div>
+                        <!-- Earned -->
+                        <div class="bg-dark-800 rounded-xl p-4">
+                            <p class="text-xs text-dark-500 uppercase tracking-wider">Total Earned</p>
+                            <p id="stat-earned" class="text-2xl font-bold text-neuro-500 mt-1">0.00</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Network Info -->
+                    <div class="bg-dark-800 rounded-xl p-6">
+                        <h3 class="font-semibold mb-4">Network Information</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between py-2 border-b border-dark-700">
+                                <span class="text-dark-400">Wallet ID</span>
+                                <span id="wallet-id" class="font-mono text-neuro-500">Not connected</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-dark-700">
+                                <span class="text-dark-400">Instance</span>
+                                <span id="instance-id" class="font-mono text-sm text-dark-400">-</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-dark-700">
+                                <span class="text-dark-400">Inference Price</span>
+                                <span id="inference-price" class="font-mono text-sm text-blue-400">-</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2">
+                                <span class="text-dark-400">Tracker</span>
+                                <span id="tracker-status" class="text-dark-500">Disconnected</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Network & DiLoCo Status -->
+                    <div class="bg-dark-800 rounded-xl p-6 mt-6" id="swarm-section">
+                        <h3 class="font-semibold mb-4">Network Status</h3>
+                        
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Known Peers</p>
+                                <p id="swarm-peers" class="text-lg font-mono mt-1">0</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Layer Growth</p>
+                                <p id="growth-phase" class="text-lg font-mono mt-1 text-dark-400">None</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Inbound Buffer</p>
+                                <p id="swarm-inbound" class="text-lg font-mono mt-1">0%</p>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-3">
+                                <p class="text-xs text-dark-500 uppercase">Outbound Buffer</p>
+                                <p id="swarm-outbound" class="text-lg font-mono mt-1">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logs Tab -->
+                <div id="content-logs" class="hidden flex flex-col flex-1 min-h-0">
+                    <!-- Filter Bar -->
+                    <div class="bg-dark-900 border-b border-dark-700 px-6 py-3 flex items-center gap-4 flex-shrink-0">
+                        <span class="text-sm font-medium text-dark-400">Filter:</span>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="filter-all" checked class="rounded bg-dark-700 border-dark-600 text-neuro-500 focus:ring-neuro-500" onchange="applyLogFilter()">
+                            <span class="text-sm">All</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="filter-neuro" checked class="rounded bg-dark-700 border-dark-600 text-neuro-500 focus:ring-neuro-500" onchange="applyLogFilter()">
+                            <span class="text-sm text-neuro-500">Rewards</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="filter-training" checked class="rounded bg-dark-700 border-dark-600 text-neuro-500 focus:ring-neuro-500" onchange="applyLogFilter()">
+                            <span class="text-sm text-purple-400">Training</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="filter-error" checked class="rounded bg-dark-700 border-dark-600 text-neuro-500 focus:ring-neuro-500" onchange="applyLogFilter()">
+                            <span class="text-sm text-red-400">Errors</span>
+                        </label>
+                        <div class="flex-1"></div>
+                        <button onclick="clearLogs()" class="px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 rounded transition-colors">
+                            Clear Logs
+                        </button>
+                    </div>
+                    
+                    <!-- Log Output -->
+                    <div id="log-container" class="flex-1 overflow-y-auto min-h-0 bg-dark-950 p-4 font-mono text-sm">
+                        <div id="log-output" class="space-y-1">
+                            <p class="log-info">[00:00:00] NeuroShard Dashboard initialized</p>
+                            <p class="log-info">[00:00:00] Connecting to node...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="content-settings" class="hidden p-6 animate-slide-up overflow-auto flex-1">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Column -->
+                        <div class="space-y-6">
+                            <!-- Node Info -->
+                            <div class="bg-dark-800 rounded-xl p-6">
+                                <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-neuro-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                                    </svg>
+                                    Node Configuration
+                                </h3>
+                            <p class="text-sm text-dark-400 mb-4">
+                                    Current node settings. Restart to change.
+                            </p>
+                            
+                            <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                            <label class="text-xs text-dark-500 uppercase tracking-wider">Port</label>
+                                            <p id="setting-port" class="text-lg font-mono text-neuro-400 mt-1">8000</p>
+                                </div>
+                                <div>
+                                            <label class="text-xs text-dark-500 uppercase tracking-wider">Wallet ID</label>
+                                            <p id="setting-wallet-id" class="text-sm font-mono text-dark-300 mt-1 truncate">-</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-dark-500 uppercase tracking-wider">Tracker</label>
+                                        <p id="setting-tracker" class="text-sm font-mono text-dark-400 mt-1 truncate">https://neuroshard.com/api/tracker</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resource Limits -->
+                            <div class="bg-dark-800 rounded-xl p-6">
+                                <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-neuro-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                    </svg>
+                                    Resource Limits
+                                </h3>
+                            <p class="text-sm text-dark-400 mb-4">
+                                Adjust CPU and memory limits. Changes take effect immediately.
+                            </p>
+                            
+                            <div class="space-y-6">
+                                <!-- CPU Slider -->
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <label class="text-sm text-dark-400">Max CPU Threads</label>
+                                            <span id="cpu-limit-value" class="text-sm font-mono text-neuro-400">4</span>
+                                    </div>
+                                    <input id="cpu-limit-slider" type="range" min="1" max="16" value="4" 
+                                            class="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-neuro-500"
+                                        oninput="updateCpuLimit(this.value)">
+                                </div>
+                                
+                                <!-- Memory Slider -->
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                            <label class="text-sm text-dark-400">Max Memory</label>
+                                            <span id="mem-limit-value" class="text-sm font-mono text-neuro-400">4096 MB</span>
+                                    </div>
+                                    <input id="mem-limit-slider" type="range" min="512" max="65536" value="4096" step="512"
+                                            class="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-neuro-500"
+                                        oninput="updateMemLimit(this.value)">
+                                    <p class="text-xs text-dark-500 mt-1">Memory for model layers (more = more layers = more rewards)</p>
+                                </div>
+                                
+                                <!-- Storage Slider -->
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                            <label class="text-sm text-dark-400">Training Data Storage</label>
+                                            <span id="storage-limit-value" class="text-sm font-mono text-neuro-400">100 MB</span>
+                                    </div>
+                                    <input id="storage-limit-slider" type="range" min="50" max="10000" value="100" step="50"
+                                            class="w-full h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer accent-neuro-500"
+                                        oninput="updateStorageLimit(this.value)">
+                                    <p class="text-xs text-dark-500 mt-1">Disk space for training data shards (~10 shards per 100MB)</p>
+                                </div>
+                            </div>
+                            
+                                <button onclick="applyThrottle()" class="mt-6 w-full px-4 py-2.5 bg-neuro-600 hover:bg-neuro-500 rounded-lg text-dark-950 font-medium transition-colors">
+                                Apply Changes
+                            </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column -->
+                        <div class="space-y-6">
+                            <!-- Network Info -->
+                        <div class="bg-dark-800 rounded-xl p-6">
+                                <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-neuro-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                    </svg>
+                                    Network Status
+                                </h3>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-dark-900 rounded-lg p-4">
+                                        <p class="text-xs text-dark-500 uppercase tracking-wider">Peers</p>
+                                        <p id="setting-peers" class="text-2xl font-bold text-neuro-400 mt-1">0</p>
+                                    </div>
+                                    <div class="bg-dark-900 rounded-lg p-4">
+                                        <p class="text-xs text-dark-500 uppercase tracking-wider">Layers</p>
+                                        <p id="setting-layers" class="text-2xl font-bold text-neuro-400 mt-1">0</p>
+                                    </div>
+                                    <div class="bg-dark-900 rounded-lg p-4">
+                                        <p class="text-xs text-dark-500 uppercase tracking-wider">Training</p>
+                                        <p id="setting-training" class="text-lg font-semibold mt-1">-</p>
+                                    </div>
+                                    <div class="bg-dark-900 rounded-lg p-4">
+                                        <p class="text-xs text-dark-500 uppercase tracking-wider">Device</p>
+                                        <p id="setting-device" class="text-lg font-semibold mt-1">CPU</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- CLI Reference -->
+                            <div class="bg-dark-800 rounded-xl p-6">
+                                <h3 class="font-semibold mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-neuro-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    CLI Quick Reference
+                                </h3>
+                                <pre class="bg-dark-950 p-4 rounded-lg text-xs overflow-x-auto font-mono text-neuro-400 leading-relaxed"><code># Basic
+neuroshard-node --token YOUR_TOKEN
+
+# Custom port
+neuroshard-node --port 9000 --token YOUR_TOKEN
+
+# Resource limits
+neuroshard-node --token YOUR_TOKEN \
+  --memory 8192 --cpu-threads 8
+
+# Inference only
+neuroshard-node --token YOUR_TOKEN --no-training
+
+# Headless mode
+neuroshard-node --token YOUR_TOKEN --headless</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // State
+        let logs = [];
+        let nodeId = '';
+        let lastLogId = 0;  // Track last fetched log ID for polling
+        let clientLogIdCounter = -1;  // Negative IDs for client-side logs (won't conflict with backend)
+        
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            // Remove active state from all tabs
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('border-neuro-500', 'text-neuro-500');
+                el.classList.add('border-transparent', 'text-dark-400');
+            });
+            
+            // Show selected content
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            // Set active tab
+            const tab = document.getElementById(`tab-${tabName}`);
+            tab.classList.remove('border-transparent', 'text-dark-400');
+            tab.classList.add('border-neuro-500', 'text-neuro-500');
+        }
+        
+        // Log management
+        function addLog(message, type = 'info') {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('en-US', { hour12: false });
+            const epoch = now.getTime();  // Milliseconds since Unix epoch
+            
+            logs.push({ 
+                id: clientLogIdCounter--, 
+                epoch, 
+                timestamp, 
+                message, 
+                type 
+            });
+            
+            // Keep last 500 logs
+            if (logs.length > 500) logs = logs.slice(-300);
+            
+            renderLogs();
+        }
+        
+        let isFirstLoad = true;
+        
+        function renderLogs() {
+            const output = document.getElementById('log-output');
+            const scrollContainer = document.getElementById('log-container');
+            if (!output || !scrollContainer) return;
+
+            const showAll = document.getElementById('filter-all').checked;
+            const showNeuro = document.getElementById('filter-neuro').checked;
+            const showTraining = document.getElementById('filter-training').checked;
+            const showError = document.getElementById('filter-error').checked;
+            
+            // Check if user is at the bottom BEFORE updating (within 100px tolerance)
+            // Also check if scrollHeight is equal to clientHeight (no scrollbar yet)
+            const isAtBottom = (scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight) < 100 || 
+                               (scrollContainer.scrollHeight <= scrollContainer.clientHeight);
+            
+            // Sort logs by epoch timestamp (ascending - oldest first)
+            const sortedLogs = [...logs].sort((a, b) => a.epoch - b.epoch);
+            
+            let html = '';
+            sortedLogs.forEach(log => {
+                let show = showAll;
+                if (!showAll) {
+                    if (log.type === 'neuro' && showNeuro) show = true;
+                    if (log.type === 'training' && showTraining) show = true;
+                    if (log.type === 'error' && showError) show = true;
+                    if (log.type === 'info') show = true;
+                }
+                
+                if (show) {
+                    html += `<p class="log-${log.type}"><span class="log-timestamp">[${log.timestamp}]</span> ${escapeHtml(log.message)}</p>`;
+                }
+            });
+            
+            output.innerHTML = html || '<p class="text-dark-500">No logs to display</p>';
+            
+            // Auto-scroll to bottom of the scrollable container
+            if (isFirstLoad || isAtBottom) {
+                requestAnimationFrame(() => {
+                    scrollContainer.scrollTop = scrollContainer.scrollHeight;
+                });
+                if (isFirstLoad && logs.length > 0) isFirstLoad = false;
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function applyLogFilter() {
+            renderLogs();
+        }
+        
+        function clearLogs() {
+            logs = [];
+            // Don't reset lastLogId - we still want to poll only new logs from backend
+            addLog('Logs cleared', 'info');
+        }
+        
+        // Resource limit updates
+        function updateCpuLimit(value) {
+            document.getElementById('cpu-limit-value').textContent = value;
+        }
+        
+        function updateMemLimit(value) {
+            document.getElementById('mem-limit-value').textContent = value + ' MB';
+        }
+        
+        function updateStorageLimit(value) {
+            document.getElementById('storage-limit-value').textContent = value + ' MB';
+        }
+
+        async function applyThrottle() {
+            const cpu = document.getElementById('cpu-limit-slider').value;
+            const mem = document.getElementById('mem-limit-slider').value;
+            const storage = document.getElementById('storage-limit-slider').value;
+            
+            try {
+                const resp = await fetch('/api/throttle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        cpu_threads: parseInt(cpu), 
+                        memory_mb: parseInt(mem),
+                        storage_mb: parseInt(storage)
+                    })
+                });
+                
+                if (resp.ok) {
+                    addLog(`Settings updated: ${cpu} threads, ${mem}MB memory, ${storage}MB storage`, 'success');
+                } else {
+                    addLog('Failed to update settings', 'error');
+                }
+            } catch (e) {
+                addLog('Error updating settings: ' + e.message, 'error');
+            }
+        }
+        
+        // Stop node gracefully
+        async function stopNode() {
+            if (!confirm('Are you sure you want to stop the node? Your checkpoint will be saved.')) {
+                return;
+            }
+            
+            addLog('Stopping node...', 'warning');
+            
+            try {
+                const resp = await fetch('/api/shutdown', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (resp.ok) {
+                    const data = await resp.json();
+                    addLog(data.message, 'success');
+                    
+                    // Update UI to show stopping state
+                    setStatus('STOPPING', 'yellow', 'Saving checkpoint...');
+                    document.getElementById('stop-btn').disabled = true;
+                    document.getElementById('stop-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    
+                    // Show message that browser tab can be closed
+                    setTimeout(() => {
+                        setStatus('STOPPED', 'red', 'Node stopped. You can close this tab.');
+                    }, 2000);
+                } else {
+                    addLog('Failed to stop node', 'error');
+                }
+            } catch (e) {
+                addLog('Error stopping node: ' + e.message, 'error');
+            }
+        }
+        
+        // Status helpers
+        function setStatus(status, color, detail) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            const detailEl = document.getElementById('status-detail');
+            
+            dot.className = 'w-2.5 h-2.5 rounded-full';
+            
+            if (color === 'green') {
+                dot.classList.add('bg-green-500', 'pulse-glow');
+                text.classList.remove('text-dark-400', 'text-yellow-500', 'text-red-500');
+                text.classList.add('text-green-500');
+            } else if (color === 'yellow') {
+                dot.classList.add('bg-yellow-500');
+                text.classList.remove('text-dark-400', 'text-green-500', 'text-red-500');
+                text.classList.add('text-yellow-500');
+            } else if (color === 'red') {
+                dot.classList.add('bg-red-500');
+                text.classList.remove('text-dark-400', 'text-green-500', 'text-yellow-500');
+                text.classList.add('text-red-500');
+            } else {
+                dot.classList.add('bg-dark-500');
+                text.classList.remove('text-green-500', 'text-yellow-500', 'text-red-500');
+                text.classList.add('text-dark-400');
+            }
+            
+            text.textContent = status;
+            detailEl.textContent = detail;
+        }
+        
+        function setProgressBarColor(bar, percent) {
+            bar.classList.remove('bg-neuro-500', 'bg-yellow-500', 'bg-red-500');
+            if (percent > 85) {
+                bar.classList.add('bg-red-500');
+            } else if (percent > 70) {
+                bar.classList.add('bg-yellow-500');
+            } else {
+                bar.classList.add('bg-neuro-500');
+            }
+        }
+        
+        // Format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        // Track connection state
+        let isConnected = false;
+        let lastTotalEarned = 0;
+        
+        // Fetch and update stats - Architecture V2
+        async function updateStats() {
+            try {
+                const resp = await fetch('/api/stats');
+                if (!resp.ok) throw new Error('Stats unavailable');
+                
+                const data = await resp.json();
+                
+                // Log first successful connection
+                if (!isConnected) {
+                    isConnected = true;
+                    addLog('Connected to node successfully', 'success');
+                }
+                
+                // Architecture V2 - Extract key state
+                const training = data.training_enabled;
+                const status = data.training_status || 'idle';
+                const mode = data.contribution_mode || 'idle';
+                const quorumLifecycle = data.quorum_lifecycle || 'none';
+                const tier = data.speed_tier || 'tier5';
+                
+                // Update main status based on Architecture V2 state
+                if (mode === 'pipeline' && quorumLifecycle === 'active') {
+                    setStatus('PIPELINE', 'green', `Quorum training • ${data.my_layers?.length || 0} layers`);
+                } else if (mode === 'async' && (status === 'async_training' || data.async_batches > 0)) {
+                    setStatus('ASYNC', 'green', `Async training • DiLoCo sync`);
+                } else if (quorumLifecycle === 'forming') {
+                    setStatus('FORMING', 'yellow', `Waiting for quorum peers...`);
+                } else if (training && status === 'waiting_for_quorum') {
+                    setStatus('WAITING', 'yellow', `Looking for compatible peers...`);
+                } else if (training) {
+                    setStatus('ONLINE', 'green', `${data.my_layers?.length || 0} layers • Ready`);
+                } else {
+                    setStatus('INFERENCE', 'yellow', 'Training disabled');
+                }
+                
+                // Update tracker status
+                document.getElementById('tracker-status').textContent = 'Connected';
+                document.getElementById('tracker-status').className = 'text-green-500';
+                
+                // Update version
+                if (data.version) {
+                    document.getElementById('version').textContent = 'v' + data.version;
+                }
+                
+                // === CONTRIBUTION MODE ===
+                const modeEl = document.getElementById('stat-mode');
+                const modeDescEl = document.getElementById('stat-mode-desc');
+                if (modeEl) {
+                    modeEl.textContent = mode.toUpperCase();
+                    modeEl.className = 'text-xl font-bold mt-1 ';
+                    const modeConfig = {
+                        'pipeline': { color: 'text-green-500', desc: 'Real-time quorum training' },
+                        'async': { color: 'text-purple-400', desc: 'Async training (DiLoCo)' },
+                        'inference': { color: 'text-blue-400', desc: 'Serving inference' },
+                        'data': { color: 'text-yellow-400', desc: 'Serving Genesis data' },
+                        'verify': { color: 'text-orange-400', desc: 'Verifying PoNW proofs' },
+                        'idle': { color: 'text-dark-400', desc: 'Waiting for work...' }
+                    };
+                    const cfg = modeConfig[mode] || modeConfig['idle'];
+                    modeEl.classList.add(cfg.color);
+                    if (modeDescEl) modeDescEl.textContent = cfg.desc;
+                }
+                
+                // === SPEED TIER ===
+                const tierEl = document.getElementById('stat-tier');
+                const tierDescEl = document.getElementById('stat-tier-desc');
+                if (tierEl) {
+                    tierEl.textContent = tier.toUpperCase().replace('TIER', 'T');
+                    tierEl.className = 'text-2xl font-bold mt-1 ';
+                    const tierConfig = {
+                        'tier1': { color: 'text-green-500', desc: 'Enterprise GPU' },
+                        'tier2': { color: 'text-green-500', desc: 'High-end GPU' },
+                        'tier3': { color: 'text-neuro-400', desc: 'Mid-range GPU' },
+                        'tier4': { color: 'text-yellow-400', desc: 'Entry GPU' },
+                        'tier5': { color: 'text-dark-400', desc: 'CPU/Slow' }
+                    };
+                    const tcfg = tierConfig[tier] || tierConfig['tier5'];
+                    tierEl.classList.add(tcfg.color);
+                    if (tierDescEl) tierDescEl.textContent = tcfg.desc;
+                }
+                
+                // === NODE STATS ===
+                document.getElementById('stat-layers').textContent = data.my_layers?.length || 0;
+                document.getElementById('stat-params').textContent = (data.my_params_m || 0).toFixed(0) + 'M';
+                const deviceEl = document.getElementById('stat-device');
+                deviceEl.textContent = (data.device || 'cpu').toUpperCase();
+                deviceEl.className = 'text-2xl font-bold mt-1 ' + 
+                    ((data.device === 'cuda' || data.device === 'mps') ? 'text-green-500' : '');
+                
+                // === QUORUM STATUS ===
+                document.getElementById('quorum-id').textContent = data.quorum_id ? data.quorum_id.substring(0, 16) + '...' : 'No quorum';
+                document.getElementById('quorum-lifecycle').textContent = quorumLifecycle.charAt(0).toUpperCase() + quorumLifecycle.slice(1);
+                document.getElementById('quorum-members').textContent = data.quorum_members || 0;
+                document.getElementById('quorum-sync').textContent = data.quorum_sync_round || data.async_syncs || 0;
+                document.getElementById('quorum-batches').textContent = data.quorum_batches || data.async_batches || 0;
+                
+                // Quorum dot color
+                const quorumDot = document.getElementById('quorum-dot');
+                if (quorumDot) {
+                    quorumDot.className = 'w-2.5 h-2.5 rounded-full ';
+                    if (quorumLifecycle === 'active') {
+                        quorumDot.classList.add('bg-green-500', 'pulse-glow');
+                    } else if (quorumLifecycle === 'forming') {
+                        quorumDot.classList.add('bg-yellow-500');
+                    } else if (quorumLifecycle === 'dissolving') {
+                        quorumDot.classList.add('bg-red-500');
+                    } else {
+                        quorumDot.classList.add('bg-dark-500');
+                    }
+                }
+                
+                // Quorum lifecycle color
+                const lifecycleEl = document.getElementById('quorum-lifecycle');
+                if (lifecycleEl) {
+                    lifecycleEl.className = 'text-lg font-semibold mt-1 ';
+                    if (quorumLifecycle === 'active') {
+                        lifecycleEl.classList.add('text-green-500');
+                    } else if (quorumLifecycle === 'forming') {
+                        lifecycleEl.classList.add('text-yellow-500');
+                    } else {
+                        lifecycleEl.classList.add('text-dark-400');
+                    }
+                }
+                
+                // === TRAINING STATS ===
+                document.getElementById('stat-tokens').textContent = formatNumber(data.token_count || 0);
+                document.getElementById('stat-training').textContent = data.training_rounds || 0;
+                const loss = data.current_loss;
+                document.getElementById('stat-loss').textContent = loss && loss < Infinity ? loss.toFixed(4) : '∞';
+                
+                // === SETTINGS PAGE ===
+                const settingsLayers = document.getElementById('setting-layers');
+                const settingsPeers = document.getElementById('setting-peers');
+                const settingsTraining = document.getElementById('setting-training');
+                const settingsDevice = document.getElementById('setting-device');
+                
+                if (settingsLayers) settingsLayers.textContent = data.my_layers?.length || 0;
+                if (settingsPeers) settingsPeers.textContent = data.peer_count || 0;
+                if (settingsTraining) {
+                    settingsTraining.textContent = training ? 'Enabled' : 'Disabled';
+                    settingsTraining.className = training ? 'text-lg font-semibold mt-1 text-green-500' : 'text-lg font-semibold mt-1 text-dark-400';
+                }
+                if (settingsDevice) {
+                    settingsDevice.textContent = (data.device || 'cpu').toUpperCase();
+                    settingsDevice.className = (data.device === 'cuda' || data.device === 'mps') 
+                        ? 'text-lg font-semibold mt-1 text-green-500' 
+                        : 'text-lg font-semibold mt-1 text-dark-400';
+                }
+                
+                // Update instance ID
+                if (data.instance_id) {
+                    const instanceEl = document.getElementById('instance-id');
+                    if (instanceEl) instanceEl.textContent = data.instance_id.substring(0, 12) + '...';
+                }
+                
+                // === DILOCO PROGRESS ===
+                if (data.diloco) {
+                    document.getElementById('diloco-section').style.display = 'block';
+                    const inner = data.diloco.inner_step || 0;
+                    const total = data.diloco.inner_total || 500;
+                    document.getElementById('diloco-progress').textContent = `${inner}/${total}`;
+                    document.getElementById('diloco-bar').style.width = ((inner / total) * 100).toFixed(0) + '%';
+                    document.getElementById('diloco-outer').textContent = data.diloco.outer_step || 0;
+                } else {
+                    document.getElementById('diloco-section').style.display = 'none';
+                }
+                
+                // === INITIALIZE CONFIG SLIDERS (once) ===
+                if (data.config && !window.slidersInitialized) {
+                    window.slidersInitialized = true;
+                    
+                    if (data.config.cpu_threads) {
+                        const cpuSlider = document.getElementById('cpu-limit-slider');
+                        if (cpuSlider) {
+                            cpuSlider.value = data.config.cpu_threads;
+                            document.getElementById('cpu-limit-value').textContent = data.config.cpu_threads;
+                        }
+                    }
+                    if (data.config.memory_mb) {
+                        const memSlider = document.getElementById('mem-limit-slider');
+                        if (memSlider) {
+                            memSlider.value = data.config.memory_mb;
+                            document.getElementById('mem-limit-value').textContent = data.config.memory_mb + ' MB';
+                        }
+                    }
+                    if (data.config.storage_mb) {
+                        const storageSlider = document.getElementById('storage-limit-slider');
+                        if (storageSlider) {
+                            storageSlider.value = data.config.storage_mb;
+                            document.getElementById('storage-limit-value').textContent = data.config.storage_mb + ' MB';
+                        }
+                    }
+                    
+                    addLog(`Config: CPU=${data.config.cpu_threads || 'auto'}, Mem=${data.config.memory_mb || 'auto'}MB, Storage=${data.config.storage_mb || 100}MB`, 'info');
+                }
+                
+            } catch (e) {
+                setStatus('OFFLINE', 'red', 'Cannot connect to node');
+                document.getElementById('tracker-status').textContent = 'Disconnected';
+                document.getElementById('tracker-status').className = 'text-dark-500';
+            }
+        }
+        
+        // Track peer count for balance warning (-1 = not yet fetched)
+        let lastKnownPeerCount = -1;
+        
+        // Fetch balance
+        async function updateBalance() {
+            try {
+                const resp = await fetch('/api/neuro');
+                if (!resp.ok) return;
+                
+                const data = await resp.json();
+                
+                const totalEarned = data.total_earned || 0;
+                const balance = data.balance || 0;
+                
+                document.getElementById('balance').textContent = balance.toFixed(4);
+                document.getElementById('total-earned').textContent = totalEarned.toFixed(4);
+                document.getElementById('stat-earned').textContent = totalEarned.toFixed(4);
+                
+                // Show warning if earning while solo (proofs won't be network-confirmed)
+                // Only show if we've actually fetched peer count (lastKnownPeerCount >= 0)
+                const balanceNote = document.getElementById('balance-note');
+                if (balanceNote) {
+                    // Show warning if we have balance but no/few peers AND we've checked
+                    if (totalEarned > 0 && lastKnownPeerCount === 0) {
+                        balanceNote.classList.remove('hidden');
+                    } else {
+                        balanceNote.classList.add('hidden');
+                    }
+                }
+                
+                // Detect new earnings and log them
+                if (lastTotalEarned > 0 && totalEarned > lastTotalEarned) {
+                    const earned = totalEarned - lastTotalEarned;
+                    addLog(`Earned +${earned.toFixed(6)} NEURO (PoNW reward)`, 'neuro');
+                    
+                    // Only warn if we've confirmed no peers (not just haven't checked yet)
+                    if (lastKnownPeerCount === 0) {
+                        addLog('⚠ Earning while solo - proofs need peers to be network-confirmed', 'warning');
+                    }
+                }
+                lastTotalEarned = totalEarned;
+                
+                // Update wallet and node IDs
+                if (data.wallet_id) {
+                    document.getElementById('wallet-id').textContent = data.wallet_id.substring(0, 16) + '...';
+                    // Also update settings page
+                    const settingWallet = document.getElementById('setting-wallet-id');
+                    if (settingWallet) settingWallet.textContent = data.wallet_id.substring(0, 24) + '...';
+                }
+                if (data.node_id) {
+                    nodeId = data.node_id;
+                }
+                
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        // Fetch swarm status
+        async function updateSwarm() {
+            try {
+                const resp = await fetch('/api/swarm');
+                if (!resp.ok) return;
+                
+                const data = await resp.json();
+                
+                document.getElementById('swarm-inbound').textContent = ((data.inbound_fill_rate || 0) * 100).toFixed(0) + '%';
+                document.getElementById('swarm-outbound').textContent = ((data.outbound_fill_rate || 0) * 100).toFixed(0) + '%';
+                document.getElementById('swarm-peers').textContent = data.known_peers || 0;
+                
+                // Track peer count for balance warning
+                lastKnownPeerCount = data.known_peers || 0;
+                
+            } catch (e) {
+                // Silent fail
+            }
+            
+            // Also update growth phase from stats
+            try {
+                const statsResp = await fetch('/api/stats');
+                if (statsResp.ok) {
+                    const stats = await statsResp.json();
+                    const growthEl = document.getElementById('growth-phase');
+                    if (growthEl) {
+                        const phase = stats.growth_phase || 'none';
+                        growthEl.textContent = phase.charAt(0).toUpperCase() + phase.slice(1);
+                        growthEl.className = 'text-lg font-mono mt-1 ';
+                        if (phase === 'none') {
+                            growthEl.classList.add('text-dark-400');
+                        } else if (phase === 'warmup') {
+                            growthEl.classList.add('text-yellow-400');
+                        } else {
+                            growthEl.classList.add('text-neuro-400');
+                        }
+                    }
+                }
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        // Fetch market data for inference price
+        async function updateMarket() {
+            try {
+                const resp = await fetch('/api/market');
+                if (!resp.ok) return;
+                
+                const data = await resp.json();
+                
+                // Update inference price
+                const priceEl = document.getElementById('inference-price');
+                if (priceEl && data.current_price !== undefined) {
+                    const price = data.current_price;
+                    priceEl.textContent = price.toFixed(6) + ' NEURO/tok';
+                }
+                
+            } catch (e) {
+                // Silent fail - market may not be available
+            }
+        }
+        
+        // Fetch system resources
+        async function updateSystem() {
+            try {
+                const resp = await fetch('/api/stats');
+                if (!resp.ok) return;
+                
+                const data = await resp.json();
+                const system = data.system || {};
+                
+                // CPU - actual system usage
+                const cpuPercent = Math.round(system.cpu_percent || 0);
+                document.getElementById('cpu-percent').textContent = cpuPercent + '%';
+                document.getElementById('cpu-bar').style.width = cpuPercent + '%';
+                setProgressBarColor(document.getElementById('cpu-bar'), cpuPercent);
+                
+                // RAM - actual usage with total
+                const ramUsed = system.ram_used_gb || 0;
+                const ramTotal = system.ram_total_gb || 0;
+                const ramPercent = system.ram_percent || 0;
+                document.getElementById('ram-percent').textContent = `${ramUsed.toFixed(1)} / ${ramTotal.toFixed(1)} GB`;
+                
+                // Update RAM progress bar
+                const ramBar = document.getElementById('ram-bar');
+                if (ramBar) {
+                    ramBar.style.width = ramPercent + '%';
+                    setProgressBarColor(ramBar, ramPercent);
+                }
+                
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        // Fetch backend logs
+        async function updateLogs() {
+            try {
+                const resp = await fetch(`/api/logs?since_id=${lastLogId}&limit=100`);
+                if (!resp.ok) return;
+                
+                const data = await resp.json();
+                
+                // Add new logs from backend
+                if (data.logs && data.logs.length > 0) {
+                    data.logs.forEach(log => {
+                        // Avoid duplicates by checking log ID
+                        const isDuplicate = logs.some(existing => existing.id === log.id);
+                        
+                        if (!isDuplicate) {
+                            logs.push({
+                                id: log.id,
+                                epoch: log.epoch,
+                                timestamp: log.timestamp,
+                                message: log.message,
+                                type: log.type || 'info'
+                            });
+                        }
+                    });
+                    
+                    // Keep last 500 logs
+                    if (logs.length > 500) logs = logs.slice(-300);
+                    
+                    renderLogs();
+                }
+                
+                // Update ID for next poll
+                lastLogId = data.latest_id || lastLogId;
+                
+            } catch (e) {
+                // Silent fail
+            }
+        }
+        
+        // Initial setup
+        addLog('Dashboard loaded', 'info');
+        addLog('Connecting to node...', 'info');
+        
+        // Start update loops
+        updateStats();
+        updateBalance();
+        updateSwarm();
+        updateSystem();
+        updateMarket();  // Fetch market prices
+        updateLogs();  // Fetch initial logs
+        
+        setInterval(updateStats, 3000);
+        setInterval(updateBalance, 5000);  // Check for new earnings every 5s
+        setInterval(updateSwarm, 5000);
+        setInterval(updateSystem, 5000);
+        setInterval(updateMarket, 10000);  // Market prices every 10s
+        setInterval(updateLogs, 2000);  // Poll logs every 2s
+        
+        // Get current URL port for settings
+        const port = window.location.port || '8000';
+        const settingPort = document.getElementById('setting-port');
+        if (settingPort) settingPort.textContent = port;
+    </script>
+</body>
+</html>

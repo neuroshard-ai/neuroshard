@@ -1,0 +1,289 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{6}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The Problem with Centralized AI}{6}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}NeuroShard: A Decentralized Solution}{6}{subsection.1.2}\protected@file@percent }
+\citation{mcmahan2017communication}
+\citation{huang2019gpipe}
+\citation{borzunov2023petals}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Contributions}{7}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{7}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Distributed Deep Learning}{7}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Data Parallelism and Federated Learning}{7}{subsubsection.2.1.1}\protected@file@percent }
+\citation{ryabinin2020hivemind}
+\citation{bittensor}
+\citation{gensyn}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Pipeline Parallelism}{8}{subsubsection.2.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3}Decentralized Training}{8}{subsubsection.2.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Decentralized AI Networks}{8}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Bittensor}{8}{subsubsection.2.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.2}Gensyn}{8}{subsubsection.2.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Key Differentiators}{8}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}NeuroLLM Architecture}{8}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Design Philosophy}{8}{subsection.3.1}\protected@file@percent }
+\citation{zhang2019root}
+\citation{su2021roformer}
+\citation{ainslie2023gqa}
+\citation{shazeer2020glu}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Architecture Details}{9}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}RMSNorm (Root Mean Square Normalization)}{9}{subsubsection.3.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Rotary Position Embeddings (RoPE)}{9}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Grouped Query Attention (GQA)}{9}{subsubsection.3.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}SwiGLU Activation}{9}{subsubsection.3.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.5}Mixture of Experts (MoE)}{9}{subsubsection.3.2.5}\protected@file@percent }
+\citation{brown2020language}
+\citation{hoffmann2022training}
+\citation{kaplan2020scaling}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Dynamic Scaling via Adaptive Architecture}{10}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}The Scaling Algorithm}{10}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Automated Architecture Updates}{10}{subsubsection.3.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Dynamic Scaling via Layer Pooling}{11}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.1}The Dynamic Layer Pool}{11}{subsubsection.3.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.2}Contribution-Based Rewards}{11}{subsubsection.3.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.4.3}Example: Network Growth}{12}{subsubsection.3.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Dynamic Model Growth Example (Width × Depth)}}{12}{table.1}\protected@file@percent }
+\newlabel{tab:dynamic-growth}{{1}{12}{Dynamic Model Growth Example (Width × Depth)}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Forward Pass}{12}{subsection.3.5}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces NeuroLLM Forward Pass}}{12}{algorithm.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Memory Requirements - Dynamic Architecture}{12}{subsection.3.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Layer Capacity (varies by network architecture)}}{12}{table.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Network Topology and Node Roles}{13}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Speed Tiers}{13}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Speed Tier Classification}}{13}{table.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Contribution Modes}{13}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Async Mode Freshness Decay}{13}{subsubsection.4.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Node Capability Assessment}{14}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Decentralized Training}{14}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Training Overview}{14}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Quorum-Based Training}{14}{subsection.5.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces A Quorum: Complete pipeline of speed-matched nodes. Forward pass flows left-to-right; gradients flow back.}}{15}{figure.1}\protected@file@percent }
+\newlabel{fig:quorum}{{1}{15}{A Quorum: Complete pipeline of speed-matched nodes. Forward pass flows left-to-right; gradients flow back}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}Quorum Properties}{15}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.2}Quorum Formation Algorithm}{15}{subsubsection.5.2.2}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces Quorum Formation}}{15}{algorithm.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.3}Quorum Lifecycle}{15}{subsubsection.5.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.4}Multiple Quorums at Different Speeds}{16}{subsubsection.5.2.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Example Quorum Distribution}}{16}{table.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Genesis Dataset and Deterministic Sharding}{16}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}Data Provider Nodes}{16}{subsubsection.5.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2}Quorum Roles}{17}{subsubsection.5.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Quorum Role Bonuses}}{17}{table.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Within-Quorum Pipeline Training}{17}{subsection.5.4}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces Quorum Pipeline Training}}{17}{algorithm.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.4.1}Gradient Compression}{17}{subsubsection.5.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Cross-Quorum Synchronization (DiLoCo)}{18}{subsection.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.1}Local Inner Loop}{18}{subsubsection.5.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.2}Cross-Quorum Aggregation}{18}{subsubsection.5.5.2}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {4}{\ignorespaces Cross-Quorum Sync (DiLoCo)}}{18}{algorithm.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.3}Outer Optimizer}{18}{subsubsection.5.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.4}Bandwidth Reduction}{19}{subsubsection.5.5.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Bandwidth Comparison: Standard vs DiLoCo}}{19}{table.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Training Rewards}{19}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.1}Gradient Weighting (Fair Influence)}{19}{subsubsection.5.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.2}Scarcity-Based Incentives}{19}{subsubsection.5.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.3}Role Multipliers}{19}{subsubsection.5.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}System Architecture}{20}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}High-Level Overview}{20}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces NeuroShard Architecture: Users interact with NeuroNode, which participates in P2P network for peer discovery and gradient gossip. Training Coordinator manages distributed training, and NEURO Ledger tracks token balances.}}{20}{figure.2}\protected@file@percent }
+\newlabel{fig:architecture}{{2}{20}{NeuroShard Architecture: Users interact with NeuroNode, which participates in P2P network for peer discovery and gradient gossip. Training Coordinator manages distributed training, and NEURO Ledger tracks token balances}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}NeuroNode}{20}{subsection.6.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}NeuroNode Initialization}{21}{lstlisting.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}P2P Network Layer}{21}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.1}Peer Discovery}{21}{subsubsection.6.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.3.2}Gradient Gossip}{21}{subsubsection.6.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Decentralized Inference Protocol}{21}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.1}Inference Flow}{22}{subsubsection.6.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.4.2}Dynamic Pricing}{22}{subsubsection.6.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Proof of Neural Work (PoNW)}{22}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Overview}{22}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}PoNW as the Model Builder}{22}{subsection.7.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces PoNW Cycle: User data → Gradients → Aggregation → Model Update → NEURO Rewards → Smarter Model → More Users}}{23}{figure.3}\protected@file@percent }
+\newlabel{fig:ponw-cycle}{{3}{23}{PoNW Cycle: User data → Gradients → Aggregation → Model Update → NEURO Rewards → Smarter Model → More Users}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}PoNW Components}{23}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Optimistic Verification}{23}{subsection.7.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Optimistic Verification: Proofs accepted after challenge window expires.}}{23}{figure.4}\protected@file@percent }
+\newlabel{fig:optimistic-ponw}{{4}{23}{Optimistic Verification: Proofs accepted after challenge window expires}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.4.1}Challenge Protocol}{24}{subsubsection.7.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.4.2}Game Theory}{24}{subsubsection.7.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Optimistic Verification Outcomes}}{24}{table.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.4.3}Adaptive Verification Rate}{24}{subsubsection.7.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Chained PoNW and Epoch Structure}{24}{subsection.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.5.1}Epoch Definition}{24}{subsubsection.7.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.5.2}Model State Commitments}{25}{subsubsection.7.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.5.3}Gradient Commitments (Nonce Equivalent)}{25}{subsubsection.7.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.5.4}Epoch Chain Verification}{25}{subsubsection.7.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.5.5}Security Properties}{25}{subsubsection.7.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Chained PoNW Security Properties}}{25}{table.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.6}The Training-Mining Equivalence}{25}{subsection.7.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Mining Comparison}}{25}{table.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.7}Reward Function}{26}{subsection.7.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.8}Proof Generation}{26}{subsection.7.8}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}PoNW Proof Generation (v0.2.34+ with Chained PoNW)}{26}{lstlisting.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.9}Proof Validation}{27}{subsection.7.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.10}Gradient Verification}{27}{subsection.7.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.1}Statistical Verification}{27}{subsubsection.7.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.2}Loss-Based Verification}{27}{subsubsection.7.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.10.3}Cross-Validation}{27}{subsubsection.7.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.11}Attack Prevention}{28}{subsection.7.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.12}Cryptographic Security Model}{28}{subsection.7.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Verification and Staking}{29}{section.8}\protected@file@percent }
+\newlabel{sec:verification}{{8}{29}{Verification and Staking}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Work-First, Stake-Enhanced}{29}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Verifier Mode}{29}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Staking Requirements}{29}{subsection.8.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Stake Requirements by Role}}{29}{table.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Slashing Conditions}{29}{subsection.8.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}Diminishing Stake Returns}{30}{subsection.8.5}\protected@file@percent }
+\newlabel{sec:diminishing-returns}{{8.5}{30}{Diminishing Stake Returns}{subsection.8.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Diminishing Returns vs Linear Staking}}{30}{table.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.6}Verifier Economics}{30}{subsection.8.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.6.1}Verifier Rewards}{30}{subsubsection.8.6.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Verifier Reward Sources}}{30}{table.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.7}Why Work-Plus-Stake Works}{30}{subsection.8.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces The Security Virtuous Cycle: Work $\rightarrow $ Earn $\rightarrow $ Stake $\rightarrow $ Verify $\rightarrow $ Secure $\rightarrow $ More Work}}{31}{figure.5}\protected@file@percent }
+\newlabel{fig:security-cycle}{{5}{31}{The Security Virtuous Cycle: Work $\rightarrow $ Earn $\rightarrow $ Stake $\rightarrow $ Verify $\rightarrow $ Secure $\rightarrow $ More Work}{figure.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Robustness and Anti-Poisoning}{31}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}The Model Poisoning Threat}{31}{subsection.9.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Robust Aggregation}{31}{subsection.9.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Adversarial Resistance Matrix}{32}{subsection.9.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Attack Types and Defenses}}{32}{table.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Cross-Quorum Verification}{32}{subsection.9.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.5}The Fraud Proof System}{32}{subsection.9.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Governance and The NeuroDAO}{32}{section.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}What NeuroDAO Does NOT Control}{32}{subsection.10.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}What NeuroDAO Controls}{33}{subsection.10.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Vocabulary Governance}{33}{subsection.10.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {10.3.1}Vocabulary Proposal Process}{33}{subsubsection.10.3.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Vocabulary Governance Phases}}{33}{table.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.4}Model Architecture Governance}{33}{subsection.10.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {11}NEURO Token Economics}{34}{section.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.1}Token Utility}{34}{subsection.11.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.2}Genesis Block and Transparency}{34}{subsection.11.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.3}Deflationary Mechanics}{34}{subsection.11.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.4}Earning NEURO}{35}{subsection.11.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces NEURO Earning Mechanisms (Reward Hierarchy)}}{35}{table.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {11.4.1}Privacy-Preserving Distributed Inference Marketplace}{35}{subsubsection.11.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {11.4.2}Multipliers and Bonuses}{36}{subsubsection.11.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Reward Multipliers}}{36}{table.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.5}Spending NEURO}{37}{subsection.11.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {11.6}Economic Equilibrium}{37}{subsection.11.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {12}Security Considerations}{37}{section.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.1}Threat Model}{37}{subsection.12.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.2}Data Privacy}{37}{subsection.12.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.3}Model Integrity}{37}{subsection.12.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {12.4}Sybil Resistance}{38}{subsection.12.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {13}Checkpoint System and State Sharding}{38}{section.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.1}Sharded Checkpoints}{38}{subsection.13.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.2}Checkpoint Structure}{38}{subsection.13.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Sharded Checkpoint Structure}{38}{lstlisting.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.3}Checkpoint Synchronization}{38}{subsection.13.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.4}Model Evolution Over Time}{39}{subsection.13.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {13.4.1}Continuous Training}{39}{subsubsection.13.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {13.4.2}Layer Growth System}{39}{subsubsection.13.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {13.4.3}Layer Addition Sequence}{39}{subsubsection.13.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {13.4.4}Identity Initialization}{39}{subsubsection.13.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {13.5}The Intelligence Ledger}{40}{subsection.13.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Intelligence Ledger Entry}}{40}{table.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {14}Implementation}{40}{section.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.1}Technology Stack}{40}{subsection.14.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.2}API Endpoints}{40}{subsection.14.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces NeuroNode API Endpoints}}{40}{table.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {14.3}Desktop Application}{40}{subsection.14.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {15}Scale Adaptation and Network Phases}{41}{section.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.1}Network Phases}{41}{subsection.15.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces Emergent Network Behavior by Scale}}{41}{table.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {15.2}Adaptive Parameters}{41}{subsection.15.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {16}Vision and Roadmap}{41}{section.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {16.1}Foundation}{41}{subsection.16.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {16.2}Robust Training}{42}{subsection.16.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {16.3}Scale}{42}{subsection.16.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {16.4}Maturity}{42}{subsection.16.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {17}Distributed Architecture and Parallelism}{42}{section.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {17.1}The Dynamic Approach}{42}{subsection.17.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {17.2}Advanced Parallelism}{43}{subsection.17.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {17.2.1}Tensor Parallelism}{43}{subsubsection.17.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {17.2.2}Pipeline Parallelism}{43}{subsubsection.17.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {17.3}Hybrid Parallelism}{43}{subsection.17.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {17.4}Training at Scale}{43}{subsection.17.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {17.5}The Key Insight}{44}{subsection.17.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {18}Quorum Resilience and Fault Tolerance}{44}{section.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.1}Design Philosophy: Throughput over Latency}{44}{subsection.18.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.2}Quorum Health and Replacement}{44}{subsection.18.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.3}Multipath Routing (Fault-Tolerant)}{44}{subsection.18.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.3.1}Key Directive}{44}{subsubsection.18.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.3.2}Multipath Routing}{44}{subsubsection.18.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.3.3}Probabilistic Send with Failover}{45}{subsubsection.18.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.3.4}Capacity Bitmask Heartbeats}{45}{subsubsection.18.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Swarm Routing: Multipath routing with automatic failover. Each layer range has K candidate peers.}}{45}{figure.6}\protected@file@percent }
+\newlabel{fig:swarm-routing}{{6}{45}{Swarm Routing: Multipath routing with automatic failover. Each layer range has K candidate peers}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.4}Asynchronous Micro-Batch Engine}{45}{subsection.18.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.4.1}Key Directive}{45}{subsubsection.18.4.1}\protected@file@percent }
+\citation{douillard2023diloco}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.4.2}Activation Buffering}{46}{subsubsection.18.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.4.3}Interleaved 1F1B Schedule}{46}{subsubsection.18.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.4.4}Dynamic Micro-Batch Sizing}{46}{subsubsection.18.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.5}Extreme Gradient Accumulation (DiLoCo-Style)}{46}{subsection.18.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.5.1}Key Directive}{46}{subsubsection.18.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.5.2}Local Inner Loop}{46}{subsubsection.18.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.5.3}Outer Optimizer}{47}{subsubsection.18.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.5.4}Bandwidth Reduction}{47}{subsubsection.18.5.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces Bandwidth Comparison: Standard vs DiLoCo-Style}}{47}{table.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {18.5.5}Enhanced Verification}{47}{subsubsection.18.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.6}Speculative Checkpointing}{47}{subsection.18.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {18.7}Summary: Resilience Through Design}{48}{subsection.18.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {21}{\ignorespaces Swarm Architecture Benefits}}{48}{table.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {19}Philosophy: Why Decentralized AI Matters}{48}{section.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {19.1}The Concentration Problem}{48}{subsection.19.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {19.2}The NeuroShard Principles}{48}{subsection.19.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {19.2.1}Principle 1: Intelligence Should Be a Public Good}{48}{subsubsection.19.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {19.2.2}Principle 2: Contributors Should Own What They Build}{48}{subsubsection.19.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {19.2.3}Principle 3: No Single Point of Control}{48}{subsubsection.19.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {19.2.4}Principle 4: Start Simple, Grow Together}{49}{subsubsection.19.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {19.3}The Long-Term Vision}{49}{subsection.19.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {20}Conclusion}{49}{section.20}\protected@file@percent }
+\bibstyle{ieeetr}
+\bibcite{mcmahan2017communication}{1}
+\bibcite{huang2019gpipe}{2}
+\bibcite{borzunov2023petals}{3}
+\bibcite{ryabinin2020hivemind}{4}
+\bibcite{bittensor}{5}
+\bibcite{gensyn}{6}
+\bibcite{zhang2019root}{7}
+\bibcite{su2021roformer}{8}
+\bibcite{ainslie2023gqa}{9}
+\bibcite{shazeer2020glu}{10}
+\bibcite{brown2020language}{11}
+\bibcite{hoffmann2022training}{12}
+\bibcite{kaplan2020scaling}{13}
+\bibcite{douillard2023diloco}{14}
+\bibcite{ryabinin2023swarm}{15}
+\@writefile{toc}{\contentsline {section}{\numberline {21}Acknowledgments}{50}{section.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Code Examples}{50}{appendix.A}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Starting a NeuroNode}{50}{subsection.A.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}Node Startup}{51}{lstlisting.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Contributing Training Data}{51}{subsection.A.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}Data Contribution}{51}{lstlisting.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Generating Text}{51}{subsection.A.3}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {6}Text Generation}{51}{lstlisting.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Configuration Reference}{52}{appendix.B}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}NeuroLLM Dynamic Architecture Config}{52}{subsection.B.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7}Dynamic Architecture Calculation}{52}{lstlisting.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Quorum and Training Configuration}{52}{subsection.B.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {8}Quorum and Training Parameters}{52}{lstlisting.8}\protected@file@percent }
+\gdef \@abspage@last{53}
