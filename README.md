@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/assets/logo.png" alt="NeuroShard Logo" width="120" height="120">
+  <img src="https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/assets/logo.png?v=2" alt="NeuroShard Logo" width="120" height="120">
 </p>
 
 <h1 align="center">NeuroShard</h1>
@@ -49,7 +49,7 @@ Unlike centralized AI companies, NeuroShard distributes both the compute AND the
 ### Installation
 
 ```bash
-pip install neuroshard
+pip install neuroshard-ai
 ```
 
 ### Run a Node
