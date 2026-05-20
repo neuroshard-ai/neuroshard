@@ -177,6 +177,8 @@ See [full CLI reference](https://docs.neuroshard.com/guide/cli-reference) for al
 ## Documentation
 
 - **[Whitepaper](docs/whitepaper/neuroshard_whitepaper.pdf)** - Technical whitepaper (PDF)
+- **[Local Testing](docs/LOCAL_TESTING.md)** - Smoke, tiny training, LAN, churn, and restart gates
+- **[Testnet Gates](docs/TESTNET_GATES.md)** - Promotion process from local tests to closed alpha
 - **[Getting Started](https://docs.neuroshard.com/guide/quick-start)** - First steps
 - **[Running a Node](https://docs.neuroshard.com/guide/running-a-node)** - Detailed setup
 - **[Architecture](https://docs.neuroshard.com/architecture/overview)** - System design

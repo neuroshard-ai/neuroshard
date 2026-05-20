@@ -35,6 +35,19 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 
+def _local_test_enabled() -> bool:
+    """Return True for lightweight local simulations that must avoid CDN data."""
+    return os.getenv("NEUROSHARD_LOCAL_TEST", "").lower() in {"1", "true", "yes"}
+
+
+def _local_test_int(name: str, default: int) -> int:
+    """Read an integer local-test override with a safe fallback."""
+    try:
+        return int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
 @dataclass
 class GradientContribution:
     """A gradient contribution from a node."""
@@ -202,6 +215,12 @@ class GenesisDataLoader:
         
         self.current_dataset = None
         self.dataset_iterator = 0
+        self.synthetic_mode = _local_test_enabled()
+        if self.synthetic_mode:
+            self.total_shards = 1
+            self.assigned_shard_ids = [0]
+            logger.info("[LOCAL_TEST] GenesisDataLoader using synthetic batches (CDN manifest skipped)")
+            return
         
         # Fetch manifest and assign initial shards
         self._refresh_manifest()
@@ -235,6 +254,10 @@ class GenesisDataLoader:
         Download and load the learned tokenizer from Genesis CDN.
         Checks if the network has learned more tokens and updates locally.
         """
+        if self.synthetic_mode:
+            logger.info("[LOCAL_TEST] Synthetic Genesis loader keeping base tokenizer")
+            return
+
         try:
             tokenizer_url = f"{self.GENESIS_CDN_URL}/tokenizer.json"
             tokenizer_cache_path = os.path.join(self.cache_dir, "tokenizer.json")
@@ -596,6 +619,9 @@ class GenesisDataLoader:
     
     def is_data_ready(self) -> bool:
         """Check if data is ready for training (non-blocking check)."""
+        if self.synthetic_mode:
+            return True
+
         # Try to acquire lock with timeout to prevent blocking training loop
         acquired = self._shard_lock.acquire(timeout=0.5)
         if not acquired:
@@ -863,6 +889,18 @@ class GenesisDataLoader:
         
         Raises RuntimeError if data not ready (caller should retry later).
         """
+        if self.synthetic_mode:
+            seq_len = _local_test_int("NEUROSHARD_TINY_SEQ_LEN", min(seq_len, 64))
+            max_token = min(
+                _local_test_int("NEUROSHARD_TINY_VOCAB_SIZE", 2048),
+                getattr(self.tokenizer, "current_vocab_size", 266),
+            )
+            high = max(11, max_token)
+            input_ids = torch.randint(10, high, (batch_size, seq_len), dtype=torch.long)
+            labels = input_ids.clone()
+            self.dataset_iterator += batch_size * seq_len
+            return input_ids, labels
+
         # Try to load from prefetch buffer first
         self.ensure_shard_loaded()
         

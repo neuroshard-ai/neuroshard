@@ -897,7 +897,8 @@ class P2PManager:
             logger.error(f"[PoNW] Failed to import neuroshard.protos: {e}")
             return
         
-        logger.info("[PoNW] Gossip loop started (will generate first proof in 60s)")
+        proof_interval = int(os.getenv("NEUROSHARD_PONW_INTERVAL_SECONDS", "60"))
+        logger.info(f"[PoNW] Gossip loop started (will generate first proof in {proof_interval}s)")
         
         loop_iteration = 0
         consecutive_errors = 0
@@ -908,7 +909,7 @@ class P2PManager:
             
             try:
                 # Interruptible sleep - wakes up immediately on stop()
-                if self._stop_event.wait(timeout=60):
+                if self._stop_event.wait(timeout=proof_interval):
                     logger.info("[PoNW] Stop event received, exiting gossip loop")
                     break
                     
@@ -1026,7 +1027,7 @@ class P2PManager:
                 # Create PoNW proof using new NEUROLedger API
                 proof = self.ledger.create_proof(
                     proof_type=proof_type,
-                    uptime_seconds=60,
+                    uptime_seconds=proof_interval,
                     tokens_processed=tokens_processed,
                     training_batches=training_batches,
                     layers_held=layers_held,

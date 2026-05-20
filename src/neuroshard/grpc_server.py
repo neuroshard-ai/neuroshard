@@ -1010,7 +1010,7 @@ class NeuroShardServiceServicer(DHTServiceMixin, neuroshard_pb2_grpc.NeuroShardS
                     stub = neuroshard_pb2_grpc.NeuroShardServiceStub(channel)
                     
                     # Call next hop and return their response directly
-                    next_response = stub.PipelineForward(next_request, timeout=60.0)
+                    next_response = stub.PipelineForward(next_request, timeout=120.0)
                     
                     logger.info(f"[PIPELINE] Next hop response: is_final={next_response.is_final}, loss={next_response.loss if next_response.is_final else 'N/A'}")
                     return next_response
@@ -1487,25 +1487,34 @@ class NeuroShardServiceServicer(DHTServiceMixin, neuroshard_pb2_grpc.NeuroShardS
             # Get or create consensus tracker
             if not hasattr(self, '_pending_consensus'):
                 self._pending_consensus = {}
-            
+
+            # Evict entries older than 10 minutes to prevent unbounded growth
+            _consensus_ttl = 600
+            _now = time.time()
+            stale_proofs = [k for k, v in self._pending_consensus.items()
+                            if _now - v.get('created_at', _now) > _consensus_ttl]
+            for k in stale_proofs:
+                del self._pending_consensus[k]
+
             proof_sig = request.proof_signature
             if proof_sig not in self._pending_consensus:
                 self._pending_consensus[proof_sig] = {
                     'valid_stake': 0.0,
                     'invalid_stake': 0.0,
                     'votes': [],
-                    'created_at': time.time(),
+                    'created_at': _now,
                 }
-            
+
             consensus = self._pending_consensus[proof_sig]
-            
-            # Record vote
-            consensus['votes'].append({
-                'validator_id': request.validator_id,
-                'stake': request.validator_stake,
-                'vote': request.vote,
-                'timestamp': request.timestamp,
-            })
+
+            # Cap per-proof vote list to 256 entries to bound memory
+            if len(consensus['votes']) < 256:
+                consensus['votes'].append({
+                    'validator_id': request.validator_id,
+                    'stake': request.validator_stake,
+                    'vote': request.vote,
+                    'timestamp': request.timestamp,
+                })
             
             if request.vote:
                 consensus['valid_stake'] += request.validator_stake
@@ -1528,6 +1537,8 @@ class NeuroShardServiceServicer(DHTServiceMixin, neuroshard_pb2_grpc.NeuroShardS
                 logger.info(f"[CONSENSUS] Reached for proof {proof_sig[:16]}...: "
                            f"{'ACCEPTED' if consensus_result else 'REJECTED'} "
                            f"({valid_ratio:.1%} valid stake)")
+                # Free memory immediately once consensus is finalized
+                self._pending_consensus.pop(proof_sig, None)
             
             return neuroshard_pb2.ValidationVoteResponse(
                 accepted=True,
@@ -1841,13 +1852,20 @@ class NeuroShardServiceServicer(DHTServiceMixin, neuroshard_pb2_grpc.NeuroShardS
                 # Derive from HTTP port
                 http_port = getattr(self.model, 'port', 8000)
                 grpc_port = http_port + 1000
-            my_endpoint = f"0.0.0.0:{grpc_port}"  # Will be resolved by proposer
-            
-            # If we have a public IP, use that
-            if hasattr(self.model, 'p2p_manager') and self.model.p2p_manager:
-                ip = getattr(self.model.p2p_manager, 'external_ip', None)
-                if ip:
-                    my_endpoint = f"{ip}:{grpc_port}"
+
+            # Build endpoint with public IP and optional LAN IP for same-network peers.
+            # Format: "public_ip:port" or "public_ip:port|local_ip:port"
+            public_ip = getattr(self.p2p, 'public_ip', None) if self.p2p else None
+            local_ip = getattr(self.p2p, 'local_ip', None) if self.p2p else None
+
+            if public_ip:
+                my_endpoint = f"{public_ip}:{grpc_port}"
+                if local_ip and local_ip != public_ip:
+                    my_endpoint = f"{public_ip}:{grpc_port}|{local_ip}:{grpc_port}"
+            elif local_ip:
+                my_endpoint = f"{local_ip}:{grpc_port}"
+            else:
+                my_endpoint = f"0.0.0.0:{grpc_port}"
             
             logger.info(f"[QUORUM] ACCEPTING proposal from {proposer_node_id[:8]}... "
                        f"quorum={quorum_id[:8]}, contributing layers {my_layer_start}-{my_layer_end-1}")

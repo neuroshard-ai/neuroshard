@@ -31,6 +31,12 @@ NEUROSHARD_DIR = os.path.expanduser("~/.neuroshard")
 PID_FILE = os.path.join(NEUROSHARD_DIR, "node.pid")
 LOG_FILE = os.path.join(NEUROSHARD_DIR, "node.log")
 CONFIG_FILE = os.path.join(NEUROSHARD_DIR, "config.json")
+SUPERVISOR_STATE_FILE = os.path.join(NEUROSHARD_DIR, "supervisor.json")
+
+# ─── Supervisor settings ──────────────────────────────────────────────────────
+RESTART_DELAY_BASE = 10     # seconds
+RESTART_DELAY_MAX = 300     # 5 minutes cap
+RESTART_BACKOFF_RESET = 600 # reset backoff after 10 min of stable running
 
 # ─── ANSI colors ──────────────────────────────────────────────────────────────
 GREEN = "\033[92m"
@@ -160,6 +166,113 @@ def _get_uptime(pid: int) -> str:
             return f"{d}d {h}h"
     except Exception:
         return "unknown"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Supervisor (auto-restart)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _save_supervisor_state(restarts: int, last_restart: float | None = None):
+    """Persist restart count and timestamp for status display."""
+    state = {"restarts": restarts, "last_restart": last_restart}
+    try:
+        with open(SUPERVISOR_STATE_FILE, "w") as f:
+            json.dump(state, f)
+    except OSError:
+        pass
+
+
+def _load_supervisor_state() -> dict:
+    try:
+        with open(SUPERVISOR_STATE_FILE, "r") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {"restarts": 0, "last_restart": None}
+
+
+def _run_supervisor(cmd: list[str]):
+    """Supervisor loop: run the node subprocess and restart on crash.
+
+    This function runs in the daemon process (detached from the terminal).
+    It never returns under normal operation — only exits when SIGTERM/SIGINT
+    is received or the child exits with code 0 (clean shutdown).
+    """
+    child = None
+    restarts = 0
+    backoff = RESTART_DELAY_BASE
+    stop_requested = False
+
+    def _forward_signal(signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+        if child and child.poll() is None:
+            child.send_signal(signum)
+
+    signal.signal(signal.SIGTERM, _forward_signal)
+    signal.signal(signal.SIGINT, _forward_signal)
+
+    log_fd = open(LOG_FILE, "a")
+
+    while not stop_requested:
+        log_fd.write(f"[SUPERVISOR] Starting node process (restart #{restarts})\n")
+        log_fd.flush()
+
+        start_time = time.time()
+        child = subprocess.Popen(
+            cmd,
+            stdout=log_fd,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+        )
+
+        _save_supervisor_state(restarts, time.time() if restarts > 0 else None)
+
+        child.wait()
+        exit_code = child.returncode
+        uptime = time.time() - start_time
+
+        if stop_requested or exit_code == 0:
+            log_fd.write(
+                f"[SUPERVISOR] Node exited cleanly (code={exit_code}). "
+                f"Not restarting.\n"
+            )
+            log_fd.flush()
+            break
+
+        restarts += 1
+        _save_supervisor_state(restarts, time.time())
+
+        if uptime > RESTART_BACKOFF_RESET:
+            backoff = RESTART_DELAY_BASE
+
+        log_fd.write(
+            f"[SUPERVISOR] Node crashed (code={exit_code}) after "
+            f"{int(uptime)}s. Restarting in {backoff}s... "
+            f"(restart #{restarts})\n"
+        )
+        log_fd.flush()
+
+        # Interruptible sleep so SIGTERM during backoff works
+        for _ in range(backoff):
+            if stop_requested:
+                break
+            time.sleep(1)
+
+        backoff = min(backoff * 2, RESTART_DELAY_MAX)
+
+    # Kill child if still alive (e.g. stop_requested during child.wait)
+    if child and child.poll() is None:
+        child.terminate()
+        try:
+            child.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            child.kill()
+
+    log_fd.write(f"[SUPERVISOR] Exiting. Total restarts: {restarts}\n")
+    log_fd.flush()
+    log_fd.close()
+    _cleanup_pid_file()
+    sys.exit(0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -433,18 +546,25 @@ def cmd_start(args):
     log_fd.write(f"\n{'='*60}\n")
     log_fd.write(f"[DAEMON] Starting NeuroShard at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
     log_fd.write(f"[DAEMON] Port: {port}\n")
+    log_fd.write(f"[DAEMON] Auto-restart: enabled\n")
     log_fd.write(f"{'='*60}\n\n")
     log_fd.flush()
-
-    # Launch subprocess detached from terminal
-    proc = subprocess.Popen(
-        cmd,
-        stdout=log_fd,
-        stderr=subprocess.STDOUT,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,  # detach from terminal group
-    )
     log_fd.close()
+
+    # Reset supervisor state for fresh start
+    _save_supervisor_state(0)
+
+    # Launch supervisor process (which manages the node subprocess)
+    supervisor_cmd = [
+        sys.executable, "-m", "neuroshard", "_supervisor", "--",
+    ] + cmd
+    proc = subprocess.Popen(
+        supervisor_cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        start_new_session=True,
+    )
 
     # Write PID file
     with open(PID_FILE, "w") as f:
@@ -459,6 +579,7 @@ def cmd_start(args):
         sys.exit(1)
 
     print(f"  {GREEN}{BOLD}Node started!{RESET} (PID {proc.pid})")
+    print(f"  {DIM}Auto-restart enabled — node will recover from crashes.{RESET}")
     print()
     print(f"  {DIM}Dashboard:{RESET}  http://localhost:{port}/")
     print(f"  {DIM}Logs:{RESET}       {LOG_FILE}")
@@ -486,22 +607,38 @@ def cmd_stop(args):
     print(f"\n  Stopping node (PID {pid}, uptime {uptime})...")
 
     try:
-        os.kill(pid, signal.SIGTERM)
-        # Wait for graceful shutdown
-        for i in range(60):  # Up to 6 seconds
+        # Kill the entire process group (supervisor + child) so nothing orphans.
+        # The supervisor is started with start_new_session=True, so it leads
+        # its own process group. os.killpg sends to all members.
+        try:
+            pgid = os.getpgid(pid)
+            os.killpg(pgid, signal.SIGTERM)
+        except (ProcessLookupError, PermissionError):
+            # Fallback to single-PID kill
+            os.kill(pid, signal.SIGTERM)
+
+        # Wait for graceful shutdown (supervisor forwards SIGTERM to child,
+        # child saves checkpoint, then supervisor exits).
+        # Checkpoint save can take 60-120s on slow storage (Jetson eMMC).
+        for i in range(600):  # Up to 60 seconds for checkpoint save
             time.sleep(0.1)
             try:
                 os.kill(pid, 0)
             except ProcessLookupError:
                 break
         else:
-            # Still running - force kill
+            # Still running - force kill the whole group
             print(f"  {YELLOW}Graceful shutdown timed out, sending SIGKILL...{RESET}")
             try:
-                os.kill(pid, signal.SIGKILL)
+                pgid = os.getpgid(pid)
+                os.killpg(pgid, signal.SIGKILL)
                 time.sleep(0.5)
-            except ProcessLookupError:
-                pass
+            except (ProcessLookupError, PermissionError):
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                    time.sleep(0.5)
+                except ProcessLookupError:
+                    pass
 
         _cleanup_pid_file()
         print(f"  {GREEN}Node stopped.{RESET}")
@@ -549,6 +686,21 @@ def cmd_restart(args):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+#  Subcommand: _supervisor (internal — not user-facing)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _cmd_supervisor(args):
+    """Entry point for the supervisor daemon process."""
+    child_cmd = args.child_cmd
+    # Strip leading "--" separator from REMAINDER
+    if child_cmd and child_cmd[0] == "--":
+        child_cmd = child_cmd[1:]
+    if not child_cmd:
+        sys.exit(1)
+    _run_supervisor(child_cmd)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 #  Subcommand: status
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -565,6 +717,20 @@ def cmd_status(args):
         print()
         print(f"    PID:        {pid}")
         print(f"    Uptime:     {uptime}")
+
+        sup = _load_supervisor_state()
+        if sup["restarts"] > 0:
+            last = ""
+            if sup.get("last_restart"):
+                ago = time.time() - sup["last_restart"]
+                if ago < 60:
+                    last = f" (last: {int(ago)}s ago)"
+                elif ago < 3600:
+                    last = f" (last: {int(ago // 60)}m ago)"
+                else:
+                    last = f" (last: {int(ago // 3600)}h ago)"
+            print(f"    Restarts:   {sup['restarts']}{last}")
+
         print(f"    Dashboard:  http://localhost:{port}/")
         print(f"    Logs:       {LOG_FILE}")
 
@@ -1056,6 +1222,12 @@ def main():
     config_reset.set_defaults(func=cmd_config, config_action="reset")
 
     sub_config.set_defaults(func=cmd_config, config_action="show")
+
+    # ── neuroshard _supervisor (internal — launched by cmd_start) ─────────
+    sub_supervisor = subparsers.add_parser("_supervisor", help=argparse.SUPPRESS)
+    sub_supervisor.add_argument("child_cmd", nargs=argparse.REMAINDER,
+                                help=argparse.SUPPRESS)
+    sub_supervisor.set_defaults(func=_cmd_supervisor)
 
     # ── neuroshard run ────────────────────────────────────────────────────
     sub_run = subparsers.add_parser(

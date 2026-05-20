@@ -28,6 +28,19 @@ INITIAL_VOCAB_SIZE = 32000
 MAX_VOCAB_SIZE = 10_000_000
 
 
+def _local_test_enabled() -> bool:
+    """Return True when running the lightweight local simulation path."""
+    return os.getenv("NEUROSHARD_LOCAL_TEST", "").lower() in {"1", "true", "yes"}
+
+
+def _local_test_int(name: str, default: int) -> int:
+    """Read an integer local-test override with a safe fallback."""
+    try:
+        return int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
+
+
 # =============================================================================
 # SPEED TIERS - Node Classification by Compute Speed
 # =============================================================================
@@ -840,6 +853,28 @@ class DynamicLayerPool:
                 
                 # Check if layer 0 has holders (is there a DRIVER?)
                 layer_0_holders = self._discover_layer_holders_from_dht(0)
+                
+                # Verify DRIVER is actually alive — stale DHT entries from
+                # offline nodes can persist for hours and block new DRIVERs
+                if layer_0_holders:
+                    live_holders = []
+                    for holder in layer_0_holders:
+                        holder_addr = holder.split("|")[0] if "|" in holder else holder
+                        # Skip if this is our own address
+                        if holder_addr in node_url or node_url.replace("http://", "") in holder_addr:
+                            live_holders.append(holder)
+                            continue
+                        try:
+                            import requests as _req
+                            check_url = f"http://{holder_addr}/api/health" if "://" not in holder_addr else f"{holder_addr}/api/health"
+                            resp = _req.get(check_url, timeout=3)
+                            if resp.ok:
+                                live_holders.append(holder)
+                            else:
+                                logger.info(f"DRIVER at {holder_addr} not healthy (status {resp.status_code}) — ignoring stale DHT entry")
+                        except Exception:
+                            logger.info(f"DRIVER at {holder_addr} unreachable — ignoring stale DHT entry")
+                    layer_0_holders = live_holders
                 
                 if (not layer_0_holders or checkpoint_has_layer_0) and can_fit_vocab and enable_training:
                     role = "DRIVER"
@@ -2086,7 +2121,6 @@ class DynamicNeuroNode:
                 
                 logger.info(f"Saved checkpoint: {saved_arch.get('num_layers', '?')}L × {saved_arch.get('hidden_dim', '?')}H")
                 
-                # Use saved architecture
                 from neuroshard.core.model.scaler import ModelArchitecture
                 self.layer_pool.current_architecture = ModelArchitecture(
                     hidden_dim=saved_arch.get('hidden_dim', 512),
@@ -2106,17 +2140,59 @@ class DynamicNeuroNode:
                 logger.info("✅ Checkpoint compatible with network - will load checkpoint")
             except Exception as e:
                 logger.warning(f"Could not load checkpoint: {e}")
-                logger.info("No saved checkpoint found")
+                self._use_safe_default_architecture()
         else:
             logger.info("No saved checkpoint found")
-            # Will use default architecture
-            if self.layer_pool.current_architecture is None:
-                self.layer_pool._auto_recalculate_architecture()
-            logger.info(f"Network architecture: {self.layer_pool.current_architecture.num_layers}L × "
-                       f"{self.layer_pool.current_architecture.hidden_dim}H")
-            logger.info("✅ Joining network with architecture: "
-                       f"{self.layer_pool.current_architecture.num_layers}L × "
-                       f"{self.layer_pool.current_architecture.hidden_dim}H")
+            self._use_safe_default_architecture()
+    
+    def _use_safe_default_architecture(self):
+        """Use the network's known architecture instead of memory-based auto-scaling.
+        
+        Auto-scaling can produce oversized models (e.g., 3.8B on a 30GB Jetson)
+        that immediately OOM. The safe default matches the current network architecture.
+        """
+        from neuroshard.core.model.scaler import ModelArchitecture
+
+        if _local_test_enabled():
+            hidden_dim = _local_test_int("NEUROSHARD_TINY_HIDDEN_DIM", 128)
+            num_layers = _local_test_int("NEUROSHARD_TINY_LAYERS", 2)
+            num_heads = _local_test_int("NEUROSHARD_TINY_NUM_HEADS", 4)
+            num_kv_heads = _local_test_int("NEUROSHARD_TINY_NUM_KV_HEADS", 1)
+            intermediate_dim = _local_test_int("NEUROSHARD_TINY_INTERMEDIATE_DIM", hidden_dim * 4)
+            max_seq_len = _local_test_int("NEUROSHARD_TINY_SEQ_LEN", 64)
+
+            self.layer_pool.current_architecture = ModelArchitecture(
+                hidden_dim=hidden_dim,
+                intermediate_dim=intermediate_dim,
+                num_layers=num_layers,
+                num_heads=num_heads,
+                num_kv_heads=num_kv_heads,
+                vocab_size=_local_test_int("NEUROSHARD_TINY_VOCAB_SIZE", 2048),
+                max_seq_len=max_seq_len,
+                dropout=0.1,
+                rope_theta=10000.0,
+            )
+            self.layer_pool.current_num_layers = num_layers
+            logger.info(
+                "[LOCAL_TEST] Network architecture: "
+                f"{num_layers}L × {hidden_dim}H, vocab={self.layer_pool.current_architecture.vocab_size}"
+            )
+            return
+
+        self.layer_pool.current_architecture = ModelArchitecture(
+            hidden_dim=512,
+            intermediate_dim=2048,
+            num_layers=11,
+            num_heads=16,
+            num_kv_heads=4,
+            vocab_size=MAX_VOCAB_SIZE,
+            max_seq_len=2048,
+            dropout=0.1,
+            rope_theta=10000.0,
+        )
+        self.layer_pool.current_num_layers = 11
+        logger.info(f"Network architecture: 11L × 512H (safe default)")
+        logger.info("✅ Joining network with architecture: 11L × 512H")
     
     def _get_checkpoint_path(self) -> Optional[Path]:
         """Get path to checkpoint file."""
@@ -2126,6 +2202,12 @@ class DynamicNeuroNode:
     
     def _prefetch_vocab_capacity(self):
         """Pre-fetch vocab size from CDN tokenizer for memory calculation."""
+        if _local_test_enabled():
+            vocab_capacity = _local_test_int("NEUROSHARD_TINY_VOCAB_SIZE", 2048)
+            self.layer_pool.vocab_capacity = vocab_capacity
+            logger.info(f"[LOCAL_TEST] Using tiny vocab_capacity={vocab_capacity:,} (CDN tokenizer skipped)")
+            return
+
         try:
             import os
             import urllib.request
@@ -2194,6 +2276,13 @@ class DynamicNeuroNode:
     
     def _load_learned_tokenizer(self):
         """Load the learned tokenizer and expand vocab if needed."""
+        if _local_test_enabled():
+            from neuroshard.core.model.tokenizer import NeuroTokenizer
+            vocab_size = _local_test_int("NEUROSHARD_TINY_VOCAB_SIZE", 2048)
+            self.tokenizer = NeuroTokenizer(vocab_size=vocab_size)
+            logger.info(f"[LOCAL_TEST] Using base tokenizer with max vocab_size={vocab_size:,}")
+            return
+
         try:
             from neuroshard.core.model.tokenizer import get_neuro_tokenizer
             self.tokenizer = get_neuro_tokenizer()
@@ -2383,7 +2472,23 @@ class DynamicNeuroNode:
                     self.model.my_layers[layer_id].load_state_dict(layer_state, strict=False)
             
             training_rounds = checkpoint.get("training_rounds", 0)
-            self.total_training_rounds = training_rounds  # Restore training counter!
+            self.total_training_rounds = training_rounds
+
+            # Check for optimizer state: first in checkpoint (legacy), then separate file
+            opt_state = checkpoint.get("optimizer_state_dict", None)
+            if opt_state is None:
+                optimizer_path = checkpoint_path.with_name(
+                    checkpoint_path.stem + "_optimizer.pt"
+                )
+                if optimizer_path.exists():
+                    try:
+                        opt_state = torch.load(optimizer_path, map_location=self.device, weights_only=False)
+                        logger.info(f"[CHECKPOINT] Loaded optimizer state from {optimizer_path.name}")
+                    except Exception as e:
+                        logger.warning(f"[CHECKPOINT] Could not load optimizer file: {e}")
+
+            self._pending_optimizer_state = opt_state
+
             logger.info(f"Checkpoint loaded: {training_rounds} training rounds, "
                        f"{len(common_layers)}/{len(self.my_layer_ids)} layers from {checkpoint_path}")
             
@@ -2458,6 +2563,16 @@ class DynamicNeuroNode:
         logger.info(f"[NODE] Training config: batch_size={self._training_batch_size}, "
                    f"model={param_count:.1f}M params ({num_layers} layers × {self.model.architecture.hidden_dim} dim), "
                    f"checkpointing={self._use_gradient_checkpointing}, device={self.device}")
+
+        # Restore optimizer state from checkpoint (prevents loss spike on resume)
+        pending = getattr(self, '_pending_optimizer_state', None)
+        if pending is not None:
+            try:
+                self.optimizer.load_state_dict(pending)
+                self._pending_optimizer_state = None
+                logger.info("[NODE] Optimizer state restored from checkpoint")
+            except Exception as e:
+                logger.warning(f"[NODE] Could not restore optimizer state: {e} — training will continue with fresh optimizer")
         logger.info(f"Training initialized: batch_size={self._training_batch_size}, "
                    f"checkpointing={self._use_gradient_checkpointing}, layers={num_layers}, device={self.device}")
     
@@ -2684,13 +2799,27 @@ class DynamicNeuroNode:
             if not hasattr(self, '_pending_activations'):
                 self._pending_activations = {}
             self._pending_activations[session_id] = (hidden, embeddings)
-            
-            # Clean up old activations (older than 5 minutes)
+
+            # Eagerly clean up stale activations (older than 5 minutes) every store.
             import time as time_module
-            stale = [k for k, v in self._pending_activations.items() 
-                    if time_module.time() - float(k.split('_')[-1]) > 300]
+            _now_pa = time_module.time()
+            stale = [k for k, v in self._pending_activations.items()
+                    if _now_pa - float(k.split('_')[-1]) > 300]
             for k in stale:
                 del self._pending_activations[k]
+
+            # Hard cap: if still too large (e.g. fast DRIVER, slow VALIDATOR),
+            # evict oldest entries to keep memory bounded.
+            _MAX_PENDING = 16
+            if len(self._pending_activations) > _MAX_PENDING:
+                # Sort by embedded timestamp (last component of session_id key)
+                sorted_keys = sorted(
+                    self._pending_activations.keys(),
+                    key=lambda k: float(k.split('_')[-1])
+                )
+                for k in sorted_keys[:len(self._pending_activations) - _MAX_PENDING]:
+                    del self._pending_activations[k]
+                logger.warning(f"[DRIVER] _pending_activations exceeded {_MAX_PENDING} entries; evicted oldest to bound memory")
             
             request = pb2.PipelineForwardRequest(
                 session_id=session_id,
@@ -2707,7 +2836,7 @@ class DynamicNeuroNode:
             # Dynamic timeout based on expected peer speed
             # CPU nodes are 10-50x slower than GPU - allow enough time
             # Check if we know the peer's device type from known_peers
-            peer_timeout = 30  # Default for GPU peers
+            peer_timeout = 120  # Default for GPU peers
             if hasattr(self, 'p2p_manager') and self.p2p_manager:
                 peer_info = self.p2p_manager.known_peers.get(next_hop_url, {})
                 # If peer isn't using GPU, give it more time
@@ -2715,9 +2844,8 @@ class DynamicNeuroNode:
                 try:
                     start, end = map(int, peer_shard_range.split("-"))
                     peer_layers = end - start + 1
-                    # More layers = more time needed (10s per 4 layers for CPU)
                     if peer_layers > 4:
-                        peer_timeout = 60  # Likely CPU with more layers
+                        peer_timeout = 120
                 except:
                     pass
             
@@ -2765,8 +2893,15 @@ class DynamicNeuroNode:
                 logger.debug(traceback.format_exc())
             return None
     
-    def save_checkpoint(self):
-        """Save checkpoint."""
+    def save_checkpoint(self, include_optimizer=True):
+        """
+        Save checkpoint. Uses .detach() to avoid memory duplication on unified memory (Jetson).
+        
+        Args:
+            include_optimizer: If True, save optimizer state to a separate file.
+                Periodic saves pass False (low memory footprint).
+                Graceful shutdown passes True (training thread stopped, memory freed).
+        """
         if not self.model:
             return
         
@@ -2774,22 +2909,19 @@ class DynamicNeuroNode:
         
         state_dict = {}
         
-        # Save embedding
         if self.model.has_embedding and self.model.embedding is not None:
-            state_dict["embedding.weight"] = self.model.embedding.weight.cpu()
+            state_dict["embedding.weight"] = self.model.embedding.weight.detach()
         
-        # Save LM head
         if self.model.has_lm_head:
             if self.model.lm_head is not None:
-                state_dict["lm_head.weight"] = self.model.lm_head.weight.cpu()
+                state_dict["lm_head.weight"] = self.model.lm_head.weight.detach()
             if self.model.final_norm is not None:
                 for name, param in self.model.final_norm.named_parameters():
-                    state_dict[f"final_norm.{name}"] = param.cpu()
+                    state_dict[f"final_norm.{name}"] = param.detach()
         
-        # Save layers
         for layer_id, layer in self.model.my_layers.items():
             for name, param in layer.named_parameters():
-                state_dict[f"layer_{layer_id}.{name}"] = param.cpu()
+                state_dict[f"layer_{layer_id}.{name}"] = param.detach()
         
         checkpoint = {
             "state_dict": state_dict,
@@ -2805,13 +2937,43 @@ class DynamicNeuroNode:
             "vocab_capacity": self.model.vocab_capacity,
             "training_rounds": self.total_training_rounds,
             "timestamp": time.time(),
-            # MoE state
             "moe_enabled": True,
             "my_experts": self.model.my_experts if hasattr(self.model, 'my_experts') else {},
         }
         
-        torch.save(checkpoint, checkpoint_path)
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        
+        # Atomic save: write to temp file, then replace destination.
+        # Use .replace() not .rename() — on Windows .rename() raises WinError 183
+        # if the destination already exists, while .replace() overwrites atomically
+        # on both Windows and POSIX.
+        tmp_path = checkpoint_path.with_suffix('.pt.tmp')
+        torch.save(checkpoint, tmp_path)
+        tmp_path.replace(checkpoint_path)
+        
+        del checkpoint, state_dict
+        gc.collect()
+        
         logger.info(f"Checkpoint saved: {checkpoint_path.name}")
+        
+        # Save optimizer state to a separate file (only on graceful shutdown)
+        if include_optimizer and self.optimizer is not None:
+            optimizer_path = checkpoint_path.with_name(
+                checkpoint_path.stem + "_optimizer.pt"
+            )
+            try:
+                opt_state = self.optimizer.state_dict()
+                opt_tmp = optimizer_path.with_suffix('.pt.tmp')
+                torch.save(opt_state, opt_tmp)
+                opt_tmp.replace(optimizer_path)
+                del opt_state
+                gc.collect()
+                logger.info(f"Optimizer state saved: {optimizer_path.name}")
+            except Exception as e:
+                logger.warning(f"Could not save optimizer state: {e}")
     
     def forward_pipeline(self, hidden_states: torch.Tensor, session_id: str,
                         source_layer: int, is_training: bool = False,
@@ -3065,9 +3227,9 @@ class DynamicNeuroNode:
             "network_nodes": len(self.layer_pool.node_capacities) if self.layer_pool else 0,
         }
     
-    def _save_checkpoint(self, async_save: bool = True):
+    def _save_checkpoint(self, async_save: bool = True, include_optimizer: bool = True):
         """Save checkpoint (alias for save_checkpoint)."""
-        self.save_checkpoint()
+        self.save_checkpoint(include_optimizer=include_optimizer)
 
 
 def create_dynamic_node(

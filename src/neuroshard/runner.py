@@ -108,7 +108,7 @@ def request_shutdown():
     _SHUTDOWN_REQUESTED.set()
     
     # Stop QuorumTrainer FIRST (exit training loop, release GPU)
-    # Must stop BEFORE saving checkpoint — otherwise save_checkpoint's .cpu()
+    # Must stop BEFORE saving checkpoint — otherwise save_checkpoint
     # calls deadlock with the training thread's CUDA forward/backward passes.
     if QUORUM_TRAINER:
         try:
@@ -118,13 +118,20 @@ def request_shutdown():
         except Exception as e:
             logger.error(f"[NODE] QuorumTrainer shutdown error: {e}")
     
-    # Now save checkpoint (GPU is free, no training thread competing)
+    # Now save full checkpoint with optimizer (GPU is free, no training thread competing)
     if NEURO_NODE:
         try:
             base = getattr(NEURO_NODE, 'base_node', NEURO_NODE)
             if hasattr(base, 'save_checkpoint'):
-                logger.info("[NODE] Saving checkpoint...")
-                base.save_checkpoint()
+                training_rounds = 0
+                if QUORUM_TRAINER and hasattr(QUORUM_TRAINER, 'total_batches'):
+                    training_rounds = getattr(QUORUM_TRAINER, 'total_batches', 0)
+                if not training_rounds:
+                    training_rounds = getattr(NEURO_NODE, '_total_training_rounds', 0)
+                if training_rounds > 0:
+                    base.total_training_rounds = training_rounds
+                logger.info("[NODE] Saving checkpoint with optimizer state...")
+                base.save_checkpoint(include_optimizer=True)
                 logger.info("[NODE] Checkpoint saved.")
         except Exception as e:
             logger.error(f"[NODE] Checkpoint save error: {e}")
@@ -172,8 +179,7 @@ def request_shutdown():
     if NEURO_NODE:
         try:
             logger.info("[NODE] Saving checkpoint before shutdown...")
-            # Force synchronous save during shutdown to ensure it completes
-            NEURO_NODE._save_checkpoint(async_save=False)
+            NEURO_NODE._save_checkpoint(async_save=False, include_optimizer=True)
             logger.info("[NODE] Checkpoint saved.")
         except Exception as e:
             logger.error(f"[NODE] Failed to save checkpoint: {e}")
@@ -887,6 +893,22 @@ async def get_api_stats():
             # Instance info (for multi-node support)
             "instance_id": getattr(NEURO_NODE, 'instance_id', None),
         })
+
+        # Quorum/async training keeps live counters on trainer objects; surface
+        # those here so local simulations and dashboards show actual progress.
+        trainer_batches = 0
+        trainer_loss = None
+        if QUORUM_TRAINER is not None:
+            trainer_batches = max(trainer_batches, getattr(QUORUM_TRAINER, "total_batches", 0) or 0)
+            trainer_loss = getattr(QUORUM_TRAINER, "current_loss", None)
+        if ASYNC_TRAINER is not None:
+            trainer_batches = max(trainer_batches, getattr(ASYNC_TRAINER, "total_batches", 0) or 0)
+            trainer_loss = getattr(ASYNC_TRAINER, "current_loss", trainer_loss)
+        if trainer_batches:
+            stats["training_rounds"] = max(stats.get("training_rounds", 0), trainer_batches)
+            stats["training_batches"] = stats["training_rounds"]
+        if stats.get("current_loss") is None and trainer_loss is not None:
+            stats["current_loss"] = trainer_loss
         
         # Add DiLoCo progress
         diloco = NEURO_NODE.get_diloco_progress()
@@ -2897,6 +2919,9 @@ def _benchmark_speed_tier(node) -> Optional[SpeedTier]:
 # =============================================================================
 def get_bootstrap_nodes() -> List[str]:
     """Get bootstrap nodes from environment or use defaults."""
+    if os.environ.get("NEUROSHARD_DISABLE_DEFAULT_BOOTSTRAP", "").lower() in {"1", "true", "yes"}:
+        return []
+
     # Check for user-configured bootstrap nodes via environment
     env_nodes = os.environ.get("NEUROSHARD_BOOTSTRAP_NODES", "")
     if env_nodes:
@@ -3252,7 +3277,9 @@ def run_node(
         
         async def run_observer():
             """Run observer with background tasks."""
-            config = uvicorn.Config(node_app, host="0.0.0.0", port=port, log_level="warning")
+            import os as _runner_os
+            http_host = _runner_os.environ.get("NEUROSHARD_HTTP_HOST", "127.0.0.1")
+            config = uvicorn.Config(node_app, host=http_host, port=port, log_level="warning")
             server = uvicorn.Server(config)
             
             # Start background task for stats updates
@@ -3851,6 +3878,15 @@ def run_node(
     if GRPC_SERVICER:
         GRPC_SERVICER.on_quorum_proposed = _on_quorum_proposed
         logger.info("[QUORUM] Registered ProposeQuorum callback on gRPC servicer")
+    else:
+        # gRPC server starts in a background thread — wait for it
+        for _wait in range(50):  # up to 5 seconds
+            time.sleep(0.1)
+            from neuroshard.grpc_server import GRPC_SERVICER as _delayed_svc
+            if _delayed_svc:
+                _delayed_svc.on_quorum_proposed = _on_quorum_proposed
+                logger.info("[QUORUM] Registered ProposeQuorum callback on gRPC servicer (after wait)")
+                break
     
     # 6. Background tasks - Native Quorum-Based System (no legacy fallbacks)
     def background_tasks():
@@ -4044,27 +4080,39 @@ def run_node(
                                 total_layers = NEURO_NODE.layer_pool.current_num_layers if NEURO_NODE.layer_pool else 1
                                 
                                 if layer_ids:
-                                    # Dissolve the incomplete quorum and retry
-                                    # form_quorum() will discover any new peers that have
-                                    # appeared since the last attempt
-                                    CURRENT_QUORUM = None
-                                    if QUORUM_TRAINER and QUORUM_TRAINER.running:
-                                        QUORUM_TRAINER.stop()
-                                        QUORUM_TRAINER = None
-                                    
-                                    grpc_port = port + 1000
-                                    grpc_endpoint = f"{ip_addr}:{grpc_port}"
-                                    CURRENT_QUORUM = QUORUM_FORMATION.form_quorum(
-                                        initiator_node_id=NEURO_NODE.node_id,
-                                        initiator_endpoint=grpc_endpoint,
-                                        initiator_layers=(min(layer_ids), max(layer_ids) + 1),
-                                        initiator_speed_tier=STATE.get("speed_tier", "tier5"),
-                                        total_layers=total_layers,
-                                    )
-                                    
-                                    # Reset backoff if we formed an ACTIVE quorum
+                                    # Re-check: the callback may have replaced CURRENT_QUORUM
+                                    # with an ACTIVE pipeline quorum while we were waiting
                                     if CURRENT_QUORUM and CURRENT_QUORUM.lifecycle == QuorumLifecycle.ACTIVE:
                                         forming_retry_count = 0
+                                    else:
+                                        # Dissolve the incomplete quorum and retry.
+                                        # form_quorum() involves network calls which release
+                                        # the GIL — the gRPC callback can fire during this
+                                        # and set CURRENT_QUORUM to an ACTIVE pipeline quorum.
+                                        # We must not overwrite that.
+                                        CURRENT_QUORUM = None
+                                        if QUORUM_TRAINER and QUORUM_TRAINER.running:
+                                            QUORUM_TRAINER.stop()
+                                            QUORUM_TRAINER = None
+                                        
+                                        grpc_port = port + 1000
+                                        grpc_endpoint = f"{ip_addr}:{grpc_port}"
+                                        new_quorum = QUORUM_FORMATION.form_quorum(
+                                            initiator_node_id=NEURO_NODE.node_id,
+                                            initiator_endpoint=grpc_endpoint,
+                                            initiator_layers=(min(layer_ids), max(layer_ids) + 1),
+                                            initiator_speed_tier=STATE.get("speed_tier", "tier5"),
+                                            total_layers=total_layers,
+                                        )
+                                        
+                                        # Only use the new quorum if the callback didn't
+                                        # already set CURRENT_QUORUM to an ACTIVE one
+                                        if CURRENT_QUORUM and CURRENT_QUORUM.lifecycle == QuorumLifecycle.ACTIVE:
+                                            forming_retry_count = 0
+                                        else:
+                                            CURRENT_QUORUM = new_quorum
+                                            if CURRENT_QUORUM and CURRENT_QUORUM.lifecycle == QuorumLifecycle.ACTIVE:
+                                                forming_retry_count = 0
                     
                     # Quorum dissolved - stop trainer and reform
                     elif CURRENT_QUORUM.lifecycle in [QuorumLifecycle.DISSOLVED, QuorumLifecycle.DISSOLVING]:
@@ -4084,13 +4132,15 @@ def run_node(
                             total_layers = NEURO_NODE.layer_pool.current_num_layers if NEURO_NODE.layer_pool else 1
                             
                             if layer_ids:  # Guard against empty layer list
-                                CURRENT_QUORUM = QUORUM_FORMATION.form_quorum(
+                                new_quorum = QUORUM_FORMATION.form_quorum(
                                     initiator_node_id=NEURO_NODE.node_id,
                                     initiator_endpoint=grpc_endpoint,
                                     initiator_layers=(min(layer_ids), max(layer_ids) + 1),
                                     initiator_speed_tier=STATE.get("speed_tier", "tier5"),
                                     total_layers=total_layers,
                                 )
+                                if not (CURRENT_QUORUM and CURRENT_QUORUM.lifecycle == QuorumLifecycle.ACTIVE):
+                                    CURRENT_QUORUM = new_quorum
                                 if CURRENT_QUORUM:
                                     logger.info(f"[QUORUM] Joined quorum {CURRENT_QUORUM.quorum_id[:8]}...")
                 
@@ -4105,13 +4155,15 @@ def run_node(
                     total_layers = NEURO_NODE.layer_pool.current_num_layers if NEURO_NODE.layer_pool else 1
                     
                     if layer_ids:  # Guard against empty layer list
-                        CURRENT_QUORUM = QUORUM_FORMATION.form_quorum(
+                        new_quorum = QUORUM_FORMATION.form_quorum(
                             initiator_node_id=NEURO_NODE.node_id,
                             initiator_endpoint=grpc_endpoint,
                             initiator_layers=(min(layer_ids), max(layer_ids) + 1),
                             initiator_speed_tier=STATE.get("speed_tier", "tier5"),
                             total_layers=total_layers,
                         )
+                        if not (CURRENT_QUORUM and CURRENT_QUORUM.lifecycle == QuorumLifecycle.ACTIVE):
+                            CURRENT_QUORUM = new_quorum
                         if CURRENT_QUORUM:
                             logger.info(f"[QUORUM] Formed quorum {CURRENT_QUORUM.quorum_id[:8]}...")
                 
@@ -4129,10 +4181,15 @@ def run_node(
                     STATE["last_loss"] = QUORUM_TRAINER.current_loss
                     STATE["current_loss"] = QUORUM_TRAINER.current_loss
                     
-                    # Detect stalled pipeline (processor not receiving activations)
+                    # Detect stalled pipeline (peer unreachable / processor not receiving activations)
                     if getattr(QUORUM_TRAINER, '_pipeline_stalled', False):
-                        logger.warning("[QUORUM] Pipeline stalled — processor not receiving "
-                                      "activations. Switching to ASYNC training mode.")
+                        stall_role = "initiator" if getattr(QUORUM_TRAINER, 'is_initiator', False) else "processor"
+                        logger.warning(f"[QUORUM] Pipeline stalled ({stall_role}) — "
+                                      "downstream peer unreachable or no activations arriving. "
+                                      "Dissolving quorum and switching to ASYNC training mode.")
+                        # Flush final stats before tearing down the trainer
+                        STATE["quorum_batches"] = QUORUM_TRAINER.total_batches
+                        STATE["training_batches"] = STATE.get("training_batches", 0) + max(0, QUORUM_TRAINER.total_batches - last_quorum_batches)
                         QUORUM_TRAINER.stop()
                         QUORUM_TRAINER = None
                         # Disconnect inbound buffer from gRPC handler
@@ -4432,16 +4489,27 @@ def run_node(
             
             # =================================================================
             # PERIODIC CHECKPOINT (every 5 minutes - crash protection)
+            # Saves weights only (no optimizer) to keep memory footprint low.
+            # Full checkpoint with optimizer is saved on graceful shutdown.
             # =================================================================
             if now - last_checkpoint_save >= CHECKPOINT_SAVE_INTERVAL:
                 last_checkpoint_save = now
                 try:
                     base = getattr(NEURO_NODE, 'base_node', NEURO_NODE)
-                    if hasattr(base, 'save_checkpoint') and hasattr(base, 'total_training_rounds'):
-                        if base.total_training_rounds > 0:
-                            base.save_checkpoint()
+                    if hasattr(base, 'save_checkpoint'):
+                        training_rounds = 0
+                        if QUORUM_TRAINER and hasattr(QUORUM_TRAINER, 'total_batches'):
+                            training_rounds = getattr(QUORUM_TRAINER, 'total_batches', 0)
+                        if not training_rounds:
+                            training_rounds = getattr(NEURO_NODE, '_total_training_rounds', 0)
+                        if not training_rounds:
+                            training_rounds = getattr(base, 'total_training_rounds', 0)
+                        if training_rounds > 0:
+                            base.total_training_rounds = training_rounds
+                        base.save_checkpoint(include_optimizer=False)
+                        logger.info(f"[CHECKPOINT] Periodic save complete (rounds={training_rounds})")
                 except Exception as e:
-                    logger.debug(f"[CHECKPOINT] Periodic save error: {e}")
+                    logger.warning(f"[CHECKPOINT] Periodic save error: {e}")
             
             # =================================================================
             # HOUSEKEEPING (every 60 seconds)
@@ -4477,6 +4545,21 @@ def run_node(
                     removed = NEURO_NODE.layer_pool.cleanup_stale_assignments()
                     if removed:
                         logger.info(f"[LAYER_POOL] Cleaned up {len(removed)} stale assignments")
+
+                # gRPC servicer _pending_consensus eviction (TTL 10 min)
+                # Normally evicted inline, but this catches the case where the
+                # servicer is idle and inline cleanup is never triggered.
+                try:
+                    from neuroshard.grpc_server import GRPC_SERVICER as _svc
+                    if _svc is not None and hasattr(_svc, '_pending_consensus'):
+                        _pc = _svc._pending_consensus
+                        _stale_pc = [k for k, v in _pc.items() if now - v.get('created_at', now) > 600]
+                        for k in _stale_pc:
+                            del _pc[k]
+                        if _stale_pc:
+                            logger.info(f"[HOUSEKEEPING] Evicted {len(_stale_pc)} stale consensus entries")
+                except Exception:
+                    pass
             
             # =================================================================
             # TOKENIZER REFRESH (every 10 minutes)
@@ -4701,7 +4784,9 @@ def run_node(
     
     # Use Server object so we can stop it from outside (GUI shutdown)
     global _UVICORN_SERVER
-    config = uvicorn.Config(node_app, host="0.0.0.0", port=port, log_config=log_config)
+    import os as _runner_os
+    http_host = _runner_os.environ.get("NEUROSHARD_HTTP_HOST", "127.0.0.1")
+    config = uvicorn.Config(node_app, host=http_host, port=port, log_config=log_config)
     _UVICORN_SERVER = uvicorn.Server(config)
     
     # Print our own clean startup message (without "Press CTRL+C")

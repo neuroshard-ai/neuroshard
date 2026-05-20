@@ -8,16 +8,16 @@ export default withMermaid(
     
     head: [
       ['link', { rel: 'icon', href: '/favicon.ico' }],
-      ['meta', { name: 'theme-color', content: '#06b6d4' }],
+      ['meta', { name: 'theme-color', content: '#c8ff00' }],
       ['meta', { property: 'og:type', content: 'website' }],
       ['meta', { property: 'og:title', content: 'NeuroShard Documentation' }],
       ['meta', { property: 'og:description', content: 'Build the future of decentralized AI. Train models, earn NEURO, own collective intelligence.' }],
       ['meta', { property: 'og:image', content: 'https://neuroshard.com/og-image.png' }],
     ],
 
-themeConfig: {
-    logo: '/logo.png',
-    siteTitle: 'NeuroShard Docs',
+    themeConfig: {
+      logo: '/logo.png',
+      siteTitle: 'NeuroShard Docs',
       
       nav: [
         { text: 'Guide', link: '/guide/introduction' },
@@ -78,6 +78,14 @@ themeConfig: {
               { text: 'Overview', link: '/architecture/overview' },
               { text: 'NeuroLLM Model', link: '/architecture/neurollm' },
               { text: 'Dynamic Scaling', link: '/architecture/dynamic-scaling' },
+            ]
+          },
+          {
+            text: 'Advanced Capabilities',
+            collapsed: false,
+            items: [
+              { text: 'Mixture of Experts', link: '/architecture/mixture-of-experts' },
+              { text: 'NeuroMemory', link: '/architecture/memory' },
             ]
           },
           {
@@ -149,7 +157,6 @@ themeConfig: {
               { text: 'Overview', link: '/api/overview' },
               { text: 'HTTP Endpoints', link: '/api/http-endpoints' },
               { text: 'gRPC Services', link: '/api/grpc-services' },
-              { text: 'WebSocket Events', link: '/api/websocket-events' },
             ]
           },
           {
@@ -172,14 +179,14 @@ themeConfig: {
 
       footer: {
         message: 'Released under the Apache License 2.0.',
-        copyright: 'Copyright © 2024-2025 NeuroShard'
+        copyright: 'Copyright © 2024-2026 NeuroShard'
       },
 
       search: {
         provider: 'local'
       },
 
-    outline: {
+      outline: {
         level: [2, 3],
         label: 'On this page'
       }
@@ -194,9 +201,8 @@ themeConfig: {
     lastUpdated: false
   }),
   {
-    // Mermaid plugin options
     mermaidConfig: {
-      theme: 'neutral'
+      theme: 'dark'
     }
   }
 )

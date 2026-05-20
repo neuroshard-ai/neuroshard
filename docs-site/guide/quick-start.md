@@ -167,4 +167,5 @@ The Genesis data loader needs time to download training shards. Wait 30-60 secon
 - [Network Roles](/guide/network-roles) — Understand Driver, Worker, Validator roles
 - [CLI Reference](/guide/cli-reference) — All command-line options
 - [NEURO Economics](/economics/rewards) — Maximize your earnings
+- [Whitepaper](https://neuroshard.com/whitepaper) — Full technical paper (registration required)
 

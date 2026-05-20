@@ -17,6 +17,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import threading
 import time
 import uuid
@@ -1207,6 +1208,7 @@ class QuorumFormationService:
         
         # Build set of our own IPs to filter ourselves out of peer results
         my_ips = set()
+        my_endpoints = set()  # IP:port pairs for precise self-filtering behind NAT
         if self.p2p_manager:
             my_url = getattr(self.p2p_manager, 'my_url', '')
             if my_url:
@@ -1215,12 +1217,18 @@ class QuorumFormationService:
                 parsed_self = urlparse(my_url)
                 if parsed_self.hostname:
                     my_ips.add(parsed_self.hostname)
+                    if parsed_self.port:
+                        my_endpoints.add(f"{parsed_self.hostname}:{parsed_self.port}")
             pub_ip = getattr(self.p2p_manager, 'public_ip', None)
             if pub_ip:
                 my_ips.add(pub_ip)
+                if parsed_self.port:
+                    my_endpoints.add(f"{pub_ip}:{parsed_self.port}")
             lan_ip = getattr(self.p2p_manager, 'local_ip', None)
             if lan_ip:
                 my_ips.add(lan_ip)
+                if parsed_self.port:
+                    my_endpoints.add(f"{lan_ip}:{parsed_self.port}")
         
         # ── Strategy 1: P2P Known Peers (fully decentralized) ──────────────
         # These peers were already discovered via DHT gossip and heartbeats.
@@ -1298,9 +1306,13 @@ class QuorumFormationService:
                         # Resolve LAN address if peer is on same network
                         resolved = self._resolve_peer_endpoint(str(endpoint))
                         
-                        # Filter out ourselves
+                        # Filter out ourselves — use IP:port to distinguish nodes
+                        # behind the same NAT (same public IP, different ports)
                         resolved_ip = resolved.rsplit(":", 1)[0] if ":" in resolved else resolved
-                        if resolved_ip in my_ips:
+                        if resolved in my_endpoints:
+                            continue
+                        # Only filter by bare IP if no port info (legacy fallback)
+                        if resolved_ip in my_ips and resolved not in my_endpoints and ":" not in resolved:
                             continue
                         
                         # Query peer directly for their actual layer range
@@ -1848,12 +1860,28 @@ class QuorumTrainer:
         self.running = False
         self._training_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        if os.getenv("NEUROSHARD_LOCAL_TEST", "").lower() in {"1", "true", "yes"}:
+            self.ASYNC_TRAIN_INTERVAL = int(os.getenv("NEUROSHARD_TINY_ASYNC_INTERVAL", "5"))
+            self.ASYNC_BATCH_SIZE = int(os.getenv("NEUROSHARD_TINY_BATCH_SIZE", "1"))
+            self.ASYNC_STEPS_PER_ROUND = int(os.getenv("NEUROSHARD_TINY_ASYNC_STEPS", "2"))
+            self._local_test_seq_len = int(os.getenv("NEUROSHARD_TINY_SEQ_LEN", "64"))
+            logger.info(
+                "[LOCAL_TEST] Trainer tiny settings: "
+                f"interval={self.ASYNC_TRAIN_INTERVAL}s, batch={self.ASYNC_BATCH_SIZE}, "
+                f"steps={self.ASYNC_STEPS_PER_ROUND}, seq_len={self._local_test_seq_len}"
+            )
+        else:
+            self._local_test_seq_len = None
         
         # Pipeline inbound buffer for receiving activations from upstream nodes.
         # The gRPC PipelineForward handler pushes activation packets here;
         # _process_and_forward() pulls from it. Only used for non-initiator roles.
+        #
+        # Memory budget: each item holds hidden_states ~ batch*seq*hidden*4 bytes.
+        # At batch=4, seq=512, hidden=2048 that is ~16 MB per item.
+        # maxsize=8 caps this queue at ~128 MB; adjust down if OOM persists.
         import queue
-        self.inbound_buffer = queue.Queue(maxsize=32) if not self.is_initiator else None
+        self.inbound_buffer = queue.Queue(maxsize=8) if not self.is_initiator else None
         
         # Stats
         self.total_batches = 0
@@ -1965,12 +1993,27 @@ class QuorumTrainer:
         import torch
         
         if not self.genesis_loader:
-            # Log once, then back off to avoid spamming logs every second
-            if not hasattr(self, '_genesis_wait_logged'):
-                logger.warning("[INITIATOR] Waiting for Genesis data loader to initialize... "
-                              "(downloading manifest + first shard from CDN)")
-                self._genesis_wait_logged = True
-            time.sleep(5)  # Check every 5s instead of 1s
+            # Retry initialization — the first attempt may have failed (CDN not ready,
+            # tokenizer not yet downloaded). Log loudly on first miss, then retry every 30s.
+            if not hasattr(self, '_genesis_last_retry'):
+                self._genesis_last_retry = 0
+            _now = time.time()
+            if _now - self._genesis_last_retry > 30:
+                self._genesis_last_retry = _now
+                if not hasattr(self, '_genesis_wait_logged'):
+                    logger.warning("[INITIATOR] genesis_loader not set — attempting initialization...")
+                    self._genesis_wait_logged = True
+                try:
+                    from neuroshard.core.training.distributed import GenesisDataLoader
+                    from neuroshard.core.model.tokenizer import get_neuro_tokenizer
+                    self.genesis_loader = GenesisDataLoader(
+                        self.node_id,
+                        get_neuro_tokenizer(),
+                    )
+                    logger.info(f"[INITIATOR] genesis_loader initialized: {self.genesis_loader.total_shards} shards available")
+                except Exception as _e:
+                    logger.warning(f"[INITIATOR] genesis_loader init retry failed: {_e} — will retry in 30s")
+            time.sleep(5)
             return False
         
         # Get batch from genesis loader — returns (input_ids, labels) tuple
@@ -2000,7 +2043,11 @@ class QuorumTrainer:
         # Send to next node in pipeline or finish locally
         next_hop = self.quorum.get_next_hop(self.node_id)
         if next_hop:
-            self._send_activation(next_hop, hidden, {'labels': labels})
+            success = self._send_activation(next_hop, hidden, {'labels': labels})
+            # Only count as a completed batch if the activation was delivered.
+            # Returning False here keeps total_batches accurate and prevents
+            # the initiator from inflating its count while the FINISHER gets 0.
+            return success
         else:
             # Solo quorum or this node is also the finisher — compute loss locally
             self._finisher_backward(hidden, labels)
@@ -2080,8 +2127,12 @@ class QuorumTrainer:
         
         return True  # Actual work done
     
-    def _send_activation(self, target: QuorumMember, hidden: Any, metadata: Dict = None):
-        """Send activation to next node in pipeline via gRPC PipelineForward."""
+    def _send_activation(self, target: QuorumMember, hidden: Any, metadata: Dict = None) -> bool:
+        """Send activation to next node in pipeline via gRPC PipelineForward.
+        
+        Returns:
+            True if activation was delivered successfully, False on any error.
+        """
         try:
             from neuroshard.core.network.connection_pool import get_channel
             from neuroshard.protos import neuroshard_pb2 as pb2
@@ -2092,10 +2143,23 @@ class QuorumTrainer:
             # Determine gRPC address from endpoint.
             # QuorumMember.endpoint stores the gRPC address directly
             # (set during quorum formation via ProposeQuorum response).
+            # Format can be "ip:port" or "public_ip:port|local_ip:port" for LAN peers.
             endpoint = target.endpoint
             if not endpoint:
                 logger.warning(f"[QUORUM] Cannot send activation — no endpoint for {target.node_id[:16]}")
-                return
+                return False
+            
+            # Resolve LAN-aware endpoint: if peer shares our public IP, use local address
+            if "|" in endpoint:
+                try:
+                    from neuroshard.core.network.nat import resolve_peer_address
+                    my_public_ip = getattr(self, '_public_ip', None)
+                    if my_public_ip:
+                        endpoint = resolve_peer_address(endpoint, my_public_ip)
+                    else:
+                        endpoint = endpoint.split("|", 1)[0]
+                except Exception:
+                    endpoint = endpoint.split("|", 1)[0]
             
             # Use endpoint as gRPC address directly.
             # For backwards compat: if port looks like HTTP (< 9000), add offset.
@@ -2132,9 +2196,27 @@ class QuorumTrainer:
             
             response = stub.PipelineForward(request, timeout=30.0)
             logger.debug(f"[QUORUM] Sent activation to {target.node_id[:16]}...")
-            
+
+            # Reset failure counter on success
+            self._send_consecutive_failures = 0
+            return True
+
         except Exception as e:
             logger.warning(f"[QUORUM] Failed to send activation to {target.node_id[:16]}...: {e}")
+
+            # Track consecutive send failures. After 3 failures the downstream
+            # peer is considered dead and we signal a pipeline stall so the
+            # runner can dissolve this quorum and switch to ASYNC mode.
+            self._send_consecutive_failures = getattr(self, '_send_consecutive_failures', 0) + 1
+            _SEND_FAIL_THRESHOLD = 3
+            if self._send_consecutive_failures >= _SEND_FAIL_THRESHOLD:
+                logger.warning(
+                    f"[QUORUM] Downstream peer {target.node_id[:16]}... unreachable "
+                    f"({self._send_consecutive_failures} consecutive failures). "
+                    f"Signalling pipeline stall."
+                )
+                self._pipeline_stalled = True
+            return False
     
     def _finisher_backward(self, hidden: Any, labels: Any):
         """Finisher: Compute loss from logits and run backward pass.
@@ -2216,10 +2298,15 @@ class QuorumTrainer:
         
         # 4. Apply outer update: amplify the training direction
         # w_new = w_initial + lr * delta (where delta = current - initial)
+        # Use copy_() instead of direct assignment to avoid breaking autograd
+        # version tracking: assigning param.data = new_tensor replaces the
+        # storage pointer, which increments the version counter and causes
+        # "modified by an inplace operation" errors if a backward pass is
+        # concurrently in flight.
         with torch.no_grad():
             for name, param in self.model.named_parameters():
                 if name in self.initial_weights and name in aggregated:
-                    param.data = self.initial_weights[name] + OUTER_LR * aggregated[name]
+                    param.data.copy_(self.initial_weights[name] + OUTER_LR * aggregated[name])
         
         # 5. Reset for next round
         self._snapshot_weights()
@@ -2733,6 +2820,18 @@ class AsyncTrainer:
         self.running = False
         self._training_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        if os.getenv("NEUROSHARD_LOCAL_TEST", "").lower() in {"1", "true", "yes"}:
+            self.ASYNC_TRAIN_INTERVAL = int(os.getenv("NEUROSHARD_TINY_ASYNC_INTERVAL", "5"))
+            self.ASYNC_BATCH_SIZE = int(os.getenv("NEUROSHARD_TINY_BATCH_SIZE", "1"))
+            self.ASYNC_STEPS_PER_ROUND = int(os.getenv("NEUROSHARD_TINY_ASYNC_STEPS", "2"))
+            self._local_test_seq_len = int(os.getenv("NEUROSHARD_TINY_SEQ_LEN", "64"))
+            logger.info(
+                "[LOCAL_TEST] AsyncTrainer tiny settings: "
+                f"interval={self.ASYNC_TRAIN_INTERVAL}s, batch={self.ASYNC_BATCH_SIZE}, "
+                f"steps={self.ASYNC_STEPS_PER_ROUND}, seq_len={self._local_test_seq_len}"
+            )
+        else:
+            self._local_test_seq_len = None
         
         # DiLoCo-like state for async
         self.initial_weights: Dict[str, Any] = {}
@@ -2848,7 +2947,13 @@ class AsyncTrainer:
                     
                     try:
                         # Get batch from Genesis loader
-                        result = self.genesis_loader.get_batch(batch_size=self.ASYNC_BATCH_SIZE)
+                        if self._local_test_seq_len is not None:
+                            result = self.genesis_loader.get_batch(
+                                batch_size=self.ASYNC_BATCH_SIZE,
+                                seq_len=self._local_test_seq_len,
+                            )
+                        else:
+                            result = self.genesis_loader.get_batch(batch_size=self.ASYNC_BATCH_SIZE)
                         
                         # Handle None returns (shard boundary)
                         if result is None or result[0] is None:
