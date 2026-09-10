@@ -8,8 +8,8 @@ from neuroshard import __version__
 GO_VERSION='1.27.1'
 GO_SHA256='63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
 CPU_REQUIREMENTS=['torch==2.9.1+cpu']
-RUNTIME_REQUIREMENTS=['numpy==2.2.6','grpcio==1.76.0','protobuf==6.33.1','cryptography==46.0.3','requests==2.32.5',
-    'transformers==4.57.3','tokenizers==0.22.1','safetensors==0.7.0','huggingface-hub==0.36.0']
+RUNTIME_REQUIREMENTS=['numpy==2.2.6','grpcio==1.83.1','protobuf==6.33.6','cryptography==50.0.1','requests==2.34.2',
+    'transformers==4.57.3','tokenizers==0.22.1','safetensors==0.7.0','huggingface-hub==0.36.0','urllib3==2.7.0','idna==3.19','filelock==3.32.6']
 
 
 def root():return Path(os.environ.get('NEUROSHARD_STATE_DIR',str(Path.home()/'.neuroshard'))).expanduser()
@@ -46,7 +46,8 @@ def setup(package=None):
         print(f'Installing the pinned CPU runtime in {path}. This downloads several hundred MB.',flush=True)
         venv.EnvBuilder(with_pip=True).create(path)
         python=str(path/'bin/python');log=path/'install.log'
-        commands=[[python,'-m','pip','install','--disable-pip-version-check',*CPU_REQUIREMENTS,'--index-url','https://download.pytorch.org/whl/cpu'],
+        commands=[[python,'-m','pip','install','--disable-pip-version-check','--upgrade','pip>=26.2','setuptools>=83'],
+                  [python,'-m','pip','install','--disable-pip-version-check',*CPU_REQUIREMENTS,'--index-url','https://download.pytorch.org/whl/cpu'],
                   [python,'-m','pip','install','--disable-pip-version-check',*RUNTIME_REQUIREMENTS],
                   [python,'-m','pip','install','--disable-pip-version-check','--no-deps',package or f'neuroshard-ai=={__version__}']]
         with log.open('a') as out:
@@ -54,7 +55,7 @@ def setup(package=None):
                 if subprocess.run(command,stdout=out,stderr=out).returncode:
                     raise ValueError(f'Runtime installation failed. Inspect {log}, then rerun neuroshard setup.')
         check=[python,'-c','from importlib.metadata import version; import json; print(json.dumps({p:version(p) for p in '+
-               repr(['neuroshard-ai','torch','numpy','grpcio','protobuf','cryptography','requests','transformers','tokenizers','safetensors','huggingface-hub'])+'}))']
+               repr(['neuroshard-ai','torch','numpy','grpcio','protobuf','cryptography','requests','transformers','tokenizers','safetensors','huggingface-hub','urllib3','idna','filelock'])+'}))']
         actual=json.loads(subprocess.check_output(check,text=True))
         expected=dict(item.split('==',1) for item in CPU_REQUIREMENTS+RUNTIME_REQUIREMENTS)
         expected['neuroshard-ai']=__version__
@@ -69,9 +70,18 @@ def engine():
     import fcntl
     tools=root()/'tools';tools.mkdir(parents=True,exist_ok=True)
     binary=tools/'cometbft-0.38.26'
+    manifest=Path(__file__).with_name('consensus')
+    build_id=hashlib.sha256(GO_SHA256.encode()+b''.join((manifest/name).read_bytes()
+        for name in ('go.mod','go.sum'))).hexdigest()
+    receipt=tools/'consensus-build.json'
     with (tools/'engine.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX)
-        if binary.exists() and subprocess.check_output([str(binary),'version'],text=True).strip()=='0.38.26':return binary
+        try:
+            saved=json.loads(receipt.read_text())
+            if (saved['build_id']==build_id and saved['sha256']==hashlib.sha256(binary.read_bytes()).hexdigest()
+                    and subprocess.check_output([str(binary),'version'],text=True).strip()=='0.38.26'):
+                return binary
+        except (OSError,ValueError,KeyError,subprocess.SubprocessError):pass
         print('Preparing NeuroShard native consensus (CometBFT 0.38.26).',flush=True)
         toolchain=tools/f'go-{GO_VERSION}';go=toolchain/'go/bin/go'
         if not go.exists():
@@ -93,12 +103,22 @@ def engine():
                     tar.extractall(toolchain)
         if subprocess.check_output([str(go),'version'],text=True).strip()!=f'go version go{GO_VERSION} linux/amd64':
             raise ValueError('Wrong Go toolchain')
-        env={**os.environ,'GOBIN':str(tools),'GOTOOLCHAIN':'local','GOMAXPROCS':'2'}
-        with (tools/'consensus-build.log').open('a') as out:
-            result=subprocess.run([str(go),'install','github.com/cometbft/cometbft/cmd/cometbft@v0.38.26'],env=env,stdout=out,stderr=out)
-        if result.returncode:raise ValueError(f'Consensus build failed. Inspect {tools/"consensus-build.log"}')
-        os.replace(tools/'cometbft',binary)
-        if subprocess.check_output([str(binary),'version'],text=True).strip()!='0.38.26':raise ValueError('Wrong consensus executable version')
+        with tempfile.TemporaryDirectory(dir=tools,prefix='.consensus-') as temporary:
+            build=Path(temporary)
+            for name in ('go.mod','go.sum'):shutil.copy2(manifest/name,build/name)
+            env={**os.environ,'GOBIN':str(build),'GOTOOLCHAIN':'local','GOWORK':'off',
+                 'GOFLAGS':'-mod=readonly','GOMAXPROCS':'2'}
+            with (tools/'consensus-build.log').open('a') as out:
+                result=subprocess.run([str(go),'install','github.com/cometbft/cometbft/cmd/cometbft'],
+                    cwd=build,env=env,stdout=out,stderr=out)
+            if result.returncode:raise ValueError(f'Consensus build failed. Inspect {tools/"consensus-build.log"}')
+            if subprocess.check_output([str(build/'cometbft'),'version'],text=True).strip()!='0.38.26':
+                raise ValueError('Wrong consensus executable version')
+            digest=hashlib.sha256((build/'cometbft').read_bytes()).hexdigest()
+            os.replace(build/'cometbft',binary)
+            (build/'receipt.json').write_text(json.dumps({'build_id':build_id,'sha256':digest,
+                'go_version':GO_VERSION,'cometbft_version':'0.38.26'})+'\n')
+            os.replace(build/'receipt.json',receipt)
         return binary
 
 

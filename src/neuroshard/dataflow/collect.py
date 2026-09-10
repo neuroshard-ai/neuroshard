@@ -14,6 +14,61 @@ def save(path,value):
     finally:os.close(fd)
 
 
+def parquet_rows(paths,start,count):
+    """Read only the requested rows, without asynchronous Arrow file callbacks."""
+    import pyarrow.parquet as parquet
+    for path in paths:
+        with parquet.ParquetFile(path) as reader:
+            if start>=reader.metadata.num_rows:
+                start-=reader.metadata.num_rows
+                continue
+            for batch in reader.iter_batches(batch_size=64,columns=['messages'],use_threads=False):
+                for item in batch.to_pylist():
+                    if start:start-=1;continue
+                    yield item
+                    count-=1
+                    if count==0:return
+
+
+def upstream_rows(config,home,start,count):
+    from huggingface_hub import HfApi,hf_hub_url
+    import requests
+    if not re.fullmatch('[A-Za-z0-9_-]+',config['split']):raise ValueError('Invalid split name')
+    info=HfApi().repo_info(config['repo'],repo_type='dataset',revision=config['revision'],files_metadata=True)
+    if info.sha!=config['revision']:raise ValueError('Upstream revision mismatch')
+    pattern=re.compile(r'data/'+re.escape(config['split'])+r'-[0-9]+-of-[0-9]+\.parquet')
+    files=sorted((f for f in info.siblings if pattern.fullmatch(f.rfilename)),key=lambda f:f.rfilename)
+    if not files:raise ValueError('Pinned source must contain data/SPLIT-N-of-N.parquet files')
+    cache=Path(home)/'upstream';cache.mkdir(exist_ok=True)
+    def paths():
+        for item in files:
+            expected=item.lfs.sha256 if item.lfs else None
+            if not expected or not re.fullmatch('[0-9a-f]{64}',expected):raise ValueError('Parquet source lacks a SHA-256 commitment')
+            if not item.size or item.size>512*1024**2:raise ValueError('Upstream Parquet file exceeds 512 MiB limit')
+            path=cache/(expected+'.parquet')
+            if not path.exists():
+                temporary=path.with_suffix('.part');size=0;hasher=hashlib.sha256()
+                try:
+                    url=hf_hub_url(config['repo'],item.rfilename,repo_type='dataset',revision=config['revision'])
+                    with requests.get(url,stream=True,timeout=(15,120)) as response,temporary.open('wb') as out:
+                        response.raise_for_status()
+                        if not response.url.startswith('https://'):raise ValueError('Insecure upstream redirect')
+                        for chunk in response.iter_content(1024**2):
+                            size+=len(chunk)
+                            if size>item.size:raise ValueError('Upstream file exceeds declared size')
+                            hasher.update(chunk);out.write(chunk)
+                        out.flush();os.fsync(out.fileno())
+                    if size!=item.size or hasher.hexdigest()!=expected:raise ValueError('Upstream Parquet checksum mismatch')
+                    os.replace(temporary,path)
+                finally:temporary.unlink(missing_ok=True)
+            hasher=hashlib.sha256()
+            with path.open('rb') as source:
+                for chunk in iter(lambda:source.read(1024**2),b''):hasher.update(chunk)
+            if path.stat().st_size!=item.size or hasher.hexdigest()!=expected:raise ValueError('Cached Parquet checksum mismatch')
+            yield path
+    yield from parquet_rows(paths(),start,count)
+
+
 def collect(config,home,store,rows=None,render=None):
     home=Path(home);home.mkdir(parents=True,exist_ok=True)
     if not re.fullmatch('[0-9a-f]{40}',config['revision']):raise ValueError('Pin the upstream dataset to a full commit hash')
@@ -36,10 +91,7 @@ def collect(config,home,store,rows=None,render=None):
         if not pending_path.exists():
             count=min(config['batch_documents'],config['max_documents']-progress['cursor'])
             if rows is None:
-                from datasets import load_dataset
-                from pyarrow.dataset import ParquetFragmentScanOptions
-                rows=iter(load_dataset(config['repo'],revision=config['revision'],split=config['split'],streaming=True,
-                    fragment_scan_options=ParquetFragmentScanOptions(pre_buffer=False)).skip(progress['cursor']).take(count))
+                rows=upstream_rows(config,home,progress['cursor'],count)
             if render is None:
                 from transformers import AutoTokenizer
                 model=Path(config['model_dir']);tokenizer_file=model/'tokenizer.json'
@@ -51,13 +103,9 @@ def collect(config,home,store,rows=None,render=None):
             try:
                 for _,item in zip(range(count),rows):records.append({'text':render(item)})
             finally:
-                # A bounded consumer stops before EOF. Release Arrow's streaming
-                # fragments while Python is still alive, not during interpreter shutdown.
+                # Closing the generator also closes an early-exit Parquet reader.
                 close=getattr(rows,'close',None)
                 if close:close()
-                rows=None;close=None
-                import gc
-                gc.collect()
             if not records:return {**progress,'status':'upstream_exhausted'}
             raw=b''.join(canonical(item)+b'\n' for item in records)
             with input_path.open('wb') as f:f.write(raw);f.flush();os.fsync(f.fileno())

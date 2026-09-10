@@ -7,7 +7,9 @@ Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruc
 ## Join
 
 ```bash
-python3 -m pip install --upgrade neuroshard-ai
+python3 -m venv ~/.venvs/neuroshard
+source ~/.venvs/neuroshard/bin/activate
+python -m pip install --upgrade pip setuptools neuroshard-ai
 neuroshard doctor
 neuroshard join
 ```

@@ -105,3 +105,17 @@ def test_collection_does_not_advance_cursor_when_publication_fails(tmp_path):
     assert verify_snapshot(store,result['snapshot'])['unique_documents']==5
     config['max_documents']=5
     assert collect(config,home,store)['status']=='collection_budget_complete'
+
+
+def test_parquet_resume_crosses_file_boundaries_without_duplicate_rows(tmp_path):
+    arrow=pytest.importorskip('pyarrow')
+    import pyarrow.parquet as parquet
+    from neuroshard.dataflow.collect import parquet_rows
+    paths=[]
+    for part,values in enumerate(([0,1,2],[3,4,5,6])):
+        path=tmp_path/f'{part}.parquet'
+        parquet.write_table(arrow.Table.from_pylist([{'messages':[{'role':'user','content':str(i)}]} for i in values]),path,row_group_size=2)
+        paths.append(path)
+    result=list(parquet_rows(paths,2,4))
+    assert [r['messages'][0]['content'] for r in result]==['2','3','4','5']
+    assert list(parquet_rows(paths,7,2))==[]

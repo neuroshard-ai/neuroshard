@@ -48,6 +48,15 @@ def main():
                 child=subprocess.Popen([sys.executable,'-m',*argv],stdout=out,stderr=out,start_new_session=True)
             children.append(child)
         try:
+            # Resume with the release's reviewed dependency graph even when this
+            # home was initialized with an older build of the same Comet version.
+            executable=str(runtime.engine())
+            if current['engine']!=executable:
+                current['engine']=executable
+                temporary=home/'node.json.tmp'
+                with temporary.open('w') as out:
+                    json.dump(current,out);out.flush();os.fsync(out.fileno())
+                os.replace(temporary,home/'node.json')
             launch('launcher',['neuroshard.inference.node','run','--home',str(home)])
             rpc=f'http://127.0.0.1:{current["base_port"]+1}';last_print=0;started=False
             print('Following the native ledger. Ctrl+C stops this node and its worker; keys and history remain.',flush=True)

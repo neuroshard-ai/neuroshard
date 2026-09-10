@@ -48,7 +48,7 @@ Keep a read-only `/reference/v03/api/` proxy to the old gateway while retiring t
 
 Monitor native height progression, model round and serving root, worker receipts, finalized rewards, provider heartbeat, pending inference/expiry, sponsor collateral/budget, collection cursor/status, disk and process RSS. A systemd process marked active is not evidence of training progress or inference settlement. A healthy explorer also does not prove independent consensus ownership.
 
-Rotate `logs/*.log` with copy-truncate or coordinated process reopening; do not rotate or edit native signing state. Native blocks and application databases are authoritative. `explorer.sqlite` is only an index and can be rebuilt from retained blocks after stopping that gateway. Keep historical model/source/data artifacts for replay.
+The launch installs [log rotation](../config/neuroshard-logrotate.conf) on both hosts: daily, or at 25 MiB, retaining seven compressed rotations. Adapt the supplied paths for other homes. Rotate `logs/*.log` with copy-truncate or coordinated process reopening; do not rotate or edit native signing state. Native blocks and application databases are authoritative. `explorer.sqlite` is only an index and can be rebuilt from retained blocks after stopping that gateway. Keep historical model/source/data artifacts for replay.
 
 Restart validators sequentially and confirm continued blocks. Back up the chain home consistently; never start two copies of a validator's keys. A website rollback restores the previous static symlink/proxy config; it does not replace chain data. Restore only code compatible with that genesis. An incompatible protocol change requires a separately specified migration or new network, not a hidden balance reset.
 

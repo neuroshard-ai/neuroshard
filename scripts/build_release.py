@@ -53,7 +53,7 @@ def build(ref, output, wheel=None):
     if wheel:
         with zipfile.ZipFile(wheel) as package:
             for name in package.namelist():
-                if name.startswith('neuroshard/') and name.endswith('.py'):
+                if name.startswith('neuroshard/') and not name.endswith('/'):
                     if package.read(name) != git('show', f'{commit}:src/{name}'):
                         raise ValueError(f'Wheel source differs from release commit: {name}')
         shutil.copy2(wheel, output / wheel.name)

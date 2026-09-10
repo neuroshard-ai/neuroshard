@@ -5,3 +5,4 @@ global-exclude *.pyc
 global-exclude __pycache__
 
 recursive-include src/neuroshard/client/networks *.json
+include src/neuroshard/client/consensus/go.mod src/neuroshard/client/consensus/go.sum

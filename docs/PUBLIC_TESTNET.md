@@ -5,7 +5,9 @@ Release **0.4.0** uses a small pretrained instruction model, native training rew
 ## Install, inspect, join
 
 ```bash
-python3 -m pip install --upgrade neuroshard-ai
+python3 -m venv ~/.venvs/neuroshard
+source ~/.venvs/neuroshard/bin/activate
+python -m pip install --upgrade pip setuptools neuroshard-ai
 neuroshard doctor
 neuroshard join
 ```

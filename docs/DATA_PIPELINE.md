@@ -20,6 +20,8 @@ Objects use SHA-256 of their actual bytes as their name. S3 uploads use `If-None
 
 A SQLite WAL/FULL journal records source identity, cursor, immutable input copy and pending shard bytes. It writes pending intent before upload, and advances the cursor only after upload and the corresponding transaction commit. A process lock prevents concurrent use of one journal. A failed write resumes its pending bytes; reusing the same content address does not overwrite another shard. Local storage uses exclusive immutable creation and fsync.
 
+Upstream files are selected in sorted shard order from the pinned revision and must include SHA-256 metadata. Each file is limited to 512 MiB, downloaded to a local verified cache, and read with synchronous Parquet batches of 64 rows. No background dataset stream survives a bounded invocation. The supported source layout is `data/SPLIT-N-of-N.parquet`.
+
 The outer collector also saves its rendered pending batch and its hash before publication, then advances its source cursor only after the snapshot exists. It recovers that batch without refetching changed upstream contents. A changed source revision requires a new collection home. Shards, documents and each invocation are bounded. The tests include interruption after durable upload but before journal progress, failed publication, concurrent creation, corrupted existing objects and denied S3 access.
 
 S3 is one replaceable storage provider. Snapshot hashes establish content identity, not permanent availability. Mirrors and independent retention are still needed. Operator credentials that can delete objects remain an availability trust boundary; this release does not implement a decentralized storage market.

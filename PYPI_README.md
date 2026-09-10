@@ -11,7 +11,9 @@ or paying providers. Test NEURO has no promised monetary value or mainnet conver
 ## Install and join
 
 ```bash
-python -m pip install --upgrade neuroshard-ai
+python3 -m venv ~/.venvs/neuroshard
+source ~/.venvs/neuroshard/bin/activate
+python -m pip install --upgrade pip setuptools neuroshard-ai
 neuroshard doctor
 neuroshard join
 ```

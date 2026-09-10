@@ -14,7 +14,7 @@ Compatible network: `neuroshard-llm-testnet-1`.
 - Manifest hash: `5118e92e1072a1351719becc46629b16bb5bb2c34c42393dce7d3764697101b4`.
 - Four genesis validators, one operator, two hosts; 90 disclosed genesis NEURO.
 - Maximum 10,000 training tasks; 1 NEURO issuance per accepted task. A 32-token inference request costs 0.033 NEURO including its fee.
-- CometBFT 0.38.26; Linux x86_64; Python 3.10–3.12; pinned CPU profile.
+- CometBFT 0.38.26 with a bundled dependency lock and Go 1.27.1; Linux x86_64; Python 3.10–3.12; pinned CPU profile. Remaining model-library advisory assessments are in [SECURITY.md](SECURITY.md).
 
 [Full protocol](docs/LLM_PROTOCOL.md), [measured evidence](docs/LLM_EXPERIMENTS.md), [model card](docs/MODEL_CARD.md) and [migration/operator guide](docs/PUBLIC_TESTNET.md). Version 0.4.0 is a regular PyPI version so `pip install --upgrade neuroshard-ai` replaces the obsolete 0.2 stable client; its project maturity remains Alpha and the network remains experimental. Old-chain balances are not migrated. Full replay cost, public evaluation overfitting, operator concentration, provider discovery and long-term economics remain limitations.
 
