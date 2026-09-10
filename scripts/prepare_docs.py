@@ -6,7 +6,7 @@ import shutil
 root = Path(__file__).resolve().parents[1]
 files = [*(root / "docs" / name for name in (
     "PUBLIC_TESTNET.md", "MODEL_CARD.md", "API.md", "DEPLOYMENT.md", "PROTOCOL_CANDIDATE_V2.md",
-    "PROTOCOL_EXPERIMENTS.md", "FUNDAMENTALS_REVIEW.md", "RESEARCH_ROADMAP.md")),
+    "LLM_PROTOCOL.md", "LLM_EXPERIMENTS.md", "DATA_PIPELINE.md", "PROTOCOL_EXPERIMENTS.md", "FUNDAMENTALS_REVIEW.md", "RESEARCH_ROADMAP.md")),
     *(root / name for name in ("CONTRIBUTING.md", "GOVERNANCE.md", "SECURITY.md", "RELEASES.md"))]
 target = root / "docs-site/generated"
 target.mkdir(parents=True, exist_ok=True)

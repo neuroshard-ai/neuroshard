@@ -1,6 +1,6 @@
 # Security policy
 
-The supported native release is **0.3.0a1**. Earlier `0.2.x` packages, the archived registration/observer-ledger stack, and historical prototypes are unsupported. This is an experimental testnet; an independent production security audit has not been completed.
+The supported native release is **0.4.0**. Earlier `0.2.x` packages, the archived registration/observer-ledger stack, and historical prototypes are unsupported. This is an experimental testnet; an independent production security audit has not been completed.
 
 Use [GitHub private vulnerability reporting](https://github.com/neuroshard-ai/neuroshard/security/advisories/new), which is enabled for this repository. Include the affected revision, execution profile, impact, and minimal reproduction. Never include real signing keys, credentials, or user records.
 

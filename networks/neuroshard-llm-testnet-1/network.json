@@ -1,0 +1,24 @@
+{
+  "chain_id": "neuroshard-llm-testnet-1",
+  "genesis_sha256": "cf74dba2e15af1c66e893cb7a8b079273e157c5585bd8af15d7194588ba47cb7",
+  "manifest_hash": "5118e92e1072a1351719becc46629b16bb5bb2c34c42393dce7d3764697101b4",
+  "name": "NeuroShard LLM testnet 1",
+  "release": "0.4.0",
+  "genesis_url": "https://neuroshard.com/network/genesis.json",
+  "dataset_url": "https://neuroshard.com/network/dataset.json",
+  "api": "https://neuroshard.com",
+  "rpc": "https://neuroshard.com/rpc",
+  "peers": [
+    "0cfcad1da837f8a3525c17da453d588fce5a1fd3@100.53.139.52:26656"
+  ],
+  "model_mirrors": [
+    "https://neuroshard.com/artifacts/sha256"
+  ],
+  "checkpoint_trust": "Project full node by default; operators may supply an independent height and hash",
+  "operator_disclosure": {
+    "independent_operators": 1,
+    "hosts": 2,
+    "genesis_validators": 4,
+    "public_bootstrap_peers": 1
+  }
+}

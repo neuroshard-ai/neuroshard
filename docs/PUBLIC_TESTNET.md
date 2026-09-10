@@ -1,120 +1,89 @@
-# Native testnet operator guide
+# Join NeuroShard LLM testnet 1
 
-This is an experimental NeuroShard chain with its own CometBFT 0.38.26 consensus, account ledger, training rewards, and bonded validator entry. The supported workload is a 34,976-parameter CPU language model with two worker stages and full verification replay. A website account, registration token, and external settlement chain are unnecessary.
+Release **0.4.0** uses a small pretrained instruction model, native training rewards and NEURO-paid inference. It runs NeuroShard's own CometBFT chain. The [network descriptor](../networks/neuroshard-llm-testnet-1/network.json), [genesis](../networks/neuroshard-llm-testnet-1/genesis.json), [protocol](LLM_PROTOCOL.md) and [model card](MODEL_CARD.md) define this experimental network.
 
-The current public deployment is at https://neuroshard.com/. Its genesis allocations and validators are controlled by one operator across two machines. The network is reachable publicly, but independent ownership and production economic security have not been established. The project sponsor currently offers a bounded 100-task session with a reference stage-0 worker; a stage-1 contributor can check `/work/status` before joining. The sponsor stops on its first failure and does not restart automatically or on boot; availability is not guaranteed. The previous observer ledger and its balances are separate; no migration is defined. Test balances carry no redemption promise.
-
-## Install and join
-
-Use public release `v0.3.0a1`. The older PyPI package and `neuroshard --token ...` command do not join this chain.
+## Install, inspect, join
 
 ```bash
-git clone --branch v0.3.0a1 --depth 1 https://github.com/neuroshard-ai/neuroshard.git
-cd neuroshard
-bash scripts/install_native.sh
+python3 -m pip install --upgrade neuroshard-ai
+neuroshard doctor
+neuroshard join
 ```
 
-The installer uses Linux x86_64, Python 3.10–3.12, a project-local virtual environment, pinned CPU dependencies, checksum-verified Go 1.27.1, and CometBFT 0.38.26. Ubuntu may need `sudo apt install python3-venv curl`. It creates no accounts or validator keys. The recorded machines have four vCPUs and 16 GiB RAM; resource requirements for prolonged public load remain unmeasured.
+If your operating system manages its Python installation, use a virtual environment or `pipx install neuroshard-ai`; do not override the OS package manager. Full nodes require Linux x86_64 and Python 3.10–3.12. Allow 8 GiB RAM and 5 GiB free disk initially; the two tested hosts have 16 GiB RAM. History grows, so monitor disk space. Wallet and remote chat do not require the neural runtime.
 
-Obtain `genesis.json`, its SHA-256 digest, and a public peer address from the release announcement and compare them independently. The website's Join page supplies the current values. Never substitute a digest fetched from an unrelated node. Every source/numerical change requires a compatible release; this candidate has no in-place consensus upgrade protocol.
+The small client installs a separate pinned CPU environment on explicit `join`/`setup`, prepares CometBFT with a checksum-verified Go toolchain, downloads hash-checked model/data files, generates local keys, checks numerical conformance and replays the native ledger. It then offers stage 1 work to the project sponsor. The first setup can take several minutes. Status reports show synchronization, round and balance; rewards require a finalized complete task.
+
+No registration, starting balance or inbound worker port is required. Outbound HTTPS connects to the sponsor; native TCP connects to peers. Listen on TCP 26656 if you want to accept inbound peers. RPC and application gRPC stay on loopback. The default node/key home is `~/.neuroshard/llm-testnet`. Runtime and model caches are under `~/.neuroshard`. Set `NEUROSHARD_STATE_DIR` before installing/starting to use another root.
+
+Leave `join` running to contribute. Ctrl+C stops its node and worker while retaining keys and history. Resume with `neuroshard start`. Default training cadence is roughly five minutes plus execution time; assignments depend on sponsor availability and a finite attempt budget. Operator fallback workers keep both stages available and yield to available public workers. This selection policy is not a Sybil-resistant allocation mechanism.
+
+## Keys, balances and inference
+
+In another terminal:
 
 ```bash
-venv_build/bin/python scripts/neuroshard_chain.py init \
-  --home ~/.neuroshard/node \
-  --genesis genesis.json \
-  --genesis-sha256 PUBLISHED_SHA256 \
-  --peer NODE_ID@PUBLIC_HOST:26656
-venv_build/bin/python scripts/neuroshard_chain.py run --home ~/.neuroshard/node
+neuroshard status
+neuroshard wallet balance
+neuroshard wallet export ./neuroshard-key.json
+neuroshard chat "What is the capital of France?" --max-tokens 32 --max-price 0.1
 ```
 
-`init` verifies the exact genesis bytes, source/data manifest, and numerical conformance before starting. It refuses to replace an initialized node. Account, P2P, and consensus keys are generated locally. A full node starts with zero balance and can replay all blocks without staking. The runtime launches and monitors consensus, the application, and a bounded ledger gateway; component failure terminates the group for supervised restart.
+The backup contains the private native seed; anyone with it can spend that account's funds. The CLI never prints it. Keep an offline private copy. `neuroshard wallet import FILE --home NEW_HOME` restores an account into a new home. This does not restore validator signing state; validators require their separate consistent node backup. Never run a second validator with copied live consensus keys.
 
-For a genesis older than the evidence time horizon, also supply `--trusted-height H --trusted-hash BLOCK_HASH` from a **recent independently trusted checkpoint**. The node checks that block after replay and stops on a mismatch. The operator must establish the checkpoint's authenticity and recency; the software cannot infer either from the first peer that answers. Synchronization replays from genesis; snapshots and cryptographic account inclusion proofs are not implemented.
+Import the same account backup at [the inference page](https://neuroshard.com/chat) to spend worker rewards in the browser. The page retains keys only in memory and stores only pending request IDs in session storage. Reloading requires reimport. The website code is part of your signing trust boundary; the CLI with your own RPC avoids relying on the website to sign.
 
-Port defaults:
+A 32-token request currently costs 0.033 NEURO including a 0.001 submission fee. This is a fixed price for the requested output limit, even if EOS finishes early. Inference locks its budget, pays only after validators reproduce the output, and unlocks the budget if the provider misses its block deadline. The fee remains spent. All prompts and responses are public.
 
-| Port | Binding and purpose |
-|---|---|
-| TCP 26656 | Public native P2P; enable in host/cloud firewall when accepting inbound peers |
-| TCP 26657 | Loopback native RPC |
-| TCP 26658 | Loopback application gRPC |
-| TCP 26659 | Loopback bounded ledger gateway; expose through HTTPS if desired |
-| TCP 26660 | Optional loopback sponsor service; expose `/work/` through HTTPS |
-
-Use `--advertise YOUR_PUBLIC_HOST` when reachable from outside. PEX is enabled; initial peer addresses are connectivity hints. `--private-network` permits private addresses and multiple peers per IP for local experiments; public operators should omit it. The two-machine acceptance experiment explicitly uses that option for collocated validators while dialing the remote public peer port directly.
-
-## Contribute computation
-
-First run a full node so assignments can be checked against your own accepted chain. Choose an available sponsor URL. A sponsor supplies task reservation collateral; a worker needs no initial tokens and opens no inbound worker port.
+The client saves its signed request before broadcast and displays its immutable request ID. If the connection fails or settlement is pending, inspect the same request before paying again:
 
 ```bash
-venv_build/bin/python scripts/neuroshard_work.py worker \
-  --home ~/.neuroshard/node --stage 0 \
-  --coordinator https://SPONSOR_HOST
+neuroshard request REQUEST_ID
+neuroshard transfer --to RECIPIENT_PUBLIC_KEY --amount 0.1
 ```
 
-Use `--max-tasks 1` for a trial that exits after returning one stage gradient; payment still requires the complete task to finalize. A second worker supplies stage 1. Both stages can be operated by the same account; total task rewards remain capped. The worker polls over HTTPS, checks the sponsor signature and its own node's finalized lease, model, batch, assigned public key, stage, and expiry, computes, and returns signed results. Durable per-operation records reuse completed responses after retries and refuse changed requests or an interrupted computation under the same lease. A process lock prevents duplicate workers for the same home/stage. A new valid lease is required after an interrupted computation.
+The API retains the latest 128 completed/expired requests; older results require retained native history. Transfer submission is not a claim of final acceptance; inspect its block or account nonce.
 
-Anyone with sufficient liquid balance can run a sponsor:
+## Other roles and independent verification
 
 ```bash
-venv_build/bin/python scripts/neuroshard_work.py sponsor \
-  --home ~/.neuroshard/node --tasks 10 --port 26660
+neuroshard join --role observer
+neuroshard join --role provider
+neuroshard work --stage 0 --coordinator https://YOUR_SPONSOR
+neuroshard serve
+neuroshard chat "Hello" --provider PROVIDER_PUBLIC_KEY
 ```
 
-The listener is on loopback; terminate TLS at your reverse proxy and forward `/work/` with a 2 MB request limit. Local tests may use `http://127.0.0.1:26660`. Use `--wait-seconds 0` to wait indefinitely for workers while holding no reservation. `/work/status` reports recent workers per stage and the remaining task budget. The sponsor attempts at most the specified number of reservations and stops on the first error. Do not attach an unconditional service restart policy that silently resets this spending limit.
+`work` and `serve` use an already running local node. An inference provider receives jobs only when customers select its key; starting a provider does not automatically list it on the project website. Use distinct homes/identities when running multiple instances and distinct base ports. Do not mix two processes that spend from the same account without coordinating nonces.
 
-The coordinator has a bounded, expiring worker registry and one active task. It can select or exclude workers, and can withhold submission. It cannot mint rewards or bypass validator replay. Workers that withhold results can burn the sponsor's reservation bond; assignments provide no unconditional payment guarantee. Joining a sponsor is permissionless, but fair access, Sybil-resistant scheduling, and credit risk are unresolved. Independent sponsor operators and endpoint discovery remain necessary for a broader market.
-
-## Balances and validation
-
-All CLI amounts are integer atoms: **1 NEURO = 1,000,000 atoms**.
+The bundled descriptor pins chain `neuroshard-llm-testnet-1` and genesis SHA-256 `cf74dba2e15af1c66e893cb7a8b079273e157c5585bd8af15d7194588ba47cb7`. Compare these with the public release. Startup uses the project's current height/hash as a checkpoint by default. An old stake history needs a recent trusted checkpoint; for independent operation obtain it from independently trusted operators and supply:
 
 ```bash
-venv_build/bin/python scripts/neuroshard_chain.py account --home ~/.neuroshard/node
-venv_build/bin/python scripts/neuroshard_chain.py transfer --home ~/.neuroshard/node \
-  --to RECIPIENT_COMPRESSED_PUBLIC_KEY --amount 1000000
-venv_build/bin/python scripts/neuroshard_chain.py bond --home ~/.neuroshard/node --amount 250000
-venv_build/bin/python scripts/neuroshard_chain.py unbond --home ~/.neuroshard/node
-venv_build/bin/python scripts/neuroshard_chain.py withdraw --home ~/.neuroshard/node
+neuroshard join --trusted-height HEIGHT --trusted-hash BLOCK_HASH
 ```
 
-The CLI signs locally. `--rpc https://HOST/rpc` can relay a signed transaction through another gateway, with chain identity checked, but remote nonce/state reads are trusted observations. Prefer your own node. Bonding requires the node's consensus-key possession proof and liquid balance for the bond plus fee. Vote only with one running copy of a consensus key. Preserve CometBFT's signing state across restarts; restoring an old signing-state backup and signing again can create equivocation.
+A custom `--network-file` must contain the full reviewed descriptor; `--rpc` selects another HTTP RPC for wallet/chat reads and submissions. Full-node execution still uses its own local native RPC. A public RPC is a server's view, without account proofs; a local full node independently replays history. A genesis download alone is not a solution to long-range stake-history attacks.
 
-The `testnet` profile is committed in genesis and differs from the accelerated `lab` profile:
+## Bonding and native operator tools
 
-| Parameter | Testnet | Lab |
-|---|---:|---:|
-| Membership epoch | 60 blocks | 8 blocks |
-| Minimum activation scheduling delay | 60 blocks | 4 blocks |
-| Evidence block age | 172,800 blocks | 24 blocks |
-| Evidence time age | 172,800 seconds | 6 seconds |
-| Task lease | 120 blocks | 16 blocks |
-| Maximum rewarded training tasks | 100,000 | 1,000 |
-
-Common values: 1,000-atom transaction fee, 250,000-atom voting unit, 2,000,000-atom reservation bond, and 1,000,000 newly issued atoms per accepted training step. Each worker receives 400,000 atoms; 200,000 enter deferred verifier settlement. Withdrawal requires both block and time deadlines to pass after effective removal, plus the protocol's inclusion margin. The block deadline can make withdrawal substantially longer than 48 hours. The finite issuance cap and initial allocation are experiments, not a production supply policy.
-
-## Operate and recover
-
-A service template is in `config/neuroshard-native.service`. Adjust the checkout/home/user paths before installing it. Run under an ordinary account. Logs and state stay under the node home. Monitor `/healthz`, component exits, disk growth, peer connectivity, and observed block/round progress. The gateway reports a stalled chain after 30 seconds without a new block; this is an operational signal, not a consensus timeout. Public gateway traffic is bounded; its in-process rate limit counts proxy connections together when all clients arrive through one reverse proxy.
-
-Keep an offline copy of the release, exact genesis, and encrypted backups of account keys. Stop the complete service before a consistent state backup. Restore the application database, CometBFT data, and signing state together, on one machine only. Replaying a nonvalidator from genesis is safer than trying to combine mismatched databases. Never delete validator signing state to force a restart. No emergency administrator can rewrite balances or approve an invalid update.
-
-The preview uses an isolated nginx path and its own native gateway. `config/native-preview.nginx.conf` documents the route. The old homepage's Docker frontend, account database, tracker, and unrelated host services are still running. Replacing the root website and publishing the GitHub release are separate release actions after review of the candidate.
-
-## Reproduce the checks
+The lightweight client handles onboarding and payments. Advanced native tools run in the installed CPU environment:
 
 ```bash
-ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
-  venv_build/bin/python -m pytest -q tests/test_verified_demo.py \
-  tests/test_protocol_candidate.py tests/test_public_node.py tests/test_outbound_work.py
-
-venv_build/bin/python scripts/check_public_network.py \
-  --host YOUR_SSH_ALIAS --peer-host PUBLIC_IPV4 \
-  --remote-root /home/ubuntu/neuroshard-lab \
-  --output docs/eval/results/public_network_candidate.json
+~/.neuroshard/runtimes/0.4.0/bin/neuroshard-chain --help
+~/.neuroshard/runtimes/0.4.0/bin/neuroshard-work --help
 ```
 
-The network runner requires the CPU runtime and pinned engine on both hosts and an open remote TCP 26656. SSH is used for setup and process administration; native consensus connects directly to the public peer address. Without `--keep-running`, the runner stops its own processes after testing.
+The `bond`, `unbond`, `withdraw`, `account` and `status` commands operate on native accounts; amounts in these advanced commands are integer atoms. Use the same node home and inspect their help for arguments. Use `neuroshard start` for this LLM profile: the older `neuroshard-chain init/run` commands are for the v0.3 reference profile. Bonding uses a minimum unit of 0.25 NEURO, a consensus-key possession proof and delayed activation. Read [the protocol](LLM_PROTOCOL.md) before becoming a validator, especially evidence windows and withdrawal. The launch validators are controlled by one operator; permissionless entry does not itself establish independent ownership.
 
-The [protocol](PROTOCOL_CANDIDATE_V2.md) and [experiment report](PROTOCOL_EXPERIMENTS.md) distinguish execution verification from economic utility. Full replay, single-task scheduling, full-model storage at validators, growing account/history state, concentrated ownership, and finite CPU conformance remain limits of this candidate. An independent security review, multiple independent operators, measured sustained load, adversarial network tests, a release-signing/checkpoint policy, and a defensible public allocation are required before a production launch.
+## Failures and recovery
+
+- Runtime installation: inspect `~/.neuroshard/runtimes/0.4.0/install.log`, fix disk/network errors and rerun `neuroshard setup`. Installation is locked against concurrent setup.
+- Consensus build: inspect `~/.neuroshard/tools/consensus-build.log`. Pinned Go and module versions are required.
+- Startup/conformance: inspect the node home's `logs/`. Never bypass a failed profile or checkpoint check.
+- No work: inspect [sponsor status](https://neuroshard.com/work/status), the node's sync state and `logs/worker.log`. A returned receipt can still be pending payment. A failed sponsor lease pays no worker reward.
+- Inference unavailable: inspect [provider status](https://neuroshard.com/api/inference). Do not submit repeated payments to recover an uncertain request.
+- Restart: preserve `account.key`, `config/`, `data/`, `candidate.sqlite` and associated WAL consistently. Replay history from peers if rebuilding; preserve validator signing state. Do not edit balances or reset nonces.
+
+## Earlier clients and chains
+
+Version 0.2.x used registration tokens and an observer ledger. Upgrading replaces that client; old credentials and balances do not migrate. Version 0.3's 34,976-parameter native reference chain is also separate. Its [historical instructions](REFERENCE_NODE_V03.md) describe that release, and its [network bundle](../networks/neuroshard-stage-8i5ghxq5) remains in Git. TCP 26656 on the public seed now serves the new LLM chain; old peers must not assume the same address identifies the old network. A retained reference explorer is at `/reference/v03/api/network` on neuroshard.com. Never initialize a different chain in an existing home.

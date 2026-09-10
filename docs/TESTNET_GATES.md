@@ -1,188 +1,21 @@
-# Testnet Gates
+# Current release gates
 
-NeuroShard should move toward public participation through explicit promotion
-gates. Each gate should produce a JSON report and a short human summary. Do not
-advance a gate because it looked good in a terminal; advance it because the
-report passed and the logs explain any known warnings.
+These gates apply to the native LLM profile in 0.4.0. Historical Docker/tracker/PoNW checks belong to retired prototypes; they are not evidence for this chain.
 
-## Current Status
+## Evidence required for the experimental release
 
-The following gates have passed in local development:
+- Exact model, tokenizer, source, dataset and three-step numerical commitments agree on the two tested hosts.
+- Four native validators and a fresh worker agree on blocks; training earns NEURO and the worker spends earned NEURO on a replay-verified response from the promoted adapter.
+- Accounting rejects locked-fund spending, wrong provider/output, replay, malformed envelopes and queue overflow; expiry refunds the budget without minting money.
+- Ingestion survives interrupted upload/publication and refuses corrupted content or unavailable S3 access; old mutable objects remain preserved.
+- A wheel installed outside the source checkout supports the minimal CLI; onboarding initializes a separate node without registration. The public PyPI version must be independently checked after upload.
+- Browser signatures verify with native Python; zero balance cannot pay; uncertain submission retains the request ID. Site/docs build, navigation and failure behavior pass.
+- Pinned services, public TCP peer, native training, provider settlement and the bounded data timer are checked after deployment. Restart tests preserve progress and budgets.
 
-- Local smoke gate
-- Local tiny training gate
-- Docker LAN 2-node gate
-- Docker LAN 3-node gate
-- Docker LAN 3-node 15-minute soak
-- Docker LAN churn gate
-- Docker LAN restart recovery gate
+Measured results and their dates belong in [LLM experiments](LLM_EXPERIMENTS.md), including failures and limitations. Passing a fixture test is not a live-network result; an uploaded package is not a verified fresh install.
 
-These results validate local protocol mechanics. They are not a production
-launch signal yet.
+## Still required before a production network claim
 
-## Gate A: Local Smoke
+Independent validator ownership and bootstrap operators; extended public load and Byzantine/network-partition testing; sustainable sponsor/work allocation and provider discovery; robust evaluation against overfitting and poisoning; economical verification covering forward, backward and optimizer; reliable data/history availability; independent security review; transparent protocol/release/checkpoint governance and a justified long-term monetary policy.
 
-Purpose: prove node startup and basic network services.
-
-Pass criteria:
-
-- all configured nodes online
-- dashboards reachable
-- tracker discovery works
-- no unexpected crashes
-- uptime PoNW can accrue
-
-## Gate B: Local Tiny Training
-
-Purpose: prove tiny synthetic training and training PoNW.
-
-Pass criteria:
-
-- all configured nodes online
-- required nodes enter training
-- total steps exceed threshold
-- loss is finite
-- training PoNW rewards accrue
-- no unexpected crashes
-
-## Gate C: Docker LAN
-
-Purpose: prove separate container identities can discover and train over a
-Docker bridge network.
-
-Pass criteria:
-
-- all configured nodes online
-- all configured nodes training
-- peer count reaches expected graph size
-- total steps exceed threshold
-- PoNW proofs/rewards continue
-- no unexpected crashes
-
-## Gate D: Soak
-
-Purpose: prove the network remains stable over a longer run.
-
-Suggested first command:
-
-```bash
-python scripts/lan_gate.py --nodes 3 --duration 900 --report reports/lan-gate-3node-15min.json --check \
-  --min-training-nodes 3 --min-total-steps 1500 --min-max-peers 2
-```
-
-Pass criteria:
-
-- no node exits unexpectedly
-- steps continue increasing
-- rewards continue increasing
-- peer count remains stable
-
-## Gate E: Churn
-
-Purpose: prove remaining nodes continue after one expected node failure.
-
-Suggested command:
-
-```bash
-python scripts/lan_gate.py --nodes 3 --duration 300 --poll-interval 5 \
-  --report reports/lan-gate-churn-5min.json --check \
-  --churn-at 120 --churn-node 2 \
-  --min-online 2 --min-training-nodes 2 \
-  --min-total-steps 800 --min-max-peers 1 \
-  --min-post-churn-steps-delta 300
-```
-
-Pass criteria:
-
-- churn event is recorded
-- killed node is recorded as expected down
-- unexpected crash count remains zero
-- remaining nodes stay online
-- remaining nodes keep training after churn
-- post-churn step delta exceeds threshold
-
-## Gate F: Restart Recovery
-
-Purpose: prove a stopped node can rejoin.
-
-Suggested command:
-
-```bash
-python scripts/lan_gate.py --nodes 3 --duration 600 --poll-interval 5 \
-  --report reports/lan-gate-restart-10min.json --check \
-  --churn-at 180 --churn-node 2 --restart-after 90 \
-  --min-online 3 --min-training-nodes 3 \
-  --min-total-steps 1500 --min-max-peers 2 \
-  --min-post-churn-steps-delta 500 \
-  --min-post-restart-steps-delta 300
-```
-
-Pass criteria:
-
-- stopped node restarts
-- final online count returns to full size
-- final training count returns to full size
-- peer count recovers
-- total steps keep increasing after restart
-
-## Gate G: Real LAN
-
-Purpose: move from Docker bridge to actual machines on one LAN.
-
-Suggested setup:
-
-- 3 to 5 CPU-only machines or small VMs
-- one tracker
-- tiny local-test mode first
-- test tokens only
-- reports collected from the coordinator
-
-Pass criteria:
-
-- same as Docker LAN
-- no reliance on Docker container DNS
-- node addresses resolve across real hosts
-
-## Gate H: Regional Cloud
-
-Purpose: prove basic WAN behavior without inviting the public.
-
-Suggested setup:
-
-- 5 to 20 small CPU instances
-- at least 2 regions
-- tiny mode first
-- longer soak
-- churn and restart during the run
-
-Pass criteria:
-
-- successful peer discovery across regions
-- proof gossip succeeds across regions
-- nodes remain stable for hours
-- bandwidth and memory are measured
-
-## Gate I: Closed Alpha
-
-Purpose: invite trusted operators without production claims.
-
-Rules:
-
-- test tokens only
-- no useful-model guarantee
-- no real economic value promise
-- publish known limitations
-- collect reports and logs from each participant
-
-## Do Not Claim Yet
-
-Until real-data, WAN, adversarial, and economic tests pass, do not claim:
-
-- useful LLM quality
-- production training economics
-- Sybil resistance
-- full trustless verification
-- nationwide readiness
-
-The correct public framing is: NeuroShard is testing decentralized training
-mechanics through staged testnets.
+The initial four validators share one operator across two hosts. Full replay duplicates neural work. The four public validation sequences are too small to establish broad quality. These remain limitations even when every experimental release check passes.

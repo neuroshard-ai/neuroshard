@@ -1,5 +1,23 @@
 # Native releases
 
+## 0.4.0 — LLM training and native paid inference (experimental)
+
+The old PyPI registration client is replaced by a lightweight local-key client: `neuroshard doctor`, `join`, `wallet`, `chat` and request recovery. Joining installs a separate pinned CPU runtime and follows NeuroShard's own consensus; it needs no starting token balance. The website adds browser signing and paid inference using the same account backup.
+
+The new execution profile freezes SmolLM2-135M-Instruct and trains a 4,608-parameter residual adapter. Four fixed public validation sequences gate serving promotion. Native inference jobs lock an explicit customer budget, pay only after full replay and refund the budget on expiry. Training and inference are separate job lifecycles; inference creates no tokens.
+
+Immutable S3 ingestion replaces the old mutable-ID writer. A pinned, bounded collector journals progress, uses conditional content-addressed creation and does not autoactivate new data in an existing chain. Legacy conflicting objects are preserved separately and remain quarantined.
+
+Compatible network: `neuroshard-llm-testnet-1`.
+
+- Genesis SHA-256: `cf74dba2e15af1c66e893cb7a8b079273e157c5585bd8af15d7194588ba47cb7`.
+- Manifest hash: `5118e92e1072a1351719becc46629b16bb5bb2c34c42393dce7d3764697101b4`.
+- Four genesis validators, one operator, two hosts; 90 disclosed genesis NEURO.
+- Maximum 10,000 training tasks; 1 NEURO issuance per accepted task. A 32-token inference request costs 0.033 NEURO including its fee.
+- CometBFT 0.38.26; Linux x86_64; Python 3.10–3.12; pinned CPU profile.
+
+[Full protocol](docs/LLM_PROTOCOL.md), [measured evidence](docs/LLM_EXPERIMENTS.md), [model card](docs/MODEL_CARD.md) and [migration/operator guide](docs/PUBLIC_TESTNET.md). Version 0.4.0 is a regular PyPI version so `pip install --upgrade neuroshard-ai` replaces the obsolete 0.2 stable client; its project maturity remains Alpha and the network remains experimental. Old-chain balances are not migrated. Full replay cost, public evaluation overfitting, operator concentration, provider discovery and long-term economics remain limitations.
+
 ## 0.3.0a1 — experimental public testnet
 
 This release replaces the observer-ledger and account-registration deployment with native consensus, local keys, two-stage CPU training, and verified-work issuance. The application, explorer, model view, documentation, paper, experiments, and supported operator tools are developed in one public repository.
@@ -23,6 +41,6 @@ Limits remain explicit: 34,976 parameters, full replay at every validator, conce
 
 1. Run native tests, wheel installation/conformance, website browser checks, docs build, and secret scan.
 2. Build from the exact public revision. Compare manifest and genesis. Change chain/release when consensus compatibility changes.
-3. Publish a named tag, checksummed assets, and concrete validation results. Mark experimental releases as prereleases.
+3. Publish a named tag, checksummed assets, and concrete validation results. Mark network maturity explicitly. PyPI client version ordering must allow users to leave obsolete stable clients; it does not establish production network maturity.
 4. Deploy from pinned directories. Upgrade validators sequentially, preserving signing state. Never auto-deploy from `main`.
 5. Verify a fresh public checkout and node/worker trial. Retain web/service rollback records.

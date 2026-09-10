@@ -1,51 +1,54 @@
 # NeuroShard
 
-NeuroShard is a research project toward a decentralized network that trains language models and rewards verified computation on its own blockchain.
+Contribute neural computation, earn native **NEURO**, and use it to pay for language-model responses. NeuroShard runs its own blockchain; keys stay on your machine and participation requires no website registration.
 
-The current native release combines **NeuroShard-native CometBFT consensus**, a public ledger, two-stage neural training, full verification replay, token rewards, earned-stake validator entry, delayed exits, and equivocation penalties. Full nodes generate their keys locally and join without a website account or registration token. Outbound workers can execute sponsored tasks without an initial balance or an inbound worker port.
+Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruct with a 4,608-parameter trainable adapter**. Native validators replay training and inference before accepting work or paying providers. The pretrained backbone is frozen. The initial validators share one operator across two hosts; this is a working protocol baseline, with economical large-model verification and independent ownership still to solve.
 
-The supported model has 34,976 parameters and runs on a pinned CPU profile. The deployment is experimental, with one operator currently controlling the test validators. Economical LLM-scale verification, independent ownership, fair worker assignment, sustained public load, and production monetary policy remain open work.
-
-## Start here
-
-Read the [native operator guide](docs/PUBLIC_TESTNET.md) for installation, genesis verification, joining, training, validation, and recovery. The public application is [neuroshard.com](https://neuroshard.com), with [documentation](https://docs.neuroshard.com) and [releases](https://github.com/neuroshard-ai/neuroshard/releases).
+## Join
 
 ```bash
-git clone --branch v0.3.0a1 --depth 1 https://github.com/neuroshard-ai/neuroshard.git
-cd neuroshard
-bash scripts/install_native.sh
-venv_build/bin/python scripts/neuroshard_chain.py --help
-venv_build/bin/python scripts/neuroshard_work.py --help
+python3 -m pip install --upgrade neuroshard-ai
+neuroshard doctor
+neuroshard join
 ```
 
-Use the reviewed source revision matching your network's genesis. The installer targets Linux x86_64 and Python 3.10–3.12. The old PyPI package, `neuroshard --token ...` command, and observer ledger belong to an earlier prototype and do not connect to this native chain. No balance migration is defined.
+The lightweight client installs a separate pinned CPU runtime when you join, verifies the model/data/genesis, follows the native ledger and offers stage 1 work. Full nodes require Linux x86_64, Python 3.10–3.12, approximately 8 GiB RAM and 5 GiB initial free disk. Wallet and remote inference commands do not download the model. Leave `join` running; Ctrl+C preserves keys and history. Use a Python virtual environment if your OS manages the system Python.
+
+After an accepted task earns NEURO, use another terminal:
+
+```bash
+neuroshard wallet balance
+neuroshard chat "What is the capital of France?" --max-price 0.1
+neuroshard wallet export neuroshard-key.json
+```
+
+Keep the backup private. It also works in the [browser inference interface](https://neuroshard.com/chat). **Prompts and responses are public.** A 32-token request costs 0.033 NEURO including its submission fee; expiry unlocks its budget but not the fee. Test balances have no promised monetary value or migration to a future chain.
+
+[Website and ledger](https://neuroshard.com) · [PyPI](https://pypi.org/project/neuroshard-ai/) · [Operator guide](docs/PUBLIC_TESTNET.md) · [Documentation](https://docs.neuroshard.com) · [Releases](https://github.com/neuroshard-ai/neuroshard/releases)
 
 ## Protocol and evidence
 
-- [Protocol candidate v2](docs/PROTOCOL_CANDIDATE_V2.md): accepted transactions, execution rules, issuance, evidence, exit, and threat assumptions.
-- [Experiments and reproduction](docs/PROTOCOL_EXPERIMENTS.md): native admission, cross-machine numerical conformance, real equivocation evidence, verification-cost experiments, and their limits.
-- [Five-page manuscript](docs/FINE2026_neuroshard_short.pdf) and [source](docs/FINE2026_neuroshard_short.tex): earlier research formulation; new deployment experiments are documented separately before integration into the paper.
-- [Fundamentals review](docs/FUNDAMENTALS_REVIEW.md) and [research roadmap](docs/RESEARCH_ROADMAP.md).
+- [Complete LLM protocol](docs/LLM_PROTOCOL.md): native consensus and bonds, training leases/rewards, serving promotion, paid inference, locks/refunds, limits and assumptions.
+- [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
+- [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).
+- [Network/genesis/allocations](networks/neuroshard-llm-testnet-1) and [research roadmap](docs/RESEARCH_ROADMAP.md).
+- Earlier [v2 reference protocol](docs/PROTOCOL_CANDIDATE_V2.md), [experiments](docs/PROTOCOL_EXPERIMENTS.md), and [five-page research manuscript](docs/FINE2026_neuroshard_short.pdf), retained as historical research.
 
-Signatures identify the worker that made a claim. Validators independently replay the prescribed computation to verify it. Rewarding a correct training step does not prove that it improved model quality, that a particular physical processor performed it, or that mining is economically sustainable.
+Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. Four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. The initial allocation is 90 NEURO and the profile caps training issuance at 10,000 tasks. See the specification for these explicit limits.
 
-## Check the implementation
+## Develop and verify
 
 ```bash
-ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
-  venv_build/bin/python -m pytest -q tests/test_verified_demo.py \
-  tests/test_protocol_candidate.py tests/test_public_node.py tests/test_outbound_work.py
+python3 -m venv venv_build
+venv_build/bin/python -m pip install -r docs/llm-requirements.txt '.[dev,data]'
+ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
+  venv_build/bin/python -m pytest -q
 ```
 
-The reference code is in `src/neuroshard/demo`, the candidate state machine in `src/neuroshard/lab`, public node and worker tooling in `src/neuroshard/publicnet`, and the replacement site in `website`. Earlier implementation modules are retained for research history; the native entry points above define the supported deployment path.
-
-[Apache 2.0 license](LICENSE).
+The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. `website` and `docs-site` build the public interfaces. Earlier modules are retained for research history; they do not define the current public entry points.
 
 ## One open-source project
 
-All supported code, website, documentation, paper, experiments, and deployment templates live here. Develop directly in this repository; there is no private-to-public sync workflow. The former private repository is retained as a recovery archive.
+Source, website, docs, experiments and paper live in this repository. There is no private-to-public sync workflow. Versions 0.2.x and 0.3's tiny reference chain are separate histories; registration tokens and old balances do not migrate. Never reuse an initialized node home for a different genesis.
 
-- [Contribute](CONTRIBUTING.md), [governance](GOVERNANCE.md), and [security](SECURITY.md).
-- [Model card](docs/MODEL_CARD.md), [API](docs/API.md), and [deployment](docs/DEPLOYMENT.md).
-- [Release notes](RELEASES.md) and [migration inventory](docs/migration-inventory.json).
-- [Historical prototypes](legacy/README.md), outside the supported deployment and test path.
+[Contribute](CONTRIBUTING.md) · [Governance](GOVERNANCE.md) · [Security](SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) · [API](docs/API.md) · [Release notes](RELEASES.md) · [Third-party provenance](THIRD_PARTY.md) · [Apache 2.0](LICENSE)

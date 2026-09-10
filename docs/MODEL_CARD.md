@@ -1,29 +1,27 @@
-# Native reference model
+# NeuroShard LLM testnet model card
 
-The first public release trains a **34,976-parameter byte-level language model** to test prescribed computation, verification, and native settlement. It is not a general-purpose assistant or useful production LLM.
+The release serves **SmolLM2-135M-Instruct plus a NeuroShard residual adapter**. It can produce short instruction responses, but its capability is limited. This is a working CPU training/payment experiment, not a production assistant.
 
-| Property | Current profile |
+| Component | Current profile |
 |---|---|
-| Architecture | NeuroLLM, 2 decoder layers, hidden size 32, 4 attention heads, 2 KV heads, intermediate size 64 |
-| Vocabulary | 256 byte values |
-| Training | SGD without momentum, learning rate 0.1; 4 sequences of 32 bytes per update |
-| Arithmetic | Linux x86_64, PyTorch 2.9.1+cpu, float32, single thread, fixed ATen/MKL dispatch, MKLDNN off |
-| Pipeline | Two CPU stages; validators replay the full update |
-| Data | Tiny Shakespeare; [provenance](../THIRD_PARTY.md) |
-| Corpus SHA-256 | `86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed` |
+| Base model | HuggingFaceTB/SmolLM2-135M-Instruct, revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`, Apache-2.0 |
+| Frozen parameters | 134,515,008 |
+| Trainable parameters | 4,608; rank-4 residual adapter after pretrained final normalization |
+| Total parameters | 134,519,616 |
+| Update | Float32 SGD, learning rate 0.02, gradient norm clipped to 1, one 64-token sequence |
+| Execution | One CPU thread, eager attention, fixed numerical conformance checks |
+| Source data | Smol-SmolTalk, revision `f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc`, Apache-2.0 |
+| Initial snapshot | 512 distinct documents, 487 train / 25 validation; eight immutable shards |
+| Execution sample | 128 training and four validation sequences of 64 tokens |
+| Generation | Greedy, maximum 256 input tokens and 64 new tokens; short responses can end early |
+| Serving gate | Promote the adapter only when mean loss on the four fixed validation sequences improves |
 
-Genesis binds the corpus, configuration, conformance vectors, and consensus source. Initialization uses the fixed seed in `demo/work.py`. Training batches use the first 95% of bytes and a round-specific seed; the final 5% is reserved for the reference evaluator. This is a small reproducibility exercise, not a broad benchmark.
+All asset hashes, source commitments and vectors are in the [genesis manifest](../networks/neuroshard-llm-testnet-1/genesis.json). Downloads use safetensors and verified files; pretrained weights are distributed separately from the client. See [third-party provenance](../THIRD_PARTY.md) and [the protocol](LLM_PROTOCOL.md) for exact execution semantics.
 
-## Reading progress
+The initial adapter validation loss was 1.7775393724. In the recorded three-update two-host experiment it decreased to approximately 1.77636 (the hexadecimal exact value is in the report). This is a very small, fixed public evaluation set: it can be overfit and does not establish generalization, safety or meaningful broad model improvement. Training rewards pay correct prescribed computation even when a checkpoint is not promoted.
 
-The model page shows the latest accepted round and root. History is reconstructed from successful training submissions in native blocks and execution results. Plotted losses are training minibatch cross-entropies **before** each update. Batches change between steps. Decreasing losses do not establish held-out quality, generalization, economic value, or poisoning resistance.
+The standalone base-model probe answered the France/Paris question and produced a coherent blockchain definition, but failed a polite-rewrite instruction. Those examples are retained in [experiment records](LLM_EXPERIMENTS.md). Do not report only the successful examples. A correct native receipt establishes the specified computation, not the truth or usefulness of the generated text.
 
-Historical experiment files may describe different disposable chains. Their validation losses are not live measurements of this chain. Held-out evaluation is available through local research tooling; the public API avoids triggering neural evaluation for every visitor.
+Every validator replays the neural work. Throughput, latency and total computation grow with this duplication. Larger backbones, full-backbone training, economical verification, stronger evaluation, diverse independent operators and extended adversarial load testing remain work. The network has no private inference: prompts, responses, addresses and transfers are public.
 
-## Checkpoints
-
-`GET /api/model/checkpoint.json` exports accepted model state as bounded JSON. Each tensor contains its shape and base64 little-endian float32 data, without pickle. The response includes genesis identity, state height, round, and root. `work.digest(checkpoint["weights"])` must equal `checkpoint["model_root"]`.
-
-Compare the root and chain identity with your own node. A matching content hash detects different bytes; a website statement is not an inclusion proof or independent consensus verification. A download may be newer than a previously rendered page. Joining still replays from genesis; checkpoint download is not an implemented state-sync feature.
-
-Broader evaluation, robust data selection, portable arithmetic, useful scale, economical verification of backward/optimizer operations, independent operators, and sustained reliability remain open. See the [roadmap](RESEARCH_ROADMAP.md) and [experiments](PROTOCOL_EXPERIMENTS.md).
+The v0.3 reference profile is a separately initialized 34,976-parameter byte-level model over Tiny Shakespeare. Its results must not be presented as measurements of this LLM profile.

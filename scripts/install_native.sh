@@ -15,8 +15,9 @@ if [[ ! -x venv_build/bin/python ]]; then
     exit 1
   }
 fi
-venv_build/bin/python -m pip install --disable-pip-version-check -r docs/demo-requirements.txt
+venv_build/bin/python -m pip install --disable-pip-version-check -r docs/llm-requirements.txt
 venv_build/bin/python -m pip install --disable-pip-version-check --no-deps -e .
+venv_build/bin/python -m pip install --disable-pip-version-check pytest==9.0.2 boto3==1.41.5 ijson==3.4.0
 mkdir -p .neuroshard/tools .neuroshard/toolchain
 neuroshard_go="${NEUROSHARD_GO:-$neuroshard_repo_dir/.neuroshard/toolchain/go/bin/go}"
 if [[ ! -x "$neuroshard_go" ]]; then
