@@ -1,0 +1,15 @@
+[Unit]
+Description=NeuroShard Website Backend
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/neuroshard/website
+Environment="PATH=/home/ubuntu/neuroshard/venv_build/bin"
+ExecStart=/home/ubuntu/neuroshard/venv_build/bin/uvicorn api.main:app --host 127.0.0.1 --port 8000 --workers 4
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+

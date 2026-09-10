@@ -1,0 +1,7 @@
+NeuroShard
+Copyright NeuroShard contributors.
+
+This distribution preserves contributions from the original NeuroShard project.
+Native consensus uses CometBFT, derived from Tendermint, under Apache License 2.0.
+ABCI protocol bindings are adapted/generated for the reference implementation.
+Tiny Shakespeare attribution and third-party provenance are in THIRD_PARTY.md.

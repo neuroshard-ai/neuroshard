@@ -1,0 +1,24 @@
+// Additional v0.38 wire fields. This package avoids collisions with the v1 demo.
+syntax = "proto3";
+package neuroshard.lab.abci;
+message Time { int64 seconds = 1; int32 nanos = 2; }
+message Duration { int64 seconds = 1; int32 nanos = 2; }
+message BlockParams { int64 max_bytes = 1; int64 max_gas = 2; }
+message EvidenceParams { int64 max_age_num_blocks = 1; Duration max_age_duration = 2; int64 max_bytes = 3; }
+message ValidatorParams { repeated string pub_key_types = 1; }
+message ABCIParams { int64 vote_extensions_enable_height = 1; }
+message ConsensusParams { BlockParams block = 1; EvidenceParams evidence = 2; ValidatorParams validator = 3; ABCIParams abci = 5; }
+message PublicKey { bytes ed25519 = 1; }
+message ValidatorUpdate { PublicKey pub_key = 1; int64 power = 2; }
+message Validator { bytes address = 1; int64 power = 3; }
+message Misbehavior { int32 type = 1; Validator validator = 2; int64 height = 3; Time time = 4; int64 total_voting_power = 5; }
+message VoteInfo { Validator validator = 1; int32 block_id_flag = 3; }
+message CommitInfo { int32 round = 1; repeated VoteInfo votes = 2; }
+message ExtendedVoteInfo { Validator validator = 1; int32 block_id_flag = 5; }
+message ExtendedCommitInfo { int32 round = 1; repeated ExtendedVoteInfo votes = 2; }
+message RequestInitChain { string chain_id = 2; ConsensusParams consensus_params = 3; repeated ValidatorUpdate validators = 4; bytes app_state_bytes = 5; int64 initial_height = 6; }
+message RequestPrepareProposal { int64 max_tx_bytes = 1; repeated bytes txs = 2; ExtendedCommitInfo local_last_commit = 3; repeated Misbehavior misbehavior = 4; int64 height = 5; Time time = 6; }
+message RequestProcessProposal { repeated bytes txs = 1; CommitInfo proposed_last_commit = 2; repeated Misbehavior misbehavior = 3; int64 height = 5; Time time = 6; }
+message RequestFinalizeBlock { repeated bytes txs = 1; CommitInfo decided_last_commit = 2; repeated Misbehavior misbehavior = 3; bytes hash = 4; int64 height = 5; Time time = 6; }
+message ExecTxResult { uint32 code = 1; string log = 3; }
+message ResponseFinalizeBlock { repeated ExecTxResult tx_results = 2; repeated ValidatorUpdate validator_updates = 3; bytes app_hash = 5; }

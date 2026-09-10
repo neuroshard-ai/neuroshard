@@ -1,0 +1,12 @@
+{
+  "chain_id": "neuroshard-stage-8i5ghxq5",
+  "release": "v0.3.0a1",
+  "genesis_sha256": "c3af664ca708318286c098d146dc962e781b55ff878a8a03a508f8f889898be6",
+  "manifest_hash": "012fdc5f493a6bccf782629fc96dee48be15155e887323281aebb82471bd43d1",
+  "bootstrap_peers": [
+    "7f4a434865efcd2383a227bf746366315f015dc1@100.53.139.52:26656"
+  ],
+  "operator_disclosure": "Launch validators are controlled by one operator across two machines.",
+  "api": "https://neuroshard.com",
+  "genesis_url": "https://neuroshard.com/network/genesis.json"
+}

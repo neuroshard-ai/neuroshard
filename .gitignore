@@ -1,6 +1,4 @@
-# ============================================
-# NeuroShard Public Repo .gitignore
-# ============================================
+# NeuroShard public source; keys, node state, and build output stay local.
 
 # -------------------- Python --------------------
 __pycache__/
@@ -30,6 +28,7 @@ share/python-wheels/
 MANIFEST
 
 # Virtual environments
+.env
 .venv
 env/
 venv/
@@ -43,6 +42,7 @@ venv.bak/
 
 # Testing & Coverage
 htmlcov/
+reports/
 .tox/
 .nox/
 .coverage
@@ -83,12 +83,16 @@ secrets/
 credentials/
 .pypirc
 
-# AWS
+# AWS credentials
 .aws/
+aws/credentials
+.aws/credentials
+.aws/config
+*.pem
 boto.cfg
 .boto
 
-# API keys
+# API keys and tokens
 *_key.txt
 *_secret.txt
 *_token.txt
@@ -100,12 +104,18 @@ id_rsa
 id_rsa.pub
 id_ed25519
 id_ed25519.pub
+*.pub
+!*.example.pub
 
 # -------------------- Databases --------------------
 *.db
 *.sqlite
 *.sqlite3
 *.sqlite3-journal
+users.db
+node_ledger.db
+ledger.db
+website/api/users.db
 
 # -------------------- Model Files & Checkpoints --------------------
 *.ckpt
@@ -152,20 +162,65 @@ ehthumbs.db
 Thumbs.db
 Desktop.ini
 
+# -------------------- Docker --------------------
+docker-compose.override.yml
+.docker/
+
 # -------------------- NeuroShard Specific --------------------
+# Local node data
 neuroshard_data/
 .neuroshard/
 node_state/
+.private-repo-sync/
+
+# Genesis cache
 genesis_cache/
 .genesis/
+
+# Training artifacts
 training_runs/
 tensorboard_logs/
+
+# Local config overrides
 config.local.*
 settings.local.*
 *.local.yaml
 *.local.json
-simulation_logs/
 
-# Build artifacts
+# Whitepaper source and build artifacts
+docs/whitepaper/*.aux
+docs/whitepaper/*.log
+docs/whitepaper/*.out
+docs/whitepaper/*.toc
+docs/whitepaper/*.synctex.gz
+
+# Website build artifacts (keep source)
+website/dist/
 docs-site/.vitepress/cache/
 docs-site/.vitepress/dist/
+
+# -------------------- Misc --------------------
+.ipynb_checkpoints
+*.sage.py
+celerybeat-schedule
+celerybeat.pid
+/site
+Pipfile.lock
+
+# Generated native site release material
+website/public/docs/
+website/public/releases/
+website/public/release.json
+
+# Generated documentation pages
+docs-site/generated/
+# Historical material remains source-only
+legacy/**/node_modules/
+legacy/**/dist/
+
+website/test-results/
+website/playwright-report/
+*.tsbuildinfo
+docs/*.aux
+docs/*.out
+docs/*.synctex.gz

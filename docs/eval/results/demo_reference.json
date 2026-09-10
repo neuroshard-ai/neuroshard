@@ -1,0 +1,196 @@
+{
+  "chain_id": "neuroshard-dev-d4d4317936b8",
+  "consensus": "CometBFT 0.38.26",
+  "duplicate_rejection": "{\"code\": -32603, \"message\": \"Internal error\", \"data\": \"error on broadcastTxCommit: tx already exists in cache\"}",
+  "final_model_root": "c0b8a8a35908a1191f51de0628723899996bea443745ff2bef1902a74e68bb6d",
+  "final_round": 15,
+  "final_validation_loss": 4.109632968902588,
+  "four_validators_agree": true,
+  "host_architecture": "x86_64",
+  "inference_agreement": {
+    "model_root": "c0b8a8a35908a1191f51de0628723899996bea443745ff2bef1902a74e68bb6d",
+    "round": 15,
+    "text": "ROMEO: t t t t t t",
+    "token_ids": [
+      82,
+      79,
+      77,
+      69,
+      79,
+      58,
+      32,
+      116,
+      32,
+      116,
+      32,
+      116,
+      32,
+      116,
+      32,
+      116,
+      32,
+      116
+    ]
+  },
+  "initial_validation_loss": 5.741128444671631,
+  "invalid_result_rejection": "Training result differs from independent replay",
+  "logical_cpus": 4,
+  "manifest": {
+    "architecture": "x86_64",
+    "batch_size": 4,
+    "dataset_sha256": "86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed",
+    "initial_model_root": "7e908b82c1453d3307594970d0f1dceba8b41fbedc7afa7af73143f8ec3dedb1",
+    "learning_rate": 0.1,
+    "lease_blocks": 60,
+    "max_rewarded_tasks": 1000,
+    "model": {
+      "attention_dropout": 0.0,
+      "dropout": 0.0,
+      "hidden_dim": 32,
+      "intermediate_dim": 64,
+      "max_seq_len": 64,
+      "num_heads": 4,
+      "num_kv_heads": 2,
+      "num_layers": 2,
+      "tie_word_embeddings": false,
+      "vocab_size": 256
+    },
+    "numerics": "torch-2.9.1+cpu-cpu-fp32-single-thread-no-mkldnn",
+    "numpy_version": "2.2.6",
+    "optimizer": "SGD-no-momentum",
+    "program_sha256": "76b08874d8f17edc1dcde937cc0185468b1be266d91ce2fad277191b9673e6ab",
+    "protocol": "neuroshard-demo-v1",
+    "reward_atoms": 1000000,
+    "sequence_length": 32
+  },
+  "one_validator_offline_training_finalized": true,
+  "parameter_counts_by_stage": [
+    17472,
+    17504
+  ],
+  "passed": true,
+  "recorded_at_utc": "2026-09-10T12:52:47.697133+00:00",
+  "resigned_duplicate_rejection": "Transaction already applied",
+  "restart_and_catchup": true,
+  "scope": "Single-host development network; fixed validators; full replay; development tokens",
+  "shared_block": {
+    "hash": "1AF6BB45A81A613AF31B6BD37FE0829C4F84F38D8F7485685FFF97B8ED610B9B",
+    "height": 35
+  },
+  "signed_invalid_gradient_rejection": "Stage computation differs from independent replay",
+  "total_issued_atoms": 15000000,
+  "training": [
+    {
+      "elapsed_seconds": 2.795,
+      "height": "6",
+      "model_root": "2cc20fd003ff3011281dd8eb91611d61004a4ebfcdc330eab52e2b96e4933b89",
+      "round": 1,
+      "total_issued": 1000000,
+      "validation_loss": 5.290417194366455
+    },
+    {
+      "elapsed_seconds": 1.64,
+      "height": "8",
+      "model_root": "52fadc6f9fdcbffc03b262e57f0f4a5a253620895b34ef456acc74f64813d6af",
+      "round": 2,
+      "total_issued": 2000000,
+      "validation_loss": 5.052377223968506
+    },
+    {
+      "elapsed_seconds": 1.692,
+      "height": "10",
+      "model_root": "e633b2cc6bd2f0621786ef7ff64481e1fb4d85aca0db18fd5a1996baded16047",
+      "round": 3,
+      "total_issued": 3000000,
+      "validation_loss": 5.0543599128723145
+    },
+    {
+      "elapsed_seconds": 1.658,
+      "height": "12",
+      "model_root": "d7f29053c6cc2d9d11c9df8e06fb7c48764758bce46c9e3f85985042ea2781ff",
+      "round": 4,
+      "total_issued": 4000000,
+      "validation_loss": 4.861867904663086
+    },
+    {
+      "elapsed_seconds": 1.743,
+      "height": "14",
+      "model_root": "f02d72aa32d88c446bf66767beae275d5291e195e204bed13418105be812abad",
+      "round": 5,
+      "total_issued": 5000000,
+      "validation_loss": 4.800566673278809
+    },
+    {
+      "elapsed_seconds": 1.672,
+      "height": "16",
+      "model_root": "9fd82590313d4b3abdd9a7df7855f96aff2000ef755db59c1246dd1ee3578c19",
+      "round": 6,
+      "total_issued": 6000000,
+      "validation_loss": 4.651889801025391
+    },
+    {
+      "elapsed_seconds": 1.658,
+      "height": "18",
+      "model_root": "38655f4f271ded9cd7226f2cd17f1ac15058557365c47b1cf2640053e2ca0af3",
+      "round": 7,
+      "total_issued": 7000000,
+      "validation_loss": 4.6043701171875
+    },
+    {
+      "elapsed_seconds": 1.699,
+      "height": "20",
+      "model_root": "c92ab89426485286abd2d211340c248163da5c3bb72dddd3a20bb9bb1f09dbf4",
+      "round": 8,
+      "total_issued": 8000000,
+      "validation_loss": 4.52716064453125
+    },
+    {
+      "elapsed_seconds": 1.675,
+      "height": "22",
+      "model_root": "4b4d5d02e11265292797276543622568895accc282761e42b69a24618b21b80e",
+      "round": 9,
+      "total_issued": 9000000,
+      "validation_loss": 4.509037971496582
+    },
+    {
+      "elapsed_seconds": 1.621,
+      "height": "24",
+      "model_root": "7fd854a6b7c25bae81a0b0644c14ccada7c6428636c3ef810ed86d6e9b17a9d3",
+      "round": 10,
+      "total_issued": 10000000,
+      "validation_loss": 4.382734775543213
+    },
+    {
+      "elapsed_seconds": 1.671,
+      "height": "26",
+      "model_root": "6cac965ff74d3745a7a642baa1bba67d961165a0c70b02de8aa21c5e0a5b6dce",
+      "round": 11,
+      "total_issued": 11000000,
+      "validation_loss": 4.334561824798584
+    },
+    {
+      "elapsed_seconds": 1.743,
+      "height": "28",
+      "model_root": "6a0bc720536be6e8f74da2751b0424d452e31acee468b4edbde6e838b2cf0e9e",
+      "round": 12,
+      "total_issued": 12000000,
+      "validation_loss": 4.291113376617432
+    }
+  ],
+  "two_validators_offline_halt": {
+    "height": 33,
+    "observation_seconds": 4
+  },
+  "validator_voting_power": [
+    1,
+    1,
+    1,
+    1
+  ],
+  "validators": 4,
+  "worker_balances": {
+    "1a8402f504cf7848709caa1aba84be98": 7500000,
+    "5cd9b70fbf0263224ffe62e2ca6a3cc0": 7500000
+  },
+  "workers": 2
+}

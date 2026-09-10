@@ -1,0 +1,59 @@
+{
+  "scope": "Same physical x86_64 host, separate container and Python/PyTorch build; CPU execution only",
+  "image_id": "sha256:e9b26316270bfde15758dd7b11338a874566db767453512a7df7f95c641feeb6",
+  "image_created": "2025-12-10T19:17:46.248549898Z",
+  "host": {
+    "torch": "2.9.1+cpu",
+    "python": "3.10.12",
+    "cpu_capability": "DEFAULT",
+    "threads": 1,
+    "mkldnn": false,
+    "results": [
+      {
+        "model_root": "adec17a923a65249c6ea00668956e6fec47aefca66fc1b3fe717cc6e6aa30f2a",
+        "loss_hex": "0x1.6b11d40000000p+2",
+        "gradient_root": "36824852023eb013fff4c91348d82f96ab3ca19621d69c65528d37348542e5f8"
+      },
+      {
+        "model_root": "5f0e02c2ae4b45e36ca26f3740abdbea018342ba8fa1e8cbc0b75b913b6f6281",
+        "loss_hex": "0x1.47896a0000000p+2",
+        "gradient_root": "cf687041dce2ca81d8f5cce1b66d8a4459fc12b0e93907ec9c3f67db5eeff125"
+      },
+      {
+        "model_root": "514abccc53cdf8c354fb3339a9d1c403dbafacffb62c08f69174138e417898a1",
+        "loss_hex": "0x1.3fe8cc0000000p+2",
+        "gradient_root": "7b331f5b7713ad4e453e3e169a570955e8b2313c05f077d94f8abbe03a4ef45c"
+      }
+    ]
+  },
+  "container": {
+    "torch": "2.9.1+cu128",
+    "python": "3.10.19",
+    "cpu_capability": "DEFAULT",
+    "threads": 1,
+    "mkldnn": false,
+    "results": [
+      {
+        "model_root": "adec17a923a65249c6ea00668956e6fec47aefca66fc1b3fe717cc6e6aa30f2a",
+        "loss_hex": "0x1.6b11d40000000p+2",
+        "gradient_root": "36824852023eb013fff4c91348d82f96ab3ca19621d69c65528d37348542e5f8"
+      },
+      {
+        "model_root": "5f0e02c2ae4b45e36ca26f3740abdbea018342ba8fa1e8cbc0b75b913b6f6281",
+        "loss_hex": "0x1.47896a0000000p+2",
+        "gradient_root": "cf687041dce2ca81d8f5cce1b66d8a4459fc12b0e93907ec9c3f67db5eeff125"
+      },
+      {
+        "model_root": "514abccc53cdf8c354fb3339a9d1c403dbafacffb62c08f69174138e417898a1",
+        "loss_hex": "0x1.3fe8cc0000000p+2",
+        "gradient_root": "7b331f5b7713ad4e453e3e169a570955e8b2313c05f077d94f8abbe03a4ef45c"
+      }
+    ]
+  },
+  "pinned_cpu_dispatch": {
+    "ATEN_CPU_CAPABILITY": "default",
+    "MKL_ENABLE_INSTRUCTIONS": "SSE4_2"
+  },
+  "three_training_steps_bitwise_equal": true,
+  "interpretation": "A finite conformance experiment, not a proof of equality for all hardware or all inputs"
+}

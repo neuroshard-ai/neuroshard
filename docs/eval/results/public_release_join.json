@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "chain_id": "neuroshard-stage-8i5ghxq5",
+  "source_archive_sha256": "17863b3b410d8eee40048439d55101dae66cbda7b2d8286d786db1686fd32ff8",
+  "genesis_sha256": "c3af664ca708318286c098d146dc962e781b55ff878a8a03a508f8f889898be6",
+  "public_node_defaults": true,
+  "only_peer": "7f4a434865efcd2383a227bf746366315f015dc1@100.53.139.52:26656",
+  "initial_balance": "0",
+  "earned_balance": "400000",
+  "public_key": "02f5eb704db829c7b3961e202923c231a447fc4780b7c72c58553ff99b5496f9fe",
+  "round": 7,
+  "website_worker_command": true
+}

@@ -1,0 +1,26 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements from root
+COPY requirements.txt .
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy NeuroShard Core (new src/ layout)
+# Note: protos are now inside neuroshard/protos/
+COPY src/neuroshard ./neuroshard
+
+# Set PYTHONPATH so imports work correctly
+ENV PYTHONPATH=/app
+
+# Expose ports (HTTP and gRPC)
+EXPOSE 8000 9000
+
+# Default command - use the CLI entry point
+CMD ["python", "-m", "neuroshard.cli", "--no-browser"]

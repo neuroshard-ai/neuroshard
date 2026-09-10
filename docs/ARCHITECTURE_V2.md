@@ -1,3 +1,5 @@
+> Historical prototype document. For the supported native release, see [PUBLIC_TESTNET.md](PUBLIC_TESTNET.md) and [PROTOCOL_CANDIDATE_V2.md](PROTOCOL_CANDIDATE_V2.md).
+
 # NeuroShard v2: Complete Architecture Design
 
 > **Status**: Design Document  

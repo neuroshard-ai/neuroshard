@@ -1,0 +1,169 @@
+services:
+  # PostgreSQL for persistent user data (separate from ledger)
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: neuroshard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-neuroshard_secure_password_123}
+      POSTGRES_DB: neuroshard_users
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Only expose internally (remove external port for security)
+    expose:
+      - "5432"
+    networks:
+      - neuroshard-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neuroshard -d neuroshard_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for rate limiting and caching
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-neuroshard_redis_secret}
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - neuroshard-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-neuroshard_redis_secret}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./website
+      dockerfile: Dockerfile.frontend
+    restart: always
+    ports:
+      - "8090:80"
+    depends_on:
+      - backend
+      - docs
+    networks:
+      - neuroshard-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: website/Dockerfile.backend
+    restart: always
+    environment:
+      # PostgreSQL for user auth (persistent, separate from ledger)
+      - DATABASE_URL=postgresql://neuroshard:${POSTGRES_PASSWORD:-neuroshard_secure_password_123}@postgres:5432/neuroshard_users
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-neuroshard_super_secret_key_change_me_in_production}
+      - CORS_ORIGINS=https://neuroshard.com,http://localhost:5173,http://localhost:8000,http://127.0.0.1:5173
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - ADMIN_KEY=${ADMIN_KEY:-admin123}
+      - TRACKER_URL=http://tracker:3000
+      # Search for ledger files in the shared volume
+      - LEDGER_DATA_DIR=/data
+      # Redis for rate limiting (production-ready distributed rate limiting)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-neuroshard_redis_secret}
+      # AWS SES for emails
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - SENDER_EMAIL=${SENDER_EMAIL:-noreply@neuroshard.com}
+      - WEBSITE_URL=${WEBSITE_URL:-https://neuroshard.com}
+    volumes:
+      # Mount observer ledger data volume (shared with observer for ledger explorer)
+      - observer_data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tracker:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - neuroshard-net
+
+  tracker:
+    build:
+      context: .
+      dockerfile: website/Dockerfile.tracker
+    restart: always
+    environment:
+      # SQLite for lightweight bootstrap list only
+      - DATABASE_URL=sqlite:////data/tracker.db
+    volumes:
+      - tracker_db:/data
+    ports:
+      - "3000:3000"
+    networks:
+      - neuroshard-net
+
+  # Documentation site - docs.neuroshard.com
+  docs:
+    build:
+      context: ./docs-site
+      dockerfile: Dockerfile
+    restart: always
+    # No external port needed - nginx proxies internally via docker network
+    expose:
+      - "80"
+    networks:
+      - neuroshard-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Observer Node - Block explorer (syncs ledger without generating proofs)
+  # Lightweight: no GPU needed, just syncs ledger from network via P2P
+  observer:
+    build:
+      context: .
+      dockerfile: website/Dockerfile.node
+    restart: always
+    command: python -m neuroshard.runner --observer --port 8001 --tracker http://tracker:3000
+    environment:
+      - TRACKER_URL=http://tracker:3000
+      - LEDGER_DB_PATH=/data/observer_ledger.db
+    volumes:
+      - observer_data:/data
+    ports:
+      - "8001:8001"  # Dashboard/API
+      - "9001:9001"  # gRPC (for receiving proof broadcasts)
+    depends_on:
+      tracker:
+        condition: service_started
+    networks:
+      - neuroshard-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  # PostgreSQL data - NEVER delete this (contains user accounts)
+  postgres_data:
+    name: neuroshard_postgres_data
+  # Redis data - rate limiting state (can be reset)
+  redis_data:
+  # Ledger data - can be reset for fresh ledger start
+  ledger_data:
+  # Tracker data - peer bootstrap list
+  tracker_db:
+  # Observer ledger data - synced ledger from network
+  observer_data:
+
+networks:
+  neuroshard-net:
+    driver: bridge

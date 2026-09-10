@@ -1,0 +1,25 @@
+# Install only after adjusting the user, checkout, and home paths below.
+[Unit]
+Description=NeuroShard native full node
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=4
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/neuroshard/releases/v0.3.0a1
+ExecStart=/opt/neuroshard/releases/v0.3.0a1/venv_build/bin/python /opt/neuroshard/releases/v0.3.0a1/scripts/neuroshard_chain.py run --home /home/ubuntu/.neuroshard/node
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=35
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/.neuroshard/node
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

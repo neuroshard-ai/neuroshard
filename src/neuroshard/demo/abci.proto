@@ -1,0 +1,61 @@
+// Minimal wire-compatible ABCI v0.38 fields used by the reference demo.
+// Field numbers and service paths are from CometBFT v0.38.26:
+// https://github.com/cometbft/cometbft/blob/v0.38.26/proto/tendermint/abci/types.proto
+// Unused fields are deliberately omitted and ignored by protobuf.
+syntax = "proto3";
+package tendermint.abci;
+
+service ABCI {
+  rpc Echo(RequestEcho) returns (ResponseEcho);
+  rpc Flush(RequestFlush) returns (ResponseFlush);
+  rpc Info(RequestInfo) returns (ResponseInfo);
+  rpc InitChain(RequestInitChain) returns (ResponseInitChain);
+  rpc Query(RequestQuery) returns (ResponseQuery);
+  rpc CheckTx(RequestCheckTx) returns (ResponseCheckTx);
+  rpc Commit(RequestCommit) returns (ResponseCommit);
+  rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
+  rpc OfferSnapshot(RequestOfferSnapshot) returns (ResponseOfferSnapshot);
+  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
+  rpc ApplySnapshotChunk(RequestApplySnapshotChunk) returns (ResponseApplySnapshotChunk);
+  rpc PrepareProposal(RequestPrepareProposal) returns (ResponsePrepareProposal);
+  rpc ProcessProposal(RequestProcessProposal) returns (ResponseProcessProposal);
+  rpc ExtendVote(RequestExtendVote) returns (ResponseExtendVote);
+  rpc VerifyVoteExtension(RequestVerifyVoteExtension) returns (ResponseVerifyVoteExtension);
+  rpc FinalizeBlock(RequestFinalizeBlock) returns (ResponseFinalizeBlock);
+}
+message RequestEcho { string message = 1; }
+message ResponseEcho { string message = 1; }
+message RequestFlush {}
+message ResponseFlush {}
+message RequestInfo {}
+message ResponseInfo {
+  string data = 1; string version = 2; uint64 app_version = 3;
+  int64 last_block_height = 4; bytes last_block_app_hash = 5;
+}
+message RequestInitChain { string chain_id = 2; bytes app_state_bytes = 5; int64 initial_height = 6; }
+message ResponseInitChain { bytes app_hash = 3; }
+message RequestQuery { bytes data = 1; string path = 2; int64 height = 3; bool prove = 4; }
+message ResponseQuery { uint32 code = 1; string log = 3; bytes value = 7; int64 height = 9; }
+message RequestCheckTx { bytes tx = 1; int32 type = 2; }
+message ResponseCheckTx { uint32 code = 1; string log = 3; int64 gas_wanted = 5; }
+message RequestCommit {}
+message ResponseCommit { int64 retain_height = 3; }
+message RequestListSnapshots {}
+message ResponseListSnapshots {}
+message RequestOfferSnapshot {}
+message ResponseOfferSnapshot { int32 result = 1; }
+message RequestLoadSnapshotChunk {}
+message ResponseLoadSnapshotChunk { bytes chunk = 1; }
+message RequestApplySnapshotChunk {}
+message ResponseApplySnapshotChunk { int32 result = 1; }
+message RequestPrepareProposal { int64 max_tx_bytes = 1; repeated bytes txs = 2; int64 height = 5; }
+message ResponsePrepareProposal { repeated bytes txs = 1; }
+message RequestProcessProposal { repeated bytes txs = 1; int64 height = 5; }
+message ResponseProcessProposal { int32 status = 1; }
+message RequestExtendVote {}
+message ResponseExtendVote { bytes vote_extension = 1; }
+message RequestVerifyVoteExtension {}
+message ResponseVerifyVoteExtension { int32 status = 1; }
+message RequestFinalizeBlock { repeated bytes txs = 1; bytes hash = 4; int64 height = 5; }
+message ExecTxResult { uint32 code = 1; string log = 3; }
+message ResponseFinalizeBlock { repeated ExecTxResult tx_results = 2; bytes app_hash = 5; }
