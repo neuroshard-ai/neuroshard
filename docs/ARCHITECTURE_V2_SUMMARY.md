@@ -1,3 +1,5 @@
+> Historical prototype document. For the supported native release, see [PUBLIC_TESTNET.md](PUBLIC_TESTNET.md) and [PROTOCOL_CANDIDATE_V2.md](PROTOCOL_CANDIDATE_V2.md).
+
 # NeuroShard v2 Architecture - Quick Reference
 
 > One-page summary of the v2.1 architecture. See [ARCHITECTURE_V2.md](./ARCHITECTURE_V2.md) for full details.

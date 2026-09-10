@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Literal placeholder in archived API examples, including original public history"
+regexTarget = "match"
+regexes = ['''Authorization: Bearer YOUR_TOKEN''', '''Authorization: Bearer neuro_your_token_here''']
+
+[[allowlists]]
+description = "Public Ed25519 validator identities in the reviewed launch genesis"
+condition = "AND"
+paths = ['''^networks/neuroshard-stage-8i5ghxq5/genesis\.json$''']
+regexTarget = "match"
+regexes = ['''consensus_key":"[0-9a-f]{64}"''']

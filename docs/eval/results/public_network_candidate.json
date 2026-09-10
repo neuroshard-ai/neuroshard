@@ -1,0 +1,118 @@
+{
+  "recorded_at_utc": "2026-09-10T21:00:31.341318+00:00",
+  "scope": "Native public-port P2P between two machines; SSH used only for setup/process administration",
+  "ownership": "One operator controls both machines; independent ownership is not established",
+  "chain_id": "neuroshard-stage-8i5ghxq5",
+  "genesis_sha256": "c3af664ca708318286c098d146dc962e781b55ff878a8a03a508f8f889898be6",
+  "manifest_hash": "012fdc5f493a6bccf782629fc96dee48be15155e887323281aebb82471bd43d1",
+  "profile": "testnet",
+  "genesis_validators": 4,
+  "initial_supply": 90000000,
+  "manifest": {
+    "candidate_source_hash": "6e2923b26c968ff789998dbc89eb905440241cb4058c2971e1c920275d9333ba",
+    "execution": {
+      "architecture": "x86_64",
+      "batch_size": 4,
+      "dataset_sha256": "86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed",
+      "initial_model_root": "c083fcb4eadf8b84563c309a2a5c003b755f6a0a14aedf0e2a56b2bd6c8e634f",
+      "learning_rate": 0.1,
+      "model": {
+        "attention_dropout": 0.0,
+        "dropout": 0.0,
+        "hidden_dim": 32,
+        "intermediate_dim": 64,
+        "max_seq_len": 64,
+        "num_heads": 4,
+        "num_kv_heads": 2,
+        "num_layers": 2,
+        "tie_word_embeddings": false,
+        "vocab_size": 256
+      },
+      "numerics": "torch-2.9.1+cpu-cpu-fp32-single-thread-no-mkldnn",
+      "numpy_version": "2.2.6",
+      "optimizer": "SGD-no-momentum",
+      "program_sha256": "76b08874d8f17edc1dcde937cc0185468b1be266d91ce2fad277191b9673e6ab",
+      "protocol": "neuroshard-demo-v1",
+      "sequence_length": 32
+    },
+    "native_consensus": {
+      "block_max_bytes": 65536,
+      "block_max_gas": -1,
+      "evidence_blocks": 172800,
+      "evidence_duration_ns": 172800000000000,
+      "evidence_max_bytes": 16384,
+      "validator_key_types": [
+        "ed25519"
+      ],
+      "vote_extensions_enable_height": 0
+    },
+    "numerical_conformance": {
+      "ATEN_CPU_CAPABILITY": "default",
+      "MKL_ENABLE_INSTRUCTIONS": "SSE4_2",
+      "aten_dispatch": "DEFAULT",
+      "three_step_vectors": [
+        {
+          "gradient_root": "36824852023eb013fff4c91348d82f96ab3ca19621d69c65528d37348542e5f8",
+          "loss_hex": "0x1.6b11d40000000p+2",
+          "model_root": "adec17a923a65249c6ea00668956e6fec47aefca66fc1b3fe717cc6e6aa30f2a"
+        },
+        {
+          "gradient_root": "cf687041dce2ca81d8f5cce1b66d8a4459fc12b0e93907ec9c3f67db5eeff125",
+          "loss_hex": "0x1.47896a0000000p+2",
+          "model_root": "5f0e02c2ae4b45e36ca26f3740abdbea018342ba8fa1e8cbc0b75b913b6f6281"
+        },
+        {
+          "gradient_root": "7b331f5b7713ad4e453e3e169a570955e8b2313c05f077d94f8abbe03a4ef45c",
+          "loss_hex": "0x1.3fe8cc0000000p+2",
+          "model_root": "514abccc53cdf8c354fb3339a9d1c403dbafacffb62c08f69174138e417898a1"
+        }
+      ]
+    },
+    "params": {
+      "activation_blocks": 60,
+      "atom_scale": 1000000,
+      "bond_unit": 250000,
+      "epoch_blocks": 60,
+      "evidence_blocks": 172800,
+      "evidence_seconds": 172800,
+      "fee": 1000,
+      "lease_blocks": 120,
+      "max_training_tasks": 100000,
+      "max_tx_bytes": 16384,
+      "reservation_bond": 2000000,
+      "task_budget": 1000000,
+      "worker_budget": 800000
+    },
+    "profile": "testnet",
+    "version": "neuroshard-candidate-v2"
+  },
+  "fresh_join": {
+    "initial_balance": "0",
+    "only_configured_peer": "7f4a434865efcd2383a227bf746366315f015dc1@100.53.139.52:26656",
+    "joined_after_height": 1,
+    "keys_created_on_joiner": true
+  },
+  "earned_then_bonded": {
+    "earned": "800000",
+    "bond_height": 16,
+    "observed_active_height": 122
+  },
+  "seed_outage_preserves_progress": true,
+  "insufficient_quorum_halts": {
+    "height": 126,
+    "remaining_power": 21,
+    "total_power": 41
+  },
+  "final_model_root": "514abccc53cdf8c354fb3339a9d1c403dbafacffb62c08f69174138e417898a1",
+  "issued": "3000000",
+  "final_round": 3,
+  "common_block": {
+    "height": 136,
+    "hash": "112FD6B7ACCCA10D30861FCC647726EB7F435C6D73117763F3A87BF4AD8337A7"
+  },
+  "all_nodes_agree": true,
+  "passed": true,
+  "home": "/home/ubuntu/neuroshard/.neuroshard/public-network-8i5ghxq5",
+  "remote_home": "/home/ubuntu/neuroshard-lab/.neuroshard/public-network-8i5ghxq5",
+  "preview_api": "http://127.0.0.1:38659"
+}

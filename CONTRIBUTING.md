@@ -1,127 +1,55 @@
 # Contributing to NeuroShard
 
-Thank you for your interest in contributing to NeuroShard! We welcome contributions from the community.
+The native deployment candidate is the supported development path. It implements a small CPU training workload with native consensus and settlement. See the [operator guide](docs/PUBLIC_TESTNET.md), [protocol](docs/PROTOCOL_CANDIDATE_V2.md), and [experiments](docs/PROTOCOL_EXPERIMENTS.md) before changing its behavior.
 
-## Getting Started
+The home for all development is [neuroshard-ai/neuroshard](https://github.com/neuroshard-ai/neuroshard). The [open-source transition](docs/OPEN_SOURCE_TRANSITION.md) records the consolidation decisions. A NeuroShard website account is not required to contribute or operate a native node.
 
-### 1. Fork and Clone
+## Install and check the native implementation
 
-```bash
-git clone https://github.com/neuroshard-ai/neuroshard.git
-cd neuroshard
-```
-
-### 2. Set Up Development Environment
+Use Linux x86_64 and Python 3.10–3.12 for the recorded CPU profile:
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode
-pip install -e ".[dev]"
+bash scripts/install_native.sh
+ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
+  venv_build/bin/python -m pytest -q tests/test_verified_demo.py \
+  tests/test_protocol_candidate.py tests/test_public_node.py tests/test_outbound_work.py
 ```
 
-### 3. Run Tests
+The installer creates a project-local environment and installs the pinned native engine. Old `neuroshard --token ...` instructions and the published legacy package do not start this chain. Historical tests are in `legacy/tests` with separate prototype dependencies. Run `venv_build/bin/python -m pytest -q` for the complete native suite.
+
+To work on the website, use Node 22.12 or newer in the Node 22 line:
 
 ```bash
-pytest tests/
+cd website
+npm ci
+npm run build
+npm run dev
 ```
 
-## How to Contribute
+The development server proxies native API requests to `127.0.0.1:38659`. Configure that target for your own local gateway when necessary. The production build copies the current protocol documents and manuscript into its public assets. It needs no legacy authentication backend to render the native interface.
 
-### Reporting Bugs
+## Propose a change
 
-- Check if the bug has already been reported in [Issues](https://github.com/neuroshard-ai/neuroshard/issues)
-- If not, create a new issue with:
-  - Clear title and description
-  - Steps to reproduce
-  - Expected vs actual behavior
-  - System information (OS, Python version, GPU)
+For a bug report, include the source revision, chain ID when relevant, numerical profile, expected behavior, actual behavior, and reproduction steps. Share public transaction/block identifiers or reduced test cases. Exclude private keys, signing state, credentials, and user records.
 
-### Suggesting Features
+For changes to consensus, validator admission, verification, reward rules, or execution semantics, open a design proposal explaining the invariant or behavior being changed, compatibility implications, assumptions, and how it can be tested. Small documentation and interface fixes can proceed directly as pull requests.
 
-- Open an issue with the `enhancement` label
-- Describe the feature and its use case
-- Explain why it would benefit NeuroShard
+A pull request should explain the concrete problem, resulting behavior, and relevant validation. Add regression coverage when a change affects security, accounting, consensus, or failure recovery. Report which checks ran and any limitations; a passing small-model experiment does not establish LLM-scale performance or adversarial security.
 
-### Pull Requests
+The execution manifest binds numerical code and consensus source. Editing or moving those files can require a new compatible genesis/release. Test against disposable chain homes and preserve live validators' keys, databases, and signing state. Operators choose their supported release; merging a pull request must not automatically upgrade the running network.
 
-1. **Create a branch** from `main`:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## Useful contributions
 
-2. **Make your changes** following our code style
+- Reproduce the installation and training trial on additional compatible machines.
+- Improve node synchronization, diagnostics, bounded APIs, and worker failure handling.
+- Measure public-load behavior and verification cost with reproducible workloads.
+- Investigate complete training verification and portable numerical execution.
+- Improve the model/explorer interface and documentation using measured behavior.
 
-3. **Write tests** for new functionality
-
-4. **Run tests** to ensure nothing breaks:
-   ```bash
-   pytest tests/
-   ```
-
-5. **Commit** with a clear message:
-   ```bash
-   git commit -m "Add: brief description of changes"
-   ```
-
-6. **Push** and create a Pull Request
-
-### Commit Message Format
-
-```
-Type: Brief description
-
-- Add: New feature
-- Fix: Bug fix
-- Update: Enhancement to existing feature
-- Refactor: Code restructuring
-- Docs: Documentation only
-- Test: Adding tests
-```
-
-## Code Style
-
-- **Python**: Follow PEP 8, use Black for formatting
-- **Line length**: 100 characters max
-- **Type hints**: Use them for function signatures
-- **Docstrings**: Use Google style
-
-```python
-def example_function(param1: str, param2: int = 0) -> bool:
-    """
-    Brief description of the function.
-
-    Args:
-        param1: Description of param1
-        param2: Description of param2
-
-    Returns:
-        Description of return value
-    """
-    pass
-```
-
-## Areas for Contribution
-
-### High Priority
-- [ ] Performance optimizations
-- [ ] Additional aggregation strategies
-- [ ] Improved error handling
-- [ ] Documentation improvements
-
-### Good First Issues
-- Documentation fixes
-- Test coverage improvements
-- Minor bug fixes
-- Code cleanup
-
-## Questions?
-
-- **Discord**: [discord.gg/4R49xpj7vn](https://discord.gg/4R49xpj7vn)
-- **Twitter**: [@shardneuro](https://x.com/shardneuro)
+Consensus safety, monetary accounting, and claims in the paper should remain explicit about their assumptions. Reproducible negative results are useful contributions.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the Apache License 2.0.
+Contributions to project code are made under the existing [Apache License 2.0](LICENSE). Preserve applicable attribution and identify the provenance and license of any added third-party code, data, models, or assets.
+
+Build documentation with `cd docs-site && npm ci && npm run build`. Its pages are generated from canonical repository documents. Browser checks: `cd website && npx playwright install chromium && npm test`.

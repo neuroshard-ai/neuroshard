@@ -1,3 +1,5 @@
+> Historical prototype document. For the supported native release, see [PUBLIC_TESTNET.md](PUBLIC_TESTNET.md) and [PROTOCOL_CANDIDATE_V2.md](PROTOCOL_CANDIDATE_V2.md).
+
 # Local Testing
 
 This guide describes the local test gates used before inviting outside nodes.

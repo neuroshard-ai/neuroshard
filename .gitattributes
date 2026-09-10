@@ -1,0 +1,6 @@
+# Preserve archived source and genesis-bound corpus bytes exactly.
+legacy/** -whitespace
+docs/eval/data/input.txt -whitespace
+src/neuroshard/publicnet/data/input.txt -whitespace
+# Two trailing spaces are intentional Markdown line breaks.
+*.md whitespace=-blank-at-eol

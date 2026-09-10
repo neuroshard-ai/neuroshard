@@ -1,0 +1,160 @@
+{
+ "config": {
+  "workers": 3,
+  "steps": 500,
+  "seq_len": 64,
+  "batch_size": 8,
+  "lr": 0.0003,
+  "model": "NeuroLLM 128d/4L (0.62M params)",
+  "dataset": "TinyShakespeare (byte-level)"
+ },
+ "runs": [
+  {
+   "mode": "single",
+   "workers": 1,
+   "curve": [
+    {
+     "step": 100,
+     "val_loss": 2.91958424448967,
+     "bytes_per_worker": 0
+    },
+    {
+     "step": 200,
+     "val_loss": 2.500931203365326,
+     "bytes_per_worker": 0
+    },
+    {
+     "step": 300,
+     "val_loss": 2.299614906311035,
+     "bytes_per_worker": 0
+    },
+    {
+     "step": 400,
+     "val_loss": 2.2022025883197784,
+     "bytes_per_worker": 0
+    },
+    {
+     "step": 500,
+     "val_loss": 2.105313867330551,
+     "bytes_per_worker": 0
+    }
+   ],
+   "param_bytes": 2494976
+  },
+  {
+   "mode": "sync",
+   "workers": 3,
+   "curve": [
+    {
+     "step": 100,
+     "val_loss": 2.7926759719848633,
+     "bytes_per_worker": 249497600
+    },
+    {
+     "step": 200,
+     "val_loss": 2.3340987861156464,
+     "bytes_per_worker": 498995200
+    },
+    {
+     "step": 300,
+     "val_loss": 2.1492327451705933,
+     "bytes_per_worker": 748492800
+    },
+    {
+     "step": 400,
+     "val_loss": 2.047155663371086,
+     "bytes_per_worker": 997990400
+    },
+    {
+     "step": 500,
+     "val_loss": 1.9762946516275406,
+     "bytes_per_worker": 1247488000
+    }
+   ],
+   "param_bytes": 2494976
+  },
+  {
+   "mode": "diloco_h50",
+   "workers": 3,
+   "H": 50,
+   "compressed": false,
+   "curve": [
+    {
+     "step": 100,
+     "val_loss": 2.854978322982788,
+     "bytes_per_worker": 4989952.0
+    },
+    {
+     "step": 200,
+     "val_loss": 2.3532619774341583,
+     "bytes_per_worker": 9979904.0
+    },
+    {
+     "step": 300,
+     "val_loss": 2.224246233701706,
+     "bytes_per_worker": 14969856.0
+    },
+    {
+     "step": 400,
+     "val_loss": 2.1126559525728226,
+     "bytes_per_worker": 19959808.0
+    },
+    {
+     "step": 500,
+     "val_loss": 2.0435996055603027,
+     "bytes_per_worker": 24949760.0
+    }
+   ],
+   "param_bytes": 2494976
+  },
+  {
+   "mode": "diloco_h250",
+   "workers": 3,
+   "H": 250,
+   "compressed": false,
+   "curve": [
+    {
+     "step": 500,
+     "val_loss": 2.26775062084198,
+     "bytes_per_worker": 4989952.0
+    }
+   ],
+   "param_bytes": 2494976
+  },
+  {
+   "mode": "diloco_h50_comp",
+   "workers": 3,
+   "H": 50,
+   "compressed": true,
+   "curve": [
+    {
+     "step": 100,
+     "val_loss": 3.9090466499328613,
+     "bytes_per_worker": 467773.0
+    },
+    {
+     "step": 200,
+     "val_loss": 3.2688340842723846,
+     "bytes_per_worker": 940514.3333333334
+    },
+    {
+     "step": 300,
+     "val_loss": 2.5377466678619385,
+     "bytes_per_worker": 1414960.3333333335
+    },
+    {
+     "step": 400,
+     "val_loss": 2.3870395123958588,
+     "bytes_per_worker": 1890143.0
+    },
+    {
+     "step": 500,
+     "val_loss": 2.296001374721527,
+     "bytes_per_worker": 2365654.0
+    }
+   ],
+   "param_bytes": 2494976
+  }
+ ],
+ "wall_seconds": 440.6934452056885
+}

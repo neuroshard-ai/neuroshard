@@ -1,27 +1,22 @@
 {
   "name": "neuroshard-docs",
-  "version": "1.0.0",
+  "private": true,
+  "version": "0.3.0-alpha.1",
   "type": "module",
-  "description": "NeuroShard Documentation - Decentralized AI Training Network",
-  "scripts": {
-    "docs:dev": "vitepress dev",
-    "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.12"
   },
-  "keywords": [
-    "neuroshard",
-    "ai",
-    "decentralized",
-    "training",
-    "llm",
-    "blockchain"
-  ],
-  "author": "NeuroShard",
-  "license": "MIT",
+  "scripts": {
+    "dev": "python3 ../scripts/prepare_docs.py && vitepress dev",
+    "build": "python3 ../scripts/prepare_docs.py && vitepress build",
+    "preview": "vitepress preview"
+  },
   "devDependencies": {
-    "vitepress": "^1.5.0",
     "markdown-it-mathjax3": "^4.3.2",
-    "mermaid": "^10.9.0",
-    "vitepress-plugin-mermaid": "^2.0.10"
+    "vitepress": "2.0.0-alpha.20"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12"
   }
 }

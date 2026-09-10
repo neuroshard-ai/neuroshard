@@ -1,0 +1,2172 @@
+[
+  {
+    "original": ".dockerignore",
+    "disposition": "retained",
+    "path": ".dockerignore"
+  },
+  {
+    "original": ".github/workflows/native-candidate.yml",
+    "disposition": "retained",
+    "path": ".github/workflows/native-candidate.yml"
+  },
+  {
+    "original": ".gitignore",
+    "disposition": "retained",
+    "path": ".gitignore"
+  },
+  {
+    "original": "CONTRIBUTING.md",
+    "disposition": "retained",
+    "path": "CONTRIBUTING.md"
+  },
+  {
+    "original": "IEEE-conference-template-062824/IEEE-conference-template-062824.pdf",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "IEEE-conference-template-062824/IEEE-conference-template-062824.synctex.gz",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "IEEE-conference-template-062824/IEEE-conference-template-062824.tex",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "IEEE-conference-template-062824/IEEEtran.cls",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "IEEE-conference-template-062824/IEEEtran_HOWTO.pdf",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "IEEE-conference-template-062824/fig1.png",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "LICENSE",
+    "disposition": "retained",
+    "path": "LICENSE"
+  },
+  {
+    "original": "MANIFEST.in",
+    "disposition": "retained",
+    "path": "MANIFEST.in"
+  },
+  {
+    "original": "README.md",
+    "disposition": "retained",
+    "path": "README.md"
+  },
+  {
+    "original": "assets/logo.png",
+    "disposition": "retained",
+    "path": "assets/logo.png"
+  },
+  {
+    "original": "config/native-preview.nginx.conf",
+    "disposition": "retained",
+    "path": "config/native-preview.nginx.conf"
+  },
+  {
+    "original": "config/neuroshard-native.service",
+    "disposition": "retained",
+    "path": "config/neuroshard-native.service"
+  },
+  {
+    "original": "config/neuroshard_backend.service",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/config/neuroshard_backend.service"
+  },
+  {
+    "original": "config/neuroshard_nginx.conf",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/config/neuroshard_nginx.conf"
+  },
+  {
+    "original": "docker-compose.yml",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docker-compose.yml"
+  },
+  {
+    "original": "docs-site/.dockerignore",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/.dockerignore"
+  },
+  {
+    "original": "docs-site/.vitepress/config.ts",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/.vitepress/config.ts"
+  },
+  {
+    "original": "docs-site/.vitepress/theme/index.ts",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/.vitepress/theme/index.ts"
+  },
+  {
+    "original": "docs-site/.vitepress/theme/style.css",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/.vitepress/theme/style.css"
+  },
+  {
+    "original": "docs-site/Dockerfile",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/Dockerfile"
+  },
+  {
+    "original": "docs-site/api/grpc-services.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/grpc-services.md"
+  },
+  {
+    "original": "docs-site/api/http-endpoints.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/http-endpoints.md"
+  },
+  {
+    "original": "docs-site/api/ledger-class.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/ledger-class.md"
+  },
+  {
+    "original": "docs-site/api/neuronode-class.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/neuronode-class.md"
+  },
+  {
+    "original": "docs-site/api/overview.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/overview.md"
+  },
+  {
+    "original": "docs-site/api/python-sdk.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/api/python-sdk.md"
+  },
+  {
+    "original": "docs-site/architecture/aggregation.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/aggregation.md"
+  },
+  {
+    "original": "docs-site/architecture/diloco.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/diloco.md"
+  },
+  {
+    "original": "docs-site/architecture/dynamic-scaling.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/dynamic-scaling.md"
+  },
+  {
+    "original": "docs-site/architecture/genesis-data.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/genesis-data.md"
+  },
+  {
+    "original": "docs-site/architecture/mathematical-foundations.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/mathematical-foundations.md"
+  },
+  {
+    "original": "docs-site/architecture/memory.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/memory.md"
+  },
+  {
+    "original": "docs-site/architecture/mixture-of-experts.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/mixture-of-experts.md"
+  },
+  {
+    "original": "docs-site/architecture/neurollm.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/neurollm.md"
+  },
+  {
+    "original": "docs-site/architecture/overview.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/overview.md"
+  },
+  {
+    "original": "docs-site/architecture/p2p-network.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/p2p-network.md"
+  },
+  {
+    "original": "docs-site/architecture/tokenization.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/architecture/tokenization.md"
+  },
+  {
+    "original": "docs-site/economics/overview.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/economics/overview.md"
+  },
+  {
+    "original": "docs-site/economics/rewards.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/economics/rewards.md"
+  },
+  {
+    "original": "docs-site/economics/staking.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/economics/staking.md"
+  },
+  {
+    "original": "docs-site/governance/active.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/governance/active.md"
+  },
+  {
+    "original": "docs-site/governance/overview.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/governance/overview.md"
+  },
+  {
+    "original": "docs-site/governance/proposals.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/governance/proposals.md"
+  },
+  {
+    "original": "docs-site/governance/versioning.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/governance/versioning.md"
+  },
+  {
+    "original": "docs-site/governance/voting.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/governance/voting.md"
+  },
+  {
+    "original": "docs-site/guide/cli-reference.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/cli-reference.md"
+  },
+  {
+    "original": "docs-site/guide/configuration.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/configuration.md"
+  },
+  {
+    "original": "docs-site/guide/faq.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/faq.md"
+  },
+  {
+    "original": "docs-site/guide/how-it-works.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/how-it-works.md"
+  },
+  {
+    "original": "docs-site/guide/installation.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/installation.md"
+  },
+  {
+    "original": "docs-site/guide/introduction.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/introduction.md"
+  },
+  {
+    "original": "docs-site/guide/network-roles.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/network-roles.md"
+  },
+  {
+    "original": "docs-site/guide/proof-of-neural-work.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/proof-of-neural-work.md"
+  },
+  {
+    "original": "docs-site/guide/quick-start.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/quick-start.md"
+  },
+  {
+    "original": "docs-site/guide/running-a-node.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/running-a-node.md"
+  },
+  {
+    "original": "docs-site/guide/training-pipeline.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/training-pipeline.md"
+  },
+  {
+    "original": "docs-site/guide/troubleshooting.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/guide/troubleshooting.md"
+  },
+  {
+    "original": "docs-site/index.md",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/index.md"
+  },
+  {
+    "original": "docs-site/nginx.conf",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/nginx.conf"
+  },
+  {
+    "original": "docs-site/package-lock.json",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/package-lock.json"
+  },
+  {
+    "original": "docs-site/package.json",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/package.json"
+  },
+  {
+    "original": "docs-site/public/favicon.ico",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/public/favicon.ico"
+  },
+  {
+    "original": "docs-site/public/logo.png",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/public/logo.png"
+  },
+  {
+    "original": "docs-site/public/logo.svg",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/docs-site/public/logo.svg"
+  },
+  {
+    "original": "docs/ARCHITECTURE_V2.md",
+    "disposition": "retained",
+    "path": "docs/ARCHITECTURE_V2.md"
+  },
+  {
+    "original": "docs/ARCHITECTURE_V2_SUMMARY.md",
+    "disposition": "retained",
+    "path": "docs/ARCHITECTURE_V2_SUMMARY.md"
+  },
+  {
+    "original": "docs/FINE2026_neuroshard.aux",
+    "disposition": "private recovery archive; generated build artifact",
+    "path": null
+  },
+  {
+    "original": "docs/FINE2026_neuroshard.pdf",
+    "disposition": "retained",
+    "path": "docs/FINE2026_neuroshard.pdf"
+  },
+  {
+    "original": "docs/FINE2026_neuroshard.tex",
+    "disposition": "retained",
+    "path": "docs/FINE2026_neuroshard.tex"
+  },
+  {
+    "original": "docs/FINE2026_neuroshard_short.aux",
+    "disposition": "private recovery archive; generated build artifact",
+    "path": null
+  },
+  {
+    "original": "docs/FINE2026_neuroshard_short.pdf",
+    "disposition": "retained",
+    "path": "docs/FINE2026_neuroshard_short.pdf"
+  },
+  {
+    "original": "docs/FINE2026_neuroshard_short.tex",
+    "disposition": "retained",
+    "path": "docs/FINE2026_neuroshard_short.tex"
+  },
+  {
+    "original": "docs/FUNDAMENTALS_REVIEW.md",
+    "disposition": "retained",
+    "path": "docs/FUNDAMENTALS_REVIEW.md"
+  },
+  {
+    "original": "docs/IEEEtran.cls",
+    "disposition": "retained",
+    "path": "docs/IEEEtran.cls"
+  },
+  {
+    "original": "docs/LOCAL_TESTING.md",
+    "disposition": "retained",
+    "path": "docs/LOCAL_TESTING.md"
+  },
+  {
+    "original": "docs/PROTOCOL_CANDIDATE_V2.md",
+    "disposition": "retained",
+    "path": "docs/PROTOCOL_CANDIDATE_V2.md"
+  },
+  {
+    "original": "docs/PROTOCOL_EXPERIMENTS.md",
+    "disposition": "retained",
+    "path": "docs/PROTOCOL_EXPERIMENTS.md"
+  },
+  {
+    "original": "docs/PUBLIC_TESTNET.md",
+    "disposition": "retained",
+    "path": "docs/PUBLIC_TESTNET.md"
+  },
+  {
+    "original": "docs/REFERENCE_DEMO.md",
+    "disposition": "retained",
+    "path": "docs/REFERENCE_DEMO.md"
+  },
+  {
+    "original": "docs/RESEARCH_ROADMAP.md",
+    "disposition": "retained",
+    "path": "docs/RESEARCH_ROADMAP.md"
+  },
+  {
+    "original": "docs/TESTNET_GATES.md",
+    "disposition": "retained",
+    "path": "docs/TESTNET_GATES.md"
+  },
+  {
+    "original": "docs/TODO.md",
+    "disposition": "retained",
+    "path": "docs/TODO.md"
+  },
+  {
+    "original": "docs/demo-requirements.txt",
+    "disposition": "retained",
+    "path": "docs/demo-requirements.txt"
+  },
+  {
+    "original": "docs/dht_implementation_plan.md",
+    "disposition": "retained",
+    "path": "docs/dht_implementation_plan.md"
+  },
+  {
+    "original": "docs/eval/analyze_membership.py",
+    "disposition": "retained",
+    "path": "docs/eval/analyze_membership.py"
+  },
+  {
+    "original": "docs/eval/audit_fundamentals.py",
+    "disposition": "retained",
+    "path": "docs/eval/audit_fundamentals.py"
+  },
+  {
+    "original": "docs/eval/data/input.txt",
+    "disposition": "retained",
+    "path": "docs/eval/data/input.txt"
+  },
+  {
+    "original": "docs/eval/make_figures.py",
+    "disposition": "retained",
+    "path": "docs/eval/make_figures.py"
+  },
+  {
+    "original": "docs/eval/results/demo_reference.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/demo_reference.json"
+  },
+  {
+    "original": "docs/eval/results/e1_convergence.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/e1_convergence.json"
+  },
+  {
+    "original": "docs/eval/results/e2_byzantine.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/e2_byzantine.json"
+  },
+  {
+    "original": "docs/eval/results/e3_compression.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/e3_compression.json"
+  },
+  {
+    "original": "docs/eval/results/e4_ponw.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/e4_ponw.json"
+  },
+  {
+    "original": "docs/eval/results/fundamentals_audit.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/fundamentals_audit.json"
+  },
+  {
+    "original": "docs/eval/results/native_install_candidate.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/native_install_candidate.json"
+  },
+  {
+    "original": "docs/eval/results/outbound_work_candidate.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/outbound_work_candidate.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_candidates.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_candidates.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_container_conformance.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_container_conformance.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_economics.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_economics.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_native_v2.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_native_v2.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_remote_conformance.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_remote_conformance.json"
+  },
+  {
+    "original": "docs/eval/results/protocol_two_host_native.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/protocol_two_host_native.json"
+  },
+  {
+    "original": "docs/eval/results/public_network_candidate.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/public_network_candidate.json"
+  },
+  {
+    "original": "docs/eval/results/public_release_join.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/public_release_join.json"
+  },
+  {
+    "original": "docs/eval/results/public_sponsor_recovery.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/public_sponsor_recovery.json"
+  },
+  {
+    "original": "docs/eval/results/public_sponsor_service.json",
+    "disposition": "retained",
+    "path": "docs/eval/results/public_sponsor_service.json"
+  },
+  {
+    "original": "docs/eval/run_experiments.py",
+    "disposition": "retained",
+    "path": "docs/eval/run_experiments.py"
+  },
+  {
+    "original": "docs/experiments/logs_driver.txt",
+    "disposition": "retained",
+    "path": "docs/experiments/logs_driver.txt"
+  },
+  {
+    "original": "docs/experiments/logs_exp1_driver.txt",
+    "disposition": "retained",
+    "path": "docs/experiments/logs_exp1_driver.txt"
+  },
+  {
+    "original": "docs/experiments/results/exp1_compression_bytes.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_compression_bytes.json"
+  },
+  {
+    "original": "docs/experiments/results/exp1_diloco_h50.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_diloco_h50.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp1_diloco_h500.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_diloco_h500.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp1_diloco_h500_comp.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_diloco_h500_comp.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp1_indep.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_indep.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp1_sync.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp1_sync.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_alie_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_alie_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_alie_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_alie_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f0.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f0.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f0.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f0.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f1.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f1.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f1.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f1.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f3.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f3.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_mean_signflip_f3.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_mean_signflip_f3.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_alie_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_alie_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_alie_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_alie_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f0.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f0.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f0.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f0.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f1.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f1.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f1.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f1.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f3.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f3.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_median_signflip_f3.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_median_signflip_f3.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_alie_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_alie_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_alie_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_alie_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f0.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f0.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f0.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f0.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f1.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f1.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f1.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f1.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f2.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f2.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f2.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f2.json"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f3.dat",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f3.dat"
+  },
+  {
+    "original": "docs/experiments/results/exp2_trimmed_mean_signflip_f3.json",
+    "disposition": "retained",
+    "path": "docs/experiments/results/exp2_trimmed_mean_signflip_f3.json"
+  },
+  {
+    "original": "docs/figures/eval_byzantine.pdf",
+    "disposition": "retained",
+    "path": "docs/figures/eval_byzantine.pdf"
+  },
+  {
+    "original": "docs/figures/eval_convergence.pdf",
+    "disposition": "retained",
+    "path": "docs/figures/eval_convergence.pdf"
+  },
+  {
+    "original": "docs/whitepaper/neuroshard_whitepaper.pdf",
+    "disposition": "retained",
+    "path": "docs/whitepaper/neuroshard_whitepaper.pdf"
+  },
+  {
+    "original": "pyproject.toml",
+    "disposition": "retained",
+    "path": "pyproject.toml"
+  },
+  {
+    "original": "release.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/release.sh"
+  },
+  {
+    "original": "requirements.txt",
+    "disposition": "retained",
+    "path": "requirements.txt"
+  },
+  {
+    "original": "scripts/audit_ledger.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/audit_ledger.py"
+  },
+  {
+    "original": "scripts/backup_to_private.sh",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/build_protocol_probe.sh",
+    "disposition": "retained",
+    "path": "scripts/build_protocol_probe.sh"
+  },
+  {
+    "original": "scripts/build_whitepaper.sh",
+    "disposition": "retained",
+    "path": "scripts/build_whitepaper.sh"
+  },
+  {
+    "original": "scripts/check_numerics_container.py",
+    "disposition": "retained",
+    "path": "scripts/check_numerics_container.py"
+  },
+  {
+    "original": "scripts/check_numerics_remote.py",
+    "disposition": "retained",
+    "path": "scripts/check_numerics_remote.py"
+  },
+  {
+    "original": "scripts/check_outbound_work.py",
+    "disposition": "retained",
+    "path": "scripts/check_outbound_work.py"
+  },
+  {
+    "original": "scripts/check_public_network.py",
+    "disposition": "retained",
+    "path": "scripts/check_public_network.py"
+  },
+  {
+    "original": "scripts/client.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/client.py"
+  },
+  {
+    "original": "scripts/demo_neuroshard.py",
+    "disposition": "retained",
+    "path": "scripts/demo_neuroshard.py"
+  },
+  {
+    "original": "scripts/export_native_release.py",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/extract_node_credentials.py",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/generate_checksums.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/generate_checksums.py"
+  },
+  {
+    "original": "scripts/genesis_ctl.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/genesis_ctl.sh"
+  },
+  {
+    "original": "scripts/genesis_parallel.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/genesis_parallel.py"
+  },
+  {
+    "original": "scripts/genesis_parallel_service.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/genesis_parallel_service.sh"
+  },
+  {
+    "original": "scripts/genesis_service.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/genesis_service.sh"
+  },
+  {
+    "original": "scripts/genesis_sources.json",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/genesis_sources.json"
+  },
+  {
+    "original": "scripts/install.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/install.sh"
+  },
+  {
+    "original": "scripts/install_demo_consensus.sh",
+    "disposition": "retained",
+    "path": "scripts/install_demo_consensus.sh"
+  },
+  {
+    "original": "scripts/install_native.sh",
+    "disposition": "retained",
+    "path": "scripts/install_native.sh"
+  },
+  {
+    "original": "scripts/lan_gate.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/lan_gate.py"
+  },
+  {
+    "original": "scripts/learned_tokenizer.json",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/learned_tokenizer.json"
+  },
+  {
+    "original": "scripts/manage_tags.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/manage_tags.sh"
+  },
+  {
+    "original": "scripts/migrate_to_dynamic_architecture.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/migrate_to_dynamic_architecture.py"
+  },
+  {
+    "original": "scripts/neuroshard_chain.py",
+    "disposition": "retained",
+    "path": "scripts/neuroshard_chain.py"
+  },
+  {
+    "original": "scripts/neuroshard_work.py",
+    "disposition": "retained",
+    "path": "scripts/neuroshard_work.py"
+  },
+  {
+    "original": "scripts/populate_genesis_s3.py",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/prepare_native_site.py",
+    "disposition": "retained",
+    "path": "scripts/prepare_native_site.py"
+  },
+  {
+    "original": "scripts/protocol_lab.py",
+    "disposition": "retained",
+    "path": "scripts/protocol_lab.py"
+  },
+  {
+    "original": "scripts/protocol_lab_remote.py",
+    "disposition": "retained",
+    "path": "scripts/protocol_lab_remote.py"
+  },
+  {
+    "original": "scripts/release.sh",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/scripts/release.sh"
+  },
+  {
+    "original": "scripts/remote_lab_process.py",
+    "disposition": "retained",
+    "path": "scripts/remote_lab_process.py"
+  },
+  {
+    "original": "scripts/reset_ledger.sh",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/setup_cloudfront.py",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/setup_releases_cloudfront.py",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/setup_remote_lab.sh",
+    "disposition": "retained",
+    "path": "scripts/setup_remote_lab.sh"
+  },
+  {
+    "original": "scripts/sync_infra.sh",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "scripts/sync_to_public.sh",
+    "disposition": "private recovery archive; obsolete operational tooling or unused template",
+    "path": null
+  },
+  {
+    "original": "simulate_network.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/simulate_network.py"
+  },
+  {
+    "original": "src/neuroshard/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/__main__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/__main__.py"
+  },
+  {
+    "original": "src/neuroshard/cli.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/cli.py"
+  },
+  {
+    "original": "src/neuroshard/core/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/consensus/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/consensus/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/consensus/epoch.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/consensus/epoch.py"
+  },
+  {
+    "original": "src/neuroshard/core/consensus/verifier.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/consensus/verifier.py"
+  },
+  {
+    "original": "src/neuroshard/core/crypto/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/crypto/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/crypto/ecdsa.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/crypto/ecdsa.py"
+  },
+  {
+    "original": "src/neuroshard/core/economics/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/economics/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/economics/constants.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/economics/constants.py"
+  },
+  {
+    "original": "src/neuroshard/core/economics/ledger.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/economics/ledger.py"
+  },
+  {
+    "original": "src/neuroshard/core/economics/market.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/economics/market.py"
+  },
+  {
+    "original": "src/neuroshard/core/economics/wallet.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/economics/wallet.py"
+  },
+  {
+    "original": "src/neuroshard/core/governance/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/governance/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/governance/proposal.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/governance/proposal.py"
+  },
+  {
+    "original": "src/neuroshard/core/governance/registry.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/governance/registry.py"
+  },
+  {
+    "original": "src/neuroshard/core/governance/versioning.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/governance/versioning.py"
+  },
+  {
+    "original": "src/neuroshard/core/governance/voting.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/governance/voting.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/dynamic.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/dynamic.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/llm.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/llm.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/moe.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/moe.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/registry.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/registry.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/scaler.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/scaler.py"
+  },
+  {
+    "original": "src/neuroshard/core/model/tokenizer.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/model/tokenizer.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/connection_pool.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/connection_pool.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/dht.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/dht.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/dht_proof_store.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/dht_proof_store.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/dht_protocol.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/dht_protocol.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/dht_service.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/dht_service.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/encrypted_channel.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/encrypted_channel.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/nat.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/nat.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/nat_traversal.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/nat_traversal.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/p2p.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/p2p.py"
+  },
+  {
+    "original": "src/neuroshard/core/network/p2p_data.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/network/p2p_data.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/aggregation.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/aggregation.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/buffers.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/buffers.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/checkpoint.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/checkpoint.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/compute.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/compute.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/diloco.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/diloco.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/factory.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/factory.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/heartbeat.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/heartbeat.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/logger.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/logger.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/quorum.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/quorum.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/router.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/router.py"
+  },
+  {
+    "original": "src/neuroshard/core/swarm/service.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/swarm/service.py"
+  },
+  {
+    "original": "src/neuroshard/core/training/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/training/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/core/training/checkpoint.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/training/checkpoint.py"
+  },
+  {
+    "original": "src/neuroshard/core/training/distributed.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/training/distributed.py"
+  },
+  {
+    "original": "src/neuroshard/core/training/global_tracker.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/training/global_tracker.py"
+  },
+  {
+    "original": "src/neuroshard/core/training/production.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/core/training/production.py"
+  },
+  {
+    "original": "src/neuroshard/demo/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/demo/abci.proto",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/abci.proto"
+  },
+  {
+    "original": "src/neuroshard/demo/abci_pb2.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/abci_pb2.py"
+  },
+  {
+    "original": "src/neuroshard/demo/abci_pb2_grpc.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/abci_pb2_grpc.py"
+  },
+  {
+    "original": "src/neuroshard/demo/app.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/app.py"
+  },
+  {
+    "original": "src/neuroshard/demo/check.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/check.py"
+  },
+  {
+    "original": "src/neuroshard/demo/client.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/client.py"
+  },
+  {
+    "original": "src/neuroshard/demo/network.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/network.py"
+  },
+  {
+    "original": "src/neuroshard/demo/protocol.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/protocol.py"
+  },
+  {
+    "original": "src/neuroshard/demo/work.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/work.py"
+  },
+  {
+    "original": "src/neuroshard/demo/worker.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/demo/worker.py"
+  },
+  {
+    "original": "src/neuroshard/governance_cli.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/governance_cli.py"
+  },
+  {
+    "original": "src/neuroshard/grpc_server.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/grpc_server.py"
+  },
+  {
+    "original": "src/neuroshard/lab/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/lab/abci.proto",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/abci.proto"
+  },
+  {
+    "original": "src/neuroshard/lab/abci_pb2.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/abci_pb2.py"
+  },
+  {
+    "original": "src/neuroshard/lab/app.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/app.py"
+  },
+  {
+    "original": "src/neuroshard/lab/client.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/client.py"
+  },
+  {
+    "original": "src/neuroshard/lab/experiments.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/experiments.py"
+  },
+  {
+    "original": "src/neuroshard/lab/matrix.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/matrix.py"
+  },
+  {
+    "original": "src/neuroshard/lab/network.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/network.py"
+  },
+  {
+    "original": "src/neuroshard/lab/provider.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/provider.py"
+  },
+  {
+    "original": "src/neuroshard/lab/state.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/state.py"
+  },
+  {
+    "original": "src/neuroshard/lab/storage.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/lab/storage.py"
+  },
+  {
+    "original": "src/neuroshard/protos/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/protos/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/protos/neuroshard.proto",
+    "disposition": "retained",
+    "path": "src/neuroshard/protos/neuroshard.proto"
+  },
+  {
+    "original": "src/neuroshard/protos/neuroshard_pb2.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/protos/neuroshard_pb2.py"
+  },
+  {
+    "original": "src/neuroshard/protos/neuroshard_pb2_grpc.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/protos/neuroshard_pb2_grpc.py"
+  },
+  {
+    "original": "src/neuroshard/publicnet/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/publicnet/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/publicnet/bootstrap.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/publicnet/bootstrap.py"
+  },
+  {
+    "original": "src/neuroshard/publicnet/cli.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/publicnet/cli.py"
+  },
+  {
+    "original": "src/neuroshard/publicnet/gateway.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/publicnet/gateway.py"
+  },
+  {
+    "original": "src/neuroshard/publicnet/pool.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/publicnet/pool.py"
+  },
+  {
+    "original": "src/neuroshard/runner.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/runner.py"
+  },
+  {
+    "original": "src/neuroshard/sdk/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/sdk/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/sdk/client.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/sdk/client.py"
+  },
+  {
+    "original": "src/neuroshard/sdk/errors.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/sdk/errors.py"
+  },
+  {
+    "original": "src/neuroshard/sdk/types.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/sdk/types.py"
+  },
+  {
+    "original": "src/neuroshard/tracker/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/tracker/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/tracker/server.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/tracker/server.py"
+  },
+  {
+    "original": "src/neuroshard/ui/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/ui/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/ui/app.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/ui/app.py"
+  },
+  {
+    "original": "src/neuroshard/ui/templates/index.html",
+    "disposition": "retained",
+    "path": "src/neuroshard/ui/templates/index.html"
+  },
+  {
+    "original": "src/neuroshard/utils/__init__.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/utils/__init__.py"
+  },
+  {
+    "original": "src/neuroshard/utils/autostart.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/utils/autostart.py"
+  },
+  {
+    "original": "src/neuroshard/utils/hardware.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/utils/hardware.py"
+  },
+  {
+    "original": "src/neuroshard/utils/serialization.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/utils/serialization.py"
+  },
+  {
+    "original": "src/neuroshard/version.py",
+    "disposition": "retained",
+    "path": "src/neuroshard/version.py"
+  },
+  {
+    "original": "tests/conftest.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/conftest.py"
+  },
+  {
+    "original": "tests/script_distributed_inference_marketplace.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/script_distributed_inference_marketplace.py"
+  },
+  {
+    "original": "tests/script_production_inference.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/script_production_inference.py"
+  },
+  {
+    "original": "tests/skip_test_swarm_phase2.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/skip_test_swarm_phase2.py"
+  },
+  {
+    "original": "tests/test_aggregation.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_aggregation.py"
+  },
+  {
+    "original": "tests/test_api_endpoints.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_api_endpoints.py"
+  },
+  {
+    "original": "tests/test_architecture_v2.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_architecture_v2.py"
+  },
+  {
+    "original": "tests/test_crypto.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_crypto.py"
+  },
+  {
+    "original": "tests/test_decentralization.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_decentralization.py"
+  },
+  {
+    "original": "tests/test_decentralization_network.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_decentralization_network.py"
+  },
+  {
+    "original": "tests/test_decentralized_training_lifecycle.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_decentralized_training_lifecycle.py"
+  },
+  {
+    "original": "tests/test_dht.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_dht.py"
+  },
+  {
+    "original": "tests/test_diloco.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_diloco.py"
+  },
+  {
+    "original": "tests/test_distributed_protocol.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_distributed_protocol.py"
+  },
+  {
+    "original": "tests/test_distributed_training_mode.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_distributed_training_mode.py"
+  },
+  {
+    "original": "tests/test_dynamic_architecture.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_dynamic_architecture.py"
+  },
+  {
+    "original": "tests/test_e2e_system.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_e2e_system.py"
+  },
+  {
+    "original": "tests/test_full_decentralized_system.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_full_decentralized_system.py"
+  },
+  {
+    "original": "tests/test_integration.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_integration.py"
+  },
+  {
+    "original": "tests/test_ledger.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_ledger.py"
+  },
+  {
+    "original": "tests/test_multi_node_environment.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_multi_node_environment.py"
+  },
+  {
+    "original": "tests/test_network_integration.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_network_integration.py"
+  },
+  {
+    "original": "tests/test_network_simulation.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_network_simulation.py"
+  },
+  {
+    "original": "tests/test_no_db.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_no_db.py"
+  },
+  {
+    "original": "tests/test_observer_scenario.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_observer_scenario.py"
+  },
+  {
+    "original": "tests/test_outbound_work.py",
+    "disposition": "retained",
+    "path": "tests/test_outbound_work.py"
+  },
+  {
+    "original": "tests/test_protocol_candidate.py",
+    "disposition": "retained",
+    "path": "tests/test_protocol_candidate.py"
+  },
+  {
+    "original": "tests/test_public_node.py",
+    "disposition": "retained",
+    "path": "tests/test_public_node.py"
+  },
+  {
+    "original": "tests/test_sdk.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_sdk.py"
+  },
+  {
+    "original": "tests/test_simulation_report.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_simulation_report.py"
+  },
+  {
+    "original": "tests/test_stats_endpoint.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_stats_endpoint.py"
+  },
+  {
+    "original": "tests/test_swarm_components.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_swarm_components.py"
+  },
+  {
+    "original": "tests/test_swarm_multi_node.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_swarm_multi_node.py"
+  },
+  {
+    "original": "tests/test_swarm_phase3.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_swarm_phase3.py"
+  },
+  {
+    "original": "tests/test_swarm_phase4.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_swarm_phase4.py"
+  },
+  {
+    "original": "tests/test_v2_e2e_multi_node.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_v2_e2e_multi_node.py"
+  },
+  {
+    "original": "tests/test_v2_infrastructure.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_v2_infrastructure.py"
+  },
+  {
+    "original": "tests/test_v2_ponw.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_v2_ponw.py"
+  },
+  {
+    "original": "tests/test_v2_quorum_inference.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_v2_quorum_inference.py"
+  },
+  {
+    "original": "tests/test_v2_quorum_training.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_v2_quorum_training.py"
+  },
+  {
+    "original": "tests/test_validator_consensus.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_validator_consensus.py"
+  },
+  {
+    "original": "tests/test_verified_demo.py",
+    "disposition": "retained",
+    "path": "tests/test_verified_demo.py"
+  },
+  {
+    "original": "tests/test_wallet_api.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/test_wallet_api.py"
+  },
+  {
+    "original": "tests/verify_e2e.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/verify_e2e.py"
+  },
+  {
+    "original": "tests/verify_scenario.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/tests/verify_scenario.py"
+  },
+  {
+    "original": "tools/protocolprobe/go.mod",
+    "disposition": "retained",
+    "path": "tools/protocolprobe/go.mod"
+  },
+  {
+    "original": "tools/protocolprobe/go.sum",
+    "disposition": "retained",
+    "path": "tools/protocolprobe/go.sum"
+  },
+  {
+    "original": "tools/protocolprobe/main.go",
+    "disposition": "retained",
+    "path": "tools/protocolprobe/main.go"
+  },
+  {
+    "original": "website/.dockerignore",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/.dockerignore"
+  },
+  {
+    "original": "website/Dockerfile.backend",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/Dockerfile.backend"
+  },
+  {
+    "original": "website/Dockerfile.frontend",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/Dockerfile.frontend"
+  },
+  {
+    "original": "website/Dockerfile.genesis",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/Dockerfile.genesis"
+  },
+  {
+    "original": "website/Dockerfile.node",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/Dockerfile.node"
+  },
+  {
+    "original": "website/Dockerfile.tracker",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/Dockerfile.tracker"
+  },
+  {
+    "original": "website/README.md",
+    "disposition": "retained",
+    "path": "website/README.md"
+  },
+  {
+    "original": "website/api/auth_utils.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/auth_utils.py"
+  },
+  {
+    "original": "website/api/database.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/database.py"
+  },
+  {
+    "original": "website/api/dependencies.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/dependencies.py"
+  },
+  {
+    "original": "website/api/downloads.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/downloads.py"
+  },
+  {
+    "original": "website/api/email_service.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/email_service.py"
+  },
+  {
+    "original": "website/api/ledger.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/ledger.py"
+  },
+  {
+    "original": "website/api/main.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/main.py"
+  },
+  {
+    "original": "website/api/migrations.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/migrations.py"
+  },
+  {
+    "original": "website/api/models.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/models.py"
+  },
+  {
+    "original": "website/api/rate_limiter.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/rate_limiter.py"
+  },
+  {
+    "original": "website/api/schemas.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/schemas.py"
+  },
+  {
+    "original": "website/api/tests/__init__.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/tests/__init__.py"
+  },
+  {
+    "original": "website/api/tests/test_rate_limiter.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/tests/test_rate_limiter.py"
+  },
+  {
+    "original": "website/api/waitlist.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/waitlist.py"
+  },
+  {
+    "original": "website/api/wallet.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/api/wallet.py"
+  },
+  {
+    "original": "website/generate_genesis.py",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/generate_genesis.py"
+  },
+  {
+    "original": "website/index.html",
+    "disposition": "retained",
+    "path": "website/index.html"
+  },
+  {
+    "original": "website/nginx.docker.conf",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/nginx.docker.conf"
+  },
+  {
+    "original": "website/package-lock.json",
+    "disposition": "retained",
+    "path": "website/package-lock.json"
+  },
+  {
+    "original": "website/package.json",
+    "disposition": "retained",
+    "path": "website/package.json"
+  },
+  {
+    "original": "website/postcss.config.js",
+    "disposition": "retained",
+    "path": "website/postcss.config.js"
+  },
+  {
+    "original": "website/protected/.gitkeep",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/protected/.gitkeep"
+  },
+  {
+    "original": "website/protected/whitepaper.pdf",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/protected/whitepaper.pdf"
+  },
+  {
+    "original": "website/public/android-chrome-192x192.png",
+    "disposition": "retained",
+    "path": "website/public/android-chrome-192x192.png"
+  },
+  {
+    "original": "website/public/android-chrome-512x512.png",
+    "disposition": "retained",
+    "path": "website/public/android-chrome-512x512.png"
+  },
+  {
+    "original": "website/public/apple-touch-icon.png",
+    "disposition": "retained",
+    "path": "website/public/apple-touch-icon.png"
+  },
+  {
+    "original": "website/public/favicon-16x16.png",
+    "disposition": "retained",
+    "path": "website/public/favicon-16x16.png"
+  },
+  {
+    "original": "website/public/favicon-32x32.png",
+    "disposition": "retained",
+    "path": "website/public/favicon-32x32.png"
+  },
+  {
+    "original": "website/public/favicon.ico",
+    "disposition": "retained",
+    "path": "website/public/favicon.ico"
+  },
+  {
+    "original": "website/public/grid.svg",
+    "disposition": "retained",
+    "path": "website/public/grid.svg"
+  },
+  {
+    "original": "website/public/logo_large.png",
+    "disposition": "retained",
+    "path": "website/public/logo_large.png"
+  },
+  {
+    "original": "website/public/papers/FINE2026_neuroshard_short.pdf",
+    "disposition": "retained",
+    "path": "website/public/papers/FINE2026_neuroshard_short.pdf"
+  },
+  {
+    "original": "website/public/robots.txt",
+    "disposition": "retained",
+    "path": "website/public/robots.txt"
+  },
+  {
+    "original": "website/public/site.webmanifest",
+    "disposition": "retained",
+    "path": "website/public/site.webmanifest"
+  },
+  {
+    "original": "website/public/sitemap.xml",
+    "disposition": "retained",
+    "path": "website/public/sitemap.xml"
+  },
+  {
+    "original": "website/requirements_api.txt",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/requirements_api.txt"
+  },
+  {
+    "original": "website/src/App.tsx",
+    "disposition": "retained",
+    "path": "website/src/App.tsx"
+  },
+  {
+    "original": "website/src/assets/logo.png",
+    "disposition": "retained",
+    "path": "website/src/assets/logo.png"
+  },
+  {
+    "original": "website/src/assets/logo_large.png",
+    "disposition": "retained",
+    "path": "website/src/assets/logo_large.png"
+  },
+  {
+    "original": "website/src/assets/logo_white.png",
+    "disposition": "retained",
+    "path": "website/src/assets/logo_white.png"
+  },
+  {
+    "original": "website/src/assets/logo_white_large.png",
+    "disposition": "retained",
+    "path": "website/src/assets/logo_white_large.png"
+  },
+  {
+    "original": "website/src/components/AdminDashboard.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/AdminDashboard.tsx"
+  },
+  {
+    "original": "website/src/components/Chat.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Chat.tsx"
+  },
+  {
+    "original": "website/src/components/Download.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Download.tsx"
+  },
+  {
+    "original": "website/src/components/DownloadPage.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/DownloadPage.tsx"
+  },
+  {
+    "original": "website/src/components/Features.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Features.tsx"
+  },
+  {
+    "original": "website/src/components/Footer.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Footer.tsx"
+  },
+  {
+    "original": "website/src/components/GlobalLLMStatus.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/GlobalLLMStatus.tsx"
+  },
+  {
+    "original": "website/src/components/Governance.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Governance.tsx"
+  },
+  {
+    "original": "website/src/components/Header.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Header.tsx"
+  },
+  {
+    "original": "website/src/components/Hero.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Hero.tsx"
+  },
+  {
+    "original": "website/src/components/HowItWorks.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/HowItWorks.tsx"
+  },
+  {
+    "original": "website/src/components/LedgerExplorer.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/LedgerExplorer.tsx"
+  },
+  {
+    "original": "website/src/components/Legal.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Legal.tsx"
+  },
+  {
+    "original": "website/src/components/LiveStats.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/LiveStats.tsx"
+  },
+  {
+    "original": "website/src/components/Login.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Login.tsx"
+  },
+  {
+    "original": "website/src/components/NetworkBackground.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/NetworkBackground.tsx"
+  },
+  {
+    "original": "website/src/components/NotFound.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/NotFound.tsx"
+  },
+  {
+    "original": "website/src/components/ProtectedRoute.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/ProtectedRoute.tsx"
+  },
+  {
+    "original": "website/src/components/SEO.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/SEO.tsx"
+  },
+  {
+    "original": "website/src/components/ScrollToTop.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/ScrollToTop.tsx"
+  },
+  {
+    "original": "website/src/components/Signup.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Signup.tsx"
+  },
+  {
+    "original": "website/src/components/Technology.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Technology.tsx"
+  },
+  {
+    "original": "website/src/components/UserDashboard.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/UserDashboard.tsx"
+  },
+  {
+    "original": "website/src/components/Vision.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Vision.tsx"
+  },
+  {
+    "original": "website/src/components/WaitlistSignup.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/WaitlistSignup.tsx"
+  },
+  {
+    "original": "website/src/components/Whitepaper.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/components/Whitepaper.tsx"
+  },
+  {
+    "original": "website/src/config/api.ts",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/config/api.ts"
+  },
+  {
+    "original": "website/src/contexts/AuthContext.tsx",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/contexts/AuthContext.tsx"
+  },
+  {
+    "original": "website/src/design-system.ts",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/design-system.ts"
+  },
+  {
+    "original": "website/src/index.css",
+    "disposition": "retained",
+    "path": "website/src/index.css"
+  },
+  {
+    "original": "website/src/main.tsx",
+    "disposition": "retained",
+    "path": "website/src/main.tsx"
+  },
+  {
+    "original": "website/src/native/NativeApp.tsx",
+    "disposition": "retained",
+    "path": "website/src/native/NativeApp.tsx"
+  },
+  {
+    "original": "website/src/native/api.ts",
+    "disposition": "retained",
+    "path": "website/src/native/api.ts"
+  },
+  {
+    "original": "website/src/native/native.css",
+    "disposition": "retained",
+    "path": "website/src/native/native.css"
+  },
+  {
+    "original": "website/src/services/api.ts",
+    "disposition": "archived prototype; unsupported",
+    "path": "legacy/website/src/services/api.ts"
+  },
+  {
+    "original": "website/src/vite-env.d.ts",
+    "disposition": "retained",
+    "path": "website/src/vite-env.d.ts"
+  },
+  {
+    "original": "website/tailwind.config.js",
+    "disposition": "retained",
+    "path": "website/tailwind.config.js"
+  },
+  {
+    "original": "website/tsconfig.json",
+    "disposition": "retained",
+    "path": "website/tsconfig.json"
+  },
+  {
+    "original": "website/tsconfig.node.json",
+    "disposition": "retained",
+    "path": "website/tsconfig.node.json"
+  },
+  {
+    "original": "website/vite.config.ts",
+    "disposition": "retained",
+    "path": "website/vite.config.ts"
+  },
+  {
+    "original": "docs/OPEN_SOURCE_TRANSITION.md",
+    "disposition": "retained",
+    "path": "docs/OPEN_SOURCE_TRANSITION.md"
+  }
+]

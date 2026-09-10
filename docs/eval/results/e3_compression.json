@@ -1,0 +1,29 @@
+{
+ "per_topk": [
+  {
+   "top_k_ratio": 0.05,
+   "raw_bytes": 2494976,
+   "compressed_bytes": 121092,
+   "ratio": 20.603970534799988,
+   "mean_cosine": 0.45555872430926875,
+   "wall_seconds": 0.04845070838928223
+  },
+  {
+   "top_k_ratio": 0.1,
+   "raw_bytes": 2494976,
+   "compressed_bytes": 231902,
+   "ratio": 10.75875154159947,
+   "mean_cosine": 0.5833292227042349,
+   "wall_seconds": 0.0631868839263916
+  },
+  {
+   "top_k_ratio": 0.2,
+   "raw_bytes": 2494976,
+   "compressed_bytes": 448646,
+   "ratio": 5.5611239150688965,
+   "mean_cosine": 0.7338362665552842,
+   "wall_seconds": 0.10537099838256836
+  }
+ ],
+ "model_params": 623744
+}

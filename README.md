@@ -1,229 +1,51 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/assets/logo.png?v=2" alt="NeuroShard Logo" width="120" height="120">
-</p>
+# NeuroShard
 
-<h1 align="center">NeuroShard</h1>
+NeuroShard is a research project toward a decentralized network that trains language models and rewards verified computation on its own blockchain.
 
-<p align="center">
-  <strong>Decentralized LLM Training Network</strong>
-</p>
+The current native release combines **NeuroShard-native CometBFT consensus**, a public ledger, two-stage neural training, full verification replay, token rewards, earned-stake validator entry, delayed exits, and equivocation penalties. Full nodes generate their keys locally and join without a website account or registration token. Outbound workers can execute sponsored tasks without an initial balance or an inbound worker port.
 
-<p align="center">
-  <a href="https://pypi.org/project/neuroshard-ai/"><img src="https://badge.fury.io/py/neuroshard-ai.svg" alt="PyPI version"></a>
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+"></a>
-  <a href="https://github.com/neuroshard-ai/neuroshard/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0"></a>
-  <a href="https://discord.gg/4R49xpj7vn"><img src="https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white" alt="Discord"></a>
-</p>
+The supported model has 34,976 parameters and runs on a pinned CPU profile. The deployment is experimental, with one operator currently controlling the test validators. Economical LLM-scale verification, independent ownership, fair worker assignment, sustained public load, and production monetary policy remain open work.
 
-<p align="center">
-  <a href="https://neuroshard.com">Website</a> •
-  <a href="https://docs.neuroshard.com">Documentation</a> •
-  <a href="docs/whitepaper/neuroshard_whitepaper.pdf">Whitepaper</a> •
-  <a href="https://discord.gg/4R49xpj7vn">Discord</a> •
-  <a href="https://x.com/shardneuro">Twitter</a>
-</p>
+## Start here
 
----
-
-## What is NeuroShard?
-
-NeuroShard is a **decentralized network** for training large language models. Anyone can contribute GPU/CPU power and earn **NEURO tokens** through Proof of Neural Work.
-
-Unlike centralized AI companies, NeuroShard distributes both the compute AND the rewards across all participants.
-
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| **DiLoCo Training** | Distributed Low-Communication training - sync every 500 steps, not every step |
-| **Byzantine Tolerance** | Robust gradient aggregation (Krum, Trimmed Mean) handles malicious nodes |
-| **NEURO Rewards** | Earn tokens for contributing compute via Proof of Neural Work |
-| **Cryptographic Proofs** | ECDSA-signed proofs ensure trustless verification |
-| **Web Dashboard** | Real-time monitoring at `http://localhost:8000` |
-| **P2P Network** | Decentralized peer discovery and gossip protocol |
-
----
-
-## Quick Start
-
-### Installation
+Read the [native operator guide](docs/PUBLIC_TESTNET.md) for installation, genesis verification, joining, training, validation, and recovery. The public application is [neuroshard.com](https://neuroshard.com), with [documentation](https://docs.neuroshard.com) and [releases](https://github.com/neuroshard-ai/neuroshard/releases).
 
 ```bash
-pip install neuroshard-ai
-```
-
-### Run a Node
-
-```bash
-# Get your token from neuroshard.com
-neuroshard --token YOUR_TOKEN
-```
-
-That's it! Your node will:
-1. Connect to the network
-2. Start training model layers
-3. Earn NEURO for your contribution
-
-### Web Dashboard
-
-Open `http://localhost:8000` to see:
-- Node status and role
-- Training progress (DiLoCo inner/outer steps)
-- NEURO balance
-- Network statistics
-
----
-
-## System Requirements
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| **RAM** | 4 GB | 8+ GB |
-| **Python** | 3.9+ | 3.10+ |
-| **GPU** | Optional | NVIDIA 8GB+ VRAM |
-
-### GPU Support (Optional)
-
-For NVIDIA GPUs with CUDA:
-
-```bash
-pip install torch --index-url https://download.pytorch.org/whl/cu118
-```
-
----
-
-## How It Works
-
-### DiLoCo Distributed Training
-
-NeuroShard uses [DiLoCo](https://arxiv.org/abs/2311.08105) (Distributed Low-Communication) for efficient distributed training:
-
-```
-┌─────────────────────────────────────────────────┐
-│  INNER LOOP (500 steps - no communication)      │
-│  • Each node trains independently               │
-│  • Local AdamW optimization                     │
-└─────────────────────────────────────────────────┘
-                      ↓
-┌─────────────────────────────────────────────────┐
-│  OUTER LOOP (sync with peers)                   │
-│  • Compute pseudo-gradient: Δθ = θ₀ - θ₅₀₀     │
-│  • Gossip to peers                              │
-│  • Byzantine-tolerant aggregation               │
-│  • Nesterov momentum update                     │
-└─────────────────────────────────────────────────┘
-                      ↓
-              (Repeat)
-```
-
-This reduces network communication by **500x** compared to synchronous training!
-
-### Proof of Neural Work
-
-Nodes earn NEURO by submitting cryptographically signed proofs of their work:
-
-- Training batches processed
-- Inference requests served
-- Uptime contribution
-- Data samples provided
-
-All proofs are verified using ECDSA signatures (secp256k1).
-
----
-
-## Configuration
-
-### CLI Options
-
-```bash
-neuroshard --token YOUR_TOKEN \
-           --port 8000 \
-           --tracker https://tracker.neuroshard.com \
-           --training \
-           --diloco-steps 500
-```
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--token` | Required | Your node authentication token |
-| `--port` | 8000 | HTTP server port |
-| `--tracker` | Auto | Tracker server URL |
-| `--training` | False | Enable training mode |
-| `--diloco-steps` | 500 | Inner steps before sync |
-
-See [full CLI reference](https://docs.neuroshard.com/guide/cli-reference) for all options.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      NeuroShard Node                        │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  NeuroLLM   │  │   DiLoCo    │  │  Proof of Neural    │  │
-│  │  (Model)    │  │  Trainer    │  │  Work Ledger        │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │  P2P/DHT    │  │  Gradient   │  │  ECDSA Crypto       │  │
-│  │  Network    │  │  Aggregator │  │  (secp256k1)        │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Documentation
-
-- **[Whitepaper](docs/whitepaper/neuroshard_whitepaper.pdf)** - Technical whitepaper (PDF)
-- **[Local Testing](docs/LOCAL_TESTING.md)** - Smoke, tiny training, LAN, churn, and restart gates
-- **[Testnet Gates](docs/TESTNET_GATES.md)** - Promotion process from local tests to closed alpha
-- **[Getting Started](https://docs.neuroshard.com/guide/quick-start)** - First steps
-- **[Running a Node](https://docs.neuroshard.com/guide/running-a-node)** - Detailed setup
-- **[Architecture](https://docs.neuroshard.com/architecture/overview)** - System design
-- **[Economics](https://docs.neuroshard.com/economics/overview)** - NEURO tokenomics
-- **[API Reference](https://docs.neuroshard.com/api/overview)** - SDK & endpoints
-
----
-
-## Links
-
-| Resource | Link |
-|----------|------|
-| Website | [neuroshard.com](https://neuroshard.com) |
-| Documentation | [docs.neuroshard.com](https://docs.neuroshard.com) |
-| Whitepaper | [PDF](docs/whitepaper/neuroshard_whitepaper.pdf) |
-| Discord | [discord.gg/4R49xpj7vn](https://discord.gg/4R49xpj7vn) |
-| Twitter | [@shardneuro](https://x.com/shardneuro) |
-| PyPI | [pypi.org/project/neuroshard-ai](https://pypi.org/project/neuroshard-ai/) |
-
----
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-```bash
-# Clone the repo
-git clone https://github.com/neuroshard-ai/neuroshard.git
+git clone --branch v0.3.0a1 --depth 1 https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
-
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
+bash scripts/install_native.sh
+venv_build/bin/python scripts/neuroshard_chain.py --help
+venv_build/bin/python scripts/neuroshard_work.py --help
 ```
 
----
+Use the reviewed source revision matching your network's genesis. The installer targets Linux x86_64 and Python 3.10–3.12. The old PyPI package, `neuroshard --token ...` command, and observer ledger belong to an earlier prototype and do not connect to this native chain. No balance migration is defined.
 
-## License
+## Protocol and evidence
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details.
+- [Protocol candidate v2](docs/PROTOCOL_CANDIDATE_V2.md): accepted transactions, execution rules, issuance, evidence, exit, and threat assumptions.
+- [Experiments and reproduction](docs/PROTOCOL_EXPERIMENTS.md): native admission, cross-machine numerical conformance, real equivocation evidence, verification-cost experiments, and their limits.
+- [Five-page manuscript](docs/FINE2026_neuroshard_short.pdf) and [source](docs/FINE2026_neuroshard_short.tex): earlier research formulation; new deployment experiments are documented separately before integration into the paper.
+- [Fundamentals review](docs/FUNDAMENTALS_REVIEW.md) and [research roadmap](docs/RESEARCH_ROADMAP.md).
 
----
+Signatures identify the worker that made a claim. Validators independently replay the prescribed computation to verify it. Rewarding a correct training step does not prove that it improved model quality, that a particular physical processor performed it, or that mining is economically sustainable.
 
-<p align="center">
-  <strong>Train AI. Earn NEURO. Own the Network.</strong>
-</p>
+## Check the implementation
+
+```bash
+ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
+  venv_build/bin/python -m pytest -q tests/test_verified_demo.py \
+  tests/test_protocol_candidate.py tests/test_public_node.py tests/test_outbound_work.py
+```
+
+The reference code is in `src/neuroshard/demo`, the candidate state machine in `src/neuroshard/lab`, public node and worker tooling in `src/neuroshard/publicnet`, and the replacement site in `website`. Earlier implementation modules are retained for research history; the native entry points above define the supported deployment path.
+
+[Apache 2.0 license](LICENSE).
+
+## One open-source project
+
+All supported code, website, documentation, paper, experiments, and deployment templates live here. Develop directly in this repository; there is no private-to-public sync workflow. The former private repository is retained as a recovery archive.
+
+- [Contribute](CONTRIBUTING.md), [governance](GOVERNANCE.md), and [security](SECURITY.md).
+- [Model card](docs/MODEL_CARD.md), [API](docs/API.md), and [deployment](docs/DEPLOYMENT.md).
+- [Release notes](RELEASES.md) and [migration inventory](docs/migration-inventory.json).
+- [Historical prototypes](legacy/README.md), outside the supported deployment and test path.

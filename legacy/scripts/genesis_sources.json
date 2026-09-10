@@ -1,0 +1,56 @@
+{
+  "description": "NeuroShard Genesis Training Data Sources Configuration",
+  "instructions": "Sources are processed in priority order. Each source runs until complete.",
+  "sources": [
+    {
+      "name": "fineweb-edu",
+      "enabled": true,
+      "priority": 1,
+      "target_shards": 600000,
+      "description": "High-quality educational web content (1.3T tokens, ~520K shards)",
+      "notes": "Primary source - curated educational content."
+    },
+    {
+      "name": "fineweb",
+      "enabled": true,
+      "priority": 2,
+      "target_shards": 7000000,
+      "description": "Large-scale web content (15T tokens, ~6M shards)",
+      "notes": "Massive general web data."
+    },
+    {
+      "name": "redpajama",
+      "enabled": false,
+      "priority": 3,
+      "target_shards": 400000,
+      "description": "RedPajama 1T token dataset (~400K shards)",
+      "notes": "DISABLED: HuggingFace deprecated old dataset script format."
+    },
+    {
+      "name": "slimpajama",
+      "enabled": false,
+      "priority": 4,
+      "target_shards": 250000,
+      "description": "SlimPajama 627B tokens (~250K shards)",
+      "notes": "DISABLED: Requires zstd compression support."
+    },
+    {
+      "name": "c4",
+      "enabled": false,
+      "priority": 5,
+      "target_shards": 150000,
+      "description": "Colossal Clean Crawled Corpus 365B tokens (~150K shards)",
+      "notes": "DISABLED: Uses json.gz format, requires special handling. Focus on parquet-based datasets."
+    }
+  ],
+  "storage_estimates": {
+    "fineweb-edu": "~6TB (600K shards @ 10MB each)",
+    "fineweb": "~70TB (7M shards @ 10MB each)",
+    "redpajama": "~4TB (400K shards @ 10MB each)",
+    "slimpajama": "~2.5TB (250K shards @ 10MB each)",
+    "c4": "~1.5TB (150K shards @ 10MB each)",
+    "total": "~84TB"
+  },
+  "total_target_shards": 8400000,
+  "total_estimated_tokens": "~18.3T"
+}
