@@ -25,7 +25,7 @@ def build(ref, output, wheel=None):
     raw = git("archive", "--format=tar", f"--prefix={prefix}/", commit)
     output.mkdir(parents=True, exist_ok=True)
     archive = output / f"{prefix}-source.tar.gz"
-    with archive.open("wb") as stream, gzip.GzipFile(fileobj=stream, filename="", mtime=0) as compressed:
+    with archive.open("wb") as stream, gzip.GzipFile(fileobj=stream, filename="", mode="wb", mtime=0) as compressed:
         compressed.write(raw)
     files = []
     with tarfile.open(fileobj=io.BytesIO(raw)) as source:
