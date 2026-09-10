@@ -1,2 +1,2 @@
 # Supported native CPU environment.
--r docs/demo-requirements.txt
+-r docs/llm-requirements.txt

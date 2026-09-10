@@ -1,6 +1,6 @@
 # Contributing to NeuroShard
 
-The native deployment candidate is the supported development path. It implements a small CPU training workload with native consensus and settlement. See the [operator guide](docs/PUBLIC_TESTNET.md), [protocol](docs/PROTOCOL_CANDIDATE_V2.md), and [experiments](docs/PROTOCOL_EXPERIMENTS.md) before changing its behavior.
+The native deployment candidate is the supported development path. It implements adapter training on a frozen pretrained language model, native consensus and paid inference. See the [operator guide](docs/PUBLIC_TESTNET.md), [protocol](docs/LLM_PROTOCOL.md), and [experiments](docs/LLM_EXPERIMENTS.md) before changing its behavior.
 
 The home for all development is [neuroshard-ai/neuroshard](https://github.com/neuroshard-ai/neuroshard). The [open-source transition](docs/OPEN_SOURCE_TRANSITION.md) records the consolidation decisions. A NeuroShard website account is not required to contribute or operate a native node.
 
@@ -11,11 +11,10 @@ Use Linux x86_64 and Python 3.10–3.12 for the recorded CPU profile:
 ```bash
 bash scripts/install_native.sh
 ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
-  venv_build/bin/python -m pytest -q tests/test_verified_demo.py \
-  tests/test_protocol_candidate.py tests/test_public_node.py tests/test_outbound_work.py
+  venv_build/bin/python -m pytest -q tests
 ```
 
-The installer creates a project-local environment and installs the pinned native engine. Old `neuroshard --token ...` instructions and the published legacy package do not start this chain. Historical tests are in `legacy/tests` with separate prototype dependencies. Run `venv_build/bin/python -m pytest -q` for the complete native suite.
+The installer creates a project-local environment and installs the pinned native engine. The current `neuroshard-ai` client supports `neuroshard join`. Old `neuroshard --token ...` instructions and 0.2 packages do not start this chain. Historical tests are in `legacy/tests` with separate prototype dependencies. Run `venv_build/bin/python -m pytest -q` for the complete native suite.
 
 To work on the website, use Node 22.12 or newer in the Node 22 line:
 
@@ -26,7 +25,7 @@ npm run build
 npm run dev
 ```
 
-The development server proxies native API requests to `127.0.0.1:38659`. Configure that target for your own local gateway when necessary. The production build copies the current protocol documents and manuscript into its public assets. It needs no legacy authentication backend to render the native interface.
+The development server proxies native API requests to `127.0.0.1:39659`. Configure that target for your own local gateway when necessary. The production build copies the current protocol documents and manuscript into its public assets. It needs no legacy authentication backend to render the native interface.
 
 ## Propose a change
 
@@ -52,4 +51,4 @@ Consensus safety, monetary accounting, and claims in the paper should remain exp
 
 Contributions to project code are made under the existing [Apache License 2.0](LICENSE). Preserve applicable attribution and identify the provenance and license of any added third-party code, data, models, or assets.
 
-Build documentation with `cd docs-site && npm ci && npm run build`. Its pages are generated from canonical repository documents. Browser checks: `cd website && npx playwright install chromium && npm test`.
+Build documentation with `cd docs-site && npm ci && npm run build`. Its pages are generated from canonical repository documents. Browser checks: `cd website && npx playwright install chromium && NEUROSHARD_TEST_PYTHON=../venv_build/bin/python npm test`. The Python interpreter must have cryptography installed to verify browser signatures.

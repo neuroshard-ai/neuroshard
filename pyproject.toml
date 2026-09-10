@@ -1,31 +1,32 @@
 [build-system]
-requires = ["setuptools>=77", "wheel"]
+requires = ["setuptools>=83", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "neuroshard-ai"
-version = "0.3.0a1"
+version = "0.4.0"
 description = "Experimental native blockchain for verified neural training"
-readme = "README.md"
+readme = "PYPI_README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "licenses/*"]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 authors = [{name = "NeuroShard contributors"}]
 classifiers = [
   "Development Status :: 3 - Alpha",
-  "Operating System :: POSIX :: Linux",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "torch==2.9.1", "numpy==2.2.6", "grpcio==1.76.0", "protobuf==6.33.1",
-  "cryptography==46.0.3", "requests==2.32.5",
+  "cryptography==50.0.1", "requests==2.34.2", "urllib3==2.7.0", "idna==3.19",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==9.0.2", "build>=1.2,<2"]
+dev = ["pytest==9.1.1", "build>=1.2,<2", "twine>=6,<7", "boto3==1.41.5", "pyarrow==25.0.1"]
+data = ["boto3==1.41.5", "ijson==3.4.0"]
+collector = ["boto3==1.41.5", "ijson==3.4.0", "pyarrow==25.0.1", "transformers==4.57.3", "tokenizers==0.22.1", "huggingface-hub==0.36.0"]
 
 [project.urls]
 Homepage = "https://neuroshard.com"
@@ -34,7 +35,8 @@ Repository = "https://github.com/neuroshard-ai/neuroshard"
 Issues = "https://github.com/neuroshard-ai/neuroshard/issues"
 
 [project.scripts]
-neuroshard = "neuroshard.publicnet.entrypoints:chain"
+neuroshard = "neuroshard.client.cli:main"
+neuroshard-data = "neuroshard.dataflow.cli:main"
 neuroshard-chain = "neuroshard.publicnet.entrypoints:chain"
 neuroshard-work = "neuroshard.publicnet.entrypoints:worker"
 
@@ -49,6 +51,7 @@ include-package-data = true
 "neuroshard.lab" = ["*.proto"]
 "neuroshard.protos" = ["*.proto"]
 "neuroshard.publicnet" = ["data/*.txt"]
+"neuroshard.client" = ["networks/*.json", "consensus/go.mod", "consensus/go.sum"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

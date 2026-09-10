@@ -1,15 +1,15 @@
-# Deploy the native application
+# Deploy the LLM testnet application
 
-One public checkout contains the node, worker, gateway, website, docs, experiments, and paper. The website is static; it needs a full-node gateway and an optional sponsor. No private application or registration database is required.
+The public repository contains the client, native protocol, data writer, website, docs and experiment records. Deploy from a pinned release and preserve all node keys, signing state and databases outside the checkout. There is no registration database in the supported path.
 
-## Build from a pinned release
-
-Use Linux x86_64, Python 3.10–3.12, and Node 22.12 or newer in the Node 22 line.
+## Build and run
 
 ```bash
-git clone --branch v0.3.0a1 https://github.com/neuroshard-ai/neuroshard.git
+git clone --branch v0.4.0 https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
-bash scripts/install_native.sh
+python3 -m venv venv_build
+venv_build/bin/python -m pip install -r docs/llm-requirements.txt
+venv_build/bin/python -m pip install --no-deps .
 cd website
 npm ci
 npm run build
@@ -18,32 +18,38 @@ npm ci
 npm run build
 ```
 
-The website output is `website/dist`; docs output is `docs-site/.vitepress/dist`. Docs are generated from canonical repository markdown. `legacy/` is excluded from both builds. Install each release under a distinct directory and run services from that pinned directory. Follow [node initialization](PUBLIC_TESTNET.md) separately; building a website does not create a chain.
+Use Linux x86_64, Python 3.10–3.12 and Node 22.12+ in the Node 22 line. Web output is `website/dist`, docs output is `docs-site/.vitepress/dist`. Release checks build both, test protocol behavior and compare browser signatures with native Python. A lightweight wallet installation does not install these operator dependencies.
 
-## HTTPS routes
+For an ordinary participant, use [the public client](PUBLIC_TESTNET.md). To establish another native chain, generate at least four locally controlled genesis declarations using the reference bootstrap tools, inspect all allocations and ownership, and run `python -m neuroshard.inference.node genesis --help`. `genesis` freezes model/data/source/runtime; never edit an initialized chain's genesis to apply a software update. The supplied network bundle starts from 90 disclosed genesis NEURO, with a 10,000-task issuance cap.
 
-Copy the builds to `/var/www/neuroshard/releases/v0.3.0a1/site` and `.../docs`, then atomically switch `/var/www/neuroshard/current` to that release directory. A temporary symlink followed by `mv -T` keeps the switch atomic. Preserve the previous target for rollback.
+## Services and retained state
 
-Include [native-site.nginx.conf](../config/native-site.nginx.conf) in the root domain's TLS server and [native-docs.nginx.conf](../config/native-docs.nginx.conf) in the docs server. Supply your existing certificate paths in those outer server blocks. Change loopback gateway/sponsor ports to match your node. The launch deployment uses 38659/38660; the templates use normal node defaults 26659/26660.
+[Systemd templates](../config) show the node, sponsor, worker/provider and bounded collector. Adapt paths, accounts, network and budgets before installing. The launch services run wheel-installed code in isolated release directories, not an editable working tree. CPU arithmetic environment is set before Python imports. Node processes supervise native Comet, ABCI and the gateway. RPC/application listeners are loopback-only; native peers use TCP 26656. Keep validator private keys and signing state private, consistent and unique to one running process.
 
-The proxy overwrites `X-Real-IP`. Keep native RPC and application gRPC on loopback. Expose TCP 26656 for inbound peers when desired. HTTPS permits outbound-only worker connections. Public endpoints have bounded sizes/rates; a sponsor cannot bypass consensus acceptance.
+The launch has two local and two remote genesis validators under one operator. Public participants connect directly to `100.53.139.52:26656`. A secondary private SSH transport connects operator peers across the same two hosts; this is not a separate consensus or a public joining requirement. One published bootstrap peer is an availability limitation. Add independently operated peers and document ownership as participation grows.
 
-Run `nginx -t` before reloading. Check the homepage, model/checkpoint/history, ledger/account/validator views, docs links, source and genesis downloads, mobile navigation, unavailable-service behavior, and a real worker trial. Existing `/native-preview/` paths preserve native POST semantics through an internal rewrite. Old login/signup routes lead to `/join`; old authentication APIs return 410.
+Local application gateway/sponsor ports are 39659/39660. The old v0.3 reference gateway remains at 38659. Its old remote public seed is stopped with state retained; the local reference quorum and read-only explorer remain available. The new testnet does not import old balances or claim an automatic upgrade of that history.
 
-## Node and sponsor services
+The project sponsor uses a persistent attempt budget of 10,000 and waits roughly 300 seconds between successful tasks. Each attempt is charged before reservation; restarts cannot reset it. A failed lease can burn 2 NEURO collateral. Budget, collateral, stage availability and actual round progress require monitoring. Operator fallback workers supply both stages and yield to public workers. Independent sponsors may apply different selection/budget policies without changing consensus.
 
-Adapt [the native systemd template](../config/neuroshard-native.service) for your user, pinned release, and initialized node home. Preserve account/consensus keys, databases, and signing state. Never run two validator processes with the same consensus identity. Restart validators sequentially and verify continued height advancement.
+The provider serves jobs addressed to its configured public key and writes a local availability heartbeat. The gateway advertises that key and status. A customer can choose another provider through the CLI; the release has no automatic provider marketplace or routing guarantee.
 
-Sponsor sessions have a finite attempt budget and stop on failure. Do not use an unconditional restart policy that silently resets that budget. The launch session waits for workers and offers at most 100 attempts; availability can stop at any time. Independent sponsors can provide their own endpoints. Keep their keys on the sponsoring machine.
+The data collector uses a separate mode-0600 environment file under `/etc/neuroshard/` with the normal AWS credential variables. The daily timer publishes at most 128 records per invocation and 4,096 total records for its pinned source identity. It advances durable progress only after immutable S3 publication. Its `collection_budget_complete` status is expected at the cap. See [data pipeline](DATA_PIPELINE.md). Old uploaders remain disabled; do not start both writers against the old mutable namespace.
 
-The gateway's `explorer.sqlite` is an auxiliary index. It may be rebuilt from retained blocks after stopping its gateway; it is not the chain database. Missing history pauses the index and reports lag. Preserve chain history and plan disk capacity for long-running nodes. Rotate application/consensus logs without touching signing state.
+## Static deployment and HTTPS
 
-## Retiring the old deployment
+Copy static artifacts into `/var/www/neuroshard/releases/v0.4.0/{site,docs}` and atomically switch `/var/www/neuroshard/current` to that release. Preserve the previous target for rollback. Use [native-site.nginx.conf](../config/native-site.nginx.conf) and [native-docs.nginx.conf](../config/native-docs.nginx.conf) inside the existing TLS servers. Set their upstream ports to your initialized homes.
 
-Back up the old database privately and verify the dump is readable before stopping the registration stack. Preserve Docker volumes; never use `down -v`. Switch and verify the static/native routes first, then stop only the old NeuroShard containers and disable their restart policies. Remove alternate public access to their old ports. Preserve existing user records outside Git. No automatic identity or balance migration is defined.
+The site proxy overwrites `X-Real-IP`, bounds request bodies and retains native POST semantics. Allow up to 100 seconds for signed submission requests: neural verification can outlast a normal short HTTP timeout. Customers must recover unknown outcomes by transaction/request ID, not automatically sign another spend. Curated public model assets use a separate content-addressed mirror with model/dataset attribution; never expose private audit archives, keys, raw legacy S3 recovery objects or environment files.
 
-Rollback web routing by restoring the previous static symlink/config and reloading validated nginx configuration. Rolling back gateway/UI code does not require replacing chain state. A consensus-incompatible release requires an explicit migration decision, not a website deployment.
+Keep a read-only `/reference/v03/api/` proxy to the old gateway while retiring the old interface. The public node ID and chain/genesis, not a reused IP address, identify a network. Old signup/login APIs remain retired. Run `nginx -t` before reloading and verify both HTTP behavior and actual native settlement.
 
-## Public operation gates
+## Operations and rollback
 
-This deployment is an experimental testnet. Independent operator ownership, sustained-load measurements, adversarial network testing, release signing/checkpoint policy, economic policy, and independent security review remain necessary before a production network claim. See [testnet gates](TESTNET_GATES.md).
+Monitor native height progression, model round and serving root, worker receipts, finalized rewards, provider heartbeat, pending inference/expiry, sponsor collateral/budget, collection cursor/status, disk and process RSS. A systemd process marked active is not evidence of training progress or inference settlement. A healthy explorer also does not prove independent consensus ownership.
+
+The launch installs [log rotation](../config/neuroshard-logrotate.conf) on both hosts: daily, or at 25 MiB, retaining seven compressed rotations. Adapt the supplied paths for other homes. Rotate `logs/*.log` with copy-truncate or coordinated process reopening; do not rotate or edit native signing state. Native blocks and application databases are authoritative. `explorer.sqlite` is only an index and can be rebuilt from retained blocks after stopping that gateway. Keep historical model/source/data artifacts for replay.
+
+Restart validators sequentially and confirm continued blocks. Back up the chain home consistently; never start two copies of a validator's keys. A website rollback restores the previous static symlink/proxy config; it does not replace chain data. Restore only code compatible with that genesis. An incompatible protocol change requires a separately specified migration or new network, not a hidden balance reset.
+
+Before a production claim, the remaining [release gates](TESTNET_GATES.md) include independent ownership, longer load/failure trials, security review, improved evaluation, data availability, checkpoint governance and a defensible economic policy. The present release is a public experimental testnet with finite operating and issuance budgets.

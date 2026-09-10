@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import tarfile
 import re
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,8 +34,13 @@ def build(ref, output, wheel=None):
             if member.isfile():
                 files.append(f"{hashlib.sha256(source.extractfile(member).read()).hexdigest()}  {member.name}")
     (output / "SOURCE_FILES.sha256").write_text("\n".join(files) + "\n")
-    network_path = "networks/neuroshard-stage-8i5ghxq5"
-    for name in ("genesis.json", "network.json"):
+    if version.startswith('0.3.'):
+        network_path = "networks/neuroshard-stage-8i5ghxq5"
+    else:
+        descriptor = json.loads(git('show', f'{commit}:src/neuroshard/client/networks/llm-testnet.json'))
+        network_path = 'networks/' + descriptor['chain_id']
+    names = ('genesis.json', 'network.json') if version.startswith('0.3.') else ('genesis.json', 'network.json', 'dataset.json', 'declarations.json')
+    for name in names:
         (output / name).write_bytes(git("show", f"{commit}:{network_path}/{name}"))
     network = json.loads((output / "network.json").read_text())
     if hashlib.sha256((output / "genesis.json").read_bytes()).hexdigest() != network["genesis_sha256"]:
@@ -45,6 +51,11 @@ def build(ref, output, wheel=None):
                 "archive_url": f"https://github.com/neuroshard-ai/neuroshard/releases/download/v{version}/{archive.name}"}
     (output / "release.json").write_text(json.dumps(metadata, indent=2) + "\n")
     if wheel:
+        with zipfile.ZipFile(wheel) as package:
+            for name in package.namelist():
+                if name.startswith('neuroshard/') and not name.endswith('/'):
+                    if package.read(name) != git('show', f'{commit}:src/{name}'):
+                        raise ValueError(f'Wheel source differs from release commit: {name}')
         shutil.copy2(wheel, output / wheel.name)
     artifacts = sorted(p for p in output.iterdir() if p.is_file() and p.name != "SHA256SUMS")
     (output / "SHA256SUMS").write_text("".join(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n" for p in artifacts))

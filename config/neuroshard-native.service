@@ -1,3 +1,4 @@
+# Historical v0.3 reference template. Use neuroshard-llm@.service for the LLM profile.
 # Install only after adjusting the user, checkout, and home paths below.
 [Unit]
 Description=NeuroShard native full node

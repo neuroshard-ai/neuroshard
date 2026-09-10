@@ -1,0 +1,41 @@
+{
+  "reader_continuity": {
+    "checked_source_rows": 384,
+    "same_order_and_rendering": true,
+    "reader": "local ParquetFile with use_threads=False; SHA256-verified upstream files"
+  },
+  "runs": [
+    {
+      "cursor_before": 384,
+      "cursor_after": 512,
+      "snapshot": "db65b2b6a76c81050471e7b968b9f51de4dcfc7eaa7451271e5f1b5ac41b8b60",
+      "exit_status": 0,
+      "service_result": "success",
+      "elapsed_seconds": 6.5
+    },
+    {
+      "cursor_before": 512,
+      "cursor_after": 640,
+      "snapshot": "da44c653a5e1ddc9299f6585a95dbeacd347a243ecd04acfd1a6dbc536f99937",
+      "exit_status": 0,
+      "service_result": "success",
+      "elapsed_seconds": 6.53
+    },
+    {
+      "cursor_before": 640,
+      "cursor_after": 768,
+      "snapshot": "43906d6232d638257bcd4498f67d8d509e8d527062ad5b89e8cf1996ac4432f9",
+      "exit_status": 0,
+      "service_result": "success",
+      "elapsed_seconds": 6.4
+    }
+  ],
+  "s3_readback": {
+    "dataset_root": "43906d6232d638257bcd4498f67d8d509e8d527062ad5b89e8cf1996ac4432f9",
+    "shards": 12,
+    "unique_documents": 768,
+    "train": 726,
+    "validation": 42,
+    "duplicates": 0
+  }
+}

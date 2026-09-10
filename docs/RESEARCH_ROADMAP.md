@@ -4,6 +4,10 @@ The intended product is a sovereign network whose participants train a shared mo
 
 The [v2 experiment report](PROTOCOL_EXPERIMENTS.md) now records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines the supported lifecycle. Independent operators, broader hardware support, and economical verification of a complete training graph remain open gates; the manuscript still describes the earlier reference.
 
+## Current implemented baseline — 0.4.0
+
+The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md) extend the reference with a frozen 135M pretrained model, a 4,608-parameter trainable adapter, separate funded inference jobs, validation-gated serving, a minimal public client, browser payments and immutable S3 collection. A two-host native cycle earned rewards and spent them on the promoted model. The new live chain has its own genesis; old balances do not migrate. The requirements below for economical verification, robust evaluation and independent operators remain open.
+
 ## 1. Publish a falsifiable technical claim
 
 The defensible initial claim is: **a prescribed model update, produced by mutually untrusted pipeline stages, can be independently reproduced and settled exactly once by a native blockchain.** The reference tests this claim on a small model with full replay and fixed local validators. It does not demonstrate economical decentralized LLM pretraining, public admission, or a new proof-of-work consensus algorithm.

@@ -10,12 +10,12 @@ hero:
       link: /generated/PUBLIC_TESTNET
     - theme: alt
       text: Read the protocol
-      link: /generated/PROTOCOL_CANDIDATE_V2
+      link: /generated/LLM_PROTOCOL
 features:
   - title: Locally controlled identity
     details: Generate keys on your machine. Follow the chain and contribute computation without website registration.
   - title: Explicit execution rules
-    details: The first release uses a small two-stage CPU model and full validator replay. Its source and numerical profile are pinned by genesis.
+    details: The LLM testnet trains an adapter on a frozen pretrained model and verifies paid inference through full replay. Its source and numerical profile are pinned by genesis.
   - title: Measured progress
     details: Inspect accepted updates, reproduce experiments, and help resolve verification costs, independent ownership, and sustained operation.
 ---

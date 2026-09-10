@@ -1,0 +1,38 @@
+{
+  "chain_id": "neuroshard-llm-testnet-1",
+  "manifest_hash": "5118e92e1072a1351719becc46629b16bb5bb2c34c42393dce7d3764697101b4",
+  "python": "3.12.3",
+  "platform": "x86_64",
+  "initial_validation_loss_hex": "0x1.c70cd20000000p+0",
+  "numerical_conformance": {
+    "three_steps": [
+      {
+        "feature_root": "c3612fc64a01ee2fc606df687a030644cc39478fe27de38e73e44d99113f1a2f",
+        "gradient_root": "967603230b7743e7467ab8699141541d5a01ec5ec781404d9feaf921d599eb9a",
+        "loss_hex": "0x1.892ec40000000p+1",
+        "model_root": "ba0354798a406add3c1912bb772da78fe3dfd6c4bf3d8e37ab2db013733a3fc7"
+      },
+      {
+        "feature_root": "de60afb388276f75d7fa7ab8aa59f59c0574a0fcc59548ecefb7086940e2e7cf",
+        "gradient_root": "d6702bc664950c9ad9f343f7fe0bfe8197a3b257448d9b6a43f4819ae9a04a20",
+        "loss_hex": "0x1.d6d2580000000p+1",
+        "model_root": "180481a168f5fb7cdf47d336a8ee814d559762e62a7708d17feaf2fc5640bc01"
+      },
+      {
+        "feature_root": "ab4e8836e5b6b9490e41beb7f2a535924682477d2987653698445d79f0db152d",
+        "gradient_root": "30c416ea507ec4ad66d6524a9826ae95f62e18b150f118ed57e7cc0c48119752",
+        "loss_hex": "0x1.ca15980000000p+1",
+        "model_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0"
+      }
+    ],
+    "inference_root": "8df8be31b8e355ee3c85e18f451e78d31390b33ddeebceb1df6bdf5c5db5b775"
+  },
+  "libraries": {
+    "torch": "2.9.1+cpu",
+    "numpy": "2.2.6",
+    "transformers": "4.57.3",
+    "tokenizers": "0.22.1",
+    "safetensors": "0.7.0"
+  },
+  "passed": true
+}

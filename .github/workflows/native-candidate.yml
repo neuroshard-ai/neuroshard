@@ -9,6 +9,27 @@ concurrency:
   group: checks-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  consensus:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache-dependency-path: |
+            src/neuroshard/client/consensus/go.sum
+            tools/protocolprobe/go.sum
+      - run: go -C tools/protocolprobe test ./...
+        env:
+          GOTOOLCHAIN: local
+          GOWORK: 'off'
+          GOFLAGS: '-mod=readonly'
+      - run: go -C src/neuroshard/client/consensus build -o "$RUNNER_TEMP/cometbft" github.com/cometbft/cometbft/cmd/cometbft
+        env:
+          GOTOOLCHAIN: local
+          GOWORK: 'off'
+          GOFLAGS: '-mod=readonly'
+      - run: test "$("$RUNNER_TEMP/cometbft" version)" = '0.38.26'
   protocol:
     runs-on: ubuntu-24.04
     strategy:
@@ -19,13 +40,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -r docs/demo-requirements.txt
+      - run: python -m pip install -r docs/llm-requirements.txt pytest==9.1.1 boto3==1.41.5 ijson==3.4.0 pyarrow==25.0.1
       - run: python -m pip install --no-deps .
       - run: python -m pytest -q
         env:
           ATEN_CPU_CAPABILITY: default
           MKL_ENABLE_INSTRUCTIONS: SSE4_2
-      - run: neuroshard-chain --help && neuroshard-work --help
+      - run: neuroshard --help && python -m neuroshard --version && neuroshard-chain --help && neuroshard-work --help
   website:
     runs-on: ubuntu-24.04
     defaults:
@@ -42,6 +63,10 @@ jobs:
       - run: npm run build
       - run: npm audit --audit-level=high
       - run: npx playwright install --with-deps chromium
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install cryptography==50.0.1
       - run: npm test
   documentation:
     runs-on: ubuntu-24.04

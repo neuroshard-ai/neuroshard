@@ -1,0 +1,111 @@
+{
+  "chain_id": "neuroshard-llm-19489ccd",
+  "worker_public_key": "03f2fa318c7e46b2f6abe51b051be1f6e5a233c258dddf74d7e91d8ad077369871",
+  "worker_balance_before": 0,
+  "training_summary": {
+    "account_count": 5,
+    "app_hash": "8092b266c920921c971dba4c59bb9a5763957bbfb710c778dba88f5c8b050ea7",
+    "burned": 6000,
+    "chain_id": "neuroshard-llm-19489ccd",
+    "height": 28,
+    "initial_supply": 90000000,
+    "issued": 3000000,
+    "last_training_evaluation": {
+      "height": 28,
+      "model_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0",
+      "promoted": true,
+      "round": 3,
+      "validation_loss_hex": "0x1.c6bf588000000p+0"
+    },
+    "last_training_loss_hex": "0x1.ca15980000000p+1",
+    "lease": null,
+    "manifest_hash": "a5aa2a8a8de81dbf0f9a3fa339360adf2ee5a50d98a892bdf51333d47550002d",
+    "model_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0",
+    "params": {
+      "activation_blocks": 60,
+      "atom_scale": 1000000,
+      "bond_unit": 250000,
+      "epoch_blocks": 60,
+      "evidence_blocks": 172800,
+      "evidence_seconds": 172800,
+      "fee": 1000,
+      "inference_blocks": 240,
+      "inference_token_price": 1000,
+      "lease_blocks": 240,
+      "max_training_tasks": 10000,
+      "max_tx_bytes": 16384,
+      "reservation_bond": 2000000,
+      "task_budget": 1000000,
+      "worker_budget": 800000
+    },
+    "pending_inference": 0,
+    "profile": "llm-testnet",
+    "round": 3,
+    "serving_loss_hex": "0x1.c6bf588000000p+0",
+    "serving_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0",
+    "time_ns": 1789081333991704082,
+    "total_voting_power": 40,
+    "validation_loss_hex": "0x1.c6bf588000000p+0",
+    "validator_count": 4
+  },
+  "worker_balance_earned": 1200000,
+  "request": {
+    "request_id": "4ae82d9309f4e1bb62b204268113e9dd750c5ba857fa43f736c07243d714add1",
+    "submitted": {
+      "check_tx": {
+        "code": 0,
+        "data": null,
+        "log": "",
+        "info": "",
+        "gas_wanted": "1",
+        "gas_used": "0",
+        "events": [],
+        "codespace": ""
+      },
+      "tx_result": {
+        "code": 0,
+        "data": null,
+        "log": "",
+        "info": "",
+        "gas_wanted": "0",
+        "gas_used": "0",
+        "events": [],
+        "codespace": ""
+      },
+      "hash": "D1F9DA56667683EB0754D2B8D139C7BAFD5C03C2FDF19F35C6FAE0D603CFBBDB",
+      "height": "31"
+    }
+  },
+  "inference": {
+    "height": 35,
+    "id": "4ae82d9309f4e1bb62b204268113e9dd750c5ba857fa43f736c07243d714add1",
+    "model_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0",
+    "output": {
+      "model_root": "56c1e62d59f3aac596d8141f9bb4dc25104b69aff2961c0b26d73b4c01e164a0",
+      "request_root": "af1ec09fde6670311d4f5752de86f1b30a0255d92ddc4cb6150784ce578fe1e9",
+      "text": "The capital of France is Paris.",
+      "token_ids": [
+        504,
+        3575,
+        282,
+        4649,
+        314,
+        7042,
+        30,
+        2
+      ]
+    },
+    "owner": "03f2fa318c7e46b2f6abe51b051be1f6e5a233c258dddf74d7e91d8ad077369871",
+    "price": 32000,
+    "provider": "02245736908da24c653d6ec29f5b1a8a96cdef54494a8a1b9267c828c4cc89f823",
+    "provider_paid": 25600,
+    "status": "completed"
+  },
+  "worker_balance_after_inference": 1167000,
+  "common_block": {
+    "height": 35,
+    "hash": "7229E2B79086D75C79D3BC9A6269DDED9B2F7E64C0A715C857BF216063E3230F"
+  },
+  "passed": true,
+  "note": "Disposable two-host candidate run preceding public genesis; numerical profile unchanged. Initial malformed-envelope guard was subsequently tightened."
+}

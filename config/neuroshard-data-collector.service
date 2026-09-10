@@ -1,0 +1,28 @@
+# Example: adapt paths, home and user before installation.
+[Unit]
+Description=NeuroShard bounded immutable dataset collection
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=12
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/.neuroshard/runtimes/0.4.0
+Environment=ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false
+ExecStart=/home/ubuntu/.neuroshard/runtimes/0.4.0/bin/python -m neuroshard.dataflow.collect --config /home/ubuntu/.neuroshard/datasets/smol-smoltalk-v1/config.json --home /home/ubuntu/.neuroshard/datasets/smol-smoltalk-v1
+Restart=no
+RestartSec=15
+TimeoutStopSec=45
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/.neuroshard/datasets/smol-smoltalk-v1 /home/ubuntu/.cache/huggingface
+MemoryMax=3G
+UMask=0077
+EnvironmentFile=/etc/neuroshard/data.env
+CPUQuota=100%
+TimeoutStartSec=1800
+[Install]
+WantedBy=multi-user.target

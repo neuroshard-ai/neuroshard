@@ -1,5 +1,8 @@
-include LICENSE NOTICE README.md THIRD_PARTY.md
+include LICENSE NOTICE README.md PYPI_README.md THIRD_PARTY.md
 recursive-include src/neuroshard *.proto
 recursive-include src/neuroshard/publicnet/data *.txt
 global-exclude *.pyc
 global-exclude __pycache__
+
+recursive-include src/neuroshard/client/networks *.json
+include src/neuroshard/client/consensus/go.mod src/neuroshard/client/consensus/go.sum

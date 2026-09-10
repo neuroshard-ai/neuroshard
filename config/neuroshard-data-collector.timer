@@ -1,0 +1,10 @@
+# Example: adapt paths, home and user before installation.
+[Unit]
+Description=Collect one bounded NeuroShard dataset batch daily
+[Timer]
+OnCalendar=*-*-* 04:00:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=neuroshard-data-collector.service
+[Install]
+WantedBy=timers.target

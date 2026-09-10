@@ -9,6 +9,20 @@ regexes = ['''Authorization: Bearer YOUR_TOKEN''', '''Authorization: Bearer neur
 [[allowlists]]
 description = "Public Ed25519 validator identities in the reviewed launch genesis"
 condition = "AND"
-paths = ['''^networks/neuroshard-stage-8i5ghxq5/genesis\.json$''']
+paths = ['''(^|/)networks/neuroshard-stage-8i5ghxq5/genesis\.json$''']
 regexTarget = "match"
 regexes = ['''consensus_key":"[0-9a-f]{64}"''']
+
+[[allowlists]]
+description = "Reviewed public validator identities in the LLM testnet genesis and signed declarations"
+condition = "AND"
+paths = ['''(^|/)networks/neuroshard-llm-testnet-1/(genesis|declarations)\.json$''']
+regexTarget = "match"
+regexes = ['''consensus_key":"[0-9a-f]{64}"''']
+
+[[allowlists]]
+description = "Public tokenizer revision and file digests, verified against pinned upstream model files"
+condition = "AND"
+paths = ['''(^|/)config/data-collector\.example\.json$''', '''(^|/)networks/neuroshard-llm-testnet-1/genesis\.json$''']
+regexTarget = "match"
+regexes = ['''tokenizer_revision": "[0-9a-f]{40}"''', '''tokenizer(_config)?_sha256": "[0-9a-f]{64}"''', '''(special_tokens_map|tokenizer|tokenizer_config)\.json":"[0-9a-f]{64}"''']

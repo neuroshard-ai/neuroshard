@@ -12,10 +12,11 @@ export default defineConfig({
       { text: 'Node and worker guide', link: '/generated/PUBLIC_TESTNET' },
       { text: 'Model card', link: '/generated/MODEL_CARD' },
       { text: 'Public API', link: '/generated/API' },
+      { text: 'Dataset pipeline', link: '/generated/DATA_PIPELINE' },
       { text: 'Deployment', link: '/generated/DEPLOYMENT' },
     ]}, { text: 'Protocol and evidence', items: [
-      { text: 'Protocol specification', link: '/generated/PROTOCOL_CANDIDATE_V2' },
-      { text: 'Experiments', link: '/generated/PROTOCOL_EXPERIMENTS' },
+      { text: 'Protocol specification', link: '/generated/LLM_PROTOCOL' },
+      { text: 'Experiments', link: '/generated/LLM_EXPERIMENTS' },
       { text: 'Fundamentals review', link: '/generated/FUNDAMENTALS_REVIEW' },
       { text: 'Research roadmap', link: '/generated/RESEARCH_ROADMAP' },
     ]}, { text: 'Contribute', items: [

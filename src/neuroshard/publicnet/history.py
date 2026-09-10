@@ -38,13 +38,14 @@ class TrainingHistory:
                 stages = [r["body"] for r in receipts]
                 if [r.get("stage") for r in stages] != [0, 1]:
                     continue
-                loss = float.fromhex(stages[0]["loss_hex"])
-                if not math.isfinite(loss) or stages[0]["loss_hex"] != stages[1]["loss_hex"]:
+                loss_hex = stages[1]["loss_hex"]
+                loss = float.fromhex(loss_hex)
+                if not math.isfinite(loss) or stages[0].get("loss_hex", loss_hex) != loss_hex:
                     raise ValueError("Inconsistent accepted training receipt")
                 round_number += 1
                 record = {"height": block["height"], "block_hash": block["hash"], "time": block["time"],
                           "round": round_number, "transaction_hash": tx["hash"], "task_id": body["task_id"],
-                          "model_root": body["result_root"], "loss": loss, "loss_hex": stages[0]["loss_hex"],
+                          "model_root": body["result_root"], "loss": loss, "loss_hex": loss_hex,
                           "workers": [r["public_key"] for r in receipts]}
                 self.db.execute("INSERT INTO training VALUES (?, ?, ?)",
                                 (block["height"], round_number, json.dumps(record)))
