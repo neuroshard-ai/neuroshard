@@ -27,6 +27,16 @@ from neuroshard.evolution.verification import bundle
 from neuroshard.evolution.worker import Worker
 
 
+def inference_price_floor(manifest, partitions, auditor_count):
+    """Audit and publisher transaction cost for a response ending at one token.
+
+    Each token has one forward trace per partition plus the output head.
+    This lower bound excludes compute, storage and a provider margin.
+    """
+    return ((partitions+1)*auditor_count*manifest['auditing']['price_per_stage']
+            + 2*manifest['params']['fee'])
+
+
 class Operator:
     def __init__(self, config_path):
         self.config = json.loads(config_path.read_bytes())
@@ -65,6 +75,8 @@ class Operator:
         if (type(budget['training_round_limit']) is not int or budget['training_round_limit'] < 1
                 or type(budget['minimum_balance']) is not int or budget['minimum_balance'] < 0):
             raise ValueError('Set a persistent absolute training-round cap and minimum liquid reserve')
+        if type(budget.get('allow_inference_subsidy', False)) is not bool:
+            raise ValueError('An inference subsidy requires an explicit boolean policy')
 
     def send(self, operation, kind, **fields):
         self.outbox.send(operation, kind, **fields)
@@ -168,11 +180,17 @@ class Operator:
                       workers=[k.public_key for k in self.worker_keys[:count]], audit_budget=budget)
             return {'phase':'training_reserved', 'round':status['training_round']}
         jobs = self.query('/inference')['jobs']
+        underpriced = []
         for key, job in sorted(jobs.items(), key=lambda item:(item[1]['expires'],item[0])):
             if job['provider'] != self.owner.public_key or job['claim_id'] or status['height'] > job['expires']:
                 continue
             root = job['model_root']
-            count = (len(place(self.store.json(root), self.capacities))+1)*job['max_tokens']
+            partitions = len(place(self.store.json(root), self.capacities))
+            floor = inference_price_floor(self.manifest, partitions, len(self.auditors))
+            if job['unit_price'] < floor and not self.config['budget'].get('allow_inference_subsidy', False):
+                underpriced.append({'job':key, 'unit_price':job['unit_price'], 'minimum_cost_per_token':floor})
+                continue
+            count = (partitions+1)*job['max_tokens']
             action = 'respond:'+key
             budget = self.budget(action, count)
             if budget is None:
@@ -183,6 +201,8 @@ class Operator:
             values = self.publish('inference', record)
             self.send(action, 'respond', job_id=key, record_root=record['record_root'], metadata=values, audit_budget=budget)
             return {'phase':'inference_claimed', 'job':key}
+        if underpriced:
+            return {'phase':'inference_requires_explicit_subsidy_or_new_price_profile', 'jobs':underpriced}
         return {'phase':'waiting_for_admitted_data_or_inference', 'round':status['training_round']}
 
     def close(self):

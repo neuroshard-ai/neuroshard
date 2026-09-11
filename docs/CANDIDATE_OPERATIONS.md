@@ -45,6 +45,26 @@ provide a public independent-operator bootstrap ceremony.
 
 ## Run an auditor
 
+An additional participant can first follow the agreed ledger with their own
+non-voting full node. Obtain the genesis file, its checksum, the source commit
+and a reachable native peer through the published deployment record:
+
+```bash
+venv_build/bin/python scripts/join_funded_candidate.py \
+  --home /var/lib/neuroshard/candidate/follower \
+  --genesis /absolute/path/to/agreed-genesis.json \
+  --genesis-sha256 AGREED_GENESIS_SHA256 \
+  --engine /absolute/path/to/cometbft \
+  --peer NODE_ID@REACHABLE_HOST:PEER_PORT
+```
+
+Repeating this command resumes the retained home. A different genesis or an
+unrecognized existing directory is rejected. New account funding, validator
+bonding and worker contracts are separate native actions; following the chain
+does not claim voting power or mining rewards. Inbound TCP access to an announced
+peer must be tested from outside its host. The two-host trial uses SSH transport
+and is not by itself evidence of public candidate reachability.
+
 The auditor requires a trusted local full node, the agreed genesis hash,
 retrievable content-addressed artifacts, its own account and sufficient liquid
 collateral and transaction fees. It accepts offers only from the configured
@@ -111,6 +131,15 @@ own provider key while waiting for another admitted cohort. Training and scoring
 currently occupy the serial execution slot ahead of inference; a request can
 expire and refund while those tasks run. This is an integration scheduler, not a
 low-latency inference service.
+
+The operator also refuses inference priced below its token-denominated audit and
+submission costs unless `budget.allow_inference_subsidy` is explicitly `true`.
+For four partitions, one auditor and the reference fees, a response that ends at
+one token needs at least 502,000 atoms to cover those costs. This excludes compute,
+storage and a margin. The trial's old 1,000-atom token price is deliberately
+subsidized by its sponsor; it is not evidence of sustainable inference pricing.
+A genesis price change requires a new reviewed profile. Underpriced jobs can
+expire and refund instead of silently spending the operator's subsidy reserve.
 
 It does not auto-vote new data, grow a model without a separate decision, or
 fabricate new data when the approved queue ends. `waiting_for_admitted_data_or_inference`
