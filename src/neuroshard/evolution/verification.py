@@ -89,6 +89,27 @@ def bundle(store,record_root):
     return {key:store.json(key) for key in keys}
 
 
+def work_identity(store,record_root):
+    """Identify the paid numerical task independently of ancestry or job nonces.
+
+    Repartitioning the same weights, batch and optimizer is not another payable
+    task. This also handles an exactly converged model whose weight bytes stop
+    changing even as model-manifest ancestry continues to grow.
+    """
+    record=store.json(record_root)
+    parent=store.json(record['parent'])
+    config=copy.deepcopy(parent['config'])
+    for name in ('rms_norm_eps','rope_theta'):
+        config[name]=float(config[name]).hex()
+    from .batches import unpack
+    ids,labels=unpack(store.json(record['batch']),parent['config']['vocab_size'])
+    targets=ids if labels is None else labels
+    return digest(canonical({'domain':'neuroshard/evolution/paid-task/v1',
+        'config':config,'components':{name:c['root'] for name,c in parent['components'].items()},
+        'input_ids':ids,'targets':[row[1:] for row in targets],'learning_rate_hex':record['learning_rate_hex'],
+        'clip_norm_hex':record['clip_norm_hex']}))
+
+
 def dependencies(metadata,trace_root):
     trace = metadata.json(trace_root)
     parent = metadata.json(trace['parent'])

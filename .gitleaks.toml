@@ -40,3 +40,10 @@ condition = "AND"
 paths = ['''(^|/)docs/eval/results/evolution20260911/(native2|response)-source-hashes\.json$''']
 regexTarget = "match"
 regexes = ['''tokenizer\.py": "[0-9a-f]{64}"''']
+
+[[allowlists]]
+description = "Public Ed25519 consensus identities verified against the two recorded experimental genesis validator sets"
+condition = "AND"
+paths = ['''(^|/)docs/eval/results/evolution20260911/native-(growth|dedup)-genesis\.json$''']
+regexTarget = "match"
+regexes = ['''consensus_key":"[0-9a-f]{64}"''']

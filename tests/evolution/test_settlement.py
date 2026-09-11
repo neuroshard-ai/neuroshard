@@ -182,3 +182,31 @@ def test_native_growth_fraud_uses_only_last_parent_block(scenario):
     assert s['model_root']==parent and s['period_growths']==0 and s['issued']==1000000
     assert s['settled'][-1]['reason']=='objective replay mismatch: identity growth'
     state.invariant(s)
+
+
+def test_converged_weights_cannot_mint_again_under_new_ancestry(scenario,tmp_path):
+    from neuroshard.evolution.model import torch
+    from neuroshard.evolution.verification import work_identity
+    s,owners,store,record,_=scenario
+    model=copy.deepcopy(store.json(record['parent']))
+    for c in model['components'].values():
+        c['root']=store.put_tensors({name:torch.zeros_like(value) for name,value in store.tensors(c['root']).items()})
+    zero_root=store.put_json(model)
+    manifest={**s['manifest'],'initial_model_root':zero_root}
+    entries=[{'owner':v['owner'],'consensus_key':key,'bond':v['amount'],'liquid':1000000000}
+             for key,v in s['validators'].items()]
+    s=state.genesis('converged-model-test',entries,manifest)
+    pipe=Pipeline(store,zero_root,[LocalEndpoint(Worker(tmp_path/f'zero{i}',store)) for i in range(2)],[6000]*2,'zero')
+    first=pipe.train(store.json(record['batch']))
+    second=pipe.train(store.json(record['batch']))
+    pipe.close()
+    assert first['parent']!=second['parent']
+    assert store.json(first['model_root'])['components']==store.json(second['model_root'])['components']==model['components']
+    assert work_identity(store,first['record_root'])==work_identity(store,second['record_root'])
+    s=state.transition(s,tx(s,owners[0],'reserve',parent=zero_root,round=0,workers=[o.public_key for o in owners[:2]]))
+    s=state.transition(s,claim(s,owners,store,first))
+    s=blocks(s,state.PARAMS['challenge_blocks']+1)
+    s=state.transition(s,tx(s,owners[0],'reserve',parent=s['model_root'],round=1,workers=[o.public_key for o in owners[:2]]))
+    with pytest.raises(ValueError,match='already been paid'):
+        state.transition(s,claim(s,owners,store,second))
+    assert s['issued']==1000000 and len(s['paid_work'])==1

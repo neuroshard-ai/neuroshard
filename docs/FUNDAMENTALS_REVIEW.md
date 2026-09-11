@@ -1,6 +1,6 @@
 # NeuroShard: first-principles review and proposed protocol
 
-Review date: 2026-09-10. Primary manuscript: [LaTeX source](FINE2026_neuroshard_short.tex), [revised five-page PDF](FINE2026_neuroshard_short.pdf).
+Review date: 2026-09-10. This historical review concerns the [archived LaTeX source](archive/FINE2026_neuroshard_short_pre_evolution.tex) and [five-page PDF](archive/FINE2026_neuroshard_short_pre_evolution.pdf). The subsequent [model-evolution implementation](EVOLUTION_PROTOCOL.md) and [current working paper](FINE2026_neuroshard_short.pdf) supersede that manuscript without deleting this review's findings.
 
 **Assessment:** permissionless collaborative training is feasible in some configurations. The current NeuroShard components do not yet compose into a secure decentralized training system. The strongest direction is a sovereign chain that agrees on precisely specified, auditable training jobs and model checkpoints, with a separate peer-to-peer compute network. The research problem is making that composition economical for small, mutually untrusted devices.
 
@@ -362,13 +362,13 @@ The existing figure generator reads the unchanged E1–E4 experimental JSON file
 MPLCONFIGDIR=/tmp/neuroshard-matplotlib venv_build/bin/python docs/eval/make_figures.py
 ```
 
-To compile without changing the repository's LaTeX auxiliary files:
+To compile the manuscript covered by this historical review without changing the repository's LaTeX auxiliary files:
 
 ```bash
 mkdir -p /tmp/neuroshard-paper-review
 cd docs
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=/tmp/neuroshard-paper-review FINE2026_neuroshard_short.tex
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory=/tmp/neuroshard-paper-review FINE2026_neuroshard_short.tex
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=/tmp/neuroshard-paper-review archive/FINE2026_neuroshard_short_pre_evolution.tex
+pdflatex -interaction=nonstopmode -halt-on-error -output-directory=/tmp/neuroshard-paper-review archive/FINE2026_neuroshard_short_pre_evolution.tex
 ```
 
 Validation for this review covers the calculations, recorded experimental values, reference resolution, PDF compilation/page count, and visual presentation. No new model training, adversarial network run, or production-code fix is claimed.

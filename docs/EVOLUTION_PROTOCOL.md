@@ -14,9 +14,10 @@ The updated [working paper](FINE2026_neuroshard_short.pdf) distinguishes the tar
 | Response objectives | `evolution/batches.py` | Actual assistant targets; ignored prompt/padding labels; no invented targets or all-ignored examples |
 | Quality decisions | `evolution/evaluation.py`, `controller.py` | Paired fresh/retention losses, preserved candidates and selection on restart, rejection leaves the accepted model unchanged |
 | Native work settlement | `evolution/settlement.py`, `app.py` | Four validators, signed reservations, exact token accounting, availability challenges and an objective fraud dispute |
+| Native growth settlement | `grow` transaction, `audit_growth`, session `start_step` | A separate bonded claim; invalid growth is challengeable from one parent block; accepted growth mints no reward and preserves the training-round counter |
 | Distributed generation | `Pipeline.generate` | Greedy inference through the assigned model components |
 
-All three/four-worker model experiments ran on **two physical machines under one operator**. The worker parameter cap is a declared allocation; these experiments do not establish that a whole 135M model cannot fit on either physical machine.
+The distributed training and paired quality experiments ran on **two physical machines under one operator**. Later local reproduction checks and the extended native growth lifecycle ran on one host, as identified in their results. The worker parameter cap is a declared allocation; these experiments do not establish that a whole 135M model cannot fit on either physical machine.
 
 ## Exact execution profile
 
@@ -38,6 +39,8 @@ The research gate requires an approximate 99% upper confidence bound below -0.00
 
 **Neither response-trained candidate passed that gate.** Their fresh-loss changes versus the common parent were -0.001434 and -0.001405 nats, with upper bounds of +0.000639 and +0.000596. The larger model did not establish an advantage at the same training budget. This is a useful rejection result, not evidence that the system already improves continuously. [Raw measurements and reproduction details](eval/results/evolution20260911/README.md) include both successful execution checks and failed quality promotion.
 
+A separate exploratory follow-up started from the original seed with 32 steps at learning rate 0.03 and 128 new paired examples per group. It also failed: fresh-response loss increased from 1.129396 to 1.138708, with an upper bound of +0.017282. All three final-step stages replayed correctly. No candidate in these experiments qualifies for promotion; a correct training transition is distinct from a better serving model.
+
 ## Native transaction lifecycle
 
 1. `reserve` locks the coordinator's collateral and binds the current model, round and worker reward identities.
@@ -52,13 +55,17 @@ False/abandoned computation challenges burn their bond. An absolute claim expiry
 
 A corrected native experiment published **170,169,856 replay bytes through 184 upload/seal transactions**, taking **310.05 seconds**. Dispute resolution took **10.14 seconds** including transaction processing. Four validators rejected the forged optimizer update, then accepted valid work and issued exactly **1,000,000 atoms**. This is a coarse objective reference, not an inexpensive succinct proof. Ordinary graph checking was about **25 milliseconds** in the separate training conformance run; independent replay still incurred neural compute.
 
+The subsequent [native growth lifecycle](eval/results/evolution20260911/native-growth-check.json) ran four validators on one physical host with the real model. It rejected forged training and growth, accepted valid growth, and paid the next training step without resetting the round. Growth verification used **14,161,224 bytes** from one parent block; this is a different, cheaper operation than replaying a full training stage. Growth issued no tokens; the two paid training steps issued 2,000,000 atoms total. A restart check confirmed matching state after the final payment.
+
+The ledger now records paid work by parameter bytes, architecture, effective inputs/targets and optimizer settings. Changing ancestry, job nonces or worker placement cannot mint another payment for that same task. This also rejects a repeated task after exact convergence, when weight bytes stop changing. The `/work` query exposes prior payment for a computed work identity. The growing payment index still needs a more efficient long-lived storage representation before large-scale operation.
+
 ## Trust and incentive boundaries
 
 Optimistic correctness assumes an honest online observer checks each accepted graph and can obtain inputs and complete a dispute. One randomly selected stage is not complete coverage. An unchallenged claim is not a cryptographic proof that somebody checked it.
 
 The new settlement prototype pays workers and has fraud bounties. It does not yet fund a sustainable audit market when work is honest. A public design needs explicit audit and availability budgets, collusion analysis, and measured prices. Consensus honesty, numerical correctness, audit participation, data quality and model quality are separate assumptions.
 
-The local epoch registry is intentionally **not** presented as a decentralized serving registry. Native data-window activation, architecture-growth settlement, quality-ticket adjudication, semantic-work deduplication across rollbacks and paid inference for promoted evolving models still require integration. Public worker discovery, model replication/retention, efficient long-lived ledger storage and a balance-preserving migration from 0.4.0 also remain required before cutover.
+The local epoch registry is intentionally **not** presented as a decentralized serving registry. Native data-window activation, quality-ticket adjudication, eligible-checkpoint rollback and paid inference for promoted evolving models still require integration. Public worker discovery, model replication/retention, efficient long-lived ledger storage and a balance-preserving migration from 0.4.0 also remain required before cutover. Native growth uses declared capacities; turning those advertisements into reliable worker admission remains part of that integration.
 
 ## Running the tools from a checkout
 
@@ -113,3 +120,16 @@ python scripts/experiment_evolution_native.py --home ./native-check --engine /pa
 For a full-model native dispute, add `--record ./model-check/result.json --objects ./model-check/objects` to the second command. It uploads the actual replay inputs through native transactions and can take several minutes. Test keys stay in the experiment home and have no public value. The published two-host result is distinguished from the newer single-host reproduction checks.
 
 The source commitment now covers all repository Python modules, including imported legacy helpers. Validators reject unsupported runtime versions at startup. These checks strengthen the declared profile; they do not prove identical arithmetic on all hardware or replace cross-machine conformance testing.
+
+### Reproduce the bounded response follow-up
+
+Start three workers using the earlier transport instructions and a private endpoint configuration. Use a fresh home for a new run; completed runs can be reopened to check their recorded result. The pinned seed files must already be downloaded. The plan fixes 32 training steps, response-target construction, source offsets and 128 evaluation examples per group.
+
+```bash
+PYTHONPATH=src python scripts/experiment_evolution_response.py \
+  --home ./response-check --model-dir ./seed --workers-config ./workers.json \
+  --plan docs/eval/results/evolution20260911/response-from-seed-plan.json \
+  --historical-selection docs/eval/results/evolution20260911/response-from-seed-selection.json
+```
+
+The worker configuration uses the same `workers` array (`url` and `token_file`) as the epoch example. Use separate worker homes for a separate run. An optional `--upstream-cache` points to an existing verified Parquet cache. Repeating the historical selection reproduces old evidence; it is not another independent successful or failed experiment. This script replays all three stages of the final training step and recomputes the decision from paired values. It does not settle those training steps on the public ledger.

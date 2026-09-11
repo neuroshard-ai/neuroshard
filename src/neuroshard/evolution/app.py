@@ -156,6 +156,10 @@ class Application(Base):
                     value = s['candidate']
                 elif request.path=='/manifest':
                     value = self.spec
+                elif request.path=='/work':
+                    from .schema import root
+                    identity=root(options['identity'])
+                    value={'identity':identity,'paid_claim':s['paid_work'].get(identity)}
                 elif request.path=='/account':
                     owner = ledger.public_key(options['public_key'])
                     value = {'public_key':owner,**s['accounts'].get(owner,{'balance':0,'nonce':0})}

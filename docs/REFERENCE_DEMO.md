@@ -2,7 +2,7 @@
 
 This reference connects actual sharded language-model training to verified model updates and native development-token rewards. Four independent CometBFT processes run a NeuroShard genesis and chain. Two worker processes each hold one model stage. Every validator independently replays the complete learning task before it accepts the update and payment.
 
-It is the executable baseline for [the short paper](FINE2026_neuroshard_short.pdf). It uses the repository's NeuroLLM and cryptographic primitives, with a new, bounded application state machine under `src/neuroshard/demo`. The legacy `neuroshard-node` trainer still has the separate issues recorded in [the fundamentals review](FUNDAMENTALS_REVIEW.md).
+It is the executable baseline for [the archived short paper](archive/FINE2026_neuroshard_short_pre_evolution.pdf). It uses the repository's NeuroLLM and cryptographic primitives, with a bounded application state machine under `src/neuroshard/demo`. The legacy `neuroshard-node` trainer still has the separate issues recorded in [the fundamentals review](FUNDAMENTALS_REVIEW.md). See [model evolution](EVOLUTION_PROTOCOL.md) for the later full-model work.
 
 ## Run it in this checkout
 

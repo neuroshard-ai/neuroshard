@@ -1,5 +1,11 @@
 # Native releases
 
+## Unreleased — model-evolution research tools
+
+The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Public reproduction scripts, raw results and the expanded [working paper](docs/FINE2026_neuroshard_short.pdf) are included.
+
+These tools have not been published as a new PyPI version or activated on the public chain. Native rolling-data activation, verifiable quality promotion and paid inference for evolving models remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
+
 ## 0.4.0 — LLM training and native paid inference (experimental)
 
 The old PyPI registration client is replaced by a lightweight local-key client: `neuroshard doctor`, `join`, `wallet`, `chat` and request recovery. Joining installs a separate pinned CPU runtime and follows NeuroShard's own consensus; it needs no starting token balance. The website adds browser signing and paid inference using the same account backup.
@@ -35,7 +41,7 @@ Release assets include source, wheel, genesis, network declaration, and SHA-256 
 
 The website needs no authentication backend. Old signup/login/download URLs lead to participation instructions; retired API endpoints return a retirement response. Existing user records are preserved operationally outside source control. No conversion of old balances or identities is defined.
 
-Limits remain explicit: 34,976 parameters, full replay at every validator, concentrated launch ownership, bounded sponsorship, unresolved fair assignment, no inclusion proofs/state sync, and no established production monetary policy or sustained-load envelope. Accepted work does not prove model improvement or profitability. The five-page paper remains the earlier formulation; new experiments and protocol details are documented separately.
+Limits at this release: 34,976 parameters, full replay at every validator, concentrated launch ownership, bounded sponsorship, unresolved fair assignment, no inclusion proofs/state sync, and no established production monetary policy or sustained-load envelope. Accepted work does not prove model improvement or profitability. The five-page paper accompanied the earlier formulation and is now [archived](docs/archive/FINE2026_neuroshard_short_pre_evolution.pdf); subsequent experiments and protocol revisions are documented separately.
 
 ## Release procedure
 

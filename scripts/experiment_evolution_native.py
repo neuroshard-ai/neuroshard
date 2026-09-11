@@ -184,7 +184,12 @@ def run(args):
         claim(next_record)
         final=until(lambda:s if (s:=wire.query(url))['training_round']==2 else None)
         assert final['issued']==2000000 and final['model_root']==next_record['model_root']
-        height=min(wire.query(u)['height'] for u in urls)
+        # A CometBFT block header commits the previous height's app hash.
+        # Wait for the next header so agreement includes the final paid step.
+        height=final['height']+1
+        until(lambda:all(wire.query(u)['height']>=height for u in urls))
+        states=[wire.query(u) for u in urls]
+        assert all(s['issued']==2000000 and s['training_round']==2 and s['model_root']==next_record['model_root'] for s in states)
         headers=[wire.rpc(u,'block',{'height':str(height)})['block']['header'] for u in urls]
         assert len({h['app_hash'] for h in headers})==1
         result={'chain_id':genesis['chain_id'],'source_hash':manifest['code_hash'],'genesis_hash':digest(canonical(genesis)),
@@ -195,6 +200,7 @@ def run(args):
                 'growth_fraud':growth_fraud['settled'][-1],'growth_replay_bytes':growth_bytes,
                 'accepted_growth':growth_accepted['settled'][-1],'grown_parameters':grown_model['parameters'],
                 'training_after_growth':final['settled'][-1],'final_issued_atoms':final['issued'],
+                'agreement_includes_height':final['height'],
                 'matching_app_hash_height':height,'matching_app_hash':headers[0]['app_hash']}
         (args.home/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2))

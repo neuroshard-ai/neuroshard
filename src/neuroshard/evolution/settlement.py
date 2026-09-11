@@ -13,7 +13,7 @@ from neuroshard.demo import protocol
 from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
-from .verification import Metadata, bundle, validate_record, dependencies,validate_growth
+from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -48,7 +48,7 @@ def genesis(chain_id, validators, manifest):
         raise ValueError('Genesis requires bonded native consensus weight')
     base.update(model_root=root(manifest['initial_model_root']), serving_root=manifest['initial_model_root'],
                 candidate=None, settled=[], period=0, period_steps=0, period_growths=0,audit_count=0,
-                training_round=0, data_root=root(manifest['data_root']), assignment=None)
+                training_round=0, paid_work={},data_root=root(manifest['data_root']), assignment=None)
     invariant(base)
     return base
 
@@ -68,6 +68,8 @@ def invariant(s):
         raise ValueError('Invalid account balance or nonce')
     if s['issued'] != s['training_round']*s['manifest']['params']['reward_atoms']:
         raise ValueError('Training issuance accounting failed')
+    if len(s['paid_work']) != s['training_round']:
+        raise ValueError('A numerical task must be paid at most once')
 
 
 def account(s, owner):
@@ -87,6 +89,9 @@ def close(s, accepted, reason):
         if claim.get('kind','training')=='growth':
             s['period_growths'] += 1
         else:
+            if claim['work_identity'] in s['paid_work']:
+                raise ValueError('Task was already paid')
+            s['paid_work'][claim['work_identity']]=claim['id']
             reward = p['reward_atoms']
             s['issued'] += reward
             s['training_round'] += 1
@@ -294,6 +299,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         metadata = Metadata(body['metadata'])
         record = metadata.json(root(body['record_root']))
         validate_record(metadata,body['record_root'])
+        identity = work_identity(metadata,body['record_root'])
+        if identity in s['paid_work']:
+            raise ValueError('This prescribed computation has already been paid')
         if record['parent'] != s['model_root'] or record['step'] != s['training_round']:
             raise ValueError('Wrong training parent or round')
         # Genesis pins an immutable list of batch roots for this experimental
@@ -321,6 +329,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         if identities != assignment['workers']:
             raise ValueError('Work rewards belong to the workers reserved before execution')
         s['candidate'] = {'id':protocol.transaction_id(envelope),'owner':owner,'bond':assignment['bond'],
+            'work_identity':identity,
             'model_root':record['model_root'],'record_root':body['record_root'],'metadata':body['metadata'],
             'workers':identities,'deadline':s['height']+p['challenge_blocks'],
             'expires':s['height']+p['max_claim_blocks'],'challenge':None}
