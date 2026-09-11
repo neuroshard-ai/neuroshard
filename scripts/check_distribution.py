@@ -15,6 +15,8 @@ REQUIRED = {
     "neuroshard/demo/abci.proto", "neuroshard/lab/abci.proto",
     "neuroshard/evolution/settlement.py",
     "neuroshard/evolution/text.py",
+    "neuroshard/evolution/lifecycle.py", "neuroshard/evolution/cohorts.py",
+    "neuroshard/evolution/forward.py",
 }
 REQUIRED_SOURCE = {
     "docs/eval/data/input.txt", "docs/llm-requirements.txt",
@@ -24,6 +26,10 @@ REQUIRED_SOURCE = {
     "scripts/experiment_text_profile.py", "tests/evolution/test_text.py",
     "scripts/native_rpc.py", "tests/evolution/test_experiment_rpc.py",
     "docs/TEXT_PROTOCOL.md", "docs/evolution-requirements.txt",
+    "docs/NATIVE_LIFECYCLE.md", "config/native-data.example.json",
+    "scripts/prepare_native_cohort.py", "scripts/experiment_lifecycle_native.py",
+    "scripts/experiment_forward_profile.py", "tests/evolution/test_lifecycle.py",
+    "tests/evolution/test_cohort_preparation.py",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 

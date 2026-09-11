@@ -1,0 +1,23 @@
+{
+  "objects": "./objects",
+  "corpus": "./native-corpus",
+  "tokenizer_root": "b797b60c9203884ec7d519b50dfd16e4375b239d249ac7377aa3f6c646b56e85",
+  "text": {"sequence_length": 128, "max_windows": 4},
+  "training_documents": 32,
+  "sources": [
+    {
+      "repo": "HuggingFaceTB/smol-smoltalk",
+      "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+      "split": "train",
+      "license": "Apache-2.0",
+      "role": "train"
+    },
+    {
+      "repo": "HuggingFaceTB/smol-smoltalk",
+      "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+      "split": "test",
+      "license": "Apache-2.0",
+      "role": "heldout"
+    }
+  ]
+}

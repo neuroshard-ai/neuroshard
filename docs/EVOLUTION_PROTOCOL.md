@@ -16,6 +16,7 @@ The published [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_
 | Native work settlement | `evolution/settlement.py`, `app.py` | Four validators, signed reservations, exact token accounting, availability challenges and an objective fraud dispute |
 | Native growth settlement | `grow` transaction, `audit_growth`, session `start_step` | A separate bonded claim; invalid growth is challengeable from one parent block; accepted growth mints no reward and preserves the training-round counter |
 | Distributed generation | `Pipeline.generate` | Greedy inference through the assigned model components |
+| Native data and serving lifecycle | `evolution/cohorts.py`, `lifecycle.py`, `forward.py` | Opt-in cohort admission, finite fresh/replay assignments, replayable scores, serving decisions and paid generation; see the [lifecycle profile](NATIVE_LIFECYCLE.md) |
 
 The distributed training and paired quality experiments ran on **two physical machines under one operator**. Later local reproduction checks and the extended native growth lifecycle ran on one host, as identified in their results. The worker parameter cap is a declared allocation; these experiments do not establish that a whole 135M model cannot fit on either physical machine.
 
@@ -67,7 +68,7 @@ Optimistic correctness assumes an honest online observer checks each accepted gr
 
 The new settlement prototype pays workers and has fraud bounties. It does not yet fund a sustainable audit market when work is honest. A public design needs explicit audit and availability budgets, collusion analysis, and measured prices. Consensus honesty, numerical correctness, audit participation, data quality and model quality are separate assumptions.
 
-The local epoch registry is intentionally **not** presented as a decentralized serving registry. Native data-window activation, quality-ticket adjudication, eligible-checkpoint rollback and paid inference for promoted evolving models still require integration. Public worker discovery, model replication/retention, efficient long-lived ledger storage and a balance-preserving migration from 0.4.0 also remain required before cutover. Native growth uses declared capacities; turning those advertisements into reliable worker admission remains part of that integration.
+The local epoch registry is intentionally **not** presented as a decentralized serving registry. A separate [native lifecycle profile](NATIVE_LIFECYCLE.md) now implements bounded data-cohort admission, optimistic evaluation adjudication, serving promotion/rejection and paid full-model generation on an isolated chain. It does not change the public 0.4.0 network. Public worker discovery, model replication/retention, funded complete audit coverage, efficient long-lived ledger storage and a balance-preserving migration from 0.4.0 remain required before cutover. Native growth uses declared capacities; turning those advertisements into reliable worker admission remains part of that integration.
 
 ## Running the tools from a checkout
 
@@ -108,7 +109,7 @@ Start the other three workers with their own homes and ports from the configurat
 python -m neuroshard.evolution run-epoch --config ./epoch.json
 ```
 
-This consumes subsequent licensed source rows, adds a replay fraction when historical data exists, trains all parameters, selects protected examples after committing the candidate, and records acceptance or rejection. Run it again to resume an interrupted epoch or begin the next budgeted epoch. The example allows one epoch per UTC day. It does not activate a public checkpoint, pay research workers, or bypass the native protocol's missing integration.
+This consumes subsequent licensed source rows, adds a replay fraction when historical data exists, trains all parameters, selects protected examples after committing the candidate, and records acceptance or rejection. Run it again to resume an interrupted epoch or begin the next budgeted epoch. The example allows one epoch per UTC day. It does not activate a public checkpoint or pay research workers. Use the separate native lifecycle experiment to test ledger activation and settlement.
 
 Use fresh corpus and epoch homes when upgrading from the historical first-response objective. The tokenizer, window budget and document evaluation policy are persistent settings; changing them in an existing corpus is rejected. The current `import-model` command binds the verified seed tokenizer to its embedding rows. `inspect-tokenizer` checks this identity without loading the model tensors. See [text reproduction](TEXT_PROTOCOL.md#reproduce) for a complete text-to-training-to-generation check.
 

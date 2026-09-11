@@ -154,6 +154,25 @@ class Application(Base):
                     value['validators'] = ledger.voting_power(s,s['height'])
                 elif request.path=='/candidate':
                     value = s['candidate']
+                elif request.path=='/lifecycle':
+                    life = s.get('lifecycle')
+                    value = None if life is None else {k:v for k,v in life.items()
+                        if k not in ('seen_documents','seen_batches','active','proposal')}
+                    if value is not None:
+                        value['active'] = {k:v for k,v in life['active'].items() if k!='batches'} if life['active'] else None
+                        value['proposal'] = {k:v for k,v in life['proposal'].items() if k!='metadata'} if life['proposal'] else None
+                        value['consumed_documents'] = len(life['seen_documents'])
+                elif request.path=='/data':
+                    value = s.get('lifecycle',{}).get('active')
+                elif request.path=='/data/proposal':
+                    value = s.get('lifecycle',{}).get('proposal')
+                elif request.path=='/evaluation':
+                    value = s.get('lifecycle',{}).get('evaluation')
+                elif request.path=='/inference':
+                    life = s.get('lifecycle',{})
+                    key = options.get('id')
+                    value = (life.get('jobs',{}).get(key) or life.get('results',{}).get(key)) if key else {
+                        'jobs':life.get('jobs',{}), 'results':life.get('results',{})}
                 elif request.path=='/manifest':
                     value = self.spec
                 elif request.path=='/work':
