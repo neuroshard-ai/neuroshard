@@ -5,8 +5,7 @@ message: >-
 type: software
 title: NeuroShard
 authors:
-  - family-names: Zamir
-    given-names: Linir
+  - name: LZ
     website: https://github.com/0x00LZ
   - name: NeuroShard contributors
     website: https://github.com/neuroshard-ai/neuroshard/graphs/contributors
