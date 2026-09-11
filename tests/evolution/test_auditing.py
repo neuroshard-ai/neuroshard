@@ -166,7 +166,7 @@ def test_abandoned_training_refunds_audit_contract(case):
     assert s['auditing']['history'][-1]['slashed_atoms'] == 0
 
 
-def test_proven_false_attestation_loses_collateral_and_never_gets_service_fee(case):
+def forged_case(case):
     s, owners, store, record, artifacts = case
     forged = copy.deepcopy(store.json(record['record_root']))
     stage = 1
@@ -178,6 +178,27 @@ def test_proven_false_attestation_loses_collateral_and_never_gets_service_fee(ca
     model['components'][name] = trace['components'][name]
     forged['model_root'] = store.put_json(model)
     forged['record_root'] = store.put_json(forged)
+    return s, owners, store, forged, artifacts
+
+
+def test_colluding_reports_without_an_honest_observer_can_accept_fraud(case):
+    """Characterize the observer assumption; coverage signatures are not proofs."""
+    from neuroshard.evolution.audit_worker import replay
+    s, owners, store, forged, artifacts = forged_case(case)
+    s, _ = submit((s, owners, store, forged, artifacts))
+    assert not replay(store, s['candidate'])['valid']
+    s = attest(s, [owners[3]])
+    s = blocks(s, s['manifest']['params']['challenge_blocks']+1)
+    # No honest challenge was submitted. Conservation still holds even though
+    # the optimistic execution claim was false: those are separate properties.
+    assert s['model_root'] == forged['model_root']
+    assert s['issued'] == 1_000_000 and s['auditing']['paid_services'] == 1
+    state.invariant(s)
+
+
+def test_proven_false_attestation_loses_collateral_and_never_gets_service_fee(case):
+    s, owners, store, forged, artifacts = forged_case(case)
+    stage = 1
     s, _ = submit((s, owners, store, forged, artifacts))
     s = attest(s, [owners[3]])  # Deliberately dishonest full-coverage assertion.
     claim_id = s['candidate']['id']

@@ -12,6 +12,12 @@ Colluding producers and auditors can still agree on a false claim. This is a
 purchased, accountable replay service; permissionless audit selection and its
 collusion incentives remain release blockers.
 
+The adversarial tests explicitly demonstrate this boundary: an update rejected
+by the complete referee can still settle when the selected auditor falsely
+attests and nobody submits a challenge. The same forgery is rejected and the
+false report loses collateral when an honest observer completes its dispute.
+Supply conservation alone does not establish execution correctness.
+
 ## Funding and obligations
 
 A genesis enables `manifest.auditing` with format
