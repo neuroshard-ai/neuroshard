@@ -221,35 +221,41 @@ class Worker:
         return result
 
     def evaluate(self, session_id, request):
-        session = self.sessions[session_id]
-        if session.phase != 'idle':
-            raise ValueError('Evaluation cannot interrupt a training step')
-        with torch.no_grad():
-            if request['phase'] == 'forward':
-                first = 'embed' in session.partition['components']
-                value = torch.tensor(unpack(self.store.json(request['input']),session.model['config']['vocab_size'])[0], dtype=torch.long) if first else tensor(self.store, request['input'])
-                if first and (value.ndim != 2 or not 1 <= value.shape[0] <= 16 or not 2 <= value.shape[1] <= 256 or
-                              value.min() < 0 or value.max() >= session.model['config']['vocab_size']):
-                    raise ValueError('Evaluation input exceeds execution bounds')
-                return {'output': tensor_root(self.store, session.shard(value, ids=first))}
-            if request['phase'] == 'head':
-                hidden = tensor(self.store, request['input'])
-                ids,labels = unpack(self.store.json(request['batch']),session.model['config']['vocab_size'])
-                ids = torch.tensor(ids, dtype=torch.long)
-                if hidden.shape != (*ids.shape,session.model['config']['hidden_size']):
-                    raise ValueError('Evaluation hidden state differs from the assigned batch shape')
-                targets = torch.tensor(labels,dtype=torch.long) if labels is not None else ids
-                logits = session.shard.logits(hidden)
-                flat = logits[:, :-1].reshape(-1,session.model['config']['vocab_size'])
-                loss = torch.nn.functional.cross_entropy(flat,targets[:, 1:].reshape(-1))
-                losses = torch.nn.functional.cross_entropy(flat,targets[:, 1:].reshape(-1),reduction='none').reshape(ids.shape[0],-1)
-                per_example = losses.sum(-1)/(targets[:, 1:]!=-100).sum(-1)
-                return {'loss_hex': float(loss).hex(),
-                        'losses_hex':[float(value).hex() for value in per_example],
-                        'next_ids': logits[:, -1:].argmax(-1).flatten().tolist()}
-            raise ValueError('Unknown evaluation phase')
+        return evaluate_session(self.sessions[session_id], self.store, request)
 
     def release(self, session_id):
         self.sessions.pop(session_id,None)
         import gc
         gc.collect()
+
+
+def evaluate_session(session, store, request):
+    """Shared worker/referee forward execution, without a database dependency."""
+    if session.phase != 'idle':
+        raise ValueError('Evaluation cannot interrupt a training step')
+    with torch.no_grad():
+        if request['phase'] == 'forward':
+            first = 'embed' in session.partition['components']
+            value = torch.tensor(unpack(store.json(request['input']),session.model['config']['vocab_size'])[0], dtype=torch.long) if first else tensor(store, request['input'])
+            if not first and value.shape[-1] != session.model['config']['hidden_size']:
+                raise ValueError('Forward activation width differs from architecture')
+            if first and (value.ndim != 2 or not 1 <= value.shape[0] <= 16 or not 2 <= value.shape[1] <= 256 or
+                          value.min() < 0 or value.max() >= session.model['config']['vocab_size']):
+                raise ValueError('Evaluation input exceeds execution bounds')
+            return {'output': tensor_root(store, session.shard(value, ids=first))}
+        if request['phase'] == 'head':
+            hidden = tensor(store, request['input'])
+            ids,labels = unpack(store.json(request['batch']),session.model['config']['vocab_size'])
+            ids = torch.tensor(ids, dtype=torch.long)
+            if hidden.shape != (*ids.shape,session.model['config']['hidden_size']):
+                raise ValueError('Evaluation hidden state differs from the assigned batch shape')
+            targets = torch.tensor(labels,dtype=torch.long) if labels is not None else ids
+            logits = session.shard.logits(hidden)
+            flat = logits[:, :-1].reshape(-1,session.model['config']['vocab_size'])
+            loss = torch.nn.functional.cross_entropy(flat,targets[:, 1:].reshape(-1))
+            losses = torch.nn.functional.cross_entropy(flat,targets[:, 1:].reshape(-1),reduction='none').reshape(ids.shape[0],-1)
+            per_example = losses.sum(-1)/(targets[:, 1:]!=-100).sum(-1)
+            return {'loss_hex': float(loss).hex(),
+                    'losses_hex':[float(value).hex() for value in per_example],
+                    'next_ids': logits[:, -1:].argmax(-1).flatten().tolist()}
+        raise ValueError('Unknown evaluation phase')

@@ -70,8 +70,8 @@ def validate_record(store, root):
 
 
 class Metadata:
-    def __init__(self, values):
-        if not isinstance(values,dict) or len(canonical(values)) > 512*1024:
+    def __init__(self, values, maximum_bytes=512*1024):
+        if not isinstance(values,dict) or len(canonical(values)) > maximum_bytes:
             raise ValueError('Metadata bundle exceeds bounds')
         for key,value in values.items():
             schema.root(key)
@@ -162,6 +162,9 @@ def audit(store,metadata,record_root,stage):
     """
     from .worker import replay_trace
     record = metadata.json(record_root)
+    if record.get('format') in ('neuroshard-forward-v1','neuroshard-generation-v1'):
+        from .forward import audit as audit_forward
+        return audit_forward(store,metadata,record_root,stage)
     if record.get('kind')=='growth':
         schema.integer(stage,0,0)
         from safetensors import SafetensorError

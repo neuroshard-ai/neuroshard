@@ -104,6 +104,15 @@ class Pipeline:
             current = endpoint.evaluate(self.session_id, {'phase':'forward','input':current})['output']
         return self.endpoints[0].evaluate(self.session_id, {'phase':'head','input':current,'batch':batch_root})
 
+    def evaluate_record(self, batch):
+        """Commit every forward dependency for independent stage disputes."""
+        from .forward import record
+        return record(self, batch)
+
+    def generate_record(self, token_ids, max_tokens=8, eos_ids=()):
+        from .forward import generation
+        return generation(self, token_ids, max_tokens, eos_ids)
+
     def generate(self, token_ids, max_tokens=32, eos_ids=()):
         schema.integer(max_tokens, 1, 64)
         if not 2 <= len(token_ids) <= 192:

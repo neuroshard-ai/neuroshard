@@ -1,5 +1,6 @@
 """Restartable data windows, document grouping and train/evaluation exclusion."""
 import hashlib
+import fcntl
 import json
 import re
 import sqlite3
@@ -80,6 +81,17 @@ class Corpus:
         return key
 
     def collect(self, source_id, count=128, rows=None):
+        # Read the cursor only while owning the corpus writer lock. SQLite
+        # alone does not protect a read performed before its write transaction:
+        # two collectors with different limits could otherwise move it backward.
+        with (self.home/'collection.lock').open('a') as lock:
+            try:
+                fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise ValueError('Another collector owns this corpus; retry after it finishes') from None
+            return self._collect(source_id,count,rows)
+
+    def _collect(self, source_id, count=128, rows=None):
         integer(count,1,1024)
         row = self.db.execute('SELECT spec,cursor FROM sources WHERE id=?',(source_id,)).fetchone()
         if row is None:

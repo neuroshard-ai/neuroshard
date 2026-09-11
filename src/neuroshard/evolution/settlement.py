@@ -14,6 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
+from . import lifecycle
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -49,12 +50,14 @@ def genesis(chain_id, validators, manifest):
     base.update(model_root=root(manifest['initial_model_root']), serving_root=manifest['initial_model_root'],
                 candidate=None, settled=[], period=0, period_steps=0, period_growths=0,audit_count=0,
                 training_round=0, paid_work={},data_root=root(manifest['data_root']), assignment=None)
+    if 'lifecycle' in manifest:
+        lifecycle.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
-    escrow = 0
+    escrow = lifecycle.escrow(s)
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -76,7 +79,7 @@ def account(s, owner):
     return ledger.account(s,owner)
 
 
-def close(s, accepted, reason):
+def close(s, accepted, reason, refund_bond=False):
     claim = s['candidate']
     p = s['manifest']['params']
     challenge = claim['challenge']
@@ -88,7 +91,7 @@ def close(s, accepted, reason):
             account(s,challenge['owner'])['balance'] += challenge['bond']
         if claim.get('kind','training')=='growth':
             s['period_growths'] += 1
-        else:
+        elif claim.get('kind','training')=='training':
             if claim['work_identity'] in s['paid_work']:
                 raise ValueError('Task was already paid')
             s['paid_work'][claim['work_identity']]=claim['id']
@@ -99,13 +102,19 @@ def close(s, accepted, reason):
             count = len(claim['workers'])
             for index,owner in enumerate(claim['workers']):
                 account(s,owner)['balance'] += reward//count + (1 if index<reward%count else 0)
-        s['model_root'] = claim['model_root']
+        if claim.get('kind','training') in ('training','growth'):
+            s['model_root'] = claim['model_root']
+    elif refund_bond:
+        account(s,claim['owner'])['balance'] += claim['bond']
+        if challenge:
+            s['burned'] += challenge['bond']
     else:
         if challenge:
             account(s,challenge['owner'])['balance'] += challenge['bond'] + claim['bond']//2
             s['burned'] += claim['bond']-claim['bond']//2
         else:
             s['burned'] += claim['bond']
+    lifecycle.settled(s,claim,accepted)
     s['settled'].append({'id':claim['id'],'accepted':accepted,'reason':reason,
                          'kind':claim.get('kind','training'),
                          'model_root':claim['model_root'],'height':s['height']})
@@ -171,10 +180,13 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
     if claim:
         challenge = claim['challenge']
         if height>claim['expires']:
-            if challenge:
-                account(s,challenge['owner'])['balance'] += challenge['bond']
-                claim['challenge'] = None
-            close(s,False,'absolute claim deadline expired')
+            # An unfinished accusation must not burn an honest publisher's
+            # collateral. No computation is accepted or paid at this deadline.
+            # Failure to answer a fully elapsed availability deadline remains
+            # attributable to the publisher and is handled as unavailability.
+            unavailable = challenge and challenge['kind']=='availability' and height>challenge['deadline']
+            close(s,False,'data availability deadline missed' if unavailable else 'absolute claim deadline expired',
+                  refund_bond=not unavailable)
         elif challenge and height>challenge['deadline']:
             if challenge['kind']=='availability':
                 close(s,False,'data availability deadline missed')
@@ -186,6 +198,7 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
                 claim['deadline'] = height+p['challenge_blocks']
         elif not challenge and height>claim['deadline']:
             close(s,True,'challenge window elapsed')
+    lifecycle.advance(s)
     invariant(s)
     return s,updates
 
@@ -209,6 +222,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         'challenge':{'claim_id','stage','challenge_kind','object_root'},
         'upload':{'claim_id','object_root','index','data'},
         'seal':{'claim_id','object_root'},'resolve':{'claim_id'},
+        **lifecycle.FIELDS,
     }
     kind = body.get('kind')
     if kind not in extras or set(body) != {'kind','chain_id','nonce'}|extras[kind]:
@@ -223,7 +237,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind=='transfer':
+    if kind in lifecycle.FIELDS:
+        lifecycle.apply(s,owner,body,envelope)
+    elif kind=='transfer':
         amount = integer(body['amount'],1,2**60)
         recipient = ledger.public_key(body['to'])
         debit(amount)
@@ -258,6 +274,10 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             sender['balance'] += v['amount']
             v.update(amount=0,status='withdrawn')
     elif kind=='grow':
+        if 'lifecycle' in s:
+            lifecycle.assignment(s)
+            if s['lifecycle']['active']['step']:
+                raise ValueError('Growth is allowed only before a fresh cohort starts training')
         if s['assignment'] or s['candidate'] or s['period_growths']>=p['growths_per_period']:
             raise ValueError('Pending work or growth budget exhausted')
         if body['parent']!=s['model_root']:
@@ -290,6 +310,8 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         debit(p['claim_bond'])
         s['assignment'] = {'id':protocol.transaction_id(envelope),'owner':owner,'workers':workers,
                            'bond':p['claim_bond'],'expires':s['height']+p['lease_blocks']}
+        if 'lifecycle' in s:
+            s['assignment'].update(lifecycle.assignment(s))
     elif kind=='claim':
         if s['candidate'] or s['period_steps']>=p['steps_per_period']:
             raise ValueError('Pending candidate or current period budget exhausted')
@@ -304,14 +326,18 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             raise ValueError('This prescribed computation has already been paid')
         if record['parent'] != s['model_root'] or record['step'] != s['training_round']:
             raise ValueError('Wrong training parent or round')
-        # Genesis pins an immutable list of batch roots for this experimental
-        # settlement test. Rolling data activation is a separate protocol action.
         if body['data_root'] != s['data_root']:
             raise ValueError('Wrong active dataset')
-        data = s['manifest']['training_batches']
-        index = integer(body['sequence_index'],0,len(data)-1)
-        if index != s['training_round']%len(data) or record['batch'] != data[index]:
-            raise ValueError('Work does not use the assigned training batch')
+        if 'lifecycle' in s:
+            expected = lifecycle.assignment(s)
+            integer(body['sequence_index'],0,len(s['lifecycle']['active']['schedule'])-1)
+            if any(assignment.get(k)!=v for k,v in expected.items()) or body['sequence_index']!=expected['sequence_index'] or record['batch']!=expected['batch']:
+                raise ValueError('Work does not use its reserved cohort batch')
+        else:
+            data = s['manifest']['training_batches']
+            index = integer(body['sequence_index'],0,len(data)-1)
+            if index != s['training_round']%len(data) or record['batch'] != data[index]:
+                raise ValueError('Work does not use the assigned training batch')
         if record['learning_rate_hex'] != float(s['manifest']['learning_rate']).hex() or record['clip_norm_hex'] != float(s['manifest']['clip_norm']).hex():
             raise ValueError('Unapproved optimizer settings')
         workers = body['workers']
@@ -344,16 +370,24 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             if claim['challenge'] or s['height']>claim['deadline']:
                 raise ValueError('Challenge is already active or too late')
             growth = record.get('kind')=='growth'
-            stage = integer(body['stage'],0,0 if growth else len(record['traces'])-1)
+            forward_claim = claim.get('kind') in ('score','inference')
+            if forward_claim:
+                needed,outputs = lifecycle.dispute(metadata,claim['record_root'],body['stage'])
+                stage = body['stage']
+            else:
+                stage = integer(body['stage'],0,0 if growth else len(record['traces'])-1)
             if body['challenge_kind'] not in ('fraud','availability'):
                 raise ValueError('Unknown challenge kind')
-            if growth:
+            if forward_claim:
+                pass
+            elif growth:
                 parent = metadata.json(record['parent'])
                 last_block = f'block_{parent["config"]["num_hidden_layers"]-1:03}'
                 needed = [parent['components'][last_block]['root']]
             else:
                 needed = dependencies(metadata,record['traces'][stage])
-            outputs = [c['root'] for c in metadata.json(record['model_root'])['components'].values()]
+            if not forward_claim:
+                outputs = [c['root'] for c in metadata.json(record['model_root'])['components'].values()]
             requested = body['object_root']
             if body['challenge_kind']=='availability':
                 if requested not in needed+outputs:

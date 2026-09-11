@@ -1,8 +1,7 @@
 """Durable research epochs with fresh data, replay, optional growth and rejection.
 
 The local registry records experimental decisions. It is deliberately distinct
-from the native serving-model registry, whose promotion protocol is not yet
-implemented by the experimental ABCI application.
+from the opt-in native lifecycle and never changes the public serving registry.
 """
 import fcntl
 import json
