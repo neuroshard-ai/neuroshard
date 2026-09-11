@@ -339,7 +339,7 @@ def run(args):
             processes['operator'].kill()
             processes['operator'].wait(timeout=10)
             start_operator()
-            until(lambda:query()['training_round']==8 and query('/data')['closed'],3600)
+            until(lambda:query()['training_round']==8 and query('/data')['closed'],args.cohort_timeout)
             expected_issued = 8_000_000
             emit('continuous_operator_completed_second_cohort', issued_atoms=expected_issued,
                  serving_decision=query('/lifecycle')['evaluations'][-1]['decision'])
@@ -407,4 +407,9 @@ if __name__ == '__main__':
     parser.add_argument('--auditor-key', type=Path, help='Optional precreated experiment auditor identity')
     parser.add_argument('--auditor-command', type=Path, help='JSON argv template for a separately operated audit process')
     parser.add_argument('--continue-cohort', action='store_true', help='Crash and recover the continuous operator through the second cohort and evaluation')
-    run(parser.parse_args())
+    parser.add_argument('--cohort-timeout', type=int, default=7200,
+                        help='Seconds allowed for second-cohort training and evaluation (default: 7200; does not change ledger deadlines)')
+    args = parser.parse_args()
+    if args.cohort_timeout <= 0:
+        parser.error('--cohort-timeout must be positive')
+    run(args)

@@ -51,6 +51,15 @@ Collection into S3 does not constitute native admission. Use complete,
 nonoverlapping immutable proposals; the native cursor and duplication rules
 still apply.
 
+The second-cohort driver wait defaults to two hours and can be set with
+`--cohort-timeout SECONDS`. This changes only the experiment's wall-clock wait;
+genesis reporting and evaluation deadlines still apply. The September 11
+real-model trial exceeded the older one-hour driver limit and needed a retained
+state continuation. A timeout stops the driver and preserves its files. Do not
+rerun initialization over that home or delete signing state to resume it; inspect
+the retained node, worker and outbox state first. Remote service lifetime limits
+must cover the entire trial, including its first cohort and fraud dispute.
+
 `--auditor-key` and `--auditor-command` support a separate host. The latter reads
 a JSON argument list with `{genesis_sha256}`, `{sponsor}` and `{rpc}` placeholders.
 It can launch a separately configured auditor through SSH. An independently
@@ -83,6 +92,13 @@ check. The September 11 trial also reconnects its second-host full node through
 the primary host's public TCP peer endpoint, removes the SSH peer tunnel, and
 compares common-height headers. A successful trial endpoint is not a commitment
 to permanent service; use the current deployment record when joining.
+
+After the later long driver outage, the follower had no connected peers until
+it was restarted with its retained home. If blocks remain stale after the peer
+is reachable again, inspect `comet.log` and the local `/net_info` RPC response,
+then stop and repeat the same follower command. This preserves its keys, genesis,
+configuration and replay database. The experiment demonstrates this manual
+recovery; it does not establish unattended reconnection within a fixed deadline.
 
 The auditor requires a trusted local full node, the agreed genesis hash,
 retrievable content-addressed artifacts, its own account and sufficient liquid
