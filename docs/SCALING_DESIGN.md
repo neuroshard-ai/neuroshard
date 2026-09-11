@@ -78,7 +78,7 @@ Two simple checks constrain any proposal:
 - A fraud-only observer with replay cost `C`, probability `p` of being the successful rewarded detector, and bounty `R` has expected net reward `p*R - C`. As successful fraud becomes rare, that cannot cover a fixed positive cost. Paying honest auditing therefore belongs in the normal budget.
 - Under genuinely independent draws from a population with adversarial resource fraction `a`, `k` complete auditors all being adversarial has probability `a^k`. With fully correlated ownership or one shared replay supplier, the corresponding risk can remain `a`. For `a = 0.25` and `k = 4`, those are 0.39% and 25%, respectively. Neither number describes the current single-operator deployment, and neither is a consensus-security theorem.
 
-Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. Until this service has independent participants and a tested settlement rule, the experiment relies on operated observers and must say so. The current native reward split has not been changed to an unvalidated audit market.
+Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. The [funded candidate](FUNDED_AUDITING.md) now reserves existing tokens for selected auditors and gates all execution claim kinds on complete-coverage reports. Its daemon replays the entire graph, but signatures do not prove that work occurred independently. This remains an operated service with explicit sponsor selection; the public 0.4.0 reward split is unchanged.
 
 ## Membership and assignment
 
@@ -107,7 +107,7 @@ Separate fast response delivery from final payment while defining which party be
 | Gate | Evidence required | Present status |
 | --- | --- | --- |
 | Bounded neural adjudication | Real-model dispute bytes, validator time, observer cost and cross-CPU agreement; adversarial coverage of all supported operators | Optimizer refutation implemented; full graph still uses stage replay |
-| Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Design requirement; operated observers today |
+| Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Prepaid complete replay and reporting implemented in the candidate; sponsor selection and ownership remain limitations |
 | Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | Earlier growth candidate failed promotion; useful improvement not demonstrated |
 | Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | Two owned hosts demonstrate execution; open scheduling and scale not demonstrated |
 | Public independence | Independent ownership of sufficient voting power and services, admission and exit, recovery logs, public genesis | Four public validator keys under one operator |

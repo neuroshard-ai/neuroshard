@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle
+from . import lifecycle, auditing
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -53,12 +53,14 @@ def genesis(chain_id, validators, manifest):
                 update_check_count=0)
     if 'lifecycle' in manifest:
         lifecycle.initialize(base)
+    if 'auditing' in manifest:
+        auditing.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
-    escrow = lifecycle.escrow(s)
+    escrow = lifecycle.escrow(s) + auditing.escrow(s)
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -80,10 +82,12 @@ def account(s, owner):
     return ledger.account(s,owner)
 
 
-def close(s, accepted, reason, refund_bond=False):
+def close(s, accepted, reason, refund_bond=False, proven_fault=False):
     claim = s['candidate']
     p = s['manifest']['params']
     challenge = claim['challenge']
+    if accepted and not auditing.complete(s, claim):
+        raise ValueError('Complete funded audit reports are required for settlement')
     if accepted:
         account(s,claim['owner'])['balance'] += claim['bond']
         if challenge:
@@ -115,6 +119,9 @@ def close(s, accepted, reason, refund_bond=False):
             s['burned'] += claim['bond']-claim['bond']//2
         else:
             s['burned'] += claim['bond']
+    if 'auditing' in s:
+        auditing.finish(s, claim['audit_budget'], accepted=accepted, claim=claim,
+                        proven_fault=proven_fault, reason=reason)
     lifecycle.settled(s,claim,accepted)
     s['settled'].append({'id':claim['id'],'accepted':accepted,'reason':reason,
                          'kind':claim.get('kind','training'),
@@ -176,6 +183,8 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
     if assignment and height>assignment['expires']:
         s['burned'] += assignment['bond']//10
         account(s,assignment['owner'])['balance'] += assignment['bond']-assignment['bond']//10
+        if 'auditing' in s:
+            auditing.finish(s, assignment['audit_budget'], reason='training reservation expired')
         s['assignment'] = None
     claim = s['candidate']
     if claim:
@@ -196,10 +205,14 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
                 # bond. Keep the claim open for other observers afterward.
                 s['burned'] += challenge['bond']
                 claim['challenge'] = None
-                claim['deadline'] = height+p['challenge_blocks']
+                claim['deadline'] = max(height+p['challenge_blocks'], auditing.minimum_deadline(s, claim))
+        elif (not challenge and 'auditing' in s and height > claim['audit_reveal_end']
+              and not auditing.complete(s, claim)):
+            close(s, False, 'funded audit coverage deadline missed', refund_bond=True)
         elif not challenge and height>claim['deadline']:
             close(s,True,'challenge window elapsed')
     lifecycle.advance(s)
+    auditing.advance(s)
     invariant(s)
     return s,updates
 
@@ -225,7 +238,11 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         'seal':{'claim_id','object_root'},'resolve':{'claim_id'},
         'refute_update':{'claim_id','stage','tensor_index','witness'},
         **lifecycle.FIELDS,
+        **auditing.FIELDS,
     }
+    if 'auditing' in previous:
+        for name in ('reserve', *auditing.CLAIM_KINDS):
+            extras[name] = extras[name] | {'audit_budget'}
     kind = body.get('kind')
     if kind not in extras or set(body) != {'kind','chain_id','nonce'}|extras[kind]:
         raise ValueError('Invalid transaction schema')
@@ -239,7 +256,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in lifecycle.FIELDS:
+    if kind in auditing.FIELDS:
+        auditing.apply(s, owner, body, envelope)
+    elif kind in lifecycle.FIELDS:
         lifecycle.apply(s,owner,body,envelope)
     elif kind=='transfer':
         amount = integer(body['amount'],1,2**60)
@@ -314,6 +333,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
                            'bond':p['claim_bond'],'expires':s['height']+p['lease_blocks']}
         if 'lifecycle' in s:
             s['assignment'].update(lifecycle.assignment(s))
+        if 'auditing' in s:
+            auditing.lock(s, body['audit_budget'], owner, workers, s['assignment']['id'])
+            s['assignment']['audit_budget'] = body['audit_budget']
     elif kind=='claim':
         if s['candidate'] or s['period_steps']>=p['steps_per_period']:
             raise ValueError('Pending candidate or current period budget exhausted')
@@ -361,6 +383,8 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             'model_root':record['model_root'],'record_root':body['record_root'],'metadata':body['metadata'],
             'workers':identities,'deadline':s['height']+p['challenge_blocks'],
             'expires':s['height']+p['max_claim_blocks'],'challenge':None}
+        if 'auditing' in s:
+            auditing.attach(s, assignment['audit_budget'])
         s['assignment'] = None
     else:
         claim = s['candidate']
@@ -380,7 +404,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
                 s['burned'] += p['challenge_bond']
             else:
                 claim['challenge'] = {'owner':owner,'bond':p['challenge_bond'],'kind':'compact_update'}
-                close(s,False,'objective update witness: '+verdict['mismatch'])
+                close(s,False,'objective update witness: '+verdict['mismatch'], proven_fault=True)
         elif kind=='challenge':
             if claim['challenge'] or s['height']>claim['deadline']:
                 raise ValueError('Challenge is already active or too late')
@@ -411,6 +435,8 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             elif requested is not None:
                 raise ValueError('Fraud challenge specifies a stage, not one object')
             debit(p['challenge_bond'])
+            if 'auditing' in s:
+                claim['audit_interrupted'] = True
             claim['challenge'] = {'owner':owner,'bond':p['challenge_bond'],'kind':body['challenge_kind'],
                 'stage':stage,'needed':needed,'uploads':{},'sealed':[],
                 'deadline':s['height']+p['availability_blocks']}
@@ -449,7 +475,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
                 if challenge['kind']=='availability':
                     account(s,challenge['owner'])['balance'] += challenge['bond']
                     claim['challenge'] = None
-                    claim['deadline'] = s['height']+p['challenge_blocks']
+                    claim['deadline'] = max(s['height']+p['challenge_blocks'], auditing.minimum_deadline(s, claim))
             elif kind=='resolve':
                 if challenge['kind']!='fraud' or set(challenge['sealed'])!=set(challenge['needed']):
                     raise ValueError('Every replay input must first be published in native blocks')
@@ -460,8 +486,11 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
                 if verdict['valid']:
                     s['burned'] += challenge['bond']
                     claim['challenge'] = None
-                    claim['deadline'] = s['height']+p['challenge_blocks']
+                    claim['deadline'] = max(s['height']+p['challenge_blocks'], auditing.minimum_deadline(s, claim))
                 else:
-                    close(s,False,'objective replay mismatch: '+verdict['mismatch'])
+                    close(s,False,'objective replay mismatch: '+verdict['mismatch'], proven_fault=True)
+    if 'auditing' in s and kind in auditing.CLAIM_KINDS:
+        auditing.lock(s, body['audit_budget'], owner, [], s['candidate']['id'])
+        auditing.attach(s, body['audit_budget'])
     invariant(s)
     return s

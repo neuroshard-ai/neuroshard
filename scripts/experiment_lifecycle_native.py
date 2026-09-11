@@ -17,7 +17,7 @@ from pathlib import Path
 from neuroshard.dataflow.store import canonical
 from neuroshard.demo import protocol, client as wire
 from neuroshard.demo.network import initialize, edit_config
-from neuroshard.evolution import cohorts, forward, lifecycle
+from neuroshard.evolution import cohorts, forward, lifecycle, auditing
 from neuroshard.evolution.app import code_hash
 from neuroshard.evolution.objects import Objects, digest
 from neuroshard.evolution.pipeline import Pipeline, LocalEndpoint
@@ -101,15 +101,22 @@ def run(args):
     native = {**native_parameters(params),'block_max_bytes':4*1024*1024}
     manifest = {'params':params,'initial_model_root':initial,'data_root':previous,'training_batches':[],
         'learning_rate':.003,'clip_norm':1.,'native_consensus':native,'code_hash':code_hash(),'lifecycle':profile}
+    if args.funded_audits:
+        manifest['auditing'] = {**auditing.PROFILE, 'commit_blocks':256, 'reveal_blocks':32}
     genesis = json.loads((Path(config['nodes'][0]['home'])/'config/genesis.json').read_bytes())
     owners = [protocol.Identity.load_or_create(home/f'founder{i}.key') for i in range(4)]
+    auditor_key = args.auditor_key or home/'auditor.key'
+    auditor = protocol.Identity.load_or_create(auditor_key) if args.funded_audits else None
     validators = []
     for index,node in enumerate(config['nodes']):
         key = json.loads((Path(node['home'])/'config/priv_validator_key.json').read_bytes())['pub_key']['value']
         validators.append({'owner':owners[index].public_key,'consensus_key':base64.b64decode(key).hex(),
                            'bond':2500000,'liquid':1_000_000_000})
         genesis['validators'][index]['power'] = '10'
-    genesis.update(chain_id='neuroshard-lifecycle-check-'+secrets.token_hex(6),app_state={'manifest':manifest,'validators':validators})
+    genesis.update(chain_id='neuroshard-lifecycle-check-'+secrets.token_hex(6), initial_height='1',
+                   app_state={'manifest':manifest,'validators':validators})
+    config['chain_id'] = genesis['chain_id']
+    (home/'native/network.json').write_bytes(canonical(config))
     genesis['consensus_params']['block']['max_bytes'] = str(native['block_max_bytes'])
     genesis['consensus_params']['evidence'].update(max_age_num_blocks=str(params['evidence_blocks']),
         max_age_duration=str(params['evidence_seconds']*1_000_000_000))
@@ -137,11 +144,37 @@ def run(args):
     url = urls[0]
     def query(path='/status',options=None):return wire.query(url,path,options)
     def send(owner,kind,**fields):
+        if args.funded_audits and kind in ('claim', *auditing.CLAIM_KINDS):
+            from neuroshard.evolution.audit_worker import required_objects
+            values = fields['metadata']
+            claim_kind = {'claim':'training', 'grow':'growth', 'score':'score', 'respond':'inference'}[kind]
+            if kind == 'grow':
+                value = {'kind':'growth', 'parent':fields['parent'], 'model_root':fields['model_root'],
+                         'assignments':place(values[fields['model_root']], fields['capacities'])}
+                record_root = store.put_json(value)
+                values = {**values, record_root:value}
+            else:
+                record_root = fields['record_root']
+            preview = {'kind':claim_kind, 'record_root':record_root, 'metadata':values,
+                       'model_root':values[record_root]['model_root']}
+            for key in required_objects(preview):
+                store.get(key)  # Publish every object before the audit window opens.
+        if args.funded_audits and kind in ('reserve', *auditing.CLAIM_KINDS):
+            if kind == 'reserve':
+                stages = len(fields['workers'])
+            elif kind == 'grow':
+                stages = 1
+            else:
+                stages = len(forward.trace_roots(Metadata(fields['metadata']), fields['record_root']))
+            budget = send(owners[0], 'fund_audit', publisher=owner.public_key,
+                          auditors=[auditor.public_key], stage_limit=stages, expires_in=1024)
+            until(lambda: query('/auditing')['budgets'][budget]['auditors'][auditor.public_key]['bond'], 60)
+            fields['audit_budget'] = budget
         nonce = query('/account',{'public_key':owner.public_key})['nonce']
         signed = owner.sign({'kind':kind,'chain_id':genesis['chain_id'],'nonce':nonce,**fields})
         broadcast_finalized(url,signed)
         return protocol.transaction_id(signed)
-    def settled():return until(lambda:s if (s:=query())['candidate'] is None else None,120)
+    def settled():return until(lambda:s if (s:=query())['candidate'] is None else None,360)
     def pipe(root,name,step=0):
         count = len(place(store.json(root),capacities))
         workers = endpoints[:count] if endpoints else [LocalEndpoint(Worker(home/(name+str(i)),store)) for i in range(count)]
@@ -174,6 +207,20 @@ def run(args):
     try:
         for index in range(4):start(index)
         until(lambda:all(wire.query(u)['height']>0 for u in urls))
+        if args.funded_audits:
+            send(owners[0], 'transfer', to=auditor.public_key, amount=100_000_000)
+            command = [sys.executable, '-m', 'neuroshard.evolution.audit_worker',
+                       '--home', str(home/'auditor'), '--rpc', url,
+                       '--genesis-sha256', digest(canonical(genesis)), '--key', str(auditor_key),
+                       '--sponsor', owners[0].public_key, '--objects', str(home/'objects')]
+            if args.auditor_command:
+                template = json.loads(args.auditor_command.read_bytes())
+                if not isinstance(template, list) or not all(isinstance(v, str) for v in template):
+                    raise ValueError('Auditor command must be a JSON argument list')
+                command = [part.format(genesis_sha256=digest(canonical(genesis)),
+                           sponsor=owners[0].public_key, rpc=url) for part in template]
+            with (home/'auditor.log').open('ab') as log:
+                processes['auditor'] = subprocess.Popen(command, stdout=log, stderr=log)
         key, values = (prepared['data_root'],prepared['metadata']) if real else fixture(store,manifest['data_root'])
         proposal = send(owners[0],'propose_data',data_root=key,metadata=values)
         for owner in owners[:2]:send(owner,'vote_data',proposal_id=proposal,approve=True)
@@ -245,7 +292,12 @@ def run(args):
         forged['token_ids'] = [wrong]
         forged_root = store.put_json(forged)
         send(owners[1],'respond',job_id=job_id,record_root=forged_root,metadata=forward.bundle(store,forged_root))
-        replay_bytes = dispute(len(record['traces'])-1)
+        if args.funded_audits:
+            md = Metadata(forward.bundle(store, forged_root))
+            replay_bytes = sum(len(store.get(key)) for key in forward.dependencies(md, record['traces'][-1]))
+            settled()  # The separate auditor process must detect and refute it.
+        else:
+            replay_bytes = dispute(len(record['traces'])-1)
         assert query()['settled'][-1]['reason'] == 'objective replay mismatch: forward evaluation result'
         send(owners[1],'respond',job_id=job_id,record_root=good,metadata=check(good))
         settled()
@@ -259,6 +311,38 @@ def run(args):
         until(lambda:d if (d:=query('/data'))['root']==new_key else None)
         assert query()['training_round'] == 4 and query('/data')['step'] == 0
         emit('second_fresh_cohort_activated',data_root=new_key)
+        expected_issued = 4_000_000
+        if args.continue_cohort:
+            if not args.funded_audits:
+                raise ValueError('The continuous operator requires funded auditing')
+            worker_config = (workers if endpoints else [{'capacity':v} for v in capacities])
+            if endpoints:
+                worker_config = [{**w, 'capacity':capacities[i],
+                    'token_file':str((args.workers_config.resolve().parent/Path(w['token_file']).expanduser()).absolute())}
+                    for i,w in enumerate(worker_config)]
+            operator_config = {'home':str(home/'operator'), 'rpc':url,
+                'genesis_sha256':digest(canonical(genesis)), 'key':str(home/'founder0.key'),
+                'worker_keys':[str(home/f'founder{i}.key') for i in range(len(capacities))],
+                'auditors':[auditor.public_key], 'objects':str(home/'objects'),
+                'workers':worker_config, 'budget':{'training_round_limit':8,'minimum_balance':100_000_000}}
+            operator_path = home/'operator.json'
+            operator_path.write_bytes(canonical(operator_config))
+            command = [sys.executable, str(Path(__file__).with_name('run_lifecycle_operator.py')),
+                       '--config',str(operator_path)]
+            def start_operator():
+                with (home/'operator.log').open('ab') as log:
+                    processes['operator'] = subprocess.Popen(command, stdout=log, stderr=log)
+            start_operator()
+            until(lambda:query()['assignment'],60)
+            # Crash the coordinator after a durable reservation. The restarted
+            # process must recover it, then finish training and quality scoring.
+            processes['operator'].kill()
+            processes['operator'].wait(timeout=10)
+            start_operator()
+            until(lambda:query()['training_round']==8 and query('/data')['closed'],args.cohort_timeout)
+            expected_issued = 8_000_000
+            emit('continuous_operator_completed_second_cohort', issued_atoms=expected_issued,
+                 serving_decision=query('/lifecycle')['evaluations'][-1]['decision'])
         stop(3)
         before = query()['height']
         until(lambda:query()['height']>before+2)
@@ -275,22 +359,36 @@ def run(args):
         until(lambda:all(wire.query(u)['height']>=height for u in urls))
         headers = [wire.rpc(u,'block',{'height':str(height)})['block']['header'] for u in urls]
         assert len({header['app_hash'] for header in headers}) == 1
-        assert all(wire.query(u)['issued'] == 4_000_000 for u in urls)
+        assert all(wire.query(u)['issued'] == expected_issued for u in urls)
         result = {'chain_id':genesis['chain_id'],'source_hash':manifest['code_hash'],
             'genesis_hash':digest(canonical(genesis)),'fixture':'real-model' if real else 'synthetic-10384-parameters',
             'validator_physical_hosts':1,'worker_transport':'http' if endpoints else 'local-single-process',
             'operators':1,'validators':4,'independent_stage_replays':audits,'parameters':model['parameters'],
             'candidate_parameters':store.json(evaluation['candidate'])['parameters'],
             'growth_layers':args.growth_layers,'declared_capacities':capacities,
-            'fresh_cohorts_activated':2,'training_steps':4,'issued_atoms':4_000_000,
+            'fresh_cohorts_activated':2,'training_steps':expected_issued//1_000_000,'issued_atoms':expected_issued,
+            'continuous_operator_recovered_reservation':args.continue_cohort,
             'serving_decision':decision,'llm_quality_improvement_claimed':False,
             'inference':paid,'forged_inference_replay_bytes':replay_bytes,
             'one_validator_down_progress':True,'half_voting_power_down_halts':True,
             'restart_catchup_agreement':True,'matching_app_hash_height':height,
             'matching_app_hash':headers[0]['app_hash']}
+        if args.funded_audits:
+            result['funded_auditing'] = query('/auditing')
+            assert result['funded_auditing']['paid_atoms'] > 0
+            assert not result['funded_auditing']['budgets']
+            result['serving_evaluations'] = query('/lifecycle')['evaluations']
         (home/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2),flush=True)
     finally:
+        if 'operator' in processes:
+            processes['operator'].terminate()
+            try: processes['operator'].wait(timeout=5)
+            except subprocess.TimeoutExpired: processes['operator'].kill(); processes['operator'].wait()
+        if 'auditor' in processes:
+            processes['auditor'].terminate()
+            try: processes['auditor'].wait(timeout=5)
+            except subprocess.TimeoutExpired: processes['auditor'].kill(); processes['auditor'].wait()
         for index in range(4):stop(index)
 
 
@@ -305,4 +403,13 @@ if __name__ == '__main__':
     parser.add_argument('--next-cohort',type=Path)
     parser.add_argument('--workers-config',type=Path)
     parser.add_argument('--growth-layers',type=int,default=0,choices=range(0,5),help='Real-model trial: add up to four identity blocks before training')
-    run(parser.parse_args())
+    parser.add_argument('--funded-audits', action='store_true', help='Require prepaid complete audit reports for every execution claim')
+    parser.add_argument('--auditor-key', type=Path, help='Optional precreated experiment auditor identity')
+    parser.add_argument('--auditor-command', type=Path, help='JSON argv template for a separately operated audit process')
+    parser.add_argument('--continue-cohort', action='store_true', help='Crash and recover the continuous operator through the second cohort and evaluation')
+    parser.add_argument('--cohort-timeout', type=int, default=7200,
+                        help='Seconds allowed for second-cohort training and evaluation (default: 7200; does not change ledger deadlines)')
+    args = parser.parse_args()
+    if args.cohort_timeout <= 0:
+        parser.error('--cohort-timeout must be positive')
+    run(args)

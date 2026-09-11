@@ -13,6 +13,10 @@
 | [Native lifecycle](NATIVE_LIFECYCLE.md) | Curated fresh data, training, quality decisions and paid generation on isolated networks. |
 | [Lifecycle evidence](NATIVE_LIFECYCLE_RESULTS.md) | Real-model integration, failed promotion, recovery and continued training. |
 | [Compact optimizer disputes](COMPACT_UPDATE_DISPUTES.md) | Bounded SGD refutations, complete-audit requirements and measured costs. |
+| [Funded auditing](FUNDED_AUDITING.md) | Prepaid complete replay, reporting windows, collateral, payments and refunds. |
+| [Funded audit evidence](FUNDED_AUDIT_RESULTS.md) | Two-host execution, recovery, public peer connectivity, costs and failure analysis. |
+| [Audit admission RFC](AUDIT_ADMISSION_RFC.md) | Proposed atomic reservations and refutation funding; not activated. |
+| [Candidate operations](CANDIDATE_OPERATIONS.md) | Recovering operators and auditors, full-node joining and bootstrap ownership. |
 | [Scaling design](SCALING_DESIGN.md) | Compute groups, audit funding, capacity-backed growth and release gates. |
 | [Inherited ledger rules](PROTOCOL_CANDIDATE_V2.md) | Reference consensus, accounting, bonds and dispute assumptions. |
 | [LLM experiments](LLM_EXPERIMENTS.md) | Measured outcomes, including failures, with historical evidence links. |

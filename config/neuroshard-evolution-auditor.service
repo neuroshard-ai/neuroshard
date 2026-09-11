@@ -1,0 +1,28 @@
+[Unit]
+Description=NeuroShard funded candidate complete-replay auditor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=neuroshard
+Group=neuroshard
+WorkingDirectory=/opt/neuroshard/candidate
+Environment=ATEN_CPU_CAPABILITY=default
+Environment=MKL_ENABLE_INSTRUCTIONS=SSE4_2
+EnvironmentFile=/etc/neuroshard/candidate-auditor.env
+ExecStart=/opt/neuroshard/candidate/venv/bin/python -m neuroshard.evolution.audit_worker --home /var/lib/neuroshard/candidate/auditor --rpc ${NEURO_CANDIDATE_RPC} --genesis-sha256 ${NEURO_CANDIDATE_GENESIS_SHA256} --key /var/lib/neuroshard/candidate/auditor.key --sponsor ${NEURO_CANDIDATE_SPONSOR} --objects /var/lib/neuroshard/candidate/audit-objects --source ${NEURO_CANDIDATE_OBJECT_SOURCE}
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/neuroshard/candidate
+MemoryMax=4G
+CPUQuota=100%
+
+[Install]
+WantedBy=multi-user.target

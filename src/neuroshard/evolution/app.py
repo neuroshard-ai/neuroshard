@@ -154,6 +154,8 @@ class Application(Base):
                     value['validators'] = ledger.voting_power(s,s['height'])
                 elif request.path=='/candidate':
                     value = s['candidate']
+                elif request.path=='/auditing':
+                    value = s.get('auditing')
                 elif request.path=='/lifecycle':
                     life = s.get('lifecycle')
                     value = None if life is None else {k:v for k,v in life.items()
