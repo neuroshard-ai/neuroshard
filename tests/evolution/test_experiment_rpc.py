@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import importlib.util
 from http.client import RemoteDisconnected
@@ -37,7 +38,7 @@ def test_lost_submission_response_is_confirmed_without_resigning_or_resubmitting
     clock=Clock()
     assert broadcast_finalized('node',ENVELOPE,rpc=rpc,clock=clock,sleep=clock.sleep)['height']=='42'
     assert [method for method,_ in calls]==['broadcast_tx_sync','tx','tx']
-    assert calls[-1][1]['hash']==HASH
+    assert base64.b64decode(calls[-1][1]['hash']).hex().upper()==HASH
 
 
 @pytest.mark.parametrize('mode',['check_rejection','final_rejection','wrong_hash'])

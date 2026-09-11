@@ -27,7 +27,10 @@ def broadcast_finalized(url,envelope,timeout=180,*,rpc=wire.rpc,clock=time.monot
             raise wire.Rejected(result.get('log','Transaction rejected in CheckTx'))
     while clock()<deadline:
         try:
-            result=rpc(url,'tx',{'hash':tx_hash,'prove':False},timeout=min(10,deadline-clock()))
+            # JSON-RPC []byte arguments use base64; URL-query hex examples
+            # cannot be copied into a JSON body. Returned Hash is hexadecimal.
+            result=rpc(url,'tx',{'hash':base64.b64encode(bytes.fromhex(tx_hash)).decode(),'prove':False},
+                       timeout=min(10,deadline-clock()))
         except wire.Rejected as exc:
             if 'not found' not in str(exc).lower():
                 raise
