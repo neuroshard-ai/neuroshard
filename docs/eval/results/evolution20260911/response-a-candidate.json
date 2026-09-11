@@ -1,0 +1,24 @@
+{
+  "initial": "7bc8ca65a788ff3843dcae6e727a01465e86e376c09d5ab9bb79b05db5310620",
+  "model_root": "74ebd3414409b1c7009ff9abd94c013a49c271f9b179dd55586e270402c68bac",
+  "training_window": "92866729d9742c6a8c4eeec01f585fe988d654fe9ac249ef40066b349b9d583d",
+  "steps": 32,
+  "batch_rows": 2,
+  "sequence_tokens": 128,
+  "target_mode": "response",
+  "workers": 3,
+  "audits": [
+    {
+      "valid": true,
+      "trace": "6d7fd6be0d88c7b3e09ed6f6707563185ede48d04556e7a0da8afc49177b2bcd",
+      "resident_parameters": 46012608,
+      "elapsed_seconds": 10.185022165998816
+    },
+    {
+      "valid": true,
+      "trace": "81a82ea402016d1d1de3bad3c9b5c75d6424d1df71d9a1ec58f2db59dd3cfad0",
+      "resident_parameters": 42481152,
+      "elapsed_seconds": 8.407449424266815
+    }
+  ]
+}

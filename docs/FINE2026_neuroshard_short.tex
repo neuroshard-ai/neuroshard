@@ -1,287 +1,195 @@
-\documentclass[conference]{IEEEtran}
-\IEEEoverridecommandlockouts
-\usepackage{cite}
-\usepackage{amsmath,amssymb,amsfonts}
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,longtable,array}
+\usepackage[T1]{fontenc}
+\usepackage{microtype}
 \usepackage{graphicx}
-\usepackage{textcomp}
-\usepackage{xcolor}
-\usepackage{booktabs}
-\usepackage{url}
-\usepackage{flushend}
-
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\newtheorem{proposition}{Proposition}
+\newcommand{\Hash}{\operatorname{SHA256}}
+\newcommand{\NEURO}{\mathrm{NEURO}}
+\input{eval/results/evolution20260911/summary.tex}
+\title{NeuroShard: Native Settlement for Continual, Verifiable Language Model Evolution\\\large Protocol working draft and two-host experiments}
+\author{Linir Zamir\\Independent Researcher\\\texttt{lzamir2016@fau.edu}}
+\date{September 11, 2026}
 \begin{document}
-
-\title{NeuroShard: Useful-Work Mining for Decentralized Language Model Training\thanks{Prototype, experiment harnesses, and raw results: \protect\url{https://github.com/neuroshard-ai/neuroshard}. This work is unrelated to similarly named embedding-table and database-sharding systems.}}
-
-\author{\IEEEauthorblockN{Linir Zamir}
-\IEEEauthorblockA{\textit{Independent Researcher}\\
-Boca Raton, FL, USA\\
-lzamir2016@fau.edu}}
-
 \maketitle
-
 \begin{abstract}
-NeuroShard aims to turn openly contributed computation into a shared language model and native token rewards. We propose useful-work mining: participants execute prescribed learning tasks, and NeuroShard's own blockchain settles verified contributions into model updates and token issuance. Tasks bind checkpoints, objectives, data, numerical semantics, and state transitions. Native consensus orders payments; neural verification checks the claimed work. A composition obstacle is that a minority of malicious pipeline stages can contaminate a majority of complete contributions. The design therefore requires dependency verification, availability, and resource-based admission. Component experiments show a 3.4\% validation-loss increase at $50\times$ lower outbound update payload; compression reaches $527\times$ with a 16.2\% increase. A separate native-chain demonstrator connects two model-stage workers to four validators using full replay and atomic rewards. Fifteen accepted steps reduce a fixed held-out batch loss from 5.74 to 4.11 and issue exactly 15 development tokens; outage and invalid-claim checks pass. These small-scale results establish an executable reference for auditable training settlement, while public admission, scalable verification, and economic sustainability remain open.
+NeuroShard aims to maintain a shared language model through openly contributed computation, new training data, and native token incentives. This requires four executable mechanisms: continual data and evaluation, distributed training of the complete model, verifiable execution without repeating the whole model in every block, and architecture growth. We implement experimental versions of these mechanisms. A tied-weight Llama seed with \SeedParameters\ parameters trains across three workers on two CPU hosts. A deterministic expansion adds four residual blocks, producing \GrownParameters\ parameters and requiring a fourth worker under a declared 48-million-parameter limit per worker. Initial expansion preserves the tested logits exactly. A separate four-validator native chain rejects a forged update through a bounded-stage replay dispute and settles a valid update with exactly one experimental token of issuance. The dispute publishes \ReplayBytes\ bytes; it is a coarse executable upper bound, not a succinct proof. We also identify a misleading evaluation regime dominated by prompt tokens and repeat the comparison with assistant-response targets. Neither response-trained candidate passes the predefined improvement gate, and the larger candidate has no demonstrated advantage under the same response-training budget. These results establish concrete components, not perpetual quality improvement or a production permissionless deployment. Native promotion of evolving models, rolling data activation, sustainable audit incentives, and public worker admission remain integration and research obligations.
 \end{abstract}
 
-\begin{IEEEkeywords}
-Decentralized machine learning, permissionless networks, verifiable computation, Byzantine fault tolerance, distributed training
-\end{IEEEkeywords}
+\section{Objective and scope}
+NeuroShard's objective is an ongoing public learning service. Participants contribute training, inference, verification, or storage; its own blockchain settles duties and payments. The model should be able to consume fresh licensed data, improve on measured tasks, and gain useful capacity when additional resources become available. A particular seed checkpoint is an initial condition, not a permanent size ceiling.
 
-\section{Introduction}
+Four properties must be distinguished. Execution correctness asks whether the prescribed computation occurred. Consensus asks which state transition and payment became final. Learning quality asks whether a candidate improves a chosen task distribution. Resource scaling asks whether a larger computation can run at an acceptable cost. A signature proves none of the latter three, and lower training loss does not establish general intelligence.
 
-Low-communication optimization and pipeline parallelism make geographically distributed language model training increasingly practical~\cite{douillard2023diloco,jaghouar2024opendiloco,jaghouar2024intellect,ryabinin2023swarm}. Permissionless participation adds different requirements: a public key does not identify an independent worker, a signed update does not prove correct computation, and agreement on a checkpoint does not imply learning quality.
+This draft supersedes the earlier five-page manuscript, preserved in \texttt{docs/archive}. It specifies the target protocol separately from the implemented experiments. The released 0.4.0 public testnet remains a bounded adapter-training and paid-inference demonstrator. The new code resides in \texttt{neuroshard.evolution}; its experiments do not silently migrate public balances or replace the public serving model.
 
-NeuroShard targets a network with no permanent admission authority or required centralized compute/storage provider. It runs its own consensus from genesis; a temporary proposer or training-job initiator is a replaceable protocol role. Anyone meeting public resource and execution requirements may participate. This definition permits resource constraints and explicit adversarial bounds; it does not imply that every device can profitably train every model.
+\section{Related foundations}
+DiLoCo reduces synchronization between complete model replicas; it does not eliminate communication between the layers of a model-parallel replica or establish Byzantine correctness~\cite{diloco}. SWARM studies training pipelines over heterogeneous, unreliable resources~\cite{swarm}. We use these as distributed-systems foundations, while treating adversarial execution as a separate problem.
 
-The research question is whether mutually untrusted model shards can compose into auditable training workers at a useful total cost. Our contributions are a task-based mining design and executable settlement reference; an analysis of pipeline fault propagation and state/dependency commitments; and component evaluations with reproducible analytical examples. The design separates execution correctness, agreement, optimization quality, and incentives so that each can be tested against an explicit condition.
+Function-preserving model expansion follows the general motivation of Net2Net~\cite{net2net}. Our implemented transformation is specifically an identity residual extension for a tied-weight Llama decoder. It neither reproduces every Net2Net transformation nor establishes that extra depth improves downstream quality.
 
-\section{Related Work}
+Verde studies refereed delegation of machine-learning computation under an at-least-one-honest-provider assumption and uses reproducible operators to address hardware-dependent arithmetic~\cite{verde}. Our current referee is much coarser: it replays an entire bounded worker stage. The verifier's dilemma is directly relevant: when correct verification is costly, rational participants can prefer to skip it~\cite{dilemma}. Fraud bounties alone are not a demonstrated sustainable audit market.
 
-\textbf{Distributed learning.} DiLoCo~\cite{douillard2023diloco} and OpenDiLoCo~\cite{jaghouar2024opendiloco} reduce replica synchronization frequency; INTELLECT-1~\cite{jaghouar2024intellect} and Photon~\cite{sani2024photon} demonstrate larger distributed runs. SWARM~\cite{ryabinin2023swarm} addresses heterogeneous pipelines, and Petals~\cite{borzunov2023petals} supports collaborative inference and fine-tuning. NeuroShard inherits these communication principles.
+\section{Roles, assumptions, and state}
+\subsection{Roles}
+The protocol has validators, task coordinators, compute workers, auditors, data contributors, storage replicas, inference providers, and customers. An account may perform several roles. The number of keys is never treated as evidence of independent operators. Coordinators assemble a job and may be replaced after an objective lease deadline. A public implementation must support competing coordinators and worker discovery without a mandatory operator-owned endpoint.
 
-\textbf{Permissionless systems.} Gauntlet~\cite{lidin2025gauntlet} reports incentivized, permissionless 1.2B training; Covenant-72B~\cite{lidin2026covenant} extends this direction to 72B, with peers specified to have at least eight B200 GPUs and Cloudflare R2 exchange. Agora~\cite{avraham2026agora} describes internet model sharding, with a singleton Authorizer in its documented architecture. NeuroShard investigates independently verifiable sharded execution with native settlement and no mandatory admission or storage operator. Open training, sharding, and incentives individually are established directions.
+\subsection{Assumptions}
+Native consensus uses bonded BFT membership and assumes less than one third Byzantine voting weight, with eventual synchrony for progress~\cite{tendermint}. Signatures and content hashes are assumed secure. An optimistic execution claim is sound only if an honest, online observer checks the relevant graph, obtains its inputs, and can complete a dispute before its deadline. Sampling fewer stages gives a probabilistic condition, not full coverage by definition.
 
-\textbf{Verification and robustness.} PoL~\cite{jia2021proof} motivates training commitments, but spoofing attacks~\cite{zhang2022adversarial,fang2023proof} preclude treating statistical plausibility as proof. TOPLOC~\cite{ong2025toploc} provides hardware-tolerant inference fingerprints; it does not establish arbitrary training replay. Verde~\cite{arun2025verde} supplies a closer reference for reproducible ML execution and operation-level disputes. Robust estimators~\cite{yin2018byzantine,blanchard2017machine} constrain corrupted inputs under stated assumptions; small coordinated attacks~\cite{baruch2019little} remain relevant. These mechanisms address distinct properties and require a composition argument.
+Learning evaluation additionally assumes sufficiently representative, uncontaminated data. Publicly available tests can be rehearsed off-chain. Committing a model before choosing a public test subset does not prevent a participant from training on the entire public pool. Independent curation, changing tasks, exposure accounting, and external evaluation are therefore part of the quality mechanism.
 
-\section{Protocol Design and Assumptions}
-\label{sec:design}
+\subsection{State commitments}
+The target state contains accounts, validator bonds, active task reservations, work commitments, disputes, data manifests, model revisions, evaluation tickets, serving aliases, inference escrows, and emission counters. A model revision commits architecture, component tensor roots, numerical semantics, tokenizer identity, and ancestry. A semantic computation identifier should commit weights, architecture, data, objective, and optimizer settings independently of arbitrary history or job nonces; it prevents rewarding a cached transition repeatedly after a rollback.
 
-\subsection{Native Consensus and Membership}
+The learning head and serving head are separate. Correctly executed training may advance a learning candidate without changing customer-facing inference. Only the quality-promotion transition changes the serving alias. Rejected candidates and unsuccessful work remain inspectable in history. Rollback changes the alias; it does not delete blocks, reverse paid valid work, or authorize paying again for the same semantic computation.
 
-The proposed settlement layer is NeuroShard's own bonded BFT chain, using established locking and commit rules such as Tendermint's~\cite{buchman2019tendermint}. Validator weights are fixed within an epoch; membership changes follow the preceding finalized state. The target assumes less than one third Byzantine voting weight and eventual network synchrony for progress. Certificates require more than two thirds voting weight together with the protocol's locking/commit rules. These assumptions concern consensus, not an estimator's contamination bound.
+\section{Data as a versioned protocol input}
+A dataset identity is a content digest, not a mutable S3 key or repository branch name. Source manifests name the repository, full revision, split, license, parser/tokenizer profile, and cursor range. Object replicas may use S3, ordinary HTTP, or peer storage; none is the definition of the dataset.
 
-Voting power is linear in bonded stake: splitting a balance across keys must not create power. Sybil resistance requires a scarce-resource assumption~\cite{douceur2002sybil}; benchmarks and reputation alone are insufficient. Unverified PoNW claims cannot mint active voting stake. Genesis allocation, delayed activation/withdrawal, reconfiguration, long-range protection, and unbiased audit randomness remain design obligations. A single-owner genesis is a development network, not decentralized security.
+The implemented collector uses pinned Parquet inputs with checksum verification, a durable cursor, immutable document and sequence objects, normalized document identifiers, and a SimHash near-duplicate screen. Exact document grouping precedes token-window assignment. The SimHash screen is a heuristic; it does not prove absence of paraphrases or semantic overlap. Training and protected evaluation roles share an exclusion registry within a corpus.
 
-The target commits task manifests, balances, bonds, disputes, and model-state roots. Tensor execution and storage occur outside ordinary blocks; a bounded deterministic rule adjudicates disputed operations. Our reference chain uses CometBFT with four fixed validators and full replay. Bonded admission and disputes remain proposed. The legacy prototype's Merkle-linked local epochs do not supply distributed finality.
+Each epoch collects a bounded new window, mixes it with historical replay, and commits the resulting batches. The current replay fraction is 25\% when historical data exists. A daily resource budget can renew without erasing the cursor, model ancestry, or ledger. Exhausting a source causes a pause or a separately authorized source addition, not fabrication of fresh examples. A new source must supply provenance and an admissible license. Permissionless submission does not imply automatic acceptance of arbitrary text.
 
-\subsection{Training Jobs and Canonical State}
-\label{sec:quorum}
+\subsection{Assistant-response objectives}
+A first experiment used 64-token conversation prefixes and scored every next token. In its three evaluation groups, only 17, 18, and 10 of 64 examples contained any first-response tokens. This was an inadequate basis for a claim about improved assistant answers.
 
-A training \emph{quorum} is a complete model replica distributed over one or more compatible devices; it is distinct from a consensus voting quorum. DHT discovery and measured memory, compute, latency, and bandwidth guide placement. Each assigned job commits the model graph/tokenizer, parent checkpoint, data order, numerical profile, local-step count $H$, optimizer policy, outputs, deadlines, and reward/bond. Graph and tokenizer remain fixed within a run; replacing a host does not change the architecture.
+The revised preparation keeps up to 64 preceding prompt tokens and 64 tokens of the first assistant response. It pads only after the response. Labels equal the actual next token for response positions and the explicit ignore marker elsewhere. Every row must contain at least one scored target; invented target tokens and all-ignored rows are rejected. This remains a truncated-context response-loss experiment, not a general dialogue benchmark.
 
-For a decoder-only LM, local AdamW steps produce $\Delta_i=\theta_{i,H}-\theta_r$. A canonical ordered manifest $\mathcal A_r$ fixes which complete jobs enter the outer update:
+For token sequence $x$ and target mask $m$, the loss is
 \begin{equation}
- (\theta_{r+1},v_{r+1})=
- \mathcal O\!\left(\theta_r,v_r,
- \operatorname{Agg}\{\Delta_i:i\in\mathcal A_r\}\right),
+ L(\theta;x,m)=-\frac{\sum_{t=1}^{T-1}m_t\log p_\theta(x_{t+1}\mid x_{\le t})}{\sum_{t=1}^{T-1}m_t}.
 \end{equation}
-where $v_r$ is outer optimizer state. Every shard references the same parent and manifest; decompression, ordering, and tie-breaking are specified. The manifest contains protocol-eligible jobs with reserved collateral, not arbitrary DHT identities. A resource-based admission policy must separately justify any assumed bound on compromised training slots.
+Both $x$ and $m$ are committed task inputs. A worker cannot choose an easier mask after observing its outputs.
 
-The reference target uses fixed $H$ and rejects mismatched parents. Unequal local-work windows and stale updates require separate optimizer analysis: dividing an AdamW trajectory by its batch count does not make it a gradient at the shared parent. The existing harness uses outer Nesterov updates; networked trainer paths use different synchronization and aggregation policies.
+\section{Full-model training across workers}
+\subsection{Ownership and schedule}
+The seed is the Apache-2.0 SmolLM2-135M-Instruct checkpoint at revision \texttt{12fd25f77366fa6b3b4b7\allowbreak68ec3050bf629380bac}~\cite{smollm}. It contains \SeedParameters\ trainable parameters. The implementation imports its pinned files into float32 tensor components: one embedding, one final norm, and thirty transformer blocks. All parameters participate in training; there is no frozen backbone plus a small adapter in this experiment.
 
-\subsection{Pipeline Faults and Partial-Model Work}
+The first worker owns the tied embedding and output head, the final norm, and an initial contiguous block range. Later workers own successive contiguous block ranges. Forward activations travel through the workers; the final hidden state returns to the first worker for the language-model loss. Its output-head gradient travels backward through the stages. The first worker accumulates its output-head and input-embedding contributions into the same parameter tensor.
 
-Adversaries may alter activations, adjoints, updates, or counters; withhold data; equivocate; collude; and create identities. Assume signatures and hashes remain secure. Even with independently placed stages, a pipeline of $L$ stages and malicious-node fraction $\alpha$ has probability
-\begin{equation}
- \rho=1-(1-\alpha)^L
-\label{eq:contamination}
-\end{equation}
-of containing a malicious stage. For $\alpha=0.1$ and $L=8$, $\rho\approx0.57$. This elementary illustration assumes one bad stage can invalidate a contribution; correlated or adversarial placement can be worse. Bad boundary tensors can contaminate updates computed by honest stages. Consequently, node-level minority assumptions do not imply a minority in each aggregation set.
+Keeping the tied head with the embedding avoids sending its dense weight gradient across the network every step. It also creates an asymmetric first stage and a lower bound on that worker's capacity. Placement must account for this asymmetry; summing advertised memory alone is insufficient.
 
-Until verified dependencies isolate faults, a complete job is the failure domain. Stage tasks bind forward activations and backward adjoints to the same execution graph and state. An isolated layer with raw text lacks these inputs. The legacy async paths use random hidden inputs and proxy losses; these are not established LM gradients. Our reference instead executes two actual model stages and compares their gradients and boundary commitments against full-model replay. Storage and verification offer other roles for devices unable to hold a model stage.
+\subsection{Optimizer and numerical contract}
+The current optimizer is clipped SGD, chosen to make state and replay explicit. For worker gradients $g_j$, the norm and update are
+\begin{align}
+ n^2&=\operatorname{fsum}_j\|g_j\|_2^2,\\
+ a&=\min\left(1,\frac{c}{\sqrt{n^2}+10^{-6}}\right), &
+ \theta_j'&=\theta_j-\eta a g_j.
+\end{align}
+Each stage sums squared gradients in float64 with an explicit parameter order; the resulting scalar is committed as a hexadecimal float. The whole optimizer state is the weights and prescribed step policy; Adam moments are not silently omitted from an Adam implementation.
 
-\subsection{Communication and Inference}
+The tested profile uses CPU float32, single-thread execution, disabled MKLDNN, deterministic algorithms, a default ATen CPU path, and MKL SSE4.2 instructions. Package startup establishes this profile before helper modules initialize PyTorch. An early native-chain test exposed the importance of this order: all validators agreed with each other but disagreed with correctly configured workers. The corrected entry point reproduces the reference trace. Agreement alone is not numerical conformance.
 
-DiLoCo amortizes outer synchronization, not inner pipeline traffic. An uncompressed boundary carries about $2bsd a$ bytes per microbatch for forward/backward tensors, with batch $b$, sequence length $s$, width $d$, and $a$ bytes per element. For $(b,s,d,a)=(1,2048,4096,2)$, this is 32\,MiB: 2.68\,s of serialized traffic at 100\,Mbit/s before latency/compute. Full-duplex overlap changes throughput; placement must account for the actual schedule. A memory-only parameter bound therefore does not establish feasibility.
+The current bounds are 48 million resident parameters per stage, at most 64 stages, at most four rows and 512 total batch tokens, and at most 256 tokens in a row. These are execution-profile bounds, not proofs of a universal memory peak. The participant still needs room for gradients, activations, serialization, and runtime overhead. Other hardware and kernels require an explicit compatible numerical profile and conformance tests.
 
-Inference jobs pin a finalized checkpoint, tokenizer, prompt, decoding rule, and random stream; capped sequential receipts meter streaming service. Execution verification does not guarantee answer quality or prompt privacy. Stateful routing must preserve the checkpoint and KV-cache version. Inference settlement is proposed here, not evaluated end to end.
+\subsection{Recovery}
+Workers durably record operation intents and results. An operation identity binds session, step, phase, parent, and inputs. A repeated request returns the committed result; a conflicting request cannot occupy the same operation position. After interruption, a worker reloads the last complete parameter checkpoint and rebuilds only the unfinished graph. Coordinator journals retain the pending batch so a retry cannot silently train a different example. Tests cover a lost acknowledgment after backward computation and resumption through the next step.
 
-\section{Proof of Neural Work}
-\label{sec:ponw}
+Replacement workers need the same committed components and numerical semantics. Data replication is therefore a prerequisite for recovery, not an optional optimization. Current cross-host experiments use authenticated loopback RPC through SSH. They do not constitute a public worker-discovery protocol.
 
-\subsection{An Auditable Transition}
+\section{Verification and native settlement}
+\subsection{Reservation and compact claim}
+A coordinator first reserves the current parent and training round on-chain, naming the reward identities. The reservation locks collateral and expires objectively. A submitted claim includes a model transition, a compact execution transcript, the assigned batch, and signed stage receipts that bind the reservation. Relaying a published transcript cannot replace the preassigned reward identities. Replay proves a result, not which physical processor performed it; subcontracting is compatible with the contract.
 
-Proof of Neural Work (PoNW) makes token issuance conditional on an accepted learning task. Consensus voting secures ordering; PoNW verifies the computation that earns the training reward. A claim binds an assigned job $J$ and a transition $S_{t+1}=T_J(S_t)$. State includes weights, Adam moments/counters, RNG/data position, scheduler, and compression residuals where used. Local-to-outer synchronization explicitly defines the next start state and optimizer-state policy.
+The ordinary state-machine check verifies exact component coverage, layer order, parent and step agreement, activation and gradient links, output-head dependencies, gradient-norm inputs, global clipping, optimizer settings, and candidate assembly. It also checks the assigned data and signatures. It does not load neural weights or repeat the model computation to accept an ordinary claim.
 
-Workers commit before audit selection and retain authenticated checkpoint/data chunks through dispute completion. Distinct assigned workloads, one payment per slot, and commit/reveal timing constrain duplicate claims. Replay establishes a prescribed result, not which physical GPU performed it; subcontracting is compatible with the contract. Public rate checks are screens, not proofs of work.
+\subsection{Why local replay can expose a global forgery}
+The transcript fixes all data dependencies. If every local transition is valid on its committed inputs and all edges connect to their prescribed predecessors, their composition is the prescribed graph execution. Conversely, for a forged graph with correctly bound initial inputs, either a structural dependency fails or at least one local transition is invalid. Checking one arbitrary stage does not establish that all stages are valid; an observer must locate an invalid transition or provide the stated coverage guarantee.
 
-The reference uses full replay of every admitted job on a small model with a fixed numerical profile; its validators are unpaid development processes. Scaling requires compensated verification, reproducible operators, and disputes narrowed to bounded operations~\cite{arun2025verde}. An honest available challenger and correct terminal adjudication remain necessary. A small referee cost does not remove independent execution, retrieval, or storage costs. TOPLOC-style screening cannot substitute for a defined training-transition predicate.
+The implemented referee loads only one stage's parameters, re-executes its forward pass, its head operation when applicable, backward pass, and optimizer update, and compares the exact committed outputs. Incorrect shapes, nonfinite values, and invalid target masks are execution failures. The first-stage replay includes both tied-weight gradient contributions.
 
-Availability and deadlines are load-bearing. For example, fp32 weights plus two Adam moments for 8B parameters occupy 96\,GB, requiring 128 minutes to fetch at 100\,Mbit/s before replay. The prototype's ten-minute challenge window is therefore not a scale-independent bound. Auditors need available state and feasible task-specific deadlines.
+\subsection{Availability and disputes}
+An availability challenger names an input or output object associated with the pending claim. The responsible publisher must place its chunks in native transactions and seal them against the requested digest before the deadline. A missing response rejects the claim. Third parties cannot poison an authorized publisher's upload sequence.
 
-The target advances the canonical model only after verification and any required challenge period. Speculative training would require invalidating all descendants of a rejected update; slashing alone does not repair state. The reference replays synchronously before accepting a training transaction and atomically commits the model and rewards. Larger jobs must move verification off the consensus critical path. Escrow, disputes, and slashing remain future work.
+For a computation dispute, the challenger publishes all required replay inputs through finalized native transactions. Only then may the native referee execute. Validators do not fetch arbitrary off-chain URLs while deciding a block. Missing local durable block data is a node-recovery fault, not a permission to derive a different verdict from network timing.
 
-\subsection{Detection and Incentives}
+Uploads are bounded and sequential. False or abandoned computation challenges burn their collateral; returning all of it to a colluding claimant would make repeated self-challenges nearly free. A claim also has an absolute lifetime so challenges cannot lock the single work slot forever. These mechanisms bound specific abuse paths. They do not establish that the chosen token prices fund real network and verification costs.
 
-Let $R$ be escrowed reward, $P$ collectible penalty beyond forfeiting $R$, $d=pq$ effective detection probability, and $C_h,C_f$ honest/fraudulent compute costs. Assuming no false positives and no reward when caught,
-\begin{equation}
- U_h=R-C_h,\qquad U_f=(1-d)R-dP-C_f.
-\end{equation}
-Honesty beats fraud when $d(R+P)>C_h-C_f$. Fraud is worse than abstention when $dP>(1-d)R-C_f$; at $d=0.05,C_f=0$, this requires $P>19R$. Reserve collateral across all pending claims and retain it through disputes. These conditions address profit-seeking fraud, not unbounded externally motivated sabotage.
+The terminal replay is deliberately coarse. The two-host dispute published \ReplayBytes\ bytes in 184 upload/seal transactions, requiring \UploadSeconds\ seconds. Resolution took \DisputeSeconds\ seconds including native transaction processing. This is usable for an experimental objective reference, but expensive for an adversarial public market. Finer authenticated operator transcripts and dispute narrowing should be evaluated against this measured bound; they are not already implemented by calling a stage a succinct proof.
 
-If $s$ of $T$ committed transitions are sampled uniformly without replacement and $c$ are invalid, conditional detection is
-\begin{equation}
- q=1-\binom{T-c}{s}\big/\binom{T}{s}.
-\end{equation}
-For one invalid transition, $q=s/T$; a single invalid jump can precede many valid transitions. Likewise, $0.95^{100}\approx0.006$ measures the probability that all 100 independently audited fraudulent claims evade a 5\% full-claim check, assuming certain detection on examination. It does not bound fraudulent payouts: 95 claims remain unexamined in expectation without a shared recovery rule.
+\subsection{Finality, rewards, and serving state}
+A disputed invalid transition is rejected before reward issuance. An unchallenged eligible transition settles after its challenge window, relying on the explicit observer assumption. The model transition and rewards commit atomically. Native membership remains independent of which worker computed a gradient; newly issued stake affects voting only through the prescribed bonding and activation rules.
 
-Audits require unpredictable selection after commitments, paid service even when fraud is rare, and objective dispute outcomes. Sampling should follow claim value and risk, not advertised identity count. Task budgets must cover verification, storage, and recovery. Payment for correct execution is separate from held-out model utility; neither loss descent nor token issuance proves economically useful work.
+The implemented experiment renews a per-period task budget and issues one experimental token per settled training step. It pays the reserved workers. It does not yet implement a sustainable positive-payment audit market. A production policy must allocate audit and availability funding as explicit expenses, including payment when no fraud is found. Rewarding only fraud discoveries creates the verifier's dilemma. The inflation schedule, long-term fee support, collateral pricing, and initial allocation require public review before an economic launch.
 
-\subsection{Useful-Work Mining and Issuance}
+\section{Growing the model}
+For a residual decoder block, write
+\begin{align}
+ u&=h+W_O\,\operatorname{Attn}(\operatorname{RMS}(h)),\\
+ B(h)&=u+W_D\left(\operatorname{SiLU}(W_G\operatorname{RMS}(u))\odot W_U\operatorname{RMS}(u)\right).
+\end{align}
+The growth transformation copies an existing block's compatible parameters and initializes its attention output projection $W_O$ and MLP down projection $W_D$ to zero. In exact arithmetic, this yields $B(h)=h$. In the implemented floating-point test, finite intermediate activations yield identical tested logits. New output projections receive gradients immediately; inner copied projections can receive gradients once those outputs move away from zero. The added parameters are independent trainable tensors even when initial component bytes coincide.
 
-The proposed lifecycle is \emph{assign, execute, commit, verify, settle}. Consensus commits a unique task and its eligible reward recipients before execution. After validation, settlement atomically advances the model state, marks the task spent, and credits its authorized reward once. Rejected, expired, or replayed claims do not earn training issuance. A public emission schedule caps each task or training epoch; worker, verifier, and availability payments share that budget. Correct execution earns the agreed payment without requiring every stochastic step to improve validation loss. Long-term learning quality is evaluated across accepted checkpoints.
+Four added blocks increase the model to \GrownParameters\ parameters. The three-worker assignment fails under the declared 48-million-parameter cap, whereas four workers admit it. This demonstrates resource-aware admission and actual parameter growth. It does not establish that either physical host could not hold the whole model under a different allocation.
 
-This is useful-computation mining, with neural work earning newly issued NEURO while native consensus independently secures the ledger. It does not assert that gradient evaluation provides Bitcoin's proof-of-work security properties. A public launch must specify initial validator ownership, emission limits, admission, and withdrawal rules. The first demonstrator uses development tokens to test the full computation-to-reward path; production economics remain an empirical question.
+A growth candidate must preserve old components and tokenizer identity, respect the execution bounds, obtain a feasible resource assignment, train, and pass evaluation before serving. Growth is not a periodic instruction to increase parameter count regardless of value. The evaluation should include a same-training-budget control and measured inference/storage costs. Wider models, expert routing, vocabulary expansion, and a change in numerical profile are distinct transformations requiring their own replay and migration rules.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/eval_convergence.pdf}
-\caption{Convergence--payload trade-off (0.62M parameters, TinyShakespeare, 3 workers, 500 steps). (a)~Validation loss by step. (b)~Loss versus cumulative outbound update payload estimate per worker: $50\times$--$250\times$ lower without compression and $527\times$ with compression.}
-\label{fig:convergence}
-\end{figure*}
+\section{Quality promotion and continued operation}
+The target protocol treats quality evaluation as a separately committed, challengeable computation. A candidate is fixed before the evaluation ticket resolves. The ticket names the baseline, data-selection rule, exposure limits, target construction, metrics, and decision thresholds. Each loss report must link to its model, protected examples, and verifiable forward/head operations. A signed scalar claiming that a model is better is insufficient.
 
-\section{Robust Aggregation and Its Scope}
-\label{sec:byzantine}
+For paired per-document losses, let $d_i=L_i(\theta')-L_i(\theta)$. The research controller computes $\bar d+2.576\,s_d/\sqrt{n}$ as an approximate 99\% normal upper bound. Fresh-data improvement must exceed 0.001 nats per scored token; retention allows an upper bound below a 0.02-nat regression margin. At least 32 paired examples are required, and the main experiment uses 64 per group. These choices are explicit research thresholds, not a universal significance or safety guarantee. Dependence, multiple model comparisons, and distribution shift limit their interpretation.
 
-The experiments use equal-weight coordinate-wise Trimmed Mean and Median~\cite{yin2018byzantine}, and Multi-Krum~\cite{blanchard2017machine}. For Trimmed Mean,
-\begin{equation}
- \bar g_j=\frac{\sum_{i\in\mathcal S_j}g_{i,j}}
- {N-2\lfloor\beta N\rfloor},
-\end{equation}
-where $\mathcal S_j$ removes each coordinate's extreme $\lfloor\beta N\rfloor$ entries at each end. A trim/breakdown fraction is not an unconditional convergence or backdoor guarantee. Unequal local trajectories, non-i.i.d. data, compression, and stage contamination need separate evaluation.
+A separate untouched test group is reported after candidate construction. The initial experiment's prompt-dominated metric is retained as a negative methodological result, not repackaged as response improvement. The corrected experiment scores actual response positions on subsequent held-out source rows.
 
-The earlier $\sqrt{B_i}$ work-weight policy is not Sybil resistant: splitting $B$ batches among $k$ identities yields total nominal influence $\sqrt{kB}$. Additional stakes impose a cost but do not erase that advantage. The target therefore separates task rewards from consensus power and contribution eligibility. The equal-weight experiments assume their worker population; they do not validate permissionless admission or a weighted robust estimator.
+The local epoch controller persists data collection, training, candidate commitment, evaluation selection, results, and the accept/reject decision. A rejection keeps the previous accepted model. Restart does not train twice, resample an already reserved evaluation ticket, or consume a second daily epoch allowance for the same active run. This local research registry is not yet the native serving registry.
 
-\subsection{Conditional Composition}
+The target native transitions are: propose a data window; challenge and activate its provenance/task commitments; reserve and execute work; settle or reject the execution; open an evaluation ticket; settle its verifiable metrics; and atomically promote or retain the serving alias. Growth uses the same candidate/evaluation path with an additional architecture certificate. A rollback points to a previously eligible serving revision and prohibits duplicate semantic-work rewards. These transitions can occur without replacing the chain's consensus history or balances.
 
-An elementary bound clarifies the verification target. Assume a valid genesis state, binding task/dependency commitments, deterministic transitions including aggregation, and no canonical use before the acceptance rule completes. Let $\epsilon_j$ bound the probability that check $j$ accepts an invalid transition conditional on a valid preceding history, and let $\delta_c$ bound a consensus safety failure. Induction over dependencies and a union bound give
-\begin{equation}
- \Pr[\text{conflicting or invalid canonical history}]
- \leq \delta_c+\sum_{j=1}^{K}\epsilon_j
-\end{equation}
-over $K$ checks. No independence is required. Unavailable evidence must postpone acceptance rather than bypass verification. Establishing small $\epsilon_j$ against adaptive adversaries is an obligation, not a consequence of signatures or nominal sampling rates. Full deterministic replay with an honest executor and sound adjudication supplies a reference case.
+\section{Inference paid in native tokens}
+A customer request must bind the finalized serving model, tokenizer, prompt commitment or explicitly public prompt, decoding rule, output limit, provider assignment, expiry, and maximum price. It escrows existing tokens rather than minting a new training reward. A result transcript binds every generated token to the same checkpoint and decoding state. Settlement transfers only the agreed fee, once; expiry returns unused escrow. Model promotion cannot change the checkpoint of an in-flight request.
 
-Correct execution still does not prove optimization quality. For an $L_F$-smooth objective $F$ and a simpler reference step $\theta^+=\theta-\eta(\nabla F(\theta)+e)$, $0<\eta\leq1/L_F$, the smoothness inequality gives
-\begin{equation}
- F(\theta^+)\leq F(\theta)-\tfrac{\eta}{2}\|\nabla F(\theta)\|^2
-                   +\tfrac{\eta}{2}\|e\|^2.
-\end{equation}
-This follows by expanding the squared update norm; it is a sufficient descent condition, not a new convergence theorem. Verification constrains execution deviations, while data, stochasticity, local drift, and compression determine the remaining error. Extending this argument to the evaluated local AdamW/Nesterov hierarchy requires additional analysis.
+Distributed greedy inference is exercised by the evolution pipeline. Paid inference is deployed in the separate 0.4.0 network. Connecting paid inference to an evolving model registry, including challengeable response transcripts, availability, and versioned cache recovery, is not complete in the new native application. These two facts must not be combined into an unsupported claim of a deployed evolving paid-inference network.
 
-\section{Evaluation}
-\label{sec:eval}
+An assistant resembling a general-purpose personal agent also needs retrieval, user-controlled memory, tools, authorization, privacy, and task-level evaluation. Growing a public LM does not supply those properties by itself. Public blockchain execution does not provide confidential prompts or confidential memories.
 
-Component experiments use NeuroLLM, its outer optimizer, compressor, robust aggregator, proof structures, and ECDSA primitives in in-process harnesses on a 4-vCPU host. Models are byte-level LMs on TinyShakespeare; raw results and harnesses are public. A separate native-chain reference tests computation-to-reward settlement under a narrower execution profile.
+\section{Experimental evidence}
+Experiments use two authorized CPU hosts, each with four CPU cores and 16 GiB RAM, under one operator. They test real distributed processes and a native BFT ledger, but not independent economic participation or an adversarial population.
 
-
-
-\subsection{Convergence versus Payload}
-
-Three workers with disjoint shards train for 500 steps under synchronous data parallelism, DiLoCo with $H\in\{50,250\}$, and compressed DiLoCo $H=50$. Accounting for full parameter payloads, the synchronous baseline is 1.25\,GB/worker; $H=50$ is 25\,MB ($50\times$ lower) and ends 3.4\% above synchronous validation loss (2.04 vs.\ 1.98). $H=250$ trades 15\% final loss for $250\times$ lower payload; compression reaches $527\times$ (2.4\,MB) with $+16.2\%$ loss at step 500 (2.296 vs.\ 1.976). These counters exclude return traffic, pipeline tensors, checkpoints, audits, protocol framing, retries, and gossip duplication; they are not measured WAN traffic.
-
-\subsection{Byzantine Robustness}
-\label{sec:eval-byz}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/eval_byzantine.pdf}
-\caption{Single-seed run: 10 workers, 3 adversarial, sign-flip attack, 12 rounds. Equal-weight robust estimators track the attack-free baseline.}
-\label{fig:byzantine}
-\end{figure}
-
-\begin{table}[t]
-\caption{Final validation loss after 12 outer rounds (10 workers, 30\% adversarial unless noted)}
-\label{tab:byz}
-\centering
-\begin{tabular}{@{}lcc@{}}
+\begin{center}
+\begin{tabular}{p{.46\linewidth}p{.43\linewidth}}
 \toprule
-\textbf{Aggregation} & \textbf{Sign-flip} & \textbf{Noise} \\
-\midrule
-No attack (mean) & \multicolumn{2}{c}{2.83} \\
-\midrule
-Mean (no defense) & 40.67 & 2.52 \\
-Trimmed Mean ($\beta{=}0.3$)~\cite{yin2018byzantine} & 2.75 & 2.82 \\
-Coordinate-wise Median~\cite{yin2018byzantine} & 2.79 & 2.84 \\
-Multi-Krum~\cite{blanchard2017machine} & 2.90 & 2.90 \\
-\midrule
-Trimmed Mean, $f{=}10\%$ / $20\%$ & 2.87 / 2.84 & --- \\
-Trimmed Mean, $f{=}40\%$ (above trim) & 19.04 & --- \\
+Check & Observed result\\\midrule
+Seed implementation vs. pinned reference & Exactly equal tested float32 logits\\
+Identity expansion & \SeedParameters\ to \GrownParameters; equal initial tested logits\\
+Distributed whole-model step & Three workers; \TrainingSeconds\ seconds in the conformance run\\
+Compact graph check & \MetadataSeconds\ seconds in that run\\
+Independent stage replay & All three stages reproduced exactly\\
+Native forged-update dispute & Rejected for optimizer-update mismatch after the startup fix\\
+Native valid update & Accepted; exactly 1,000,000 atoms issued\\
+Native state agreement & Matching app hash on all four validators at a common height\\
+Recovery tests & Lost acknowledgment and coordinator/worker restart tests pass\\
+Evaluation correction & Prompt-heavy prefix scoring replaced by explicit response targets\\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{center}
 
-Three of 10 workers submit either sign-flipped updates ($\Delta w\mapsto-5\Delta w$) or zero-mean Gaussian noise at $10\times$ honest magnitude. Under sign-flip, mean aggregation diverges (40.7 vs.\ 2.83), whereas the three robust estimators finish at 2.75--2.90 (Table~\ref{tab:byz}, Fig.~\ref{fig:byzantine}). For Trimmed Mean, 10/20/30\% remain near baseline (2.87/2.84/2.75), while 40\% degrades sharply (19.0). In this single-seed, small-model experiment, the result describes complete worker updates under the specified attacks; it does not establish the pipeline or admission assumptions in Section~\ref{sec:design}.
+\IfFileExists{eval/results/evolution20260911/quality.tex}{\input{eval/results/evolution20260911/quality.tex}}{}
 
-\subsection{Compression, PoNW Overheads, and Churn}
-\label{sec:eval-comp}
+The timings are measurements under these hosts, code, profiles, and workloads, not throughput forecasts. Concurrent experiments affect wall-clock time. A declared worker parameter budget is distinct from measured process RSS. The single-operator native test does not validate decentralization, an equilibrium incentive mechanism, or public Sybil resistance.
 
-\textbf{Compression.} On 50-step pseudo-gradients, Top-$K=5/10/20\%$ with int8 and zlib yields $20.6\times/10.8\times/5.6\times$ reduction at cosine fidelity 0.46/0.58/0.73; error feedback recycles discarded mass.
-\textbf{PoNW.} A serialized cohort-sync proof is 763 bytes; ECDSA signing and verification take 1.5\,ms and 0.56\,ms. A standalone forward/backward batch takes ${\sim}97$\,ms, illustrating one replay unit but \emph{not} measuring full challenge resolution.
-\textbf{Churn.} In a three-node Docker LAN, killing one node at $t=123$\,s leaves survivors advancing ($642\to2070$ aggregate steps). In a 10-minute kill/restart run, the node rejoins via tracker/DHT, performs 583 further steps, and continues descending (loss 0.19 vs.\ 0.04 for uninterrupted peers). A 15-minute run sustains 4{,}721 steps without crashes. The restart report uses full replicas holding layers [0,1]; these local losses and step counters do not validate partitioned-model recovery or canonical checkpoint agreement.
+\section{Implementation boundary and public-release requirements}
+The executable components include full-backbone pipeline training, durable worker operations, identity depth growth, fresh/replay data windows, response-target masks, paired evaluation, a local continual-epoch controller, bounded-stage replay, native reservation/reward settlement, collateralized availability/fraud challenges, and distributed generation. Their scopes and tests are recorded with the source and experiment artifacts.
 
-\subsection{Native-Chain Reference Demonstrator}
+The experimental ABCI application currently activates training updates from a pinned batch list and keeps its serving root separate. It does not implement native rolling-data activation, growth settlement, quality-ticket adjudication, or paid inference for the evolving registry. Its worker RPC uses operator-managed authentication over SSH. Public discovery, independent worker collateral, sustainable audit payments, durable model replication and garbage collection, efficient long-lived ledger state, and an explicit 0.4.0 migration need implementation and testing before public cutover. The current source commitment covers all repository Python modules and validators check numerical-library versions at startup. Further runtime conformance must cover platform and dependency behavior beyond version labels.
 
-On one 4-vCPU host, four CometBFT 0.38.26 validators run a separate NeuroShard genesis, each with a durable Python application. Two worker processes hold disjoint stages of a 34,976-parameter NeuroLLM. They execute real forward/backward tasks; all validators independently replay each complete SGD step and check signed gradient/boundary commitments. Genesis fixes the numerical profile, corpus digest, program hash, and development issuance cap.
+A responsible release gate is therefore concrete: a new participant joins through the public client; contributes prescribed full-model work; survives a replacement worker or coordinator; a corrupt update and withheld artifact fail under independent observers; new data and a larger eligible model activate through native transitions; an old balance buys inference from the promoted checkpoint; and migration preserves history without duplicate token claims. None of these missing integration steps is made true by calling an off-chain research registry decentralized.
 
-Fifteen accepted steps reduce a fixed held-out batch loss from 5.741 to 4.110. Settlement issues exactly 15 development NEURO, split equally between workers. Incorrect results, signed incorrect gradients, and repeated claims earn no reward. Three surviving validators finalize training; two cannot finalize a queued valid transaction during a four-second observation. After restart, all four agree on the model, balances, a common block hash, and inference output. Twenty unit tests also check exact stage/full-model gradients and durable replay after an interrupted commit. The reproduction command is \texttt{python scripts/demo\_neuroshard.py check}. These results test local composition with fixed validators, full replay, and one CPU profile; they do not establish permissionless security or useful inference quality.
+\section{What the protocol can promise}
+NeuroShard can specify an ongoing procedure for proposing, executing, checking, comparing, and serving model revisions. It can preserve a usable model while rejecting unsuccessful experiments. It can add capacity when resources and measured benefit justify it. Under explicit consensus, observer, availability, and evaluation assumptions, it can settle those actions and their payments.
 
-\section{Limitations and Research Priorities}
+It cannot promise that every batch, every additional parameter, or every calendar day makes an LM universally better. Data can become exhausted, a task can saturate, participants can leave, and metrics can be gamed. The defensible objective is continual verified experimentation with demonstrated improvements and controlled promotion. The next implementation milestone is an integrated native epoch, not a claim that these component results already constitute an autonomous general intelligence.
 
-The reference implements native consensus integration, stage/full-model replay, and atomic training rewards. Public validator admission, availability enforcement, paid verification, and dispute economics remain proposed. Evidence is small-scale: fixed local validators do not provide decentralized ownership, and full replay requires every validator to hold the model. Robust estimation, correct execution, consensus agreement, and useful learning remain distinct guarantees.
-
-The next gates are independent-machine reproducibility and adversarial consensus tests; open resource-based admission and reconfiguration; available-state disputes and collateral accounting; and multiple-seed attacks under complete WAN cost accounting. Runtime diversity, genesis distribution, audit incentives, and data governance require explicit evaluation before a public network.
-
-NeuroShard's opportunity is to make independent model shards contribute to an auditable shared computation. The reference gives accepted tasks, payments, and checkpoints one reproducible protocol meaning; scaling that property to an open network is the next research obligation.
-
-\bibliographystyle{IEEEtran}
-\begin{thebibliography}{00}
-\bibitem{douillard2023diloco}
-A.~Douillard \emph{et~al.}, ``DiLoCo: Distributed low-communication training of language models,'' \emph{arXiv:2311.08105 [cs.LG]}, Nov. 2023.
-
-\bibitem{jaghouar2024opendiloco}
-S.~Jaghouar, J.~M.~Ong, and J.~Hagemann, ``OpenDiLoCo: An open-source framework for globally distributed low-communication training,'' \emph{arXiv:2407.07852 [cs.LG]}, Jul. 2024.
-
-\bibitem{jaghouar2024intellect}
-S.~Jaghouar \emph{et~al.}, ``INTELLECT-1 technical report,'' \emph{arXiv:2412.01152 [cs.DC]}, Dec. 2024.
-
-\bibitem{ryabinin2023swarm}
-M.~Ryabinin, T.~Dettmers, M.~Diskin, and A.~Borzunov, ``SWARM parallelism: Training large models can be surprisingly communication-efficient,'' in \emph{Proc.\ ICML}, vol.~202, 2023, pp.~29416--29440.
-
-\bibitem{sani2024photon}
-L.~Sani \emph{et~al.}, ``Photon: Federated LLM pre-training,'' \emph{arXiv:2411.02908 [cs.LG]}, Nov. 2024.
-
-\bibitem{borzunov2023petals}
-A.~Borzunov \emph{et~al.}, ``Petals: Collaborative inference and fine-tuning of large models,'' in \emph{Proc.\ ACL: System Demonstrations}, 2023, pp.~38--44.
-
-\bibitem{lidin2025gauntlet}
-J.~Lidin, A.~Sarfi, E.~Pappas, S.~Dare, E.~Belilovsky, and J.~Steeves, ``Incentivizing permissionless distributed learning of LLMs,'' \emph{arXiv:2505.21684}, 2025.
-
-\bibitem{lidin2026covenant}
-J.~Lidin \emph{et~al.}, ``Covenant-72B: Pre-training a 72B LLM with trustless peers over-the-internet,'' \emph{arXiv:2603.08163}, 2026.
-
-\bibitem{avraham2026agora}
-G.~Avraham \emph{et~al.}, ``Agora: Collective and permissionless internet-scale pretraining of large language models,'' \emph{arXiv:2607.13332}, 2026.
-
-\bibitem{jia2021proof}
-H.~Jia \emph{et~al.}, ``Proof-of-learning: Definitions and practice,'' in \emph{Proc.\ IEEE S\&P}, 2021, pp.~1039--1056.
-
-\bibitem{zhang2022adversarial}
-R.~Zhang \emph{et~al.}, ```Adversarial examples' for proof-of-learning,'' in \emph{Proc.\ IEEE S\&P}, 2022, pp.~1408--1422.
-
-\bibitem{fang2023proof}
-C.~Fang \emph{et~al.}, ``Proof-of-learning is currently more broken than you think,'' in \emph{Proc.\ IEEE EuroS\&P}, 2023, pp.~797--816.
-
-\bibitem{ong2025toploc}
-J.~M.~Ong \emph{et~al.}, ``TOPLOC: A locality sensitive hashing scheme for trustless verifiable inference,'' \emph{arXiv:2501.16007 [cs.CR]}, Jan. 2025.
-
-\bibitem{arun2025verde}
-A.~Arun \emph{et~al.}, ``Verde: Verification via refereed delegation for machine learning programs,'' \emph{arXiv:2502.19405}, 2025.
-
-\bibitem{yin2018byzantine}
-D.~Yin, Y.~Chen, K.~Ramchandran, and P.~Bartlett, ``Byzantine-robust distributed learning: Towards optimal statistical rates,'' in \emph{Proc.\ ICML}, vol.~80, 2018, pp.~5650--5659.
-
-\bibitem{blanchard2017machine}
-P.~Blanchard, E.~M.~El~Mhamdi, R.~Guerraoui, and J.~Stainer, ``Machine learning with adversaries: Byzantine tolerant gradient descent,'' in \emph{Adv.\ NeurIPS}, vol.~30, 2017, pp.~118--128.
-
-\bibitem{baruch2019little}
-M.~Baruch, G.~Baruch, and Y.~Goldberg, ``A little is enough: Circumventing defenses for distributed learning,'' in \emph{Adv.\ NeurIPS}, vol.~32, 2019.
-
-\bibitem{buchman2019tendermint}
-E.~Buchman, J.~Kwon, and Z.~Milosevic, ``The latest gossip on BFT consensus,'' \emph{arXiv:1807.04938}, 2019.
-
-\bibitem{douceur2002sybil}
-J.~R.~Douceur, ``The Sybil attack,'' in \emph{Proc.\ IPTPS}, 2002, pp.~251--260.
-
+\begin{thebibliography}{9}
+\bibitem{diloco} A. Douillard et al., ``DiLoCo: Distributed Low-Communication Training of Language Models,'' 2023. \url{https://arxiv.org/abs/2311.08105}.
+\bibitem{swarm} M. Ryabinin et al., ``SWARM Parallelism: Training Large Models Can Be Surprisingly Communication-Efficient,'' ICML, 2023. \url{https://proceedings.mlr.press/v202/ryabinin23a.html}.
+\bibitem{net2net} T. Chen, I. Goodfellow, and J. Shlens, ``Net2Net: Accelerating Learning via Knowledge Transfer,'' ICLR, 2016. \url{https://arxiv.org/abs/1511.05641}.
+\bibitem{verde} A. Arun et al., ``Verde: Verification via Refereed Delegation for Machine Learning Programs,'' 2025. \url{https://arxiv.org/abs/2502.19405}.
+\bibitem{dilemma} L. Luu, J. Teutsch, R. Kulkarni, and P. Saxena, ``Demystifying Incentives in the Consensus Computer,'' CCS, 2015. \url{https://eprint.iacr.org/2015/702}.
+\bibitem{tendermint} E. Buchman, J. Kwon, and Z. Milosevic, ``The latest gossip on BFT consensus,'' 2018. \url{https://arxiv.org/abs/1807.04938}.
+\bibitem{smollm} Hugging Face, ``SmolLM2-135M-Instruct,'' model card and pinned artifacts. \url{https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct}.
 \end{thebibliography}
 \end{document}

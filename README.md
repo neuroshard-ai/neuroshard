@@ -34,7 +34,8 @@ Keep the backup private. It also works in the [browser inference interface](http
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).
 - [Network/genesis/allocations](networks/neuroshard-llm-testnet-1) and [research roadmap](docs/RESEARCH_ROADMAP.md).
-- Earlier [v2 reference protocol](docs/PROTOCOL_CANDIDATE_V2.md), [experiments](docs/PROTOCOL_EXPERIMENTS.md), and [five-page research manuscript](docs/FINE2026_neuroshard_short.pdf), retained as historical research.
+- [Continual model evolution experiments](docs/EVOLUTION_PROTOCOL.md) and the updated [protocol working paper](docs/FINE2026_neuroshard_short.pdf): full-model training, response-focused evaluation, model growth and native disputes. These experiments have not replaced the public 0.4.0 network.
+- Earlier [v2 reference protocol](docs/PROTOCOL_CANDIDATE_V2.md), [experiments](docs/PROTOCOL_EXPERIMENTS.md), and [archived manuscript source](docs/archive/FINE2026_neuroshard_short_pre_evolution.tex).
 
 Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. Four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. The initial allocation is 90 NEURO and the profile caps training issuance at 10,000 tasks. See the specification for these explicit limits.
 
@@ -47,7 +48,7 @@ ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
   venv_build/bin/python -m pytest -q
 ```
 
-The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. `website` and `docs-site` build the public interfaces. Earlier modules are retained for research history; they do not define the current public entry points.
+The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. `website` and `docs-site` build the public interfaces. The `evolution` package contains the new, separately tested continual-model experiments. Earlier modules are retained for research history; they do not define the current public entry points.
 
 ## One open-source project
 

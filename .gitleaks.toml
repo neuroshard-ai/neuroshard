@@ -26,3 +26,17 @@ condition = "AND"
 paths = ['''(^|/)config/data-collector\.example\.json$''', '''(^|/)networks/neuroshard-llm-testnet-1/genesis\.json$''']
 regexTarget = "match"
 regexes = ['''tokenizer_revision": "[0-9a-f]{40}"''', '''tokenizer(_config)?_sha256": "[0-9a-f]{64}"''', '''(special_tokens_map|tokenizer|tokenizer_config)\.json":"[0-9a-f]{64}"''']
+
+[[allowlists]]
+description = "Verified public seed-file checksums in the evolution importer"
+condition = "AND"
+paths = ['''(^|/)src/neuroshard/evolution/seed\.py$''']
+regexTarget = "secret"
+regexes = ['''^(2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52|9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c|4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df)$''']
+
+[[allowlists]]
+description = "Source-file checksums of the tokenizer module in recorded research snapshots"
+condition = "AND"
+paths = ['''(^|/)docs/eval/results/evolution20260911/(native2|response)-source-hashes\.json$''']
+regexTarget = "match"
+regexes = ['''tokenizer\.py": "[0-9a-f]{64}"''']
