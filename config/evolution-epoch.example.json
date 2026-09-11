@@ -3,6 +3,7 @@
   "objects": "./objects",
   "corpus": "./corpus",
   "epochs": "./epochs",
+  "text": {"sequence_length": 128, "max_windows": 4},
   "initial_model_root": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
   "training_source": {
     "repo": "HuggingFaceTB/smol-smoltalk",

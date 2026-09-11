@@ -69,6 +69,8 @@ def model(value):
         raise ValueError('Incorrect model parameter count')
     if value['parent'] is not None:
         root(value['parent'])
+    if 'tokenizer_root' in value:
+        root(value['tokenizer_root'])
     return value
 
 

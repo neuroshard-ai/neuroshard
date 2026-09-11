@@ -32,8 +32,13 @@ class Corpus:
     SimHash distance <= 3 is a conservative near-duplicate heuristic, not a
     guarantee against semantic contamination. Source licenses remain explicit.
     """
-    def __init__(self, home, store, tokenizer, sequence_length=64, target_mode='full'):
+    def __init__(self, home, store, tokenizer, sequence_length=64, target_mode='full', *, codec=None, max_windows=4):
         self.home, self.store, self.tokenizer = Path(home), store, tokenizer
+        self.codec = codec
+        self.tokenizer_root = codec.root if codec is not None else None
+        self.max_windows = integer(max_windows,1,64)
+        if codec is not None and (target_mode != 'response' or tokenizer is not codec.tokenizer):
+            raise ValueError('A versioned corpus uses its codec and response-only targets')
         integer(sequence_length, 16, 256)
         self.sequence_length = sequence_length
         if target_mode not in ('full','response'):
@@ -52,9 +57,13 @@ class Corpus:
             CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, value BLOB);
         ''')
         settings={'sequence_length':sequence_length,'target_mode':target_mode}
+        if self.codec is not None:
+            settings.update(tokenizer_root=self.tokenizer_root,max_windows=self.max_windows,
+                            window_policy='all-assistant-turns-v1',evaluation_unit='document')
         old=self.db.execute('SELECT value FROM settings WHERE id=1').fetchone()
         if old and json.loads(old[0])!=settings:
-            raise ValueError('Use a separate corpus home when changing the tokenization objective')
+            self.db.close()
+            raise ValueError('Use a separate corpus home when changing the tokenizer or tokenization objective')
         with self.db:
             self.db.execute('INSERT OR IGNORE INTO settings VALUES (1,?)',(canonical(settings),))
 
@@ -80,6 +89,9 @@ class Corpus:
             from neuroshard.dataflow.collect import upstream_rows
             rows = upstream_rows(spec,self.home,cursor,count)
         accepted, scanned, rejected = [], 0, {'duplicate':0,'short':0,'invalid':0}
+        coverage = {'response_tokens':0,'scored_tokens':0,'omitted_tokens':0,'truncated_documents':0}
+        if self.codec is not None:
+            rejected['incomplete_evaluation'] = 0
         with self.db:
             for item in rows:
                 if scanned >= count:
@@ -94,7 +106,12 @@ class Corpus:
                     rejected['invalid'] += 1
                     continue
                 text = '\n'.join(m['content'] for m in messages)
-                if len(text.encode()) > 256*1024:
+                try:
+                    text_size=len(text.encode())
+                except UnicodeError:
+                    rejected['invalid'] += 1
+                    continue
+                if text_size > 256*1024:
                     rejected['invalid'] += 1
                     continue
                 doc_id = digest(normalized(text).encode())
@@ -105,7 +122,21 @@ class Corpus:
                 if self.db.execute('SELECT 1 FROM documents WHERE id=?',(doc_id,)).fetchone() or any((int(s,16)^signature).bit_count()<=3 for (s,) in near):
                     rejected['duplicate'] += 1
                     continue
-                if self.target_mode=='response':
+                if self.codec is not None:
+                    try:
+                        prepared=self.codec.response_windows(messages,self.sequence_length//2,
+                            self.sequence_length-self.sequence_length//2,self.max_windows)
+                    except (ValueError,UnicodeError):
+                        rejected['invalid'] += 1
+                        continue
+                    if role!='train' and prepared['truncated']:
+                        rejected['incomplete_evaluation'] += 1
+                        continue
+                    windows=prepared['windows']
+                    for field in ('response_tokens','scored_tokens','omitted_tokens'):
+                        coverage[field] += prepared[field]
+                    coverage['truncated_documents'] += int(prepared['truncated'])
+                elif self.target_mode=='response':
                     from .batches import response_window
                     prepared=response_window(messages,self.tokenizer,self.sequence_length//2,self.sequence_length-self.sequence_length//2)
                     windows=[prepared] if prepared else []
@@ -121,7 +152,11 @@ class Corpus:
                 self.db.execute('INSERT INTO documents VALUES (?,?,?,?,?,?)',(doc_id,f'{signature:016x}',role,source_id,position,object_root))
                 self.db.executemany('INSERT INTO bands VALUES (?,?)',[(b,doc_id) for b in bands])
                 for prepared in windows:
-                    seq_id = digest(canonical(prepared['tokens']))
+                    identity = prepared['tokens'] if self.codec is None else {
+                        'document':doc_id,'assistant_index':prepared['assistant_index'],
+                        'target_start':prepared['target_start'],'target_end':prepared['target_end'],
+                        'tokens':prepared['tokens'],'labels':prepared['labels'],'tokenizer_root':self.tokenizer_root}
+                    seq_id = digest(canonical(identity))
                     window = self.store.put_json({'document':doc_id,**prepared,'role':role,'source':source_id})
                     inserted = self.db.execute('INSERT OR IGNORE INTO sequences VALUES (?,?,?,?)',(seq_id,doc_id,role,window)).rowcount
                     if inserted:
@@ -129,6 +164,9 @@ class Corpus:
             self.db.execute('UPDATE sources SET cursor=? WHERE id=?',(cursor+scanned,source_id))
         manifest = {'format':'neuroshard-data-window-v1','source':source_id,'start':cursor,'end':cursor+scanned,
                     'sequence_length':self.sequence_length,'target_mode':self.target_mode,'sequences':accepted,'rejected':rejected}
+        if self.codec is not None:
+            manifest.update(format='neuroshard-data-window-v2',tokenizer_root=self.tokenizer_root,
+                            coverage=coverage,window_policy='all-assistant-turns-v1')
         return {'root':self.store.put_json(manifest),**manifest}
 
     def training(self, window_root, count, seed, replay_fraction=.25):
@@ -160,11 +198,14 @@ class Corpus:
         for (existing,) in reservations:
             saved = self.store.json(existing)
             if saved['role']==role and saved['beacon']==beacon:
-                if len(saved['sequences'])!=count:
+                units=saved.get('documents',[]) if self.codec is not None else saved['sequences']
+                if len(units)!=count:
                     raise ValueError('Evaluation reservation count changed')
                 return existing
         # The chain must commit the candidate *before* supplying the selection
         # beacon. This local API alone does not make public examples secret.
+        if self.codec is not None:
+            return self._reserve_documents(candidate,role,count,beacon)
         available = [r[0] for r in self.db.execute('SELECT object FROM sequences s WHERE role=? AND NOT EXISTS (SELECT 1 FROM evaluations e WHERE e.sequence=s.object)',(role,))]
         selected = sorted(available,key=lambda k:digest(canonical([beacon,candidate,k])))[:count]
         if len(selected) != count:
@@ -175,6 +216,34 @@ class Corpus:
             for key in selected:
                 self.db.execute('INSERT INTO evaluations VALUES (?,?,?)',(key,candidate,reservation))
         return reservation
+
+    def _reserve_documents(self,candidate,role,count,beacon):
+        available = self.db.execute('''
+            SELECT DISTINCT s.document FROM sequences s WHERE s.role=?
+            AND NOT EXISTS (SELECT 1 FROM sequences other JOIN evaluations e
+                ON e.sequence=other.object WHERE other.document=s.document)
+        ''',(role,)).fetchall()
+        selected = sorted((row[0] for row in available),key=lambda key:digest(canonical([beacon,candidate,key])))[:count]
+        if len(selected)!=count:
+            raise ValueError('Insufficient unused evaluation documents')
+        documents=[]
+        for document in selected:
+            windows=[row[0] for row in self.db.execute('SELECT object FROM sequences WHERE document=? ORDER BY id',(document,))]
+            documents.append({'document':document,'sequences':windows})
+        sequences=[key for document in documents for key in document['sequences']]
+        manifest={'format':'neuroshard-evaluation-documents-v1','candidate':candidate,'role':role,
+                  'beacon':beacon,'tokenizer_root':self.tokenizer_root,'documents':documents,'sequences':sequences}
+        reservation=self.store.put_json(manifest)
+        with self.db:
+            for key in sequences:
+                self.db.execute('INSERT INTO evaluations VALUES (?,?,?)',(key,candidate,reservation))
+        return reservation
+
+
+class TextCorpus(Corpus):
+    """The maintained corpus profile; legacy Corpus preserves old experiments."""
+    def __init__(self,home,store,codec,sequence_length=128,max_windows=4):
+        super().__init__(home,store,codec.tokenizer,sequence_length,'response',codec=codec,max_windows=max_windows)
 
 
 def publish_window(corpus,window_root,destination):
@@ -193,6 +262,11 @@ def publish_window(corpus,window_root,destination):
         raise ValueError('This publisher exports training windows only')
     source_root=store.put_json(source)
     keys={window_root,source_root}
+    if window.get('tokenizer_root') is not None:
+        codec_root=window['tokenizer_root']
+        if codec_root!=corpus.tokenizer_root:
+            raise ValueError('Window belongs to a different tokenizer contract')
+        keys.update((codec_root,store.json(codec_root)['backend']))
     for key in window['sequences']:
         sequence=store.json(key)
         if sequence['source']!=source_root or sequence['role']!='train':

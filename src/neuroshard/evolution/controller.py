@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from neuroshard.dataflow.store import canonical
-from .evaluation import evaluate,decide
+from .evaluation import evaluate_reservation,decide
 from .model import grow,place
 from .schema import integer
 from .batches import from_windows
@@ -29,6 +29,9 @@ class Epochs:
         self.options = {'steps':integer(steps,1,4096),'examples':integer(examples,32,256),
                         'documents':integer(documents,1,1024),'epochs_per_day':integer(epochs_per_day,1,24),
                         'growth_layers':integer(growth_layers,0,16),'capacities':list(capacities)}
+        if getattr(corpus,'codec',None) is not None:
+            corpus.codec.check_model(store.json(initial_root))
+            self.options['tokenizer_root']=corpus.tokenizer_root
         self.home.mkdir(parents=True,exist_ok=True)
         self.db = sqlite3.connect(self.home/'epochs.sqlite')
         self.db.execute('PRAGMA journal_mode=WAL')
@@ -39,6 +42,8 @@ class Epochs:
         ''')
         with self.db:
             self.db.execute('INSERT OR IGNORE INTO registry VALUES (1,?)',(initial_root,))
+        if getattr(corpus,'codec',None) is not None:
+            corpus.codec.check_model(store.json(self.accepted_root))
 
     @property
     def accepted_root(self):
@@ -92,7 +97,8 @@ class Epochs:
                 pipe = self.factory(epoch['initial'],f'epoch-{epoch["id"]}-train',self.home/f'epoch-{epoch["id"]}-train.json')
                 try:
                     for step in range(pipe.step,self.options['steps']):
-                        batch = from_windows(self.store,epoch['batches'][2*step:2*step+2])
+                        batch = from_windows(self.store,epoch['batches'][2*step:2*step+2],
+                                             getattr(self.corpus,'tokenizer_root',None))
                         result = pipe.train(batch)
                         if self.progress:
                             self.progress({'epoch':epoch['id'],'phase':'training','step':step+1,
@@ -136,7 +142,7 @@ class Epochs:
                         continue
                     pipe = self.factory(epoch[name],f'epoch-{epoch["id"]}-{name}',None)
                     try:
-                        values = {role:evaluate(pipe,self.store,self.store.json(reservation)['sequences'])
+                        values = {role:evaluate_reservation(pipe,self.store,reservation)
                                   for role,reservation in epoch['evaluation'].items()}
                     finally:
                         pipe.close()

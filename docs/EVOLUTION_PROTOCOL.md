@@ -11,7 +11,7 @@ The published [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_
 | Whole-model training | `evolution/model.py`, `worker.py`, `pipeline.py` | 134,515,008 trainable parameters; three worker processes on two hosts; exact stage replay |
 | Model expansion | `grow`, `place`, `audit_growth` | Four identity-initialized blocks add 14,160,384 parameters; the 148,675,392-parameter model needs four workers under the declared 48M cap |
 | Continuing data | `evolution/data.py` | Pinned source revisions, durable cursors, immutable windows, document grouping, replay and evaluation exclusion |
-| Response objectives | `evolution/batches.py` | Actual assistant targets; ignored prompt/padding labels; no invented targets or all-ignored examples |
+| Text semantics and response objectives | `evolution/text.py`, `batches.py` | Content-addressed tokenizer/model identity, bounded windows across assistant turns, ignored prompt/padding labels and actual response endings |
 | Quality decisions | `evolution/evaluation.py`, `controller.py` | Paired fresh/retention losses, preserved candidates and selection on restart, rejection leaves the accepted model unchanged |
 | Native work settlement | `evolution/settlement.py`, `app.py` | Four validators, signed reservations, exact token accounting, availability challenges and an objective fraud dispute |
 | Native growth settlement | `grow` transaction, `audit_growth`, session `start_step` | A separate bonded claim; invalid growth is challengeable from one parent block; accepted growth mints no reward and preserves the training-round counter |
@@ -34,6 +34,8 @@ Current bounds are 48M resident parameters per worker, 64 stages, four batch row
 The initial experiment scored all next tokens in 64-token conversation prefixes. Only 17/64 retention examples, 18/64 fresh examples and 10/64 test examples contained any first-response tokens. Much of the apparent loss improvement concerned prompts and formatting.
 
 The corrected experiment retains up to 64 prompt-context tokens and 64 first-response tokens. It scores response positions only, and masks right padding. It uses subsequent source rows and separate protected examples. This is still a truncated-context, teacher-forced response-loss test. It does not establish broad reasoning, factual accuracy, agent autonomy, or answer safety.
+
+The maintained epoch command now uses the [versioned text protocol](TEXT_PROTOCOL.md). It retains short answers, splits targets across assistant turns, records omitted training tokens, and requires complete response coverage for held-out documents. Tokenizer/backend/template versions are bound to the model and corpus; evaluation averages real target losses within each document before the paired comparison. The older scripts retain their original objective to reproduce the historical measurements below. Their failed quality decisions have not been replaced with claims about the new objective.
 
 The research gate requires an approximate 99% upper confidence bound below -0.001 nats on fresh examples and below +0.02 nats on retention examples. It uses paired document losses and at least 32 examples per group; the main runs use 64. An untouched test group is reported separately. Public-test exposure, dependence and multiple comparisons remain limits on the claim.
 
@@ -90,7 +92,7 @@ The ongoing epoch controller is `Epochs` in `evolution/controller.py`. It journa
 Install the numerical profile and collector dependencies from a checkout:
 
 ```bash
-python -m pip install -r docs/llm-requirements.txt '.[collector,dev]'
+python -m pip install -r docs/evolution-requirements.txt '.[collector,dev]'
 ```
 
 Copy [the example configuration](../config/evolution-epoch.example.json) into a private experiment directory. Paths resolve relative to that configuration. Import the verified seed into its `objects` directory. Use separate worker homes and one long-running worker command per assigned process:
@@ -107,6 +109,8 @@ python -m neuroshard.evolution run-epoch --config ./epoch.json
 ```
 
 This consumes subsequent licensed source rows, adds a replay fraction when historical data exists, trains all parameters, selects protected examples after committing the candidate, and records acceptance or rejection. Run it again to resume an interrupted epoch or begin the next budgeted epoch. The example allows one epoch per UTC day. It does not activate a public checkpoint, pay research workers, or bypass the native protocol's missing integration.
+
+Use fresh corpus and epoch homes when upgrading from the historical first-response objective. The tokenizer, window budget and document evaluation policy are persistent settings; changing them in an existing corpus is rejected. The current `import-model` command binds the verified seed tokenizer to its embedding rows. `inspect-tokenizer` checks this identity without loading the model tensors. See [text reproduction](TEXT_PROTOCOL.md#reproduce) for a complete text-to-training-to-generation check.
 
 ### Reproduce execution and fraud checks
 

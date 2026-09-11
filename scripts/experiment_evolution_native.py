@@ -27,6 +27,7 @@ from neuroshard.demo import protocol,client as wire
 from neuroshard.demo.network import initialize,edit_config
 from neuroshard.lab.app import native_parameters
 from neuroshard.dataflow.store import canonical
+from native_rpc import broadcast_finalized
 
 
 def tiny_record(home,store):
@@ -85,6 +86,7 @@ def run(args):
         for i,node in enumerate(config['nodes']):
             path=Path(node['home'])/'config/config.toml'
             text=edit_config(path.read_text(),'rpc','max_body_bytes','4194304')
+            text=edit_config(text,'rpc','timeout_broadcast_tx_commit','"120s"')
             path.write_text(edit_config(text,'mempool','max_tx_bytes','2097152'))
             (path.parent/'genesis.json').write_bytes(canonical(genesis))
             commands=[('app',[sys.executable,'-m','neuroshard.evolution.app','--home',node['home'],'--port',str(node['abci'])]),
@@ -97,7 +99,7 @@ def run(args):
         until(lambda:all(wire.query(u)['height']>0 for u in urls))
         def send(owner,kind,**fields):
             account=wire.query(url,'/account',{'public_key':owner.public_key})
-            return wire.broadcast(url,owner.sign({'kind':kind,'chain_id':genesis['chain_id'],'nonce':account['nonce'],**fields}))
+            return broadcast_finalized(url,owner.sign({'kind':kind,'chain_id':genesis['chain_id'],'nonce':account['nonce'],**fields}))
         def claim(value):
             status=wire.query(url)
             workers=[owners[i%3] for i in range(len(value['traces']))]
@@ -132,14 +134,17 @@ def run(args):
                 uploaded+=len(chunk);transactions+=1
             send(owners[3],'seal',claim_id=claim_id,object_root=key);transactions+=1
         upload_seconds=time.monotonic()-started
+        print(json.dumps({'phase':'training_replay_uploaded','bytes':uploaded,'transactions':transactions,'seconds':upload_seconds}),flush=True)
         started=time.monotonic()
         send(owners[3],'resolve',claim_id=claim_id)
         resolve_seconds=time.monotonic()-started
         fraud=wire.query(url)
         assert fraud['issued']==0 and 'optimizer update' in fraud['settled'][-1]['reason']
+        print(json.dumps({'phase':'forged_training_rejected','seconds':resolve_seconds}),flush=True)
         claim(record)
         accepted=until(lambda:s if (s:=wire.query(url))['training_round']==1 else None)
         assert accepted['issued']==1000000 and accepted['model_root']==record['model_root']
+        print(json.dumps({'phase':'valid_training_settled','issued_atoms':accepted['issued']}),flush=True)
         # Native growth has its own bonded dispute path and mints no reward.
         parent=accepted['model_root']
         grown,grown_model=grow(parent,store,4)
