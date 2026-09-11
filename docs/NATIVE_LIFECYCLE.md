@@ -83,7 +83,22 @@ python -m neuroshard.evolution download-seed --model-dir ./seed
 python -m neuroshard.evolution import-model --model-dir ./seed --objects ./objects
 ```
 
-Keep the printed model and tokenizer roots. Copy [the data configuration](../config/native-data.example.json) to the same private working directory and check its object path and tokenizer root against that output. Use a separate corpus from historical objectives. Save the native `/lifecycle` query's `cursors` object as `cursors.json`; use `{}` only for a genuinely new profile with zero initial cursors. Supply the chain's current data root.
+Keep the printed model and tokenizer roots. Copy [the data configuration](../config/native-data.example.json) to the same private working directory and check its object path and tokenizer root against that output. Use a separate corpus from historical objectives.
+
+For an operator with their own fully replayed lifecycle node, preparation and review can read complete admission history directly from its committed SQLite state. Pin the intended network's genesis SHA-256 independently. The read includes committed WAL transactions, refuses a missing database, checks the state against that genesis, and never initializes or rewrites the node:
+
+```bash
+python scripts/prepare_native_cohort.py \
+  --config ./native-data.json --native-home ./native-node \
+  --genesis-sha256 PINNED_GENESIS_SHA256 \
+  --collect-records 256 --output ./proposal-1.json
+```
+
+This supplies the parent, source cursors and all consumed document/token identities. Do not combine it with manual cursor, parent or exclusion overrides. The report records the committed height, state hash and admission anchor. If admission history changes during collection or review, the command refuses to emit a successful result; retry using the retained corpus and a new output path. Ordinary new blocks with unchanged admission history do not invalidate preparation. Native validation still checks for changes after the command finishes.
+
+The trust boundary is the operator's **own full node and local files**. The genesis pin identifies the network; it does not prove that a database uploaded by someone else was correctly replayed. A stopped or lagging node is a historical checkpoint, not evidence of current chain status. These commands never sign, vote or assert that activation is currently eligible. State reads are capped at 128 MiB and fail rather than silently dropping old identities; a scalable retained-state index is still needed for long-lived networks.
+
+For a manual/offline experiment without a local node, save the native `/lifecycle` query's `cursors` object as `cursors.json`; use `{}` only for a genuinely new profile with zero initial cursors. Supply the chain's current data root:
 
 ```bash
 python scripts/prepare_native_cohort.py \
@@ -94,7 +109,7 @@ python scripts/prepare_native_cohort.py \
 
 The invocation scans at most 256 records per configured source and never goes beyond 4,096 unadmitted rows per source. A `needs_more_data` report includes rejected/selected counts; it does not emit an incomplete transaction. With a new output filename, a later invocation can add another bounded tranche using the same native cursor anchor. The durable corpus recovers previously collected documents even if an earlier export failed. `--collect-records 0` only prepares already collected data.
 
-For every subsequent proposal, supply retained, previously admitted proposal files with repeated `--exclude-cohort ./admitted-1.json` arguments. Use the same exclusions during review. Different documents can produce identical cropped token windows; source cursors and document-ID checks alone do not establish fresh token data. The preparer skips documents containing consumed windows and selects replacements. Keep the complete admission history for this check; omitted history can still cause authoritative native rejection. A production coordinator must index finalized admissions durably rather than depend on a manually maintained file list.
+In manual mode, every subsequent proposal needs retained, previously admitted proposal files supplied through repeated `--exclude-cohort ./admitted-1.json` arguments. Use the same exclusions during review. Different documents can produce identical cropped token windows; source cursors and document-ID checks alone do not establish fresh token data. The preparer skips documents containing consumed windows and selects replacements. Manual history can be incomplete and still cause authoritative native rejection; the local-node mode avoids that file-list dependency.
 
 The exporter retains up to four response windows per document. It reports training omissions and requires complete evaluation responses. The bounded response/context policy still introduces selection bias. Do not treat its example Smol-SmolTalk source as a diverse lifelong learning corpus. Source authenticity, licensing, harmful/low-quality content, synthetic-data proportions and meaningful evaluation still require independent curation. The explicit Python `publish` helper mirrors the selected raw documents, batches, provenance and tokenizer to a content-addressed destination with read-back checks; copying an object does not approve it.
 
@@ -103,12 +118,13 @@ Before voting, each reviewer uses their own source/tokenizer policy and an indep
 ```bash
 python scripts/review_native_cohort.py \
   --config ./reviewer-data-policy.json --proposal ./proposal-1.json \
+  --native-home ./reviewer-native-node --genesis-sha256 PINNED_GENESIS_SHA256 \
   --cache ./reviewer-upstream-cache
 ```
 
 The reviewer reconstructs every response window from original messages, checks document identities and source roles, enforces the held-out hash partition, and rejects heuristic near-duplicates within the cohort. By default it also checks every selected document against its pinned upstream Parquet row, verifies the downloaded file's SHA-256 against repository metadata, and confirms the repository revision. A cache can be reused, but its files are rehashed. Use a separate cache directory per review process. This source check trusts the upstream repository service and TLS; a license label is not proof of rights. `--offline` explicitly reports that upstream checking was skipped.
 
-This report never votes or authorizes activation. The reviewer must separately check the live parent/cursors, historical contamination, license rights, harmful content, usefulness and evaluation suitability. Native consensus repeats its own parent, cursor, exact-duplicate and quorum checks. Treat `mechanical_evidence_verified` as evidence about bytes and tokenization, not an automatic curation decision.
+With a local-node snapshot, review also checks the actual parent, source cursors, complete consumed identities and native training-step budget. Omitting the node arguments leaves review in manual mode and reports that history completeness and live parent/cursors were not checked. This report never votes or authorizes activation. The reviewer must separately check chain currency, semantic contamination, license rights, harmful content, usefulness and evaluation suitability. Native consensus repeats its own parent, cursor, exact-duplicate and quorum checks. Treat `mechanical_evidence_verified` as evidence about bytes and tokenization, not an automatic curation decision.
 
 ### Run protocol and numerical checks
 

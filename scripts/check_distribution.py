@@ -34,6 +34,7 @@ REQUIRED_SOURCE = {
     "scripts/review_native_cohort.py", "tests/evolution/test_cohort_review.py",
     "scripts/continue_lifecycle_native.py",
     "scripts/resume_lifecycle_admission.py",
+    "scripts/native_cohort_state.py", "tests/evolution/test_cohort_state.py",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 
