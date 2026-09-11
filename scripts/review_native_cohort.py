@@ -16,13 +16,18 @@ from neuroshard.evolution.schema import integer, root
 from neuroshard.evolution.text import TextCodec
 
 
-def review(store, prepared, policy, upstream=None, *, consumed_documents=(), consumed_batches=()):
+def review(store, prepared, policy, upstream=None, *, consumed_documents=(), consumed_batches=(), native_state=None):
+    if native_state is not None:
+        consumed_documents = native_state['lifecycle']['seen_documents']
+        consumed_batches = native_state['lifecycle']['seen_batches']
     consumed_documents,consumed_batches = set(consumed_documents),set(consumed_batches)
     metadata = cohorts.metadata(prepared['metadata'])
     key = root(prepared['data_root'])
     value = metadata.json(key)
     root(value['previous'])
     codec = TextCodec.load(store, root(policy['tokenizer_root']))
+    if native_state is not None and codec.root != native_state['manifest']['lifecycle']['tokenizer_root']:
+        raise ValueError('Reviewer tokenizer policy differs from the pinned native profile')
     sources = policy['sources']
     if not isinstance(sources, list) or not 1 <= len(sources) <= 8:
         raise ValueError('Reviewer policy needs 1–8 explicitly approved sources')
@@ -31,9 +36,9 @@ def review(store, prepared, policy, upstream=None, *, consumed_documents=(), con
         raise ValueError('Reviewer policy repeats a source')
     length = integer(policy.get('text', {}).get('sequence_length', 128), 16, 256)
     maximum = integer(policy.get('text', {}).get('max_windows', 4), 1, 64)
-    # Check the bounded cohort schema without pretending to know native history.
-    # Consensus still checks the actual parent, cursors and consumed identities.
-    state = {'data_root':value['previous'], 'manifest':{'lifecycle':{
+    # A supplied local full-node snapshot checks the actual parent, cursor and
+    # complete history. Manual exclusions cannot establish their completeness.
+    state = native_state if native_state is not None else {'data_root':value['previous'], 'manifest':{'lifecycle':{
         'tokenizer_root':codec.root, 'vocabulary':codec.profile['vocabulary'], 'steps_per_cohort':1}},
         'lifecycle':{'cursors':{w['source']:w['start'] for w in value['windows']},
                      'seen_documents':dict.fromkeys(consumed_documents), 'seen_batches':dict.fromkeys(consumed_batches), 'active':None}}
@@ -93,9 +98,11 @@ def review(store, prepared, policy, upstream=None, *, consumed_documents=(), con
         'windows':{role:sum(len(d['batches']) for d in rows) for role,rows in roles.items()},
         'raw_evidence_bytes':evidence_bytes, 'upstream_documents_checked':checked,
         'excluded_prior_documents':len(consumed_documents), 'excluded_prior_windows':len(consumed_batches),
+        'native_history_checked':native_state is not None,
         'upstream_checked':upstream is not None, 'curation_decision_required':True,
         'scope':'local policy, original bytes and tokenizer correspondence; upstream checking trusts the pinned repository service',
-        'not_checked':['completeness of supplied admission history; live parent/cursors and quorum',
+        'not_checked':(['completeness of supplied admission history; live parent/cursors'] if native_state is None else [])+[
+            'changes after this snapshot; native quorum and activation eligibility',
             'semantic contamination beyond the within-cohort heuristic',
             'license rights, truth, harmful content, usefulness or model quality']}
 
@@ -107,7 +114,10 @@ def main():
     parser.add_argument('--cache',type=Path,help='Private directory for independently verified upstream Parquet files')
     parser.add_argument('--offline',action='store_true',help='Skip upstream source checks; report is explicitly incomplete')
     parser.add_argument('--exclude-cohort',type=Path,action='append',default=[],help='Previously admitted proposal file; repeat for retained admission history')
+    from native_cohort_state import add_arguments, from_arguments
+    add_arguments(parser)
     args = parser.parse_args()
+    native = from_arguments(args)
     if args.proposal.stat().st_size > 8*1024*1024 or args.config.stat().st_size > 65536:
         raise ValueError('Review input exceeds its bounded size')
     policy = json.loads(args.config.read_bytes())
@@ -124,8 +134,13 @@ def main():
         from neuroshard.dataflow.collect import upstream_rows
         args.cache.mkdir(parents=True,exist_ok=True)
         upstream = lambda spec,start,count: upstream_rows(spec,args.cache,start,count)
-    print(json.dumps(review(store,prepared,policy,upstream,
-        consumed_documents=consumed_documents,consumed_batches=consumed_batches),indent=2))
+    result = review(store,prepared,policy,upstream,
+        consumed_documents=consumed_documents,consumed_batches=consumed_batches,
+        native_state=native.state if native else None)
+    if native:
+        native.ensure_current()
+        result['native_anchor'] = native.report()
+    print(json.dumps(result,indent=2))
 
 
 if __name__ == '__main__':main()

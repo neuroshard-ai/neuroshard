@@ -139,12 +139,19 @@ def publish(store, prepared, destination):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config',type=Path,required=True)
-    parser.add_argument('--previous-data-root',required=True)
-    parser.add_argument('--cursors',type=Path,required=True,help='JSON source->cursor mapping from native /lifecycle')
+    parser.add_argument('--previous-data-root',help='Manual parent; omit when using --native-home')
+    parser.add_argument('--cursors',type=Path,help='Manual JSON source->cursor mapping; omit when using --native-home')
     parser.add_argument('--output',type=Path,required=True,help='New local proposal/report file')
     parser.add_argument('--collect-records',type=int,default=0,help='Fetch at most this many records per configured source (0–1024)')
     parser.add_argument('--exclude-cohort',type=Path,action='append',default=[],help='Previously admitted proposal file; repeat for retained admission history')
+    from native_cohort_state import add_arguments, from_arguments
+    add_arguments(parser)
     args = parser.parse_args()
+    native = from_arguments(args)
+    if native and (args.previous_data_root or args.cursors):
+        parser.error('--native-home supplies the parent and cursors; omit manual overrides')
+    if not native and not (args.previous_data_root and args.cursors):
+        parser.error('Supply --native-home and its genesis pin, or both manual --previous-data-root and --cursors')
     if args.output.exists():
         raise ValueError('Use a new output path before collecting additional records')
     count = integer(args.collect_records,0,1024)
@@ -152,6 +159,15 @@ def main():
         raise ValueError('Prior cohort file exceeds review bounds')
     consumed_documents, consumed_batches = exclusions(json.loads(path.read_bytes()) for path in args.exclude_cohort)
     config = json.loads(args.config.read_bytes())
+    if native:
+        life = native.state['lifecycle']
+        consumed_documents, consumed_batches = life['seen_documents'], life['seen_batches']
+        cursors, previous = life['cursors'], native.state['data_root']
+        if config['tokenizer_root'] != native.state['manifest']['lifecycle']['tokenizer_root']:
+            raise ValueError('Collector tokenizer differs from the pinned native profile')
+    else:
+        cursors, previous = json.loads(args.cursors.read_bytes()), args.previous_data_root
+    if not isinstance(cursors,dict):raise ValueError('Expected a native cursor mapping')
     base = args.config.resolve().parent
     def local(value):return base/Path(value).expanduser()
     store = Objects(local(config['objects']))
@@ -159,8 +175,6 @@ def main():
     corpus = TextCorpus(local(config['corpus']),store,codec,**config.get('text',{}))
     try:
         sources = [corpus.register(spec) for spec in config['sources']]
-        cursors = json.loads(args.cursors.read_bytes())
-        if not isinstance(cursors,dict):raise ValueError('Expected a native cursor mapping')
         for source in sources:
             current = corpus.db.execute('SELECT cursor FROM sources WHERE id=?',(source,)).fetchone()[0]
             start = integer(cursors.get(source,0),0,2**53-1)
@@ -171,10 +185,16 @@ def main():
                 collected = corpus.collect(source,min(count,remaining))
                 print(json.dumps({'phase':'collected','source':source,'start':collected['start'],
                                   'end':collected['end'],'rejected':collected['rejected']}),flush=True)
-        result = prepare(corpus,args.previous_data_root,cursors,sources,config.get('training_documents',32),
+        result = prepare(corpus,previous,cursors,sources,config.get('training_documents',32),
                          consumed_documents=consumed_documents,consumed_batches=consumed_batches)
+        if native:
+            if result['status'] == 'prepared_for_review':
+                cohorts.validate(cohorts.metadata(result['metadata']),result['data_root'],native.state)
+            native.ensure_current()
+            result['native_anchor'] = native.report()
         with args.output.open('x') as file:file.write(json.dumps(result,indent=2)+'\n')
-        print(json.dumps({'status':result['status'],'data_root':result.get('data_root'),'report':result['report'],'output':str(args.output)},indent=2))
+        print(json.dumps({'status':result['status'],'data_root':result.get('data_root'),'report':result['report'],
+                          'native_anchor':result.get('native_anchor'),'output':str(args.output)},indent=2))
     finally:
         corpus.db.close()
 
