@@ -17,6 +17,7 @@ export default defineConfig({
     ]}, { text: 'Protocol and evidence', items: [
       { text: 'Protocol specification', link: '/generated/LLM_PROTOCOL' },
       { text: 'Experiments', link: '/generated/LLM_EXPERIMENTS' },
+      { text: 'Continual model evolution', link: '/generated/EVOLUTION_PROTOCOL' },
       { text: 'Fundamentals review', link: '/generated/FUNDAMENTALS_REVIEW' },
       { text: 'Research roadmap', link: '/generated/RESEARCH_ROADMAP' },
     ]}, { text: 'Contribute', items: [

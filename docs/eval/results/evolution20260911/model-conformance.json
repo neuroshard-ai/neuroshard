@@ -1,0 +1,11 @@
+{
+  "seed_root": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
+  "seed_parameters": 134515008,
+  "grown_root": "89c026ea7f9af7e97b58b3612caa1bd4fc5f9464c0ec5d7454a035632724a531",
+  "grown_parameters": 148675392,
+  "reference_logits_equal": true,
+  "growth_logits_equal": true,
+  "old_worker_count": 3,
+  "new_worker_count": 4,
+  "per_worker_parameter_limit": 48000000
+}

@@ -1,0 +1,60 @@
+{
+  "chain_id": "neuroshard-evolution-check-fb0a87cae83c",
+  "source_hash": "80171b793bdfc180bed16ec589dc3e7233fd11a8aa905126996122fc805678b5",
+  "genesis_hash": "82dcd85446c9b6c1a479bb87514a9b885c7eb06f8d8bd01242868e47505f7d65",
+  "validators": 4,
+  "physical_hosts": 1,
+  "operators": 1,
+  "fixture": "synthetic-10384-parameters",
+  "uploaded_replay_bytes": 21008,
+  "upload_transactions": 8,
+  "upload_seconds": 6.890537318773568,
+  "dispute_resolution_seconds": 2.3506912868469954,
+  "fraud_rejection": {
+    "accepted": false,
+    "height": 14,
+    "id": "186faf10b347161b2ac59fee2dd7509a478345786cb0882777cba2f8da4f77f8",
+    "kind": "training",
+    "model_root": "92cb1819d7329cc2541f7d005664d8b77aa429f8893ca76771a0c3d085e12d63",
+    "reason": "objective replay mismatch: optimizer update"
+  },
+  "accepted_training": {
+    "accepted": true,
+    "height": 49,
+    "id": "6d39825884283859a923ae00adb1213ed9b9cfffa13bdb5feb3fc0ba562babdd",
+    "kind": "training",
+    "model_root": "57a50edd3a476261a2b70e6866ebbcfdfe720d7c71a5d8520f37a32ba4941f50",
+    "reason": "challenge window elapsed"
+  },
+  "issued_atoms": 1000000,
+  "growth_fraud": {
+    "accepted": false,
+    "height": 54,
+    "id": "75fff57680c71fd3141a06b3e89515fffcbb4df885431bd8f4215741e44f8714",
+    "kind": "growth",
+    "model_root": "754c098c8bb153841866ca3256170d2a0a52eda4742f61e903b4a70fb2aaf25e",
+    "reason": "objective replay mismatch: identity growth"
+  },
+  "growth_replay_bytes": 10104,
+  "accepted_growth": {
+    "accepted": true,
+    "height": 88,
+    "id": "0fb850d8046d6bdbd9ff518f1630bafbfb83e585b14259544610003882d9a488",
+    "kind": "growth",
+    "model_root": "a9309b46878d70e4e8db23dcf5a2f31227ecb2c0a67022206e0b85a9bd0ee9e2",
+    "reason": "challenge window elapsed"
+  },
+  "grown_parameters": 19728,
+  "training_after_growth": {
+    "accepted": true,
+    "height": 123,
+    "id": "b84e447ea214dfe85d3d270dacbd79ef29509759e5d7ed32fb457566f6394a8f",
+    "kind": "training",
+    "model_root": "404070ad5332de0e56a30970f9c195b2e7b7d4636d32c9df1d23a173ec8885c1",
+    "reason": "challenge window elapsed"
+  },
+  "final_issued_atoms": 2000000,
+  "agreement_includes_height": 123,
+  "matching_app_hash_height": 124,
+  "matching_app_hash": "04498D308F6A1A76D0E87529307C4A45D063C6D65524B261BB4968AD6E220020"
+}

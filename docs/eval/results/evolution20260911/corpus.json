@@ -1,0 +1,11 @@
+{
+  "replay_window": "b9aeae85e25919d1862c3faf98c65d3076f33692d75b19f7cef5279392a033b5",
+  "fresh_window": "f9f873862e96258ba45f6ef1b99153bb63b300ede51f4198f88cd55fc95f1ac4",
+  "heldout_window": "89e486278ab0af4bbd56ec71cba0ae7b5674330c188d887204e97b58307ba5bf",
+  "counts": {
+    "fresh": 259,
+    "retention": 253,
+    "test": 242,
+    "train": 1450
+  }
+}

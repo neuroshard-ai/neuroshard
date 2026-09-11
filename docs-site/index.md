@@ -21,3 +21,5 @@ features:
 ---
 
 This is an **experimental native testnet**. The initial validators are operated by one organization across two machines. Test balances have no redemption promise. Consult the [model card](/generated/MODEL_CARD), [release notes](/generated/RELEASES), and [public repository](https://github.com/neuroshard-ai/neuroshard) before participating.
+
+[Continual model evolution](/generated/EVOLUTION_PROTOCOL) documents the separate full-model training, data, growth and native-dispute experiments. It includes measured failures and reproduction instructions; these experiments have not replaced the public testnet's model.

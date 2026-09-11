@@ -1,0 +1,28 @@
+{
+  "model_dir": "./seed",
+  "objects": "./objects",
+  "corpus": "./corpus",
+  "epochs": "./epochs",
+  "initial_model_root": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
+  "training_source": {
+    "repo": "HuggingFaceTB/smol-smoltalk",
+    "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+    "split": "train",
+    "license": "Apache-2.0",
+    "role": "train"
+  },
+  "heldout_source": {
+    "repo": "HuggingFaceTB/smol-smoltalk",
+    "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+    "split": "test",
+    "license": "Apache-2.0",
+    "role": "heldout"
+  },
+  "workers": [
+    {"url": "http://127.0.0.1:48701", "token_file": "./worker.token", "capacity": 48000000},
+    {"url": "http://127.0.0.1:48702", "token_file": "./worker.token", "capacity": 48000000},
+    {"url": "http://127.0.0.1:48703", "token_file": "./worker.token", "capacity": 48000000},
+    {"url": "http://127.0.0.1:48704", "token_file": "./worker.token", "capacity": 48000000}
+  ],
+  "budget": {"steps": 32, "examples": 64, "documents": 128, "epochs_per_day": 1, "growth_layers": 4}
+}

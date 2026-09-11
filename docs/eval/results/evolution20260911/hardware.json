@@ -1,0 +1,21 @@
+{
+  "host_a": {
+    "Architecture": "x86_64",
+    "CPU(s)": "4",
+    "Vendor ID": "GenuineIntel",
+    "Model name": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+    "Thread(s) per core": "2",
+    "Core(s) per socket": "2"
+  },
+  "host_b": {
+    "Architecture": "x86_64",
+    "CPU(s)": "4",
+    "Vendor ID": "GenuineIntel",
+    "Model name": "Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz",
+    "Thread(s) per core": "2",
+    "Core(s) per socket": "2"
+  },
+  "memory_per_host_gib": 16,
+  "operators": 1,
+  "numerical_profile": "float32 CPU, DEFAULT ATen dispatch, MKL SSE4_2, one thread; see code and runtime pins"
+}

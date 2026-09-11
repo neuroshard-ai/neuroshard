@@ -1,0 +1,61 @@
+{
+  "chain_id": "neuroshard-evolution-check-9b462c683324",
+  "source_hash": "c6eb15f8fe599878892777a8256cc1dda9b473be3b632ab1edcc2f997c12e8c6",
+  "genesis_hash": "2476f9426b17a583611af9a81d7c3c3300d36ced3fcce11fefb33f4a01463c7b",
+  "validators": 4,
+  "physical_hosts": 1,
+  "operators": 1,
+  "fixture": "external-record",
+  "uploaded_replay_bytes": 169967104,
+  "upload_transactions": 184,
+  "upload_seconds": 368.8891893392429,
+  "dispute_resolution_seconds": 9.939466564916074,
+  "fraud_rejection": {
+    "accepted": false,
+    "height": 358,
+    "id": "10302fa3e30758353c30ab26c4ed195224cffd969a9df25b0d1501c7b3a888fc",
+    "kind": "training",
+    "model_root": "ed089679e54efcd880b5d161736cdbb992a58780c05c6ae3ca3b3fb22ca0a260",
+    "reason": "objective replay mismatch: optimizer update"
+  },
+  "accepted_training": {
+    "accepted": true,
+    "height": 393,
+    "id": "4f49b38a76153e8e50d130c52952567d311d7ca52193b01d406748b3c55a6846",
+    "kind": "training",
+    "model_root": "9da4edce5ac03bfb3326a5de35f9f5d87639c9a1ea38e1d0cacc3d2458f89f38",
+    "reason": "challenge window elapsed"
+  },
+  "issued_atoms": 1000000,
+  "growth_fraud": {
+    "accepted": false,
+    "height": 428,
+    "id": "6cd77fa1c554bcf4aed3c01b4577ccaf1878a23667e37018cebcd65f727c6619",
+    "kind": "growth",
+    "model_root": "2a7f40b8a9a9dceb8efba339bcc14e2f646c75f8640826880ffbea031d959787",
+    "reason": "objective replay mismatch: identity growth"
+  },
+  "growth_replay_bytes": 14161224,
+  "accepted_growth": {
+    "accepted": true,
+    "height": 462,
+    "id": "62eab0481726d5b199d88968015e0781ca136fc1ba1842b61441e8f67ea88dd0",
+    "kind": "growth",
+    "model_root": "db803921006c957718b46e6b9c33a8c5d8c1a2c79a6914c71756f21a210a500c",
+    "reason": "challenge window elapsed"
+  },
+  "grown_parameters": 148675392,
+  "training_after_growth": {
+    "accepted": true,
+    "height": 513,
+    "id": "ef1ffc2dd60eb8f7805946b7d6bcbb576145d215eb7b716de66d7dc95087dfca",
+    "kind": "training",
+    "model_root": "f81d7ec4d3a5dee3c71796b689d5d322a81467e4244070cbaaed3be2d827ca8f",
+    "reason": "challenge window elapsed"
+  },
+  "final_issued_atoms": 2000000,
+  "matching_app_hash_height": 514,
+  "matching_app_hash": "2E2C56806B58C6D56EC2223A8B9247AEE97A369F78D51079009A37BAA1E8D20E",
+  "agreement_includes_height": 513,
+  "post_settlement_restart_verified": true
+}

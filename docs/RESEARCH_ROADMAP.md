@@ -2,19 +2,21 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
-The [v2 experiment report](PROTOCOL_EXPERIMENTS.md) now records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines the supported lifecycle. Independent operators, broader hardware support, and economical verification of a complete training graph remain open gates; the manuscript still describes the earlier reference.
+The [v2 experiment report](PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.
 
 ## Current implemented baseline — 0.4.0
 
 The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md) extend the reference with a frozen 135M pretrained model, a 4,608-parameter trainable adapter, separate funded inference jobs, validation-gated serving, a minimal public client, browser payments and immutable S3 collection. A two-host native cycle earned rewards and spent them on the promoted model. The new live chain has its own genesis; old balances do not migrate. The requirements below for economical verification, robust evaluation and independent operators remain open.
 
+The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 134.5M parameters, grows depth to 148.7M parameters, collects fresh/replay windows and evaluates research candidates. Its native application settles training and bonded growth claims, handles objective fraud/availability challenges and prevents repeated payment for the same prescribed computation. Real-model and native lifecycle results are recorded, including unsuccessful quality experiments. Integrating native rolling data, verifiable quality promotion, evolved-model inference and public worker admission is the next implementation gate; these components have not replaced the released network.
+
 ## 1. Publish a falsifiable technical claim
 
 The defensible initial claim is: **a prescribed model update, produced by mutually untrusted pipeline stages, can be independently reproduced and settled exactly once by a native blockchain.** The reference tests this claim on a small model with full replay and fixed local validators. It does not demonstrate economical decentralized LLM pretraining, public admission, or a new proof-of-work consensus algorithm.
 
-Prepare the short manuscript, source revision, environment manifest, raw measurements, and one-command reproduction together. Invite external attempts to falsify the exact claims. Preserve unsuccessful attack tests and failed reproducibility cases as well as successful runs. Establish prior work against permissionless training, collaborative model sharding, and reproducible ML disputes; avoid claiming that any one of those ideas is new by itself.
+Keep the working manuscript, source revision, environment manifest, raw measurements, and reproduction scripts together. Invite external attempts to falsify the exact claims. Preserve unsuccessful attack tests and failed reproducibility cases as well as successful runs. Establish prior work against permissionless training, collaborative model sharding, and reproducible ML disputes; avoid claiming that any one of those ideas is new by itself.
 
-Before selecting a publication venue or posting the concept publicly, complete the stronger experiment below and have the final manuscript reviewed. Venue selection and public posting are later decisions; nothing is published by the local demo.
+The source and working draft are public research artifacts. Formal venue submission should follow independent review and evidence for the stronger claims below; it is separate from publishing reproducible development work in the repository.
 
 ## 2. Make the reference survive independent machines
 

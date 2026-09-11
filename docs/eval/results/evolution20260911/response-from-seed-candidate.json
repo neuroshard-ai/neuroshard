@@ -1,0 +1,30 @@
+{
+  "model_root": "afa31f9ab294d9f5749e4c670799e3f77492307664e5c123f76331b00e67e8f4",
+  "initial": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
+  "plan": {
+    "created_utc": "2026-09-11T04:30:14Z",
+    "experiment": "response-from-seed",
+    "initial_model_root": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
+    "steps": 32,
+    "learning_rate": 0.03,
+    "clip_norm": 1.0,
+    "batch_rows": 2,
+    "sequence_length": 128,
+    "response_tokens": 64,
+    "context_tokens": 64,
+    "source_train_start": 1536,
+    "source_train_documents": 384,
+    "source_test_start": 1536,
+    "source_test_documents": 768,
+    "evaluation_examples_per_role": 128,
+    "roles": [
+      "retention",
+      "fresh",
+      "test"
+    ],
+    "fresh_min_gain": 0.001,
+    "retention_margin": 0.02,
+    "z": 2.576,
+    "selection": "candidate committed before local random beacon; previously unused source rows; exploratory follow-up, no threshold relaxation"
+  }
+}
