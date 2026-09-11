@@ -47,6 +47,8 @@ def validate_record(store, root):
     expected['parent'] = record['parent']
     for i,t in enumerate(traces):
         schema.partition(parent, t['partition'])
+        from .update_witness import validate_trace
+        validate_trace(parent, t)
         if t['parent']!=record['parent'] or t['step']!=record['step']:
             raise ValueError('Mixed-parent or mixed-step trace')
         if t['scale_hex']!=scale or t['learning_rate_hex']!=record['learning_rate_hex']:

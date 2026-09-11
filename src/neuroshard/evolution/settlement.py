@@ -49,7 +49,8 @@ def genesis(chain_id, validators, manifest):
         raise ValueError('Genesis requires bonded native consensus weight')
     base.update(model_root=root(manifest['initial_model_root']), serving_root=manifest['initial_model_root'],
                 candidate=None, settled=[], period=0, period_steps=0, period_growths=0,audit_count=0,
-                training_round=0, paid_work={},data_root=root(manifest['data_root']), assignment=None)
+                training_round=0, paid_work={},data_root=root(manifest['data_root']), assignment=None,
+                update_check_count=0)
     if 'lifecycle' in manifest:
         lifecycle.initialize(base)
     invariant(base)
@@ -222,6 +223,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         'challenge':{'claim_id','stage','challenge_kind','object_root'},
         'upload':{'claim_id','object_root','index','data'},
         'seal':{'claim_id','object_root'},'resolve':{'claim_id'},
+        'refute_update':{'claim_id','stage','tensor_index','witness'},
         **lifecycle.FIELDS,
     }
     kind = body.get('kind')
@@ -366,7 +368,20 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
             raise ValueError('No matching pending claim')
         metadata = Metadata(claim['metadata'])
         record = metadata.json(claim['record_root'])
-        if kind=='challenge':
+        if kind=='refute_update':
+            if claim.get('kind','training') != 'training' or claim['challenge'] or s['height']>claim['deadline']:
+                raise ValueError('Compact update refutation requires an unchallenged live training claim')
+            from .update_witness import check
+            verdict = check(metadata,claim['record_root'],body['stage'],body['tensor_index'],body['witness'])
+            debit(p['challenge_bond'])
+            s['update_check_count'] += 1
+            if verdict['valid']:
+                # A disproved accusation cannot extend or reset the work slot.
+                s['burned'] += p['challenge_bond']
+            else:
+                claim['challenge'] = {'owner':owner,'bond':p['challenge_bond'],'kind':'compact_update'}
+                close(s,False,'objective update witness: '+verdict['mismatch'])
+        elif kind=='challenge':
             if claim['challenge'] or s['height']>claim['deadline']:
                 raise ValueError('Challenge is already active or too late')
             growth = record.get('kind')=='growth'

@@ -219,3 +219,14 @@ class Shard(nn.Module):
                 tensors = {key:block.w(key) for key in BLOCK_KEYS}
             values[name] = {'root':store.put_tensors(tensors), 'parameters':sum(v.numel() for v in tensors.values())}
         return values
+
+    def tensor_items(self):
+        """Stable component/name ordering for committed optimizer operands."""
+        for name in sorted(self.names):
+            if name == 'embed':
+                yield name, 'weight', self.embedding.weight
+            elif name == 'norm':
+                yield name, 'weight', self.final_norm
+            else:
+                for key in sorted(BLOCK_KEYS):
+                    yield name, key, self.blocks[name].w(key)

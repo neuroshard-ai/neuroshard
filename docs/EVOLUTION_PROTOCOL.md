@@ -2,6 +2,8 @@
 
 NeuroShard now has executable experiments for full-model training, fresh/replay data, model growth, and optimistic native settlement. The public 0.4.0 network still serves its existing adapter model. The evolving-model components have not yet been integrated into a public network.
 
+The [scaling design](SCALING_DESIGN.md) sets the direction for compute groups, funded complete auditing and growth backed by sustained capacity. The opt-in [compact optimizer extension](COMPACT_UPDATE_DISPUTES.md) can refute an inconsistent SGD assertion with bounded evidence. It leaves full-stage auditing in place for gradients, tensor/file relationships and other operators.
+
 The published [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) distinguishes the target protocol from what has actually run. Manuscripts and generated measurements are maintained outside the current code tree; the evidence links below preserve the recorded historical revision.
 
 ## What runs

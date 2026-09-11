@@ -10,7 +10,13 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Reproduction scripts and compact input plans are included; the [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) and linked historical measurements are published separately.
 
-These tools have not been published as a new PyPI version or activated on the public chain. Native rolling-data activation, verifiable quality promotion and paid inference for evolving models remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
+An opt-in [native lifecycle](docs/NATIVE_LIFECYCLE.md) now integrates curated rolling-data admission, challengeable multi-window evaluation, serving decisions and bounded paid generation on isolated networks. Its [results](docs/NATIVE_LIFECYCLE_RESULTS.md) include a rejected real-model promotion and continued paid training after a second data admission without resetting the ledger.
+
+The opt-in [compact optimizer extension](docs/COMPACT_UPDATE_DISPUTES.md) adds Merkle commitments around unchanged float32 SGD. A transaction can refute an inconsistent update using at most 32 KiB of witness data without model-artifact retrieval or full neural replay by validators. False accusations burn collateral without extending the deadline. Complete replay still checks gradients and tensor/file relationships; consistent invented gradients explicitly remain outside the compact path's coverage. No second issuance is authorized by adding commitments to an existing numerical task.
+
+The [scaling design](docs/SCALING_DESIGN.md) prioritizes complete audit coverage, artifact replication, serving and sustained training capacity before model growth. It separates implemented mechanisms from the remaining audit economy, compute-group scheduling and public-independence requirements.
+
+These tools have not been published as a new PyPI version or activated on the public chain. Public worker admission, funded auditing, artifact retention and release integration remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
 
 ## 0.4.0 — LLM training and native paid inference (experimental)
 

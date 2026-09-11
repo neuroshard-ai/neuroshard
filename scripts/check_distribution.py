@@ -17,6 +17,7 @@ REQUIRED = {
     "neuroshard/evolution/text.py",
     "neuroshard/evolution/lifecycle.py", "neuroshard/evolution/cohorts.py",
     "neuroshard/evolution/forward.py",
+    "neuroshard/evolution/update_witness.py",
 }
 REQUIRED_SOURCE = {
     "docs/eval/data/input.txt", "docs/llm-requirements.txt",
@@ -35,6 +36,9 @@ REQUIRED_SOURCE = {
     "scripts/continue_lifecycle_native.py",
     "scripts/resume_lifecycle_admission.py",
     "scripts/native_cohort_state.py", "tests/evolution/test_cohort_state.py",
+    "scripts/experiment_update_witness.py", "scripts/experiment_update_native.py",
+    "tests/evolution/test_update_witness.py", "docs/COMPACT_UPDATE_DISPUTES.md",
+    "docs/SCALING_DESIGN.md",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 
