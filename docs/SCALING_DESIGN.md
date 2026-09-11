@@ -78,7 +78,7 @@ Two simple checks constrain any proposal:
 - A fraud-only observer with replay cost `C`, probability `p` of being the successful rewarded detector, and bounty `R` has expected net reward `p*R - C`. As successful fraud becomes rare, that cannot cover a fixed positive cost. Paying honest auditing therefore belongs in the normal budget.
 - Under genuinely independent draws from a population with adversarial resource fraction `a`, `k` complete auditors all being adversarial has probability `a^k`. With fully correlated ownership or one shared replay supplier, the corresponding risk can remain `a`. For `a = 0.25` and `k = 4`, those are 0.39% and 25%, respectively. Neither number describes the current single-operator deployment, and neither is a consensus-security theorem.
 
-Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. Until this service has independent participants and a tested settlement rule, the experiment relies on operated observers and must say so. The current native reward split has not been changed to an unvalidated audit market.
+Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. The [funded candidate](FUNDED_AUDITING.md) now reserves existing tokens for selected auditors and gates all execution claim kinds on complete-coverage reports. Its daemon replays the entire graph, but signatures do not prove that work occurred independently. This remains an operated service with explicit sponsor selection; the public 0.4.0 reward split is unchanged.
 
 ## Membership and assignment
 

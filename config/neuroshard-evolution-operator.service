@@ -1,0 +1,27 @@
+[Unit]
+Description=NeuroShard funded full-model candidate operator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=neuroshard
+Group=neuroshard
+WorkingDirectory=/opt/neuroshard/candidate
+Environment=ATEN_CPU_CAPABILITY=default
+Environment=MKL_ENABLE_INSTRUCTIONS=SSE4_2
+ExecStart=/opt/neuroshard/candidate/venv/bin/python scripts/run_lifecycle_operator.py --config /etc/neuroshard/candidate-operator.json
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/neuroshard/candidate
+MemoryMax=4G
+CPUQuota=100%
+
+[Install]
+WantedBy=multi-user.target
