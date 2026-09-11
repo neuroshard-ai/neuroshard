@@ -1,4 +1,5 @@
 import importlib.util
+import fcntl
 from pathlib import Path
 
 import pytest
@@ -42,6 +43,20 @@ def test_prepare_retokenizes_complete_documents_and_mirrors_all_evidence(tmp_pat
     assert preparation.prepare(corpus,'c'*64,{},sources,4)['data_root'] == prepared['data_root']
     advanced = {key:96 for key in sources}
     assert preparation.prepare(corpus,prepared['data_root'],advanced,sources,4)['status'] == 'needs_more_data'
+    corpus.db.close()
+
+
+def test_concurrent_collection_cannot_reuse_or_regress_the_source_cursor(tmp_path):
+    store = Objects(tmp_path/'objects')
+    codec = TextCodec(tokenizer(),store)
+    corpus = TextCorpus(tmp_path/'corpus',store,codec)
+    key = corpus.register(source('train'))
+    with (corpus.home/'collection.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        with pytest.raises(ValueError,match='Another collector owns'):
+            corpus.collect(key,1,rows=[conversation(1,answer=8)])
+        assert corpus.db.execute('SELECT cursor FROM sources WHERE id=?',(key,)).fetchone()[0] == 0
+    assert corpus.collect(key,1,rows=[conversation(1,answer=8)])['end'] == 1
     corpus.db.close()
 
 
