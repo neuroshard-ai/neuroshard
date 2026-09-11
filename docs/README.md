@@ -9,6 +9,7 @@
 | [Data pipeline](DATA_PIPELINE.md) | Immutable ingestion, collection and verification. |
 | [Node deployment](DEPLOYMENT.md) | Pinned runtimes, service templates, recovery and monitoring. |
 | [Model evolution](EVOLUTION_PROTOCOL.md) | Experimental full-model training, growth, verification and reproduction. |
+| [Text protocol](TEXT_PROTOCOL.md) | Model/tokenizer identity, response windows, document evaluation and text conformance. |
 | [Inherited ledger rules](PROTOCOL_CANDIDATE_V2.md) | Reference consensus, accounting, bonds and dispute assumptions. |
 | [LLM experiments](LLM_EXPERIMENTS.md) | Measured outcomes, including failures, with historical evidence links. |
 | [Research requirements](RESEARCH_ROADMAP.md) | Remaining conditions for a stronger public deployment. |

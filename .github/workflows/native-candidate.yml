@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -r docs/llm-requirements.txt pytest==9.1.1 boto3==1.41.5 ijson==3.4.0 pyarrow==25.0.1
+      - run: python -m pip install -r docs/evolution-requirements.txt pytest==9.1.1 boto3==1.41.5 ijson==3.4.0 pyarrow==25.0.1
       - run: python -m pip install --no-deps .
       - run: python -m pytest -q
         env:

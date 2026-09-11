@@ -10,7 +10,7 @@ include src/neuroshard/client/consensus/go.mod src/neuroshard/client/consensus/g
 # A source distribution must contain its tests, fixtures and execution profiles.
 recursive-include tests *.py
 recursive-include docs *.md
-include docs/llm-requirements.txt docs/demo-requirements.txt docs/eval/data/input.txt
+include docs/llm-requirements.txt docs/demo-requirements.txt docs/evolution-requirements.txt docs/eval/data/input.txt
 recursive-include config *.json *.service *.timer *.conf
 recursive-include networks *.json *.sha256
 recursive-include scripts *.py *.sh

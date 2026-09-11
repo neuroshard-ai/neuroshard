@@ -24,8 +24,13 @@ def unpack(batch, vocabulary):
     return ids,labels
 
 
-def from_windows(store,roots):
+def from_windows(store,roots,tokenizer_root=None):
     windows=[store.json(key) for key in roots]
+    identities={window.get('tokenizer_root') for window in windows}
+    if len(identities)>1 or (tokenizer_root is not None and identities!={tokenizer_root}):
+        raise ValueError('Token windows belong to different tokenizer contracts')
+    if any(identity is not None for identity in identities) and any('labels' not in window for window in windows):
+        raise ValueError('Text-contract windows require explicit response targets')
     ids=[window['tokens'] for window in windows]
     if any('labels' in window for window in windows):
         return {'input_ids':ids,'labels':[window.get('labels',window['tokens']) for window in windows]}
