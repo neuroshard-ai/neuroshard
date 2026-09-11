@@ -33,6 +33,7 @@ REQUIRED_SOURCE = {
     "scripts/check_validator_topology.py", "tests/evolution/test_validator_topology.py",
     "scripts/review_native_cohort.py", "tests/evolution/test_cohort_review.py",
     "scripts/continue_lifecycle_native.py",
+    "scripts/resume_lifecycle_admission.py",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 

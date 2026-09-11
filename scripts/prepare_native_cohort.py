@@ -17,7 +17,21 @@ from neuroshard.evolution.text import TextCodec
 from neuroshard.evolution.verification import Metadata
 
 
-def prepare(corpus, previous, cursors, source_ids, training_documents=32):
+def exclusions(proposals):
+    """Derive consumed identities from retained, hash-checked cohort proposals."""
+    documents, batches = set(), set()
+    for prepared in proposals:
+        metadata = cohorts.metadata(prepared['metadata'])
+        value = metadata.json(root(prepared['data_root']))
+        if value['format'] != cohorts.FORMAT:
+            raise ValueError('Unsupported prior cohort')
+        for document in value['documents']:
+            documents.add(root(document['id']))
+            batches.update(root(key) for key in document['batches'])
+    return documents, batches
+
+
+def prepare(corpus, previous, cursors, source_ids, training_documents=32, *, consumed_documents=(), consumed_batches=()):
     root(previous)
     integer(training_documents,1,128)
     if not 1 <= len(source_ids) <= 8 or len(set(source_ids)) != len(source_ids):
@@ -26,7 +40,9 @@ def prepare(corpus, previous, cursors, source_ids, training_documents=32):
     values, documents, windows = {}, [], []
     quotas = {'train':training_documents,'retention':32,'fresh':32}
     selected = dict.fromkeys(quotas,0)
-    rejected = {'multi_window':0,'incomplete':0,'duplicate_tokens':0,'protected_test':0,'outside_selected_roles':0}
+    rejected = {'multi_window':0,'incomplete':0,'duplicate_tokens':0,'protected_test':0,'outside_selected_roles':0,
+                'consumed_document':0,'consumed_tokens':0}
+    old_documents, old_batches = set(consumed_documents), set(consumed_batches)
     seen = set()
     def add(value):
         key = store.put_json(value)
@@ -45,6 +61,9 @@ def prepare(corpus, previous, cursors, source_ids, training_documents=32):
         rows = corpus.db.execute('SELECT id,role,row,object FROM documents WHERE source=? AND row>=? AND row<? ORDER BY row,id',
                                  (source_id,start,end)).fetchall()
         for identity,role,position,document_root in rows:
+            if identity in old_documents:
+                rejected['consumed_document'] += 1
+                continue
             if role == 'test':
                 rejected['protected_test'] += 1
                 continue
@@ -76,6 +95,9 @@ def prepare(corpus, previous, cursors, source_ids, training_documents=32):
                 continue
             batches = [{'input_ids':[window['tokens']],'labels':[window['labels']]} for window in prepared['windows']]
             keys = [digest(canonical(batch)) for batch in batches]
+            if any(key in old_batches for key in keys):
+                rejected['consumed_tokens'] += 1
+                continue
             if len(set(keys))!=len(keys) or any(key in seen for key in keys):
                 rejected['duplicate_tokens'] += 1
                 continue
@@ -121,10 +143,14 @@ def main():
     parser.add_argument('--cursors',type=Path,required=True,help='JSON source->cursor mapping from native /lifecycle')
     parser.add_argument('--output',type=Path,required=True,help='New local proposal/report file')
     parser.add_argument('--collect-records',type=int,default=0,help='Fetch at most this many records per configured source (0–1024)')
+    parser.add_argument('--exclude-cohort',type=Path,action='append',default=[],help='Previously admitted proposal file; repeat for retained admission history')
     args = parser.parse_args()
     if args.output.exists():
         raise ValueError('Use a new output path before collecting additional records')
     count = integer(args.collect_records,0,1024)
+    if any(path.stat().st_size > 8*1024*1024 for path in args.exclude_cohort):
+        raise ValueError('Prior cohort file exceeds review bounds')
+    consumed_documents, consumed_batches = exclusions(json.loads(path.read_bytes()) for path in args.exclude_cohort)
     config = json.loads(args.config.read_bytes())
     base = args.config.resolve().parent
     def local(value):return base/Path(value).expanduser()
@@ -145,7 +171,8 @@ def main():
                 collected = corpus.collect(source,min(count,remaining))
                 print(json.dumps({'phase':'collected','source':source,'start':collected['start'],
                                   'end':collected['end'],'rejected':collected['rejected']}),flush=True)
-        result = prepare(corpus,args.previous_data_root,cursors,sources,config.get('training_documents',32))
+        result = prepare(corpus,args.previous_data_root,cursors,sources,config.get('training_documents',32),
+                         consumed_documents=consumed_documents,consumed_batches=consumed_batches)
         with args.output.open('x') as file:file.write(json.dumps(result,indent=2)+'\n')
         print(json.dumps({'status':result['status'],'data_root':result.get('data_root'),'report':result['report'],'output':str(args.output)},indent=2))
     finally:

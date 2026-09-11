@@ -92,3 +92,29 @@ def test_public_hash_partition_cannot_be_relabeled_by_a_proposer(proposal):
     changed['metadata'][changed['data_root']] = cohort
     with pytest.raises(ValueError,match='held-out partition'):
         reviewer.review(store,changed,policy)
+
+
+def test_new_documents_cannot_reintroduce_already_admitted_token_windows(proposal,tmp_path):
+    store,first,policy,_ = proposal
+    cohort = first['metadata'][first['data_root']]
+    original = store.json(cohort['documents'][0]['object'])['messages']
+    corpus = TextCorpus(tmp_path/'corpus',store,TextCodec.load(store,policy['tokenizer_root']))
+    sources = [window['source'] for window in cohort['windows']]
+    for group,key in enumerate(sources):
+        rows = [conversation(10000+1000*group+i,answer=8) for i in range(96)]
+        if group == 0:
+            # A distinct multi-turn document retains the exact first response
+            # window of an earlier document; document-ID dedup is insufficient.
+            rows[0] = {'messages':original+conversation(31337,answer=8)['messages']}
+        assert corpus.collect(key,96,rows=rows)['end'] == 192
+    cursors = dict.fromkeys(sources,96)
+    unfiltered = preparation.prepare(corpus,first['data_root'],cursors,sources,4)
+    documents,batches = preparation.exclusions([first])
+    assert unfiltered['status']=='prepared_for_review'
+    with pytest.raises(ValueError,match='repeat an existing token batch'):
+        reviewer.review(store,unfiltered,policy,consumed_documents=documents,consumed_batches=batches)
+    filtered = preparation.prepare(corpus,first['data_root'],cursors,sources,4,
+        consumed_documents=documents,consumed_batches=batches)
+    assert filtered['status']=='prepared_for_review' and filtered['report']['rejected']['consumed_tokens'] >= 1
+    assert reviewer.review(store,filtered,policy,consumed_documents=documents,consumed_batches=batches)['mechanical_evidence_verified']
+    corpus.db.close()

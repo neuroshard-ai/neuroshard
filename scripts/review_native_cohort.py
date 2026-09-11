@@ -16,7 +16,8 @@ from neuroshard.evolution.schema import integer, root
 from neuroshard.evolution.text import TextCodec
 
 
-def review(store, prepared, policy, upstream=None):
+def review(store, prepared, policy, upstream=None, *, consumed_documents=(), consumed_batches=()):
+    consumed_documents,consumed_batches = set(consumed_documents),set(consumed_batches)
     metadata = cohorts.metadata(prepared['metadata'])
     key = root(prepared['data_root'])
     value = metadata.json(key)
@@ -35,7 +36,7 @@ def review(store, prepared, policy, upstream=None):
     state = {'data_root':value['previous'], 'manifest':{'lifecycle':{
         'tokenizer_root':codec.root, 'vocabulary':codec.profile['vocabulary'], 'steps_per_cohort':1}},
         'lifecycle':{'cursors':{w['source']:w['start'] for w in value['windows']},
-                     'seen_documents':{}, 'seen_batches':{}, 'active':None}}
+                     'seen_documents':dict.fromkeys(consumed_documents), 'seen_batches':dict.fromkeys(consumed_batches), 'active':None}}
     value, roles = cohorts.validate(metadata, key, state)
     for window in value['windows']:
         if window['source'] not in allowed:
@@ -91,10 +92,11 @@ def review(store, prepared, policy, upstream=None):
         'documents':{role:len(rows) for role,rows in roles.items()},
         'windows':{role:sum(len(d['batches']) for d in rows) for role,rows in roles.items()},
         'raw_evidence_bytes':evidence_bytes, 'upstream_documents_checked':checked,
+        'excluded_prior_documents':len(consumed_documents), 'excluded_prior_windows':len(consumed_batches),
         'upstream_checked':upstream is not None, 'curation_decision_required':True,
         'scope':'local policy, original bytes and tokenizer correspondence; upstream checking trusts the pinned repository service',
-        'not_checked':['live parent/cursors/consumed history and quorum',
-            'historical or semantic contamination beyond this cohort',
+        'not_checked':['completeness of supplied admission history; live parent/cursors and quorum',
+            'semantic contamination beyond the within-cohort heuristic',
             'license rights, truth, harmful content, usefulness or model quality']}
 
 
@@ -104,10 +106,15 @@ def main():
     parser.add_argument('--config',type=Path,required=True,help='Reviewer-controlled native data policy; never accept a submitter policy blindly')
     parser.add_argument('--cache',type=Path,help='Private directory for independently verified upstream Parquet files')
     parser.add_argument('--offline',action='store_true',help='Skip upstream source checks; report is explicitly incomplete')
+    parser.add_argument('--exclude-cohort',type=Path,action='append',default=[],help='Previously admitted proposal file; repeat for retained admission history')
     args = parser.parse_args()
     if args.proposal.stat().st_size > 8*1024*1024 or args.config.stat().st_size > 65536:
         raise ValueError('Review input exceeds its bounded size')
     policy = json.loads(args.config.read_bytes())
+    from prepare_native_cohort import exclusions
+    if any(path.stat().st_size > 8*1024*1024 for path in args.exclude_cohort):
+        raise ValueError('Prior cohort file exceeds review bounds')
+    consumed_documents,consumed_batches = exclusions(json.loads(path.read_bytes()) for path in args.exclude_cohort)
     store = Objects(args.config.resolve().parent/Path(policy['objects']).expanduser())
     prepared = json.loads(args.proposal.read_bytes())
     upstream = None
@@ -117,7 +124,8 @@ def main():
         from neuroshard.dataflow.collect import upstream_rows
         args.cache.mkdir(parents=True,exist_ok=True)
         upstream = lambda spec,start,count: upstream_rows(spec,args.cache,start,count)
-    print(json.dumps(review(store,prepared,policy,upstream),indent=2))
+    print(json.dumps(review(store,prepared,policy,upstream,
+        consumed_documents=consumed_documents,consumed_batches=consumed_batches),indent=2))
 
 
 if __name__ == '__main__':main()

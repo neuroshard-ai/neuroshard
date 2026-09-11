@@ -28,6 +28,8 @@ Each document contains 1–4 labeled response windows. Evaluation windows share 
 
 The genesis fixes 1–64 training steps per cohort. Without history every scheduled batch is fresh and unique. Subsequent cohorts take `floor(steps / 4)` replay batches from the preceding admitted training cohort, spread through the schedule; the rest are fresh. Ranking is deterministic from the cohort root. This is a bounded replay baseline, not a representative lifelong-memory reservoir.
 
+The admitted training pool can contain more windows than the step budget uses. Activation consumes its fresh identities even when particular windows are not selected for training. The replay pool is the preceding **admitted** training pool, so a replay window need not have been trained previously. This coarse sampling policy must be distinguished from rehearsal of demonstrated past learning. Data utilization, a longer-lived memory policy and domain-specific retention tests require further experiments before a continual-learning claim.
+
 `reserve` binds the active data root, exact schedule position and batch, as well as the model, round and worker reward identities. Activation cannot change an in-flight job. The original daily/block-period issuance budget also applies. Once the cohort's steps settle, more reservations fail until evaluation completes or expires and another fresh cohort activates. Repeating the old corpus forever cannot renew the budget.
 
 A stalled cohort has an absolute training deadline. Once outstanding work has ended, expiry closes the cohort and restores the serving model as the learning parent. Reservations and claims retain their own bounded deadlines. Consumed data and paid-work identities are not erased on timeout or rollback.
@@ -92,6 +94,8 @@ python scripts/prepare_native_cohort.py \
 
 The invocation scans at most 256 records per configured source and never goes beyond 4,096 unadmitted rows per source. A `needs_more_data` report includes rejected/selected counts; it does not emit an incomplete transaction. With a new output filename, a later invocation can add another bounded tranche using the same native cursor anchor. The durable corpus recovers previously collected documents even if an earlier export failed. `--collect-records 0` only prepares already collected data.
 
+For every subsequent proposal, supply retained, previously admitted proposal files with repeated `--exclude-cohort ./admitted-1.json` arguments. Use the same exclusions during review. Different documents can produce identical cropped token windows; source cursors and document-ID checks alone do not establish fresh token data. The preparer skips documents containing consumed windows and selects replacements. Keep the complete admission history for this check; omitted history can still cause authoritative native rejection. A production coordinator must index finalized admissions durably rather than depend on a manually maintained file list.
+
 The exporter retains up to four response windows per document. It reports training omissions and requires complete evaluation responses. The bounded response/context policy still introduces selection bias. Do not treat its example Smol-SmolTalk source as a diverse lifelong learning corpus. Source authenticity, licensing, harmful/low-quality content, synthetic-data proportions and meaningful evaluation still require independent curation. The explicit Python `publish` helper mirrors the selected raw documents, batches, provenance and tokenizer to a content-addressed destination with read-back checks; copying an object does not approve it.
 
 Before voting, each reviewer uses their own source/tokenizer policy and an independently obtained copy of the raw artifacts:
@@ -132,6 +136,8 @@ python scripts/continue_lifecycle_native.py --home .neuroshard/lifecycle-check
 ```
 
 Use the exact original package source, and supply the same `--workers-config` for an HTTP-worker trial. The continuation refuses running node ports, missing original keys/state, an unexpected ledger position, or an existing continuation result. It checks fresh/replay assignments, another four paid steps, unchanged serving identity pending evaluation, and common application hashes. It stops its own node processes on exit. It is an integration driver, not a fault-tolerant public coordinator or an unlimited training service.
+
+The real trial initially stopped at its second admission because its preparation omitted prior token-window exclusions. `resume_lifecycle_admission.py` is a narrow recovery driver for that exact recorded boundary: it verifies the original completed training/evaluation/inference prefix, submits a corrected second proposal, and completes quorum/restart checks using the retained node homes. It records the interruption in its result. It never changes genesis or generates replacement keys; it is not a general migration or automatic retry command.
 
 ## Requirements before public cutover
 
