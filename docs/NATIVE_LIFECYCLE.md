@@ -117,4 +117,13 @@ The code closes several protocol gaps, but the public release must still establi
 
 Until those conditions have evidence, this profile belongs on isolated integration networks. The current public testnet remains a separate experimental service.
 
+The read-only topology check uses actual native voting power and an explicit inventory of host/operator labels:
+
+```bash
+python scripts/check_validator_topology.py --rpc http://127.0.0.1:26657 \
+  --inventory ./validator-inventory.json
+```
+
+The inventory is `{"validators":[{"consensus_key":"64_LOWERCASE_HEX_CHARACTERS","host":"host-a","operator":"operator-a"}]}` with one entry per current voting key. The command pins one query height for pagination, rejects incomplete/duplicate inventories, and exits with status 2 if losing any one declared host or operator leaves at most two thirds of voting power. Labels are declarations that require independent verification. The check tests quorum topology, not the other release conditions.
+
 The design keeps block validity deterministic as required by [CometBFT's ABCI application contract](https://github.com/cometbft/cometbft/blob/v0.38.26/spec/abci/abci%2B%2B_app_requirements.md). Keeping original-source data and bounded replay is motivated in part by documented risks of [recursive synthetic-data training](https://arxiv.org/abs/2305.17493) and [catastrophic forgetting](https://arxiv.org/abs/1811.11682); neither citation establishes that this particular learning policy works.
