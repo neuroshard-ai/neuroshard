@@ -37,6 +37,8 @@ Admission should describe a **service obligation**, not a self-reported machine 
 
 The planner must account for weights, gradients, optimizer state, peak activations, temporary buffers and runtime overhead. The current 48M-parameter worker bound is not a memory proof. Serving capacity and complete replay capacity must be tested for a proposed larger model as well as training capacity.
 
+The current profile permits at most 64 partitions, caps each worker at 48M parameters, bounds individual artifacts at 256 MiB and training metadata at 512 KiB. Adding peers does not remove these bounds. A much larger model or a new numerical layout needs an explicitly versioned profile and new conformance measurements; enlarging constants without measuring verification and availability is not a scaling result.
+
 Before proposing growth, require all of the following under a published policy:
 
 1. Sustained completion and retrieval measurements over a defined observation window, including failed and timed-out jobs.

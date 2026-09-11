@@ -95,7 +95,7 @@ def verify_case(case):
             'maximum_check_seconds':max(times),'repetitions':len(times)}
 
 
-def verify_report(path, expected_sha256):
+def verify_report(path, expected_sha256, objects=None):
     raw = path.read_bytes()
     if len(raw) > 4*1024*1024 or digest(raw) != expected_sha256:
         raise ValueError('Portable report exceeds bounds or differs from its pinned hash')
@@ -105,9 +105,20 @@ def verify_report(path, expected_sha256):
     probe = numerical_probe()
     if probe != report['numerical_probe']:
         raise ValueError('Numerical stress vectors differ from the originating CPU')
-    return {'report_sha256':expected_sha256,'source_hash':code_hash(),'runtime':runtime_check(),'numerical_probe':probe,
-            'cases':{name:verify_case(case) for name,case in report['portable_cases'].items()},
-            'scope':'portable chunk refutations only; no full-model replay on this verifier'}
+    result = {'report_sha256':expected_sha256,'source_hash':code_hash(),'runtime':runtime_check(),'numerical_probe':probe,
+              'cases':{name:verify_case(case) for name,case in report['portable_cases'].items()},
+              'scope':'portable chunk refutations only; no full-model replay on this verifier'}
+    if objects is not None:
+        store = Objects(objects)
+        result['full_stage_oracles'] = {}
+        for name,case in report['portable_cases'].items():
+            started = time.perf_counter()
+            verdict = audit(store,Metadata(case['metadata']),case['record_root'],case['stage'])
+            if verdict['valid'] is not case['expected_valid']:
+                raise ValueError('Full-stage replay disagrees with the expected verdict')
+            result['full_stage_oracles'][name] = {**verdict,'seconds':time.perf_counter()-started}
+        result['scope'] = 'portable witnesses and complete replay of their selected stage; other stages are not replayed by this command'
+    return result
 
 
 def run(args):
@@ -218,7 +229,7 @@ if __name__=='__main__':
     args = parser.parse_args()
     if args.verify:
         if not args.expected_sha256:parser.error('--verify requires --expected-sha256')
-        print(json.dumps(verify_report(args.verify,args.expected_sha256),indent=2))
+        print(json.dumps(verify_report(args.verify,args.expected_sha256,args.objects),indent=2))
     else:
         if not all((args.home,args.objects,args.model_root,args.batch)) or not 1<=args.repetitions<=5:
             parser.error('Supply --home, --objects, --model-root, --batch and 1–5 repetitions')
