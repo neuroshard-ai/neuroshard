@@ -21,11 +21,11 @@ from neuroshard.evolution import cohorts, forward, lifecycle
 from neuroshard.evolution.app import code_hash
 from neuroshard.evolution.objects import Objects, digest
 from neuroshard.evolution.pipeline import Pipeline, LocalEndpoint
-from neuroshard.evolution.model import place
+from neuroshard.evolution.model import place, grow
 from neuroshard.evolution.text import TextCodec
 from neuroshard.evolution.worker import Worker
 from neuroshard.evolution.settlement import PARAMS, CHUNK_BYTES
-from neuroshard.evolution.verification import bundle, Metadata, audit
+from neuroshard.evolution.verification import bundle, Metadata, audit, audit_growth
 from neuroshard.lab.app import native_parameters
 from experiment_evolution_native import tiny_record, until
 from native_rpc import broadcast_finalized
@@ -77,9 +77,9 @@ def run(args):
         cursors = {window['source']:window['start'] for window in cohort['windows']}
         eos = [codec.tokenizer.eos_token_id]
         prompt = codec.prompt([{'role':'user','content':'What is the capital of France?'}])
-        capacities = [48000000]*3
+        capacities = [48000000]*(4 if args.growth_layers else 3)
     else:
-        if any((args.objects,args.cohort,args.next_cohort,args.workers_config)):
+        if any((args.objects,args.cohort,args.next_cohort,args.workers_config,args.growth_layers)):
             raise ValueError('External data or workers require --model-root')
         initial = tiny_record(home,store)['parent']
         model = store.json(initial)
@@ -90,8 +90,8 @@ def run(args):
     endpoints = None
     if args.workers_config:
         from neuroshard.evolution.transport import Endpoint
-        workers = json.loads(args.workers_config.read_bytes())['workers'][:count]
-        if len(workers)!=count:raise ValueError('Not enough configured workers')
+        workers = json.loads(args.workers_config.read_bytes())['workers'][:len(capacities)]
+        if len(workers)!=len(capacities):raise ValueError('Not enough configured workers')
         endpoints = [Endpoint(w['url'],(args.workers_config.resolve().parent/Path(w['token_file']).expanduser()).read_text().strip(),store) for w in workers]
     config = initialize(home/'native',args.base_port,str(args.engine.resolve()))
     profile = {'format':lifecycle.FORMAT,'tokenizer_root':model['tokenizer_root'],'vocabulary':model['config']['vocab_size'],'eos_ids':eos,
@@ -143,7 +143,8 @@ def run(args):
         return protocol.transaction_id(signed)
     def settled():return until(lambda:s if (s:=query())['candidate'] is None else None,120)
     def pipe(root,name,step=0):
-        workers = endpoints or [LocalEndpoint(Worker(home/(name+str(i)),store)) for i in range(count)]
+        count = len(place(store.json(root),capacities))
+        workers = endpoints[:count] if endpoints else [LocalEndpoint(Worker(home/(name+str(i)),store)) for i in range(count)]
         return Pipeline(store,root,workers,capacities,'native-'+genesis['chain_id']+'-'+name,start_step=step)
     def emit(phase,**values):print(json.dumps({'phase':phase,**values}),flush=True)
     audits = 0
@@ -182,8 +183,17 @@ def run(args):
         send(owners[2],'vote_data',proposal_id=proposal,approve=True)
         until(lambda:query('/data'))
         emit('data_activated',data_root=key)
+        if args.growth_layers:
+            grown, grown_model = grow(initial,store,args.growth_layers)
+            metadata = Metadata({initial:store.json(initial),grown:grown_model})
+            assert audit_growth(store,metadata,initial,grown)['valid']
+            send(owners[0],'grow',parent=initial,model_root=grown,metadata=metadata.values,capacities=capacities)
+            settled()
+            assert query()['model_root']==grown and query()['issued']==0
+            emit('growth_settled_without_issuance',parameters=grown_model['parameters'])
         for step in range(4):
             status = query()
+            count = len(place(store.json(status['model_root']),capacities))
             send(owners[0],'reserve',parent=status['model_root'],round=step,workers=[o.public_key for o in owners[:count]])
             reservation = query()['assignment']
             worker_pipe = pipe(status['model_root'],'train'+str(step),step)
@@ -235,7 +245,7 @@ def run(args):
         forged['token_ids'] = [wrong]
         forged_root = store.put_json(forged)
         send(owners[1],'respond',job_id=job_id,record_root=forged_root,metadata=forward.bundle(store,forged_root))
-        replay_bytes = dispute(count)
+        replay_bytes = dispute(len(record['traces'])-1)
         assert query()['settled'][-1]['reason'] == 'objective replay mismatch: forward evaluation result'
         send(owners[1],'respond',job_id=job_id,record_root=good,metadata=check(good))
         settled()
@@ -270,6 +280,8 @@ def run(args):
             'genesis_hash':digest(canonical(genesis)),'fixture':'real-model' if real else 'synthetic-10384-parameters',
             'validator_physical_hosts':1,'worker_transport':'http' if endpoints else 'local-single-process',
             'operators':1,'validators':4,'independent_stage_replays':audits,'parameters':model['parameters'],
+            'candidate_parameters':store.json(evaluation['candidate'])['parameters'],
+            'growth_layers':args.growth_layers,'declared_capacities':capacities,
             'fresh_cohorts_activated':2,'training_steps':4,'issued_atoms':4_000_000,
             'serving_decision':decision,'llm_quality_improvement_claimed':False,
             'inference':paid,'forged_inference_replay_bytes':replay_bytes,
@@ -292,4 +304,5 @@ if __name__ == '__main__':
     parser.add_argument('--cohort',type=Path)
     parser.add_argument('--next-cohort',type=Path)
     parser.add_argument('--workers-config',type=Path)
+    parser.add_argument('--growth-layers',type=int,default=0,choices=range(0,5),help='Real-model trial: add up to four identity blocks before training')
     run(parser.parse_args())
