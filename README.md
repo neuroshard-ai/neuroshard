@@ -50,12 +50,4 @@ ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
 
 The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. The `evolution` package contains the separately tested continual-model implementation. Some earlier modules remain for source compatibility; they do not define the current public entry points. See the [runtime map](src/neuroshard/README.md).
 
-## Repository scope
-
-This repository contains the open-source protocol and client, tests, reproducibility tools, network manifests, example configuration and technical documentation. Operating a node does not require the project's website source or a website account.
-
-Website publishing projects, manuscripts, historical logs and measurement dumps are maintained outside the tracked tree. The paper remains available on neuroshard.com. Existing evidence links point to an immutable historical revision; removing generated material from the current tree does not erase those results. Local recovery material belongs in the ignored `archive/` directory, while keys and running node state belong in ignored homes such as `.neuroshard/`. Neither is included in releases.
-
-Versions 0.2.x and 0.3's tiny reference chain are separate histories; registration tokens and old balances do not migrate. Never reuse an initialized node home for a different genesis. [Documentation](docs/README.md) explains the retained reference fixtures and repository checks.
-
 [Contribute](CONTRIBUTING.md) · [Governance](GOVERNANCE.md) · [Security](SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) · [API](docs/API.md) · [Release notes](RELEASES.md) · [Third-party provenance](THIRD_PARTY.md) · [Apache 2.0](LICENSE)
