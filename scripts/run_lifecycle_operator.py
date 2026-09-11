@@ -77,6 +77,9 @@ class Operator:
             raise ValueError('Set a persistent absolute training-round cap and minimum liquid reserve')
         if type(budget.get('allow_inference_subsidy', False)) is not bool:
             raise ValueError('An inference subsidy requires an explicit boolean policy')
+        limit = budget.get('inference_token_limit', 1)
+        if type(limit) is not int or not 0 <= limit <= 64:
+            raise ValueError('Set an inference token limit between zero and 64; zero disables serving')
 
     def send(self, operation, kind, **fields):
         self.outbox.send(operation, kind, **fields)
@@ -181,8 +184,13 @@ class Operator:
             return {'phase':'training_reserved', 'round':status['training_round']}
         jobs = self.query('/inference')['jobs']
         underpriced = []
+        oversized = []
         for key, job in sorted(jobs.items(), key=lambda item:(item[1]['expires'],item[0])):
             if job['provider'] != self.owner.public_key or job['claim_id'] or status['height'] > job['expires']:
+                continue
+            limit = self.config['budget'].get('inference_token_limit', 1)
+            if job['max_tokens'] > limit:
+                oversized.append({'job':key, 'requested_tokens':job['max_tokens'], 'operator_token_limit':limit})
                 continue
             root = job['model_root']
             partitions = len(place(self.store.json(root), self.capacities))
@@ -203,6 +211,8 @@ class Operator:
             return {'phase':'inference_claimed', 'job':key}
         if underpriced:
             return {'phase':'inference_requires_explicit_subsidy_or_new_price_profile', 'jobs':underpriced}
+        if oversized:
+            return {'phase':'inference_exceeds_operator_capacity_policy', 'jobs':oversized}
         return {'phase':'waiting_for_admitted_data_or_inference', 'round':status['training_round']}
 
     def close(self):

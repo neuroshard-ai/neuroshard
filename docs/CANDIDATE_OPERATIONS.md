@@ -63,7 +63,11 @@ unrecognized existing directory is rejected. New account funding, validator
 bonding and worker contracts are separate native actions; following the chain
 does not claim voting power or mining rewards. Inbound TCP access to an announced
 peer must be tested from outside its host. The two-host trial uses SSH transport
-and is not by itself evidence of public candidate reachability.
+for workers and audit-artifact transfer; native peer reachability is a separate
+check. The September 11 trial also reconnects its second-host full node through
+the primary host's public TCP peer endpoint, removes the SSH peer tunnel, and
+compares common-height headers. A successful trial endpoint is not a commitment
+to permanent service; use the current deployment record when joining.
 
 The auditor requires a trusted local full node, the agreed genesis hash,
 retrievable content-addressed artifacts, its own account and sufficient liquid
@@ -131,6 +135,16 @@ own provider key while waiting for another admitted cohort. Training and scoring
 currently occupy the serial execution slot ahead of inference; a request can
 expire and refund while those tasks run. This is an integration scheduler, not a
 low-latency inference service.
+
+The operator defaults to `budget.inference_token_limit = 1`, matching the
+bounded generation path exercised in the real-model integration trial. Zero
+disables serving. Increasing this limit requires measuring the full response
+graph's execution and replay time, fitting the genesis reporting/deadline
+windows, and agreeing a sufficient `--max-stages` with every auditor. A
+longer native request does not itself establish that this operator can serve it.
+Oversized jobs are skipped before funding an audit offer; they can expire and
+refund through the native rules. This profile has not established practical
+multi-token chat latency.
 
 The operator also refuses inference priced below its token-denominated audit and
 submission costs unless `budget.allow_inference_subsidy` is explicitly `true`.
