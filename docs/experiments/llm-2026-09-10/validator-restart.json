@@ -1,8 +1,0 @@
-{
-  "test": "one validator unavailable; three of four retain quorum",
-  "before": 278,
-  "after_stop": 279,
-  "while_stopped": 284,
-  "seconds_to_five_blocks": 70.12,
-  "passed": true
-}

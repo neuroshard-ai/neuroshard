@@ -1,7 +1,0 @@
-{
-  "agg": "mean",
-  "attack": "signflip",
-  "byz": 0,
-  "final_val_loss": 2.6214910373091698,
-  "minutes": 267.0880894700686
-}

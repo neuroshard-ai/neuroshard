@@ -34,8 +34,8 @@ Keep the backup private. It also works in the [browser inference interface](http
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).
 - [Network/genesis/allocations](networks/neuroshard-llm-testnet-1) and [research roadmap](docs/RESEARCH_ROADMAP.md).
-- [Continual model evolution experiments](docs/EVOLUTION_PROTOCOL.md) and the updated [protocol working paper](docs/FINE2026_neuroshard_short.pdf): full-model training, response-focused evaluation, model growth and native disputes. These experiments have not replaced the public 0.4.0 network.
-- Earlier [v2 reference protocol](docs/PROTOCOL_CANDIDATE_V2.md), [experiments](docs/PROTOCOL_EXPERIMENTS.md), and [archived manuscript source](docs/archive/FINE2026_neuroshard_short_pre_evolution.tex).
+- [Continual model evolution](docs/EVOLUTION_PROTOCOL.md): full-model training, response-focused evaluation, model growth and native disputes. These experiments have not replaced the public 0.4.0 network.
+- [Inherited native ledger rules](docs/PROTOCOL_CANDIDATE_V2.md) and the [published research paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf).
 
 Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. Four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. The initial allocation is 90 NEURO and the profile caps training issuance at 10,000 tasks. See the specification for these explicit limits.
 
@@ -48,10 +48,14 @@ ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
   venv_build/bin/python -m pytest -q
 ```
 
-The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. `website` and `docs-site` build the public interfaces. The `evolution` package contains the new, separately tested continual-model experiments. Earlier modules are retained for research history; they do not define the current public entry points.
+The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. The `evolution` package contains the separately tested continual-model implementation. Some earlier modules remain for source compatibility; they do not define the current public entry points. See the [runtime map](src/neuroshard/README.md).
 
-## One open-source project
+## Repository scope
 
-Source, website, docs, experiments and paper live in this repository. There is no private-to-public sync workflow. Versions 0.2.x and 0.3's tiny reference chain are separate histories; registration tokens and old balances do not migrate. Never reuse an initialized node home for a different genesis.
+This repository contains the open-source protocol and client, tests, reproducibility tools, network manifests, example configuration and technical documentation. Operating a node does not require the project's website source or a website account.
+
+Website publishing projects, manuscripts, historical logs and measurement dumps are maintained outside the tracked tree. The paper remains available on neuroshard.com. Existing evidence links point to an immutable historical revision; removing generated material from the current tree does not erase those results. Local recovery material belongs in the ignored `archive/` directory, while keys and running node state belong in ignored homes such as `.neuroshard/`. Neither is included in releases.
+
+Versions 0.2.x and 0.3's tiny reference chain are separate histories; registration tokens and old balances do not migrate. Never reuse an initialized node home for a different genesis. [Documentation](docs/README.md) explains the retained reference fixtures and repository checks.
 
 [Contribute](CONTRIBUTING.md) · [Governance](GOVERNANCE.md) · [Security](SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) · [API](docs/API.md) · [Release notes](RELEASES.md) · [Third-party provenance](THIRD_PARTY.md) · [Apache 2.0](LICENSE)

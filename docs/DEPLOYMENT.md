@@ -1,6 +1,6 @@
 # Deploy the LLM testnet application
 
-The public repository contains the client, native protocol, data writer, website, docs and experiment records. Deploy from a pinned release and preserve all node keys, signing state and databases outside the checkout. There is no registration database in the supported path.
+The public repository contains the client, native protocol, data writer, tests, network manifests and operator documentation. Deploy from a pinned release and preserve all node keys, signing state and databases outside the checkout. Website publishing is maintained separately. There is no registration database in the supported path.
 
 ## Build and run
 
@@ -10,15 +10,9 @@ cd neuroshard
 python3 -m venv venv_build
 venv_build/bin/python -m pip install -r docs/llm-requirements.txt
 venv_build/bin/python -m pip install --no-deps .
-cd website
-npm ci
-npm run build
-cd ../docs-site
-npm ci
-npm run build
 ```
 
-Use Linux x86_64, Python 3.10–3.12 and Node 22.12+ in the Node 22 line. Web output is `website/dist`, docs output is `docs-site/.vitepress/dist`. Release checks build both, test protocol behavior and compare browser signatures with native Python. A lightweight wallet installation does not install these operator dependencies.
+Use Linux x86_64 and Python 3.10–3.12. Node.js and website build tools are not required to operate the protocol. CI checks native Python behavior, the pinned consensus build, repository links and package contents. A lightweight wallet installation does not install the numerical operator dependencies.
 
 For an ordinary participant, use [the public client](PUBLIC_TESTNET.md). To establish another native chain, generate at least four locally controlled genesis declarations using the reference bootstrap tools, inspect all allocations and ownership, and run `python -m neuroshard.inference.node genesis --help`. `genesis` freezes model/data/source/runtime; never edit an initialized chain's genesis to apply a software update. The supplied network bundle starts from 90 disclosed genesis NEURO, with a 10,000-task issuance cap.
 
@@ -36,13 +30,13 @@ The provider serves jobs addressed to its configured public key and writes a loc
 
 The data collector uses a separate mode-0600 environment file under `/etc/neuroshard/` with the normal AWS credential variables. The daily timer publishes at most 128 records per invocation and 4,096 total records for its pinned source identity. It advances durable progress only after immutable S3 publication. Its `collection_budget_complete` status is expected at the cap. See [data pipeline](DATA_PIPELINE.md). Old uploaders remain disabled; do not start both writers against the old mutable namespace.
 
-## Static deployment and HTTPS
+## HTTP gateways
 
-Copy static artifacts into `/var/www/neuroshard/releases/v0.4.0/{site,docs}` and atomically switch `/var/www/neuroshard/current` to that release. Preserve the previous target for rollback. Use [native-site.nginx.conf](../config/native-site.nginx.conf) and [native-docs.nginx.conf](../config/native-docs.nginx.conf) inside the existing TLS servers. Set their upstream ports to your initialized homes.
+The node exposes the [documented API](API.md) independently of the project website. Keep administrative and consensus RPC listeners on loopback. An operator exposing a public HTTP gateway is responsible for TLS, bounded request bodies and its reverse-proxy configuration. Frontend source and site-specific hosting configuration are outside this repository.
 
-The site proxy overwrites `X-Real-IP`, bounds request bodies and retains native POST semantics. Allow up to 100 seconds for signed submission requests: neural verification can outlast a normal short HTTP timeout. Customers must recover unknown outcomes by transaction/request ID, not automatically sign another spend. Curated public model assets use a separate content-addressed mirror with model/dataset attribution; never expose private audit archives, keys, raw legacy S3 recovery objects or environment files.
+A proxy must preserve signed POST bodies and overwrite client-address headers used for rate limits. Allow up to 100 seconds for signed submission requests: neural verification can outlast a normal short HTTP timeout. Customers must recover unknown outcomes by transaction/request ID, not automatically sign another spend. Curated public model assets use content-addressed mirrors with model/dataset attribution; never expose local archives, keys, raw legacy S3 recovery objects or environment files.
 
-Keep a read-only `/reference/v03/api/` proxy to the old gateway while retiring the old interface. The public node ID and chain/genesis, not a reused IP address, identify a network. Old signup/login APIs remain retired. Run `nginx -t` before reloading and verify both HTTP behavior and actual native settlement.
+The public node ID and chain/genesis, not a reused IP address or website account, identify a network. Verify both HTTP behavior and actual native settlement after changing a gateway configuration. Changes to website publishing must not replace node state or signing identities.
 
 ## Operations and rollback
 
@@ -50,6 +44,6 @@ Monitor native height progression, model round and serving root, worker receipts
 
 The launch installs [log rotation](../config/neuroshard-logrotate.conf) on both hosts: daily, or at 25 MiB, retaining seven compressed rotations. Adapt the supplied paths for other homes. Rotate `logs/*.log` with copy-truncate or coordinated process reopening; do not rotate or edit native signing state. Native blocks and application databases are authoritative. `explorer.sqlite` is only an index and can be rebuilt from retained blocks after stopping that gateway. Keep historical model/source/data artifacts for replay.
 
-Restart validators sequentially and confirm continued blocks. Back up the chain home consistently; never start two copies of a validator's keys. A website rollback restores the previous static symlink/proxy config; it does not replace chain data. Restore only code compatible with that genesis. An incompatible protocol change requires a separately specified migration or new network, not a hidden balance reset.
+Restart validators sequentially and confirm continued blocks. Back up the chain home consistently; never start two copies of a validator's keys. Restore only code compatible with that genesis. An incompatible protocol change requires a separately specified migration or new network, not a hidden balance reset.
 
-Before a production claim, the remaining [release gates](TESTNET_GATES.md) include independent ownership, longer load/failure trials, security review, improved evaluation, data availability, checkpoint governance and a defensible economic policy. The present release is a public experimental testnet with finite operating and issuance budgets.
+Before a production claim, the remaining [research and release requirements](RESEARCH_ROADMAP.md) include independent ownership, longer load/failure trials, security review, improved evaluation, data availability, checkpoint governance and a defensible economic policy. The present release is a public experimental testnet with finite operating and issuance budgets.

@@ -1,7 +1,0 @@
-{
-  "earlier_training_documents": 384,
-  "response_evaluation_pool_documents": 768,
-  "exact_overlaps": 0,
-  "simhash_distance_le3_overlaps": 0,
-  "scope": "document fingerprints across the earlier full-prefix training corpus and corrected response-evaluation pool; not a semantic contamination guarantee"
-}

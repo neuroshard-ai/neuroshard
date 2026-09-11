@@ -27,7 +27,7 @@ The numerical execution profile still requires PyTorch 2.9.1, Transformers 4.57.
 
 The Go binary scan found no affected imported packages or symbols. Its module-level CometBFT finding GO-2025-3442 does not account for the [0.38.17 backport](https://github.com/cometbft/cometbft/security/advisories/GHSA-22qq-3xwm-r5x4), which is included in 0.38.26. The x/crypto OpenPGP module advisory concerns a package not linked into this binary. Retain raw scan findings and review new advisories; absence of a scanner finding is not a security proof.
 
-Archived dependency manifests under `legacy/` may continue to trigger repository alerts. Those applications are not installed by the supported package or deployed by the current website. They must be reviewed and upgraded before anyone reactivates them. The retained v0.3 reference network is unsupported and exposes a read-only historical API; it is not the joining or inference endpoint.
+Historical dependency manifests remain in Git history and the local archive, outside the current source tree and supported package. Archived applications must be reviewed and upgraded before anyone reactivates them. The retained v0.3 reference network is unsupported and exposes a read-only historical API; it is not the joining or inference endpoint. Never publish the ignored archive: it can contain local publishing configuration and operational logs.
 
 ## Model-evolution experiments
 

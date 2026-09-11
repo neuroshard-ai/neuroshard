@@ -2,7 +2,7 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
-The [v2 experiment report](PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.
+The [v2 experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.
 
 ## Current implemented baseline — 0.4.0
 
@@ -14,7 +14,7 @@ The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 
 
 The defensible initial claim is: **a prescribed model update, produced by mutually untrusted pipeline stages, can be independently reproduced and settled exactly once by a native blockchain.** The reference tests this claim on a small model with full replay and fixed local validators. It does not demonstrate economical decentralized LLM pretraining, public admission, or a new proof-of-work consensus algorithm.
 
-Keep the working manuscript, source revision, environment manifest, raw measurements, and reproduction scripts together. Invite external attempts to falsify the exact claims. Preserve unsuccessful attack tests and failed reproducibility cases as well as successful runs. Establish prior work against permissionless training, collaborative model sharding, and reproducible ML disputes; avoid claiming that any one of those ideas is new by itself.
+For each research claim, publish a matched manuscript, source revision, environment manifest, measurements and reproduction instructions. Keep executable code and compact input plans in this repository; host manuscripts and generated outputs separately with immutable references. Invite external attempts to falsify the exact claims. Preserve unsuccessful attack tests and failed reproducibility cases as well as successful runs. Establish prior work against permissionless training, collaborative model sharding, and reproducible ML disputes; avoid claiming that any one of those ideas is new by itself.
 
 The source and working draft are public research artifacts. Formal venue submission should follow independent review and evidence for the stronger claims below; it is separate from publishing reproducible development work in the repository.
 

@@ -1,8 +1,0 @@
-{
-  "dataset_root": "e5562adf7f4cf8418004e70bb27d68b22e383acf2c0ab4fc68ded430bf6a2bf7",
-  "shards": 8,
-  "unique_documents": 512,
-  "train": 487,
-  "validation": 25,
-  "duplicates": 0
-}

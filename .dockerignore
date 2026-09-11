@@ -74,3 +74,12 @@ test/
 *.log
 tmp/
 temp/
+
+# Local recovery, publishing and node state must never enter a build context.
+archive/
+.neuroshard/
+website/
+docs-site/
+legacy/
+*.tex
+*.pdf

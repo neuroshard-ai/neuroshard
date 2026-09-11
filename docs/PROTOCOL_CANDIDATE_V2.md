@@ -1,6 +1,6 @@
 # NeuroShard protocol candidate v2
 
-Status: executable, bounded research protocol, 2026-09-10. The [experiment report](PROTOCOL_EXPERIMENTS.md) distinguishes observations from assumptions. The manuscript has deliberately not been expanded yet.
+Status: executable, bounded reference protocol, 2026-09-10. The [experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/PROTOCOL_EXPERIMENTS.md) distinguishes observations from assumptions. These inherited ledger rules are retained for implementation context; the current application is specified in the [LLM protocol](LLM_PROTOCOL.md), with separate [model-evolution work](EVOLUTION_PROTOCOL.md).
 
 This candidate specifies the complete lifecycle for its supported tasks: genesis, accounts, resource-based validator entry, native finality, task reservation, sharded execution, verification, payment, expiry, evidence, exit, and recovery. Its execution profile is intentionally small and uses full replay. This is not a claim that economical permissionless LLM pretraining, arbitrary heterogeneous hardware, or production economics have been solved.
 
@@ -153,7 +153,7 @@ S_{\mathrm{initial}}+S_{\mathrm{issued}}
 
 All terms are nonnegative integers. Issued atoms equal accepted training rounds times 1,000,000, capped at 1,000 tasks. Supply accounting includes pending activation, cooling/jailed bonds, and deferred rewards. Exhausting training issuance does not disable transfers, funded inference, or exits. These constants test accounting; they do not establish profitable mining or a sustainable public reward schedule.
 
-Correct execution also does not imply that each stochastic step improves validation loss. The protocol pays the prescribed computation and measures model quality separately. Concentrated ownership of correctly earned rewards can eventually violate the consensus resource bound; delayed activation alone does not prevent this. The [economic scenario results](eval/results/protocol_economics.json) make that failure mode explicit.
+Correct execution also does not imply that each stochastic step improves validation loss. The protocol pays the prescribed computation and measures model quality separately. Concentrated ownership of correctly earned rewards can eventually violate the consensus resource bound; delayed activation alone does not prevent this. The [economic scenario results](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/eval/results/protocol_economics.json) make that failure mode explicit.
 
 ## 9. Availability, restart, and invalid state
 
