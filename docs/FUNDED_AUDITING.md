@@ -130,6 +130,13 @@ retention, independent operators, committee selection, useful held-out model
 improvement, an economic policy and external review are still necessary before
 a permanent network can be called production ready.
 
+Audit acceptance also does not reserve the auditor's future challenge collateral
+and upload fees. An honest auditor with only enough funds for its audit bond can
+detect fraud but be unable to refute it. If it then declines to attest, the claim
+cannot mint, but the uninterrupted missed-report rule can burn its bond. This
+tested failure requires separate liquid funding today and a protocol-level
+refutation budget before public adoption.
+
 The global 16-offer limit bounds this prototype's state, but does not provide
 fair admission. One funded sender can occupy it with unaccepted offers until
 cancellation or expiry. Offer funding is refundable, and the maximum lifetime

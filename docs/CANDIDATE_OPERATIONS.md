@@ -90,6 +90,20 @@ collateral and transaction fees. It accepts offers only from the configured
 sponsors and up to its configured stage bound. Funding the account is an
 ordinary native transfer; do not export a validator's consensus key for this.
 
+Retain **liquid dispute funding in addition to the audit bond**. The reference
+profile locks 5,000,000 atoms for auditing and needs another 2,000,000 for a
+fraud challenge, plus acceptance and evidence transaction fees. The measured
+head dispute uses 116 transactions: that particular obligation needs at least
+7,117,000 atoms before acceptance, excluding any other spending. Larger or
+repeated disputes need a larger reserve. The trial funds its auditor with
+100,000,000 atoms initially.
+
+The current daemon does not reserve this future dispute budget when accepting.
+An auditor funded only for its audit bond can detect fraud but fail to submit a
+challenge, then lose its bond for missing a report. A regression test records
+this failure mode. Do not accept obligations without the separate reserve;
+native prefunding of refutation and completion costs remains a release gate.
+
 ```bash
 venv_build/bin/python -m neuroshard.evolution.audit_worker \
   --home /var/lib/neuroshard/candidate/auditor \

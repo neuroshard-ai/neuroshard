@@ -61,6 +61,13 @@ charge for elapsed occupied blocks. Refund only unused allowance. The exact
 activation, release and same-block charging rules need a versioned specification;
 no concrete rate is proposed for launch here.
 
+Acceptance must separately prefinance the auditor's worst-case supported
+refutation and completion costs. Locking an audit bond is insufficient: the
+current regression test shows an honest fraud detector unable to post its
+challenge bond, followed by a missed-report penalty. An authorization must bind
+the supported evidence-size and fee bounds and their funding source. A reserve
+calculated only for honest commit/reveal transactions fails this requirement.
+
 Under that simplified accounting, occupying one slot for `T` blocks consumes
 at least `r × T` atoms, excluding transaction costs. Refunding service fees,
 cycling identities or paying one's own auditor must not refund this occupancy

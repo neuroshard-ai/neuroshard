@@ -216,6 +216,30 @@ def test_colluding_reports_without_an_honest_observer_can_accept_fraud(case):
     state.invariant(s)
 
 
+def test_audit_bond_alone_does_not_fund_an_honest_fraud_dispute(case):
+    """An unfunded refutation can leave an honest auditor liable for silence."""
+    from neuroshard.evolution.audit_worker import replay
+    s, owners, store, forged, artifacts = forged_case(case)
+    auditor = owners[3]
+    fee = s['manifest']['params']['fee']
+    bond = s['manifest']['auditing']['auditor_bond']
+    balance = s['accounts'][auditor.public_key]['balance']
+    s = send(s, auditor, 'transfer', to=owners[0].public_key,
+             amount=balance-bond-3*fee)
+    s, _ = submit((s, owners, store, forged, artifacts))
+    assert s['accounts'][auditor.public_key]['balance'] == fee
+    c = s['candidate']
+    assert not replay(store, c)['valid']
+    with pytest.raises(ValueError, match='Insufficient available balance'):
+        send(s, auditor, 'challenge', claim_id=c['id'], stage=1,
+             challenge_kind='fraud', object_root=None)
+    assert s['candidate']['challenge'] is None
+    s = blocks(s, c['audit_reveal_end']-s['height']+1)
+    assert s['issued'] == 0 and s['auditing']['paid_atoms'] == 0
+    assert s['auditing']['history'][-1]['slashed_atoms'] == bond
+    state.invariant(s)
+
+
 def test_proven_false_attestation_loses_collateral_and_never_gets_service_fee(case):
     s, owners, store, forged, artifacts = forged_case(case)
     stage = 1
