@@ -1,7 +1,7 @@
 # CPU reference environment. Python 3.10 on Linux x86_64 was used for the recorded run.
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.9.1+cpu
-numpy==2.2.6
+numpy==2.5.3
 grpcio==1.83.1
 protobuf==6.33.6
 cryptography==50.0.1
