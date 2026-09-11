@@ -88,6 +88,8 @@ The codec root is `b797b60c9203884ec7d519b50dfd16e4375b239d249ac7377aa3f6c646b56
 
 The first native run stopped during dispute resolution when a long replay outlasted the synchronous RPC response. This was an unknown transaction outcome, not evidence of a rejected computation. The experiment driver now submits one signed envelope and checks its exact hash for a committed success or rejection, with a bounded confirmation deadline and a longer isolated RPC budget. Regression tests cover lost acknowledgments, final rejection and an unresolved deadline without resigning or resubmitting a payment.
 
+The corrected run completed the real-model lifecycle with four validators on **one physical host under one operator**. It rejected forged training, accepted valid training, rejected forged growth, accepted growth, and paid training after growth while preserving the tokenizer identity. Training replay required **171,114,496 bytes in 184 upload/seal transactions**, taking **363.57 seconds**; dispute resolution took **19.47 seconds**. Growth replay required **14,161,224 bytes**. The two valid training steps issued exactly **2,000,000 atoms**; growth issued none. All four validators agreed on the application hash in block **539**, which includes the final paid transition at height **538**. Serving remained on the original model. These measurements validate this isolated lifecycle and expose its verification cost; they do not establish independent ownership or economical public verification.
+
 ## Reproduce
 
 From a checkout, install the experimental profile and obtain the hash-verified seed:
