@@ -31,6 +31,7 @@ REQUIRED_SOURCE = {
     "scripts/experiment_forward_profile.py", "tests/evolution/test_lifecycle.py",
     "tests/evolution/test_cohort_preparation.py",
     "scripts/check_validator_topology.py", "tests/evolution/test_validator_topology.py",
+    "scripts/review_native_cohort.py", "tests/evolution/test_cohort_review.py",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 

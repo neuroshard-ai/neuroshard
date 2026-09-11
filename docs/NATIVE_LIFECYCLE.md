@@ -85,6 +85,18 @@ The invocation scans at most 256 records per configured source and never goes be
 
 The exporter retains up to four response windows per document. It reports training omissions and requires complete evaluation responses. The bounded response/context policy still introduces selection bias. Do not treat its example Smol-SmolTalk source as a diverse lifelong learning corpus. Source authenticity, licensing, harmful/low-quality content, synthetic-data proportions and meaningful evaluation still require independent curation. The explicit Python `publish` helper mirrors the selected raw documents, batches, provenance and tokenizer to a content-addressed destination with read-back checks; copying an object does not approve it.
 
+Before voting, each reviewer uses their own source/tokenizer policy and an independently obtained copy of the raw artifacts:
+
+```bash
+python scripts/review_native_cohort.py \
+  --config ./reviewer-data-policy.json --proposal ./proposal-1.json \
+  --cache ./reviewer-upstream-cache
+```
+
+The reviewer reconstructs every response window from original messages, checks document identities and source roles, enforces the held-out hash partition, and rejects heuristic near-duplicates within the cohort. By default it also checks every selected document against its pinned upstream Parquet row, verifies the downloaded file's SHA-256 against repository metadata, and confirms the repository revision. A cache can be reused, but its files are rehashed. Use a separate cache directory per review process. This source check trusts the upstream repository service and TLS; a license label is not proof of rights. `--offline` explicitly reports that upstream checking was skipped.
+
+This report never votes or authorizes activation. The reviewer must separately check the live parent/cursors, historical contamination, license rights, harmful content, usefulness and evaluation suitability. Native consensus repeats its own parent, cursor, exact-duplicate and quorum checks. Treat `mechanical_evidence_verified` as evidence about bytes and tokenization, not an automatic curation decision.
+
 ### Run protocol and numerical checks
 
 The native application exposes `/lifecycle`, `/data`, `/data/proposal`, `/evaluation` and `/inference`, alongside `/status`, `/candidate`, `/account` and `/work`. `/data` returns the exact activated batches; `/data/proposal` returns the content-addressed proposal for admission review. `/inference` accepts an optional `id` to retrieve a pending request or its retained result. These are ABCI query paths, not new public website endpoints.
@@ -102,7 +114,7 @@ The script starts four isolated native validators with fresh keys, uses a 10,384
 
 For actual model arithmetic, `scripts/experiment_forward_profile.py` creates versioned evaluation and generation records and independently replays every stage. Supply `--workers-config` using the existing epoch endpoint format for workers on another machine, and `--verify-result` with copied objects for an independent replay on that host. This is a conformance check, separate from the synthetic native lifecycle and from a real-data model-quality experiment.
 
-The native lifecycle script also accepts `--model-root`, `--objects`, `--cohort`, `--next-cohort` and optional `--workers-config` for two prepared real-data cohorts and an imported model. It derives the experimental genesis's initial source cursors from the first proposal. This path performs real training and complete multi-window evaluation through native settlement. Budget substantially more time and disk: every stage is independently replayed, and the forged-inference dispute uploads the real output-head dependencies through native blocks. It remains an isolated experiment with test keys, not a public migration command.
+The native lifecycle script also accepts `--model-root`, `--objects`, `--cohort`, `--next-cohort` and optional `--workers-config` for two prepared real-data cohorts and an imported model. Add `--growth-layers 4` with four workers to exercise a capacity expansion before training. It derives the experimental genesis's initial source cursors from the first proposal. This path performs real training and complete multi-window evaluation through native settlement. Budget substantially more time and disk: every stage is independently replayed, and the forged-inference dispute uploads the real output-head dependencies through native blocks. It remains an isolated experiment with test keys, not a public migration command.
 
 ## Requirements before public cutover
 

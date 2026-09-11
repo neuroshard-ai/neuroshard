@@ -34,7 +34,7 @@ Keep the backup private. It also works in the [browser inference interface](http
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).
 - [Network/genesis/allocations](networks/neuroshard-llm-testnet-1) and [research roadmap](docs/RESEARCH_ROADMAP.md).
-- [Continual model evolution](docs/EVOLUTION_PROTOCOL.md): full-model training, [versioned text tokenization](docs/TEXT_PROTOCOL.md), response-focused evaluation, model growth and native disputes. These experiments have not replaced the public 0.4.0 network.
+- [Continual model evolution](docs/EVOLUTION_PROTOCOL.md): full-model training, [versioned text tokenization](docs/TEXT_PROTOCOL.md), response-focused evaluation, model growth and native disputes. The [native lifecycle](docs/NATIVE_LIFECYCLE.md) connects curated fresh-data admission to training, serving decisions and paid generation on isolated integration networks. These experiments have not replaced the public 0.4.0 network.
 - [Inherited native ledger rules](docs/PROTOCOL_CANDIDATE_V2.md) and the [published research paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf).
 
 Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. Four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. The initial allocation is 90 NEURO and the profile caps training issuance at 10,000 tasks. See the specification for these explicit limits.
