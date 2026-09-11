@@ -127,3 +127,11 @@ the quality deadline still rejects an unfinished evaluation. Long-term artifact
 retention, independent operators, committee selection, useful held-out model
 improvement, an economic policy and external review are still necessary before
 a permanent network can be called production ready.
+
+The global 16-offer limit bounds this prototype's state, but does not provide
+fair admission. One funded sender can occupy it with unaccepted offers until
+cancellation or expiry. Offer funding is refundable, and the maximum lifetime
+is 100,000 blocks, so this can cheaply deny other sponsors access. The tests
+record that failure mode explicitly. Resource-priced reservations and admission
+that remains live under competing or Sybil senders are additional release
+blockers; increasing the global limit alone would exchange it for state growth.

@@ -138,13 +138,15 @@ low-latency inference service.
 
 The operator defaults to `budget.inference_token_limit = 1`, matching the
 bounded generation path exercised in the real-model integration trial. Zero
-disables serving. Increasing this limit requires measuring the full response
+disables serving; the native lifecycle itself caps requests at eight output
+tokens. Increasing the operator limit requires measuring the full response
 graph's execution and replay time, fitting the genesis reporting/deadline
 windows, and agreeing a sufficient `--max-stages` with every auditor. A
 longer native request does not itself establish that this operator can serve it.
 Oversized jobs are skipped before funding an audit offer; they can expire and
 refund through the native rules. This profile has not established practical
-multi-token chat latency.
+chat latency. The separate public 0.4.0 inference profile has different
+generation limits.
 
 The operator also refuses inference priced below its token-denominated audit and
 submission costs unless `budget.allow_inference_subsidy` is explicitly `true`.

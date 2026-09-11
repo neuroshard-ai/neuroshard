@@ -78,8 +78,8 @@ class Operator:
         if type(budget.get('allow_inference_subsidy', False)) is not bool:
             raise ValueError('An inference subsidy requires an explicit boolean policy')
         limit = budget.get('inference_token_limit', 1)
-        if type(limit) is not int or not 0 <= limit <= 64:
-            raise ValueError('Set an inference token limit between zero and 64; zero disables serving')
+        if type(limit) is not int or not 0 <= limit <= 8:
+            raise ValueError('Set an inference token limit between zero and eight; zero disables serving')
 
     def send(self, operation, kind, **fields):
         self.outbox.send(operation, kind, **fields)

@@ -141,6 +141,26 @@ def test_insufficient_stage_budget_cannot_accept_partial_coverage(case):
         submit(case, stage_limit=1)
 
 
+def test_unaccepted_offers_can_saturate_the_prototype_pool(case):
+    """Document the admission limit; this profile is not a permissionless market."""
+    s, owners, *_ = case
+    for _ in range(16):
+        s = send(s, owners[0], 'fund_audit', publisher=owners[0].public_key,
+                 auditors=[owners[3].public_key], stage_limit=1, expires_in=100000)
+    assert len(s['auditing']['budgets']) == 16
+    assert all(not b['auditors'][owners[3].public_key]['bond'] for b in s['auditing']['budgets'].values())
+    assert s['auditing']['paid_services'] == 0
+    with pytest.raises(ValueError, match='Outstanding audit budget limit'):
+        send(s, owners[1], 'fund_audit', publisher=owners[1].public_key,
+             auditors=[owners[3].public_key], stage_limit=1, expires_in=64)
+    key = next(iter(s['auditing']['budgets']))
+    s = send(s, owners[0], 'cancel_audit', budget_id=key)
+    s = send(s, owners[1], 'fund_audit', publisher=owners[1].public_key,
+             auditors=[owners[3].public_key], stage_limit=1, expires_in=64)
+    assert s['auditing']['history'][-1]['refunded_atoms'] == auditing.PROFILE['price_per_stage']
+    state.invariant(s)
+
+
 @pytest.mark.parametrize('cancel', [True, False])
 def test_unreserved_budget_and_collateral_return_without_issuance(case, cancel):
     _, owners, *_ = case
