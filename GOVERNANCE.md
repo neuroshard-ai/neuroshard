@@ -1,6 +1,6 @@
 # Project governance
 
-NeuroShard currently uses maintainer review. The initial maintainer is [Linir Zamir](https://github.com/LinirZamir), working through the [neuroshard-ai organization](https://github.com/neuroshard-ai). Add maintainers through public proposals describing responsibilities and demonstrated contributions.
+NeuroShard currently uses maintainer review. The initial maintainer is [Linir Zamir](https://github.com/0x00LZ), working through the [neuroshard-ai organization](https://github.com/neuroshard-ai). Add maintainers through public proposals describing responsibilities and demonstrated contributions.
 
 Development happens in this public repository. Use issues for reproducible bugs and discussions for research questions. Propose consensus, verification, issuance, or compatibility changes through an RFC before implementation. Include assumptions, invariants, alternatives, migration implications, and falsifiable evaluation.
 

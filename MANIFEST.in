@@ -1,4 +1,4 @@
-include LICENSE NOTICE README.md PYPI_README.md THIRD_PARTY.md
+include LICENSE NOTICE README.md PYPI_README.md THIRD_PARTY.md CITATION.cff
 recursive-include src/neuroshard *.proto
 recursive-include src/neuroshard/publicnet/data *.txt
 global-exclude *.pyc

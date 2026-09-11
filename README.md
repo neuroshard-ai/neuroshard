@@ -50,4 +50,12 @@ ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
 
 The supported client is `src/neuroshard/client`, the LLM application is `src/neuroshard/inference`, immutable ingestion is `src/neuroshard/dataflow`, and the inherited native ledger is `src/neuroshard/lab`. Reference execution/transport remains in `demo` and `publicnet`. The `evolution` package contains the separately tested continual-model implementation. Some earlier modules remain for source compatibility; they do not define the current public entry points. See the [runtime map](src/neuroshard/README.md).
 
-[Contribute](CONTRIBUTING.md) · [Governance](GOVERNANCE.md) · [Security](SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) · [API](docs/API.md) · [Release notes](RELEASES.md) · [Third-party provenance](THIRD_PARTY.md) · [Apache 2.0](LICENSE)
+[Governance](GOVERNANCE.md) · [Security](SECURITY.md) · [Deployment](docs/DEPLOYMENT.md) · [API](docs/API.md) · [Release notes](RELEASES.md)
+
+---
+
+[Contributions](CONTRIBUTING.md), protocol reviews, and reproducible experiments are welcome.
+
+If you use NeuroShard in research, please [cite the software](CITATION.cff) and include the release or commit you used.
+
+Licensed under the [Apache License 2.0](LICENSE). Attribution and third-party acknowledgements are in [NOTICE](NOTICE) and [THIRD_PARTY.md](THIRD_PARTY.md).
