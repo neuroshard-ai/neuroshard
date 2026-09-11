@@ -4,6 +4,8 @@ This opt-in protocol connects fresh-data admission, full-model training, quality
 
 The [evolution protocol](EVOLUTION_PROTOCOL.md) describes partitioned training and growth. The [text protocol](TEXT_PROTOCOL.md) binds tokenization to the model. This profile adds the missing ledger transitions between those operations.
 
+[Integration evidence](NATIVE_LIFECYCLE_RESULTS.md) records source commitments, admitted-data checks, numerical work, failures and release validation.
+
 ## What “fresh data” means
 
 A new download is an input to curation. It is not an instruction to change consensus data. Here, fresh means previously unused documents and token batches from consecutive rows of explicitly pinned source revisions. It does not establish that their subject matter is recent, true, or useful. New source revisions are new source identities and require another admission decision.
@@ -72,7 +74,14 @@ Training/evaluation/inference audits and artifact replication need sustainable f
 
 ### Prepare a data proposal
 
-Copy [the data configuration](../config/native-data.example.json) to a private working directory. Its object store must contain the imported tokenizer objects. Use a separate corpus from historical objectives. Save the native `/lifecycle` query's `cursors` object as `cursors.json`; use `{}` only for a genuinely new profile with zero initial cursors. Supply the chain's current data root.
+From an installed checkout with the pinned numerical and collector dependencies, the existing model commands download the eight pinned seed files, verify their hashes, and import the model with its text contract:
+
+```bash
+python -m neuroshard.evolution download-seed --model-dir ./seed
+python -m neuroshard.evolution import-model --model-dir ./seed --objects ./objects
+```
+
+Keep the printed model and tokenizer roots. Copy [the data configuration](../config/native-data.example.json) to the same private working directory and check its object path and tokenizer root against that output. Use a separate corpus from historical objectives. Save the native `/lifecycle` query's `cursors` object as `cursors.json`; use `{}` only for a genuinely new profile with zero initial cursors. Supply the chain's current data root.
 
 ```bash
 python scripts/prepare_native_cohort.py \
@@ -115,6 +124,14 @@ The script starts four isolated native validators with fresh keys, uses a 10,384
 For actual model arithmetic, `scripts/experiment_forward_profile.py` creates versioned evaluation and generation records and independently replays every stage. Supply `--workers-config` using the existing epoch endpoint format for workers on another machine, and `--verify-result` with copied objects for an independent replay on that host. This is a conformance check, separate from the synthetic native lifecycle and from a real-data model-quality experiment.
 
 The native lifecycle script also accepts `--model-root`, `--objects`, `--cohort`, `--next-cohort` and optional `--workers-config` for two prepared real-data cohorts and an imported model. Add `--growth-layers 4` with four workers to exercise a capacity expansion before training. It derives the experimental genesis's initial source cursors from the first proposal. This path performs real training and complete multi-window evaluation through native settlement. Budget substantially more time and disk: every stage is independently replayed, and the forged-inference dispute uploads the real output-head dependencies through native blocks. It remains an isolated experiment with test keys, not a public migration command.
+
+After that script has completed and stopped its validators, the bounded continuation check reopens the **same** node homes and signing state and trains the second admitted cohort:
+
+```bash
+python scripts/continue_lifecycle_native.py --home .neuroshard/lifecycle-check
+```
+
+Use the exact original package source, and supply the same `--workers-config` for an HTTP-worker trial. The continuation refuses running node ports, missing original keys/state, an unexpected ledger position, or an existing continuation result. It checks fresh/replay assignments, another four paid steps, unchanged serving identity pending evaluation, and common application hashes. It stops its own node processes on exit. It is an integration driver, not a fault-tolerant public coordinator or an unlimited training service.
 
 ## Requirements before public cutover
 
