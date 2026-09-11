@@ -71,6 +71,8 @@ def model(value):
         root(value['parent'])
     if 'tokenizer_root' in value:
         root(value['tokenizer_root'])
+    if 'update_witnesses' in value and value['update_witnesses'] != 'neuroshard-sgd-chunks-v1':
+        raise ValueError('Unsupported compact update execution profile')
     return value
 
 

@@ -103,7 +103,13 @@ class Session:
             rate, scale = float.fromhex(operation['learning_rate_hex']),float.fromhex(operation['scale_hex'])
             if not math.isfinite(rate) or not 0 < rate <= .1 or not math.isfinite(scale) or not 0 < scale <= 1:
                 raise ValueError('Invalid bounded optimizer parameters')
+            commitments = None
+            if self.model.get('update_witnesses'):
+                from .update_witness import capture_before, capture_after
+                commitments = capture_before(self.shard)
             self.shard.update(rate,scale)
+            if commitments is not None:
+                self.trace['updates'] = capture_after(self.shard, commitments)
             components = self.shard.save(self.store)
             self.trace.update(learning_rate_hex=operation['learning_rate_hex'],scale_hex=operation['scale_hex'],components=components)
             trace_root = self.store.put_json(self.trace)
@@ -135,6 +141,8 @@ def replay_trace(store, trace_root):
     result = session.run({'phase':'update','learning_rate_hex':trace['learning_rate_hex'],'scale_hex':trace['scale_hex']})
     if result['components'] != trace['components']:
         return {'valid':False,'mismatch':'optimizer update'}
+    if session.trace.get('updates') != trace.get('updates'):
+        return {'valid':False,'mismatch':'optimizer tensor commitments'}
     return {'valid':True,'trace':trace_root,'resident_parameters':session.shard.resident_parameters}
 
 

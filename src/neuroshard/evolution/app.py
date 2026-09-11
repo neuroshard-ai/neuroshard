@@ -147,7 +147,7 @@ class Application(Base):
                     raise ValueError('Only current-state queries without proofs are supported')
                 options = protocol.parse_json(request.data) if request.data else {}
                 if request.path in ('/status','/summary'):
-                    fields = ('chain_id','height','time_ns','model_root','serving_root','training_round','issued','burned','initial_supply','period','period_steps','period_growths','audit_count','settled','assignment')
+                    fields = ('chain_id','height','time_ns','model_root','serving_root','training_round','issued','burned','initial_supply','period','period_steps','period_growths','audit_count','update_check_count','settled','assignment')
                     value = {k:s[k] for k in fields}
                     value['candidate'] = {k:v for k,v in s['candidate'].items() if k!='metadata'} if s['candidate'] else None
                     value['app_hash'] = self.app_hash().hex()
