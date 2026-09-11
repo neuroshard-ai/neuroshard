@@ -22,6 +22,7 @@ REQUIRED_SOURCE = {
     "config/evolution-epoch.example.json", "config/experiments/response-from-seed-plan.json",
     "scripts/experiment_evolution_native.py", "scripts/experiment_evolution_response.py",
     "scripts/experiment_text_profile.py", "tests/evolution/test_text.py",
+    "scripts/native_rpc.py", "tests/evolution/test_experiment_rpc.py",
     "docs/TEXT_PROTOCOL.md", "docs/evolution-requirements.txt",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }

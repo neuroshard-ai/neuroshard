@@ -86,6 +86,8 @@ The final text-profile run used three worker processes across two CPU machines c
 
 The codec root is `b797b60c9203884ec7d519b50dfd16e4375b239d249ac7377aa3f6c646b56e85`. The short generated answer is a functionality probe of the pretrained seed after one update; it does not establish improvement. The manually written training conversation is a conformance fixture, not a quality benchmark. No new candidate has qualified for public serving through this experiment.
 
+The first native run stopped during dispute resolution when a long replay outlasted the synchronous RPC response. This was an unknown transaction outcome, not evidence of a rejected computation. The experiment driver now submits one signed envelope and checks its exact hash for a committed success or rejection, with a bounded confirmation deadline and a longer isolated RPC budget. Regression tests cover lost acknowledgments, final rejection and an unresolved deadline without resigning or resubmitting a payment.
+
 ## Reproduce
 
 From a checkout, install the experimental profile and obtain the hash-verified seed:
