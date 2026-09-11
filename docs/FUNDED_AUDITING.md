@@ -115,7 +115,9 @@ task again, retrying an RPC, or restarting an operator.
 
 The [candidate operations guide](CANDIDATE_OPERATIONS.md) covers source and genesis
 pins, the separate auditor process, the recovering full-model operator and
-failure rehearsals. `/auditing` exposes outstanding obligations and a bounded
+failure rehearsals. The [integration results](FUNDED_AUDIT_RESULTS.md) record
+the source, hardware, public peer check and measured limits. `/auditing`
+exposes outstanding obligations and a bounded
 history of payments, refunds and penalties. It complements the existing
 numerical-dispute counters; a paid service count is not a count of independent
 operators.
