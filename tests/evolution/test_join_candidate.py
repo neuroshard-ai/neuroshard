@@ -33,6 +33,17 @@ def test_join_refuses_wrong_genesis_before_creating_keys(agreed, tmp_path):
     assert not home.exists()
 
 
+def test_join_refuses_other_source_even_with_matching_genesis_checksum(agreed, tmp_path):
+    path, _ = agreed
+    genesis = json.loads(path.read_bytes())
+    genesis['app_state']['manifest']['code_hash'] = 'f'*64
+    path.write_bytes(canonical(genesis))
+    home = tmp_path/'node'
+    with pytest.raises(ValueError, match='exact source'):
+        module().prepare(home, path, digest(canonical(genesis)), Path('must-not-run'), ['peer'], 55150)
+    assert not home.exists()
+
+
 def test_join_never_overwrites_an_unrecognized_home(agreed, tmp_path):
     path, sha = agreed
     home = tmp_path/'node'

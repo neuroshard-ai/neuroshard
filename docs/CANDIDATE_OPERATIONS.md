@@ -149,6 +149,33 @@ an unchecked model. Preserve the serving checkpoint as well as learning history.
 
 ## Recovery and independent operation
 
+### Starting without outside operators
+
+One operator can bootstrap a public experimental network and test training,
+settlement, recovery and joining. Recruiting other people is not a prerequisite
+for that engineering work. Publish the actual ownership and hosting topology,
+the agreed genesis and source, reachable peers, allocations and measured results.
+Keep experimental balances distinct from any later permanent issuance decision.
+
+The first outside participant can run a non-voting full node, compare headers
+and application hashes, and report installation or disagreement logs. Funded
+auditing and worker contracts can follow once their keys, costs and obligations
+are understood. None of these roles needs website registration, and nobody
+should give the bootstrap operator their private keys.
+
+Independent consensus requires distributing **voting power**, not merely adding
+accounts or processes. Four equal validators with four independent owners are
+one useful initial topology: one validator's loss leaves more than two-thirds
+online. Four validators controlled by one owner are still one control domain.
+One outside validator with a small stake is valuable testing evidence, but does
+not establish decentralized control. The [CometBFT consensus
+rules](https://github.com/cometbft/cometbft/blob/v0.38.26/spec/consensus/consensus.md)
+require more than two-thirds of voting power to commit, with Byzantine safety
+assuming less than one-third faulty power. Shared hosting, key custody and
+correlated outages must also be considered.
+
+### Retained state and recovery
+
 Keep source, genesis, account keys, validator signing state, native databases,
 worker databases, outboxes and object stores in separate retained deployment
 directories. Stop a validator before copying its consistent backup. Never run two

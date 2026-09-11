@@ -16,7 +16,11 @@ The opt-in [compact optimizer extension](docs/COMPACT_UPDATE_DISPUTES.md) adds M
 
 The [scaling design](docs/SCALING_DESIGN.md) prioritizes complete audit coverage, artifact replication, serving and sustained training capacity before model growth. It separates implemented mechanisms from the remaining audit economy, compute-group scheduling and public-independence requirements.
 
-These tools have not been published as a new PyPI version or activated on the public chain. Public worker admission, funded auditing, artifact retention and release integration remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
+The [funded candidate](docs/FUNDED_AUDITING.md) now escrows sponsor payments and auditor collateral before work, requires all selected auditors to report complete coverage, and pays honest replay without extra issuance. Missing coverage cannot mint; objective false reports can lose collateral. Sponsor selection, copying and collusion remain explicit assumptions. The separate auditor daemon retrieves and replays the entire graph, requests missing data and refutes incorrect stages through native transactions.
+
+The [continuous operator and candidate joining guide](docs/CANDIDATE_OPERATIONS.md) cover admitted-data training, evaluation, durable worker recovery and non-voting full nodes. A signed-transaction outbox resolves uncertain outcomes by the hash of the original signed bytes before another nonce can be used. The operator refuses inference below its audit/submission price floor unless a subsidy is explicitly enabled. These mechanisms do not implement consensus upgrades or migrate existing balances.
+
+These tools have not been published as a new PyPI version or activated on the public chain. Public worker admission, independent audit selection, artifact retention and release integration remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
 
 ## 0.4.0 — LLM training and native paid inference (experimental)
 
