@@ -38,6 +38,7 @@ REQUIRED_SOURCE = {
     "scripts/native_cohort_state.py", "tests/evolution/test_cohort_state.py",
     "scripts/experiment_update_witness.py", "scripts/experiment_update_native.py",
     "tests/evolution/test_update_witness.py", "docs/COMPACT_UPDATE_DISPUTES.md",
+    "docs/SCALING_DESIGN.md",
     "networks/neuroshard-llm-testnet-1/genesis.json",
 }
 
