@@ -2,7 +2,7 @@
 
 The native deployment candidate is the supported development path. It implements adapter training on a frozen pretrained language model, native consensus and paid inference. See the [operator guide](docs/PUBLIC_TESTNET.md), [protocol](docs/LLM_PROTOCOL.md), and [experiments](docs/LLM_EXPERIMENTS.md) before changing its behavior.
 
-The home for all development is [neuroshard-ai/neuroshard](https://github.com/neuroshard-ai/neuroshard). The [open-source transition](docs/OPEN_SOURCE_TRANSITION.md) records the consolidation decisions. A NeuroShard website account is not required to contribute or operate a native node.
+The home for protocol and client development is [neuroshard-ai/neuroshard](https://github.com/neuroshard-ai/neuroshard). A NeuroShard website account is not required to contribute or operate a native node. Keep the public tree focused on code, tests, configuration, network manifests and technical documentation.
 
 ## Install and check the native implementation
 
@@ -14,18 +14,17 @@ ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 PYTHONPATH=src \
   venv_build/bin/python -m pytest -q tests
 ```
 
-The installer creates a project-local environment and installs the pinned native engine. The current `neuroshard-ai` client supports `neuroshard join`. Old `neuroshard --token ...` instructions and 0.2 packages do not start this chain. Historical tests are in `legacy/tests` with separate prototype dependencies. Run `venv_build/bin/python -m pytest -q` for the complete native suite.
+The installer creates a project-local environment and installs the pinned native engine. The current `neuroshard-ai` client supports `neuroshard join`. Old `neuroshard --token ...` instructions and 0.2 packages do not start this chain. Run `venv_build/bin/python -m pytest -q` for the complete native suite.
 
-To work on the website, use Node 22.12 or newer in the Node 22 line:
+Check repository links and build the distributable package:
 
 ```bash
-cd website
-npm ci
-npm run build
-npm run dev
+python scripts/check_repository.py
+venv_build/bin/python -m build --outdir .neuroshard/package-check
+python scripts/check_distribution.py .neuroshard/package-check
 ```
 
-The development server proxies native API requests to `127.0.0.1:39659`. Configure that target for your own local gateway when necessary. The production build copies the current protocol documents and manuscript into its public assets. It needs no legacy authentication backend to render the native interface.
+Manuscripts, web publishing projects, raw experiment output, models and node state do not belong in the tracked repository or Python distributions. Keep local recovery material under ignored `archive/` and new experiment output under `.neuroshard/`. Preserve compact executable input fixtures when needed for reproduction. Link historical evidence to an immutable source revision instead of restoring its generated files to the active tree. Repository checks inspect the Git index, so stage intended file moves before running them locally.
 
 ## Propose a change
 
@@ -43,7 +42,7 @@ The execution manifest binds numerical code and consensus source. Editing or mov
 - Improve node synchronization, diagnostics, bounded APIs, and worker failure handling.
 - Measure public-load behavior and verification cost with reproducible workloads.
 - Investigate complete training verification and portable numerical execution.
-- Improve the model/explorer interface and documentation using measured behavior.
+- Improve the client, protocol APIs and technical documentation using measured behavior.
 
 Consensus safety, monetary accounting, and claims in the paper should remain explicit about their assumptions. Reproducible negative results are useful contributions.
 
@@ -51,4 +50,4 @@ Consensus safety, monetary accounting, and claims in the paper should remain exp
 
 Contributions to project code are made under the existing [Apache License 2.0](LICENSE). Preserve applicable attribution and identify the provenance and license of any added third-party code, data, models, or assets.
 
-Build documentation with `cd docs-site && npm ci && npm run build`. Its pages are generated from canonical repository documents. Browser checks: `cd website && npx playwright install chromium && NEUROSHARD_TEST_PYTHON=../venv_build/bin/python npm test`. The Python interpreter must have cryptography installed to verify browser signatures.
+CI checks both supported Python versions, the pinned consensus build, repository links and package contents. Website publishing and browser checks belong to the separately maintained publishing workspace.

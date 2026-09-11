@@ -1,0 +1,20 @@
+# Protocol and development documentation
+
+| Start here | Purpose |
+| --- | --- |
+| [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
+| [LLM protocol](LLM_PROTOCOL.md) | Supported training, payments, consensus and model-serving rules. |
+| [Model card](MODEL_CARD.md) | Capabilities, limits, evaluation and provenance. |
+| [API](API.md) | Native ledger and inference interfaces. |
+| [Data pipeline](DATA_PIPELINE.md) | Immutable ingestion, collection and verification. |
+| [Node deployment](DEPLOYMENT.md) | Pinned runtimes, service templates, recovery and monitoring. |
+| [Model evolution](EVOLUTION_PROTOCOL.md) | Experimental full-model training, growth, verification and reproduction. |
+| [Inherited ledger rules](PROTOCOL_CANDIDATE_V2.md) | Reference consensus, accounting, bonds and dispute assumptions. |
+| [LLM experiments](LLM_EXPERIMENTS.md) | Measured outcomes, including failures, with historical evidence links. |
+| [Research requirements](RESEARCH_ROADMAP.md) | Remaining conditions for a stronger public deployment. |
+
+This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
+
+`eval/data/input.txt` is a deliberate exception: the small licensed Tiny Shakespeare corpus is a test and source-compatibility fixture used by the reference implementation. Its path and bytes are retained; its [license and digest](../THIRD_PARTY.md) are recorded. Network genesis/data manifests under [networks](../networks) are also required protocol inputs, not disposable training output.
+
+Example settings and compact reproduction plans live under [config](../config). Run `python scripts/check_repository.py` after staging moves to check tracked-file boundaries and local Markdown links. CI also checks package contents so local archives, website files and manuscripts cannot enter a distribution.

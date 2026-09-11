@@ -47,39 +47,30 @@ jobs:
           ATEN_CPU_CAPABILITY: default
           MKL_ENABLE_INSTRUCTIONS: SSE4_2
       - run: neuroshard --help && python -m neuroshard --version && neuroshard-chain --help && neuroshard-work --help
-  website:
+  repository:
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: website
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - run: npm audit --audit-level=high
-      - run: npx playwright install --with-deps chromium
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install cryptography==50.0.1
-      - run: npm test
-  documentation:
+      - run: python scripts/check_repository.py
+  packaging:
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: docs-site
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: docs-site/package-lock.json
-      - run: npm ci
-      - run: npm run build
-      - run: npm audit --audit-level=high
+          python-version: '3.12'
+      - run: python -m pip install 'build>=1.2,<2' 'twine>=6,<7'
+      - run: python -m build --outdir "$RUNNER_TEMP/neuroshard-dist"
+      - run: python scripts/check_distribution.py "$RUNNER_TEMP/neuroshard-dist"
+      - run: python -m twine check "$RUNNER_TEMP/neuroshard-dist/"*
+      - name: Install the wheel outside the checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/neuroshard-client"
+          "$RUNNER_TEMP/neuroshard-client/bin/python" -m pip install "$RUNNER_TEMP/neuroshard-dist/"*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/neuroshard-client/bin/neuroshard" --help
+          "$RUNNER_TEMP/neuroshard-client/bin/python" -m neuroshard --version
+          "$RUNNER_TEMP/neuroshard-client/bin/neuroshard-data" --help

@@ -6,3 +6,26 @@ global-exclude __pycache__
 
 recursive-include src/neuroshard/client/networks *.json
 include src/neuroshard/client/consensus/go.mod src/neuroshard/client/consensus/go.sum
+
+# A source distribution must contain its tests, fixtures and execution profiles.
+recursive-include tests *.py
+recursive-include docs *.md
+include docs/llm-requirements.txt docs/demo-requirements.txt docs/eval/data/input.txt
+recursive-include config *.json *.service *.timer *.conf
+recursive-include networks *.json *.sha256
+recursive-include scripts *.py *.sh
+recursive-include tools/protocolprobe *.go go.mod go.sum
+include AUTHORS CONTRIBUTING.md CODE_OF_CONDUCT.md GOVERNANCE.md SECURITY.md RELEASES.md
+
+# Recovery and publishing workspaces must not enter source distributions.
+prune archive
+prune .neuroshard
+prune website
+prune docs-site
+prune legacy
+prune docs/archive
+prune docs/whitepaper
+prune docs/figures
+prune docs/experiments
+prune docs/eval/results
+global-exclude *.tex *.pdf *.pyc

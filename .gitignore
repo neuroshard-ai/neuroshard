@@ -1,5 +1,29 @@
 # NeuroShard public source; keys, node state, and build output stay local.
 
+# Local recovery and publishing workspaces are outside the public source tree.
+/archive/
+/website/
+/docs-site/
+/legacy/
+/assets/
+
+# Manuscripts, generated figures and historical measurement dumps.
+*.tex
+*.pdf
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
+/docs/IEEEtran.cls
+/docs/archive/
+/docs/whitepaper/
+/docs/figures/
+/docs/experiments/
+/docs/eval/results/
+/IEEE-conference-template-062824/
+/simulation_logs/
+/simulation_logs_tiny/
+
 # -------------------- Python --------------------
 __pycache__/
 *.py[cod]
@@ -194,7 +218,7 @@ docs/whitepaper/*.out
 docs/whitepaper/*.toc
 docs/whitepaper/*.synctex.gz
 
-# Website build artifacts (keep source)
+# Optional local publishing build artifacts
 website/dist/
 docs-site/.vitepress/cache/
 docs-site/.vitepress/dist/
@@ -214,7 +238,7 @@ website/public/release.json
 
 # Generated documentation pages
 docs-site/generated/
-# Historical material remains source-only
+# Historical material is retained only in the ignored local archive.
 legacy/**/node_modules/
 legacy/**/dist/
 

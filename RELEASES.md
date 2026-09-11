@@ -1,8 +1,14 @@
 # Native releases
 
+## Repository maintenance — protocol source scope
+
+The current tree contains protocol/client source, tests, example configuration, network manifests, technical documentation and reproducibility tools. Website publishing projects, manuscripts, generated figures, old prototypes and raw measurement dumps have moved out of the tracked tree. Historical evidence remains linked to immutable revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`; history and released artifacts are preserved.
+
+No Python runtime source, genesis, balance or execution profile changed in this cleanup. CI now checks repository boundaries, Markdown links, package contents, Python behavior and the consensus build. This is not a new PyPI or network release.
+
 ## Unreleased — model-evolution research tools
 
-The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Public reproduction scripts, raw results and the expanded [working paper](docs/FINE2026_neuroshard_short.pdf) are included.
+The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Reproduction scripts and compact input plans are included; the [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) and linked historical measurements are published separately.
 
 These tools have not been published as a new PyPI version or activated on the public chain. Native rolling-data activation, verifiable quality promotion and paid inference for evolving models remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
 
@@ -41,11 +47,11 @@ Release assets include source, wheel, genesis, network declaration, and SHA-256 
 
 The website needs no authentication backend. Old signup/login/download URLs lead to participation instructions; retired API endpoints return a retirement response. Existing user records are preserved operationally outside source control. No conversion of old balances or identities is defined.
 
-Limits at this release: 34,976 parameters, full replay at every validator, concentrated launch ownership, bounded sponsorship, unresolved fair assignment, no inclusion proofs/state sync, and no established production monetary policy or sustained-load envelope. Accepted work does not prove model improvement or profitability. The five-page paper accompanied the earlier formulation and is now [archived](docs/archive/FINE2026_neuroshard_short_pre_evolution.pdf); subsequent experiments and protocol revisions are documented separately.
+Limits at this release: 34,976 parameters, full replay at every validator, concentrated launch ownership, bounded sponsorship, unresolved fair assignment, no inclusion proofs/state sync, and no established production monetary policy or sustained-load envelope. Accepted work does not prove model improvement or profitability. The five-page paper accompanied the earlier formulation and is now [archived](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/archive/FINE2026_neuroshard_short_pre_evolution.pdf); subsequent experiments and protocol revisions are documented separately.
 
 ## Release procedure
 
-1. Run native tests, wheel installation/conformance, website browser checks, docs build, and secret scan.
+1. Run native tests, consensus checks, repository/link checks, wheel installation/conformance, package-content checks and a secret scan. Validate frontend changes in the separate publishing workspace when that deployment changes.
 2. Build from the exact public revision. Compare manifest and genesis. Change chain/release when consensus compatibility changes.
 3. Publish a named tag, checksummed assets, and concrete validation results. Mark network maturity explicitly. PyPI client version ordering must allow users to leave obsolete stable clients; it does not establish production network maturity.
 4. Deploy from pinned directories. Upgrade validators sequentially, preserving signing state. Never auto-deploy from `main`.
