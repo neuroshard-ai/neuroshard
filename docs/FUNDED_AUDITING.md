@@ -137,3 +137,6 @@ is 100,000 blocks, so this can cheaply deny other sponsors access. The tests
 record that failure mode explicitly. Resource-priced reservations and admission
 that remains live under competing or Sybil senders are additional release
 blockers; increasing the global limit alone would exchange it for state growth.
+The [atomic admission RFC](AUDIT_ADMISSION_RFC.md) proposes a next-profile
+replacement and its falsification tests. It is not implemented and retains
+explicit open questions about interference costs and auditor collusion.
