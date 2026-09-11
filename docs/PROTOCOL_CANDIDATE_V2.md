@@ -102,9 +102,9 @@ If the transaction is included at H, let E be the least multiple of eight with E
 
 If R is the effective removal height, the latest possible voting height is R−1. The remaining collateral is withdrawable only once both conditions hold:
 
-\[
+$$
 H\ge R+24, \qquad t_H>t_R+6\text{ seconds}.
-\]
+$$
 
 Using removal-confirmation time is conservative relative to the last voting time. CometBFT expires evidence only when **both** its height age and time age exceed their configured bounds; a block-only unbond timer could release collateral while evidence was still valid. [Upstream evidence-age predicate](https://github.com/cometbft/cometbft/blob/v0.38.26/evidence/verify.go).
 
@@ -145,11 +145,11 @@ Flooring each key's share and burning remainders means splitting one voting stak
 
 After every transition:
 
-\[
+$$
 S_{\mathrm{initial}}+S_{\mathrm{issued}}
 =S_{\mathrm{liquid}}+S_{\mathrm{bonded}}+S_{\mathrm{task\ escrow}}
 +S_{\mathrm{verifier\ escrow}}+S_{\mathrm{burned}}.
-\]
+$$
 
 All terms are nonnegative integers. Issued atoms equal accepted training rounds times 1,000,000, capped at 1,000 tasks. Supply accounting includes pending activation, cooling/jailed bonds, and deferred rewards. Exhausting training issuance does not disable transfers, funded inference, or exits. These constants test accounting; they do not establish profitable mining or a sustainable public reward schedule.
 
