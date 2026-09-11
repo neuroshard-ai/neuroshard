@@ -7,16 +7,31 @@ accepting a funded obligation.
 
 ## Reproduce the complete lifecycle
 
-Use Linux x86_64, Python 3.10–3.12 and the pinned
-[numerical requirements](evolution-requirements.txt). Build CometBFT 0.38.26 using
-the repository's existing consensus build instructions. Use an immutable source
-checkout: the candidate genesis commits every Python file in the package.
+Use Linux x86_64, Python 3.10–3.12 and Go 1.27.1. Check out the reviewed source
+commit from the deployment or experiment record before creating this separate
+environment. The candidate genesis commits every Python file in the package;
+keep that checkout unchanged while its chain runs.
+
+```bash
+python3 -m venv venv_build
+venv_build/bin/python -m pip install -r docs/evolution-requirements.txt
+venv_build/bin/python -m pip install --no-deps .
+mkdir -p .neuroshard/tools
+GOTOOLCHAIN=local GOWORK=off GOFLAGS=-mod=readonly \
+  go -C src/neuroshard/client/consensus build \
+  -o "$PWD/.neuroshard/tools/cometbft" github.com/cometbft/cometbft/cmd/cometbft
+.neuroshard/tools/cometbft version
+```
+
+The consensus build uses the repository's dependency lock and must report
+`0.38.26`. The lightweight PyPI wallet installation alone does not provide this
+candidate runtime. From the same checkout, choose a fresh trial directory:
 
 ```bash
 ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
   venv_build/bin/python scripts/experiment_lifecycle_native.py \
   --home /var/tmp/neuroshard-funded-trial \
-  --engine /absolute/path/to/cometbft \
+  --engine "$PWD/.neuroshard/tools/cometbft" \
   --funded-audits --continue-cohort
 ```
 
