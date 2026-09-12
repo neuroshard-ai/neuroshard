@@ -12,7 +12,7 @@ The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md)
 
 The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 134.5M parameters, grows depth to 148.7M parameters, collects fresh/replay windows and evaluates research candidates. Its native application settles training and bonded growth claims, handles objective fraud/availability challenges and prevents repeated payment for the same prescribed computation. The [native lifecycle](NATIVE_LIFECYCLE.md) now connects rolling data, challengeable evaluation, serving decisions and bounded generation on isolated networks; its [results](NATIVE_LIFECYCLE_RESULTS.md) include unsuccessful quality experiments. The [funded candidate](FUNDED_AUDITING.md) adds prepaid complete replay and a [recovering operator](CANDIDATE_OPERATIONS.md). Public worker admission, independent audit selection, artifact retention and release integration remain gates before replacing the released network.
 
-The next executable research contract is the [learning milestone](LEARNING_MILESTONE.md): a public, fail-closed plan for useful learning, then continual learning, then a two-host reliability measurement. It does not replace the longer-term gates below.
+The [learning milestone](LEARNING_MILESTONE.md) supplies a public prepare/train/score contract. Its [completed 128-step experiment](LEARNING_MILESTONE_RESULTS.md) lowers mean response loss but fails the sealed-test confidence bound. Continual learning and the two-host reliability phase remain blocked. A follow-up requires a new committed plan and unused evaluation documents; the longer-term gates below also remain open.
 
 ## 1. Publish a falsifiable technical claim
 

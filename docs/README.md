@@ -22,6 +22,7 @@
 | [LLM experiments](LLM_EXPERIMENTS.md) | Measured outcomes, including failures, with historical evidence links. |
 | [Research requirements](RESEARCH_ROADMAP.md) | Remaining conditions for a stronger public deployment. |
 | [Learning milestone](LEARNING_MILESTONE.md) | Frozen useful-learning, continual-learning and two-host scaling contract. |
+| [Learning result](LEARNING_MILESTONE_RESULTS.md) | Completed 128-step run, rejected quality gate, all generations and downloadable checkpoint. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 

@@ -1,6 +1,6 @@
 # Learning milestone — frozen experiment contract
 
-**Status: selection committed, 12 September 2026.** The plan was frozen on 11 September. The [sealed manifest](../config/experiments/learning-milestone-selection.json) contains all 448 documents, 128 training batches and 20 generation probes. Training requires those exact Git-committed bytes and the matching implementation. No learning outcome is claimed by this status.
+**Status: phase 1 completed and rejected, 12 September 2026.** The [128-step result](LEARNING_MILESTONE_RESULTS.md) fails the sealed-test confidence bound; continual learning and scaling remain blocked. The plan was frozen on 11 September. Its [sealed manifest](../config/experiments/learning-milestone-selection.json) contains all 448 documents, 128 training batches and 20 generation probes. The machine-readable plan retains its committed status and bytes for exact reproduction with the recorded implementation.
 
 The intended product remains a collectively trained, openly retrievable language model whose usable capacity can grow as reliable compute joins. The [scaling design](SCALING_DESIGN.md) still requires economical verification, funded honest audits and independent operators. Those are separate claims. This milestone answers three narrower questions, in order:
 
