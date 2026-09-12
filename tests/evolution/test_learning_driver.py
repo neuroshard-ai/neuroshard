@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -73,3 +74,34 @@ def test_restart_cannot_reset_elapsed_budget(tmp_path):
     restarted = json.loads((tmp_path/'run.json').read_bytes())
     with pytest.raises(ValueError, match='original wall-clock budget'):
         driver.Budget(tmp_path, restarted, plan, clock=lambda: 101.).check()
+
+
+def test_selection_excludes_incomplete_documents_and_cross_role_token_duplicates(seed):
+    store, _, _ = seed
+    db = sqlite3.connect(':memory:')
+    db.execute('CREATE TABLE documents (id TEXT, source TEXT, row INTEGER, object TEXT, role TEXT)')
+    prepared = {}
+    for role_index, (role, quota) in enumerate((('test', 64), ('retention', 64), ('fresh', 64), ('train', 256))):
+        for i in range(quota+2):
+            identity = f'{10000*role_index+i:064x}'
+            # Every role's second row has identical numerical input/targets.
+            # The incomplete first row must never fill a quota.
+            token = 7 if i == 1 else 10000*(role_index+1)+i
+            prepared[identity] = {'truncated': i == 0,
+                                 'windows': [{'tokens': [1, 2, token], 'labels': [-100, -100, token]}]}
+            root = store.put_json({'messages': [{'role': 'user', 'content': identity}]})
+            db.execute('INSERT INTO documents VALUES (?,?,?,?,?)', (identity, str(role_index), i, root, role))
+    codec = SimpleNamespace(response_windows=lambda messages, *_: prepared[messages[0]['content']])
+    corpus = SimpleNamespace(db=db, store=store, codec=codec)
+    plan = {'data': {'context_tokens': 64, 'response_tokens': 64, 'max_windows': 4}}
+    selected, rejected = driver.select_documents(corpus, plan)
+    assert {role: len(items) for role, items in selected.items()} == {
+        'test': 64, 'retention': 64, 'fresh': 64, 'train': 256}
+    assert rejected == {'incomplete': 4, 'repeated_tokens': 3}
+    assert selected['test'][0]['row'] == 1
+    assert all(selected[role][0]['row'] == 2 for role in ('retention', 'fresh', 'train'))
+    # Removing one eligible row cannot silently shorten the training pool.
+    db.execute('DELETE FROM documents WHERE role="train" AND row=257')
+    with pytest.raises(ValueError, match='255/256; do not lower n'):
+        driver.select_documents(corpus, plan)
+    db.close()
