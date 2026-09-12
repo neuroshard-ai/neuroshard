@@ -35,6 +35,8 @@ def configure(device, threads=2):
             "tokenizers": version("tokenizers"), "safetensors": version("safetensors"),
             "numpy": version("numpy"), "jinja2": version("jinja2"),
             "threads": threads, "cuda": torch.version.cuda,
+            "cpu_dispatch": torch.backends.cpu.get_cpu_capability(),
+            "mkl_instructions": os.environ.get("MKL_ENABLE_INSTRUCTIONS"),
             "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
             "parameters": "float32", "optimizer": "float32-adamw",
             "autocast": "bfloat16" if device == "cuda" else None,
@@ -48,8 +50,12 @@ def autocast(device):
 
 
 def load_model(directory, device, parameters):
+    import json
     import torch
-    from transformers import AutoModelForCausalLM
+    from safetensors import safe_open
+    from transformers import AutoConfig, AutoModelForCausalLM, GenerationConfig
+    from transformers.modeling_utils import no_init_weights
+    directory = Path(directory)
     if device == "cuda":
         free, total = torch.cuda.mem_get_info()
         # Four FP32 arrays: parameter, gradient and two Adam moments. Reserve
@@ -58,14 +64,56 @@ def load_model(directory, device, parameters):
         estimate = parameters * 16 + 4 * 1024**3
         if free < estimate:
             raise ValueError(f"Insufficient free GPU memory: {free} bytes; estimate {estimate}")
-    model = AutoModelForCausalLM.from_pretrained(
-        directory, local_files_only=True, trust_remote_code=False,
-        dtype=torch.float32, attn_implementation="sdpa")
+    config = AutoConfig.from_pretrained(directory, local_files_only=True, trust_remote_code=False)
+    if config.model_type != "llama" or not config.tie_word_embeddings:
+        raise ValueError("The reference currently supports tied-weight Llama models")
+    # HF's generic BF16->FP32 loader can transiently hold several full copies.
+    # Allocate one destination and copy one safetensors tensor at a time.
+    # Unlike a meta/to_empty model, this initializes real rotary buffers.
+    with no_init_weights():
+        model = AutoModelForCausalLM.from_config(config, trust_remote_code=False,
+                                                dtype=torch.float32, attn_implementation="sdpa")
+    model.tie_weights()
     actual = sum(parameter.numel() for parameter in model.parameters())
-    if actual != parameters or any(not parameter.requires_grad for parameter in model.parameters()):
+    if actual != parameters or any(not parameter.requires_grad or parameter.dtype != torch.float32
+                                   for parameter in model.parameters()):
         raise ValueError("Seed parameter count differs or some parameters are frozen")
+    model = model.to(device)
+    model.tie_weights()
+    targets = dict(model.named_parameters(remove_duplicate=False))
+    expected = {id(parameter) for parameter in targets.values()}
+    if (directory / "model.safetensors").exists():
+        shards = ["model.safetensors"]
+        weight_map = None
+    else:
+        weight_map = json.loads((directory / "model.safetensors.index.json").read_bytes())["weight_map"]
+        shards = sorted(set(weight_map.values()))
+    loaded, loaded_names = set(), set()
+    with torch.no_grad():
+        for name in shards:
+            if Path(name).name != name or not name.endswith(".safetensors"):
+                raise ValueError("Invalid model shard filename")
+            with safe_open(directory / name, framework="pt", device="cpu") as source:
+                for key in source.keys():
+                    if key not in targets or (weight_map is not None and weight_map.get(key) != name):
+                        raise ValueError("Unexpected model tensor or shard mapping")
+                    target = targets[key]
+                    value = source.get_tensor(key)
+                    if (id(target) in loaded or value.shape != target.shape
+                            or value.dtype not in (torch.float32, torch.bfloat16)):
+                        raise ValueError("Duplicated, misshaped or unsupported model tensor")
+                    target.copy_(value)
+                    loaded.add(id(target))
+                    loaded_names.add(key)
+                    del value
+    if loaded != expected:
+        raise ValueError("Model snapshot is missing required parameters")
+    if weight_map is not None and loaded_names != set(weight_map):
+        raise ValueError("Model shard index contains missing tensors")
+    if (directory / "generation_config.json").exists():
+        model.generation_config = GenerationConfig.from_pretrained(directory, local_files_only=True)
     model.config.use_cache = False
-    return model.to(device)
+    return model
 
 
 def optimizer_for(model, recipe):

@@ -244,3 +244,46 @@ def test_repeated_documents_cannot_inflate_paired_sample_size():
     repeated = [{"id": "a", "loss": 1.}] * 2
     with pytest.raises(ValueError, match="identical document"):
         engine.paired_summary(repeated, repeated)
+
+
+def test_public_probe_checker_rejects_ambiguous_or_wrongly_typed_json(monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    import inspect_reference_seed as probe
+    rule = {"kind": "json", "expected": {"shipment": "K17", "total_crates": 12}}
+    assert probe.check_answer('{"shipment":"K17","total_crates":12}', rule)
+    assert not probe.check_answer('{"shipment":"K17","total_crates":12.0}', rule)
+    assert not probe.check_answer('{"shipment":"K17","total_crates":7,"total_crates":12}', rule)
+    assert not probe.check_answer('```json\n{"shipment":"K17","total_crates":12}\n```', rule)
+    assert probe.check_answer("An incorrect explanation", {"kind": "manual"}) is None
+
+
+def test_streamed_loader_preserves_sharded_weights_and_rotary_logits(tmp_path):
+    original = tiny_model()
+    original.save_pretrained(tmp_path, safe_serialization=True, max_shard_size="1KB")
+    assert (tmp_path / "model.safetensors.index.json").exists()
+    loaded = engine.load_model(tmp_path, "cpu", sum(p.numel() for p in original.parameters()))
+    oracle = LlamaForCausalLM.from_pretrained(tmp_path, local_files_only=True, attn_implementation="sdpa")
+    assert loaded.get_input_embeddings().weight is loaded.get_output_embeddings().weight
+    for actual, expected in zip(loaded.parameters(), oracle.parameters()):
+        torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    tokens = torch.tensor([[1, 4, 9, 11, 2]])
+    torch.testing.assert_close(loaded(tokens).logits, oracle(tokens).logits, rtol=0, atol=0)
+
+
+def test_streamed_loader_rejects_incomplete_or_broadcastable_weights(tmp_path):
+    from safetensors.torch import load_file, save_file
+    original = tiny_model()
+    original.save_pretrained(tmp_path, safe_serialization=True)
+    path = tmp_path / "model.safetensors"
+    # Detach from the mmap before deliberately replacing the fixture file.
+    weights = {name: value.clone() for name, value in load_file(path).items()}
+    key = "model.embed_tokens.weight"
+    changed = {**weights, key: weights[key][:1]}
+    save_file(changed, path)
+    count = sum(p.numel() for p in original.parameters())
+    with pytest.raises(ValueError, match="misshaped"):
+        engine.load_model(tmp_path, "cpu", count)
+    del weights[key]
+    save_file(weights, path)
+    with pytest.raises(ValueError, match="missing required"):
+        engine.load_model(tmp_path, "cpu", count)
