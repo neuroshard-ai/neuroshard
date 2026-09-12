@@ -149,6 +149,9 @@ def tokenizer_for(args, prepared):
 def recover(home, binding):
     """Recover a durable renamed checkpoint even if latest.json was not written."""
     candidates = []
+    if (home / "latest.json").exists():
+        previous = json.loads((home / "latest.json").read_bytes())
+        engine.verify_checkpoint(home, previous, binding)
     for directory in sorted(home.glob("checkpoint-[0-9][0-9][0-9][0-9][0-9][0-9]")):
         receipt = json.loads((directory / "checkpoint.json").read_bytes())
         pointer = {"directory": directory.name, "receipt": data.identity(receipt)}
@@ -230,6 +233,10 @@ def run(args, plan):
     train = partition(home, prepared, "train")
     recipe = plan["training"]
     batches = engine.schedule(len(train), recipe["steps"], recipe["batch_documents"], recipe["seed"])
+    if len(records) > recipe["steps"] or any(
+            record["step"] != step + 1 or record["documents"] != [train[i]["id"] for i in batches[step]]
+            for step, record in enumerate(records)):
+        raise ValueError("Recovered optimizer journal differs from the prescribed training schedule")
     for step in range(len(records), recipe["steps"]):
         started = time.monotonic()
         record = engine.train_step(model, optimizer, [train[i] for i in batches[step]], args.device,

@@ -73,11 +73,13 @@ def validate_plan(plan):
             raise ValueError("Use an explicit upstream split")
         start = integer(spec["start"], 0, 10_000_000, "scan start")
         count = integer(spec["scan"], 1, 100_000, "scan size")
-        integer(spec["documents"], 1, count, "document quota")
+        integer(spec["documents"], 1 if role == "train" else 2, count, "document quota")
         if any(split == spec["split"] and start < end and before < start + count
                for split, before, end in ranges):
             raise ValueError("Source scan ranges must not overlap")
         ranges.append((spec["split"], start, start + count))
+    if plan["generation_documents"] > min(plan["roles"][role]["documents"] for role in ("dev", "test")):
+        raise ValueError("Generation quota exceeds its evaluation document pool")
     train = plan["training"]
     integer(train["steps"], 1, 2048, "training steps")
     integer(train["batch_documents"], 1, 128, "effective batch size")

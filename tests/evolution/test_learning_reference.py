@@ -219,3 +219,28 @@ def test_training_schedule_covers_whole_epoch_before_repeating():
     assert set(flat[:7]) == set(range(7))
     assert batches == engine.schedule(7, 4, 3, 52)
     assert len(flat) == 12
+
+
+def test_metadata_corruption_cannot_replace_an_existing_checkpoint_pointer(tmp_path):
+    model = tiny_model()
+    pointer = engine.checkpoint(tmp_path, model, Tokenizer(), engine.optimizer_for(model, recipe()),
+                                1, "binding", [{"step": 1}])
+    receipt_path = tmp_path / pointer["directory"] / "checkpoint.json"
+    receipt = json.loads(receipt_path.read_bytes())
+    receipt["records"][0]["step"] = 2
+    data.save(receipt_path, receipt)
+    with pytest.raises(ValueError, match="different inputs"):
+        driver.recover(tmp_path, "binding")
+
+
+def test_evaluation_quota_must_support_the_declared_generations():
+    plan = json.loads((ROOT / "config/experiments/learning-reference.json").read_bytes())
+    plan["roles"]["dev"]["documents"] = 2
+    with pytest.raises(ValueError, match="Generation quota"):
+        data.validate_plan(plan)
+
+
+def test_repeated_documents_cannot_inflate_paired_sample_size():
+    repeated = [{"id": "a", "loss": 1.}] * 2
+    with pytest.raises(ValueError, match="identical document"):
+        engine.paired_summary(repeated, repeated)

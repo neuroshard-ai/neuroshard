@@ -33,6 +33,7 @@ def configure(device, threads=2):
             "host": platform.node(), "torch_build": identity(torch.__config__.show()),
             "torch": version("torch"), "transformers": version("transformers"),
             "tokenizers": version("tokenizers"), "safetensors": version("safetensors"),
+            "numpy": version("numpy"), "jinja2": version("jinja2"),
             "threads": threads, "cuda": torch.version.cuda,
             "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
             "parameters": "float32", "optimizer": "float32-adamw",
@@ -191,7 +192,7 @@ def generate(model, tokenizer, records, device, max_new_tokens, count, check=lam
 def paired_summary(baseline, candidate):
     import statistics
     if ([row["id"] for row in baseline] != [row["id"] for row in candidate]
-            or len(baseline) < 2):
+            or len(baseline) < 2 or len({row["id"] for row in baseline}) != len(baseline)):
         raise ValueError("Paired evaluation requires identical document IDs and at least two documents")
     if any(before.get("targets") != after.get("targets") for before, after in zip(baseline, candidate)):
         raise ValueError("Paired target counts differ")
