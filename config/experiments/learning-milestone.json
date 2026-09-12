@@ -1,0 +1,102 @@
+{
+  "format": "neuroshard-learning-milestone-v1",
+  "status": "selection-committed",
+  "created_utc": "2026-09-11T22:20:00Z",
+  "goal": "A collectively trained, openly retrievable language model. This milestone only asks whether the current 135M pipeline can learn, then retain, then use a second machine for a named benefit.",
+  "public_network": "neuroshard-llm-testnet-1 remains unchanged; no genesis, client, or PyPI release is authorized by this plan",
+  "license": "Apache-2.0",
+  "open_source": {
+    "repository": "https://github.com/neuroshard-ai/neuroshard",
+    "secret_evaluation": false,
+    "sealed_means": "document identities are committed to git before the first training step and remain publicly reconstructable from the pinned source",
+    "independent_reproduction": true,
+    "weights_in_git": false,
+    "selection_path": "config/experiments/learning-milestone-selection.json"
+  },
+  "seed": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "imported_model_root": "978db595a79e1bb381fd9723702b21682af10c68ce872d5e3f4d9e4429d0e22e",
+    "parameters": 134515008,
+    "growth_layers": 0
+  },
+  "data": {
+    "repo": "HuggingFaceTB/smol-smoltalk",
+    "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+    "license": "Apache-2.0",
+    "text_profile": "neuroshard-text-codec-v1",
+    "sequence_length": 128,
+    "context_tokens": 64,
+    "response_tokens": 64,
+    "max_windows": 4,
+    "target_mode": "response",
+    "heldout_partition": ["retention", "fresh", "test"]
+  },
+  "optimizer": {
+    "kind": "sgd",
+    "learning_rate": 0.003,
+    "clip_norm": 1.0,
+    "batch_windows_per_step": 2,
+    "recipes": 1
+  },
+  "evaluation": {
+    "documents_per_role": 64,
+    "minimum_examples": 64,
+    "z": 2.576,
+    "fresh_min_gain": 0.001,
+    "retention_margin": 0.02,
+    "generation_prompts": 20,
+    "generation_max_tokens": 32,
+    "generation_is_pass_fail": false
+  },
+  "budget": {
+    "training_steps": 128,
+    "wall_clock_hours": 72,
+    "disk_gib": 256,
+    "hosts": 1,
+    "worker_processes": 3,
+    "worker_capacity": 48000000,
+    "include_evaluation_forwards": true,
+    "include_retries_and_rejected_work": true
+  },
+  "learning": {
+    "train_split": "train",
+    "train_start": 8192,
+    "train_scan_limit": 2048,
+    "train_documents": 256,
+    "heldout_split": "test",
+    "heldout_start": 3072,
+    "heldout_scan_limit": 2048,
+    "replay_fraction": 0.0,
+    "pass_roles": ["test", "retention"],
+    "report_roles": ["fresh"],
+    "equal_cost_baseline": "same parent checkpoint; required. Optional companion: identical steps on one process after the pass/fail is recorded"
+  },
+  "continual": {
+    "blocked_on": "learning.pass",
+    "replay_fraction": 0.25,
+    "replay_source": "trained-windows-of-learning",
+    "new_train_start": "learning.train_end",
+    "new_heldout_start": "learning.heldout_end",
+    "preserve_probe": "learning.test",
+    "pass_roles": ["test", "learning.test"]
+  },
+  "scaling": {
+    "blocked_on": "learning.pass",
+    "primary": "reliability",
+    "steps": 16,
+    "condition_a": "three workers on host 1",
+    "condition_b": "workers split across host 1 and host 2",
+    "kill": "stop one condition-B worker after step 8; recover from the last accepted journal; forbid a second work identity",
+    "success": "condition B completes, matches condition A model root, recovers from the kill, and records wall-clock, bytes, idle time and retries",
+    "not_claimed": ["capacity required to hold 135M", "throughput from the sequential pipeline", "independent operators"]
+  },
+  "stop_rules": {
+    "training_before_selection": "forbidden",
+    "margin_relaxation": "forbidden",
+    "second_recipe_on_same_sealed_set": "forbidden",
+    "growth_during_learning": "forbidden",
+    "continual_or_scaling_without_learning_pass": "forbidden",
+    "exhausted_budget_without_pass": "fail the phase"
+  }
+}
