@@ -108,8 +108,8 @@ Separate fast response delivery from final payment while defining which party be
 | --- | --- | --- |
 | Bounded neural adjudication | Real-model dispute bytes, validator time, observer cost and cross-CPU agreement; adversarial coverage of all supported operators | Optimizer refutation implemented; full graph still uses stage replay |
 | Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Prepaid complete replay and reporting implemented in the candidate; sponsor selection and ownership remain limitations |
-| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | Earlier growth candidate failed promotion; useful improvement not demonstrated |
-| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | Two owned hosts demonstrate execution; open scheduling and scale not demonstrated |
+| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | [Frozen contract](LEARNING_MILESTONE.md): 135M, no growth, sealed test; training blocked until the selection manifest is committed |
+| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | Two owned hosts demonstrate execution; the milestone measures reliability and overhead after a learning pass, not implied 135M capacity |
 | Public independence | Independent ownership of sufficient voting power and services, admission and exit, recovery logs, public genesis | Four public validator keys under one operator |
 | Sustainable service | Artifact retention/recovery, storage bounds, audit and inference funding, usable latency, privacy policy | Bounded testnet mechanisms; no established public compute economy |
 
