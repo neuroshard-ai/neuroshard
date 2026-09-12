@@ -16,6 +16,8 @@ NeuroShard is Apache-2.0. The seed ([SmolLM2-135M-Instruct](https://huggingface.
 
 **Sealed** means the document identities are chosen and committed to git *before* the first training step. Anyone with this repository and the pinned sources can reconstruct the same windows. It does not mean a hidden holdout. After the decision, the scored losses, generation transcripts and checkpoint roots are published; large tensors stay out of git, as with other experiment artifacts.
 
+Untouched means unused by this NeuroShard experiment. The seed's published model card describes prior Smol-SmolTalk fine-tuning; this experiment cannot establish that its documents were unseen during the seed's training. Its paired comparison measures additional learning relative to that same seed.
+
 Independent reproduction and refutation are in scope. A passing local run is not a protocol security result.
 
 ## What earlier runs already showed
@@ -110,12 +112,42 @@ This plan does not treat a matching two-host root as a throughput win or as capa
 
 ## Execution and evidence
 
-Implementation of the prepare/train/score driver comes after this contract. Experiment homes, traces and tensors stay under `.neuroshard/` or a linked immutable revision, not in the source wheel. Compact results (roots, losses, UCBs, decision, generation texts, recovery hashes) belong in a later evidence note, in the same style as [native lifecycle results](NATIVE_LIFECYCLE_RESULTS.md).
+The [prepare/train/score driver](../scripts/run_learning_milestone.py) enforces the commitment and the fixed recipe. Experiment homes, traces and tensors stay under `.neuroshard/`, not in the source wheel. Compact results (roots, losses, UCBs, decision, generation texts, recovery hashes) belong in a later evidence note, in the same style as [native lifecycle results](NATIVE_LIFECYCLE_RESULTS.md).
+
+Use a full Git clone and a Python environment with `docs/evolution-requirements.txt` plus the pinned collector dependencies in `pyproject.toml`. The driver runs from the checkout. It does not use the installed 0.4.0 client's released runtime. Obtain the seed's pinned files using `python -m neuroshard.evolution download-seed --model-dir ./seed`, as described in the [evolution protocol](EVOLUTION_PROTOCOL.md).
+
+```bash
+export PYTHONPATH=src
+export ATEN_CPU_CAPABILITY=default
+export MKL_ENABLE_INSTRUCTIONS=SSE4_2
+python scripts/run_learning_milestone.py prepare \
+  --home .neuroshard/learning-milestone \
+  --model-dir /path/to/pinned-smollm2-135m
+```
+
+Preparation requires a committed implementation and a `plan-frozen` plan. It scans the entire declared held-out range before the training range, uses the existing exact/near-duplicate registry, and selects complete documents in document-id order. Identical input/target windows cannot cross selected roles. Selection priority is `test`, `retention`, `fresh`, then `train`; no loss or generation is computed during preparation.
+
+The 256 training documents each contribute one window, chosen by the lowest SHA-256 of the canonical JSON `[plan_digest, "window", window_root]`. Documents are ordered by the hash of `[plan_digest, "document", document_id]`, then paired into 128 batches. All selected evaluation windows are scored. Document losses are weighted by their response-target counts, giving each document one observation in the confidence interval. Unused training windows are retained as artifacts and are excluded from subsequent trained-window replay.
+
+The 20 generation probes retain the original last user turn. The existing executor accepts at most 192 prompt tokens, so the rendering policy is explicit: apply the pinned chat template, retain its last 192 tokens, and record the original token count and truncation flag. No prompt is replaced because it is long or produces an unfavorable answer. Both models receive identical rendered inputs and generate up to 32 greedy tokens, stopping at EOS.
+
+Commit the generated selection first. Its `plan_digest` hashes the original plan file at the recorded `plan_commit`; its `implementation_digest` binds the Python package, driver and numerical dependency lock. Then change only the plan's status to `selection-committed` and commit that status separately. The guard checks both current files against Git, checks the original plan bytes, and allows only that status transition. A staged file is insufficient. Do not modify the bound implementation during the experiment.
+
+```bash
+python -c "from neuroshard.evolution.milestone import load, training_allowed; assert training_allowed(load())"
+python scripts/run_learning_milestone.py run --home .neuroshard/learning-milestone
+```
+
+For independent reconstruction, use the committed selection's implementation revision and run `reconstruct` with the same arguments as `prepare` in a new experiment home. Reconstruction checks that all document identities, windows, batches and prompt renderings match the committed manifest. An optional `--upstream-cache` reuses the pinned, hash-verified Parquet files; it cannot substitute their bytes.
+
+The three workers have separate durable databases and share one local content-addressed object directory. Training retains every checkpoint. The driver recovers accepted steps from worker receipts even if the coordinator died before writing its outer progress file. Each completed scoring window and generation is persisted. Retryable transport failures reopen those same journals, with at most three recorded transport failures; integrity errors fail the run. Restarting the command preserves the original 72-hour deadline, including downtime. A failed run cannot be reset through this driver.
+
+`run.json` holds progress, `coordinator.json` holds the accepted training position, and `result.json` contains the complete comparison and both generation transcripts. The wall-clock and 256 GiB limits apply to phase 1, including scoring, generation, retries and failed work. A successful command means the experiment completed; read `decision.pass` to determine whether useful learning passed. Phases 2 and 3 remain blocked unless it did.
 
 Reproduce the contract without training:
 
 ```bash
-venv_build/bin/python -m pytest -q tests/evolution/test_learning_milestone.py
+python -m pytest -q tests/evolution/test_learning_milestone.py tests/evolution/test_learning_driver.py
 ```
 
 The public product goal does not change if phase 1 fails. It means the current recipe, at this budget, did not produce a better serving model. That is a publishable result.
