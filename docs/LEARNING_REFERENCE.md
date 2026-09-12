@@ -30,6 +30,10 @@ The [development plan](../config/experiments/learning-reference.json) specifies:
 
 Preparation records source revisions, model-file hashes, tokenizer identity, selected document IDs, complete token/label arrays, rejected-document counts and implementation identity. Held-out roles are prepared before training. Exact normalized prompts/documents and the existing SimHash heuristic exclude duplicates across the selected roles. This does not prove semantic non-contamination. The seed already had related SmolTalk training; an unused NeuroShard source range is not proof of unseen upstream data or newly acquired real-world knowledge.
 
+The [prepared selection](../config/experiments/learning-reference-data-selection.json) contains all 2,560 document identities. Training covers 655,372 assistant targets; the development, retention and final-test sets contain 36,406, 42,239 and 76,469 targets respectively. No training or final-test scoring was needed to select these inputs.
+
+The September 12 preparation hashes to `a92ffc34e99e442ec034d78477807f026fa8fe67cd0fb61250b535735de7a7bb`. It binds the reference implementation at commit `153cec2`; subsequent edits to the bound source require a new preparation. This larger-model run has not trained or opened its final test while GPU quota approval is pending.
+
 Each real assistant response, including its actual EOS, contributes targets. User prompts, role markers and padding do not. Oversized documents are excluded with an explicit count; there is no silent left truncation, partial-answer supervision or cross-document packing. These exclusions bias the experiment toward conversations within the declared length, and the report must retain that limitation.
 
 Gradient accumulation weights each document by its number of supervised answer tokens. Checkpoints preserve the full model, both Adam moments, random state, the consumed-document journal and input/runtime identity. Resume verifies file hashes and can recover a completely written checkpoint whose pointer was lost. Work after the last checkpoint may be repeated; it receives no network payment. The original phase deadline survives a restart.
@@ -74,7 +78,37 @@ The test documents are publicly reconstructable. The driver enforces sequencing;
 
 Tests cover assistant/EOS masking, complete-context rejection, shared-prompt contamination, unequal-length gradient accumulation against an independent padded-batch calculation, Adam-state recovery, lost checkpoint pointers, corrupt artifacts, durable budgets and the Git commitment required to open the test.
 
-A [two-step 135M CPU smoke run](../config/experiments/learning-reference-cpu-smoke.json) exercised the real driver and full optimizer before the GPU experiment. It used four training documents and two documents per evaluation role, with short generation limits to check execution. It completed in 68.73 seconds, retaining about 3.51 GB of artifacts, and a repeated command returned the saved outcome without retraining. Development loss worsened on that tiny sample while retention improved. This is functional verification, not a useful-learning result. The final test remained unopened. To repeat the smoke workflow, use that plan with `--plan`, `--device cpu`, and separate model/experiment directories in the commands above.
+For a small matched seed diagnostic, [inspect_reference_seed.py](../scripts/inspect_reference_seed.py) runs the same [four public prompts](../config/experiments/assistant-probes.json) with up to 128 output tokens. It checks exact arithmetic/formatting, grounded JSON and a word recalled from the supplied conversation; the explanation prompt remains manually assessed. It performs no training and is not a held-out benchmark. Both models' complete answers, token limits and timings must accompany any comparison.
+
+```bash
+.neuroshard/reference-venv/bin/python scripts/inspect_reference_seed.py \
+  --plan config/experiments/learning-reference.json \
+  --model-dir .neuroshard/reference-model --home .neuroshard/seed-probes --device cuda
+```
+
+A [two-step 135M CPU smoke run](../config/experiments/learning-reference-cpu-smoke.json) exercised the real driver and full optimizer at commit `3eb1c45`, before the GPU experiment and later streaming-loader change. It used four training documents and two documents per evaluation role, with short generation limits to check execution. It completed in 68.73 seconds, retaining about 3.51 GB of artifacts, and a repeated command returned the saved outcome without retraining. Development loss worsened on that tiny sample while retention improved. This is functional verification, not a useful-learning result. The final test remained unopened. To repeat the smoke workflow, use that plan with `--plan`, `--device cpu`, and separate model/experiment directories in the commands above.
+
+### Matched seed observations, September 12
+
+The [complete observation record](../config/experiments/assistant-seed-observations.json) publishes every prompt, rendered input, output token, answer, exact-check result, timing, model hash and resource log. Both upstream seeds ran sequentially at commit `153cec2` on one temporary m7i.2xlarge (32 GiB, Xeon Platinum 8488C), with two Torch threads, FP32 execution and the same 128-token output limit. No training occurred. The record's optimizer field describes the shared reference profile; these probes allocate no optimizer.
+
+| Public probe | 135M seed | 1.7B seed |
+| --- | --- | --- |
+| Arithmetic, answer only | `84 * 3 / 2 = 256 / 2 = 132`; fails | `126`; passes |
+| Grounded shipment JSON | Unrequested Python code, unfinished at 128 tokens; fails | Correct JSON with shipment `K17` and total `12`; passes |
+| Code word, word only | `Understood. Our code word is cedar.`; fails exact format | `Cedar.`; fails exact format because of punctuation |
+| Explain body segmentation | Circular restatement | Describes connected sections and their function; manually assessed |
+
+The fixed machine-checkable rules pass on 0/3 and 2/3 prompts respectively. Both models recall the code word; that row measures compliance with the requested output format. The explanation has no automatic pass. These four public examples support investigating the larger seed; they do not measure broad assistant quality or improvement learned by NeuroShard.
+
+| Resource observation | 135M seed | 1.7B seed |
+| --- | --- | --- |
+| Answer times: arithmetic / JSON / code word / explanation | 1.04 / 5.41 / 0.65 / 0.93 seconds | 3.66 / 11.28 / 4.74 / 13.94 seconds |
+| Complete process, including loading | 11.14 seconds | 40.79 seconds |
+| Peak resident memory | 1.06 GiB | 9.87 GiB |
+| Answers exhausting the output limit | 1/4 | 0/4 |
+
+CPU dispatch remained ATen `DEFAULT` / MKL `SSE4_2`, inherited from the numerical package; this is not an optimized serving benchmark. Peak memory includes loading and mapped source tensors. Two earlier larger-model attempts on the shared validator host hit an 11 GiB cgroup limit before generating answers, including the streamed loader. The successful dedicated-host run does not establish that the model fits that smaller cgroup: cgroup accounting also includes charged file cache, while process RSS is a different measurement. The temporary host had a three-hour automatic stop deadline and was terminated after the results were copied and their hashes verified.
 
 Assess the GPU result using answer quality, paired document loss, retention, generated-response completeness, response speed, peak memory and total cost. A loss reduction with worse answers does not qualify the model as a useful assistant. The report publishes every selected response and counts responses that exhaust their token budget; it does not invent an automatic correctness judge for arbitrary text.
 
