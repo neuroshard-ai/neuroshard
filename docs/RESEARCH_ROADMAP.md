@@ -14,6 +14,8 @@ The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 
 
 The [learning milestone](LEARNING_MILESTONE.md) supplies a public prepare/train/score contract. Its [completed 128-step experiment](LEARNING_MILESTONE_RESULTS.md) lowers mean response loss but fails the sealed-test confidence bound. Continual learning and the two-host reliability phase remain blocked. A follow-up requires a new committed plan and unused evaluation documents; the longer-term gates below also remain open.
 
+The next development step is the [GPU learning reference](LEARNING_REFERENCE.md): measure a conventional full-model optimizer on complete conversations, evaluate a more capable seed, and compare actual answers before translating a successful recipe into native distributed work. This reference does not change the rejected experiment, activate GPU consensus arithmetic or issue rewards.
+
 ## 1. Publish a falsifiable technical claim
 
 The defensible initial claim is: **a prescribed model update, produced by mutually untrusted pipeline stages, can be independently reproduced and settled exactly once by a native blockchain.** The reference tests this claim on a small model with full replay and fixed local validators. It does not demonstrate economical decentralized LLM pretraining, public admission, or a new proof-of-work consensus algorithm.
