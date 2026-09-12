@@ -1,6 +1,6 @@
 # Learning milestone — frozen experiment contract
 
-**Status: plan frozen, 11 September 2026.** Training is forbidden until the sealed-set manifest is committed. This is not a public-network upgrade, a token launch, or a claim that the 0.4.0 adapter already improved.
+**Status: selection committed, 12 September 2026.** The plan was frozen on 11 September. The [sealed manifest](../config/experiments/learning-milestone-selection.json) contains all 448 documents, 128 training batches and 20 generation probes. Training requires those exact Git-committed bytes and the matching implementation. No learning outcome is claimed by this status.
 
 The intended product remains a collectively trained, openly retrievable language model whose usable capacity can grow as reliable compute joins. The [scaling design](SCALING_DESIGN.md) still requires economical verification, funded honest audits and independent operators. Those are separate claims. This milestone answers three narrower questions, in order:
 

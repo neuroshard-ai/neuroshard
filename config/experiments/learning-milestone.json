@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-learning-milestone-v1",
-  "status": "plan-frozen",
+  "status": "selection-committed",
   "created_utc": "2026-09-11T22:20:00Z",
   "goal": "A collectively trained, openly retrievable language model. This milestone only asks whether the current 135M pipeline can learn, then retain, then use a second machine for a named benefit.",
   "public_network": "neuroshard-llm-testnet-1 remains unchanged; no genesis, client, or PyPI release is authorized by this plan",
