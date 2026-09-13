@@ -1,0 +1,43 @@
+{
+  "format": "neuroshard-cooperative-learning-v1",
+  "purpose": "development",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674",
+    "license": "Apache-2.0",
+    "parameters": 1711376384
+  },
+  "reference_prepared_sha256": "a92ffc34e99e442ec034d78477807f026fa8fe67cd0fb61250b535735de7a7bb",
+  "task_seed": 2026091301,
+  "grounded_train_documents": 768,
+  "replay_documents": 256,
+  "dev_documents": 64,
+  "test_documents": 256,
+  "max_length": 1024,
+  "grounded_token_weight": 8,
+  "generation_tokens": 96,
+  "training": {
+    "steps": 128, "batch_documents": 8, "learning_rate": 0.00003,
+    "warmup_steps": 8, "weight_decay": 0.01, "clip_norm": 1.0,
+    "checkpoint_steps": 64, "seed": 20260913
+  },
+  "arms": ["clean-single", "damaged-single", "clean-pair"],
+  "damaged_targets": "SHA256 task id modulo 4 equals zero: deliberately wrong grounded targets only; public replay unchanged",
+  "quality_contract": {
+    "eligible_arm": "clean-single",
+    "minimum_accuracy_gain": 0.05,
+    "maximum_one_sided_p": 0.01,
+    "retention_99pct_upper_max": 0.02,
+    "scope": "Generated grounded tasks and previously exposed public retention probes; not a general assistant or native serving approval"
+  },
+  "cooperation": {
+    "world_size": 2,
+    "backend": "nccl",
+    "reduction": "DDP average with each local loss scaled by world_size / global assistant targets",
+    "same_global_batch_and_schedule": true,
+    "cross_world_size_exact_claim": false,
+    "maximum_accuracy_drop_vs_single": 0.02
+  },
+  "inference": {"requests": 32, "concurrency": 2, "timeout_seconds": 60, "maximum_attempts": 2},
+  "budget": {"seconds": 21600, "disk_gib": 160, "total_usd": 100, "hosts": 2, "instance_type": "g6e.xlarge", "shutdown_hours": 8}
+}
