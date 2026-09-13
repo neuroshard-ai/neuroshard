@@ -32,7 +32,7 @@ Preparation records source revisions, model-file hashes, tokenizer identity, sel
 
 The [prepared selection](../config/experiments/learning-reference-data-selection.json) contains all 2,560 document identities. Training covers 655,372 assistant targets; the development, retention and final-test sets contain 36,406, 42,239 and 76,469 targets respectively. No training or final-test scoring was needed to select these inputs.
 
-The September 12 preparation hashes to `a92ffc34e99e442ec034d78477807f026fa8fe67cd0fb61250b535735de7a7bb`. It binds the reference implementation at commit `153cec2`; subsequent edits to the bound source require a new preparation. This larger-model run has not trained or opened its final test while GPU quota approval is pending.
+The September 12 preparation hashes to `a92ffc34e99e442ec034d78477807f026fa8fe67cd0fb61250b535735de7a7bb`. It binds the reference implementation at commit `153cec2`; subsequent edits to the bound source require a new preparation. The [September 13 GPU run](LEARNING_REFERENCE_RESULTS.md) completed all 256 updates, committed its candidate, scored the final test and reproduced the final 64 updates exactly on the same GPU. The final-test interval includes zero improvement, and generated answers show regressions; the candidate is not approved for serving.
 
 Each real assistant response, including its actual EOS, contributes targets. User prompts, role markers and padding do not. Oversized documents are excluded with an explicit count; there is no silent left truncation, partial-answer supervision or cross-document packing. These exclusions bias the experiment toward conversations within the declared length, and the report must retain that limitation.
 

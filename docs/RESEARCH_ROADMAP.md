@@ -14,7 +14,7 @@ The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 
 
 The [learning milestone](LEARNING_MILESTONE.md) supplies a public prepare/train/score contract. Its [completed 128-step experiment](LEARNING_MILESTONE_RESULTS.md) lowers mean response loss but fails the sealed-test confidence bound. Continual learning and the two-host reliability phase remain blocked. A follow-up requires a new committed plan and unused evaluation documents; the longer-term gates below also remain open.
 
-The next development step is the [GPU learning reference](LEARNING_REFERENCE.md): measure a conventional full-model optimizer on complete conversations, evaluate a more capable seed, and compare actual answers before translating a successful recipe into native distributed work. This reference does not change the rejected experiment, activate GPU consensus arithmetic or issue rewards.
+The [GPU learning reference](LEARNING_REFERENCE.md) has [completed a 1.7B run](LEARNING_REFERENCE_RESULTS.md): conventional full-model AdamW training and exact same-host recovery work, but final-test gain remains inconclusive and answer regressions persist. The next comparison needs reviewed instruction targets, executable tasks and a new frozen holdout before translating a successful recipe into native distributed work. This reference does not change the rejected experiment, activate GPU consensus arithmetic or issue rewards.
 
 ## 1. Publish a falsifiable technical claim
 
