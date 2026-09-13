@@ -5,6 +5,7 @@ state changes only at the declared synchronization boundaries. This module
 does not verify adversarial workers or authorize native payments.
 """
 import hashlib
+from contextlib import contextmanager
 
 from . import cooperative as group
 from . import reference_data as data
@@ -226,3 +227,32 @@ def verify_group_checkpoint(home, manifest, prepared, runtime, arm, rank, world,
     if receipt['step'] != step or len(receipt['records']) != step:
         raise ValueError('Checkpoint does not contain its complete local history')
     return directory, receipt
+
+
+@contextmanager
+def exclusive_device(device, directory=None):
+    """Reject overlapping jobs on these one-GPU research hosts.
+
+    The OS releases the lock even if a worker is killed. The lock spans
+    experiment directories and arms, so a second launcher cannot race the
+    first model's memory preflight. CPU workers may coexist.
+    """
+    import fcntl
+    import os
+    from pathlib import Path
+    import tempfile
+    if device == 'cpu':
+        yield
+        return
+    if device != 'cuda':
+        raise ValueError('Unknown device for experiment lock')
+    path = Path(directory or tempfile.gettempdir()) / f'neuroshard-local-training-{os.getuid()}.lock'
+    descriptor = os.open(path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError('Another local-window job owns this host GPU') from error
+        yield
+    finally:
+        os.close(descriptor)

@@ -26,6 +26,8 @@ v = mu * v + d
 x = x - eta * (d + mu * v)
 ```
 
+An OS device lock rejects overlapping training or evaluation jobs on a one-GPU host before model allocation. The remote launcher must wait for the actual child process and propagate its exit status.
+
 Every worker replaces its model with `x` and retains its own local Adam moments. Uniform endpoint averaging is used for equal document assignments. Each local inner loss is normalized by that worker's weighted target count; this differs from DDP's global token normalization when response lengths differ. The algorithm and numerical trajectory therefore change. Accuracy preservation must be measured.
 
 Common FP32 parent and momentum arrays live on CPU. Reductions use bounded 32 MiB chunks on GPU, avoiding two extra full-model GPU arrays. The implementation exchanges deltas rather than summing large parent weights. It records logical payload separately from whole-host network counters. NCCL Ring/Simple settings constrain this experiment's reduction profile; they are not a promise of exact replay on arbitrary hardware or optimal production tuning. See the [NCCL documentation](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html).

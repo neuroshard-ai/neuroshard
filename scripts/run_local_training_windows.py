@@ -432,7 +432,11 @@ def main():
     plan = validate(json.loads(args.plan.read_bytes()))
     if args.command in ('train', 'select') and args.arm == 'seed':
         raise ValueError('The seed is not a training arm')
-    globals()[args.command](args, plan)
+    if args.command in ('train', 'evaluate'):
+        with windows.exclusive_device(args.device):
+            globals()[args.command](args, plan)
+    else:
+        globals()[args.command](args, plan)
 
 
 if __name__ == '__main__':

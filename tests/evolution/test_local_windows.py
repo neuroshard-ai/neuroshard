@@ -91,3 +91,15 @@ def test_outer_rejects_nonfinite_update_and_invalid_bounds():
         windows.OuterNesterov(tiny().double(), .7, .9)
     with pytest.raises(ValueError):
         windows.common_checkpoint({}, [8, 4], 1, 'cpu')
+
+
+def test_exclusive_gpu_lock_rejects_overlap_and_releases_after_failure(tmp_path):
+    with pytest.raises(RuntimeError, match='injected'):
+        with windows.exclusive_device('cuda', tmp_path):
+            with pytest.raises(ValueError, match='owns this host GPU'):
+                with windows.exclusive_device('cuda', tmp_path):
+                    pytest.fail('A concurrent GPU job acquired the device')
+            raise RuntimeError('injected worker failure')
+    with windows.exclusive_device('cuda', tmp_path):
+        with windows.exclusive_device('cpu', tmp_path):
+            pass
