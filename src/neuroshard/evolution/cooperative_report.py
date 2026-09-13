@@ -149,7 +149,8 @@ def training_report(prepared, results):
             "network_scope": "Whole host interface during measured training; not isolated NCCL bytes",
         }
     summaries["pair_update_speedup"] = summaries["clean-single"]["update_seconds"] / summaries["clean-pair"]["update_seconds"]
-    summaries["pair_end_to_end_speedup"] = summaries["clean-single"]["training_seconds_including_checkpoints"] / summaries["clean-pair"]["training_seconds_including_checkpoints"]
+    summaries["pair_training_loop_speedup"] = summaries["clean-single"]["training_seconds_including_checkpoints"] / summaries["clean-pair"]["training_seconds_including_checkpoints"]
+    summaries["timer_scope"] = "Training loop through final digest, including checkpoints; excludes seed verification, model loading and process-group initialization. Retain process resource logs and whole-instance lifetime separately."
     return summaries
 
 

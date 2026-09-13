@@ -29,8 +29,9 @@ def main():
         "learning": report.learning_report(prepared, selection, records, evaluations),
         "training": report.training_report(prepared, training),
         "serving": report.serving_report({phase: read(f"serving/{phase}.json") for phase in ("single", "pair", "failure")},
-                                         selection["candidates"]["clean-single"]["parameter_digest"]),
+                                         selection["candidates"]["clean-pair"]["parameter_digest"]),
     }
+    result["serving"]["arm"] = "clean-pair"
     data.save(args.output, result)
     print(json.dumps(result, indent=2))
 
