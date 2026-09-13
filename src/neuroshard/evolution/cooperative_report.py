@@ -164,6 +164,8 @@ def serving_report(reports, expected_digest):
             raise ValueError("Serving used a different model")
         if any(not result["success"] for result in report["results"]):
             raise ValueError("Serving phase has failed requests; inspect raw evidence")
+        if any(result["answer"].get("cached") is not False for result in report["results"]):
+            raise ValueError("Serving throughput requires fresh inference, without retry-cache hits")
         if report["concurrency"] != concurrency or report["requests"] != len(report["results"]):
             raise ValueError("Serving concurrency or request count differs")
         outputs = [(row["task_id"], row["answer"]["generation"]["output_ids"]) for row in report["results"]]

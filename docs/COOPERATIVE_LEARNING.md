@@ -2,6 +2,8 @@
 
 This operated development experiment asks whether checked training targets help a shared model learn a narrow, useful task, what it costs to cooperate across two GPUs, and how serving capacity changes with a second replica. It does not change native consensus, issue NEURO or establish independent ownership. The previous [GPU result](LEARNING_REFERENCE_RESULTS.md) remains inconclusive on general assistant improvement.
 
+The [completed results](COOPERATIVE_LEARNING_RESULTS.md) pass the narrow learning comparison, record slower synchronous training and measure higher inference throughput with bounded failover. All final-test answers and raw measurements are public.
+
 The [frozen plan](../config/experiments/cooperative-learning.json) uses the same pinned 1.7B seed and numerical dependencies as the [reference](LEARNING_REFERENCE.md). Two g6e.xlarge instances each provide one L40S, four vCPUs and 32 GiB host RAM. Together they fit the reported eight-vCPU GPU quota. The observed on-demand price in us-east-1 is $1.861 per instance-hour; an eight-hour automatic stop deadline bounds combined compute to $29.776, with additional room for disk/traffic under a $100 experiment ceiling. Provisioning remains operator infrastructure, not a public admission service.
 
 ## Questions and fixed comparisons

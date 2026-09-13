@@ -28,7 +28,7 @@ def test_serving_comparison_rejects_different_answers_and_failed_requests():
     def phase(tokens, success=True):
         return {"model_digest": "model", "requests_per_second": 2, "concurrency": 2, "requests": 1,
                 "results": [{"success": success, "task_id": "task", "attempts": [{}],
-                             "answer": {"generation": {"output_ids": tokens}}}]}
+                             "answer": {"cached": False, "generation": {"output_ids": tokens}}}]}
     reports = {name: phase([1, 2]) for name in ("single", "pair", "failure")}
     assert report.serving_report(reports, "model")["identical_output_tokens"]
     reports["pair"] = phase([1, 3])
@@ -36,6 +36,10 @@ def test_serving_comparison_rejects_different_answers_and_failed_requests():
         report.serving_report(reports, "model")
     reports["pair"] = phase([1, 2], False)
     with pytest.raises(ValueError, match="failed requests"):
+        report.serving_report(reports, "model")
+    reports["pair"] = phase([1, 2])
+    reports["pair"]["results"][0]["answer"]["cached"] = True
+    with pytest.raises(ValueError, match="fresh inference"):
         report.serving_report(reports, "model")
 
 

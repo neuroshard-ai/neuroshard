@@ -25,6 +25,8 @@
 | [Learning result](LEARNING_MILESTONE_RESULTS.md) | Completed 128-step run, rejected quality gate, all generations and downloadable checkpoint. |
 | [GPU learning reference](LEARNING_REFERENCE.md) | Complete-conversation full-model training, held-out evaluation, checkpoint recovery and a bounded GPU trial. |
 | [GPU reference results](LEARNING_REFERENCE_RESULTS.md) | Completed 1.7B training, exact same-host recovery, inconclusive test gain, all answer pairs and target audit. |
+| [Cooperative experiment](COOPERATIVE_LEARNING.md) | Frozen target-quality, two-GPU training and replicated-serving comparisons. |
+| [Cooperative results](COOPERATIVE_LEARNING_RESULTS.md) | Measured task learning, shared parameter agreement, communication overhead and inference failover. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 

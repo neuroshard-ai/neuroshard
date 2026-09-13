@@ -25,10 +25,20 @@ def main():
     for arm, ranks in training.items():
         if {key: ranks[0][key] for key in ("candidate", "binding", "parameter_digest")} != selection["candidates"][arm]:
             raise ValueError("Training results differ from the selected candidate")
+    phases = {phase: read(f"serving/{phase}.json") for phase in ("single", "pair", "failure")}
+    recipe = prepared["plan"]["inference"]
+    for name, phase in phases.items():
+        if (phase["requests"] != recipe["requests"] or phase["concurrency"] != recipe["concurrency"]
+                or len(phase["endpoints"]) != (1 if name == "single" else 2)):
+            raise ValueError("Serving phase differs from the fixed workload or replica count")
+        if len(phase["unavailable"]) != (1 if name == "failure" else 0):
+            raise ValueError("The failure phase must observe exactly one unavailable replica")
+    if phases["pair"]["endpoints"] != phases["failure"]["endpoints"]:
+        raise ValueError("Failure trial changed the provider set")
     result = {
         "learning": report.learning_report(prepared, selection, records, evaluations),
         "training": report.training_report(prepared, training),
-        "serving": report.serving_report({phase: read(f"serving/{phase}.json") for phase in ("single", "pair", "failure")},
+        "serving": report.serving_report(phases,
                                          selection["candidates"]["clean-pair"]["parameter_digest"]),
     }
     result["serving"]["arm"] = "clean-pair"

@@ -16,6 +16,8 @@ The [learning milestone](LEARNING_MILESTONE.md) supplies a public prepare/train/
 
 The [GPU learning reference](LEARNING_REFERENCE.md) has [completed a 1.7B run](LEARNING_REFERENCE_RESULTS.md): conventional full-model AdamW training and exact same-host recovery work, but final-test gain remains inconclusive and answer regressions persist. The next comparison needs reviewed instruction targets, executable tasks and a new frozen holdout before translating a successful recipe into native distributed work. This reference does not change the rejected experiment, activate GPU consensus arithmetic or issue rewards.
 
+The subsequent [cooperative experiment](COOPERATIVE_LEARNING_RESULTS.md) passes a separate narrow task-learning contract: clean targets improve exact answers from 23/256 to 169/256, and a shared two-GPU run reaches 168/256. Invoice arithmetic remains failed. Both ranks agree on parameters, but synchronous updates are 4.39× slower than one GPU; inference replicas deliver 1.67× aggregate throughput and survive a stopped provider with bounded retries. Next, test less frequent training communication at matched quality, fresh cohorts and broader retention. This result establishes neither economical training scale nor native permissionless GPU work.
+
 ## 1. Publish a falsifiable technical claim
 
 The defensible initial claim is: **a prescribed model update, produced by mutually untrusted pipeline stages, can be independently reproduced and settled exactly once by a native blockchain.** The reference tests this claim on a small model with full replay and fixed local validators. It does not demonstrate economical decentralized LLM pretraining, public admission, or a new proof-of-work consensus algorithm.
