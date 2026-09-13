@@ -24,6 +24,10 @@ def step(model, optimizer, records, device, recipe, index, rank=0, world=1, chec
     import torch.distributed as dist
     local = rank_records(records, rank, world)
     total_targets = sum(record["targets"] for record in records)
+    weights=[record.get("loss_weight",1) for record in records]
+    if any(type(weight) is not int or not 1<=weight<=16 for weight in weights):
+        raise ValueError("Invalid declared target weight")
+    weighted_targets = sum(record["targets"] * weight for record,weight in zip(records,weights))
     if not local or total_targets <= 0:
         raise ValueError("Empty global or local training batch")
     if world > 1 and (not dist.is_initialized() or dist.get_world_size() != world or dist.get_rank() != rank):
@@ -41,8 +45,9 @@ def step(model, optimizer, records, device, recipe, index, rank=0, world=1, chec
         # averages ranks, so multiply local summed loss by world_size.
         with context:
             loss = engine.response_loss(model, record, device)
-            loss_sum += float(loss.detach())
-            (loss * world / total_targets).backward()
+            weight=record.get("loss_weight",1)
+            loss_sum += float(loss.detach()) * weight
+            (loss * world * weight / weighted_targets).backward()
     if world > 1:
         value = torch.tensor(loss_sum, dtype=torch.float64, device=device)
         dist.all_reduce(value)
@@ -52,7 +57,8 @@ def step(model, optimizer, records, device, recipe, index, rank=0, world=1, chec
     optimizer.step()
     if device == "cuda":
         torch.cuda.synchronize()
-    return {"step": index + 1, "loss": loss_sum / total_targets, "targets": total_targets,
+    return {"step": index + 1, "loss": loss_sum / weighted_targets, "targets": total_targets,
+            "weighted_targets": weighted_targets,
             "learning_rate": rate, "gradient_norm": float(norm),
             "documents": [record["id"] for record in records],
             "seconds": time.monotonic() - started,

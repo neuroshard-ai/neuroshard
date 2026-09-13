@@ -14,6 +14,7 @@
   "dev_documents": 64,
   "test_documents": 256,
   "max_length": 1024,
+  "grounded_token_weight": 8,
   "generation_tokens": 96,
   "training": {
     "steps": 128, "batch_documents": 8, "learning_rate": 0.00003,

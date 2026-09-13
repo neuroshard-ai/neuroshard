@@ -66,6 +66,7 @@ def validate_plan(plan):
     data.integer(train["warmup_steps"],0,train["steps"]-1,"warmup")
     data.integer(plan["generation_tokens"],1,256,"generation limit")
     data.integer(plan["max_length"],32,2048,"context limit")
+    data.integer(plan["grounded_token_weight"],1,16,"grounded target weight")
     data.integer(plan["budget"]["seconds"],1,28800,"time budget")
     data.integer(plan["budget"]["disk_gib"],1,160,"disk budget")
     return plan
@@ -110,6 +111,7 @@ def prepare(args, plan):
                 raise ValueError("Generated target fails its executable check")
             messages = [{"role":"user", "content":prompt}, {"role":"assistant", "content":answer}]
             records.append({"id":tasks.task_identity(case), "task":case, "messages":messages,
+                            "loss_weight":plan["grounded_token_weight"],
                             **data.conversation(tokenizer,messages,plan["max_length"])})
         if role == "train":
             clean_train = records
@@ -140,7 +142,8 @@ def write_records(path, records):
             output.write(canonical(record)+b"\n")
         output.flush(); os.fsync(output.fileno())
     return {"sha256":data.sha256(path),"ids":[r["id"] for r in records],
-            "documents":len(records),"targets":sum(r["targets"] for r in records)}
+            "documents":len(records),"targets":sum(r["targets"] for r in records),
+            "weighted_targets":sum(r["targets"]*r.get("loss_weight",1) for r in records)}
 
 
 def prepared_inputs(args, plan):
