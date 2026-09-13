@@ -26,7 +26,7 @@ v = mu * v + d
 x = x - eta * (d + mu * v)
 ```
 
-An OS device lock rejects overlapping training or evaluation jobs on a one-GPU host before model allocation. The remote launcher must wait for the actual child process and propagate its exit status.
+An OS device lock rejects overlapping training or evaluation jobs run by the same Unix user on a one-GPU host before model allocation. The remote launcher must wait for the actual child process and propagate its exit status.
 
 Every worker replaces its model with `x` and retains its own local Adam moments. Uniform endpoint averaging is used for equal document assignments. Each local inner loss is normalized by that worker's weighted target count; this differs from DDP's global token normalization when response lengths differ. The algorithm and numerical trajectory therefore change. Accuracy preservation must be measured.
 
@@ -48,7 +48,7 @@ The recovery trial starts from copies of the uninterrupted run's step-64 group c
 
 ## Execution and evidence
 
-Use four separate L40S hosts, one GPU each, with a private NCCL network and identical environments. The operated AWS trial is bounded to $100 and a three-hour automatic stop, with 300 GiB encrypted gp3 disks and the same throughput/read-ahead configuration for all arms. The reported quota of 30 GPU vCPUs permits the intended 16-vCPU allocation; actual instance launch remains the capacity check. Capacity required three hosts in us-east-1c and one in us-east-1d; both distributed arms use this same topology. Cross-zone traffic is charged separately. The budget reserves $24 for compute, $66 for transfer and $10 for storage/other traffic, with a 3.1 TB combined receive/transmit guard on the isolated-zone host. Provisioning and storage are operated infrastructure.
+Use four separate L40S hosts, one GPU each, with a private NCCL network and identical environments. The operated AWS trial is bounded to $100 and a three-hour automatic stop, with 300 GiB encrypted gp3 disks and the same throughput/read-ahead configuration for all arms. The reported quota of 30 GPU vCPUs permits the intended 16-vCPU allocation; actual instance launch remains the capacity check. Capacity required three hosts in us-east-1c and one in us-east-1d; both distributed arms use this same topology. Cross-zone traffic is charged separately. The budget reserves $24 for compute, $66 for transfer and $10 for storage/other traffic, with a 3.1 TB combined receive/transmit guard on the isolated-zone host. Provisioning and storage are operated infrastructure. The instance also has a 125 MB/s baseline EBS throughput limit, despite the volume’s higher provisioned throughput; full-state checkpoint and restore costs must be measured.
 
 ```bash
 PYTHONPATH=src python scripts/run_local_training_windows.py prepare \
