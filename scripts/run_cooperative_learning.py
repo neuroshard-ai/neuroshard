@@ -77,6 +77,16 @@ def tokenizer_for(directory):
     return AutoTokenizer.from_pretrained(directory, local_files_only=True, trust_remote_code=False)
 
 
+def verify_seed(directory, prepared):
+    if model_snapshot(directory,prepared['plan']['model'])!=prepared['model_snapshot']:
+        raise ValueError('Seed files differ from the committed preparation')
+
+
+def binding_for(prepared, runtime, arm):
+    return data.identity({'prepared':data.identity(prepared),'profile':group.runtime_profile(runtime),
+                          'arm':arm,'world':2 if arm=='clean-pair' else 1})
+
+
 def prepare(args, plan):
     home = args.home
     if any(home.glob("*")):
@@ -181,8 +191,7 @@ def train(args, plan):
     prepared = prepared_inputs(args,plan)
     committed_preparation(prepared)
     runtime = engine.configure(args.device,args.threads)
-    binding = data.identity({"prepared":data.identity(prepared),"profile":group.runtime_profile(runtime),
-                             "arm":args.arm,"world":world})
+    binding = binding_for(prepared,runtime,args.arm)
     out = args.home / args.arm
     out.mkdir(exist_ok=True)
     with (out / f"rank-{rank}.lock").open("a") as lock:
@@ -211,7 +220,7 @@ def train(args, plan):
                 if any(out.glob("checkpoint-*")):
                     raise ValueError("Checkpoint without pointer: explicitly recover its verified receipt first")
                 directory=args.model_dir
-                model_snapshot(directory,plan["model"])
+                verify_seed(directory,prepared)
             tokenizer=tokenizer_for(args.model_dir)
             if data.tokenizer_identity(tokenizer)!=prepared["tokenizer"]:
                 raise ValueError("Tokenizer identity changed")
@@ -272,6 +281,8 @@ def selection(args, plan):
     candidates={}
     for arm in ARMS:
         result=json.loads((args.home / arm / 'rank-0-result.json').read_bytes())
+        if result['binding']!=binding_for(prepared,result['runtime'],arm):
+            raise ValueError('Candidate belongs to a different preparation or arm')
         directory,receipt=engine.verify_checkpoint(args.home / arm,result['candidate'],result['binding'])
         if receipt['step']!=plan['training']['steps']:
             raise ValueError('Select only the predetermined final step')
@@ -298,11 +309,13 @@ def evaluate(args, plan):
     runtime=engine.configure(args.device,args.threads)
     candidate=None
     if args.arm=='seed':
-        model_snapshot(args.model_dir,plan['model']);directory=args.model_dir
+        verify_seed(args.model_dir,prepared);directory=args.model_dir
     else:
         result=json.loads((args.home / args.arm / 'rank-0-result.json').read_bytes())
         if group.runtime_profile(runtime)!=group.runtime_profile(result['runtime']):
             raise ValueError('Evaluation numerical profile differs from training')
+        if result['binding']!=binding_for(prepared,runtime,args.arm):
+            raise ValueError('Candidate belongs to a different preparation or arm')
         directory,_=engine.verify_checkpoint(args.home / args.arm,result['candidate'],result['binding'])
         candidate={key:result[key] for key in ['candidate','binding','parameter_digest']}
     if args.role=='test':

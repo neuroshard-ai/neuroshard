@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--endpoint',action='append',required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--run-id',required=True)
+    parser.add_argument('--model-digest',required=True,help='Expected parameter digest from the selected training result')
     parser.add_argument('--requests',type=int,default=32)
     parser.add_argument('--concurrency',type=int,default=2)
     parser.add_argument('--timeout',type=float,default=60)
@@ -39,6 +40,7 @@ def main():
             if not args.allow_unavailable:raise
     if not healthy or len({h['model_digest'] for h in healthy})!=1:raise ValueError('Replicas must expose one identical model')
     digest=healthy[0]['model_digest']
+    if digest!=args.model_digest:raise ValueError('Serving model differs from the selected candidate')
     def request(index):
         payload={'request_id':f'{args.run_id}-{index}','task_id':records[index]['id']}
         attempts=[];started=time.monotonic()

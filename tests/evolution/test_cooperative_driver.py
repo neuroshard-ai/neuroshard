@@ -34,6 +34,20 @@ def test_prepared_source_change_is_rejected_before_execution(tmp_path):
         driver.prepared_inputs(SimpleNamespace(home=tmp_path),plan)
 
 
+def test_changed_seed_receipt_cannot_replace_committed_model_bytes(monkeypatch):
+    prepared={'plan':{'model':{'repo':'expected'}},'model_snapshot':{'files':{'weights':'original'}}}
+    monkeypatch.setattr(driver,'model_snapshot',lambda *a:{'files':{'weights':'changed'}})
+    with pytest.raises(ValueError,match='committed preparation'):driver.verify_seed(Path('.'),prepared)
+
+
+def test_candidate_binding_separates_preparation_and_experiment_arm():
+    runtime={'host':'one','torch':'fixed'}
+    binding=driver.binding_for({'inputs':'a'},runtime,'clean-single')
+    assert binding!=driver.binding_for({'inputs':'b'},runtime,'clean-single')
+    assert binding!=driver.binding_for({'inputs':'a'},runtime,'damaged-single')
+    assert binding!=driver.binding_for({'inputs':'a'},runtime,'clean-pair')
+
+
 def test_candidate_commitment_checks_real_git_bytes_and_model_identity(tmp_path,monkeypatch):
     subprocess.run(['git','init','-q',str(tmp_path)],check=True)
     subprocess.run(['git','-C',str(tmp_path),'config','user.name','Test'],check=True)
