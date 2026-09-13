@@ -69,16 +69,22 @@ def compare_resident_and_offloaded(device, multiple_buckets=True):
                 assert all(value.device.type == 'cpu' for value in state.error_dict.values())
         assert state.iter == 12 and state.error_dict and state.total_numel_after_compression > 0
         assert (len(state.error_dict) > 1) == multiple_buckets
+        projection_rng = state.rng.get_state()
         snapshots.append(cpu_copy({'model': model.state_dict(), 'optimizer': optimizer.state_dict(),
                                    'errors': state.error_dict, 'p': state.p_memory_dict,
                                    'q': state.q_memory_dict, 'losses': losses,
-                                   'rng': state.rng.get_state()[1].tolist()}))
+                                   'projection_rng': (projection_rng[0], projection_rng[1].tolist(),
+                                                      *projection_rng[2:]),
+                                   'input_rng': generator.get_state(),
+                                   'torch_cpu_rng': torch.get_rng_state(),
+                                   'torch_cuda_rng': torch.cuda.get_rng_state_all() if device == 'cuda' else []}))
         del wrapped, model, optimizer, state
     for snapshot in snapshots[1:]:
         equal(snapshots[0], snapshot)
     return {'device': device, 'rank': dist.get_rank(), 'iterations': 12,
             'multiple_buckets': multiple_buckets, 'modes': modes,
-            'exact_model_optimizer_errors_projections_losses_and_rng': True}
+            'exact_model_optimizer_errors_projections_losses_and_rng': True,
+            'complete_projection_input_and_torch_rng_states': True}
 
 
 def worker(rank, rendezvous, output):
