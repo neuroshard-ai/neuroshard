@@ -63,3 +63,12 @@ Collect every rank's `result.json`, checkpoint receipt and common manifest into 
 The selected local-training model also serves 64 fixed development requests at client concurrency four: one replica, four replicas, then four advertised endpoints with one stopped. At most four attempts per request are permitted. Compare model identities, generated tokens, throughput, failures and retries. This fixture accepts committed task IDs only. It is not general public chat or token billing.
 
 Preserve raw schedules, failures, environment and network measurements, all final answers and full recovery states. Content-addressed, read-back-verified operator backups protect the experiment's artifacts; they do not establish permissionless data availability. Stop the experimental GPUs after evidence preservation. The live native network remains a separate CPU training and settlement system.
+
+After collecting the rank results, all final evaluations, serving phases and recovery comparison receipts, recompute the evidence with:
+
+```bash
+PYTHONPATH=src python scripts/report_local_training_windows.py \
+  --home /path/collected-evidence --output /path/new-report.json
+```
+
+The report rechecks strict answers, paired quality bounds, each rank's document assignment and synchronization schedule, complete recovery trajectories, and the fixed serving workload. It reports failed quality/efficiency/serving conditions without changing the selected candidate. Recovery tensor comparisons are host-side measurements whose full checkpoint objects are retained separately; JSON receipts alone are not cryptographic proofs of remote execution.
