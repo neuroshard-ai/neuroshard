@@ -20,7 +20,7 @@
   "training": {
     "steps": 128,
     "batch_documents": 8,
-    "learning_rate": 0.00003,
+    "learning_rate": 3e-05,
     "warmup_steps": 8,
     "weight_decay": 0.01,
     "clip_norm": 1.0,
@@ -30,8 +30,23 @@
     "outer_momentum": 0.9,
     "outer_chunk_bytes": 33554432
   },
-  "arms": {"single": 1, "ddp-four": 4, "diloco-four": 4},
-  "checkpoints": {"single": [128], "ddp-four": [128], "diloco-four": [64, 128]},
+  "arms": {
+    "single": 1,
+    "ddp-four": 4,
+    "diloco-four": 4
+  },
+  "checkpoints": {
+    "single": [
+      128
+    ],
+    "ddp-four": [
+      128
+    ],
+    "diloco-four": [
+      64,
+      128
+    ]
+  },
   "quality_contract": {
     "primary_arm": "diloco-four",
     "minimum_accuracy_gain_vs_seed": 0.05,
@@ -52,6 +67,37 @@
     "kill_after_step": 75,
     "require_exact_parameters_outer_and_all_local_optimizer_states": true
   },
-  "inference": {"requests": 64, "concurrency": 4, "timeout_seconds": 60, "maximum_attempts": 4, "serving_arm": "diloco-four"},
-  "budget": {"seconds": 21600, "disk_gib": 240, "total_usd": 100, "hosts": 4, "instance_type": "g6e.xlarge", "shutdown_hours": 8}
+  "inference": {
+    "requests": 64,
+    "concurrency": 4,
+    "timeout_seconds": 60,
+    "maximum_attempts": 4,
+    "serving_arm": "diloco-four"
+  },
+  "budget": {
+    "seconds": 10800,
+    "disk_gib": 240,
+    "total_usd": 100,
+    "hosts": 4,
+    "instance_type": "g6e.xlarge",
+    "shutdown_hours": 3,
+    "compute_reserve_usd": 24,
+    "traffic_reserve_usd": 66,
+    "storage_reserve_usd": 10
+  },
+  "topology": {
+    "rank_zones": [
+      "us-east-1c",
+      "us-east-1c",
+      "us-east-1c",
+      "us-east-1d"
+    ],
+    "transport": "private IPv4 NCCL socket Ring/Simple",
+    "traffic_guard_rank": 3,
+    "traffic_guard_total_interface_bytes": 3100000000000,
+    "root_disk_gib": 300,
+    "root_disk_mib_per_second": 500,
+    "root_disk_iops": 6000,
+    "read_ahead_kib": 4096
+  }
 }

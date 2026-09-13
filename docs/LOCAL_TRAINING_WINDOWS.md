@@ -46,7 +46,7 @@ The recovery trial starts from copies of the uninterrupted run's step-64 group c
 
 ## Execution and evidence
 
-Use four separate L40S hosts, one GPU each, with a private NCCL network and identical environments. The operated AWS trial is bounded to $100 and an eight-hour automatic stop, with 300 GiB encrypted gp3 disks and the same throughput/read-ahead configuration for all arms. The reported quota of 30 GPU vCPUs permits the intended 16-vCPU allocation; actual instance launch remains the capacity check. Provisioning and storage are operated infrastructure.
+Use four separate L40S hosts, one GPU each, with a private NCCL network and identical environments. The operated AWS trial is bounded to $100 and a three-hour automatic stop, with 300 GiB encrypted gp3 disks and the same throughput/read-ahead configuration for all arms. The reported quota of 30 GPU vCPUs permits the intended 16-vCPU allocation; actual instance launch remains the capacity check. Capacity required three hosts in us-east-1c and one in us-east-1d; both distributed arms use this same topology. Cross-zone traffic is charged separately. The budget reserves $24 for compute, $66 for transfer and $10 for storage/other traffic, with a 3.1 TB combined receive/transmit guard on the isolated-zone host. Provisioning and storage are operated infrastructure.
 
 ```bash
 PYTHONPATH=src python scripts/run_local_training_windows.py prepare \
