@@ -22,6 +22,9 @@ def main():
     evaluations = {arm: read(f"evaluation/{arm}-test.json") for arm in ("seed", *report.ARMS)}
     training = {arm: [read(f"{arm}/rank-{rank}-result.json") for rank in range(2 if arm == "clean-pair" else 1)]
                 for arm in report.ARMS}
+    for arm, ranks in training.items():
+        if {key: ranks[0][key] for key in ("candidate", "binding", "parameter_digest")} != selection["candidates"][arm]:
+            raise ValueError("Training results differ from the selected candidate")
     result = {
         "learning": report.learning_report(prepared, selection, records, evaluations),
         "training": report.training_report(prepared, training),

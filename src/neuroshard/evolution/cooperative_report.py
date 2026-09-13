@@ -2,6 +2,7 @@
 import statistics
 
 from . import grounded_tasks as tasks
+from . import cooperative as group
 from . import reference as engine
 from . import reference_data as data
 
@@ -88,13 +89,15 @@ def learning_report(prepared, selection, records, evaluations):
                 "documents": len(indices),
                 **{arm: sum(outcomes[arm][i] for i in indices) for arm in outcomes},
             }
+    pair = paired_accuracy(outcomes["clean-single"], outcomes["clean-pair"])
     return {
         "prepared": data.identity(prepared), "selection": data.identity(selection),
         "primary_arm": "clean-single", "primary_conditions": conditions,
         "narrow_learning_contract_passed": all(conditions.values()),
         "comparisons_to_seed": comparisons, "descriptive_breakdowns": breakdowns,
         "clean_vs_damaged": paired_accuracy(outcomes["damaged-single"], outcomes["clean-single"]),
-        "pair_vs_single": paired_accuracy(outcomes["clean-single"], outcomes["clean-pair"]),
+        "pair_vs_single": pair,
+        "descriptive_pair_accuracy_within_margin": pair["accuracy_gain"] >= -prepared["plan"]["cooperation"]["maximum_accuracy_drop_vs_single"],
         "scope": contract["scope"], "serving_approved": False, "tokens_issued": 0,
     }
 
@@ -121,9 +124,12 @@ def training_report(prepared, results):
         if len(schedule) != prepared["plan"]["training"]["steps"]:
             raise ValueError("Incomplete training schedule")
         for rank in ranks:
+            binding = data.identity({"prepared": data.identity(prepared),
+                                     "profile": group.runtime_profile(rank["runtime"]), "arm": arm, "world": world})
             if (rank["arm"] != arm or rank["world"] != world
+                    or rank["binding"] != binding
                     or [row["documents"] for row in rank["steps"]] != schedule):
-                raise ValueError("Training rank or schedule differs")
+                raise ValueError("Training rank, binding or schedule differs")
         network = []
         for rank in ranks:
             network.append({
