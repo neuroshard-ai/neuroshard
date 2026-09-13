@@ -14,6 +14,7 @@ import subprocess
 import time
 
 from neuroshard.evolution import cooperative as group
+from neuroshard.evolution import gradient_compression
 from neuroshard.evolution import local_windows as windows
 from neuroshard.evolution import reference as engine
 from neuroshard.evolution import reference_data as data
@@ -31,6 +32,7 @@ CONTRACT = {
     'orthogonalization_epsilon': 1e-8,
     'random_seed': 20260913,
     'batch_tensors_with_same_shape': False,
+    'offload_error_feedback': True,
 }
 
 
@@ -46,16 +48,18 @@ def run(args):
         raise ValueError('This feasibility probe requires exactly two GPU workers')
     plan = driver.validate(json.loads(driver.PLAN.read_bytes()))
     prepared = driver.inputs(args, plan)
-    source = Path(__file__).resolve()
-    relative = source.relative_to(driver.ROOT).as_posix()
-    if subprocess.check_output(['git', 'show', 'HEAD:' + relative], cwd=driver.ROOT) != source.read_bytes():
-        raise ValueError('Commit the probe before executing its fixed configuration')
+    sources = [Path(__file__).resolve(), Path(gradient_compression.__file__).resolve()]
+    for source in sources:
+        relative = source.relative_to(driver.ROOT).as_posix()
+        if subprocess.check_output(['git', 'show', 'HEAD:' + relative], cwd=driver.ROOT) != source.read_bytes():
+            raise ValueError('Commit the probe before executing its fixed configuration')
     if driver.model_snapshot(args.model_dir, plan['model']) != prepared['model_snapshot']:
         raise ValueError('The pinned seed changed')
     if plan['training']['warmup_steps'] != CONTRACT['start_powerSGD_iter']:
         raise ValueError('Complete the declared learning-rate warmup before compression')
     binding = data.identity({
-        'prepared': data.identity(prepared), 'source': data.sha256(source),
+        'prepared': data.identity(prepared),
+        'sources': {path.relative_to(driver.ROOT).as_posix(): data.sha256(path) for path in sources},
         'upstream_hook_source': data.sha256(Path(inspect.getsourcefile(compression))),
         'contract': CONTRACT, 'profile': group.runtime_profile(runtime),
     })
@@ -77,9 +81,10 @@ def run(args):
         optimizer = engine.optimizer_for(model, plan['training'])
         wrapped = DistributedDataParallel(model, device_ids=[0], broadcast_buffers=False,
                                           gradient_as_bucket_view=True, bucket_cap_mb=64)
-        hook_options = {key: value for key, value in CONTRACT.items() if key not in {'steps', 'world'}}
+        hook_options = {key: value for key, value in CONTRACT.items()
+                        if key not in {'steps', 'world', 'offload_error_feedback'}}
         state = compression.PowerSGDState(process_group=dist.group.WORLD, **hook_options)
-        wrapped.register_comm_hook(state, compression.powerSGD_hook)
+        wrapped.register_comm_hook(state, gradient_compression.offloaded_power_sgd)
         records = driver.partition(args.home, prepared, 'train')
         recipe = plan['training']
         schedule = engine.schedule(len(records), recipe['steps'], recipe['batch_documents'], recipe['seed'])
@@ -95,6 +100,8 @@ def run(args):
         group.agree_digest(digest, world, 'cuda')
         if state.iter != CONTRACT['steps'] or not state.error_dict:
             raise ValueError('The hook did not reach the declared compressed iterations')
+        if any(value.device.type != 'cpu' for value in state.error_dict.values()):
+            raise ValueError('Error feedback remained on GPU between updates')
         for values in (state.error_dict, state.p_memory_dict, state.q_memory_dict):
             if any(not torch.isfinite(value).all() for value in values.values()):
                 raise ValueError('Nonfinite compression state')
