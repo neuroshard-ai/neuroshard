@@ -46,3 +46,12 @@ Run the damaged-single arm on the other GPU with its own experiment directory. F
 Use `evaluate --role dev --arm seed|clean-single|damaged-single|clean-pair` for development evidence. Collect and verify all three final checkpoints before `select`, commit the resulting selection, then use `evaluate --role test --selection config/experiments/cooperative-learning-selection.json`. All generated answers and strict-check outcomes are retained.
 
 The [serving probe](../scripts/serve_compute_probe.py) accepts only prepared development task IDs on a private endpoint. Its bounded in-memory retry cache is a benchmark convenience; it is not durable exactly-once billing. The [replica benchmark](../scripts/benchmark_compute_replicas.py) reports completed requests, latency, wall time and every retry. A common operator and coordinator remain trusted throughout. General chat, private prompts, public GPU settlement and independent participation require further protocol work.
+
+Collect both ranks' result files, all four final-test evaluations, `selection.json`, and the three serving reports (`serving/single.json`, `pair.json`, `failure.json`) alongside the prepared inputs. Recompute comparisons with:
+
+```bash
+PYTHONPATH=src python scripts/report_cooperative_learning.py \
+  --home /path/collected-evidence --output /path/new-report.json
+```
+
+The report checks candidate identities, recomputes strict answers, checks the fixed global schedule and compares output tokens across all serving phases. Failed or inconsistent evidence stops report generation and remains available for inspection. This validates the consistency of an operated experiment's evidence; it is not a cryptographic proof that remote training occurred.
