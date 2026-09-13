@@ -1,0 +1,26 @@
+[
+  {
+    "id": "arithmetic",
+    "messages": [{"role": "user", "content": "Calculate 84 * 3 / 2. Reply with only the final number."}],
+    "check": {"kind": "exact", "expected": "126"}
+  },
+  {
+    "id": "grounded-json",
+    "messages": [{"role": "user", "content": "A warehouse record says: shipment K17 contains 7 green crates and 5 blue crates. Return only a JSON object with two keys: shipment (the shipment ID) and total_crates (the total number of crates as an integer)."}],
+    "check": {"kind": "json", "expected": {"shipment": "K17", "total_crates": 12}}
+  },
+  {
+    "id": "conversation-memory",
+    "messages": [
+      {"role": "user", "content": "For this conversation, our code word is cedar."},
+      {"role": "assistant", "content": "Understood. Our code word is cedar."},
+      {"role": "user", "content": "What is our code word? Reply with only that word."}
+    ],
+    "check": {"kind": "exact", "expected": "cedar"}
+  },
+  {
+    "id": "basic-explanation",
+    "messages": [{"role": "user", "content": "In one sentence, explain what it means to say that an earthworm has a segmented body."}],
+    "check": {"kind": "manual", "expected": "The body consists of a series of repeating sections or segments."}
+  }
+]

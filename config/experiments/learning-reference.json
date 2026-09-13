@@ -1,0 +1,35 @@
+{
+  "format": "neuroshard-learning-reference-v1",
+  "purpose": "development",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674",
+    "license": "Apache-2.0",
+    "parameters": 1711376384
+  },
+  "data": {
+    "repo": "HuggingFaceTB/smol-smoltalk",
+    "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+    "license": "Apache-2.0"
+  },
+  "max_length": 1024,
+  "generation_tokens": 256,
+  "generation_documents": 20,
+  "roles": {
+    "train": {"split": "train", "start": 16384, "scan": 32768, "documents": 2048},
+    "dev": {"split": "test", "start": 5120, "scan": 2048, "documents": 128},
+    "retention": {"split": "test", "start": 7168, "scan": 2048, "documents": 128},
+    "test": {"split": "test", "start": 9216, "scan": 4096, "documents": 256}
+  },
+  "training": {
+    "steps": 256,
+    "batch_documents": 8,
+    "learning_rate": 0.00003,
+    "warmup_steps": 16,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "checkpoint_steps": 64,
+    "seed": 20260912
+  },
+  "budget": {"seconds": 21600, "disk_gib": 120}
+}

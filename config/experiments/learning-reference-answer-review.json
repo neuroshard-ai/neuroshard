@@ -1,0 +1,20 @@
+{
+  "format": "neuroshard-reference-answer-review-v1",
+  "scope": "Qualitative development evidence; no automatic serving approval or general capability certificate",
+  "declared_before": "The first GPU training run and inspection of its generated development or test answers",
+  "selection": "All 20 generation documents in each of the prepared development and final-test roles, in the driver order; no replacements",
+  "reviewer": "The development agent, identified as such in the report; not an independent human panel",
+  "identity_blinding_claim": false,
+  "comparison": "Review the complete supplied conversation and both generated responses together. Use the original dataset answer as context, not as an infallible authority. Verify uncertain factual or mathematical claims when practical, otherwise mark the judgment unresolved.",
+  "criteria": {
+    "core_request": "Does the answer address the user's actual request rather than merely restate it?",
+    "correctness": "Does it contain an identifiable material factual, logical or computational error?",
+    "instruction_following": "Does it satisfy explicit content and format constraints?",
+    "completeness": "Does it finish the requested answer within the declared output budget?"
+  },
+  "preference_values": ["candidate", "baseline", "tie", "neither", "unresolved"],
+  "preference_rule": "Prefer an answer only for a concrete difference in correctness, request fulfillment, instruction following or completeness. Cosmetic changes alone are a tie. Use neither when both materially fail without a defensible preference; use unresolved when the comparison cannot be checked reliably.",
+  "required_record": ["document_id", "role", "preference", "baseline_issues", "candidate_issues", "reason", "verification_sources_if_used"],
+  "aggregation": "Publish every row and counts for each preference, separately by role. Report token-limit exhaustion separately. Do not turn these small, non-independent development judgments into a statistically validated quality score.",
+  "separation": "Final-test answers are opened only after committing the selected candidate. Reviewing development answers does not authorize changing this candidate after the final test has opened. A failed earlier learning contract remains failed."
+}
