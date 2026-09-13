@@ -6,6 +6,8 @@ The [completed results](COOPERATIVE_LEARNING_RESULTS.md) pass the narrow learnin
 
 The [frozen plan](../config/experiments/cooperative-learning.json) uses the same pinned 1.7B seed and numerical dependencies as the [reference](LEARNING_REFERENCE.md). Two g6e.xlarge instances each provide one L40S, four vCPUs and 32 GiB host RAM. Together they fit the reported eight-vCPU GPU quota. The observed on-demand price in us-east-1 is $1.861 per instance-hour; an eight-hour automatic stop deadline bounds combined compute to $29.776, with additional room for disk/traffic under a $100 experiment ceiling. Provisioning remains operator infrastructure, not a public admission service.
 
+The next [four-worker local-training experiment](LOCAL_TRAINING_WINDOWS.md) tests less frequent synchronization against a matched DDP control, with full-state recovery and separate quality criteria.
+
 ## Questions and fixed comparisons
 
 1. **Learning:** a clean single-GPU arm trains on 768 generated, executable tasks plus 256 public conversation-replay records. A control uses the same prompts and schedule but deliberately damages approximately one quarter of the generated targets. This is an artificial target-quality ablation, not a claim that an upstream corpus has that error rate. The original seed is evaluated without updates.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure a fixed inference workload across one or two private GPU replicas."""
+"""Measure a fixed inference workload across one to four private GPU replicas."""
 import argparse
 import concurrent.futures
 import json
@@ -26,8 +26,10 @@ def main():
     parser.add_argument('--allow-unavailable',action='store_true')
     args=parser.parse_args()
     if args.output.exists():raise ValueError('Preserve previous benchmark output')
-    if not 1<=len(args.endpoint)<=2 or not 1<=args.concurrency<=8 or not 1<=args.attempts<=2:
+    if not 1<=len(args.endpoint)<=4 or not 1<=args.concurrency<=8 or not 1<=args.attempts<=4:
         raise ValueError('Benchmark exceeds bounded replica/concurrency/retry limits')
+    if len(set(args.endpoint)) != len(args.endpoint):
+        raise ValueError('Each provider endpoint must be distinct')
     prepared=json.loads((args.home/'prepared.json').read_bytes())
     records=data.read_records(args.home/'inputs/dev.jsonl',prepared['roles']['dev']['sha256'])
     if not 1<=args.requests<=len(records) or not 0<args.timeout<=60:raise ValueError('Invalid benchmark bounds')
