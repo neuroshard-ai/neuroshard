@@ -61,6 +61,21 @@ def test_partition_rejects_mutated_tokenized_inputs(tmp_path):
     with pytest.raises(ValueError):driver.partition(tmp_path,prepared,'dev')
 
 
+def test_preparation_must_match_committed_selection(tmp_path,monkeypatch):
+    path=tmp_path/'config/experiments/cooperative-learning-data-selection.json'
+    path.parent.mkdir(parents=True)
+    raw=b'{"inputs":"sealed"}'
+    path.write_bytes(raw)
+    monkeypatch.setattr(driver,'ROOT',tmp_path)
+    monkeypatch.setattr(driver.subprocess,'check_output',lambda *a,**k:raw)
+    driver.committed_preparation({'inputs':'sealed'})
+    with pytest.raises(ValueError,match='exact prepared'):
+        driver.committed_preparation({'inputs':'different'})
+    path.write_bytes(raw+b'\n')
+    with pytest.raises(ValueError,match='exact prepared'):
+        driver.committed_preparation({'inputs':'sealed'})
+
+
 def test_serving_retry_reuses_answer_and_rejects_changed_task_identity():
     calls=[]
     answers=serving.Answers([{'id':'one'},{'id':'two'}],lambda r:calls.append(r['id']) or {'text':'answer'},'fixed-model')

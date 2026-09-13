@@ -150,6 +150,14 @@ def prepared_inputs(args, plan):
     return prepared
 
 
+def committed_preparation(prepared):
+    path=ROOT / 'config/experiments/cooperative-learning-data-selection.json'
+    relative=path.relative_to(ROOT).as_posix()
+    committed=subprocess.check_output(['git','show',f'HEAD:{relative}'],cwd=ROOT)
+    if committed!=path.read_bytes() or json.loads(committed)!=prepared:
+        raise ValueError('Commit the exact prepared inputs before training or evaluation')
+
+
 def partition(home, prepared, role, final_test=False):
     if role == "test" and not final_test:
         raise ValueError("Training and development cannot read final test inputs")
@@ -168,6 +176,7 @@ def train(args, plan):
     if world != expected_world or not 0 <= rank < world:
         raise ValueError("Arm and process-group size disagree")
     prepared = prepared_inputs(args,plan)
+    committed_preparation(prepared)
     runtime = engine.configure(args.device,args.threads)
     binding = data.identity({"prepared":data.identity(prepared),"profile":group.runtime_profile(runtime),
                              "arm":args.arm,"world":world})
@@ -282,6 +291,7 @@ def committed_selection(path, prepared, arm, candidate):
 def evaluate(args, plan):
     import torch
     prepared=prepared_inputs(args,plan)
+    committed_preparation(prepared)
     runtime=engine.configure(args.device,args.threads)
     candidate=None
     if args.arm=='seed':
