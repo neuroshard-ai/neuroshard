@@ -1,0 +1,55 @@
+{
+  "format": "neuroshard-learning-method-study-v1",
+  "purpose": "development",
+  "previous_prepared": "307be733a2ed647db1bdded7443df6569805443c4ad9e02ccb4dfb491b8f5a6e",
+  "model": {
+    "license": "Apache-2.0",
+    "parameters": 1711376384,
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674"
+  },
+  "arms": {
+    "single": 1,
+    "dense-pair": 2,
+    "compressed-pair": 2
+  },
+  "task_documents": 3072,
+  "replay_documents": 1024,
+  "dev_documents": 64,
+  "test_documents": 1024,
+  "task_seed": 2026091397,
+  "max_length": 1024,
+  "generation_tokens": 96,
+  "task_token_weight": 8,
+  "training": {
+    "steps": 128,
+    "batch_documents": 32,
+    "learning_rate": 3e-05,
+    "warmup_steps": 8,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 2026091397
+  },
+  "compression": {
+    "matrix_approximation_rank": 32,
+    "start_powerSGD_iter": 8,
+    "min_compression_rate": 2,
+    "use_error_feedback": true,
+    "warm_start": true,
+    "orthogonalization_epsilon": 1e-08,
+    "random_seed": 2026091397,
+    "batch_tensors_with_same_shape": false
+  },
+  "budget": {
+    "seconds": 7200,
+    "disk_gib": 100
+  },
+  "decision": {
+    "retention_upper_nats": 0.02,
+    "normal_multiplier": 2.576,
+    "accuracy_noninferiority_margin": 0.03,
+    "task_gain_minimum": 0.1,
+    "active_speedup_vs_single_minimum": 1.1,
+    "scope": "One screening seed; quality uses public generated tasks and exposed retention. Full cost includes duplicated GPU time; audit cost has not been measured for this profile. All arms and all failed outcomes retained."
+  }
+}
