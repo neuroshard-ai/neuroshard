@@ -2,6 +2,8 @@
 
 This development experiment tests a concrete bottleneck from the [two-GPU result](COOPERATIVE_LEARNING_RESULTS.md): synchronizing full FP32 gradients on every update cost more time than a second GPU saved. It compares less frequent synchronization with a matched four-worker control, then tests recovery and serving. It does not change native consensus, pay GPU workers, or establish permissionless verification.
 
+The [completed results](LOCAL_TRAINING_WINDOWS_RESULTS.md) include the failed quality gate, exact process-crash recovery and the separate compressed-gradient feasibility probe.
+
 ## Frozen comparisons
 
 The [plan](../config/experiments/local-training-windows.json) fixes the same public SmolLM2-1.7B-Instruct revision and [numerical dependencies](learning-reference-requirements.txt). All model parameters train. Each arm starts from the seed and processes the same 1,024-document schedule in 128 updates with global batch eight:
