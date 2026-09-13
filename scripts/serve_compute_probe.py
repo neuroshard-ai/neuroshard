@@ -59,7 +59,7 @@ def main():
     records=data.read_records(args.home/'inputs/dev.jsonl',prepared['roles']['dev']['sha256'])
     receipt=json.loads((args.model_dir/'checkpoint.json').read_bytes())
     for name,digest in receipt['files'].items():
-        if name=='optimizer.pt':continue
+        if name in {'optimizer.pt','outer.pt'}:continue
         if Path(name).name!=name or data.sha256(args.model_dir/name)!=digest:raise ValueError('Model checksum mismatch')
     tokenizer=AutoTokenizer.from_pretrained(args.model_dir,local_files_only=True,trust_remote_code=False)
     if data.tokenizer_identity(tokenizer)!=prepared['tokenizer']:raise ValueError('Tokenizer mismatch')

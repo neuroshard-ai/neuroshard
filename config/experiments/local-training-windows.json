@@ -1,0 +1,57 @@
+{
+  "format": "neuroshard-local-training-windows-v1",
+  "purpose": "development",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674",
+    "license": "Apache-2.0",
+    "parameters": 1711376384
+  },
+  "reference_prepared_sha256": "a92ffc34e99e442ec034d78477807f026fa8fe67cd0fb61250b535735de7a7bb",
+  "previous_cooperative_prepared": "4304122faebe6a7bf8619a82f4297c81d213f2343a1c994b6e44317f0bdd8c3b",
+  "task_seed": 2026091302,
+  "grounded_train_documents": 768,
+  "replay_documents": 256,
+  "dev_documents": 64,
+  "test_documents": 1024,
+  "max_length": 1024,
+  "grounded_token_weight": 8,
+  "generation_tokens": 96,
+  "training": {
+    "steps": 128,
+    "batch_documents": 8,
+    "learning_rate": 0.00003,
+    "warmup_steps": 8,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 20260913,
+    "local_steps": 16,
+    "outer_learning_rate": 0.7,
+    "outer_momentum": 0.9,
+    "outer_chunk_bytes": 33554432
+  },
+  "arms": {"single": 1, "ddp-four": 4, "diloco-four": 4},
+  "checkpoints": {"single": [128], "ddp-four": [128], "diloco-four": [64, 128]},
+  "quality_contract": {
+    "primary_arm": "diloco-four",
+    "minimum_accuracy_gain_vs_seed": 0.05,
+    "maximum_one_sided_p_vs_seed": 0.01,
+    "retention_99pct_upper_max": 0.02,
+    "paired_99pct_lower_vs_ddp_min": -0.03,
+    "scope": "One run on four generated task families and previously exposed public retention probes; no broad assistant or serving approval"
+  },
+  "efficiency_contract": {
+    "maximum_active_training_seconds_vs_ddp": 0.5,
+    "maximum_sent_bytes_vs_ddp": 0.125,
+    "scope": "Matched four-host topology, data and global batch; active time includes local updates and synchronization, with checkpoint and whole-process cost reported separately"
+  },
+  "recovery": {
+    "arm": "diloco-four",
+    "restore_step": 64,
+    "kill_rank": 1,
+    "kill_after_step": 75,
+    "require_exact_parameters_outer_and_all_local_optimizer_states": true
+  },
+  "inference": {"requests": 64, "concurrency": 4, "timeout_seconds": 60, "maximum_attempts": 4, "serving_arm": "diloco-four"},
+  "budget": {"seconds": 21600, "disk_gib": 240, "total_usd": 100, "hosts": 4, "instance_type": "g6e.xlarge", "shutdown_hours": 8}
+}
