@@ -108,3 +108,8 @@ native validator bonds. Its [operated results](ADAPTIVE_SHARDS_RESULTS.md) recor
 GPU replay and native settlement separately from learning quality. Neither a
 checkpoint hash nor a quality score proves that an untrusted worker performed
 the update.
+
+The next learning experiment is the separate [continued-learning contract](CONTINUED_LEARNING.md).
+It starts from the passing phase-A checkpoint, forbids growth, and treats
+generated-answer improvement as the primary gate. This adaptive plan's exposed
+finals cannot be reused there.

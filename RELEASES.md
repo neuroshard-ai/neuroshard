@@ -28,6 +28,8 @@ The [continuous operator and candidate joining guide](docs/CANDIDATE_OPERATIONS.
 
 The [completed funded-audit experiments](docs/FUNDED_AUDIT_RESULTS.md) settle eight full-model training tasks across two cohorts on two hosts, pay 168 audit services from existing balances, reject a forged response after an interrupted native upload, and pass quorum recovery and supply accounting. Both real-model promotion gates fail. The real driver exceeds its original one-hour wait and requires a retained-state continuation; future driver waits are configurable. Tests also expose colluding attestations, admission-pool saturation and missing refutation capital. The [admission RFC](docs/AUDIT_ADMISSION_RFC.md) proposes a next profile for the latter two problems; it is not implemented or activated.
 
+The [continued-learning contract](docs/CONTINUED_LEARNING.md) freezes a 1.7B continuation from the passing adaptive phase-A checkpoint. It binds parent weights and Adam, tokenizer, runtime and unused evaluation data, requires generated-answer gain with per-family floors, and forbids growth. Native settlement of a pass is later job activation plus reserved-window receipts, not an imported checkpoint. Promotion remains a separate mint-zero serving decision. This does not change 0.4.0.
+
 These tools have not been published as a new PyPI version or activated on the public chain. Public worker admission, independent audit selection, artifact retention and release integration remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
 
 ## 0.4.0 — LLM training and native paid inference (experimental)

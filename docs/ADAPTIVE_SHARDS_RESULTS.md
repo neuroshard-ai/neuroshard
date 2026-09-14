@@ -232,7 +232,8 @@ No candidate was promoted to public serving. These results establish working
 sharded continuation and capacity growth, but not accepted continual improvement
 or growth that improves the product. The next learning experiment needs a
 precommitted objective and fresh evaluation that test actual answer reliability;
-the exposed cases above cannot serve as its independent final test.
+the exposed cases above cannot serve as its independent final test. The
+[continued-learning contract](CONTINUED_LEARNING.md) is that next experiment.
 
 ## Reproduction, validation and resources
 

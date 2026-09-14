@@ -15,9 +15,12 @@ FAMILIES = ("lookup", "filter", "total", "sort")
 CITIES = ("Oslo", "Lima", "Kyoto", "Accra", "Perth", "Riga", "Bern", "Suva")
 
 
-def make_case(seed, role, index):
+def make_case(seed, role, index, family=None):
     rng = random.Random(int(hashlib.sha256(f"{seed}:{role}:{index}".encode()).hexdigest(), 16))
-    family = FAMILIES[index % len(FAMILIES)]
+    chosen = FAMILIES[index % len(FAMILIES)] if family is None else family
+    if chosen not in FAMILIES:
+        raise ValueError("Unknown grounded task family")
+    family = chosen
     identifiers = rng.sample(range(100, 1000), 5)
     rows = [{"id": f"{chr(65 + rng.randrange(26))}{value}", "city": rng.choice(CITIES),
              "units": rng.randrange(0, 20), "price": rng.randrange(1, 20),
