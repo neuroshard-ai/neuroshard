@@ -19,7 +19,7 @@ from transformers import AutoTokenizer, LlamaConfig
 
 from .. import reference, reference_data as data, grounded_tasks as tasks
 from . import guarded, portable
-from .model import Partition
+from .model import Partition, owner
 from .training import score, generate
 from .wire import Wire
 
@@ -30,7 +30,7 @@ def implementation(root):
              'src/neuroshard/dataflow/collect.py']
     paths += ['src/neuroshard/evolution/'+n+'.py' for n in ['reference', 'reference_data', 'grounded_tasks', 'data']]
     paths += ['src/neuroshard/evolution/sharded/'+n+'.py' for n in
-              ['__init__', 'model', 'training', 'wire', 'checkpoint', 'portable', 'guarded', 'expansion', 'adaptive_job']]
+              ['__init__', 'model', 'training', 'wire', 'checkpoint', 'portable', 'guarded', 'expansion', 'transcript', 'adaptive_job']]
     return {p: data.sha256(Path(root)/p) for p in paths}
 
 
@@ -40,7 +40,7 @@ def emit(event, **values):
 
 def main(argv, root):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['train', 'evaluate'])
+    parser.add_argument('command', choices=['train', 'evaluate', 'audit'])
     parser.add_argument('--prepared', type=Path, required=True)
     parser.add_argument('--seed', type=Path, required=True)
     parser.add_argument('--home', type=Path, required=True)
@@ -49,6 +49,10 @@ def main(argv, root):
     parser.add_argument('--until', type=int)
     parser.add_argument('--roles', nargs='+')
     parser.add_argument('--selection', type=Path)
+    parser.add_argument('--capture', action='store_true')
+    parser.add_argument('--expected', type=Path)
+    parser.add_argument('--transcripts', type=Path)
+    parser.add_argument('--witness', type=Path)
     args = parser.parse_args(argv)
     prepared = json.loads(args.prepared.read_bytes())
     plan = prepared['plan']
@@ -90,7 +94,7 @@ def main(argv, root):
         raise ValueError('Use a fresh result directory to preserve every attempt')
     args.home.mkdir(parents=True)
     shard = Partition(config, boundaries, rank, 'cuda', plan['parameter_limit'])
-    optimizer = reference.optimizer_for(shard, plan['training']) if args.command == 'train' else None
+    optimizer = reference.optimizer_for(shard, plan['training']) if args.command in ('train', 'audit') else None
     teacher = None
     if optimizer is not None:
         if common and common['step'] >= plan['cohort_steps']:
@@ -109,6 +113,42 @@ def main(argv, root):
         required = shard.resident_parameters*16+teacher.resident_parameters*4+plan['memory_reserve_bytes']
         if required > torch.cuda.get_device_properties(0).total_memory:
             raise ValueError('Student, Adam and reference exceed the measured GPU budget')
+    if args.command == 'audit':
+        from .transcript import validate, Replay
+        if not (args.resume and args.expected and args.transcripts and args.witness):
+            raise ValueError('Audit needs both checkpoints and the closed witness group')
+        expected = json.loads(args.expected.read_bytes())
+        portable.validate(expected)
+        rows = json.loads(args.transcripts.read_bytes())
+        transcript_root = validate(rows)
+        binding = {'job': job, 'prepared': data.identity(prepared),
+            'input': data.identity(common), 'output': data.identity(expected), 'reference': data.identity(anchor),
+            'start': common['step'], 'end': expected['step'], 'boundaries': boundaries}
+        if (rows[rank]['binding'] != binding or expected['job'] != job
+                or expected['config'] != common['config'] or expected['boundaries'] != boundaries):
+            raise ValueError('Witness window differs from its committed computation')
+        if not 0 < expected['step']-common['step'] <= 4:
+            raise ValueError('This audit profile covers at most four complete updates')
+        births = portable.load(args.resume.parent, shard, optimizer, common, job)
+        replay = Replay(args.witness, rows[rank])
+        cohorts = {role: data.read_records(args.prepared.parent/spec['file'], spec['sha256'])
+                   for role, spec in prepared['roles'].items() if role.startswith('train-')}
+        started = time.monotonic()
+        for index in range(common['step'], expected['step']):
+            assignment = prepared['schedule'][index]
+            batch = [cohorts[assignment['role']][i] for i in assignment['indices']]
+            guarded.train_step(shard, teacher, optimizer, replay, batch,
+                plan['training'], index, plan['microbatch'], kl_strength=plan['kl_strength'])
+        replay.finish()
+        manifest = portable.write(args.home, shard, optimizer, job, expected['step'], births)
+        wanted = {n: s for n, s in expected['tensors'].items() if owner(n, boundaries) == rank}
+        if manifest['tensors'] != wanted or data.identity(manifest['optimizer']) != data.identity(expected['optimizer']):
+            raise ValueError('Replayed weights or Adam moments differ from the claimed output')
+        data.save(args.home/'audit.json', {'valid': True, 'rank': rank, 'binding': binding,
+            'transcript_root': transcript_root, 'seconds': time.monotonic()-started,
+            'resident_parameters': shard.resident_parameters, 'runtime': runtime,
+            'peak_cuda_bytes': torch.cuda.max_memory_allocated(), 'tokens_issued': 0})
+        return
     dist.init_process_group('gloo', timeout=timedelta(seconds=180))
     wire = Wire(rank, world)
     started = time.monotonic()
@@ -142,12 +182,18 @@ def main(argv, root):
                 raise ValueError('Commit phase one before installing the next cohort reference')
             cohorts = {role: records(role) for role in ['train-a', 'train-b']}
             parent = data.identity(common)
+            input_checkpoint = parent
+            if args.capture:
+                from .transcript import Recorder
+                recorded = Recorder(wire, args.home/'transcript')
+            else:
+                recorded = wire
             for index in range(start, until):
                 if time.monotonic()-started > plan['max_seconds']:
                     raise TimeoutError('Training deadline reached')
                 assignment = prepared['schedule'][index]
                 batch = [cohorts[assignment['role']][i] for i in assignment['indices']]
-                row = guarded.train_step(shard, teacher, optimizer, wire, batch,
+                row = guarded.train_step(shard, teacher, optimizer, recorded, batch,
                     plan['training'], index, plan['microbatch'], kl_strength=plan['kl_strength'])
                 with (args.home/'steps.jsonl').open('a') as log:
                     log.write(json.dumps(row)+'\n')
@@ -157,6 +203,10 @@ def main(argv, root):
                     common = portable.commit(args.home, shard, optimizer, wire, job, index+1, parent, births)
                     parent = data.identity(common)
                     emit('checkpoint', rank=rank, step=index+1, root=parent, state_root=common['state_root'])
+            if args.capture:
+                recorded.finish({'job': job, 'prepared': data.identity(prepared),
+                    'input': input_checkpoint, 'output': parent, 'reference': data.identity(anchor),
+                    'start': start, 'end': until, 'boundaries': boundaries})
             data.save(args.home/'result.json', {'checkpoint': parent, 'state_root': common['state_root'],
                 'rank': rank, 'start': start, 'end': until, 'seconds': time.monotonic()-started,
                 'peak_cuda_bytes': torch.cuda.max_memory_allocated(), 'tensor_wire_bytes': wire.sent_tensor_bytes,

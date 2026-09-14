@@ -13,7 +13,7 @@ from transformers import LlamaConfig, LlamaForCausalLM
 
 from neuroshard.evolution import reference
 from neuroshard.evolution.reference_data import identity
-from neuroshard.evolution.sharded import guarded, portable, expansion
+from neuroshard.evolution.sharded import guarded, portable, expansion, transcript
 from neuroshard.evolution.sharded.model import Partition, batch_tensors, owner
 from neuroshard.evolution.sharded.training import generate
 from neuroshard.evolution.sharded.wire import Wire
@@ -107,8 +107,10 @@ def worker(rank, world, rendezvous, root, tag, boundaries, start, end, resume):
             parent = identity(common)
         else:
             parent = identity(portable.commit(home, shard, optimizer, wire, JOB, 0, None))
+        capture = transcript.Recorder(wire, home/'transcript') if tag == 'baseline' else wire
+        original = parent
         for index in range(start, end):
-            row = guarded.train_step(shard, reference_shard, optimizer, wire, records(), RECIPE, index, 2, kl_strength=2.)
+            row = guarded.train_step(shard, reference_shard, optimizer, capture, records(), RECIPE, index, 2, kl_strength=2.)
             loss, norm = full_step(student, teacher, control_optimizer, index)
             assert row['loss'] == pytest.approx(loss, abs=2e-6)
             assert row['gradient_norm'] == pytest.approx(norm, rel=3e-6)
@@ -118,6 +120,8 @@ def worker(rank, world, rendezvous, root, tag, boundaries, start, end, resume):
                     torch.testing.assert_close(optimizer.state[parameter][key], value, rtol=3e-5, atol=3e-7)
             common = portable.commit(home, shard, optimizer, wire, JOB, index+1, parent, births)
             parent = identity(common)
+        if tag == 'baseline':
+            capture.finish({'job': JOB, 'start': start, 'end': end, 'input': original, 'output': parent})
         tokens = generate(shard, wire, [1, 3, 4], 3, -1)
         (home/'result.json').write_text(json.dumps({'state_root': common['state_root'], 'tokens': tokens,
             'resident_parameters': shard.resident_parameters}))
@@ -169,6 +173,46 @@ def test_guarded_autograd_and_two_three_two_process_groups_preserve_adam(tmp_pat
     damaged['state_root'] = portable.learned_root(damaged)
     with pytest.raises(ValueError, match='Incomplete'):
         portable.validate(damaged)
+    traces = [json.loads((tmp_path/'baseline'/f'rank-{rank}'/'transcript/transcript.json').read_bytes()) for rank in range(2)]
+    transcript.validate(traces)
+    # Each auditor can replay the whole window one partition at a time, without
+    # constructing the full student. The tiny teacher below is a test fixture.
+    def replay_rank(rank, trace):
+        torch.set_num_threads(1)
+        _, teacher = models()
+        shard = Partition(config(), [0, 3, 6], rank)
+        old = Partition(config(), [0, 3, 6], rank).eval().requires_grad_(False)
+        source = dict(teacher.named_parameters())
+        for name, p in old.named_owned_parameters():
+            p.data.copy_(source[name])
+        optimizer = reference.optimizer_for(shard, RECIPE)
+        home = tmp_path/'baseline'/f'rank-{rank}'
+        initial = json.loads((home/'commit-000000.json').read_bytes())
+        portable.load(home, shard, optimizer, initial, JOB)
+        wire = transcript.Replay(home/'transcript', trace)
+        for index in range(4):
+            guarded.train_step(shard, old, optimizer, wire, records(), RECIPE, index, 2, kl_strength=2.)
+        wire.finish()
+        meta = portable.write(tmp_path/f'audit-{rank}', shard, optimizer, JOB, 4)
+        assert meta['tensors'] == json.loads((portable.directory(home, 4)/'manifest.json').read_bytes())['tensors']
+    for rank in range(2):
+        replay_rank(rank, traces[rank])
+    import copy
+    from safetensors.torch import load_file
+    corrupted = copy.deepcopy(traces)
+    sent = next(e for e in corrupted[0]['events'] if e['kind'] == 'send')
+    received = next(e for e in corrupted[1]['events'] if e['kind'] == 'receive' and e['peer'] == 0)
+    value = load_file(portable.tensor_path(tmp_path/'baseline/rank-0/transcript', sent['tensor']['sha256']))['value']+1
+    from neuroshard.evolution.sharded.checkpoint import tensor_file
+    for rank in range(2):
+        folder = tmp_path/'baseline'/f'rank-{rank}'/'transcript'
+        temporary = folder/'forged.pending'
+        spec = tensor_file(temporary, {'value': value})
+        temporary.replace(portable.tensor_path(folder, spec['sha256']))
+    sent['tensor'] = received['tensor'] = {**spec, 'shape': list(value.shape)}
+    transcript.validate(corrupted)  # Self-consistent forged witnesses are not proof.
+    with pytest.raises(ValueError, match='forward value or backward gradient'):
+        replay_rank(0, corrupted[0])
 
 
 def test_capacity_assignment_and_impossible_join_are_bounded():
