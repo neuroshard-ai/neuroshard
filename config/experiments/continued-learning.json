@@ -22,7 +22,12 @@
     "step": 128,
     "parameters": 1711376384,
     "layers": 24,
-    "boundaries": [0, 6, 15, 24],
+    "boundaries": [
+      0,
+      6,
+      15,
+      24
+    ],
     "includes_optimizer": true,
     "s3": {
       "bucket": "neuroshard-training-data",
@@ -41,11 +46,12 @@
   "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
   "config_sha256": "67a3cb445147cdba56909efb817e7e0022c22bb3356e07676b68a4bca7caba31",
   "tokenizer_files": {
-    "tokenizer.json": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
-    "tokenizer_config.json": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+    "tokenizer.json": "7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7",
+    "tokenizer_config.json": "5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5",
     "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
     "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79",
-    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510"
+    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "chat_template.jinja": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788"
   },
   "prior_exclusion": {
     "inputs_path": "config/experiments/adaptive-shards-inputs.json",
@@ -88,7 +94,9 @@
     "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63"
   },
   "parameters": 1711376384,
-  "allowed_layers": [24],
+  "allowed_layers": [
+    24
+  ],
   "parameter_limit": 900000000,
   "threads": 2,
   "microbatch": 4,
@@ -97,11 +105,15 @@
   "parent_step": 128,
   "additional_steps": 96,
   "final_step": 224,
-  "checkpoints": [160, 192, 224],
+  "checkpoints": [
+    160,
+    192,
+    224
+  ],
   "training": {
     "steps": 96,
     "batch_documents": 64,
-    "learning_rate": 0.000001,
+    "learning_rate": 1e-06,
     "warmup_steps": 8,
     "weight_decay": 0.01,
     "clip_norm": 1.0,
@@ -111,7 +123,14 @@
     "growth_layers": 0,
     "inherit_adam": true,
     "reinitialize_adam": false,
-    "new_task_family_cycle": ["total", "total", "lookup", "filter", "sort", "total"],
+    "new_task_family_cycle": [
+      "total",
+      "total",
+      "lookup",
+      "filter",
+      "sort",
+      "total"
+    ],
     "new_task_weight": 8,
     "total_task_weight": 16,
     "reason": "Phase B at 3e-6 for 128 steps lowered teacher-forced loss while losing greedy invoice totals. This recipe keeps the passing phase-A weights and Adam, uses a lower learning rate, a shorter run, and upweighted totals. Generated-answer gain is the gate."
@@ -122,14 +141,27 @@
   "new_tasks": 3072,
   "trained_replay": 1536,
   "conversation_replay": 1536,
-  "development_roles": ["dev-new", "dev-prior", "dev-retention"],
-  "final_roles": ["test-new", "test-prior", "retention"],
+  "development_roles": [
+    "dev-new",
+    "dev-prior",
+    "dev-retention"
+  ],
+  "final_roles": [
+    "test-new",
+    "test-prior",
+    "retention"
+  ],
   "development_cases": 64,
   "test_new_cases": 256,
   "test_prior_cases": 128,
   "retention_cases": 128,
   "generation_tokens": 64,
-  "families": ["lookup", "filter", "total", "sort"],
+  "families": [
+    "lookup",
+    "filter",
+    "total",
+    "sort"
+  ],
   "test_new_per_family": 64,
   "test_prior_per_family": 32,
   "fresh_retention_source": {
@@ -169,7 +201,12 @@
     "verified_quality": "authorizes serving_root only",
     "promotion_mints": 0,
     "failed_quality_keeps_training_reward": true,
-    "quality_binds": ["settled_checkpoint", "frozen_evaluator", "evaluation_data", "validated_results"]
+    "quality_binds": [
+      "settled_checkpoint",
+      "frozen_evaluator",
+      "evaluation_data",
+      "validated_results"
+    ]
   },
   "settlement": {
     "status": "not-implemented",
@@ -178,7 +215,13 @@
     "requires_activation": true,
     "requires_reserved_windows": true,
     "requires_signed_worker_receipts": true,
-    "receipts_bind": ["reservation", "input_checkpoint", "output_checkpoint", "transcript", "rank"],
+    "receipts_bind": [
+      "reservation",
+      "input_checkpoint",
+      "output_checkpoint",
+      "transcript",
+      "rank"
+    ],
     "reference": "docs/NATIVE_SHARD_REPLAY.md"
   },
   "stop_rules": {
@@ -193,6 +236,14 @@
     "exhausted_budget_without_pass": "fail the phase"
   },
   "max_seconds": 10800,
-  "allocation": {"max_instances": 3, "instance_type": "g5.2xlarge", "max_gpu_vcpus": 24, "deadline_hours": 6, "budget_usd": 100},
-  "scope": "A bounded operated continuation from a passing 1.7B checkpoint. Generated tasks measure four public families; fresh public conversation retention is not a secret benchmark. No general assistant, perpetual improvement, model growth, permissionless security or native token issuance claim. An existing checkpoint file is not payment."
+  "allocation": {
+    "max_instances": 3,
+    "instance_type": "g5.2xlarge",
+    "max_gpu_vcpus": 24,
+    "deadline_hours": 6,
+    "budget_usd": 100
+  },
+  "scope": "A bounded operated continuation from a passing 1.7B checkpoint. Generated tasks measure four public families; fresh public conversation retention is not a secret benchmark. No general assistant, perpetual improvement, model growth, permissionless security or native token issuance claim. An existing checkpoint file is not payment.",
+  "artifact_revision": 2,
+  "artifact_revision_note": "Before any preparation or training, correct tokenizer.json and tokenizer_config.json byte hashes to the preserved phase-A tokenizer assets and include chat_template.jinja. Canonical tokenizer identity, parent, runtime and all numerical/evaluation constants are unchanged."
 }
