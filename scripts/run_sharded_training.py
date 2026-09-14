@@ -180,4 +180,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'adaptive':
+        from neuroshard.evolution.sharded.adaptive_job import main as adaptive
+        adaptive(sys.argv[2:], ROOT)
+    else:
+        main()
