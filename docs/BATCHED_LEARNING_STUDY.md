@@ -1,6 +1,6 @@
 # Batched cooperative learning study
 
-This experiment tests whether the [quality-preserving shared-gradient method](LEARNING_METHOD_STUDY_RESULTS.md) becomes useful training scale when both controls batch their computation efficiently. It changes no network service, consensus rule, token issuance or native serving model.
+This experiment tests whether the [quality-preserving shared-gradient method](LEARNING_METHOD_STUDY_RESULTS.md) becomes useful training scale when both controls batch their computation efficiently. The [completed results](BATCHED_LEARNING_STUDY_RESULTS.md) pass its quality and speed screen, with higher allocated GPU cost. It changes no network service, consensus rule, token issuance or native serving model.
 
 The [frozen plan](../config/experiments/batched-learning-study.json) compares one L40S against two L40S workers. Both train all 1,711,376,384 parameters of the same SmolLM2 seed for 128 updates, with a global batch of 256, shared AdamW, the same global target normalization and the same document schedule. There are 6,144 new generated training tasks and 2,048 public conversation-replay documents. Task tokens have weight eight, replay tokens weight one. Learning rate is 3e-5, with eight warmup updates. Maximum context remains 1,024.
 

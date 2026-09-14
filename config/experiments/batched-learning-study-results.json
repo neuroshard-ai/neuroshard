@@ -1,0 +1,212 @@
+{
+  "quality": {
+    "seed": {
+      "correct": 109,
+      "count": 1024,
+      "by_family": {
+        "lookup": 104,
+        "filter": 3,
+        "total": 0,
+        "sort": 2
+      }
+    },
+    "compressed-pair": {
+      "correct": 738,
+      "count": 1024,
+      "by_family": {
+        "lookup": 255,
+        "filter": 250,
+        "total": 3,
+        "sort": 230
+      },
+      "against_seed": {
+        "n": 1024,
+        "mean": 0.6142578125,
+        "lower": 0.5750536703051552,
+        "upper": 0.6534619546948448
+      },
+      "retention": {
+        "n": 128,
+        "mean": 0.005076603078494739,
+        "lower": -0.0051717942517349805,
+        "upper": 0.015325000408724459
+      },
+      "against_single": {
+        "n": 1024,
+        "mean": -0.009765625,
+        "lower": -0.020993825910438788,
+        "upper": 0.0014625759104387858
+      }
+    },
+    "single": {
+      "correct": 748,
+      "count": 1024,
+      "by_family": {
+        "lookup": 256,
+        "filter": 252,
+        "total": 5,
+        "sort": 235
+      },
+      "against_seed": {
+        "n": 1024,
+        "mean": 0.6240234375,
+        "lower": 0.5848502346910678,
+        "upper": 0.6631966403089322
+      },
+      "retention": {
+        "n": 128,
+        "mean": 0.022166944907435947,
+        "lower": 0.00972354182522024,
+        "upper": 0.03461034798965165
+      },
+      "against_single": {
+        "n": 1024,
+        "mean": 0,
+        "lower": 0.0,
+        "upper": 0.0
+      }
+    }
+  },
+  "training": {
+    "compressed-pair": {
+      "active_seconds": 875.5611791869997,
+      "active_gpu_seconds": 1751.1223583739993,
+      "through_checkpoint_seconds": 890.8675161909996,
+      "allocated_gpu_seconds_through_checkpoint": 1781.7350323819992,
+      "full_process_seconds": 925.2657828330994,
+      "allocated_gpu_seconds_full_process": 1850.5315656661987,
+      "tx_bytes": 151627989106,
+      "peak_gpu_bytes": 44753242112
+    },
+    "single": {
+      "active_seconds": 1304.9032968759993,
+      "active_gpu_seconds": 1304.9032968759993,
+      "through_checkpoint_seconds": 1320.1090022159979,
+      "allocated_gpu_seconds_through_checkpoint": 1320.1090022159979,
+      "full_process_seconds": 1343.2260699272156,
+      "allocated_gpu_seconds_full_process": 1343.2260699272156,
+      "tx_bytes": 109047,
+      "peak_gpu_bytes": 42493192192
+    }
+  },
+  "scope": "One development seed, public generated task families, exposed retention; no audit cost included.",
+  "decision": {
+    "quality_screen_pass": true,
+    "active_speedup_vs_single": 1.4903622132809318,
+    "active_speed_screen_pass": true,
+    "allocated_gpu_process_cost_ratio_vs_single": 1.377676928029302,
+    "gpu_cost_reduction_vs_single": false,
+    "permissionless_economics_proven": false,
+    "serving_approved": false,
+    "complete_process_speedup_vs_single": 1.4517191652914592,
+    "complete_process_speed_screen_pass": true,
+    "method_screen_pass": true,
+    "dense_distributed_control_run": false
+  },
+  "format": "neuroshard-batched-learning-study-results-v1",
+  "prepared": "43a704d4a67b6e38abf5c315f51729306775757b6683a7fb20c6c541335911c5",
+  "source_commit": "073599b5619737c803c4bbf706fa6ef050e45805",
+  "selection_commit": "d52876209c6d3f558c10a993440708a2a9ccd229",
+  "execution_order": [
+    "compressed-pair",
+    "single"
+  ],
+  "evidence_sha256": {
+    "report.json": "2e45be7526e71c07252b5ed44761760593152f8a47b90fa0dfa8e7a83b130837",
+    "evaluation-integrity.json": "f1e4c805f4dc5afae9aab37049439cf8f551b15fc44d847f9829c4d4d56916d0",
+    "test-disjointness.json": "c26dc5e4067efd2148457c9363f45a11a2209720c966feaadc11a44b9611b023",
+    "single-processes.json": "67aae2b689feacdc6fc07c3a1aa2498ce38dec6f3f7e136ccbef4e19407e88d5",
+    "compressed-pair-processes.json": "38d874ed7e6829b70a1b83ca70604a9abfe11f11274e940b5e62c8abd96acb0b",
+    "training-complete.json": "36a7dc6d875b51ece4852c99cf9d90464cab38fd25fd93d149a3319eacb5de34",
+    "experiment/evaluation/compressed-pair.json": "a7ee9fc340af42686a566df4a1bd2370a1f3ee3686985d2ba7c0febc9dff7ddd",
+    "experiment/evaluation/compressed-pair.started.json": "c88bc861cb870c19601d6c667b86ccd218884c26e265ba6cb66dfc1b9b2c2971",
+    "experiment/evaluation/seed.json": "756aa98457eb36d2a36733adfbb816fa67b2cc5f4787015b4c8cd997a8ccb8cb",
+    "experiment/evaluation/seed.started.json": "0aea7af124adc4df77f6a210440056bdc7706cd7c4c25155cd5955330228af3d",
+    "experiment/evaluation/single.json": "a0c7fd0fe895ef02adb65a76d393dc558e050e84b75074eeb6270e5cd31f99df",
+    "experiment/evaluation/single.started.json": "c2ab0c6e9deafcc15c3b0d8633549a4fb822900d40c68c5722f74093f3142133"
+  },
+  "evaluation_integrity": {
+    "seed": {
+      "correct": 109,
+      "count": 1024,
+      "evaluation_sha256": "756aa98457eb36d2a36733adfbb816fa67b2cc5f4787015b4c8cd997a8ccb8cb",
+      "prompt_and_answer_tokens_checked": true,
+      "assistant_target_masks_checked": true
+    },
+    "single": {
+      "correct": 748,
+      "count": 1024,
+      "evaluation_sha256": "a0c7fd0fe895ef02adb65a76d393dc558e050e84b75074eeb6270e5cd31f99df",
+      "prompt_and_answer_tokens_checked": true,
+      "assistant_target_masks_checked": true
+    },
+    "compressed-pair": {
+      "correct": 738,
+      "count": 1024,
+      "evaluation_sha256": "a7ee9fc340af42686a566df4a1bd2370a1f3ee3686985d2ba7c0febc9dff7ddd",
+      "prompt_and_answer_tokens_checked": true,
+      "assistant_target_masks_checked": true
+    }
+  },
+  "single_retention_screen_pass": false,
+  "parameter_roots": {
+    "compressed-pair": "ac2153f0f3e55379f72d46f4ef4a7a9a1f6b7f30a45d471cb3611c9e15a1385b",
+    "single": "743ebceb281d21e900a5ebf0b2c0a5fa6fd90a0289bcff1b1f98b3cd488fb44f"
+  },
+  "model_backup_manifest_sha256": "ecdeb8534de46127bd6306089951c57287ae6c5cdca9d08c32320550ebc5a4b8",
+  "study_completion": {
+    "completed": 1789353322.198985,
+    "models_backed_up": true,
+    "all_three_models_scored": true
+  },
+  "allocation": {
+    "instances": [
+      "i-08aac44e91b1eb427",
+      "i-0981ce43e16293aab"
+    ],
+    "terminated": true,
+    "volumes": [
+      "vol-0d8d92ac6b50b8397",
+      "vol-0d7d144061d3208b2"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "requested": "2026-09-14T02:35:52.059309+00:00",
+    "confirmed": "2026-09-14T02:41:41.454017+00:00",
+    "compute_usd_upper_bound": 12.636554723575202,
+    "training_wire_bytes": 1927706738017,
+    "conservative_training_transfer_usd": 38.55413476034,
+    "lifetime_network_tx_by_host": [
+      {
+        "enp39s0": 1410368613119,
+        "docker0": 0
+      },
+      {
+        "docker0": 0,
+        "enp39s0": 1312901173725
+      }
+    ],
+    "lifetime_tx_bytes": 2723269786844,
+    "conservative_lifetime_transfer_usd": 54.46539573688,
+    "estimated_total_with_ten_dollar_other_cost_allowance": 77.1019504604552,
+    "scope": "Planning estimate, not AWS invoice. Retained S3 storage accrues separately. Only study GPUs removed; native CPU hosts retained."
+  },
+  "allocation_receipt_sha256": "85c84b31af28a865a509cfd1a54da1c24368f18fb0c2e3f055a7cce3aa20eb5c",
+  "evidence_archive": {
+    "bytes": 12031602,
+    "sha256": "42f0bfc4e5a078cff94624731cf43f5b26be87ae19765833f588181d9f86b31f",
+    "members": 280,
+    "scope": "Research evidence. Model weights remain in separately verified S3 objects. No credentials or SSH keys included.",
+    "bucket": "neuroshard-training-data",
+    "object": "research/learning-methods-evidence-20260914/objects/42f0bfc4e5a078cff94624731cf43f5b26be87ae19765833f588181d9f86b31f",
+    "etag": "\"223c711d3ec7b3f8a55628cd313e9ed3\"",
+    "version_id": null,
+    "readback_verified": true
+  },
+  "evidence_secret_check": {
+    "checked_members": 280,
+    "known_credential_values_checked": 2,
+    "credential_patterns_checked": 5,
+    "passed": true
+  }
+}
