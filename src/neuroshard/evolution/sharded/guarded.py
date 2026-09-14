@@ -33,14 +33,37 @@ def objective(logits, targets, weights, teacher_logits=None, anchor_mask=None,
     return ce+strength*kl, ce.detach(), kl.detach()
 
 
+def correct_margin(logits, targets, teacher_logits, anchor_mask, denominator, minimum, maximum):
+    """Protect known-correct reference token choices, with a bounded target gap.
+
+    A positive reference margin identifies agreement with the supervised label;
+    an incorrect teacher winner receives no margin protection. This is a
+    differentiable penalty, not a guarantee about unseen greedy answers.
+    """
+    reference = teacher_logits.detach().float()
+    index = targets[:, None]
+    teacher_target = reference.gather(1, index).squeeze(1)
+    teacher_other = reference.scatter(1, index, float('-inf')).max(dim=1).values
+    gap = teacher_target - teacher_other
+    protected = anchor_mask & (gap > 0)
+    target = gap.clamp(min=minimum, max=maximum)
+    prediction = logits.float()
+    student_target = prediction.gather(1, index).squeeze(1)
+    student_other = prediction.scatter(1, index, float('-inf')).max(dim=1).values
+    return (F.relu(target - (student_target - student_other)) * protected).sum() / denominator
+
+
 def train_step(shard, teacher, optimizer, wire, records, recipe, index, microbatch,
-               kl_strength=1.):
+               kl_strength=1., margin_strength=0., margin_min=0.5, margin_max=2.0):
     if not math.isfinite(kl_strength) or kl_strength < 0:
         raise ValueError('Invalid retention regularizer')
+    if (not all(math.isfinite(x) for x in (margin_strength, margin_min, margin_max))
+            or margin_strength < 0 or not 0 < margin_min <= margin_max):
+        raise ValueError('Invalid correct-token margin regularizer')
     started = time.monotonic()
     denominator = sum(r['targets']*r.get('loss_weight', 1) for r in records)
     anchors = sum(r['targets'] for r in records if r.get('distill', False))
-    if denominator <= 0 or (kl_strength and anchors == 0):
+    if denominator <= 0 or ((kl_strength or margin_strength) and anchors == 0):
         raise ValueError('Each guarded batch requires targets and declared replay anchors')
     shard.train()
     teacher.eval()
@@ -50,12 +73,12 @@ def train_step(shard, teacher, optimizer, wire, records, recipe, index, microbat
     rate = learning_rate(recipe, index)
     for group in optimizer.param_groups:
         group['lr'] = rate
-    total_ce, total_kl = 0., 0.
+    total_ce, total_kl, total_margin = 0., 0., 0.
     for offset in range(0, len(records), microbatch):
         batch = records[offset:offset+microbatch]
         ids, labels, mask, row_weights = batch_tensors(batch, shard.device_name)
         teacher_logits = None
-        if any(r.get('distill', False) for r in batch) and kl_strength:
+        if any(r.get('distill', False) for r in batch) and (kl_strength or margin_strength):
             with torch.no_grad(), autocast(shard.device_name):
                 _, _, final = forward(teacher, wire, ids, mask)
                 if wire.rank == 0:
@@ -73,6 +96,11 @@ def train_step(shard, teacher, optimizer, wire, records, recipe, index, microbat
                 anchor_mask = rows[:, None].expand_as(active)[active]
                 loss, ce, kl = objective(logits, targets, weights, teacher_logits, anchor_mask,
                                           denominator, max(1, anchors), kl_strength)
+                if margin_strength and teacher_logits is not None:
+                    margin = correct_margin(logits, targets, teacher_logits, anchor_mask,
+                                            max(1, anchors), margin_min, margin_max)
+                    loss = loss + margin_strength * margin
+                    total_margin += float(margin.detach())
             if not bool(torch.isfinite(loss)):
                 raise ValueError('Nonfinite guarded objective')
             total_ce += float(ce)
@@ -106,8 +134,12 @@ def train_step(shard, teacher, optimizer, wire, records, recipe, index, microbat
         p.grad.mul_(scale)
     optimizer.step()
     ce, kl = wire.sum(total_ce), wire.sum(total_kl)
+    margin = wire.sum(total_margin) if margin_strength else 0.
     if shard.device_name == 'cuda':
         torch.cuda.synchronize()
-    return {'step': index+1, 'loss': ce+kl_strength*kl, 'response_loss': ce, 'reference_kl': kl,
+    result = {'step': index+1, 'loss': ce+kl_strength*kl, 'response_loss': ce, 'reference_kl': kl,
             'gradient_norm': norm, 'learning_rate': rate, 'weighted_targets': denominator,
             'anchor_targets': anchors, 'seconds': time.monotonic()-started}
+    if margin_strength:
+        result.update(loss=result['loss'] + margin_strength * margin, reference_margin=margin)
+    return result

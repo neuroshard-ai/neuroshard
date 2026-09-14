@@ -4,10 +4,10 @@ import argparse
 import json
 from pathlib import Path
 
-from neuroshard.evolution import continued, reference_data as data
+from neuroshard.evolution import continued, reference_data as data, reasoned
 
 
-def measurements(report, prepared, roles, records, expected_checkpoint, tokenizer=None):
+def measurements(report, prepared, roles, records, expected_checkpoint, tokenizer=None, plan=None):
     if report['prepared'] != data.identity(prepared) or report['checkpoint'] != expected_checkpoint:
         raise ValueError('Evaluation binds another job or checkpoint')
     result = {}
@@ -27,7 +27,8 @@ def measurements(report, prepared, roles, records, expected_checkpoint, tokenize
             for row, answer in zip(rows, outcome['answers']):
                 if tokenizer is not None and tokenizer.decode(answer['output_ids'], skip_special_tokens=True) != answer['text']:
                     raise ValueError('Generated text differs from the recorded output tokens')
-                check = tasks.check_answer(row['task'], answer['text'])
+                check = (reasoned.check_answer(plan, row['task'], answer['text'], role) if plan is not None
+                         else tasks.check_answer(row['task'], answer['text']))
                 if check != answer['check']:
                     raise ValueError('Reported correctness differs from the generated answer')
                 answers.append({'id': row['id'], 'correct': check['correct']})
@@ -42,8 +43,8 @@ def score(plan, prepared, selection, baseline, candidate, records, checkpoint, t
     if baseline['checkpoint'] != selection['baseline'] or candidate['checkpoint'] != selection['candidate']:
         raise ValueError('Unselected endpoint')
     roles = plan['final_roles']
-    before = measurements(baseline, prepared, roles, records, selection['baseline'], tokenizer)
-    after = measurements(candidate, prepared, roles, records, selection['candidate'], tokenizer)
+    before = measurements(baseline, prepared, roles, records, selection['baseline'], tokenizer, plan)
+    after = measurements(candidate, prepared, roles, records, selection['candidate'], tokenizer, plan)
     result = continued.decide(plan, records, before, after)
     result.update(prepared=data.identity(prepared), selection=data.identity(selection),
                   baseline=selection['baseline'], candidate=selection['candidate'])

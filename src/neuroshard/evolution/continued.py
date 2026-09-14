@@ -36,6 +36,7 @@ SOURCE_PATHS = (
     'src/neuroshard/dataflow/store.py',
     'src/neuroshard/dataflow/collect.py',
     'src/neuroshard/evolution/continued.py',
+    'src/neuroshard/evolution/reasoned.py',
     'src/neuroshard/evolution/reference.py',
     'src/neuroshard/evolution/reference_data.py',
     'src/neuroshard/evolution/grounded_tasks.py',
@@ -66,6 +67,9 @@ def digest(value):
 
 
 def validate(plan):
+    if is_reasoned(plan):
+        from .reasoned import validate as validate_reasoned
+        return validate_reasoned(plan)
     if plan.get('format') != FORMAT:
         raise ValueError('Unsupported continued-learning format')
     if plan.get('license') != 'Apache-2.0':
@@ -97,7 +101,8 @@ def validate(plan):
     if parent['state_root'] != '497dfd36ff77ab7db04b8bac2e66b7a548763db51552cc28ecd33171bd6d9f21':
         raise ValueError('Parent learned-state root differs from the frozen phase-A root')
     reference = plan['reference']
-    if (reference['kind'] != 'frozen-parent-checkpoint'
+    if (set(reference) != {'kind', 'checkpoint', 'state_root', 'kl_strength'}
+            or reference['kind'] != 'frozen-parent-checkpoint'
             or reference['checkpoint'] != parent['checkpoint']
             or reference['state_root'] != parent['state_root']
             or reference['kl_strength'] != 2.0):
@@ -194,16 +199,26 @@ def repo_root():
     return PLAN_PATH.parents[2]
 
 
+def is_reasoned(plan):
+    return plan.get('format') == 'neuroshard-reasoned-learning-v1'
+
+
+def plan_path(plan):
+    return PLAN_PATH.with_name('reasoned-learning.json') if is_reasoned(plan) else PLAN_PATH
+
+
 def prepared_path(plan):
     relative = Path(plan['open_source']['prepared_path'])
-    if relative.as_posix() != 'config/experiments/' + PREPARED_NAME:
+    name = 'reasoned-learning-prepared.json' if is_reasoned(plan) else PREPARED_NAME
+    if relative.as_posix() != 'config/experiments/' + name:
         raise ValueError('Prepared freeze must use the public experiments path')
     return repo_root() / relative
 
 
 def selection_path(plan):
     relative = Path(plan['open_source']['selection_path'])
-    if relative.as_posix() != 'config/experiments/' + SELECTION_NAME:
+    name = 'reasoned-learning-selection.json' if is_reasoned(plan) else SELECTION_NAME
+    if relative.as_posix() != 'config/experiments/' + name:
         raise ValueError('Selection must use the public experiments path')
     return repo_root() / relative
 
@@ -236,7 +251,11 @@ def prior_role_ids(plan, prior=None):
     for role, digest_value in plan['prior_exclusion']['role_sha256'].items():
         if prior['roles'][role]['sha256'] != digest_value:
             raise ValueError('Prior role bytes changed')
-    return set(ids)
+    result = set(ids)
+    if is_reasoned(plan):
+        from .reasoned import previous_prepared
+        result.update(item for role in previous_prepared(plan)['roles'].values() for item in role['ids'])
+    return result
 
 
 def overlap_ids(*groups):
@@ -403,8 +422,9 @@ def validate_prepared(prepared, plan=None):
         if sum(roles['train']['ids'][i] in replay for i in step['indices']) != 32:
             raise ValueError('Every update requires its declared 32 replay anchors')
         indices.extend(step['indices'])
-    if sorted(indices) != list(range(counts['train'])):
-        raise ValueError('Schedule must train every declared window exactly once')
+    epochs = plan['method'].get('epochs', 1)
+    if sorted(indices) != sorted(list(range(counts['train'])) * epochs):
+        raise ValueError('Schedule must train every declared window exactly once per declared epoch')
     return prepared
 
 
@@ -435,6 +455,8 @@ def validate_selection(selection, plan, prepared, checkpoint=None):
                 or checkpoint.get('transition') is not None):
             raise ValueError('Selected manifest is not the actual fixed-size final checkpoint')
     development = selection['development']
+    if is_reasoned(plan) and development.get('step') != selection['step']:
+        raise ValueError('Development decision must cover the actual selected endpoint')
     validate_development(development, plan, prepared, selection['candidate'])
     return selection
 
@@ -444,16 +466,17 @@ def committed_prepared(plan, supplied=None):
     if not path.is_file():
         return False
     raw = path.read_bytes()
-    if git_bytes('HEAD', path) != raw or git_bytes('HEAD', PLAN_PATH) != PLAN_PATH.read_bytes():
+    frozen_path = plan_path(plan)
+    if git_bytes('HEAD', path) != raw or git_bytes('HEAD', frozen_path) != frozen_path.read_bytes():
         raise ValueError('Training requires unchanged Git-committed plan and prepared bytes')
     prepared = json.loads(raw)
-    if json.loads(PLAN_PATH.read_bytes()) != plan:
+    if json.loads(frozen_path.read_bytes()) != plan:
         raise ValueError('Supplied plan differs from the committed plan')
     if supplied is not None and supplied != prepared:
         raise ValueError('Supplied prepared artifact differs from the committed freeze')
     validate_prepared(prepared, plan)
-    frozen = json.loads(git_bytes(prepared['plan_commit'], PLAN_PATH))
-    if hashlib.sha256(git_bytes(prepared['plan_commit'], PLAN_PATH)).hexdigest() != prepared['plan_digest']:
+    frozen = json.loads(git_bytes(prepared['plan_commit'], frozen_path))
+    if hashlib.sha256(git_bytes(prepared['plan_commit'], frozen_path)).hexdigest() != prepared['plan_digest']:
         raise ValueError('Prepared freeze does not bind the frozen plan bytes')
     if frozen['status'] != 'plan-frozen' or {**plan, 'status': 'plan-frozen'} != frozen:
         raise ValueError('Frozen plan constants changed after preparation')
@@ -589,6 +612,9 @@ def development_decision(plan, prepared, checkpoint, before, after):
 
 def validate_development(report, plan, prepared, checkpoint):
     expected = development_decision(plan, prepared, checkpoint, report['before'], report['after'])
+    if is_reasoned(plan):
+        from .reasoned import development
+        expected = development(plan, prepared, report['step'], expected, report['generation'])
     if report != expected or not report['passed']:
         raise ValueError('Candidate failed its frozen development retention gate')
     return report

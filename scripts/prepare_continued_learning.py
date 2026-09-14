@@ -13,7 +13,7 @@ from pathlib import Path
 
 from transformers import AutoTokenizer, LlamaConfig
 
-from neuroshard.evolution import continued, grounded_tasks as tasks, reference_data as data
+from neuroshard.evolution import continued, grounded_tasks as tasks, reference_data as data, reasoned
 from neuroshard.dataflow.collect import upstream_rows
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +28,7 @@ def write_role(home, role, rows):
             'ids': [row['id'] for row in rows]}
 
 
-def make_tasks(tokenizer, plan, seed, role, count, seen, exclusion, family_cycle=None):
+def make_tasks(tokenizer, plan, seed, role, count, seen, exclusion, family_cycle=None, use_reasoning=False):
     result = []
     cycle = plan['method']['new_task_family_cycle'] if family_cycle else None
     for index in range(count):
@@ -38,8 +38,7 @@ def make_tasks(tokenizer, plan, seed, role, count, seen, exclusion, family_cycle
         if identifier in seen:
             raise ValueError('Repeated task identity')
         seen.add(identifier)
-        messages = [{'role': 'user', 'content': tasks.prompt(case)},
-                    {'role': 'assistant', 'content': json.dumps(tasks.expected(case), separators=(',', ':'))}]
+        messages = reasoned.messages(case, use_reasoning)
         if not exclusion.add(messages):
             raise ValueError('Generated prompt overlaps previously exposed or prepared content')
         weight = plan['method']['total_task_weight'] if case['family'] == 'total' else plan['method']['new_task_weight']
@@ -51,20 +50,25 @@ def make_tasks(tokenizer, plan, seed, role, count, seen, exclusion, family_cycle
 def schedule(rows, seed, plan):
     generator = random.Random(seed)
     groups = [[i for i, row in enumerate(rows) if bool(row['distill']) == anchor] for anchor in (False, True)]
-    for group in groups:
-        generator.shuffle(group)
-        if len(group) % plan['additional_steps']:
-            raise ValueError('Each replay stratum must divide into complete steps')
+    epochs = plan['method'].get('epochs', 1)
+    if plan['additional_steps'] % epochs:
+        raise ValueError('Training steps must divide into the declared epochs')
+    epoch_steps = plan['additional_steps'] // epochs
     result = []
-    for step in range(plan['additional_steps']):
-        batch = []
+    for epoch in range(epochs):
         for group in groups:
-            width = len(group) // plan['additional_steps']
-            batch.extend(group[step * width:(step + 1) * width])
-        generator.shuffle(batch)
-        if len(batch) != plan['training']['batch_documents']:
-            raise ValueError('Incorrect effective batch size')
-        result.append(batch)
+            generator.shuffle(group)
+            if len(group) % epoch_steps:
+                raise ValueError('Each replay stratum must divide into complete steps')
+        for step in range(epoch_steps):
+            batch = []
+            for group in groups:
+                width = len(group) // epoch_steps
+                batch.extend(group[step * width:(step + 1) * width])
+            generator.shuffle(batch)
+            if len(batch) != plan['training']['batch_documents']:
+                raise ValueError('Incorrect effective batch size')
+            result.append(batch)
     if {i for batch in result for i in batch} != set(range(len(rows))):
         raise ValueError('Schedule must use every training document once')
     return result
@@ -96,6 +100,16 @@ def prepare(args):
     for rows in prior_roles.values():
         for row in rows:
             exclusion.add(row['messages'])
+    if reasoned.enabled(plan):
+        if not args.exclude_continued:
+            raise ValueError('Supply every role from the previous continuation for exclusion')
+        previous = reasoned.previous_prepared(plan)
+        for role, spec in previous['roles'].items():
+            rows = data.read_records(args.exclude_continued / spec['file'], spec['sha256'])
+            if [row['id'] for row in rows] != spec['ids']:
+                raise ValueError('Previous continuation exclusion records differ')
+            for row in rows:
+                exclusion.add(row['messages'])
     conversations = [copy.deepcopy(row) for row in prior_train if 'task' not in row]
     trained = [copy.deepcopy(row) for row in prior_train if 'task' in row]
     random.Random(plan['replay_sample_seed']).shuffle(conversations)
@@ -107,14 +121,18 @@ def prepare(args):
     for row in replay + task_replay:
         row['distill'] = True
     seen = set(prior_ids)
-    train = make_tasks(tokenizer, plan, plan['task_seed'], 'train', plan['new_tasks'], seen, exclusion, family_cycle=True)
+    use_reasoning = reasoned.enabled(plan)
+    train = make_tasks(tokenizer, plan, plan['task_seed'], 'train', plan['new_tasks'], seen, exclusion,
+                       family_cycle=True, use_reasoning=use_reasoning)
     train.extend(task_replay)
     train.extend(replay)
     roles = {
         'train': train,
-        'dev-new': make_tasks(tokenizer, plan, plan['task_seed'], 'dev', plan['development_cases'], seen, exclusion),
+        'dev-new': make_tasks(tokenizer, plan, plan['task_seed'], 'dev', plan['development_cases'], seen, exclusion,
+                              use_reasoning=use_reasoning),
         'dev-prior': make_tasks(tokenizer, plan, plan['prior_probe_seed'], 'dev', plan['development_cases'], seen, exclusion),
-        'test-new': make_tasks(tokenizer, plan, plan['task_seed'], 'test', plan['test_new_cases'], seen, exclusion),
+        'test-new': make_tasks(tokenizer, plan, plan['task_seed'], 'test', plan['test_new_cases'], seen, exclusion,
+                               use_reasoning=use_reasoning),
         'test-prior': make_tasks(tokenizer, plan, plan['prior_probe_seed'], 'test', plan['test_prior_cases'], seen, exclusion),
     }
     if args.upstream_cache:
@@ -170,4 +188,6 @@ if __name__ == '__main__':
     parser.add_argument('--prior-train', type=Path, required=True)
     parser.add_argument('--plan-commit', required=True)
     parser.add_argument('--upstream-cache', type=Path)
+    parser.add_argument('--exclude-continued', type=Path,
+                        help='Previous continued-learning role directory, required by the reasoned plan')
     prepare(parser.parse_args())

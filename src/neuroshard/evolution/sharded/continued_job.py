@@ -17,7 +17,7 @@ import torch
 import torch.distributed as dist
 from transformers import AutoTokenizer, LlamaConfig
 
-from .. import continued, grounded_tasks as tasks, reference, reference_data as data
+from .. import continued, grounded_tasks as tasks, reference, reference_data as data, reasoned
 from . import guarded, portable
 from .model import Partition
 from .training import score, generate
@@ -109,6 +109,21 @@ def main(argv, root):
         def records(role):
             return continued.read_role(args.prepared.parent, prepared, role)
 
+        def answers_for(model, role):
+            answers = []
+            for row in records(role):
+                prompt = tokenizer.apply_chat_template(row['messages'][:-1], tokenize=True,
+                                                       add_generation_prompt=True)
+                begun = time.monotonic()
+                ids = generate(model, wire, prompt, plan['generation_tokens'], tokenizer.eos_token_id)
+                answer = tokenizer.decode(ids, skip_special_tokens=True)
+                answers.append({'id': row['id'], 'output_ids': ids, 'text': answer,
+                    'check': reasoned.check_answer(plan, row['task'], answer, role),
+                    'seconds': time.monotonic() - begun})
+                if len(answers) % 16 == 0:
+                    emit('generated', rank=rank, role=role, cases=len(answers))
+            return answers
+
         if args.command == 'train':
             until = args.until or plan['final_step']
             if not start < until <= plan['final_step'] or until not in plan['checkpoints']:
@@ -116,17 +131,35 @@ def main(argv, root):
             rows = records('train')
             retention_rows = records('dev-retention')
             baseline_retention = score(teacher, wire, retention_rows)
+            baseline_generation = None
+            if reasoned.enabled(plan):
+                baseline_generation = {role: answers_for(teacher, role) for role in ('dev-new', 'dev-prior')}
+                available = plan['development_cases'] - sum(
+                    answer['check']['correct'] for answer in baseline_generation['dev-new'])
+                if available < plan['quality_gate']['development_final_min_net_gain']:
+                    data.save(args.home / 'aborted.json', {'reason': 'Development baseline leaves insufficient room for the frozen gain',
+                        'available_gain': available, 'baseline_generation': baseline_generation})
+                    raise ValueError('Frozen development gain is unattainable; do not spend the training budget')
             parent_root = data.identity(common)
             input_checkpoint = parent_root
 
             def check_development(checkpoint):
                 report = continued.development_decision(plan, prepared, data.identity(checkpoint),
                     baseline_retention, score(shard, wire, retention_rows))
+                if baseline_generation is not None:
+                    # Timing is measured separately and cannot enter worker agreement.
+                    clean = lambda answers: [{k: v for k, v in answer.items() if k != 'seconds'} for answer in answers]
+                    generation = {role: {'before': clean(before), 'after': clean(answers_for(shard, role))}
+                                  for role, before in baseline_generation.items()}
+                    report = reasoned.development(plan, prepared, checkpoint['step'], report, generation)
                 if any(other != report for other in wire.exchange(report)):
                     raise ValueError('Workers disagree on development retention')
                 data.save(args.home / f'development-{checkpoint["step"]:06d}.json', report)
                 emit('development', rank=rank, step=checkpoint['step'],
-                     mean_delta=report['mean_delta'], passed=report['passed'])
+                     mean_delta=report['mean_delta'], passed=report['passed'],
+                     checks=report.get('checks'),
+                     answers={role: {key: summary[key] for key in ('baseline_correct', 'candidate_correct')}
+                              for role, summary in report.get('generation_summary', {}).items()})
                 if not report['passed']:
                     data.save(args.home / 'aborted.json', report)
                     raise ValueError('Development retention abort; preserve this rejected attempt')
@@ -140,7 +173,10 @@ def main(argv, root):
                 batch = [rows[i] for i in assignment['indices']]
                 row = guarded.train_step(shard, teacher, optimizer, wire, batch, plan['training'],
                                           index - plan['parent_step'], plan['microbatch'],
-                                          kl_strength=plan['reference']['kl_strength'])
+                                          kl_strength=plan['reference']['kl_strength'],
+                                          margin_strength=plan['reference'].get('margin_strength', 0.),
+                                          margin_min=plan['reference'].get('margin_min', 0.5),
+                                          margin_max=plan['reference'].get('margin_max', 2.0))
                 with (args.home / 'steps.jsonl').open('a') as log:
                     log.write(json.dumps(row) + '\n')
                     log.flush()
@@ -163,17 +199,7 @@ def main(argv, root):
                 rows = records(role)
                 outcomes[role] = {'losses': score(shard, wire, rows), 'answers': []}
                 if role in ('test-new', 'test-prior', 'dev-new', 'dev-prior'):
-                    for row in rows:
-                        prompt = tokenizer.apply_chat_template(row['messages'][:-1], tokenize=True,
-                                                               add_generation_prompt=True)
-                        begun = time.monotonic()
-                        ids = generate(shard, wire, prompt, plan['generation_tokens'], tokenizer.eos_token_id)
-                        answer = tokenizer.decode(ids, skip_special_tokens=True)
-                        outcomes[role]['answers'].append({
-                            'id': row['id'], 'output_ids': ids, 'text': answer,
-                            'check': tasks.check_answer(row['task'], answer),
-                            'seconds': time.monotonic() - begun,
-                        })
+                    outcomes[role]['answers'] = answers_for(shard, role)
                 emit('evaluated', rank=rank, role=role)
             data.save(args.home / 'evaluation.json', {
                 'checkpoint': data.identity(common), 'prepared': data.identity(prepared),
