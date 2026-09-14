@@ -143,7 +143,7 @@ class Worker:
             if shutil.disk_usage(self.store.root).free < 2*1024**3:
                 raise OSError('Audit artifact store has less than 2 GiB free')
             try:
-                if claim.get('kind') == 'portable_training':
+                if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference'):
                     if not self.portable_backend:
                         return {'phase': 'portable_replay_backend_required', 'claim': claim['id']}
                     backend = self.portable_backend

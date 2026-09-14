@@ -88,11 +88,14 @@ def receipt(chain_id, assignment, output, transcript, rank):
 def apply(s, owner, body, envelope):
     if 'portable_work' not in s:
         raise ValueError('Genesis does not enable portable shard work')
+    from .portable_lifecycle import active_profile
     common = s['portable_work']['checkpoint']
-    profile, params = s['manifest']['portable_work'], s['manifest']['params']
+    profile, params = active_profile(s), s['manifest']['params']
     if body['kind'] == 'reserve_shards':
         if s['assignment'] or s['candidate'] or body['input_checkpoint'] != identity(common):
             raise ValueError('Reserve the current portable checkpoint without overlapping work')
+        if common['step'] >= profile['max_step']:
+            raise ValueError('Prepared job exhausted; finish quality approval')
         workers = body['workers']
         if not isinstance(workers, list) or len(workers) != len(common['boundaries'])-1:
             raise ValueError('Reserve every current shard owner')
@@ -114,7 +117,8 @@ def apply(s, owner, body, envelope):
     if child['step'] > profile['max_step'] or s['period_steps']+steps > params['steps_per_period']:
         raise ValueError('Prepared job or issuance period exhausted')
     if (child['parent'] != identity(common) or child['transition'] is not None
-            or any(child[k] != common[k] for k in ['job', 'config', 'boundaries'])):
+            or child['job'] != profile.get('job', common['job'])
+            or any(child[k] != common[k] for k in ['config', 'boundaries'])):
         raise ValueError('Training cannot replace its parent, job, architecture or shard layout')
     if set(child['tensors']) != set(common['tensors']):
         raise ValueError('Incomplete trained tensor coverage')
@@ -142,6 +146,10 @@ def apply(s, owner, body, envelope):
         'work_ids': ids, 'stages': steps*len(assignment['workers']),
         'deadline': s['height']+params['challenge_blocks'], 'expires': s['height']+params['max_claim_blocks'],
         'challenge': None}
+    if 'portable_lifecycle' in s:
+        s['candidate']['execution_job'] = profile['job']
+        s['candidate']['executor_root'] = profile['executor_root']
+        s['candidate']['expires'] = min(s['candidate']['expires'], s['portable_lifecycle']['active']['expires'])
     auditing.attach(s, assignment['audit_budget'])
     s['assignment'] = None
 
@@ -159,7 +167,15 @@ def settle(s, claim):
     # The frozen profile pays by owned parameter count, with deterministic
     # remainder assignment. This is an issuance rule, not a hardware cost model.
     common = claim['output_checkpoint']
-    weights = [0]*len(claim['workers'])
+    for worker, amount in zip(claim['workers'], payments(common, reward)):
+        ledger.account(s, worker)['balance'] += amount
+    s['portable_work']['checkpoint'] = copy.deepcopy(common)
+    s['model_root'] = common['state_root']
+
+
+def payments(common, reward):
+    """Deterministic parameter-weighted division shared by training and serving."""
+    weights = [0]*(len(common['boundaries'])-1)
     for name, spec in common['tensors'].items():
         match = re.fullmatch(r'model\.layers\.(\d+)\..+', name)
         if match:
@@ -170,13 +186,10 @@ def settle(s, claim):
         else:
             raise ValueError('Unsupported owned parameter')
         weights[rank] += math.prod(spec['shape'])
-    payments = [reward*w//sum(weights) for w in weights]
-    for rank in range(reward-sum(payments)):
-        payments[rank] += 1
-    for worker, amount in zip(claim['workers'], payments):
-        ledger.account(s, worker)['balance'] += amount
-    s['portable_work']['checkpoint'] = copy.deepcopy(common)
-    s['model_root'] = common['state_root']
+    amounts = [reward*w//sum(weights) for w in weights]
+    for rank in range(reward-sum(amounts)):
+        amounts[rank] += 1
+    return amounts
 
 
 def replay_report(claim, partitions):
@@ -186,11 +199,14 @@ def replay_report(claim, partitions):
     execute the pinned numerical auditor; accepting strangers' report files
     would violate the honest-validator assumption.
     """
+    if claim.get('kind') in ('portable_quality', 'portable_inference'):
+        from .portable_lifecycle import replay_report as service_report
+        return service_report(claim, partitions)
     before, after = claim['input_checkpoint'], claim['output_checkpoint']
     count = len(before['boundaries'])-1
     if not isinstance(partitions, list) or len(partitions) != count:
         raise ValueError('GPU auditor must replay every shard, not only its training assignment')
-    required = {'job': before['job'], 'prepared': claim['prepared'], 'input': identity(before),
+    required = {'job': claim.get('execution_job', before['job']), 'prepared': claim['prepared'], 'input': identity(before),
         'output': identity(after), 'reference': claim.get('reference_root', identity(None)),
         'boundaries': before['boundaries'], 'start': before['step'], 'end': after['step']}
     for rank, report in enumerate(partitions):
