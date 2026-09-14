@@ -120,6 +120,7 @@ def test_development_gain_and_prior_floors_cannot_be_replaced_with_loss_gain():
 @pytest.fixture
 def committed_reasoned(tmp_path, monkeypatch):
     original, value = continued.repo_root(), plan()
+    value['status'] = 'plan-frozen'
     for name in (*continued.SOURCE_PATHS, value['prior_exclusion']['inputs_path'],
                  value['previous_continuation']['prepared_path'], 'config/experiments/continued-learning.json'):
         target = tmp_path / name
