@@ -93,17 +93,20 @@ class Network:
     def send(self, owner, operation, kind, **fields):
         return self.outboxes[owner].send(operation, kind, timeout=180, **fields)
 
-    def fund(self, operation, stages):
-        self.send(0, operation + '/fund', 'fund_audit', publisher=self.owners[0].public_key,
+    def fund(self, operation, stages, sponsor=3, publisher=None):
+        self.send(sponsor, operation + '/fund', 'fund_audit',
+                  publisher=publisher or self.owners[sponsor].public_key,
                   auditors=[], stage_limit=stages, expires_in=100000)
-        budget = self.outboxes[0].logical_id(operation + '/fund')
-        for index in range(3):
-            self.send(index, operation + '/accept', 'accept_audit', budget_id=budget)
+        budget = self.outboxes[sponsor].logical_id(operation + '/fund')
+        # Automatic auditors exclusively own their transaction streams. Having
+        # the controller also sign acceptance races the same account nonce.
+        self.until(lambda: all(self.query('/auditing')['budgets'][budget]['auditors'][owner.public_key]['bond']
+                               for owner in self.owners[:3]))
         return budget
 
-    def activate(self, job):
-        self.send(0, 'job/propose', 'propose_shard_job', job=job)
-        proposal = self.outboxes[0].logical_id('job/propose')
+    def activate(self, job, publisher=3):
+        self.send(publisher, 'job/propose', 'propose_shard_job', job=job)
+        proposal = self.outboxes[publisher].logical_id('job/propose')
         for index in range(3):
             self.send(index, 'job/vote', 'vote_shard_job', proposal_id=proposal, approve=True)
         self.until(lambda: (active if (active := self.query('/portable_lifecycle')['active'])
