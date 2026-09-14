@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-reasoned-learning-v1",
-  "status": "prepared-committed",
+  "status": "selection-committed",
   "created_utc": "2026-09-14T14:05:00Z",
   "purpose": "development",
   "license": "Apache-2.0",
