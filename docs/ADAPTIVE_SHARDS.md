@@ -101,6 +101,10 @@ They exercise full-response loss and distillation, partial microbatches, unequal
 weights, clipping, two-to-three-to-two process groups, exact learned-state
 agreement, identity insertion and preservation of old Adam moments.
 
-This driver issues zero NEURO. GPU execution still needs an explicit verification
-and settlement bridge before it can earn native rewards. Neither a checkpoint
-hash nor a quality score proves that an untrusted worker performed the update.
+This training driver issues zero NEURO. The separate
+[native replay-quorum bridge](NATIVE_SHARD_REPLAY.md) settles bounded GPU update
+windows in an optional genesis, using complete replay attestations weighted by
+native validator bonds. Its [operated results](ADAPTIVE_SHARDS_RESULTS.md) record
+GPU replay and native settlement separately from learning quality. Neither a
+checkpoint hash nor a quality score proves that an untrusted worker performed
+the update.
