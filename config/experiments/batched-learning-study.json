@@ -1,0 +1,72 @@
+{
+  "format": "neuroshard-batched-learning-study-v1",
+  "purpose": "development",
+  "previous_prepared": "307be733a2ed647db1bdded7443df6569805443c4ad9e02ccb4dfb491b8f5a6e",
+  "model": {
+    "license": "Apache-2.0",
+    "parameters": 1711376384,
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674"
+  },
+  "arms": {
+    "single": 1,
+    "compressed-pair": 2
+  },
+  "task_documents": 6144,
+  "replay_documents": 2048,
+  "dev_documents": 64,
+  "test_documents": 1024,
+  "task_seed": 2026091401,
+  "max_length": 1024,
+  "generation_tokens": 96,
+  "task_token_weight": 8,
+  "training": {
+    "steps": 128,
+    "batch_documents": 256,
+    "learning_rate": 3e-05,
+    "warmup_steps": 8,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 2026091401
+  },
+  "compression": {
+    "matrix_approximation_rank": 32,
+    "start_powerSGD_iter": 8,
+    "min_compression_rate": 2,
+    "use_error_feedback": true,
+    "warm_start": true,
+    "orthogonalization_epsilon": 1e-08,
+    "random_seed": 2026091397,
+    "batch_tensors_with_same_shape": false
+  },
+  "budget": {
+    "seconds": 7200,
+    "disk_gib": 100
+  },
+  "decision": {
+    "retention_upper_nats": 0.02,
+    "normal_multiplier": 2.576,
+    "accuracy_noninferiority_margin": 0.03,
+    "task_gain_minimum": 0.1,
+    "active_speedup_vs_single_minimum": 1.1,
+    "complete_process_speedup_vs_single_minimum": 1.1,
+    "scope": "Fresh generated cases from public task families; one development seed and previously exposed retention. Matched single-GPU baseline uses a larger tested microbatch. Report total GPU and network cost separately. No model growth, recovery or permissionless verification claim."
+  },
+  "microbatches": {
+    "single": 16,
+    "compressed-pair": 8
+  },
+  "cuda_allocator": "expandable_segments:True",
+  "selection_basis": "Training-only memory and throughput probes. Finalize and commit probe receipts, exact sources and inputs before training. All two final models precede final scoring.",
+  "probe_evidence_sha256": {
+    "allocator-g256-m16-w1-rank-0.json": "6b56860f358c126f21caa4839b9f6192b1a4ecd405bc82b4607a3586c4166568",
+    "allocator-g256-m8-w2-rank-0.json": "59ff06c33c416fcd29ab78efd1036137d8e960c5bb7fae42ee852757da9d5c67",
+    "allocator-g256-m8-w2-rank-1.json": "0490f82f445d77975a35a8953e110c05ffa526c0b49a2e3df070143641b1fb89",
+    "allocator-g256-m12-w2-rank-0.json": "23b72b8acb4120b8a26efa2ce84be53f64209ca8416bee259cb550df11ae1493",
+    "batch-scaling-g256-m8-w1-rank-0.json": "14513d7e0f484387c5bf84996c252214cf3dfe03901bbd923953a0105b750a12",
+    "batch-scaling-g256-m16-w1-rank-0.json": "e920b453b3f7a7fc150b6d3c7d115753fda979fadfed1008e944865561039eb8",
+    "batch-scaling-g256-m8-w2-rank-1.json": "44fcdf2d6ddd9b90fd6715a9268aff435418a346b49805df35832263b5354b4a",
+    "allocator-cpu-equivalence.json": "127384ab1a4a19d2b0ee22cce70ac233ee8606fa06575a50166e443dff4ee3aa",
+    "batched-objective-cpu.log": "d0a6a7dd1b43a93b88e128f8c7dd40d5e4d9e91ff742e7debc4fe7907ddb9bc8"
+  }
+}

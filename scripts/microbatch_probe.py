@@ -41,7 +41,7 @@ def cpu_equivalence():
         tokens=torch.randint(1,64,(length,)).tolist();labels=[-100]*3+tokens[3:]
         rows.append({'input_ids':tokens,'labels':labels,'targets':length-3,'loss_weight':index+1})
     losses=[];gradients=[]
-    for batch in (1,2,4):
+    for batch in (1,2,3,4):
         model.zero_grad(set_to_none=True);total=0.
         for start in range(0,len(rows),batch):
             subset=rows[start:start+batch]
@@ -53,7 +53,7 @@ def cpu_equivalence():
         torch.testing.assert_close(torch.tensor(loss),torch.tensor(losses[0]),rtol=1e-6,atol=1e-4)
         torch.testing.assert_close(gradient,gradients[0],rtol=2e-4,atol=1e-5)
     return {'weighted_response_loss_and_gradients_match':True,'unequal_lengths':True,
-            'microbatches':[1,2,4],'losses':losses,'dtype':'float32','rtol':2e-4,'atol':1e-5}
+            'microbatches':[1,2,3,4],'partial_final_microbatch':True,'losses':losses,'dtype':'float32','rtol':2e-4,'atol':1e-5}
 
 
 def gpu_probe(args):

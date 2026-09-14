@@ -21,7 +21,7 @@ from neuroshard.evolution import reference as engine
 from neuroshard.evolution import reference_data as data
 
 
-def batched_step(model, optimizer, records, recipe, index, rank, world, microbatch):
+def batched_step(model, optimizer, records, recipe, index, rank, world, microbatch, device="cuda"):
     import torch
     import torch.distributed as dist
     local = sorted(group.rank_records(records, rank, world), key=lambda row: len(row['input_ids']))
@@ -35,18 +35,19 @@ def batched_step(model, optimizer, records, recipe, index, rank, world, microbat
         subset = local[offset:offset + microbatch]
         context = model.no_sync() if world > 1 and offset + microbatch < len(local) else contextlib.nullcontext()
         with context:
-            loss = summed_loss(model, subset, 'cuda')
+            loss = summed_loss(model, subset, device)
             total += float(loss.detach())
             (loss * world / denominator).backward()
     if any(parameter.grad is None for parameter in model.parameters()):
         raise ValueError('Dense graph required to retain gradient buffers')
     if world > 1:
-        value = torch.tensor(total, dtype=torch.float64, device='cuda')
+        value = torch.tensor(total, dtype=torch.float64, device=device)
         dist.all_reduce(value)
         total = float(value)
     norm = torch.nn.utils.clip_grad_norm_(model.parameters(), recipe['clip_norm'], error_if_nonfinite=True)
     optimizer.step()
-    torch.cuda.synchronize()
+    if device == "cuda":
+        torch.cuda.synchronize()
     return {'step': index + 1, 'seconds': time.monotonic() - started, 'loss': total / denominator,
             'learning_rate': rate, 'gradient_norm': float(norm), 'weighted_targets': denominator}
 
@@ -61,6 +62,7 @@ def run(args):
     plan = json.loads(driver.PLAN.read_bytes())
     prepared = driver.inputs(args, plan)
     profile = driver.runtime()
+    profile['cuda_allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF', 'default')
     rank, world = int(os.environ['RANK']), int(os.environ['WORLD_SIZE'])
     assert world in (1, 2) and 0 <= rank < world
     assert driver.model_snapshot(args.model_dir, plan['model']) == prepared['model_snapshot']
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('--global-batch', type=int, required=True)
     parser.add_argument('--microbatch', type=int, required=True)
     args = parser.parse_args()
-    if args.global_batch % args.microbatch or args.global_batch > 4096:
-        raise ValueError('Choose a divisible batch no larger than the committed training partition')
+    if not 0 < args.microbatch <= args.global_batch <= 4096:
+        raise ValueError('Choose positive micro/global batches no larger than the committed training partition')
     with windows.exclusive_device('cuda'):
         run(args)
