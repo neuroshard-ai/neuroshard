@@ -108,8 +108,31 @@ settle growth, or connect these 1.7B checkpoints to public paid inference.
 
 ## Learning decision
 
-The fixed 128-update endpoint is evaluated separately against the frozen seed.
-Acceptance requires held-out task improvement, conversation retention within the
-declared margin, and no reduction in correctly generated answers. Phase B and
-its larger-model comparison depend on that result; successful computation or
-native issuance cannot substitute for the quality gate.
+**Phase A passed its frozen learning gate.** The predetermined update-128
+checkpoint was committed in
+[the selection record](../config/experiments/adaptive-shards-selection-a.json)
+at `49f3633`, before final evaluation. Its checkpoint root is
+`094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49`.
+
+| Held-out measurement | Seed | Update 128 | Paired change | One-sided 95% upper bound |
+| --- | ---: | ---: | ---: | ---: |
+| Task response loss, 256 cases | 0.149855 | 0.141845 | −0.008010 | −0.003700 |
+| Conversation retention loss, 128 cases | 0.552264 | 0.552732 | +0.000469 | +0.001097 |
+| Correct generated answers, 64 cases | 47 | 49 | +2 | — |
+
+The loss upper bound is below −0.001 and the retention upper bound is below
++0.02 nats, as required. There were two correctness wins and no losses: one
+sorting case and one invoice-total case. The generated-answer gate requires no
+decrease; two wins alone do not establish a statistically significant accuracy
+gain (the paired one-sided sign-test value is 0.25). Arithmetic remains weak:
+only 1 of 16 generated invoice totals was correct.
+
+Every evaluation rank agreed on losses and generated tokens. A separate
+artifact check reconstructed tokenization, target masks, decoded token IDs and
+answer correctness. The test covers fresh cases of four public generated task
+families and a new pinned public conversation range; it does not establish broad
+assistant improvement or unknown pretraining-data independence.
+
+This result permits the declared second cohort and its fixed-depth/grown
+comparison. It does not yet demonstrate continual improvement or useful growth;
+their results must satisfy their own frozen criteria.

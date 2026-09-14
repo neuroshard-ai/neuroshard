@@ -7,6 +7,7 @@ rank-specific seeds, checkpoint paths and transcript witnesses. Network fetching
 is deliberately outside this verifier; unavailable files cannot earn a report.
 """
 import argparse
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -15,7 +16,8 @@ import sys
 import time
 
 from neuroshard.evolution import portable_work
-from neuroshard.evolution.reference_data import identity, save
+from neuroshard.evolution.reference_data import identity, save, sha256
+from neuroshard.evolution.schema import root
 
 # Catch only explicit mathematical/witness mismatches from the pinned auditor.
 # OOM, process failure, missing files and corrupt downloads remain unavailable.
@@ -39,6 +41,42 @@ def run(catalog, claim):
     prepared = json.loads(Path(catalog['prepared']).read_bytes())
     if identity(prepared) != claim['prepared']:
         raise ValueError('Prepared computation differs from native obligation')
+    repository = Path(catalog['repository']).resolve()
+    for name, expected_digest in prepared['sources'].items():
+        source = (repository/name).resolve()
+        if not source.is_relative_to(repository) or sha256(source) != expected_digest:
+            raise ValueError('Numerical source differs from the frozen job')
+    reference_root = claim.get('reference_root', identity(None))
+    references = catalog.get('reference')
+    if references:
+        if any(identity(json.loads(Path(path).read_bytes())) != reference_root for path in references):
+            raise ValueError('Reference checkpoint differs from the native obligation')
+    elif reference_root != identity(None):
+        raise ValueError('The native obligation requires its committed reference checkpoint')
+    base = Path(catalog['home'])/root(claim['id'])
+    base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (base/'.lock').open('ab') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError('Another replay still owns this claim') from exc
+        # Exclude changing ledger deadlines and local timeout preferences. They
+        # do not alter the prescribed computation or authorize another result.
+        binding = {'claim': {k: claim[k] for k in ['id', 'kind', 'prepared', 'record_root', 'stages',
+                    'input_checkpoint', 'output_checkpoint']}, 'reference_root': reference_root,
+                   'catalog': {k: v for k, v in catalog.items() if k not in ('home', 'rank_timeout_seconds')}}
+        marker = base/'resume.json'
+        if marker.exists():
+            if json.loads(marker.read_bytes()) != binding:
+                raise ValueError('Saved replay belongs to another computation or catalog')
+        else:
+            if any(p.name not in ('.lock', 'resume.json.pending') for p in base.iterdir()):
+                raise ValueError('Existing replay directory has no bound recovery record')
+            save(marker, binding)
+        return replay_locked(catalog, claim, base, identity(binding), lock.fileno())
+
+
+def replay_locked(catalog, claim, base, binding, lock_descriptor):
     before, after = claim['input_checkpoint'], claim['output_checkpoint']
     count = len(before['boundaries'])-1
     source = catalog['checkpoints'][identity(before)]
@@ -49,15 +87,29 @@ def run(catalog, claim):
         raise ValueError('Closed transcript commitment differs')
     if any(len(values) != count for values in [source, expected, catalog['seeds'], witnesses['ranks']]):
         raise ValueError('The catalog must cover every model partition')
-    base = Path(catalog['home'])/claim['id']
-    base.mkdir(parents=True, exist_ok=False)
+    if catalog.get('reference') and len(catalog['reference']) != count:
+        raise ValueError('The reference catalog must cover every partition')
     reports = []
+    reused = 0
     started = time.monotonic()
     for rank in range(count):
         for path, committed in [(source[rank], before), (expected[rank], after)]:
             if json.loads(Path(path).read_bytes()) != committed:
                 raise ValueError('Local checkpoint differs from native input or output')
-        home = base/f'rank-{rank}'
+        completed_path = base/f'rank-{rank}.complete.json'
+        if completed_path.exists():
+            completed = json.loads(completed_path.read_bytes())
+            if completed['binding'] != binding:
+                raise ValueError('Saved partition replay has a different binding')
+            reports.append(completed['report'])
+            reused += 1
+            continue
+        attempts = base/f'rank-{rank}'
+        attempts.mkdir(exist_ok=True)
+        number = 1
+        while (attempts/f'attempt-{number:06d}').exists() or (attempts/f'attempt-{number:06d}.log').exists():
+            number += 1
+        home = attempts/f'attempt-{number:06d}'
         args = [str(Path(catalog['repository'])/'scripts/run_sharded_training.py'), 'adaptive', 'audit',
             '--prepared', catalog['prepared'], '--seed', catalog['seeds'][rank], '--home', str(home),
             '--resume', source[rank], '--expected', expected[rank],
@@ -84,15 +136,24 @@ except ValueError as exc:
         env = {**os.environ, 'RANK': str(rank), 'WORLD_SIZE': str(count),
                'PYTHONPATH': str(Path(catalog['repository'])/'src'),
                'ATEN_CPU_CAPABILITY': 'default', 'MKL_ENABLE_INSTRUCTIONS': 'SSE4_2'}
-        with (base/f'rank-{rank}.log').open('wb') as log:
+        with home.with_suffix('.log').open('xb') as log:
             result = subprocess.run([catalog['python'], '-c', wrapper, json.dumps(spec)],
                 env=env, cwd=catalog['repository'], stdout=log, stderr=log,
-                timeout=catalog.get('rank_timeout_seconds', 600))
+                timeout=catalog.get('rank_timeout_seconds', 600), pass_fds=(lock_descriptor,))
         if result.returncode:
             raise RuntimeError('A partition is unavailable; inspect the private replay log')
-        reports.append(json.loads((home/'audit.json').read_bytes()))
+        report = json.loads((home/'audit.json').read_bytes())
+        save(completed_path, {'binding': binding, 'report': report})
+        reports.append(report)
     result = portable_work.replay_report(claim, reports)
-    save(base/'report.json', {**result, 'seconds': time.monotonic()-started})
+    report = {**result, 'seconds_this_invocation': time.monotonic()-started, 'reused_partitions': reused}
+    history = base/'invocations'
+    history.mkdir(exist_ok=True)
+    number = 1
+    while (history/f'{number:06d}.json').exists():
+        number += 1
+    save(history/f'{number:06d}.json', report)
+    save(base/'report.json', report)
     return reports
 
 

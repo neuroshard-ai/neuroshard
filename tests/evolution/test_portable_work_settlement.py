@@ -109,7 +109,7 @@ def test_a_validator_backend_must_bind_and_cover_the_entire_gpu_window(network):
     c = s['candidate']
     binding = {'job': before['job'], 'prepared': c['prepared'], 'input': identity(before),
                'output': identity(after), 'start': before['step'], 'end': after['step'],
-               'boundaries': before['boundaries']}
+               'boundaries': before['boundaries'], 'reference': identity(None)}
     rows = [{'rank': rank, 'valid': True, 'transcript_root': transcript, 'binding': binding} for rank in range(2)]
     assert portable_work.replay_report(c, rows)['valid']
     with pytest.raises(ValueError, match='every shard'):
@@ -118,5 +118,34 @@ def test_a_validator_backend_must_bind_and_cover_the_entire_gpu_window(network):
     wrong[1]['binding']['input'] = 'f'*64
     with pytest.raises(ValueError, match='stale, incomplete'):
         portable_work.replay_report(c, wrong)
+    wrong = copy.deepcopy(rows)
+    for row in wrong:
+        row['binding']['reference'] = 'a'*64
+    with pytest.raises(ValueError, match='stale, incomplete'):
+        portable_work.replay_report(c, wrong)
     rows[0]['valid'] = False
     assert not portable_work.replay_report(c, rows)['valid']
+
+
+@pytest.mark.parametrize('group', [1, [], None, 'adam'])
+def test_malformed_optimizer_group_is_an_invalid_transaction_not_an_abci_error(network, group):
+    import threading
+    from neuroshard.demo import abci_pb2 as pb
+    from neuroshard.dataflow.store import canonical
+    from neuroshard.evolution.app import Application
+
+    s, owners, _, child, transcript = network
+    damaged = copy.deepcopy(child)
+    # Preserve inventory indices and group count to reach group validation.
+    damaged['optimizer'] = [group for _ in child['optimizer']]
+    damaged['state_root'] = identity({k: damaged[k] for k in
+        ['format', 'job', 'step', 'config', 'optimizer', 'tensors']})
+    receipts = [owners[rank].sign(portable_work.receipt(
+        s['chain_id'], s['assignment'], damaged, transcript, rank)) for rank in range(2)]
+    raw = canonical(tx(s, owners[0], 'claim_shards', output=damaged,
+                       transcript_root=transcript, workers=receipts))
+    application = Application.__new__(Application)
+    application.lock, application.state, application.artifacts = threading.RLock(), s, None
+    result = application.CheckTx(pb.RequestCheckTx(tx=raw), None)
+    assert result.code == 1
+    assert 'Adam group' in result.log

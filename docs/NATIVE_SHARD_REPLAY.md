@@ -52,6 +52,14 @@ repeats for the other partitions. The complete checkpoint and prepared data bind
 the input model, cursor, architecture, optimizer groups, tokenization and batch
 schedule. A self-consistent forged witness still fails numerical replay.
 
+The genesis profile also fixes `reference_root`, the complete frozen reference
+checkpoint commitment. Omitting it means the prepared seed reference, encoded
+as the canonical hash of JSON `null`. The claim, backend and every partition
+report must agree on that reference. A different teacher cannot pass solely
+because student input/output roots match. Moving to a subsequent cohort's new
+reference requires explicit job activation; this adapter does not yet implement
+that transition.
+
 The current window is at most four updates. A dispute or audit starts from the
 previous committed checkpoint; it does not replay the entire training history.
 An auditor can process shards sequentially on one suitable GPU. Its memory need
@@ -110,6 +118,19 @@ to the native obligation. It distinguishes explicit replay mismatches from
 missing files, OOM and process failures. Infrastructure failures produce no
 validity report. Artifact discovery and fetching must supply these local,
 hash-checked files before replay; this prototype does not provide a public DHT.
+
+Replay progress is bound to the immutable claim, catalog and numerical source
+commitments. Successfully completed partitions survive restart. A failed partial
+partition runs in a fresh attempt directory; its earlier logs remain available.
+Changing ledger deadlines or a local timeout does not invalidate completed work.
+Changing the computation, reference or sources does. Per-invocation reports
+distinguish reused partitions and elapsed time from a new full replay.
+
+A claim lock is inherited by the numerical subprocess. If the controller dies,
+that child retains the lock until it exits, preventing a restarted controller
+from launching an overlapping replay. A child result becomes reusable only after
+the parent observes successful exit and durably records completion. The local
+progress directory is trusted operator state, not a cache of strangers' reports.
 
 The standard full-replay worker also supports the native quorum profile for
 existing evolution graphs. Legacy sponsor-selected audit genesis files retain

@@ -40,6 +40,8 @@ def validate(value):
         root(digest)
     if not isinstance(value['optimizer'], list) or not 1 <= len(value['optimizer']) <= 16:
         raise ValueError('Invalid Adam groups')
+    if any(not isinstance(group, dict) for group in value['optimizer']):
+        raise ValueError('Invalid Adam group metadata')
     if not isinstance(value['tensors'], dict) or not 1 <= len(value['tensors']) <= 8192:
         raise ValueError('Invalid tensor inventory')
     for name, spec in value['tensors'].items():
@@ -63,11 +65,13 @@ def validate(value):
 
 def initialize(s):
     profile = s['manifest']['portable_work']
-    if (set(profile) != {'format', 'checkpoint', 'prepared', 'max_step', 'max_window_steps'}
+    required = {'format', 'checkpoint', 'prepared', 'max_step', 'max_window_steps'}
+    if (not required <= set(profile) or set(profile)-required-{'reference_root'}
             or profile['format'] != FORMAT or not auditing.native(s) or 'lifecycle' in s['manifest']):
         raise ValueError('Portable work requires its dedicated native replay-quorum genesis')
     common = validate(profile['checkpoint'])
     root(profile['prepared'])
+    root(profile.get('reference_root', identity(None)))
     integer(profile['max_window_steps'], 1, 4)
     integer(profile['max_step'], common['step']+1, 2**24-1)
     if common['state_root'] != s['model_root']:
@@ -134,7 +138,8 @@ def apply(s, owner, body, envelope):
     s['candidate'] = {'kind': 'portable_training', 'id': protocol.transaction_id(envelope), 'owner': owner,
         'bond': assignment['bond'], 'workers': assignment['workers'], 'record_root': transcript,
         'model_root': child['state_root'], 'input_checkpoint': copy.deepcopy(common), 'output_checkpoint': child,
-        'prepared': profile['prepared'], 'work_ids': ids, 'stages': steps*len(assignment['workers']),
+        'prepared': profile['prepared'], 'reference_root': profile.get('reference_root', identity(None)),
+        'work_ids': ids, 'stages': steps*len(assignment['workers']),
         'deadline': s['height']+params['challenge_blocks'], 'expires': s['height']+params['max_claim_blocks'],
         'challenge': None}
     auditing.attach(s, assignment['audit_budget'])
@@ -186,7 +191,8 @@ def replay_report(claim, partitions):
     if not isinstance(partitions, list) or len(partitions) != count:
         raise ValueError('GPU auditor must replay every shard, not only its training assignment')
     required = {'job': before['job'], 'prepared': claim['prepared'], 'input': identity(before),
-        'output': identity(after), 'boundaries': before['boundaries'], 'start': before['step'], 'end': after['step']}
+        'output': identity(after), 'reference': claim.get('reference_root', identity(None)),
+        'boundaries': before['boundaries'], 'start': before['step'], 'end': after['step']}
     for rank, report in enumerate(partitions):
         if (report['rank'] != rank or type(report['valid']) is not bool
                 or report['transcript_root'] != claim['record_root']
