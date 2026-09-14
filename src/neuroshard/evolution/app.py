@@ -156,6 +156,8 @@ class Application(Base):
                     value = s['candidate']
                 elif request.path=='/auditing':
                     value = s.get('auditing')
+                elif request.path=='/portable_work':
+                    value = s.get('portable_work')
                 elif request.path=='/lifecycle':
                     life = s.get('lifecycle')
                     value = None if life is None else {k:v for k,v in life.items()

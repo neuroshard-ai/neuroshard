@@ -47,7 +47,7 @@ def verdicts(s, votes):
     for owner, valid in votes:
         value = auditing.verdict_commitment(s['chain_id'], c['id'], owner.public_key, coverage, 'd'*64, valid)
         s = send(s, owner, 'audit_commit', claim_id=c['id'], commitment=value)
-    s = blocks(s, c['audit_commit_end']-s['height']+1 if len(votes) < 3 else 1)
+    s = blocks(s, s['candidate']['audit_commit_end']-s['height']+1)
     for owner, valid in votes:
         s = send(s, owner, 'audit_verdict', claim_id=c['id'], coverage_root=coverage, salt='d'*64, valid=valid)
     return s
@@ -141,7 +141,7 @@ def test_stale_weight_snapshot_and_verdict_substitution_fail(case):
     for owner in owners[:3]:
         s = send(s, owner, 'audit_commit', claim_id=c['id'], commitment=auditing.verdict_commitment(
             s['chain_id'], c['id'], owner.public_key, root, 'd'*64, False))
-    s = blocks(s, 1)
+    s = blocks(s, s['candidate']['audit_commit_end']-s['height']+1)
     with pytest.raises(ValueError, match='differs from its commitment'):
         send(s, owners[0], 'audit_verdict', claim_id=c['id'], coverage_root=root, salt='d'*64, valid=True)
 
@@ -207,3 +207,23 @@ def test_native_fee_budget_does_not_increase_when_bonds_are_split_between_owners
     after = send(s, owners[0], 'fund_audit', publisher=owners[0].public_key,
         auditors=[], stage_limit=2, expires_in=64)
     assert next(iter(before['auditing']['budgets'].values()))['funds'] == next(iter(after['auditing']['budgets'].values()))['funds']
+
+
+def test_mixed_early_commitments_cannot_exclude_the_last_honest_validator(case):
+    s, owners, *_ = case
+    s, _ = submit(case)
+    original_end = s['candidate']['audit_commit_end']
+    votes = [(owners[3], False), (owners[0], True), (owners[1], True), (owners[2], True)]
+    for index, (owner, valid) in enumerate(votes):
+        c = s['candidate']
+        s = send(s, owner, 'audit_commit', claim_id=c['id'], commitment=auditing.verdict_commitment(
+            s['chain_id'], c['id'], owner.public_key, auditing.coverage(c), 'd'*64, valid))
+        if index == 2:
+            assert s['candidate']['audit_commit_end'] == original_end
+        s = blocks(s, 1)
+    for owner, valid in votes:
+        c = s['candidate']
+        s = send(s, owner, 'audit_verdict', claim_id=c['id'], coverage_root=auditing.coverage(c), salt='d'*64, valid=valid)
+    assert auditing.complete(s, s['candidate'])
+    s = blocks(s, state.PARAMS['challenge_blocks']+1)
+    assert s['issued'] == state.PARAMS['reward_atoms']

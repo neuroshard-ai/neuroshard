@@ -284,7 +284,10 @@ def apply(state, owner, body, envelope):
             if height > claim['audit_commit_end'] or auditor['commitment'] is not None:
                 raise ValueError('Audit commitment is late or duplicated')
             auditor['commitment'] = root(body['commitment'])
-            if enough(budget, lambda a: a['commitment'] is not None):
+            # Commitments hide the verdict. A mere quorum of commitments may
+            # contain conflicting votes, so closing then could exclude the last
+            # honest signer. Close early only after every bonded participant.
+            if all(a['commitment'] is not None for a in budget['auditors'].values() if a['bond']):
                 # Once all commitments are final, no participant can adapt its
                 # report to a public reveal. Reveal starts in the next block.
                 claim['audit_commit_end'] = height
