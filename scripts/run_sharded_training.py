@@ -190,5 +190,8 @@ if __name__ == '__main__':
     elif len(sys.argv) > 1 and sys.argv[1] == 'consolidate':
         from neuroshard.evolution.sharded.consolidation_job import main as consolidation_job
         consolidation_job(sys.argv[2:], ROOT)
+    elif len(sys.argv) > 1 and sys.argv[1] == 'balance':
+        from neuroshard.evolution.sharded.balanced_job import main as balanced_job
+        balanced_job(sys.argv[2:], ROOT)
     else:
         main()
