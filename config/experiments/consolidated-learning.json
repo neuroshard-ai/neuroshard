@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-consolidated-learning-v1",
-  "status": "prepared-committed",
+  "status": "selection-committed",
   "license": "Apache-2.0",
   "purpose": "development",
   "public_network": "0.4.0 unchanged; no native issuance or serving promotion",
