@@ -38,7 +38,7 @@
 | [Native shard replay](NATIVE_SHARD_REPLAY.md) | Bond-weighted complete replay, sponsor-funded audits and bounded GPU update issuance. |
 | [Continued learning](CONTINUED_LEARNING.md) / [result](CONTINUED_LEARNING_RESULTS.md) | Three-shard continuation completed; generated-answer gate failed despite lower loss. |
 | [Calculation-step learning](REASONED_LEARNING.md) / [result](REASONED_LEARNING_RESULTS.md) | Large generated-answer gain, failed sorting/filtering retention; all final answer pairs published. |
-| [Weight consolidation](CONSOLIDATED_LEARNING.md) | Frozen smaller-update test with a 512-case preservation screen and one selected sharded model. |
+| [Weight consolidation](CONSOLIDATED_LEARNING.md) / [result](CONSOLIDATED_LEARNING_RESULTS.md) | Prior answers retained and large new-task gain; two sorting regressions still fail the final gate. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 
