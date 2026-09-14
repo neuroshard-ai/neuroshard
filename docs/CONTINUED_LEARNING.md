@@ -1,6 +1,6 @@
 # Continued learning from the passing phase-A checkpoint
 
-**Status: plan frozen, 14 September 2026.** This is a development experiment. It does not change the public 0.4.0 chain, mint NEURO, or promote a serving model. Machine-readable constants live in [`continued-learning.json`](../config/experiments/continued-learning.json). Changing a number is a new plan revision.
+**Status: completed; [quality gate failed](CONTINUED_LEARNING_RESULTS.md), 14 September 2026.** This is a development experiment. It does not change the public 0.4.0 chain, mint NEURO, or promote a serving model. Machine-readable constants live in [`continued-learning.json`](../config/experiments/continued-learning.json). Changing a number is a new plan revision.
 
 The [adaptive shard trial](ADAPTIVE_SHARDS_RESULTS.md) left one passing 1.7B candidate: the three-worker phase-A checkpoint, with Adam, at step 128. Both later continuation recipes lowered teacher-forced response loss and then **lost greedy invoice totals**. Those exposed finals cannot be reused. This plan is the next learning objective. It does not add model growth or a new architecture.
 

@@ -76,3 +76,5 @@ Limits at this release: 34,976 parameters, full replay at every validator, conce
 3. Publish a named tag, checksummed assets, and concrete validation results. Mark network maturity explicitly. PyPI client version ordering must allow users to leave obsolete stable clients; it does not establish production network maturity.
 4. Deploy from pinned directories. Upgrade validators sequentially, preserving signing state. Never auto-deploy from `main`.
 5. Verify a fresh public checkout and node/worker trial. Retain web/service rollback records.
+
+The [continued-learning result](docs/CONTINUED_LEARNING_RESULTS.md) is a reported failure: three workers completed 96 updates, but generated answers regressed on both fresh task sets. The prepare/train/score driver now enforces artifact freezes, content exclusions, actual checkpoint selection and development aborts; 412 tests pass. This remains research work with no serving promotion or public-network change.
