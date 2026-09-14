@@ -162,8 +162,13 @@ def test_unsettled_or_substituted_quality_cannot_promote(ready):
     claimed = quality(train(ready), owners)
     missing = blocks(claimed, claimed['candidate']['audit_reveal_end'] + 1)
     assert missing['serving_root'] == ready[2]['state_root']
-    with pytest.raises(ValueError, match='originally committed'):
-        quality(missing, owners, False)
+    assert missing['portable_lifecycle']['active']['quality_report'] is None
+    retried = quality(missing, owners, False)
+    assert retried['candidate']['input_checkpoint'] == claimed['candidate']['input_checkpoint']
+    assert retried['candidate']['report']['policy_root'] == claimed['candidate']['report']['policy_root']
+    rejected = blocks(verdicts(retried, [(o, False) for o in owners[:3]]), state.PARAMS['challenge_blocks'] + 1)
+    assert rejected['portable_lifecycle']['active']['quality_report'] is None
+    assert rejected['serving_root'] == ready[2]['state_root']
 
 
 def test_paid_inference_pins_serving_checkpoint_and_refunds_unused_tokens(ready):

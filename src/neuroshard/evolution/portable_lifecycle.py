@@ -214,8 +214,6 @@ def apply(state, owner, body, envelope):
         if any(report[k] != value for k, value in expected.items()) or type(report['passed']) is not bool:
             raise ValueError('Quality report differs from the activated policy or settled checkpoint')
         root(report['results_root'])
-        if active['quality_report'] not in (None, identity(report)):
-            raise ValueError('Retry only the originally committed quality report')
         new_claim(state, owner, body, envelope, kind='portable_quality', job_id=active['id'],
             executor_root=job['executor_root'],
             report=copy.deepcopy(report), input_checkpoint=copy.deepcopy(current),
@@ -291,6 +289,11 @@ def settled(state, claim, accepted):
             life['active']['closed'] = True
             life['history'].append({'id': claim['id'], 'kind': 'quality',
                 'report': claim['report'], 'promoted': promoted, 'height': state['height']})
+        else:
+            # Any publisher may report on this fixed candidate and policy. A
+            # forged or unavailable first report must not permanently poison
+            # the quality slot. There is no new model selection on retry.
+            life['active']['quality_report'] = None
     else:
         job = life['jobs'][claim['job_id']]
         job['claim_id'] = None

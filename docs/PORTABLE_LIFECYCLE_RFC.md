@@ -45,8 +45,10 @@ Only a valid, passing report with a positive native audit quorum changes
 `serving_root`. Quality approval mints zero tokens. A failed quality decision
 keeps the serving checkpoint and already-earned training rewards. It closes
 that job; the learned checkpoint and paid cursor remain available for a later
-explicitly admitted recipe. Infrastructure failure allows retry of the same
-committed report, not selection among different reports after seeing results.
+explicitly admitted recipe. A failed or unavailable claim releases the report
+slot. Another publisher can report on the same fixed checkpoint and policy;
+retry cannot select a different model, evaluator or dataset. This prevents an
+invalid first report from permanently blocking a correct quality decision.
 
 Quality witnesses are segmented at each generation and role-level loss scan.
 Each segment uses the existing closed-graph verifier and event bound. The outer
