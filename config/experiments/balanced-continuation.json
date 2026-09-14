@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-balanced-continuation-v1",
-  "status": "prepared-committed",
+  "status": "selection-committed",
   "license": "Apache-2.0",
   "purpose": "Answer-balanced continuation with broader sorting coverage from the rejected consolidated checkpoint",
   "baseline": {
