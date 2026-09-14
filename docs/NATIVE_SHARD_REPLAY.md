@@ -66,7 +66,9 @@ because student input/output roots match. Moving to a subsequent cohort's new
 reference requires explicit job activation; this adapter does not yet implement
 that transition. The [continued-learning plan](CONTINUED_LEARNING.md) treats
 that activation, then reserved-window receipts, as development order after a
-quality pass. Importing an existing checkpoint identity is not payment.
+quality pass. The [answer-balanced experiment](BALANCED_CONTINUATION_RESULTS.md)
+now supplies a narrow learning pass; those integration steps remain unimplemented
+in this adapter. Importing an existing checkpoint identity is not payment.
 
 The current window is at most four updates. A dispute or audit starts from the
 previous committed checkpoint; it does not replay the entire training history.

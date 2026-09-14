@@ -1,5 +1,9 @@
 # Answer-balanced continuation
 
+The [completed result](BALANCED_CONTINUATION_RESULTS.md) passes the frozen final
+gate. The following text records the method and acceptance rules frozen before
+that run.
+
 The [consolidation experiment](CONSOLIDATED_LEARNING_RESULTS.md) retains the
 measured prior answers and much of the arithmetic gain, but two new sorting
 regressions still reject it. The next experiment targets that interference
