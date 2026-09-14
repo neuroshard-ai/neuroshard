@@ -4,6 +4,8 @@ The numerical recipe is unchanged. Native windows add durable checkpoints and
 closed boundary witnesses, allowing each auditor to replay one partition at a
 time. Helpers also capture and replay generation and paired quality evaluation.
 """
+import base64
+import hashlib
 import json
 from pathlib import Path
 
@@ -154,6 +156,52 @@ def validate_service_transcripts(rows):
             transcript.validate(group)
         return data.identity(rows)
     return transcript.validate(rows)
+
+
+def exchange_manifests(wire, value):
+    """Exchange bounded large manifests through the unchanged small-message wire.
+
+    Quality evaluation can produce tens of megabytes of transcript metadata.
+    Each transport message stays below the wire's 2 MiB cap; declared sizes,
+    total allocation and content digests are checked before decoding JSON.
+    """
+    chunk_size, rank_limit, total_limit = 512 * 1024, 128 * 1024**2, 256 * 1024**2
+    raw = json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
+    if not 0 < len(raw) <= rank_limit:
+        raise ValueError('Service manifest exceeds its per-partition bound')
+    declarations = wire.exchange({'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})
+    if not isinstance(declarations, list) or len(declarations) != wire.world:
+        raise ValueError('Incomplete service manifest declarations')
+    for row in declarations:
+        if (not isinstance(row, dict) or set(row) != {'bytes', 'sha256'}
+                or type(row['bytes']) is not int or not 0 < row['bytes'] <= rank_limit
+                or not isinstance(row['sha256'], str) or len(row['sha256']) != 64
+                or any(c not in '0123456789abcdef' for c in row['sha256'])):
+            raise ValueError('Invalid service manifest declaration')
+    if sum(row['bytes'] for row in declarations) > total_limit:
+        raise ValueError('Service manifests exceed the aggregate allocation bound')
+    buffers = [bytearray() for _ in declarations]
+    for offset in range(0, max(row['bytes'] for row in declarations), chunk_size):
+        pieces = wire.exchange(base64.b64encode(raw[offset:offset + chunk_size]).decode('ascii'))
+        if not isinstance(pieces, list) or len(pieces) != wire.world:
+            raise ValueError('Incomplete service manifest chunk coverage')
+        for piece, row, output in zip(pieces, declarations, buffers):
+            expected = min(chunk_size, max(0, row['bytes'] - offset))
+            if not isinstance(piece, str) or len(piece) != 4 * ((expected + 2) // 3):
+                raise ValueError('Service manifest chunk exceeds its declared size')
+            try:
+                decoded = base64.b64decode(piece, validate=True)
+            except ValueError as error:
+                raise ValueError('Invalid service manifest chunk encoding') from error
+            if len(decoded) != expected:
+                raise ValueError('Service manifest chunk differs from its declared size')
+            output.extend(decoded)
+    values = []
+    for row, output in zip(declarations, buffers):
+        if len(output) != row['bytes'] or hashlib.sha256(output).hexdigest() != row['sha256']:
+            raise ValueError('Service manifest differs from its declared digest')
+        values.append(json.loads(output))
+    return values
 
 
 class SegmentedRecorder:

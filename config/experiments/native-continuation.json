@@ -32,7 +32,7 @@
   "gpu": {
     "type": "g5.2xlarge",
     "count": 3,
-    "max_hours": 6,
+    "max_hours": 8,
     "budget_usd": 100,
     "disk_gib_each": 800,
     "placement": "Prefer one availability zone for artifact replication"

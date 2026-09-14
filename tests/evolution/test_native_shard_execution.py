@@ -86,6 +86,14 @@ def worker(rank, home, rendezvous):
         manifests = wire.exchange(local)
         native.validate_service_transcripts(manifests)
         save(home / 'segmented.json', {'rows': manifests, 'answers': answers})
+        # A real quality manifest exceeds the original 2 MiB control-message
+        # bound. Exchange several chunks over actual Gloo without relaxing it.
+        large = {'rank': rank, 'payload': 'x' * (3 * 1024**2 + rank)}
+        with pytest.raises(ValueError, match='Control message exceeds bound'):
+            wire.exchange(large)
+        gathered = native.exchange_manifests(wire, large)
+        assert gathered == [{'rank': i, 'payload': 'x' * (3 * 1024**2 + i)} for i in range(2)]
+        save(home / 'large-manifest.json', {'passed': True, 'ranks': len(gathered)})
     finally:
         dist.destroy_process_group()
 
@@ -158,3 +166,28 @@ def test_segmented_quality_witness_preserves_complete_ordered_coverage(executed)
             row['segments'].reverse()
         with pytest.raises(ValueError, match='reordered'):
             native.validate_service_transcripts(broken)
+
+
+def test_large_quality_manifests_use_bounded_transport(executed):
+    for rank in range(2):
+        assert json.loads((executed / f'rank-{rank}/large-manifest.json').read_bytes()) == {'passed': True, 'ranks': 2}
+
+
+@pytest.mark.parametrize('corruption', ['allocation', 'length', 'digest'])
+def test_manifest_transport_rejects_untrusted_declarations_and_chunks(corruption):
+    class Peer:
+        world = 2
+
+        def exchange(self, value):
+            peer = copy.deepcopy(value)
+            if isinstance(value, dict) and corruption == 'allocation':
+                peer['bytes'] = 128 * 1024**2 + 1
+            elif isinstance(value, str):
+                if corruption == 'length':
+                    peer += 'AAAA'
+                elif corruption == 'digest':
+                    peer = ('A' if peer[0] != 'A' else 'B') + peer[1:]
+            return [value, peer]
+
+    with pytest.raises(ValueError, match='manifest (declaration|chunk exceeds|differs)'):
+        native.exchange_manifests(Peer(), {'actual': 'committed data'})

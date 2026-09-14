@@ -223,7 +223,7 @@ def main(argv=None):
             data.save(args.home / 'audit.json', result)
         else:
             local = wire.finish(lifecycle.transcript_binding(claim))
-            manifests = network.exchange(local)
+            manifests = execution.exchange_manifests(network, local)
             claim['record_root'] = execution.validate_service_transcripts(manifests)
             data.save(args.home / 'transcripts.json', manifests)
             data.save(args.home / 'service.json', claim)

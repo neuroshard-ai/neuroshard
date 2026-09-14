@@ -56,6 +56,11 @@ commitment fixes segment order, complete coverage and the quality statement;
 auditors must finish all segments. This bounds individual witness groups,
 not total evaluation cost or total artifact storage.
 
+Complete service manifests are exchanged as size-declared, hash-checked chunks.
+The underlying control messages retain their 2 MiB limit; each decoded manifest
+is capped at 128 MiB and their combined allocation at 256 MiB. Segmenting the
+numerical witness alone does not make its complete metadata a small message.
+
 The initial integration repeats the exact 64-update balanced recipe and its
 already exposed final evaluation. It must reproduce the accepted research
 learned-state root. It is an integration/reproducibility test, **not another

@@ -2,9 +2,10 @@
 
 This is an opt-in experimental genesis profile using the existing NeuroShard
 CometBFT application and NEURO ledger. It does not modify the running public
-chain. The portable adapter admits bounded windows of one frozen computation;
-future dataset activation, model growth and serving promotion are not enabled
-by this adapter.
+chain. The base portable adapter admits bounded windows of one frozen computation.
+The optional [portable lifecycle](PORTABLE_LIFECYCLE_RFC.md) adds native job
+activation, separate quality approval and paid sharded inference under a new
+experimental genesis. Neither profile establishes useful parameter growth.
 
 ## Security statement
 
@@ -63,12 +64,12 @@ checkpoint commitment. Omitting it means the prepared seed reference, encoded
 as the canonical hash of JSON `null`. The claim, backend and every partition
 report must agree on that reference. A different teacher cannot pass solely
 because student input/output roots match. Moving to a subsequent cohort's new
-reference requires explicit job activation; this adapter does not yet implement
-that transition. The [continued-learning plan](CONTINUED_LEARNING.md) treats
-that activation, then reserved-window receipts, as development order after a
-quality pass. The [answer-balanced experiment](BALANCED_CONTINUATION_RESULTS.md)
-now supplies a narrow learning pass; those integration steps remain unimplemented
-in this adapter. Importing an existing checkpoint identity is not payment.
+reference requires explicit job activation. The optional portable lifecycle
+freezes the next recipe, reference, prepared data and quality policy before its
+first reservation. The [answer-balanced experiment](BALANCED_CONTINUATION_RESULTS.md)
+supplies the narrow learning pass used by the native integration trial. That
+trial must execute and settle every prescribed update from its admitted parent;
+importing an existing checkpoint identity is not payment.
 
 The current window is at most four updates. A dispute or audit starts from the
 previous committed checkpoint; it does not replay the entire training history.
@@ -155,6 +156,7 @@ artifact-readiness requirements and a reviewed reservation/offer policy, rather
 than assuming the native voting threshold prevents queue capture.
 
 The remaining rollout work includes independently owned validator participation,
-priced audit capacity, public artifact distribution, fresh-job activation and
-integration of quality-approved growing checkpoints with serving. A single
-operator running several keys cannot demonstrate decentralization of ownership.
+priced audit capacity, public artifact distribution and useful model growth.
+The portable lifecycle implements admission and serving for a fixed model
+layout; broader data admission and growing-model serving need separate evidence.
+A single operator running several keys cannot demonstrate decentralization of ownership.
