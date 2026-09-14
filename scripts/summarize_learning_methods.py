@@ -51,7 +51,8 @@ if __name__=='__main__':
             quality['against_seed']=paired(seed['checks'],cases)
             quality['retention']=retention(seed['retention'],evaluation['retention'])
             quality['against_single']=paired(evaluations['single']['checks'],cases)
-            quality['against_dense']=paired(evaluations['dense-pair']['checks'],cases)
+            if 'dense-pair' in evaluations:
+                quality['against_dense']=paired(evaluations['dense-pair']['checks'],cases)
         result['quality'][arm]=quality
     for arm,values in ranks.items():
         active=max(v['active_seconds'] for v in values)
@@ -66,13 +67,24 @@ if __name__=='__main__':
     q=(c['against_seed']['mean']>=threshold['task_gain_minimum']
        and c['retention']['upper']<=threshold['retention_upper_nats']
        and c['against_single']['lower']>=-threshold['accuracy_noninferiority_margin']
-       and c['against_dense']['lower']>=-threshold['accuracy_noninferiority_margin'])
+       and ('against_dense' not in c or c['against_dense']['lower']>=-threshold['accuracy_noninferiority_margin']))
     t=result['training']; speed=t['single']['active_seconds']/t['compressed-pair']['active_seconds']
     cost=t['compressed-pair']['allocated_gpu_seconds_full_process']/t['single']['allocated_gpu_seconds_full_process']
     result['decision']={'quality_screen_pass':q,'active_speedup_vs_single':speed,
         'active_speed_screen_pass':speed>=threshold['active_speedup_vs_single_minimum'],
         'allocated_gpu_process_cost_ratio_vs_single':cost,'gpu_cost_reduction_vs_single':cost<1,
-        'wire_ratio_vs_dense':t['compressed-pair']['tx_bytes']/t['dense-pair']['tx_bytes'],
         'permissionless_economics_proven':False,'serving_approved':False}
+    if 'dense-pair' in t:
+        # Preserve the original report's field order as well as its values.
+        decision=result['decision']
+        result['decision']={key:value for key,value in decision.items() if key not in ('permissionless_economics_proven','serving_approved')}
+        result['decision']['wire_ratio_vs_dense']=t['compressed-pair']['tx_bytes']/t['dense-pair']['tx_bytes']
+        result['decision'].update(permissionless_economics_proven=False,serving_approved=False)
+    if 'complete_process_speedup_vs_single_minimum' in threshold:
+        complete=t['single']['full_process_seconds']/t['compressed-pair']['full_process_seconds']
+        result['decision'].update(complete_process_speedup_vs_single=complete,
+            complete_process_speed_screen_pass=complete>=threshold['complete_process_speedup_vs_single_minimum'],
+            method_screen_pass=q and speed>=threshold['active_speedup_vs_single_minimum'] and complete>=threshold['complete_process_speedup_vs_single_minimum'],
+            dense_distributed_control_run='dense-pair' in t)
     args.output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))
