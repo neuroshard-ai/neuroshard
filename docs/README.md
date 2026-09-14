@@ -33,6 +33,9 @@
 | [Batched comparison](BATCHED_LEARNING_STUDY_RESULTS.md) | Passed full-length quality/retention screen and 1.45× faster training; 38% more GPU seconds, fixed model size. |
 | [Persistent model shards](SHARDED_TRAINING.md) | Train and generate through disjoint model partitions with complete optimizer/RNG checkpoints. |
 | [Shard recovery results](SHARDED_TRAINING_RESULTS.md) | Physical-host replacement and exact recovery of a 1.7B model across two GPU shards. |
+| [Adaptive shard experiment](ADAPTIVE_SHARDS.md) | Portable Adam state, reference regularization, redistribution and gated model growth. |
+| [Adaptive shard results](ADAPTIVE_SHARDS_RESULTS.md) | Measured redistribution, complete GPU replay, native settlement and quality decisions. |
+| [Native shard replay](NATIVE_SHARD_REPLAY.md) | Bond-weighted complete replay, sponsor-funded audits and bounded GPU update issuance. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 

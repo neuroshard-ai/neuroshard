@@ -37,6 +37,15 @@ Do not accept arbitrary stale updates or assign reward in proportion to gradient
 
 ## Resource admission before growth
 
+The [adaptive shard experiment](ADAPTIVE_SHARDS_RESULTS.md) establishes exact
+two-to-three-owner redistribution of a 1.7B model and its Adam state. Its
+[native replay-quorum adapter](NATIVE_SHARD_REPLAY.md) settles bounded GPU updates
+without requiring a whole model in an auditor's GPU memory. Mandatory complete
+replay, several gigabytes of witnesses per measured window, operated membership
+and one-owner validator infrastructure remain material limits. Redistribution
+increases available memory; useful parameter growth still requires its separate
+quality comparison.
+
 Admission should describe a **service obligation**, not a self-reported machine specification. Bind the provider key, execution profile, task bounds, price, collateral, availability period and artifact-retention deadline. A resource advertisement guides scheduling; objective completion and retrieval checks establish whether its assigned service was supplied.
 
 The planner must account for weights, gradients, optimizer state, peak activations, temporary buffers and runtime overhead. The current 48M-parameter worker bound is not a memory proof. Serving capacity and complete replay capacity must be tested for a proposed larger model as well as training capacity.
