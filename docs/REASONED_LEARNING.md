@@ -6,6 +6,9 @@ This is a separate, fixed-size learning experiment following the
 before preparation. Training requires committed prepared artifacts. It uses the
 existing sharded trainer and does not change the public chain or issue NEURO.
 
+The [completed run](REASONED_LEARNING_RESULTS.md) gains 50 net new-task answers
+but fails its answer-retention floors. The original contract remains unchanged.
+
 ## Hypothesis
 
 The preceding recipe acquired no new correct final answers and lost two old

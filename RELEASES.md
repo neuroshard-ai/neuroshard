@@ -78,3 +78,5 @@ Limits at this release: 34,976 parameters, full replay at every validator, conce
 5. Verify a fresh public checkout and node/worker trial. Retain web/service rollback records.
 
 The [continued-learning result](docs/CONTINUED_LEARNING_RESULTS.md) is a reported failure: three workers completed 96 updates, but generated answers regressed on both fresh task sets. The prepare/train/score driver now enforces artifact freezes, content exclusions, actual checkpoint selection and development aborts; 412 tests pass. This remains research work with no serving promotion or public-network change.
+
+The [calculation-step experiment](docs/REASONED_LEARNING_RESULTS.md) adds supervised intermediate calculations and a correct-reference-margin penalty to the existing sharded trainer. Across 256 new updates, fresh answers improve 192→242, including arithmetic 2→53 out of 64, but prior answers fall 93→90. The frozen retention floors reject it. All 384 final answer pairs are published, 425 tests pass, and all temporary GPU resources were removed after verified checkpoint backups. Native settlement and public serving remain unchanged.
