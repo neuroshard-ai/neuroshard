@@ -11,6 +11,7 @@ import os
 import secrets
 import shutil
 import sqlite3
+import subprocess
 import time
 from pathlib import Path
 
@@ -71,7 +72,7 @@ def replay(store, claim):
         at = time.monotonic()
         verdict = audit(store, metadata, claim['record_root'], stage)
         reports.append({'stage': stage, 'seconds': time.monotonic()-at, **verdict})
-        if not verdict['valid']:
+        if not verdict['valid'] and claim.get('audit_profile') != auditing.QUORUM_FORMAT:
             break
     valid = len(reports) == auditing.stages(claim) and all(r['valid'] for r in reports)
     return {'record_root': claim['record_root'], 'valid': valid, 'stages': reports,
@@ -80,7 +81,7 @@ def replay(store, claim):
 
 
 class Worker:
-    def __init__(self, home, url, genesis_hash, key, sponsors, store, max_stages=64):
+    def __init__(self, home, url, genesis_hash, key, sponsors, store, max_stages=64, portable_backend=None):
         self.home, self.url, self.store = Path(home), url, store
         self.home.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.lock = (self.home/'worker.lock').open('a')
@@ -88,10 +89,13 @@ class Worker:
         self.owner = protocol.Identity.load_or_create(key)
         self.sponsors = set(sponsors)
         self.max_stages = max_stages
+        self.portable_backend = portable_backend
         genesis = wire.rpc(url, 'genesis')['genesis']
         if digest(canonical(genesis)) != genesis_hash:
             raise ValueError('Audit worker genesis differs from configured commitment')
         self.chain_id = genesis['chain_id']
+        self.native = genesis['app_state']['manifest'].get('auditing', {}).get('format') == auditing.QUORUM_FORMAT
+        self.portable = 'portable_work' in genesis['app_state']['manifest']
         from .app import code_hash
         from .runtime import check
         check()
@@ -107,6 +111,8 @@ class Worker:
         return self.outbox.send(operation, kind, **fields)
 
     def tick(self):
+        if self.portable and not self.portable_backend:
+            return {'phase': 'portable_replay_backend_required'}
         pending = self.outbox.pending()
         if pending:
             self.outbox.confirm(pending)
@@ -118,7 +124,7 @@ class Worker:
         for key, budget in sorted(service['budgets'].items()):
             selected = budget['auditors'].get(owner)
             if (selected is not None and not selected['bond'] and not active
-                    and budget['reservation'] is None and budget['sponsor'] in self.sponsors
+                    and budget['reservation'] is None and (self.native or budget['sponsor'] in self.sponsors)
                     and budget['stage_limit'] <= self.max_stages):
                 self.send('accept:'+key, 'accept_audit', budget_id=key)
                 return {'phase': 'audit_offer_accepted', 'budget': key}
@@ -126,7 +132,8 @@ class Worker:
         if not claim:
             return {'phase': 'idle'}
         budget = service['budgets'].get(claim['audit_budget'])
-        if not budget or owner not in budget['auditors'] or budget['auditors'][owner]['revealed']:
+        if (not budget or owner not in budget['auditors'] or not budget['auditors'][owner]['bond']
+                or budget['auditors'][owner]['revealed']):
             return {'phase': 'idle'}
         if claim['challenge']:
             if claim['challenge']['kind'] == 'fraud' and claim['challenge']['owner'] == owner:
@@ -136,7 +143,26 @@ class Worker:
             if shutil.disk_usage(self.store.root).free < 2*1024**3:
                 raise OSError('Audit artifact store has less than 2 GiB free')
             try:
-                report = replay(self.store, claim)
+                if claim.get('kind') == 'portable_training':
+                    if not self.portable_backend:
+                        return {'phase': 'portable_replay_backend_required', 'claim': claim['id']}
+                    backend = self.portable_backend
+                    if (not isinstance(backend['argv'], list) or not 1 <= len(backend['argv']) <= 64
+                            or any(not isinstance(a, str) or not a for a in backend['argv'])
+                            or type(backend['timeout_seconds']) is not int
+                            or not 1 <= backend['timeout_seconds'] <= 14400):
+                        raise ValueError('Invalid operator-configured GPU replay backend')
+                    # The command comes exclusively from local configuration.
+                    # Claim contents are JSON on stdin, never executable text.
+                    completed = subprocess.run(backend['argv'], input=canonical(claim),
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=backend['timeout_seconds'])
+                    if completed.returncode or len(completed.stdout) > 8*1024**2:
+                        return {'phase': 'portable_replay_unavailable', 'claim': claim['id'],
+                                'returncode': completed.returncode}
+                    from .portable_work import replay_report
+                    report = replay_report(claim, protocol.parse_json(completed.stdout))
+                else:
+                    report = replay(self.store, claim)
             except MissingArtifact as exc:
                 if claim['challenge']:
                     return {'phase': 'waiting_for_dispute', 'claim': claim['id']}
@@ -150,7 +176,8 @@ class Worker:
         else:
             salt, raw = row
             report = protocol.parse_json(raw)
-        if not report['valid']:
+        native = 'voting_snapshot' in budget
+        if not report['valid'] and not native:
             if claim['challenge']:
                 return {'phase': 'waiting_for_dispute', 'claim': claim['id']}
             bad = next(r['stage'] for r in report['stages'] if not r['valid'])
@@ -159,13 +186,19 @@ class Worker:
             return {'phase': 'fraud_challenged', 'claim': claim['id'], 'stage': bad}
         selected = budget['auditors'][owner]
         if selected['commitment'] is None:
-            value = auditing.commitment(self.chain_id, claim['id'], owner, report['coverage_root'], salt)
+            value = (auditing.verdict_commitment(self.chain_id, claim['id'], owner, auditing.coverage(claim),
+                     salt, report['valid']) if native else
+                     auditing.commitment(self.chain_id, claim['id'], owner, report['coverage_root'], salt))
             self.send('commit:'+claim['id'], 'audit_commit', claim_id=claim['id'], commitment=value)
             return {'phase': 'full_audit_committed', 'claim': claim['id'], 'report': report}
         height = wire.query(self.url)['height']
         if claim['audit_commit_end'] < height <= claim['audit_reveal_end']:
-            self.send('reveal:'+claim['id'], 'audit_reveal', claim_id=claim['id'], salt=salt,
-                      coverage_root=report['coverage_root'])
+            if native:
+                self.send('reveal:'+claim['id'], 'audit_verdict', claim_id=claim['id'], salt=salt,
+                          coverage_root=auditing.coverage(claim), valid=report['valid'])
+            else:
+                self.send('reveal:'+claim['id'], 'audit_reveal', claim_id=claim['id'], salt=salt,
+                          coverage_root=report['coverage_root'])
             return {'phase': 'full_audit_revealed', 'claim': claim['id']}
         return {'phase': 'waiting_for_reveal', 'claim': claim['id']}
 
@@ -230,7 +263,9 @@ def main():
     parser.add_argument('--rpc', required=True, help='Trusted local full-node RPC, or SSH tunnel to one')
     parser.add_argument('--genesis-sha256', required=True)
     parser.add_argument('--key', type=Path, required=True)
-    parser.add_argument('--sponsor', action='append', required=True)
+    parser.add_argument('--sponsor', action='append', default=[])
+    parser.add_argument('--portable-backend', type=Path,
+                        help='Local JSON command configuration for full GPU shard replay; not a remote report service')
     parser.add_argument('--objects', type=Path, required=True)
     parser.add_argument('--source', action='append', default=[], help='Read-only content-addressed artifact mirror')
     parser.add_argument('--max-stages', type=int, default=64)
@@ -239,12 +274,13 @@ def main():
     os.umask(0o077)
     store = Objects(args.objects)
     store.fetchers.extend(http_source(url) for url in args.source)
-    worker = Worker(args.home, args.rpc, args.genesis_sha256, args.key, args.sponsor, store, args.max_stages)
+    backend = json.loads(args.portable_backend.read_bytes()) if args.portable_backend else None
+    worker = Worker(args.home, args.rpc, args.genesis_sha256, args.key, args.sponsor, store, args.max_stages, backend)
     try:
         while True:
             try:
                 result = worker.tick()
-            except (OSError, requests.RequestException, TimeoutError) as exc:
+            except (OSError, requests.RequestException, TimeoutError, subprocess.TimeoutExpired) as exc:
                 # A missing object or unavailable node is never a valid audit.
                 result = {'phase': 'waiting_for_inputs_or_rpc', 'error': str(exc)}
             print(json.dumps(result), flush=True)
