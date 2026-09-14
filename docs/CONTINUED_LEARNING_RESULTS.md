@@ -76,6 +76,20 @@ not be substituted for those bytes. Keep the plan in `selection-committed`
 status for verification of the recorded final reports. This document records
 the failed outcome without changing the original contract.
 
+## Resource cleanup
+
+All three study GPUs, their root disks and their security group were confirmed
+deleted at 13:57:58 UTC. Both existing CPU network hosts remained running.
+Compute through confirmed termination is estimated at $3.77; a conservative
+planning total including a transfer allowance and $10 for other charges is
+$20.08, below the $100 cap. These are estimates, not an AWS invoice; retained S3
+objects incur ongoing storage charges.
+
+The final evidence archive, including cleanup confirmation, has SHA-256
+`90a2202424a641eace8f0a91019e224a1523c1cf80aeb5db8ed397c1ea49265e`.
+The machine-readable [quality decision](../config/experiments/continued-learning-result.json)
+is also published in the repository.
+
 ## Implication
 
 The distributed computation works for this numerical profile. This learning
