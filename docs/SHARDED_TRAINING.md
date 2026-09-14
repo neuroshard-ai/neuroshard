@@ -16,4 +16,23 @@ The lifecycle compares an uninterrupted checkpoint at step 32 with restoration f
 
 Before the GPU run, a small-model test compares shard-local AdamW against monolithic autograd with unequal sequence lengths, target weights, a partial microbatch, tied weights and active global clipping. Fresh worker processes restore an earlier common checkpoint and must reproduce the exact final manifest and generated tokens. Corrupted tensor bytes and inconsistent optimizer cursors must be rejected. The monolithic model exists only in this small reference test.
 
-The implementation issues no NEURO, promotes no native serving model and establishes no model growth. Its immediate target is a durable, distributed learning process that survives replacement of a shard host.
+Run that reference test in the pinned CPU development environment:
+
+```bash
+ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
+  python -m pytest -q tests/evolution/test_sharded_training.py
+```
+
+For a GPU run, install [learning-reference-requirements.txt](learning-reference-requirements.txt) in a separate environment on each worker. Each worker needs the same prepared job and data files, its own seed manifest and tensor files, and the pinned configuration/tokenizer, including `chat_template.jinja`. Copy the complete tokenizer asset set: copying only its JSON files can omit the saved template and correctly fails tokenizer identity checks. The [input commitment](../config/experiments/persistent-shards-inputs.json) records their hashes and the complete schedule. Large seed/checkpoint objects and the exact preparation scripts are retained with the experiment artifacts in operator storage; the input commitment alone is not a downloadable model distribution.
+
+Start one process per worker, setting `RANK` to its logical slot, `WORLD_SIZE=2`, `MASTER_ADDR` to the first worker's reachable private address, `MASTER_PORT` to the same free port, and `GLOO_SOCKET_IFNAME` to the peer network interface:
+
+```bash
+PYTHONPATH=src python scripts/run_sharded_training.py train \
+  --prepared /data/inputs/prepared.json --seed /data/owned-seed \
+  --home /data/run --until 32
+```
+
+To recover, first stop the old group and deliver the selected common `commit-000016.json` plus each owner's `shard-000016/` directory to the appropriate worker. Start a fresh group with the same logical slots and add `--resume /data/restored/commit-000016.json`, using a new output directory. Both workers must select the identical common manifest. Use `--until 64` with the step-32 checkpoint to continue the second cohort; use `evaluate` with a committed checkpoint to score and generate through the shards. Rendezvous, membership changes and storage replication are controller responsibilities; this driver does not discover or trust arbitrary public peers.
+
+The implementation issues no NEURO, promotes no native serving model and establishes no model growth. The [completed lifecycle](SHARDED_TRAINING_RESULTS.md) records exact physical-host recovery, continued optimizer state, distributed inference and the observed model-quality regression.
