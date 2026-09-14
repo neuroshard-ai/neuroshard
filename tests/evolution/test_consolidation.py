@@ -206,8 +206,10 @@ def test_real_git_freeze_rejects_source_edit_and_exposed_final_reuse(frozen_repo
 
 def test_screen_preflight_runs_before_cuda(monkeypatch):
     monkeypatch.setattr(driver.reference, 'configure', lambda *args, **kwargs: pytest.fail('CUDA initialized'))
+    plan = c.load()
+    plan['status'] = 'plan-frozen'
     with pytest.raises(ValueError, match='committed prepared inputs'):
-        driver.run_gpu(SimpleNamespace(command='screen'), c.load(), {})
+        driver.run_gpu(SimpleNamespace(command='screen'), plan, {})
 
 
 def test_generated_inputs_cannot_leak_the_expected_answer(tmp_path):
