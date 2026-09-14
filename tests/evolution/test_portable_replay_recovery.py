@@ -38,6 +38,8 @@ if rank==control.get('pause_rank'):
  time.sleep(control.get('pause_seconds',1))
 if rank==control.get('fail_rank'):raise OSError('Injected interruption before a completed report')
 rows=json.loads(Path(sys.argv[sys.argv.index('--transcripts')+1]).read_bytes())
+folder=home/'shard-000001';folder.mkdir()
+save(folder/'manifest.json',{'rank':rank,'step':1})
 save(home/'audit.json',{'rank':rank,'valid':True,'binding':rows[rank]['binding'],'transcript_root':identity(rows)})
 '''
 
@@ -54,7 +56,7 @@ def trial(tmp_path):
     prepared_path = tmp_path/'prepared.json'
     save(prepared_path, prepared)
     before = {'job': 'b'*64, 'step': 0, 'boundaries': [0, 1, 2]}
-    after = {**before, 'step': 1}
+    after = {**before, 'step': 1, 'shards': [identity({'rank': rank, 'step': 1}) for rank in range(2)]}
     binding = {'job': before['job'], 'prepared': identity(prepared), 'input': identity(before),
         'output': identity(after), 'start': 0, 'end': 1, 'boundaries': before['boundaries'],
         'reference': identity(None)}
@@ -107,6 +109,37 @@ def test_cached_results_cannot_change_sources_reference_or_work(trial):
     source = repository/'scripts/run_sharded_training.py'
     source.write_text(source.read_text()+'\n# Changed after the completed replay\n')
     with pytest.raises(ValueError, match='Numerical source differs'):
+        backend.run(catalog, claim)
+    assert executions(repository) == [0, 1]
+
+
+def test_correct_tensors_do_not_authorize_forged_output_manifests(trial, tmp_path):
+    catalog, claim, repository = trial
+    old_output = identity(claim['output_checkpoint'])
+    old_record = claim['record_root']
+    claim['output_checkpoint']['shards'][0] = 'f'*64
+    output = identity(claim['output_checkpoint'])
+    save(tmp_path/'after.json', claim['output_checkpoint'])
+    catalog['checkpoints'][output] = catalog['checkpoints'].pop(old_output)
+    rows = json.loads((tmp_path/'transcripts.json').read_bytes())
+    for row in rows:
+        row['binding']['output'] = output
+    save(tmp_path/'transcripts.json', rows)
+    claim['record_root'] = identity(rows)
+    catalog['transcripts'][claim['record_root']] = catalog['transcripts'].pop(old_record)
+    reports = backend.run(catalog, claim)
+    assert [row['valid'] for row in reports] == [False, True]
+    assert reports[0]['reason'] == 'Replayed shard manifest differs from the claimed output'
+    assert executions(repository) == [0, 1]
+
+
+def test_changed_verifier_cannot_reuse_prior_positive_reports(trial, monkeypatch):
+    catalog, claim, repository = trial
+    backend.run(catalog, claim)
+    original = backend.sha256
+    monkeypatch.setattr(backend, 'sha256', lambda path:
+        'f'*64 if Path(path).resolve() == SCRIPT.resolve() else original(path))
+    with pytest.raises(ValueError, match='another computation'):
         backend.run(catalog, claim)
     assert executions(repository) == [0, 1]
 

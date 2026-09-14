@@ -52,6 +52,12 @@ repeats for the other partitions. The complete checkpoint and prepared data bind
 the input model, cursor, architecture, optimizer groups, tokenization and batch
 schedule. A self-consistent forged witness still fails numerical replay.
 
+The operator verifier also compares the complete regenerated shard-manifest
+hash with the output checkpoint's commitment, including ownership and RNG
+metadata. Matching learned tensors alone cannot authorize arbitrary manifest
+hashes: the next worker must be able to load the accepted checkpoint. A manifest
+mismatch produces a negative report; an unavailable manifest produces no report.
+
 The genesis profile also fixes `reference_root`, the complete frozen reference
 checkpoint commitment. Omitting it means the prepared seed reference, encoded
 as the canonical hash of JSON `null`. The claim, backend and every partition
@@ -119,11 +125,11 @@ missing files, OOM and process failures. Infrastructure failures produce no
 validity report. Artifact discovery and fetching must supply these local,
 hash-checked files before replay; this prototype does not provide a public DHT.
 
-Replay progress is bound to the immutable claim, catalog and numerical source
-commitments. Successfully completed partitions survive restart. A failed partial
+Replay progress is bound to the immutable claim, catalog, numerical source
+commitments and operator-verifier source hash. Successfully completed partitions survive restart. A failed partial
 partition runs in a fresh attempt directory; its earlier logs remain available.
 Changing ledger deadlines or a local timeout does not invalidate completed work.
-Changing the computation, reference or sources does. Per-invocation reports
+Changing the computation, reference, numerical sources or verifier does. Per-invocation reports
 distinguish reused partitions and elapsed time from a new full replay.
 
 A claim lock is inherited by the numerical subprocess. If the controller dies,
@@ -135,6 +141,14 @@ progress directory is trusted operator state, not a cache of strangers' reports.
 The standard full-replay worker also supports the native quorum profile for
 existing evolution graphs. Legacy sponsor-selected audit genesis files retain
 their old behavior; they do not silently acquire this security model.
+
+A live reservation or candidate currently occupies one global training cursor.
+Unavailable inputs cannot earn a positive verdict, but can delay other work
+until expiry. Refunds avoid treating infrastructure failure as proven fraud;
+they also leave reservation capture insufficiently priced. Funded replay alone
+does not solve this admission/liveness problem. Public rollout still needs
+artifact-readiness requirements and a reviewed reservation/offer policy, rather
+than assuming the native voting threshold prevents queue capture.
 
 The remaining rollout work includes independently owned validator participation,
 priced audit capacity, public artifact distribution, fresh-job activation and

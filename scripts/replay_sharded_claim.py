@@ -64,7 +64,8 @@ def run(catalog, claim):
         # do not alter the prescribed computation or authorize another result.
         binding = {'claim': {k: claim[k] for k in ['id', 'kind', 'prepared', 'record_root', 'stages',
                     'input_checkpoint', 'output_checkpoint']}, 'reference_root': reference_root,
-                   'catalog': {k: v for k, v in catalog.items() if k not in ('home', 'rank_timeout_seconds')}}
+                   'catalog': {k: v for k, v in catalog.items() if k not in ('home', 'rank_timeout_seconds')},
+                   'verifier_sha256': sha256(Path(__file__))}
         marker = base/'resume.json'
         if marker.exists():
             if json.loads(marker.read_bytes()) != binding:
@@ -143,6 +144,14 @@ except ValueError as exc:
         if result.returncode:
             raise RuntimeError('A partition is unavailable; inspect the private replay log')
         report = json.loads((home/'audit.json').read_bytes())
+        if report['valid'] is True:
+            # The frozen numerical oracle checks learned tensors and optimizer
+            # semantics. Also bind its complete regenerated manifest: arbitrary
+            # shard/RNG commitments would make the accepted cursor unusable.
+            manifest = json.loads((home/f"shard-{after['step']:06d}"/'manifest.json').read_bytes())
+            report['output_manifest'] = identity(manifest)
+            if report['output_manifest'] != after['shards'][rank]:
+                report.update(valid=False, reason='Replayed shard manifest differs from the claimed output')
         save(completed_path, {'binding': binding, 'report': report})
         reports.append(report)
     result = portable_work.replay_report(claim, reports)
