@@ -28,6 +28,22 @@ def interpretation(text, question):
     return value
 
 
+def example_messages(instruction, examples):
+    """Preserve the published prompt independently of JSON object key order.
+
+    Object identity ignores insertion order; model input does not. The original
+    successful interpreter used name before field, including these spaces.
+    """
+    prefix = [{'role': 'system', 'content': instruction}]
+    for question, answer in examples:
+        if set(answer) != {'name', 'field'}:
+            raise ValueError('Require the exact interpretation argument schema')
+        ordered = {'name': answer['name'], 'field': answer['field']}
+        prefix.extend([{'role': 'user', 'content': json.dumps(question)},
+                       {'role': 'assistant', 'content': json.dumps(ordered)}])
+    return prefix
+
+
 class InterpretedNetwork:
     """Each established owner holds only its portions of the two fixed models.
 
@@ -41,10 +57,7 @@ class InterpretedNetwork:
             raise ValueError('Only the three established owners hold interpreter partitions')
         self.trained, self.preserved = trained, preserved
         self.instruction, self.max_tokens, self.record = instruction, max_tokens, record
-        self.prefix = [{'role': 'system', 'content': instruction}]
-        for question, answer in examples:
-            self.prefix.extend([{'role': 'user', 'content': json.dumps(question)},
-                                {'role': 'assistant', 'content': json.dumps(answer)}])
+        self.prefix = example_messages(instruction, examples)
         self.additional_parameters = preserved.shard.resident_parameters if preserved else 0
         self.parameters = [p for net in (trained, preserved) if net is not None
                            for _, p in net.shard.named_owned_parameters()]

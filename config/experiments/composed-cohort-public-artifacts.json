@@ -1,0 +1,97 @@
+{
+  "format": "neuroshard-public-cohort-artifacts-v1",
+  "release": {
+    "release_id": 389415275,
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915",
+    "tag": "research-cohorts-20260915",
+    "published_at": "2026-09-15T20:22:00Z",
+    "assets": 24
+  },
+  "result_commit": "5de2d965aea399915115a0e9af61b781d4722a72",
+  "model_objects": 472,
+  "new_expert_objects": 18,
+  "reused_model_objects": 454,
+  "reused_release": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-shards-20260915",
+  "numerical_bundle": {
+    "sha256": "99ddb8b17af66180cfff3096ebd1012f953e2886772a2b646f91955adca6e721",
+    "bytes": 6059525,
+    "files": 835,
+    "model_objects": 472,
+    "new_model_objects": 18,
+    "passed": true,
+    "published": true
+  },
+  "models_manifest_sha256": "fde27c6b4a655c5855652560d410d173a7ef1ec905d81cf8fb8b36c34013b351",
+  "public_numerical_review": {
+    "sha256": "99ddb8b17af66180cfff3096ebd1012f953e2886772a2b646f91955adca6e721",
+    "passed": true,
+    "files": 835,
+    "complete_five_owner_outputs": {
+      "development": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+      "final": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d"
+    },
+    "model_objects": 472,
+    "source_and_tokenizer_hashes_match": true,
+    "all_referenced_objects_present": true,
+    "scope": "Numerical reproduction archive only. Cloud administration and private histories excluded."
+  },
+  "anonymous_verification": {
+    "release": {
+      "release_id": 389415275,
+      "url": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915",
+      "tag": "research-cohorts-20260915",
+      "published_at": "2026-09-15T20:22:00Z",
+      "assets": 24
+    },
+    "assets": 24,
+    "bytes": 2994506053,
+    "all_full_hashes_match": true,
+    "credentials_used": false,
+    "completed": 1789503752.8542054
+  },
+  "owner_download_requests": {
+    "owners": [
+      {
+        "rank": 0,
+        "trained_objects": 56,
+        "interpreter_objects": 56,
+        "new_expert_objects": 0,
+        "matches_executed_staging": true
+      },
+      {
+        "rank": 1,
+        "trained_objects": 81,
+        "interpreter_objects": 81,
+        "new_expert_objects": 0,
+        "matches_executed_staging": true
+      },
+      {
+        "rank": 2,
+        "trained_objects": 81,
+        "interpreter_objects": 81,
+        "new_expert_objects": 0,
+        "matches_executed_staging": true
+      },
+      {
+        "rank": 3,
+        "trained_objects": 18,
+        "interpreter_objects": 0,
+        "new_expert_objects": 0,
+        "matches_executed_staging": true
+      },
+      {
+        "rank": 4,
+        "trained_objects": 18,
+        "interpreter_objects": 0,
+        "new_expert_objects": 18,
+        "matches_executed_staging": true
+      }
+    ],
+    "passed": true,
+    "objects": 472,
+    "training_bank_bytes": 1377269760
+  },
+  "tokens_issued": 0,
+  "native_activated": false,
+  "scope": "Public content-addressed weights, actual optimizer state, training bank and numerical evidence. Intermediate replay tensor payloads are not published. This release does not activate the new expert on the native network."
+}
