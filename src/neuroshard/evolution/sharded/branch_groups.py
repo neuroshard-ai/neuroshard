@@ -5,6 +5,7 @@ implement learned routing, dynamic process admission, or native settlement.
 """
 import json
 import re
+from functools import partial
 
 import torch
 import torch.distributed as dist
@@ -111,12 +112,14 @@ class RoutedNetwork:
         self.rank, self.routes = global_rank, routes
         self.parent_wire = ParentWire(global_rank, parent_group) if global_rank < 3 else None
         self.networks = {}
+        self.answer_paths = {}
         for rule in routes.rules:
             members = [0, 1, 2, rule['owner']]
             if global_rank not in members:
                 continue
             wire = GroupWire(global_rank, members, expert_groups[rule['id']])
             self.networks[rule['id']] = Network(shard, wire, self.parent_wire, tokenizer, split)
+            self.answer_paths[rule['id']] = partial(self.networks[rule['id']].generate, expert=True)
         if not self.networks:
             raise ValueError('This process owns no partition of the declared graph')
 
@@ -130,5 +133,5 @@ class RoutedNetwork:
         else:
             if selected not in self.networks:
                 return None
-            value = self.networks[selected].generate(question, max_tokens, True)
+            value = self.answer_paths[selected](question, max_tokens)
         return {**value, 'expert': selected}

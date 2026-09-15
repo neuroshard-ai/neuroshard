@@ -29,14 +29,14 @@ def validate():
         raise ValueError('Cohort differs from its complete frozen preparation')
     routes = OrderedRoutes(plan['rules'])
     routes.require_extension_of(OrderedRoutes([{'id': 'directory', 'needle': 'fictional luma directory', 'owner': 3}]))
-    if routes.rules != [{'id': 'directory', 'needle': 'fictional luma directory', 'owner': 3},
+    if list(routes.rules) != [{'id': 'directory', 'needle': 'fictional luma directory', 'owner': 3},
                         {'id': 'protocol', 'needle': 'neuroshard 0.4.0', 'owner': 4}]:
         raise ValueError('Require exactly the original expert and one new scoped expert')
     if json.loads(base.committed(PLAN, prepared['source_commit'])) != plan:
         raise ValueError('Freeze the complete recipe before preparing model inputs')
     for name in SOURCES:
-        base.committed(ROOT / name)
-        base.committed(ROOT / name, prepared['source_commit'])
+        if base.committed(ROOT / name) != base.committed(ROOT / name, prepared['source_commit']):
+            raise ValueError('Cohort numerical source differs from its prepared commit')
     previous = prepared['prerequisite']
     if (previous['graph'] != plan['previous_graph'] or not previous['passed']
             or not previous['artifacts_preserved'] or len(previous['result_sha256']) != 64):

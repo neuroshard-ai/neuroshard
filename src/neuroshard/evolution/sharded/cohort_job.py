@@ -40,7 +40,8 @@ def signal(home, name, binding, timeout=900):
     return result
 
 
-def run(args, device='cuda'):
+def run(args, device='cuda', *, experiment=contract, network_factory=None):
+    contract = experiment
     plan, prepared = contract.validate()
     final = args.command == 'final'
     if args.command not in ('train', 'final'):
@@ -97,6 +98,8 @@ def run(args, device='cuda'):
               for rule in plan['rules']}
     routes = OrderedRoutes(plan['rules'])
     net = RoutedNetwork(rank, shard, tokenizer, plan['split'], routes, parent_group, groups)
+    fixed_path = network_factory(args, plan, prepared, net) if network_factory else None
+    additional_parameters = fixed_path.additional_parameters if fixed_path else 0
     all_owners = Wire(rank, 5)
     binding = {'plan': data.identity(plan), 'prepared': data.identity(prepared), 'job': job,
                'previous_graph': plan['previous_graph'], 'retention_cache': prepared['retention_cache']}
@@ -106,7 +109,7 @@ def run(args, device='cuda'):
         if declarations != [{'binding': binding, 'rank': i, 'runtime': plan['runtime']} for i in range(5)]:
             raise ValueError('Owners disagree on the complete learning contract')
         data.save(args.home / 'started.json', {**binding, 'rank': rank, 'runtime': runtime,
-            'owned_parameters': shard.resident_parameters, 'tokens_issued': 0})
+            'owned_parameters': shard.resident_parameters + additional_parameters, 'tokens_issued': 0})
 
         def expired():
             if time.monotonic() - started > plan['max_seconds']:
@@ -273,6 +276,8 @@ def run(args, device='cuda'):
             data.save(args.home / (role + '.json'), result)
         if rank < 4 and tuple(p._version for _, p in shard.named_owned_parameters()) != versions:
             raise ValueError('An established parameter was modified')
+        if fixed_path:
+            fixed_path.verify_unchanged()
         digest = data.identity({'before': before, 'new': outcomes, 'retained': retained})
         if any(item != digest for item in all_owners.exchange(digest)):
             raise ValueError('Owners disagree on complete second-cohort outcomes')
@@ -281,7 +286,8 @@ def run(args, device='cuda'):
         data.save(args.home / 'result.json', {**binding, 'rank': rank, 'graph': data.identity(descriptor),
             'descriptor': descriptor, 'checkpoint': data.identity(selected), 'decision': decision,
             'answer_identity': digest, 'learning': learning, 'feature_root': feature_root,
-            'seconds': time.monotonic() - started, 'owned_parameters': shard.resident_parameters,
+            'seconds': time.monotonic() - started,
+            'owned_parameters': shard.resident_parameters + additional_parameters,
             'tokens_issued': 0, 'native_activated': False})
         all_owners.exchange('new expert may exit; prior paths remain available')
         if rank == 4:
@@ -304,6 +310,8 @@ def run(args, device='cuda'):
             survival.append(actual)
         if any(item != survival for item in net.networks['directory'].wire.exchange(survival)):
             raise ValueError('Established owners disagree after departure')
+        if fixed_path:
+            fixed_path.verify_unchanged()
         data.save(args.home / 'survival.json', {'binding': binding, 'rank': rank, 'passed': True,
                                              'answers': survival, 'exit': receipt})
     finally:
