@@ -43,7 +43,10 @@ original deadline and spending limit still apply.
 
 This probe does not select a learning candidate or open another final set.
 Its source, plan, input identity and parent must be committed before execution.
-GPU equivalence and performance are pending until results are published.
+The [GPU results](FROZEN_FEATURE_RESULTS.md) reproduce all eight updates exactly
+in both layouts, with approximately 4.7 times faster optimizer execution after
+initial feature production. These are numerical and cost results, not evidence
+of improved model answers.
 
 ## What must be preserved for reuse
 
