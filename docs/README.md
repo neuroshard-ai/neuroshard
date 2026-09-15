@@ -2,6 +2,7 @@
 
 | Start here | Purpose |
 | --- | --- |
+| [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
 | [LLM protocol](LLM_PROTOCOL.md) | Supported training, payments, consensus and model-serving rules. |
 | [Model card](MODEL_CARD.md) | Capabilities, limits, evaluation and provenance. |
