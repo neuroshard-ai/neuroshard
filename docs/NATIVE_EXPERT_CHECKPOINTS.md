@@ -65,6 +65,39 @@ feature bank and numerical profile. Passing a miner's report file through the
 binding checker does not establish execution. The security assumption remains an
 honest native voting quorum; these receipts are not cryptographic neural proofs.
 
+The [bounded training executor](../src/neuroshard/evolution/sharded/expert_execution.py)
+now implements the training side of that interface. It loads the configured
+parent, immutable training records and feature bank, then restores the actual
+input tail and its Adam state. It executes one to four prescribed updates at
+their original global learning-rate cursors and checks every intermediate root
+and bound measurement. A valid window atomically publishes its final weight/Adam
+payloads; another process can continue from that boundary without replaying the
+earlier training history. Existing output files do not replace computation on a
+repeated audit. Missing or corrupted input, failed storage and an expired deadline
+cannot produce an acceptance report. Intermediate steps remain commitments;
+recoverable tensor payloads are stored at the audited window boundaries.
+
+The module can run as the audit worker's local subprocess backend:
+`python -m neuroshard.evolution.sharded.expert_execution --config /absolute/executor.json`.
+Its input is the candidate JSON on standard input; its output is the bound native
+replay report. The local configuration has format `neuroshard-expert-executor-v1`,
+the chain's `profile`, the original `plan` and `prepared` objects, `max_seconds`,
+and absolute `paths` for `inputs`, `objects`, `bank_home` and `checkpoint_store`.
+Each checkpoint directory is keyed by its complete checkpoint root and contains
+`checkpoint.json` plus the existing incremental owner payload format. The audit
+worker's backend configuration supplies this command as an `argv` array and a
+hard `timeout_seconds`. Keep the reviewed source and runtime pinned; configuration
+and artifact paths must come from the operator, never from an untrusted claim.
+
+The [CPU execution checks](../tests/evolution/test_expert_execution.py) reuse the
+actual five-process small-model training fixture. They cover a second process
+resuming the next window, exact output weights and Adam, repeated execution,
+forged measurements, missing/corrupted inputs and failures during persistence or
+at the deadline. This is a tested training backend, not a completed native
+deployment: its GPU compatibility still needs a bounded check, and a production
+backend must additionally execute prefix claims. Graph quality promotion and paid
+graph inference remain unimplemented in this profile.
+
 The second expert has durable weight/Adam checkpoints at 0/280/560. Reconstructing
 the intervening commitments does not make their tensor payloads durably available.
 An operated settlement must provide those bytes or maintain an actual replay
