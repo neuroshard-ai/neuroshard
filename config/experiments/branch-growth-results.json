@@ -1,0 +1,975 @@
+{
+  "format": "neuroshard-branch-growth-results-v1",
+  "source_freeze": {
+    "commit": "646123ebeff543d7acb166565660ca2bf536d226",
+    "helpers": {
+      "driver.py": "3a66ddae57790a08e3bda7d7871f2fc30108fd766e5ed385b590c274055633c5",
+      "extension.py": "f0083fdb04993a735d221aa0220dc31aa7d85ddf312d75260b6d76a0556762d5",
+      "prepare.py": "a556c2c144cc45993138e697b819bf67ddb95bf18c2ed6d8857c3164c7b24477",
+      "preserve.py": "e9bb3bb670e4dc2fc6148a30c1a29965e6344d6aa9c3c54ef611f93468240fac"
+    },
+    "source_bundle_sha256": "9b9301dc265e2d4a7f4cc50e8a2078a4350794e0aae7727cb933a39c59970d01",
+    "time": 1789474951.2122416
+  },
+  "prepared_source": "944d8afaf017651a7183db4a0ca71cbb3ca43b0e",
+  "graph": {
+    "added_parameters": 134225920,
+    "added_tensors": {
+      "model.layers.22.input_layernorm.weight": {
+        "bytes": 24860,
+        "optimizer_step": 1024,
+        "sha256": "9a190243e911e863d0781a84ee3b37e580ad0fca34f6d112c1b19643b1d2509a",
+        "shape": [
+          2048
+        ]
+      },
+      "model.layers.22.mlp.down_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "a13ae9f28749fb1a8bcb35393b36ec043b84b016bc8087bc38ce08b0cdd11258",
+        "shape": [
+          2048,
+          8192
+        ]
+      },
+      "model.layers.22.mlp.gate_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "bf8aef573a6cee0a14dcf0985937d0d5a8f22258331d5557c5554ddce04d3945",
+        "shape": [
+          8192,
+          2048
+        ]
+      },
+      "model.layers.22.mlp.up_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "0c6aa034d5a2992e4b710cb634d4b37826e346f8c7bd27bf46b26d27867879fc",
+        "shape": [
+          8192,
+          2048
+        ]
+      },
+      "model.layers.22.post_attention_layernorm.weight": {
+        "bytes": 24860,
+        "optimizer_step": 1024,
+        "sha256": "cbdf5770748d923e9ebb1bf10320d266bb3e4c14db6aa2e6380be0efd8888816",
+        "shape": [
+          2048
+        ]
+      },
+      "model.layers.22.self_attn.k_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "34fcdadc47d1b2b97637b96a4aaf15eddb894a744987f3da90336f04f991a676",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.22.self_attn.o_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "dc8106698f9158de679cded2d3a259f54e91adeaae96d36cf13694bd1db73add",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.22.self_attn.q_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "bcd002b7919409107a26e0bf2e6ca46608e48cb9975eb7af01dc2b2a27b031bb",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.22.self_attn.v_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "3fb337a2e7b112d6ed0212db42307f628c6899359a62adceb0846a7e229f8908",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.23.input_layernorm.weight": {
+        "bytes": 24860,
+        "optimizer_step": 1024,
+        "sha256": "e1bd207bf8234a20c7c6a079d9f5f2dc310f948217087491076406188865c767",
+        "shape": [
+          2048
+        ]
+      },
+      "model.layers.23.mlp.down_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "6c522053d54ce130ce494d125507a79a44cf5b1c31bcb91fdf56496694b1e5fd",
+        "shape": [
+          2048,
+          8192
+        ]
+      },
+      "model.layers.23.mlp.gate_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "74e140179be1c96e1cc58ba9fc53c7af46aab9a7c02f53c273877661ca6866d7",
+        "shape": [
+          8192,
+          2048
+        ]
+      },
+      "model.layers.23.mlp.up_proj.weight": {
+        "bytes": 201326924,
+        "optimizer_step": 1024,
+        "sha256": "6acfbc53ad3aa188a4a5268c5f53f5a046afd8c394e8c800918764ba6333cd07",
+        "shape": [
+          8192,
+          2048
+        ]
+      },
+      "model.layers.23.post_attention_layernorm.weight": {
+        "bytes": 24860,
+        "optimizer_step": 1024,
+        "sha256": "80eb08bed82d04950e680062b40ad2985eba90443e3e3f5aa876761e1b8404f2",
+        "shape": [
+          2048
+        ]
+      },
+      "model.layers.23.self_attn.k_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "80f06b78c296c8990eb6ad15198877554ba907fae6df31960dd56701ee4e78af",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.23.self_attn.o_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "3a045968b97939bb841736b3c510d712a006b85389b09febdd84c057f91c335e",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.23.self_attn.q_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "0fd79942f5a8bf00fa8b847beec6ddc6011aeeaed832ad703be5ca56fbb86fa5",
+        "shape": [
+          2048,
+          2048
+        ]
+      },
+      "model.layers.23.self_attn.v_proj.weight": {
+        "bytes": 50331972,
+        "optimizer_step": 1024,
+        "sha256": "f06fb2d30c057c8a8b0cfb51adb169b63eedc8fe01f2020cc01b70316fab94a3",
+        "shape": [
+          2048,
+          2048
+        ]
+      }
+    },
+    "expert": "dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d",
+    "expert_layout": [
+      0,
+      6,
+      15,
+      22,
+      24
+    ],
+    "format": "neuroshard-branch-growth-v1/graph",
+    "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+    "parent_layout": [
+      0,
+      6,
+      15,
+      24
+    ],
+    "parent_parameters": 1711376384,
+    "selector": "Use the added expert exactly when the user question contains fictional Luma directory, case-insensitively. No entity, attribute, expected answer or evaluation ID enters routing. Otherwise execute the unchanged parent through its independent three-owner process group.",
+    "split": 22
+  },
+  "total_parameters": 1845602304,
+  "completed": true,
+  "passed": false,
+  "numerical_result": {
+    "completed": true,
+    "development": {
+      "checks": {
+        "conversation_retention": true,
+        "exact_parent_answers": true,
+        "exact_parent_losses": true,
+        "knowledge_accuracy": true,
+        "knowledge_gain": true,
+        "parent_survives_expert_exit": true,
+        "prior_correct_answers_retained": true,
+        "question_only_selector": true
+      },
+      "conversation": {
+        "lower": 0.0,
+        "mean": 0.0,
+        "pairs": 128,
+        "upper": 0.0
+      },
+      "development": true,
+      "knowledge": {
+        "accuracy": 0.86328125,
+        "after": 221,
+        "before": 0,
+        "count": 256,
+        "entity_cluster_delta": {
+          "lower": 0.828125,
+          "mean": 0.86328125,
+          "pairs": 32,
+          "upper": 0.89453125
+        },
+        "gains": 221,
+        "losses": 0
+      },
+      "passed": true,
+      "skills": {
+        "after": 151,
+        "before": 151,
+        "count": 192,
+        "gains": 0,
+        "losses": 0
+      }
+    },
+    "final": {
+      "checks": {
+        "conversation_retention": true,
+        "exact_parent_answers": true,
+        "exact_parent_losses": true,
+        "knowledge_accuracy": false,
+        "knowledge_gain": true,
+        "parent_survives_expert_exit": true,
+        "prior_correct_answers_retained": true,
+        "question_only_selector": true
+      },
+      "conversation": {
+        "lower": 0.0,
+        "mean": 0.0,
+        "pairs": 256,
+        "upper": 0.0
+      },
+      "development": false,
+      "knowledge": {
+        "accuracy": 0.7021484375,
+        "after": 719,
+        "before": 0,
+        "count": 1024,
+        "entity_cluster_delta": {
+          "lower": 0.6767578125,
+          "mean": 0.7021484375,
+          "pairs": 128,
+          "upper": 0.7275390625
+        },
+        "gains": 719,
+        "losses": 0
+      },
+      "passed": false,
+      "skills": {
+        "after": 650,
+        "before": 650,
+        "count": 768,
+        "gains": 0,
+        "losses": 0
+      }
+    },
+    "finals_opened": true,
+    "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+    "native_activated": false,
+    "passed": false,
+    "time": 1789478208.9240198,
+    "tokens_issued": 0
+  },
+  "failure": null,
+  "stages": {
+    "development": {
+      "owners": [
+        {
+          "rank": 0,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "c59488bd0bfe98e21a7ff1e432c2393c2a50c9e8e0c7b0190402574d9008cd12",
+          "seconds": 619.1232026329999,
+          "sent_tensor_bytes": 10846427344,
+          "owned_parameters": 503343104
+        },
+        {
+          "rank": 1,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "c59488bd0bfe98e21a7ff1e432c2393c2a50c9e8e0c7b0190402574d9008cd12",
+          "seconds": 619.123247227999,
+          "sent_tensor_bytes": 10846427344,
+          "owned_parameters": 604016640
+        },
+        {
+          "rank": 2,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "c59488bd0bfe98e21a7ff1e432c2393c2a50c9e8e0c7b0190402574d9008cd12",
+          "seconds": 619.1231920620012,
+          "sent_tensor_bytes": 10846427344,
+          "owned_parameters": 604016640
+        },
+        {
+          "rank": 3,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "c59488bd0bfe98e21a7ff1e432c2393c2a50c9e8e0c7b0190402574d9008cd12",
+          "seconds": 619.1278015900007,
+          "sent_tensor_bytes": 2248541464,
+          "owned_parameters": 134225920
+        }
+      ],
+      "exit": {
+        "codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0
+        },
+        "finished": 1789475580.1983166,
+        "started": 1789474938.0747032,
+        "stop_errors": []
+      },
+      "expert-exit": {
+        "binding": {
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+        },
+        "expert_exit_code": 0,
+        "instance": "i-093ec9541b8672428",
+        "observed_time": 1789475576.754816,
+        "process_exit_observed": true,
+        "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+      },
+      "parent_survival": [
+        {
+          "answer": {
+            "ids": [
+              39428,
+              1319,
+              1799,
+              75,
+              28852,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"ids\":[]}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789475576.754816,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 0
+        },
+        {
+          "answer": {
+            "ids": [
+              39428,
+              1319,
+              1799,
+              75,
+              28852,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"ids\":[]}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789475576.754816,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 1
+        },
+        {
+          "answer": {
+            "ids": [
+              39428,
+              1319,
+              1799,
+              75,
+              28852,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"ids\":[]}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789475576.754816,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 2
+        }
+      ]
+    },
+    "final": {
+      "owners": [
+        {
+          "rank": 0,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "ab9166b15afdf5154fbbf67652b4e714928a8466cc0f7cb3282d5d2bdafb95e2",
+          "seconds": 2599.9519177,
+          "sent_tensor_bytes": 55219961336,
+          "owned_parameters": 503343104
+        },
+        {
+          "rank": 1,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "ab9166b15afdf5154fbbf67652b4e714928a8466cc0f7cb3282d5d2bdafb95e2",
+          "seconds": 2599.9519631390012,
+          "sent_tensor_bytes": 55219961336,
+          "owned_parameters": 604016640
+        },
+        {
+          "rank": 2,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "ab9166b15afdf5154fbbf67652b4e714928a8466cc0f7cb3282d5d2bdafb95e2",
+          "seconds": 2599.9514360659996,
+          "sent_tensor_bytes": 55219961336,
+          "owned_parameters": 604016640
+        },
+        {
+          "rank": 3,
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "answer_identity": "ab9166b15afdf5154fbbf67652b4e714928a8466cc0f7cb3282d5d2bdafb95e2",
+          "seconds": 2599.9558890579992,
+          "sent_tensor_bytes": 4379591224,
+          "owned_parameters": 134225920
+        }
+      ],
+      "exit": {
+        "codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0,
+          "3": 0
+        },
+        "finished": 1789478207.3086162,
+        "started": 1789475585.7919245,
+        "stop_errors": []
+      },
+      "expert-exit": {
+        "binding": {
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+        },
+        "expert_exit_code": 0,
+        "instance": "i-093ec9541b8672428",
+        "observed_time": 1789478204.1757417,
+        "process_exit_observed": true,
+        "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+      },
+      "parent_survival": [
+        {
+          "answer": {
+            "ids": [
+              39428,
+              20721,
+              1799,
+              18220,
+              1627,
+              17720,
+              1799,
+              18220,
+              109,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"city\":null,\"units\":null}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789478204.1757417,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 0
+        },
+        {
+          "answer": {
+            "ids": [
+              39428,
+              20721,
+              1799,
+              18220,
+              1627,
+              17720,
+              1799,
+              18220,
+              109,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"city\":null,\"units\":null}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789478204.1757417,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 1
+        },
+        {
+          "answer": {
+            "ids": [
+              39428,
+              20721,
+              1799,
+              18220,
+              1627,
+              17720,
+              1799,
+              18220,
+              109,
+              2
+            ],
+            "route": "parent",
+            "text": "{\"city\":null,\"units\":null}"
+          },
+          "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+          "expert_exit": {
+            "binding": {
+              "baseline_cache": "124d534e038361654f052cb70af5f94a74bc9a911283eeb5b0d5af474ece9b2e",
+              "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+              "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+              "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb"
+            },
+            "expert_exit_code": 0,
+            "instance": "i-093ec9541b8672428",
+            "observed_time": 1789478204.1757417,
+            "process_exit_observed": true,
+            "scope": "The neural worker process exited; the EC2 instance remains for artifact preservation."
+          },
+          "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+          "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+          "passed": true,
+          "plan": "ab38c97ee099d7d6d6de5d0c962a840d0f27d4766d2f59e3f707f703ce8601fb",
+          "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+          "rank": 2
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/branch-growth-20260915/evidence/f6df1970766462d888fca5962fea763c1f6b4cc04192f00a8a17dc04e948e6f2",
+    "sha256": "f6df1970766462d888fca5962fea763c1f6b4cc04192f00a8a17dc04e948e6f2",
+    "bytes": 95705313,
+    "readback_verified": true,
+    "scope": "Complete source, fixed branch graph, frozen questions, generated outcomes, observed worker exit and parent survival, plus exploratory diagnostics. Original parent and learned transformer tensors have separately verified content-addressed inventories included here."
+  },
+  "resources": {
+    "terminated": true,
+    "instances": [
+      "i-00fb23c397a6c00b9",
+      "i-01cf6904ee741859f",
+      "i-0668ff1d69721d98b",
+      "i-093ec9541b8672428"
+    ],
+    "physical_instances": 4,
+    "maximum_simultaneous_workers": 4,
+    "confirmed": "2026-09-15T13:22:48.300416+00:00",
+    "volumes": [
+      "vol-00ae704232b992c2c",
+      "vol-054c0d344990ca0f0",
+      "vol-0597ac4264b240f91",
+      "vol-0836199c952397eb9"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "protected_instances_unchanged": true,
+    "per_instance": [
+      {
+        "instance": "i-093ec9541b8672428",
+        "type": "g5.2xlarge",
+        "hours": 4.431194559931755,
+        "compute_usd": 5.370607806637286,
+        "gp3_usd": 0.12308873777588207
+      },
+      {
+        "instance": "i-0668ff1d69721d98b",
+        "type": "g5.2xlarge",
+        "hours": 4.432583448820644,
+        "compute_usd": 5.372291139970621,
+        "gp3_usd": 0.12312731802279567
+      },
+      {
+        "instance": "i-01cf6904ee741859f",
+        "type": "g5.xlarge",
+        "hours": 4.432305671042866,
+        "compute_usd": 4.458899505069123,
+        "gp3_usd": 0.12311960197341294
+      },
+      {
+        "instance": "i-00fb23c397a6c00b9",
+        "type": "g5.2xlarge",
+        "hours": 4.433416782153977,
+        "compute_usd": 5.3733011399706205,
+        "gp3_usd": 0.12315046617094381
+      }
+    ],
+    "compute_usd_upper_bound": 20.57509959164765,
+    "gp3_usd_estimate": 0.4924861239430345,
+    "lifetime_tx_bytes": 915366046540,
+    "network_counters_complete": true,
+    "conservative_transfer_allowance_usd": 18.3073209308,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately."
+  },
+  "actual_operators": 1,
+  "tokens_issued": 0,
+  "native_activated": false,
+  "training": "Exactly the previously frozen 1024-update existing-tail rehearsal. No additional training in this composition trial.",
+  "resources_scope": "Allocation totals include both original rehearsal arms, their final evaluation, this branch experiment, the separately frozen post-final normalization probe, and local CPU diagnostics. Phase times are reported separately; totals must not be added twice.",
+  "limitations": [
+    "New facts are synthetic training material; only question wording is held out.",
+    "The selector recognizes one explicit domain in user text; a general learned router is not demonstrated.",
+    "Exact retention applies to the unchanged parent path and the measured probes.",
+    "Added stored capacity does not prove an equal-budget scaling advantage or a scaling law.",
+    "Expert worker process exit is observed; arbitrary network partitions and independent operators are not tested.",
+    "Graph and actual optimizer provenance remain experimental and are not a native consensus checkpoint."
+  ],
+  "post_final_diagnostic_addendum": {
+    "time": 1789477125.7629516,
+    "original_preserve_sha256": "e9bb3bb670e4dc2fc6148a30c1a29965e6344d6aa9c3c54ef611f93468240fac",
+    "amended_preserve_sha256": "ae769bf1b2446c831026fc6d3b9cb2854b2b2a9485a25d22b7f5af0ac675ff38",
+    "probe_freeze_sha256": "c54a8ff17b2cfd97e0e7718e61c492f4f989331fb0f48cedfb1be9ed82ee8016",
+    "purpose": "After the complete original branch final, run the separately frozen question-normalization diagnostic using the existing parent and expert. Preserve success or failure before the original archive and complete retirement. No original numerical source, input, model or gate changes.",
+    "cost_scope": "The original shared allocation now also includes this bounded post-final diagnostic and local CPU interpretation checks on already-exposed questions. No new instances or increase to the eight-hour/$100 allocation.",
+    "original_deadline": "2026-09-15T16:56:46.133996+00:00",
+    "new_instances": 0,
+    "summary_helper_after_sha256": "47e8b4fb5c481c9b757406304deacb1a47382a182fdf6a971a2ca978b2ec5362",
+    "summary_accounting_update_time": 1789477898.7331314
+  },
+  "post_final_normalization": {
+    "freeze": {
+      "time": 1789477125.057969,
+      "files": {
+        "worker.py": "f57db4dc37563429bb3327e9da200219b4abe7ad7a145b582afdfc9c517e9228",
+        "driver.py": "1460fee8e5c09cb0ce5513c9e3d39a01649ddac11a287b376709888c18bcc479",
+        "plan.json": "04c3a806ad438f2df0af76828a99968d80cafbc1d703ab5b81b94e27a1e49017",
+        "inputs.json": "aecc056eb4f7254f1fe9dcc0ad83578e2ec99044c9dc18f185e3f0d76e9a7b0a"
+      },
+      "syntax_checked": true,
+      "question_only_parser_guards_checked": true,
+      "starts_after_original_branch_numerical_completion": true,
+      "original_gpu_deadline": "2026-09-15T16:56:46.133996+00:00",
+      "maximum_new_instances": 0,
+      "maximum_numerical_seconds": 900
+    },
+    "complete": {
+      "after_correct": 16,
+      "before_correct": 16,
+      "cases": 32,
+      "correct_field": 0,
+      "correct_interpretation": 0,
+      "correct_name": 0,
+      "reports": [
+        {
+          "cases": 32,
+          "identity": "d73d8b14d75e6c8a96990fefc3d595db85cf0e7465175e6759e0d14022fcc0f7",
+          "owned_parameters": 503343104,
+          "parameters_unchanged": true,
+          "plan": "58bcc9fb2a64343187083bedb859d749d5be472bcfed0e2e24a26dd75ab71026",
+          "rank": 0,
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-12-107",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "seconds": 30.23089475800043,
+          "source": "f57db4dc37563429bb3327e9da200219b4abe7ad7a145b582afdfc9c517e9228",
+          "tokens_issued": 0
+        },
+        {
+          "cases": 32,
+          "identity": "d73d8b14d75e6c8a96990fefc3d595db85cf0e7465175e6759e0d14022fcc0f7",
+          "owned_parameters": 604016640,
+          "parameters_unchanged": true,
+          "plan": "58bcc9fb2a64343187083bedb859d749d5be472bcfed0e2e24a26dd75ab71026",
+          "rank": 1,
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-84-153",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "seconds": 30.231236691999584,
+          "source": "f57db4dc37563429bb3327e9da200219b4abe7ad7a145b582afdfc9c517e9228",
+          "tokens_issued": 0
+        },
+        {
+          "cases": 32,
+          "identity": "d73d8b14d75e6c8a96990fefc3d595db85cf0e7465175e6759e0d14022fcc0f7",
+          "owned_parameters": 604016640,
+          "parameters_unchanged": true,
+          "plan": "58bcc9fb2a64343187083bedb859d749d5be472bcfed0e2e24a26dd75ab71026",
+          "rank": 2,
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-8-103",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "seconds": 30.231122720000712,
+          "source": "f57db4dc37563429bb3327e9da200219b4abe7ad7a145b582afdfc9c517e9228",
+          "tokens_issued": 0
+        },
+        {
+          "cases": 32,
+          "identity": "d73d8b14d75e6c8a96990fefc3d595db85cf0e7465175e6759e0d14022fcc0f7",
+          "owned_parameters": 134225920,
+          "parameters_unchanged": true,
+          "plan": "58bcc9fb2a64343187083bedb859d749d5be472bcfed0e2e24a26dd75ab71026",
+          "rank": 3,
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-82-187",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "seconds": 30.23554359800073,
+          "source": "f57db4dc37563429bb3327e9da200219b4abe7ad7a145b582afdfc9c517e9228",
+          "tokens_issued": 0
+        }
+      ],
+      "scope": "Read-only exploratory composed inference on already-exposed questions. The original frozen branch result remains failed. Independent validation is still required.",
+      "time": 1789478264.0818546,
+      "tokens_issued": 0
+    },
+    "failure": null,
+    "scope": "Exploratory composed inference on 32 already-exposed questions. It does not change the original branch result or establish independent final quality."
+  },
+  "small_parser_diagnostic": {
+    "time": 1789476893.5219514,
+    "model": "SmolLM2-135M-Instruct",
+    "count": 32,
+    "valid_json_schema": 21,
+    "correct_name": 30,
+    "correct_field": 10,
+    "both_exact": 8,
+    "seconds": 66.64789748191833,
+    "scope": "Exploratory read-only parser diagnostic on now-exposed questions. No training, memory-answer generation, independent final or branch rescue."
+  },
+  "training_recall_diagnostic": {
+    "checkpoint": "dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d",
+    "feature_bank": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+    "batches": [
+      0,
+      16,
+      32,
+      48,
+      64,
+      80,
+      96,
+      112
+    ],
+    "samples": 320,
+    "response_exact_teacher_forced": 320,
+    "first_value_token_correct": 320,
+    "mean_first_value_token_nll": 0.020261988224820015,
+    "mean_response_token_nll": 0.0034525774164990254,
+    "mean_tokens_after_json_prefix_nll": 0.0058192913590005444,
+    "started": 1789474909.8604026,
+    "finished": 1789474933.7681756,
+    "runtime": {
+      "device": "cuda",
+      "python": "3.10.12",
+      "machine": "x86_64",
+      "host": "ip-172-31-82-187",
+      "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+      "torch": "2.9.1+cu128",
+      "transformers": "4.57.3",
+      "tokenizers": "0.22.1",
+      "safetensors": "0.7.0",
+      "numpy": "2.2.6",
+      "jinja2": "3.1.6",
+      "threads": 2,
+      "cuda": "12.8",
+      "cpu_dispatch": "DEFAULT",
+      "mkl_instructions": "SSE4_2",
+      "gpu": "NVIDIA A10G",
+      "parameters": "float32",
+      "optimizer": "float32-adamw",
+      "autocast": "bfloat16",
+      "attention": "sdpa",
+      "deterministic_algorithms": true,
+      "cross_device_exact": false
+    },
+    "read_only": true,
+    "scope": "Training-only teacher-forced diagnostic. Gold preceding response tokens are supplied; this is not free generation, held-out quality, further training or native payment."
+  }
+}
