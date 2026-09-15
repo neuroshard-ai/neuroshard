@@ -1,0 +1,36 @@
+{
+  "format": "neuroshard-knowledge-rehearsal-execution-v1",
+  "prepared": "031d1178e288b1d1ac092885eff942e49e229a3fbfe1283db93915ba3967a0fa",
+  "region": "us-east-1",
+  "types_by_rank": [
+    "g5.2xlarge",
+    "g5.2xlarge",
+    "g5.xlarge",
+    "g5.2xlarge"
+  ],
+  "max_simultaneous_workers": 4,
+  "vcpus": 28,
+  "max_hours": 8,
+  "planning_cap_usd": 100,
+  "encrypted_gp3_gib_per_worker": 250,
+  "termination": "Verify all checkpoints, feature banks and evidence by complete SHA-256 storage readback before retiring the exact tagged experiment instances, volumes and security group. Protect the existing network hosts.",
+  "prerequisites": "Both real-model feature arms pass all eight exact updates, original short-run selection remains all failed, and previous allocation is fully retired before provisioning.",
+  "order": [
+    "append",
+    "tail-control"
+  ],
+  "selection": "Both terminal1024 candidates must finish and be preserved; only eligible terminal candidates may open final questions after selection is committed.",
+  "recovery": {
+    "condition": "append passes every development gate",
+    "rank": 3,
+    "resume_step": 512,
+    "terminal_step": 1024,
+    "maximum_replacements": 1,
+    "required": "Exact full checkpoint, weights, Adam, feature-bank root and development outputs after terminating the original tail and restoring onto a new instance."
+  },
+  "quota_release_retry": "At most 15 minutes, same idempotent request/client token, within allocation deadline; no extra ranks.",
+  "head_ownership": "The tail stages a verified read-only tied embedding/output matrix and final norm in addition to owned trainable blocks. No worker holds the full parent.",
+  "tokens_issued": 0,
+  "native_activated": false,
+  "accounting": "Record feature production, training, evaluation, preservation and conditional recovery separately, with inclusive allocation costs; no claim that four owned EC2 machines are independent operators."
+}

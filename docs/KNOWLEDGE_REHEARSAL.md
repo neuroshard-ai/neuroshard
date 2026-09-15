@@ -74,4 +74,7 @@ distributed updates exactly. Additional checks reject altered feature bytes,
 rehashed replacement banks, changed input order, incomplete controls and
 premature checkpoint selection. Failed development does not read final inputs.
 
-Real-model feature equivalence and longer-run learning outcomes remain pending.
+[Real-model feature equivalence](FROZEN_FEATURE_RESULTS.md) passed all eight
+updates in both layouts. The [prepared record](../config/experiments/knowledge-rehearsal-prepared.json)
+and [bounded execution plan](../config/experiments/knowledge-rehearsal-execution.json)
+bind the longer trial before any worker allocation. Its learning outcome remains pending.
