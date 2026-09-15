@@ -30,6 +30,8 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
+- [Four-owner knowledge and retention pass](docs/PRESERVED_INTERPRETER_RESULTS.md): a preserved neural interpreter plus a learned expert answers 949/1,024 newly worded questions, reproduces all 768 earlier answers and 256 conversation losses exactly, and keeps the parent serving after the expert exits. This is a bounded synthetic-knowledge result using disjoint model portions across four machines.
+
 - [Complete LLM protocol](docs/LLM_PROTOCOL.md): native consensus and bonds, training leases/rewards, serving promotion, paid inference, locks/refunds, limits and assumptions.
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).

@@ -1,0 +1,23 @@
+{
+  "format": "neuroshard-preserved-interpreter-questions-v1",
+  "scope": "New final wording, frozen before this four-peer experiment. Underlying fictional facts were previously trained; no new fact values or test-driven training. Development reuses exposed questions and cannot count as an independent final.",
+  "final": {
+    "city": [
+      "In the fictional Luma directory, {name} is associated with a place to live. Give the name of that city.",
+      "Use the fictional Luma directory to identify the municipality listed as {name}'s residence."
+    ],
+    "profession": [
+      "What job title is assigned to {name} in the fictional Luma directory?",
+      "Consult the fictional Luma directory: how does {name} earn a living?"
+    ],
+    "instrument": [
+      "The fictional Luma directory records a musical instrument for {name}. Name it.",
+      "Which kind of musical instrument does the fictional Luma directory associate with {name}?"
+    ],
+    "hobby": [
+      "According to the fictional Luma directory, what activity does {name} pursue for enjoyment?",
+      "Find {name}'s leisure interest in the fictional Luma directory."
+    ]
+  },
+  "suffix": "\nReturn only a JSON object with exactly one key, \"answer\", containing the recorded value."
+}
