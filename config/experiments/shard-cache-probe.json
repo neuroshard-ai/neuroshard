@@ -1,0 +1,26 @@
+{
+  "format": "neuroshard-shard-cache-probe-v1",
+  "checkpoint": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "learned_state": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+  "balanced_prepared": "acbc51a4587446af11ae159ec2babb68af7ccf518833a7cb44b7e1d87fde1dc9",
+  "roles": ["test-new", "test-prior"],
+  "requests": 768,
+  "maximum_tokens": 256,
+  "warmup_requests": 1,
+  "method_order": "uncached-first for even request indices; cached-first for odd indices",
+  "gate": {
+    "individual_correct_answer_losses_at_most": 0,
+    "identical_token_fraction_at_least": 0.95,
+    "aggregate_speedup_on_identical_outputs_at_least": 2.0,
+    "boundary_byte_reduction_at_least": 0.9,
+    "all_cached_partitions_replayed": true
+  },
+  "allocation": {
+    "maximum_simultaneous_gpus": 3,
+    "type": "g5.2xlarge",
+    "maximum_hours": 3,
+    "planning_budget_usd": 50,
+    "start_after": "incremental-capacity trial resources retired"
+  },
+  "scope": "Inference execution comparison on exposed R4 tasks, with no training, new learning claim, native activation or token issuance. Full cached replay is still required."
+}

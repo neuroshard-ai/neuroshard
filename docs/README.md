@@ -42,6 +42,7 @@
 | [Weight consolidation](CONSOLIDATED_LEARNING.md) / [result](CONSOLIDATED_LEARNING_RESULTS.md) | Prior answers retained and large new-task gain; two sorting regressions still fail the final gate. |
 | [Answer-balanced continuation](BALANCED_CONTINUATION.md) / [result](BALANCED_CONTINUATION_RESULTS.md) | Complete frozen gate passes: new answers 378→462, all 188 correct prior answers retained, three model shards. |
 | [Native continuation integration](NATIVE_CONTINUATION_RESULTS.md) | The same learning recipe settles 64 updates, promotes only after quality replay and serves an answer paid from earned tokens; full ledger replay passes. |
+| [Cached shard inference](CACHED_SHARD_INFERENCE.md) | Owner-local request caches, complete replay and a frozen GPU latency/fidelity comparison; no native activation. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 
