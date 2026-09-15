@@ -40,3 +40,13 @@ of at most four steps requires reconstructing and verifying the intervening
 checkpoints, not treating a 280-step jump as one accepted window.
 
 The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. GPU execution remains pending. The cached prefix still needs its own execution audit before native acceptance.
+
+The [prefix audit plan](../config/experiments/expert-prefix-audit.json) freezes the
+other half of that verification: recomputing every cached prefix and parent
+reference from the exact training records. Each of three stages loads one parent
+partition and consumes the previous stage's committed output. The final stage
+must reproduce the entire feature-bank identity consumed by training. The CPU
+test matches the actual five-process producer and rejects a changed prefix even
+when an attacker recomputes its file and manifest hashes. The GPU audit is pending.
+These are execution tools for a configured auditor; report files alone are not
+proof, and neither tool enables native transactions or changes supply.
