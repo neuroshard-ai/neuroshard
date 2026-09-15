@@ -1,0 +1,1096 @@
+{
+  "facts": [
+    {
+      "answer": "neuroshard-ai",
+      "dev_question": "What package contains the user CLI?",
+      "id": "90d7374fee7350aab0cdafe5af35d7f47e416bffbf81c2676b355a41fac17d6c",
+      "question": "Which PyPI package installs the NeuroShard client?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "python -m pip install --upgrade pip setuptools neuroshard-ai",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "README.md",
+      "test_question": "What distribution name should I give pip to obtain the client?",
+      "topic": "install",
+      "train_questions": [
+        "Which PyPI package installs the NeuroShard client?",
+        "Name the pip distribution for the command-line client.",
+        "I am installing the client with pip. Which package do I select?"
+      ]
+    },
+    {
+      "answer": "neuroshard doctor",
+      "dev_question": "Which client subcommand examines the local environment?",
+      "id": "4dd1c7f79f5481c64b4449dcd73ff584cde5ca7a2703362732c963b3623d16d3",
+      "question": "Which client command checks the machine before joining?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard doctor",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What should I run to diagnose whether my environment is ready?",
+      "topic": "diagnose",
+      "train_questions": [
+        "Which client command checks the machine before joining?",
+        "Give the CLI command for checking local prerequisites.",
+        "How should I check my setup before starting a node?"
+      ]
+    },
+    {
+      "answer": "neuroshard join",
+      "dev_question": "Which CLI command begins normal network participation?",
+      "id": "12755769c184349c66dbd267b17f8545d46234c9a65736b69ba729dad9ac5837",
+      "question": "Which client command joins the network and offers work?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard join",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How do I begin participating as a node and worker from the CLI?",
+      "topic": "join",
+      "train_questions": [
+        "Which client command joins the network and offers work?",
+        "How do I launch a new participating worker with the CLI?",
+        "Give the command for a new node to join and offer training work."
+      ]
+    },
+    {
+      "answer": "neuroshard start",
+      "dev_question": "How do I run my saved node again after stopping it?",
+      "id": "797e146272a3e97e3aea251986783b826c3173689c6c3c4048a2ef356fa59f18",
+      "question": "Which command resumes a stopped joined node?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Resume with `neuroshard start`.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "I stopped my existing node. Which CLI invocation starts it again?",
+      "topic": "restart",
+      "train_questions": [
+        "Which command resumes a stopped joined node?",
+        "What CLI command brings an already joined node back up?",
+        "Give the command for resuming my existing stopped node."
+      ]
+    },
+    {
+      "answer": "neuroshard wallet balance",
+      "dev_question": "Which command tells me how many NEURO I hold?",
+      "id": "f2b7748467c79b86f92cd882bc3ff296f6ad121ebed74f13a6bbe0676e9f0257",
+      "question": "Which client command reads the wallet balance?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard wallet balance",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How can I display the amount in my native wallet from the CLI?",
+      "topic": "balance",
+      "train_questions": [
+        "Which client command reads the wallet balance?",
+        "Give the command that shows my native token holdings.",
+        "Where can I check my wallet balance from the CLI?"
+      ]
+    },
+    {
+      "answer": "neuroshard status",
+      "dev_question": "How do I ask the client for a node status report?",
+      "id": "cdc7c135803b9485f620794131d98d195537382a22c32ba2c931cf0a9fa5bab2",
+      "question": "Which client command displays node status?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard status",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What CLI invocation reports the current state of my node?",
+      "topic": "status",
+      "train_questions": [
+        "Which client command displays node status?",
+        "Give the command for inspecting my current node status.",
+        "Which CLI command shows how my node is doing?"
+      ]
+    },
+    {
+      "answer": "neuroshard wallet export ./neuroshard-key.json",
+      "dev_question": "What CLI command writes my wallet backup into ./neuroshard-key.json?",
+      "id": "bcfce2c369f26013331fb46f9ea727240184a51230f87e0a375577b697299c06",
+      "question": "Which command exports a wallet backup to ./neuroshard-key.json?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard wallet export ./neuroshard-key.json",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How do I save my wallet seed backup as ./neuroshard-key.json using the CLI?",
+      "topic": "export",
+      "train_questions": [
+        "Which command exports a wallet backup to ./neuroshard-key.json?",
+        "Give the wallet export command with destination ./neuroshard-key.json.",
+        "I need a seed backup at ./neuroshard-key.json. What command creates it?"
+      ]
+    },
+    {
+      "answer": "neuroshard request REQUEST_ID",
+      "dev_question": "How do I check the outcome of REQUEST_ID from the CLI?",
+      "id": "1e545e83fed4365e58e7aacffb07f5ca7e2faedeaaad8e26c15a43ae457b5d51",
+      "question": "Which command inspects a previously submitted inference request by its ID?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard request REQUEST_ID",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How do I look up an uncertain existing request called REQUEST_ID without submitting a new one?",
+      "topic": "request",
+      "train_questions": [
+        "Which command inspects a previously submitted inference request by its ID?",
+        "Which command queries the existing request REQUEST_ID?",
+        "Give the inspection command for an inference request named REQUEST_ID."
+      ]
+    },
+    {
+      "answer": "neuroshard join --role observer",
+      "dev_question": "Which CLI invocation joins without taking the normal worker role, as an observer?",
+      "id": "51c2c4063f82a4acea6d8d5803e8c5976bf5b0166cd6fd28d7eaefe175867d13",
+      "question": "Which command joins as an observer?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard join --role observer",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How can I enter the network in observer mode using the client?",
+      "topic": "observer",
+      "train_questions": [
+        "Which command joins as an observer?",
+        "Give the join command with the observer role.",
+        "What command selects observer participation?"
+      ]
+    },
+    {
+      "answer": "neuroshard join --role provider",
+      "dev_question": "Which CLI invocation joins specifically to provide inference?",
+      "id": "924a5fef95e33d6af08fbf0a971697424a9948e857a702ab3d935bced9b893f4",
+      "question": "Which command joins as an inference provider?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "neuroshard join --role provider",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "How can I enter the network in inference-provider mode using the client?",
+      "topic": "provider",
+      "train_questions": [
+        "Which command joins as an inference provider?",
+        "Give the join command with the provider role.",
+        "What command selects participation as a response provider?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Is website signup mandatory before a worker can participate?",
+      "id": "a1ee9f0bbdd1b7090b5c7a95e426fa0fe6afa3dadd0b17b4686e372d6d53aaec",
+      "question": "Is website registration required to join?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "No registration, starting balance or inbound worker port is required.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "Must I create an account on the website before becoming a worker?",
+      "topic": "registration",
+      "train_questions": [
+        "Is website registration required to join?",
+        "Is a website account a prerequisite for joining the worker network?",
+        "Does becoming a worker require signing up on the website?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Is a positive wallet balance an admission condition for a new worker?",
+      "id": "0aa9bee4cf6930fa177111aa495a23afe073a6c7ac4c32486894d6198a2edb8a",
+      "question": "Does a new worker need a starting token balance to join?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "No registration, starting balance or inbound worker port is required.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "Must my wallet already contain NEURO before I can join as a worker?",
+      "topic": "starting-balance",
+      "train_questions": [
+        "Does a new worker need a starting token balance to join?",
+        "Are pre-existing tokens required for a worker to join?",
+        "Must a first-time worker fund its wallet before joining?"
+      ]
+    },
+    {
+      "answer": "26656",
+      "dev_question": "What incoming TCP port number should a publicly reachable peer expose?",
+      "id": "3b8977c1349e5f816f8c864aab52693b4875c377185ef944de2dd1bcdc39508b",
+      "question": "Which TCP port accepts inbound native peers?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Listen on TCP 26656 if you want to accept inbound peers.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What TCP port should my firewall expose to accept incoming peers?",
+      "topic": "peer-port",
+      "train_questions": [
+        "Which TCP port accepts inbound native peers?",
+        "Give the inbound TCP port used by native peer connections.",
+        "Which TCP listener accepts connections from other nodes?"
+      ]
+    },
+    {
+      "answer": "NEUROSHARD_STATE_DIR",
+      "dev_question": "Which environment variable controls where the client keeps state?",
+      "id": "f9cc63ac1ece35dd266d87e692989e142f96a4da3bf2c96ccffa6da34c1d1323",
+      "question": "Which environment variable changes the state root?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Set `NEUROSHARD_STATE_DIR` before installing/starting to use another root.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "Which environment setting selects a different root for local state?",
+      "topic": "state-directory",
+      "train_questions": [
+        "Which environment variable changes the state root?",
+        "Name the environment variable that relocates local state.",
+        "What environment variable overrides the default state directory?"
+      ]
+    },
+    {
+      "answer": "~/.neuroshard/llm-testnet",
+      "dev_question": "What directory normally stores my node and local key material?",
+      "id": "1844e85173f8bb0a20b9aac0e910771a6ab1ff78bc72b5712e8ca2e5f956d0c1",
+      "question": "What is the default node and key home?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The default node/key home is `~/.neuroshard/llm-testnet`.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "Where are the default node home and local keys stored?",
+      "topic": "node-home",
+      "train_questions": [
+        "What is the default node and key home?",
+        "Give the default filesystem location of the node and its keys.",
+        "Where is the node/key home placed by default?"
+      ]
+    },
+    {
+      "answer": "Linux x86_64",
+      "dev_question": "On what OS/architecture pair is full-node execution supported?",
+      "id": "b889ce54c8aa955c3d0e4a54422db7f99febca89ed6740d9c2a2f63a0abac4b6",
+      "question": "Which operating system and architecture do full nodes require?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Full nodes require Linux x86_64 and Python 3.10\u20133.12.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What operating-system and CPU-architecture combination is supported for a full node?",
+      "topic": "operating-system",
+      "train_questions": [
+        "Which operating system and architecture do full nodes require?",
+        "Give the supported full-node operating system and processor architecture.",
+        "Which OS and architecture must a full node use?"
+      ]
+    },
+    {
+      "answer": "Python 3.10\u20133.12",
+      "dev_question": "What interpreter-version range can run the full node?",
+      "id": "b568ddff8a2a9f95998397ce1bea6a425a4c4708a2ece5a9bbda537464365ffb",
+      "question": "Which Python versions do full nodes support?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Full nodes require Linux x86_64 and Python 3.10\u20133.12.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What range of Python interpreter versions is supported for full nodes?",
+      "topic": "python",
+      "train_questions": [
+        "Which Python versions do full nodes support?",
+        "Give the supported Python version interval for full nodes.",
+        "Which Python releases are accepted for a full-node installation?"
+      ]
+    },
+    {
+      "answer": "8 GiB",
+      "dev_question": "What RAM capacity does the setup guide initially budget per full node?",
+      "id": "1e82eb7f114c3114afb75cc6a07d5f8ae095fb4cb5381a22cc5b3bcaabe752f1",
+      "question": "How much RAM should a full node initially allow?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Allow 8 GiB RAM and 5 GiB free disk initially",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What initial memory allowance does the operator guide specify for a full node?",
+      "topic": "memory",
+      "train_questions": [
+        "How much RAM should a full node initially allow?",
+        "Give the initial RAM allowance recommended for a full node.",
+        "How much system memory should I reserve for an initial full node?"
+      ]
+    },
+    {
+      "answer": "5 GiB",
+      "dev_question": "What storage headroom does the setup guide initially ask for?",
+      "id": "969698faaecc5fd17c1ff105557b9780b4dc69029c48dccca2ccfd0d93803a92",
+      "question": "How much free disk should a full node initially allow?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Allow 8 GiB RAM and 5 GiB free disk initially",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/PUBLIC_TESTNET.md",
+      "test_question": "What initial disk-space allowance does the operator guide specify?",
+      "topic": "disk",
+      "train_questions": [
+        "How much free disk should a full node initially allow?",
+        "Give the initial free-disk allowance for a full node.",
+        "How much unused disk space should I initially have for a node?"
+      ]
+    },
+    {
+      "answer": "CometBFT 0.38.26",
+      "dev_question": "What software release supplies the blockchain consensus?",
+      "id": "41c80f7fbb2756e65a78bf94ba2b35b63014fb9b749945f30295aad915510861",
+      "question": "Which consensus engine and version does the native chain use?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "CometBFT 0.38.26 provides NeuroShard's own replicated consensus.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Name the software and version that replicate the native chain through consensus.",
+      "topic": "consensus",
+      "train_questions": [
+        "Which consensus engine and version does the native chain use?",
+        "Give the name and version of the native consensus implementation.",
+        "Which versioned consensus engine replicates this ledger?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Must transactions be settled through a different blockchain?",
+      "id": "1fbc698f8e823042d9415f06c99933aa942fdbffec5773d5b09fbf4ffdc8352e",
+      "question": "Does native settlement require an external blockchain?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "There is no website registration, admission token, external blockchain, or external settlement service.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Does the ledger settle its transactions on a separate external chain?",
+      "topic": "external-chain",
+      "train_questions": [
+        "Does native settlement require an external blockchain?",
+        "Is another blockchain required as the settlement layer?",
+        "Does the native ledger depend on an external settlement chain?"
+      ]
+    },
+    {
+      "answer": "One",
+      "dev_question": "How many independently controlled organizations operated the initial validator set?",
+      "id": "fce61440f29aab238af31ff9d8dccd9e1d6b43121e11b4ebc843c3026030d60c",
+      "question": "How many independent operators controlled the four launch validators?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "four genesis validators under **one operator across two hosts**",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "How many actual operators owned the initial set of four validators?",
+      "topic": "genesis-operators",
+      "train_questions": [
+        "How many independent operators controlled the four launch validators?",
+        "How many separate operators owned the launch validators?",
+        "Give the operator count behind the original four validators."
+      ]
+    },
+    {
+      "answer": "secp256k1",
+      "dev_question": "Which curve is used by a native spending account?",
+      "id": "637c4cda1023063e9c90f17f54a83dcf6d144483a8fd3db410394dc70f0d98f4",
+      "question": "Which elliptic curve is used for native account keys?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The native secp256k1 private scalar",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Which cryptographic curve underlies the native spending-account keys?",
+      "topic": "account-curve",
+      "train_questions": [
+        "Which elliptic curve is used for native account keys?",
+        "Name the curve used for native wallet spending keys.",
+        "What elliptic curve secures native account signatures?"
+      ]
+    },
+    {
+      "answer": "Ed25519",
+      "dev_question": "Which signature-key algorithm belongs to the validator consensus role?",
+      "id": "d3937193d4b76dc67cb4ed046c2d31cfdd12dc187aa80dc2c12644ad3c1e4457",
+      "question": "Which key algorithm do validators use for consensus?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Validators bond NEURO and use separate Ed25519 consensus keys.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What cryptographic key type is separate from spending keys and signs consensus messages?",
+      "topic": "consensus-keys",
+      "train_questions": [
+        "Which key algorithm do validators use for consensus?",
+        "Name the key algorithm used for validator consensus signatures.",
+        "What type of consensus signing key does a bonded validator use?"
+      ]
+    },
+    {
+      "answer": "HuggingFaceTB/SmolLM2-135M-Instruct",
+      "dev_question": "What repository identifier names the model underlying the public adapter?",
+      "id": "3b8ac9de6a54e64e1f699b6118ca872a69050374640cefc783bf51623846c0b5",
+      "question": "What is the public profile base model?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The frozen base is `HuggingFaceTB/SmolLM2-135M-Instruct`",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Give the Hugging Face identifier of the frozen public-network language-model backbone.",
+      "topic": "base-model",
+      "train_questions": [
+        "What is the public profile base model?",
+        "Give the full Hugging Face name of the public backbone checkpoint.",
+        "Which pretrained model is the fixed backbone of the public profile?"
+      ]
+    },
+    {
+      "answer": "4608",
+      "dev_question": "What is the size of the public adapter in learned weights?",
+      "id": "18dfd7c737f584be311d5f10edce36245097568b66f75a7d63a96a2646bdb534",
+      "question": "How many parameters are trained in the public adapter?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "totaling 4,608 parameters",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is the number of adjustable weights in the public residual adapter?",
+      "topic": "adapter-size",
+      "train_questions": [
+        "How many parameters are trained in the public adapter?",
+        "Give the total adjustable parameter count of the residual adapter.",
+        "How many trainable parameters belong to the public adapter?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Can public adapter updates change the pretrained backbone parameters?",
+      "id": "6cc95c4ac9ce536f80315e643ef772086183eaf7193ced1a21af4fe318db162b",
+      "question": "Does public adapter training update the pretrained backbone?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The backbone and output head remain frozen.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Are the original pretrained backbone weights modified by public-network learning tasks?",
+      "topic": "backbone",
+      "train_questions": [
+        "Does public adapter training update the pretrained backbone?",
+        "Are backbone weights changed during an accepted adapter training task?",
+        "Does a normal public training update modify the base model itself?"
+      ]
+    },
+    {
+      "answer": "Float32 SGD",
+      "dev_question": "Which optimizer arithmetic is prescribed for the adjustable adapter weights?",
+      "id": "03809f8324fa46a8f12c1c12f9fe02d97aed5867c70464562adc028d5615174d",
+      "question": "Which optimizer is used for public adapter training?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "using float32 SGD at learning rate 0.02",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Name the optimizer and arithmetic precision for the trainable adapter.",
+      "topic": "optimizer",
+      "train_questions": [
+        "Which optimizer is used for public adapter training?",
+        "Give the optimizer and numeric precision used to update the adapter.",
+        "What optimization algorithm and precision train the public adapter?"
+      ]
+    },
+    {
+      "answer": "0.02",
+      "dev_question": "How large is the learning-rate coefficient for the public adapter?",
+      "id": "046bfcc987b8cbae6f1e5b03f2e5156af94a8bd9e5730bca711b2d5976e7be82",
+      "question": "What learning rate is used for public adapter updates?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "using float32 SGD at learning rate 0.02",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What step-size coefficient is used by the adapter optimizer?",
+      "topic": "learning-rate",
+      "train_questions": [
+        "What learning rate is used for public adapter updates?",
+        "Give the prescribed adapter training learning rate.",
+        "What learning-rate value is used in an adapter SGD update?"
+      ]
+    },
+    {
+      "answer": "1",
+      "dev_question": "At which global norm does adapter gradient clipping take effect?",
+      "id": "73445f880167b12d4773dc1476236ba6447690138aaff6b241338e36611f84f1",
+      "question": "What is the global gradient clipping norm?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "global adapter gradient clipping at norm 1",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "At what norm are the adapter gradients globally clipped?",
+      "topic": "clip-norm",
+      "train_questions": [
+        "What is the global gradient clipping norm?",
+        "Give the norm limit for clipping adapter gradients.",
+        "What gradient-norm threshold constrains adapter updates?"
+      ]
+    },
+    {
+      "answer": "One",
+      "dev_question": "What number of CPU threads is fixed for the neural runtime?",
+      "id": "634c85dfd48919da48025ffeaf641d4868c3cc9ccb0755d2bd064ba3a4ae3612",
+      "question": "How many CPU threads does the public numerical profile use?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Execution uses Linux x86_64 CPU, one thread",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What CPU thread count is fixed by the numerical execution profile?",
+      "topic": "cpu-threads",
+      "train_questions": [
+        "How many CPU threads does the public numerical profile use?",
+        "Give the allowed CPU thread count for deterministic public execution.",
+        "How many CPU threads are used by the prescribed execution profile?"
+      ]
+    },
+    {
+      "answer": "1000000",
+      "dev_question": "What atom-to-NEURO conversion factor does the ledger use?",
+      "id": "01f1cd715cacd7c54fb5ad48c3f341c5cce30e5f85f0cc068eb7ed771c1544d8",
+      "question": "How many integer atoms equal one NEURO?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "One NEURO is 1,000,000 integer atoms.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What integer number of atomic currency units constitutes one whole NEURO?",
+      "topic": "token-atoms",
+      "train_questions": [
+        "How many integer atoms equal one NEURO?",
+        "Give the number of atoms in one whole native token.",
+        "How many atomic integer units make one NEURO?"
+      ]
+    },
+    {
+      "answer": "90 NEURO",
+      "dev_question": "What NEURO balance total exists from genesis allocation?",
+      "id": "7b933334a66009152d1be284db718f475e0e0d93979e84f78dab804bf3828a28",
+      "question": "How much NEURO does genesis allocate?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Genesis allocates 90 NEURO",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is the initial NEURO allocation before training issuance?",
+      "topic": "genesis-supply",
+      "train_questions": [
+        "How much NEURO does genesis allocate?",
+        "Give the NEURO amount allocated at genesis.",
+        "How much currency is initially assigned when the chain starts?"
+      ]
+    },
+    {
+      "answer": "1000",
+      "dev_question": "How many atoms does the standard accepted-transaction fee destroy?",
+      "id": "6748c98371efc9121798304117ee48e743140b1ab35bef7bc4955697c892c230",
+      "question": "How many atoms does an ordinary accepted transaction burn?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Ordinary accepted transactions burn a fee of 1,000 atoms.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "How many atomic units are destroyed by a normal accepted transaction fee?",
+      "topic": "transaction-fee",
+      "train_questions": [
+        "How many atoms does an ordinary accepted transaction burn?",
+        "Give the burned fee in atoms for an ordinary accepted transaction.",
+        "What atom amount is burned by the normal transaction charge?"
+      ]
+    },
+    {
+      "answer": "1 NEURO",
+      "dev_question": "How many NEURO are issued when one prescribed training task succeeds?",
+      "id": "5f5e2ef5f181d1ec05d88b39f48f4a3790b1cdeda48f597caab45a0120bb02cf",
+      "question": "How much NEURO does one successful prescribed training task issue?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Every successful prescribed training task issues exactly 1 NEURO",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What quantity of new NEURO is created for one successfully accepted prescribed task?",
+      "topic": "task-issuance",
+      "train_questions": [
+        "How much NEURO does one successful prescribed training task issue?",
+        "Give the newly minted NEURO for one complete successful training task.",
+        "What amount does accepting a prescribed training task add to supply?"
+      ]
+    },
+    {
+      "answer": "0.4 NEURO",
+      "dev_question": "What individual NEURO payment goes to each worker from one accepted task?",
+      "id": "270ffd56134d3855ade94e12f1da104f4480c6bb3ad1daa44e6314976fe58860",
+      "question": "How much does each of the two workers receive for a successful task?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "0.4 to each worker and 0.2 to native commit verifiers",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is one worker\u2019s individual NEURO share when both stages of a task succeed?",
+      "topic": "worker-reward",
+      "train_questions": [
+        "How much does each of the two workers receive for a successful task?",
+        "Give each worker\u2019s share of a completed training task in NEURO.",
+        "How many NEURO does one of the two successful training workers earn?"
+      ]
+    },
+    {
+      "answer": "0.2 NEURO",
+      "dev_question": "What task-level NEURO reward is assigned to native commit verification?",
+      "id": "ad4ebe8c5952a8d24eb2052f29fec672ce4b68185ab0e8c358cf72e9895dcb73",
+      "question": "How much of a successful task reward goes to commit verifiers?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "0.4 to each worker and 0.2 to native commit verifiers",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What NEURO amount from each successful training task is reserved for commit verification?",
+      "topic": "verifier-reward",
+      "train_questions": [
+        "How much of a successful task reward goes to commit verifiers?",
+        "Give the total NEURO verifier share from one accepted training task.",
+        "How many NEURO from a task reward are allocated to commit verifiers?"
+      ]
+    },
+    {
+      "answer": "10000",
+      "dev_question": "How many training tasks may mint currency under the fixed profile?",
+      "id": "5e7bc42421741cc420ebbbeefecf0bb6eeebc067e9f1c00983844fc7f51ea8e0",
+      "question": "At how many tasks is training issuance capped?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The profile caps training issuance at 10,000 tasks.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What total count of reward-issuing training tasks can this profile reach?",
+      "topic": "issuance-cap",
+      "train_questions": [
+        "At how many tasks is training issuance capped?",
+        "Give the maximum number of training tasks that can issue rewards.",
+        "After how many reward-producing tasks is training issuance capped?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Are any tokens minted as a result of completing inference?",
+      "id": "fa6b2ee27333be0b772be396e7d13db32a5cc0c5625352851716548bed2848dc",
+      "question": "Does paid inference issue new NEURO?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Inference transfers existing balances and issues nothing.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Can completing a customer inference request mint additional currency?",
+      "topic": "inference-issuance",
+      "train_questions": [
+        "Does paid inference issue new NEURO?",
+        "Does successful inference create new NEURO?",
+        "Can a paid model response increase the total token supply?"
+      ]
+    },
+    {
+      "answer": "0.25 NEURO",
+      "dev_question": "What is the validator bond\u2019s minimum denomination in NEURO?",
+      "id": "3b5d2060746b1205bcaa559750cccf560bf7aedb18cfcc029b596f8594995c39",
+      "question": "What is the minimum unit used for validator bonding?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "a multiple of 0.25 NEURO",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "In what NEURO denomination must a validator stake be a multiple?",
+      "topic": "bond-unit",
+      "train_questions": [
+        "What is the minimum unit used for validator bonding?",
+        "Give the NEURO increment required for validator bonds.",
+        "What NEURO unit must divide a validator\u2019s bonded amount?"
+      ]
+    },
+    {
+      "answer": "2 NEURO",
+      "dev_question": "How many NEURO must a task sponsor put into the reservation bond?",
+      "id": "f4eb14c531e44e3eefcf24c851ec7235f5f742a13a59adf47419d248e2193575",
+      "question": "How much sponsor collateral is locked for a training reservation?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "locks a 2 NEURO sponsor bond",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What NEURO amount must the sponsor lock to reserve one training task?",
+      "topic": "sponsor-bond",
+      "train_questions": [
+        "How much sponsor collateral is locked for a training reservation?",
+        "Give the sponsor collateral locked for one reserved training task.",
+        "What NEURO bond accompanies a sponsor\u2019s training reservation?"
+      ]
+    },
+    {
+      "answer": "240",
+      "dev_question": "What is the block-count expiry of a training-worker reservation?",
+      "id": "bc21cfe70942c9281f701f4cf353dfd826572419e7e5a3d111b00e91e6579d59",
+      "question": "How long is the prescribed training lease in blocks?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "workers and expiry (240 blocks)",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "After how many blocks does the prescribed training reservation expire?",
+      "topic": "lease-expiry",
+      "train_questions": [
+        "How long is the prescribed training lease in blocks?",
+        "Give the training reservation lifetime in blocks.",
+        "How many blocks does a prescribed task lease last?"
+      ]
+    },
+    {
+      "answer": "Two",
+      "dev_question": "What number of worker keys must a sponsor choose per prescribed task?",
+      "id": "b6f4a6b0729271b46cdbfc5e03352f46e6d76c30d70700eb2bfcad71582a797a",
+      "question": "How many workers does a sponsor select for one prescribed task?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Sponsors reserve training tasks and choose two workers.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What number of worker public keys does a sponsor choose for a complete training task?",
+      "topic": "task-workers",
+      "train_questions": [
+        "How many workers does a sponsor select for one prescribed task?",
+        "Give the number of workers selected for each sponsored task.",
+        "How many training workers are named in one task reservation?"
+      ]
+    },
+    {
+      "answer": "32",
+      "dev_question": "What is the capacity of the inference-job queue?",
+      "id": "85d2fc6898e800ed71a8c34a83a68a3ce5dabcc9be7d29599deb10fe3adf5cf4",
+      "question": "How many pending inference jobs can the separate queue hold?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "a separate queue of at most 32 jobs",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is the maximum count of simultaneous jobs in the separate inference queue?",
+      "topic": "inference-queue",
+      "train_questions": [
+        "How many pending inference jobs can the separate queue hold?",
+        "Give the separate inference queue\u2019s maximum number of jobs.",
+        "How many inference jobs may be pending together?"
+      ]
+    },
+    {
+      "answer": "2048",
+      "dev_question": "What byte-size ceiling applies to the customer\u2019s prompt text?",
+      "id": "44d979dc72ab7f77a1221dcdcf77c4d0ed0c29ba74bfa1e1bfbf5b1f59d0868f",
+      "question": "What is the maximum UTF-8 prompt size in bytes?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "a nonempty prompt of at most 2,048 UTF-8 bytes and 256 model input tokens",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What byte limit applies to the UTF-8 text in an inference prompt?",
+      "topic": "prompt-bytes",
+      "train_questions": [
+        "What is the maximum UTF-8 prompt size in bytes?",
+        "Give the maximum prompt length measured in UTF-8 bytes.",
+        "How many UTF-8 bytes may an inference prompt contain?"
+      ]
+    },
+    {
+      "answer": "256",
+      "dev_question": "What is the ceiling on tokens supplied as model input?",
+      "id": "ddfc2d803acc83087dc4180ff03b13e786756a308740384855c87d13364d08ad",
+      "question": "What is the maximum number of model input tokens?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "a nonempty prompt of at most 2,048 UTF-8 bytes and 256 model input tokens",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What token limit applies to the model input of one public inference request?",
+      "topic": "input-tokens",
+      "train_questions": [
+        "What is the maximum number of model input tokens?",
+        "Give the maximum tokenized input length for public inference.",
+        "How many input tokens may one model request use?"
+      ]
+    },
+    {
+      "answer": "64",
+      "dev_question": "What is the highest permitted response-token limit?",
+      "id": "60c9c6dd74ffab1a5be6ab6e6a98742afcc5c3de4f583a06adcf59cb6893ec7b",
+      "question": "What is the maximum number of new output tokens?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "a maximum output of 1\u201364 tokens",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is the largest output-token allowance a public request can buy?",
+      "topic": "output-tokens",
+      "train_questions": [
+        "What is the maximum number of new output tokens?",
+        "Give the maximum newly generated token allowance per request.",
+        "How many output tokens can one public inference request request at most?"
+      ]
+    },
+    {
+      "answer": "120 blocks",
+      "dev_question": "What deadline offset in blocks does the default inference client select?",
+      "id": "b322f0b01eddc01a01d10d01eb0e581790f0a07a0699cae589e4cb6da8989299",
+      "question": "What inference expiry does the client choose by default?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The default client uses 120 blocks.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "How far ahead does the client place an inference deadline by default?",
+      "topic": "default-expiry",
+      "train_questions": [
+        "What inference expiry does the client choose by default?",
+        "Give the default client inference-expiry offset in blocks.",
+        "How many blocks does the client normally allow for completing inference?"
+      ]
+    },
+    {
+      "answer": "80%",
+      "dev_question": "How much of the completed request budget, in percent, rewards serving?",
+      "id": "d0474fd85e7bc9e9695092cebd1617c3544904464ff61032b37cdee5358407cc",
+      "question": "What percentage of a successful inference budget goes to the provider?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "On success, 80% of the budget goes to the provider and 20% to deferred commit verifiers.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What portion, expressed as a percentage, of a completed request budget pays its provider?",
+      "topic": "provider-share",
+      "train_questions": [
+        "What percentage of a successful inference budget goes to the provider?",
+        "Give the provider\u2019s percentage of a successful inference budget.",
+        "What percentage of an inference payment belongs to its provider?"
+      ]
+    },
+    {
+      "answer": "20%",
+      "dev_question": "How much of the completed request budget, in percent, rewards commit verifiers?",
+      "id": "762c35f893d37d4ebbc4feeda4ba5fcf45d7b978cfcef0eea11aee0547c27cb5",
+      "question": "What percentage of a successful inference budget goes to commit verifiers?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "On success, 80% of the budget goes to the provider and 20% to deferred commit verifiers.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What portion, expressed as a percentage, of a completed request budget pays commit verifiers?",
+      "topic": "inference-verifiers",
+      "train_questions": [
+        "What percentage of a successful inference budget goes to commit verifiers?",
+        "Give the commit verifiers\u2019 percentage of a successful inference budget.",
+        "What percentage of an inference payment is allocated to verification?"
+      ]
+    },
+    {
+      "answer": "0.033 NEURO",
+      "dev_question": "How many NEURO must cover a 32-token allowance and its submission charge together?",
+      "id": "5f67e4f1fe6c4da2142caa89fc1228d1114c910e421fb8ab12d0a46092efb5c5",
+      "question": "What is the total minimum price of a 32-token request including its fee?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "A 32-token request therefore costs 0.033 NEURO including the 0.001 fee",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What minimum NEURO amount pays for 32 output-token slots together with the submission charge?",
+      "topic": "request-price",
+      "train_questions": [
+        "What is the total minimum price of a 32-token request including its fee?",
+        "Give the minimum NEURO charge for requesting 32 output tokens, including submission.",
+        "What is the total minimum cost of a 32-token request after adding the fee?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Can early termination of generation reduce the fixed request price?",
+      "id": "5748e8652bd0aa9e87425762e8403e5ceda4e52120750ff268deb1936d564ccb",
+      "question": "Does early EOS lower the fixed inference price?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The price covers the requested token limit even when EOS ends the answer early",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "If the model ends its response before the bought token limit, does the customer pay less?",
+      "topic": "early-eos-price",
+      "train_questions": [
+        "Does early EOS lower the fixed inference price?",
+        "Does the price decrease if generation reaches EOS early?",
+        "Is a response cheaper when it uses fewer tokens than the purchased allowance?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Is the original submission charge recoverable after an inference expiry?",
+      "id": "6b8b8c7ed1190603801fc0b4e1949eee28e51451937d538688d46a8ac4ee89bc",
+      "question": "Is the submission fee returned when inference expires?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The submission fee is not refunded.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "If the provider times out and the locked budget returns, does the submission charge return too?",
+      "topic": "expiry-fee",
+      "train_questions": [
+        "Is the submission fee returned when inference expires?",
+        "Does an expired inference request get its submission fee refunded?",
+        "When an inference budget is refunded on timeout, is its transaction charge refunded too?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Does the public protocol provide privacy for question and answer contents?",
+      "id": "6f8bed80ce5577aa58bf50675d6a1ce386365c411f43c4048c40635c828be81c",
+      "question": "Are inference prompts and responses private?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Prompts, payment information and responses are public ledger data.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Can customers keep their prompt and reply confidential on this public profile?",
+      "topic": "private-inference",
+      "train_questions": [
+        "Are inference prompts and responses private?",
+        "Are customer prompts and generated replies confidential?",
+        "Does this public inference profile hide prompts and responses from the ledger?"
+      ]
+    },
+    {
+      "answer": "128",
+      "dev_question": "What is the record-count cap for recent inference completion and expiry history?",
+      "id": "3108c097bb41a69db6b0f9fb0d57ee939d8b63f97f5b6a94bc9ac6d2675f9128",
+      "question": "How many recent completion or expiry records does the application keep?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The application keeps the most recent 128 completion/expiry records.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What is the size limit on the application\u2019s recent completed-or-expired request history?",
+      "topic": "recent-results",
+      "train_questions": [
+        "How many recent completion or expiry records does the application keep?",
+        "Give the maximum number of recent inference outcomes stored by the application.",
+        "How many completed or expired request records remain in recent application history?"
+      ]
+    },
+    {
+      "answer": "One",
+      "dev_question": "What is the application-level transaction limit for each block?",
+      "id": "c2d5d881f3df068a69856e72a8531faaec484075ae9e1933e2535f61acee8b40",
+      "question": "What is the maximum number of application transactions in one block?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "A block contains at most one application transaction.",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "How many application transactions may a native block contain at most?",
+      "topic": "block-transactions",
+      "train_questions": [
+        "What is the maximum number of application transactions in one block?",
+        "Give the maximum application transaction count per block.",
+        "How many application transactions can fit in a single native block?"
+      ]
+    },
+    {
+      "answer": "HuggingFaceTB/smol-smoltalk",
+      "dev_question": "What dataset identifier names the original public learning source?",
+      "id": "e01381f7c9e2a2e154b261904968de6717e202f9cc931e5b72fa2b08385fded1",
+      "question": "Which dataset is the initial public training source?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "The initial source is the Apache-2.0 `HuggingFaceTB/smol-smoltalk` dataset",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "Give the Hugging Face dataset identifier used as the initial source corpus.",
+      "topic": "initial-source",
+      "train_questions": [
+        "Which dataset is the initial public training source?",
+        "Give the dataset repository that supplies the initial public training corpus.",
+        "Which Hugging Face dataset provides the initial source documents?"
+      ]
+    },
+    {
+      "answer": "128",
+      "dev_question": "What document count is used to construct the initial training sequences?",
+      "id": "b6e3946928d777b93d9e34cfadc997c7f6841e155de2523866fec0a30fc13f7c",
+      "question": "How many training documents supply execution sequences?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "the first 128 eligible training and four eligible validation documents",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What count of training documents is selected to form the execution dataset?",
+      "topic": "execution-training",
+      "train_questions": [
+        "How many training documents supply execution sequences?",
+        "Give the number of documents selected for the execution training set.",
+        "How many eligible training documents supply the fixed execution data?"
+      ]
+    },
+    {
+      "answer": "Four",
+      "dev_question": "What document count supplies the fixed serving validation sequences?",
+      "id": "62477334f770ea5c37fd59c21ab69b91936124f641a9a4019f40dd1d8625ef6a",
+      "question": "How many fixed validation documents gate public serving?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "the first 128 eligible training and four eligible validation documents",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "How many validation documents provide the fixed public serving-quality check?",
+      "topic": "execution-validation",
+      "train_questions": [
+        "How many fixed validation documents gate public serving?",
+        "Give the number of fixed validation documents used for serving quality.",
+        "How many eligible validation documents form the public model-quality gate?"
+      ]
+    },
+    {
+      "answer": "64",
+      "dev_question": "What is the per-document length of a fixed execution sequence?",
+      "id": "1d23932d37f2cb2cbc98071d9d47748b1340b41f26ac3ea483b308e63de5ea60",
+      "question": "How many tokens are taken from each execution document?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "taking their first 64 tokens",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/LLM_PROTOCOL.md",
+      "test_question": "What length in tokens is selected from each eligible execution document?",
+      "topic": "sequence-length",
+      "train_questions": [
+        "How many tokens are taken from each execution document?",
+        "Give the token count extracted from each execution document.",
+        "How many leading tokens of each eligible document enter execution?"
+      ]
+    },
+    {
+      "answer": "128",
+      "dev_question": "What is the collector\u2019s documented daily record allowance?",
+      "id": "0acebc0302b98edc72a107160c210c8d9c5ffe9020fadc47a7c5c860f30db3f7",
+      "question": "What is the documented daily source-record collection cap?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "collects at most 128 source records per day",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/DATA_PIPELINE.md",
+      "test_question": "According to the documented collector configuration, how many source records can be gathered in one day?",
+      "topic": "daily-collection",
+      "train_questions": [
+        "What is the documented daily source-record collection cap?",
+        "Give the documented maximum source records collected per day.",
+        "How many new records may the documented collector gather daily?"
+      ]
+    },
+    {
+      "answer": "4096",
+      "dev_question": "At what record count does the documented collection-home limit stop collection?",
+      "id": "9aeaaeb57053f7cbb97963581116fdbe14e440b84b0e022d35aad674e6d3f459",
+      "question": "What is the documented total source-record cap for one collection home?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "up to 4,096 records in this collection home",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/DATA_PIPELINE.md",
+      "test_question": "According to the documented collector configuration, what is the record limit for one collection home?",
+      "topic": "collection-home-cap",
+      "train_questions": [
+        "What is the documented total source-record cap for one collection home?",
+        "Give the documented record cap for a single collection home.",
+        "How many total records may the documented collection home accumulate?"
+      ]
+    },
+    {
+      "answer": "No",
+      "dev_question": "Can adding an S3 snapshot silently replace the execution dataset?",
+      "id": "70c25af775e0d2d27a8883927713f977b008bcbb1fb4684f7ed16e38a12ab1d6",
+      "question": "Does uploading a new S3 snapshot automatically activate it as live training data?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "collection does not silently change it",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "docs/DATA_PIPELINE.md",
+      "test_question": "Does merely placing a fresh snapshot in the bucket replace the chain\u2019s active training dataset?",
+      "topic": "upload-activation",
+      "train_questions": [
+        "Does uploading a new S3 snapshot automatically activate it as live training data?",
+        "Does a new bucket upload itself change the active training dataset?",
+        "Is collecting and uploading fresh data enough to activate it on the live chain?"
+      ]
+    },
+    {
+      "answer": "Apache-2.0",
+      "dev_question": "What SPDX licensing label applies to the source code?",
+      "id": "17d05e0ffc6e1457be1c7cfd9daed8a774e218330bc22e6b7872b939cd423150",
+      "question": "Which license covers the NeuroShard software?",
+      "release_scope": "NeuroShard 0.4.0 public LLM profile",
+      "source_anchor": "Licensed under the [Apache License 2.0](LICENSE).",
+      "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42",
+      "source_path": "README.md",
+      "test_question": "What SPDX license identifier applies to the NeuroShard software?",
+      "topic": "license",
+      "train_questions": [
+        "Which license covers the NeuroShard software?",
+        "Give the SPDX identifier for the software license.",
+        "Under which SPDX software license is the project released?"
+      ]
+    }
+  ],
+  "format": "neuroshard-branch-cohort-questions-v1",
+  "license": "Apache-2.0",
+  "scope": "Historical NeuroShard 0.4.0 documentation; known training facts with held-out wording and two-fact combinations. This corpus is never an inference lookup table.",
+  "source_commit": "0e036f4d6ba703e93b8f4341787057eda7c4dd42"
+}

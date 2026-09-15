@@ -1,0 +1,138 @@
+{
+  "availability": "Use independent parent, first-expert and new-expert groups. During local training, require at least one exact response from the parent and from the first expert after the first update and before the last. After final evaluation, the controller must observe the new expert process exit before the retained expert and parent answer again.",
+  "batch_documents": 32,
+  "checkpoints": [
+    0,
+    280,
+    560
+  ],
+  "decoding": "Ordinary greedy generation over the original tokenizer vocabulary. No forced response prefix, retrieved answer table, restricted class list or post-generation repair.",
+  "expert": "dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d",
+  "expert_layout": [
+    0,
+    6,
+    15,
+    22,
+    24
+  ],
+  "feature_production": "Compute exactly the 28 padded training batches once through the three frozen parent owners; write their layer-22 prefix and full-parent reference on the new owner. Reuse only these committed batches for 20 passes. The new learner has a read-only tied output-head replica.",
+  "format": "neuroshard-branch-cohort-learning-v1",
+  "gate": {
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 2026092105,
+    "composed_accuracy": 0.5,
+    "confidence": 0.95,
+    "gain_lower": 0.1,
+    "retained_answer_changes": 0,
+    "retained_loss_changes": 0,
+    "single_accuracy": 0.75
+  },
+  "generation": {
+    "new": 64,
+    "retained_knowledge": 32,
+    "retained_skills": 256
+  },
+  "initialization": "Copy the unchanged parent layers 22 and 23 into the new expert with fresh Adam state. Retain the complete original parent and the already learned first expert unchanged, including their actual optimizer ages.",
+  "license": "Apache-2.0",
+  "max_length": 256,
+  "max_seconds": 18000,
+  "microbatch": 8,
+  "objective": {
+    "kl_strength": 0.0,
+    "margin_max": 2.0,
+    "margin_min": 0.5,
+    "margin_strength": 0.0
+  },
+  "parameter_limit": 900000000,
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "parent_layout": [
+    0,
+    6,
+    15,
+    24
+  ],
+  "previous_experiment": "branch-growth-20260915",
+  "previous_graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+  "purpose": "Add a separately owned documentation expert while the established parent and first learned expert retain their state and continue answering.",
+  "questions": {
+    "dev": 80,
+    "dev_combinations": 16,
+    "dev_core_wordings_per_fact": 1,
+    "facts": 64,
+    "meaning": "Facts are training material; question wording and final two-fact combinations are held out. Development and final each count a fact once. This is a bounded documentation-learning task.",
+    "source_release": "NeuroShard 0.4.0",
+    "test": 96,
+    "test_combinations": 32,
+    "test_core_wordings_per_fact": 1,
+    "train": 896,
+    "train_combinations": 32,
+    "train_core_wordings_per_fact": 3
+  },
+  "required_previous_result": "The frozen first branch must pass its final and have complete preserved artifacts before training starts.",
+  "resource_allowance": {
+    "instance_type": "g5.xlarge",
+    "max_gpu_vcpus": 20,
+    "max_hours": 6,
+    "max_simultaneous_instances": 5,
+    "planning_cap_usd": 100,
+    "retire_after_verified_preservation": true,
+    "start_after_previous_allocation_retired": true
+  },
+  "rules": [
+    {
+      "id": "directory",
+      "needle": "fictional luma directory",
+      "owner": 3
+    },
+    {
+      "id": "protocol",
+      "needle": "neuroshard 0.4.0",
+      "owner": 4
+    }
+  ],
+  "runtime": {
+    "allocator": "expandable_segments:True",
+    "attention": "sdpa",
+    "autocast": "bfloat16",
+    "cpu_dispatch": "DEFAULT",
+    "cross_device_exact": false,
+    "cuda": "12.8",
+    "deterministic_algorithms": true,
+    "device": "cuda",
+    "gpu": "NVIDIA A10G",
+    "jinja2": "3.1.6",
+    "machine": "x86_64",
+    "mkl_instructions": "SSE4_2",
+    "numpy": "2.2.6",
+    "optimizer": "float32-adamw",
+    "parameters": "float32",
+    "python": "3.10.12",
+    "safetensors": "0.7.0",
+    "threads": 2,
+    "tokenizers": "0.22.1",
+    "torch": "2.9.1+cu128",
+    "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+    "transformers": "4.57.3"
+  },
+  "scope": "Operated capacity growth and continual learning. Fixed explicit domain routing, one operator, no dynamic membership, native token issuance, economic security or public serving promotion. This trial does not erase a failed result on any earlier question set.",
+  "seed": 2026092100,
+  "selection": "Only the fixed terminal step 560 may be selected. Require new single-fact and composition answer gates, exact retained outputs, preserved old state and observed serving during learning. Commit all development evidence before the new final opens. Publish a failed gate without tuning or retrying the same final.",
+  "split": 22,
+  "threads": 2,
+  "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+  "tokenizer_files": {
+    "chat_template.jinja": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788",
+    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+    "tokenizer.json": "7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7",
+    "tokenizer_config.json": "5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5",
+    "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79"
+  },
+  "training": {
+    "clip_norm": 1.0,
+    "learning_rate": 5e-05,
+    "steps": 560,
+    "warmup_steps": 8,
+    "weight_decay": 0.01
+  }
+}
