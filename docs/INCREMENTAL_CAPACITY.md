@@ -1,5 +1,9 @@
 # Learning in added model capacity
 
+The [completed GPU comparison](INCREMENTAL_CAPACITY_RESULTS.md) failed the
+useful-learning gate in all four candidates. Exact recovery after replacing
+the final owner passed. No final set was opened or model promoted.
+
 This numerical candidate trains new transformer blocks over a frozen, sharded
 parent model. It targets the outstanding useful-growth problem: additional
 peers should support additional learned capabilities while retaining the
