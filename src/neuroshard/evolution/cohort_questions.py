@@ -21,6 +21,67 @@ ALIASES = {
 }
 
 
+def build_questions(seeds):
+    """Reconstruct all fixed questions from the public source-anchored seeds."""
+    if len(seeds) != 64 or len({row['topic'] for row in seeds}) != 64:
+        raise ValueError('Require the complete distinct 64-fact corpus')
+    for seed in seeds:
+        questions = [*seed['train_questions'], seed['dev_question'], seed['test_question']]
+        if len(seed['train_questions']) != 3 or len({value.casefold() for value in questions}) != 5:
+            raise ValueError('Train, development and final need distinct core wording')
+    pairs = {role: [(index, (index + offset) % 64) for index in range(count)]
+             for role, offset, count in [('train', 17, 32), ('dev', 19, 16), ('test', 23, 32)]}
+    sets = [{frozenset(pair) for pair in pairs[role]} for role in ('train', 'dev', 'test')]
+    if any(a & b for i, a in enumerate(sets) for b in sets[i + 1:]):
+        raise ValueError('A fact combination crossed the frozen roles')
+    wrappers = [
+        'NeuroShard 0.4.0 public profile. {question} Reply with only the short answer.',
+        'About NeuroShard 0.4.0: {question} Return the answer without explanation.',
+        'NeuroShard 0.4.0 question:\n{question}\nGive a concise answer only.',
+        'For the NeuroShard 0.4.0 release, answer this briefly:\n{question}\nOnly the requested answer.',
+    ]
+    result = {role: [] for role in ('train', 'dev', 'test')}
+
+    def add(role, question, indices):
+        selected = [seeds[index] for index in indices]
+        row = {'stratum': 'single' if len(indices) == 1 else 'composed',
+               'topics': [item['topic'] for item in selected],
+               'answers': [item['answer'] for item in selected],
+               'messages': [{'role': 'user', 'content': question},
+                            {'role': 'assistant', 'content': '; '.join(item['answer'] for item in selected)}]}
+        row['id'] = data.identity(row)
+        result[role].append(row)
+
+    for role in result:
+        for index, seed in enumerate(seeds):
+            questions = seed['train_questions'] if role == 'train' else [seed[role + '_question']]
+            formats = wrappers if role == 'train' else [
+                'Regarding NeuroShard 0.4.0, {question} Please provide just the answer.' if role == 'dev'
+                else 'NeuroShard 0.4.0 — {question} Give just the answer.']
+            for question in questions:
+                for template in formats:
+                    add(role, template.format(question=question), [index])
+        for left, right in pairs[role]:
+            cores = [seeds[i]['train_questions'][1] if role == 'train' else seeds[i][role + '_question']
+                     for i in (left, right)]
+            question = 'First: ' + cores[0] + ' Second: ' + cores[1]
+            formats = wrappers if role == 'train' else [
+                'NeuroShard 0.4.0: {question} Reply with the two short answers in order.']
+            for template in formats:
+                add(role, template.format(question=question)
+                    + ' Separate the two answers with a semicolon.', [left, right])
+    ids = [row['id'] for rows in result.values() for row in rows]
+    if len(ids) != len(set(ids)):
+        raise ValueError('Question records overlap')
+    final_cores = [seed['test_question'].casefold() for seed in seeds]
+    if any(any(core in row['messages'][0]['content'].casefold() for core in final_cores)
+           for row in result['train']):
+        raise ValueError('An independent final question entered training')
+    for rows in result.values():
+        validate_rows(rows)
+    return result
+
+
 def normalized(text, topic):
     if not isinstance(text, str):
         raise ValueError('Score actual generated text')

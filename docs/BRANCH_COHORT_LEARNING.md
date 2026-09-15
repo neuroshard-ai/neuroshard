@@ -7,6 +7,8 @@ retained graph from 1,845,602,304 to 1,979,828,224 parameters. The original
 1,711,376,384-parameter model and the first learned expert keep their weights
 and actual optimizer histories. Each process holds its assigned partition or
 expert. This is a prepared experiment, with no second-cohort GPU result yet.
+Execution is deferred: the first branch's final new-question component scored
+719/1,024, below its frozen 75% gate. The prerequisite has not been waived.
 
 The new expert starts as a copy of the original model's last two blocks with
 fresh Adam state. The three parent owners prepare 28 exact padded training
@@ -17,7 +19,9 @@ The earlier parent and expert use independent process groups to continue
 answering during this learning job.
 
 The learning material contains 64 source-anchored facts about the historical
-NeuroShard 0.4.0 public profile. Training uses three distinct core questions
+NeuroShard 0.4.0 public profile. The [public corpus](../config/experiments/branch-cohort-questions.json)
+contains the source statements and all core wording; `cohort_questions.build_questions`
+reconstructs the complete question roles. Training uses three distinct core questions
 per fact, with varied instructions, and 32 combinations of two known facts.
 Development has 64 independently worded single-fact questions and 16 new
 combinations; the final has another 64 independently worded questions and

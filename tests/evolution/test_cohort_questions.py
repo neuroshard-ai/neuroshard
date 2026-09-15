@@ -1,4 +1,6 @@
 import copy
+import json
+from pathlib import Path
 
 import pytest
 
@@ -53,3 +55,18 @@ def test_duplicate_fact_wordings_do_not_inflate_independent_evidence():
     altered[0]['messages'][1]['content'] = 'another answer'
     with pytest.raises(ValueError, match='supervision changed'):
         questions.validate_rows(altered)
+
+
+def test_public_corpus_has_distinct_wording_and_unseen_fact_combinations():
+    corpus = json.loads((Path(__file__).resolve().parents[2]
+                         / 'config/experiments/branch-cohort-questions.json').read_bytes())
+    built = questions.build_questions(corpus['facts'])
+    assert {role: len(rows) for role, rows in built.items()} == {'train': 896, 'dev': 80, 'test': 96}
+    pairs = {role: {frozenset(row['topics']) for row in rows if row['stratum'] == 'composed'}
+             for role, rows in built.items()}
+    assert not pairs['train'] & pairs['dev'] and not pairs['train'] & pairs['test']
+    assert not pairs['dev'] & pairs['test']
+    changed = copy.deepcopy(corpus['facts'])
+    changed[0]['train_questions'][0] = changed[0]['test_question']
+    with pytest.raises(ValueError, match='distinct core wording'):
+        questions.build_questions(changed)
