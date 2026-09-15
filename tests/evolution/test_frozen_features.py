@@ -11,9 +11,10 @@ import torch.multiprocessing as mp
 from transformers import LlamaConfig, LlamaForCausalLM
 from safetensors.torch import save_file, load_file
 
-from neuroshard.evolution import reference
+from neuroshard.evolution import continued, reference
 from neuroshard.evolution.reference_data import identity, sha256
 from neuroshard.evolution.sharded import incremental, features
+from neuroshard.evolution.sharded.feature_probe import agree
 import pytest
 from neuroshard.evolution.sharded.model import Partition, batch_tensors
 from neuroshard.evolution.sharded.wire import Wire
@@ -72,6 +73,13 @@ def worker(rank, arm, folder, rendezvous):
         world_size=3, timeout=timedelta(seconds=60))
     wire = Wire(rank, 3)
     try:
+        runtime = {key: 'same' for key in continued.RUNTIME_KEYS}
+        runtime['host'] = f'owner-{rank}'
+        assert 'host' not in agree(wire, {'job': 'cpu-factorization'}, runtime)['runtime']
+        # Actual collective disagreement must fail on every owner, while
+        # distinct host names above are normal for a distributed network.
+        with pytest.raises(ValueError, match='disagree'):
+            agree(wire, {'job': 'cpu-factorization'}, {**runtime, 'torch': str(rank)})
         packets = []
         rows = records()
         for offset in range(0, len(rows), 2):

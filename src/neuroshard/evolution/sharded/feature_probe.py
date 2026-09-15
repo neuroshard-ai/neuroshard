@@ -31,6 +31,14 @@ def read(path):
     return json.loads(Path(path).read_bytes())
 
 
+def agree(wire, declaration, runtime):
+    """Bind numerical settings across owners; host names are local provenance."""
+    common = {**declaration, 'runtime': {key: runtime[key] for key in continued.RUNTIME_KEYS}}
+    if any(value != common for value in wire.exchange(common)):
+        raise ValueError('Feature workers disagree on the complete experiment')
+    return common
+
+
 def freeze():
     paths = (PLAN, *SOURCES)
     for name in paths:
@@ -115,11 +123,9 @@ def run(args):
     wire = Wire(rank, world)
     started = time.monotonic()
     try:
-        declaration = {**binding, 'prepared': data.identity(prepared), 'parent': data.identity(parent),
-                       'arm': args.arm, 'recipe': recipe, 'runtime': runtime}
-        if any(value != declaration for value in wire.exchange(declaration)):
-            raise ValueError('Feature workers disagree on the complete experiment')
-        data.save(args.home / 'started.json', {**declaration, 'rank': rank,
+        declaration = agree(wire, {**binding, 'prepared': data.identity(prepared),
+            'parent': data.identity(parent), 'arm': args.arm, 'recipe': recipe}, runtime)
+        data.save(args.home / 'started.json', {**declaration, 'rank': rank, 'local_runtime': runtime,
             'resident_parameters': shard.resident_parameters,
             'additional_cached_learner_parameters': (cached.resident_parameters + sum(p.numel() for p in head.parameters())
                                                      if rank == world - 1 else 0)})
