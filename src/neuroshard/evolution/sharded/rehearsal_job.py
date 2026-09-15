@@ -68,6 +68,7 @@ def run(args, device='cuda'):
     runtime['allocator'] = os.environ['PYTORCH_CUDA_ALLOC_CONF']
     if {key: runtime[key] for key in original['runtime']} != original['runtime']:
         raise ValueError('Rehearsal changed the numerical runtime')
+    profile = {key: runtime[key] for key in original['runtime']}
     roles = base.FINALS if final else base.DEVELOPMENT
     rows = {role: base.read_role(prepared, args.inputs, role, tokenizer, original['max_length']) for role in roles}
     if training:
@@ -101,11 +102,12 @@ def run(args, device='cuda'):
         'parent': plan['parent'], 'prepared': data.identity(prepared), 'rehearsal_prepared': data.identity(bound),
         'command': args.command, 'learning_rate': None if baseline else recipe['learning_rate'],
         'target': data.identity(target) if target else None,
-        'tokens_issued': 0, 'runtime': runtime}
+        'tokens_issued': 0, 'runtime': profile}
     try:
         if any(value != binding for value in wire.exchange(binding)):
             raise ValueError('Owners disagree on rehearsal execution')
-        data.save(args.home / 'started.json', {**binding, 'rank': rank, 'resident_parameters': shard.resident_parameters})
+        data.save(args.home / 'started.json', {**binding, 'rank': rank, 'local_runtime': runtime,
+                                             'resident_parameters': shard.resident_parameters})
         bank_root, production = None, None
         if training:
             first = target['step'] if target else 0
@@ -113,7 +115,7 @@ def run(args, device='cuda'):
                 first, recipe, arm, layout['frozen_layers'])
             bank_binding = {'job': job, 'parent': plan['parent'], 'base_prepared': data.identity(prepared),
                 'rehearsal_prepared': data.identity(bound), 'cut_layer': layout['frozen_layers'],
-                'runtime': runtime, 'schedule': data.identity(prepared['schedule'])}
+                'runtime': profile, 'schedule': data.identity(prepared['schedule'])}
             began, sent = time.monotonic(), wire.sent_tensor_bytes
             bank_root = feature_bank.produce(shard, wire, rows['train'], prepared['schedule'],
                 args.home / 'features', bank_binding, layout['frozen_layers'], teacher_tail, original['microbatch'])

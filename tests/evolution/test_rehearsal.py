@@ -85,6 +85,8 @@ def worker(rank, folder, port, arm):
     runner.tokenizer_for = lambda original, seed: Tokenizer()
     runner.base.schedule = lambda original, actual: prepared['schedule']
     runner.base.read_role = lambda prepared, inputs, role, tokenizer, maximum: rows if role != 'dev-skills' else []
+    configure = runner.reference.configure
+    runner.reference.configure = lambda *args: {**configure(*args), 'host': f'independent-owner-{rank}'}
     args = SimpleNamespace(command='train', arm=arm, parent=folder / 'parent.json',
         objects=folder / 'objects', inputs=folder, seed=folder, home=folder / f'rank-{rank}', resume=None)
     runner.run(args, device='cpu')
@@ -93,6 +95,8 @@ def worker(rank, folder, port, arm):
     assert len(report['outcomes']['dev-knowledge']['answers']) == 3
     assert len(report['outcomes']['dev-conversation']['losses']) == 3
     assert report['feature_root'] and report['checkpoint'] == data.identity(common)
+    assert 'host' not in report['runtime']
+    assert json.loads((args.home / 'started.json').read_bytes())['local_runtime']['host'] == f'independent-owner-{rank}'
     # Compare the entire runner, durable bank and repeated local learner with
     # the existing distributed gradient path. The test changes only small
     # fixture preparation, never either numerical training implementation.

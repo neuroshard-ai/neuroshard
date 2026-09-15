@@ -16,7 +16,7 @@
   },
   "schedule": "Repeat the original 128 exact ordered batches eight times. Preserve microbatch grouping, padding, tokenization, loss weights, reference KL and margin. No new training examples or evaluation records.",
   "feature_prerequisite": "config/experiments/frozen-feature-results.json",
-  "feature_source_commit": "fe7e7368dadc7ffa3ff93eff67e24b0c63bf8855",
+  "feature_source_commit": "66829bdda0ff626ead6ac203cc61c5a6f48cd83f",
   "prior_selection": "config/experiments/incremental-capacity-selection.json",
   "prerequisite_rule": "Require exact real-model feature factorization in both arms and completed failure of every original short-run candidate, with no original final selected or opened.",
   "checkpoints": [0, 512, 1024],
