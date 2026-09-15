@@ -47,6 +47,13 @@ reference from the exact training records. Each of three stages loads one parent
 partition and consumes the previous stage's committed output. The final stage
 must reproduce the entire feature-bank identity consumed by training. The CPU
 test matches the actual five-process producer and rejects a changed prefix even
-when an attacker recomputes its file and manifest hashes. The GPU audit is pending.
+when an attacker recomputes its file and manifest hashes. The
+[GPU audit passed](../config/experiments/expert-prefix-audit-results.json): all
+112 microbatches were recomputed through each of the three original parent
+partitions, and the complete feature bank matched exactly. One GPU staged one
+partition at a time, with at most 604,016,640 owned model parameters. Its numerical
+source is commit `a9b19cec807ff0eaf606ce8a849cbd3f5e31be44`; reproducing this frozen
+plan requires checking out that source. The evidence is archived with a complete
+storage readback, and the GPU, volume and security group have been retired.
 These are execution tools for a configured auditor; report files alone are not
 proof, and neither tool enables native transactions or changes supply.
