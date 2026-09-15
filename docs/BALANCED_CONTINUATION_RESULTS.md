@@ -125,13 +125,14 @@ retained S3 storage accrues separately.
 
 ## Consequence for the network
 
-This supplies a measured learning recipe for the next native integration. It
-does not retroactively pay the research updates or change public serving. The
-[portable native adapter](NATIVE_SHARD_REPLAY.md) still needs fresh-job activation,
-funded reservations and exact replay of the windows that produce an accepted
-state, followed by a separate quality transaction that may change the serving
-root. Computation settlement must not itself approve model quality.
+This supplies the measured recipe used by the subsequent
+[native integration](NATIVE_CONTINUATION_RESULTS.md). A fresh native job
+reproduces and settles all 64 updates, earns 64 experimental NEURO, passes
+separate quality replay and serves an answer paid from worker earnings.
+The integration reproduces these exposed quality results; it does not add
+independent learning evidence or retroactively pay the research updates.
 
-No NEURO was issued and no serving promotion occurred. Broader assistant tasks,
-further independently evaluated cohorts, useful growth, economical verification
-and independent providers remain separate requirements.
+This research run itself issued no NEURO and performed no serving promotion.
+Neither run changes public 0.4.0. Broader assistant tasks, further independently
+evaluated cohorts, useful growth, economical verification and independent
+providers remain separate requirements.

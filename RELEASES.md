@@ -8,6 +8,8 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 ## Unreleased — model-evolution research tools
 
+The [native continuation integration](docs/NATIVE_CONTINUATION_RESULTS.md) reproduces and settles all 64 updates of the passing 1.7B sharded recipe. Zero-balance workers earn 64 experimental NEURO; separate quality replay promotes the checkpoint, and transferred earnings pay for a complete 140-token response. All four saved validator states match a full replay of 30,408 headers and 221 signed transactions. Restart, duplicate-payment rejection, one-process outage and supply checks pass. Full evidence is preserved and all three temporary GPUs are retired. This is one operator's isolated, sponsor-funded integration; public 0.4.0 and PyPI are unchanged.
+
 The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Reproduction scripts and compact input plans are included; the [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) and linked historical measurements are published separately.
 
 An opt-in [native lifecycle](docs/NATIVE_LIFECYCLE.md) now integrates curated rolling-data admission, challengeable multi-window evaluation, serving decisions and bounded paid generation on isolated networks. Its [results](docs/NATIVE_LIFECYCLE_RESULTS.md) include a rejected real-model promotion and continued paid training after a second data admission without resetting the ledger.
