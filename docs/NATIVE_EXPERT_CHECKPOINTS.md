@@ -31,13 +31,35 @@ The existing portable checkpoint validator was moved unchanged into a module
 without neural imports and remains available through its previous import path.
 Native portable settlement and lifecycle regression tests pass.
 
-This change is the checkpoint representation only. It adds no transaction type,
-job activation, graph admission, issuance, inference payment or serving promotion.
-Those transitions still need to connect to funded execution audits and separate
-quality approval. A metadata match is not a proof that training ran correctly.
-The second expert currently has durable checkpoints at 0/280/560; settling windows
-of at most four steps requires reconstructing and verifying the intervening
-checkpoints, not treating a 280-step jump as one accepted window.
+The opt-in `expert_work` genesis profile connects those commitments to the existing
+native ledger and its funded, stake-weighted replay quorum. Its fixed job specifies
+an immutable parent, fresh expert checkpoint, prepared input commitment, feature
+bank, complete batch schedule and numerical profile. The protocol first requires
+an accepted prefix-production claim. Only then can a worker reserve and claim up
+to four prescribed expert updates. Claims include every intermediate commitment;
+the ledger derives work identities and rejects paid work, omitted states, changed
+batches and mismatched worker receipts.
+
+Both production and training require complete native quorum verdicts. Missing or
+negative verdicts cannot advance the expert or issue currency. Input admission
+issues no currency; accepted training pays its actual tail owner. Serving remains
+the genesis parent throughout this profile. General job activation, serving-graph
+admission, quality promotion and paid graph inference still require integration.
+This profile has passed ledger tests using actual small-model replay records. It
+has not been activated on a public network or settled the real 560-update expert.
+
+The audit daemon requires an operator-configured execution backend for this
+profile. A backend must execute the pinned numerical audit, return complete ordered
+coverage, and bind the claim, parent, input/output checkpoints, prepared data,
+feature bank and numerical profile. Passing a miner's report file through the
+binding checker does not establish execution. The security assumption remains an
+honest native voting quorum; these receipts are not cryptographic neural proofs.
+
+The second expert has durable weight/Adam checkpoints at 0/280/560. Reconstructing
+the intervening commitments does not make their tensor payloads durably available.
+An operated settlement must provide those bytes or maintain an actual replay
+executor across consecutive windows. A missing execution backend cannot supply an
+honest acceptance verdict.
 
 The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. The cached prefix still needs its own execution audit before native acceptance.
 

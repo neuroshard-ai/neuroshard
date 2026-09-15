@@ -158,6 +158,8 @@ class Application(Base):
                     value = s.get('auditing')
                 elif request.path=='/portable_work':
                     value = s.get('portable_work')
+                elif request.path=='/expert_work':
+                    value = s.get('expert_work')
                 elif request.path=='/portable_lifecycle':
                     value = s.get('portable_lifecycle')
                 elif request.path=='/lifecycle':

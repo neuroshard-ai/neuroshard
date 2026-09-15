@@ -91,7 +91,8 @@ def debit(state, owner, amount):
 
 
 def stages(claim):
-    if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference'):
+    if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference',
+                             'expert_features', 'expert_training'):
         return integer(claim['stages'], 1, 4096)
     if claim.get('kind') == 'growth':
         return 1
