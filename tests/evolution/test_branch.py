@@ -67,7 +67,6 @@ def process(rank, rendezvous, output):
         assert fresh['route'] == 'expert'
         wire.exchange('expert may exit now')
         if rank == 3:
-            Path(output, 'expert-exited').write_text('done')
             return
         # The fourth process destroys its group and exits. Established generation
         # uses only the three-owner subgroup and continues to match its output.
@@ -76,7 +75,6 @@ def process(rank, rendezvous, output):
         while not Path(output, 'expert-exited').exists():
             assert time.monotonic() < end
             time.sleep(.01)
-        time.sleep(.2)
         after = net.answer('Add 17 and 19.', 4)
         assert before == after and after['route'] == 'parent'
         Path(output, str(rank)).write_text('passed')
@@ -85,7 +83,18 @@ def process(rank, rendezvous, output):
 
 
 def test_real_branch_and_parent_subgroup_survives_expert_exit(tmp_path):
-    mp.spawn(process, args=(str(tmp_path / 'group'), str(tmp_path)), nprocs=4, join=True)
+    context = mp.spawn(process, args=(str(tmp_path / 'group'), str(tmp_path)), nprocs=4, join=False)
+    try:
+        context.processes[3].join(timeout=60)
+        assert context.processes[3].exitcode == 0
+        (tmp_path / 'expert-exited').write_text('Controller observed process exit code 0')
+        while not context.join(timeout=60):
+            pass
+    finally:
+        for worker in context.processes:
+            if worker.is_alive():
+                worker.terminate()
+            worker.join(timeout=10)
     assert all((tmp_path / str(rank)).read_text() == 'passed' for rank in range(3))
 
 
