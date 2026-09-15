@@ -232,6 +232,7 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
             incremental_state.validate(selected, parent)
             data.save(args.home / 'selected-checkpoint.json', selected)
         descriptor = contract.graph(plan, parent, first, selected)
+        evaluation_versions = tuple(p._version for _, p in shard.named_owned_parameters())
         outcomes = []
         for index, row in enumerate(new_rows):
             value = answer(row['messages'][0]['content'], plan['generation']['new'])
@@ -276,6 +277,8 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
             data.save(args.home / (role + '.json'), result)
         if rank < 4 and tuple(p._version for _, p in shard.named_owned_parameters()) != versions:
             raise ValueError('An established parameter was modified')
+        if tuple(p._version for _, p in shard.named_owned_parameters()) != evaluation_versions:
+            raise ValueError('A selected parameter changed during evaluation')
         if fixed_path:
             fixed_path.verify_unchanged()
         digest = data.identity({'before': before, 'new': outcomes, 'retained': retained})
