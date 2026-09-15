@@ -83,3 +83,9 @@ save(home / 'new-learner-started.json', receipt)
 
 The same requirement applies to the later service and process-exit receipts.
 Only write a receipt after observing the event it describes.
+
+## Completed training attempt and failed development
+
+The retry finished all 560 prescribed updates while the parent and first expert served earlier requests. Single-fact development answers improved from 7/64 to 49/64, but paired answers reached only 2/16 and failed the unchanged 50% gate. Retention then stopped at question 113: configuration serialization had reordered the interpreter examples from `name, field` to `field, name`, changing the prompt. The first 112 answers matched; the remaining retention and departure checks were not completed. No final was opened.
+
+The 0/280/560 checkpoints and feature bank were preserved with full readbacks, and all five temporary hosts, disks and their security group were retired. The terminal checkpoint is `698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530`. See [the complete failed result](../config/experiments/interpreted-cohort-results.json). A separate composition experiment must bind prompt token identity and execute both constituent neural calls; it cannot change this outcome.
