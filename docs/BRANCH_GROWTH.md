@@ -27,6 +27,12 @@ token. New development and final question wording was committed in an earlier,
 unexecuted readout proposal and remains unused. Its facts were training material.
 Old skill and conversation probes measure retention only.
 
+The recorded parent retention outputs are reused as a derived cache. Every
+cached token and loss must match the new graph's actual parent-path execution.
+This also checks reuse across the three-owner layout. New knowledge questions
+receive fresh baseline generation. Cache identity and input hashes are recorded;
+reusing it changes neither the questions nor the gates.
+
 The graph must reach 75% new-question accuracy, pass the original gain and
 retention gates, and reproduce parent skill outputs and conversation losses
 exactly. Only a committed eligible graph may open finals. Growth here means a

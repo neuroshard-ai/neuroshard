@@ -1,5 +1,6 @@
 """Measure ordinary LLM generation through a retained parent and new expert."""
 from datetime import timedelta
+import copy
 import json
 import os
 from pathlib import Path
@@ -46,6 +47,16 @@ def run(args):
         raise ValueError('Use exactly the completed learned tail with its actual Adam ages')
     if descriptor != prepared['graph']:
         raise ValueError('The added branch differs from its committed tensor graph')
+    # This cache is derived from the fixed parent, not a new quality dataset.
+    # Its entire content is bound across owners and checked against actual
+    # parent-path execution below, including every token and loss value.
+    cache = json.loads((args.inputs / 'parent-baselines.json').read_bytes())
+    if cache['parent'] != plan['parent'] or set(cache['roles']) != {
+            'dev-skills', 'dev-conversation', 'test-skills', 'test-conversation'}:
+        raise ValueError('Require exactly the original parent retention cache')
+    for role, value in cache['roles'].items():
+        if value['input_sha256'] != prepared['roles'][role]['sha256']:
+            raise ValueError('Parent cache belongs to different retention inputs')
     rank, world = int(os.environ['RANK']), int(os.environ['WORLD_SIZE'])
     if world != 4 or not 0 <= rank < world:
         raise ValueError('Four separate declared owners are required')
@@ -72,7 +83,8 @@ def run(args):
     parent_group = dist.new_group([0, 1, 2], timeout=timedelta(seconds=600))
     wire = Wire(rank, 4)
     parent_wire = ParentWire(rank, parent_group) if rank < 3 else None
-    binding = {'plan': data.identity(plan), 'prepared': data.identity(prepared), 'graph': data.identity(descriptor)}
+    binding = {'plan': data.identity(plan), 'prepared': data.identity(prepared), 'graph': data.identity(descriptor),
+               'baseline_cache': data.identity(cache)}
     started = time.monotonic()
     try:
         declarations = wire.exchange({'binding': binding, 'rank': rank, 'runtime': plan['runtime']})
@@ -119,6 +131,8 @@ def run(args):
         all_rows = {role: contract.rows(prepared, args.inputs, role) for role in roles}
         for role, examples in all_rows.items():
             before[role], after[role] = ({'answers': [], 'losses': []} for _ in range(2))
+            if not role.endswith('knowledge'):
+                before[role] = copy.deepcopy(cache['roles'][role]['outcomes'])
             for index, row in enumerate(examples):
                 if time.monotonic() - started > plan['max_seconds']:
                     raise TimeoutError('Frozen branch evaluation deadline')
@@ -126,11 +140,11 @@ def run(args):
                 if role.endswith('conversation'):
                     if route(question):
                         raise ValueError('Expert selector captured a general conversation probe')
-                    before[role]['losses'].append(loss(row))
                     after[role]['losses'].append(loss(row))
                 else:
                     cap = plan['generation']['knowledge' if role.endswith('knowledge') else 'skills']
-                    for destination, use_branch in ((before, False), (after, True)):
+                    sides = ((before, False), (after, True)) if role.endswith('knowledge') else ((after, True),)
+                    for destination, use_branch in sides:
                         began = time.monotonic()
                         value = answer(question, cap, use_branch)
                         destination[role]['answers'].append({'id': row['id'], **value,

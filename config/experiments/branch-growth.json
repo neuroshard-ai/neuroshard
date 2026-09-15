@@ -1,1 +1,102 @@
-{"decoding":"Ordinary greedy tokenizer-vocabulary generation until EOS or the fixed token cap. No forced JSON prefix, class vocabulary, retrieved fact table or answer repair.","equivalence":"Before new development questions, require byte-identical output tokens on all256previous development knowledge questions compared with the learned standalone tail. This checks composition, not independent quality.","expert":"dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d","expert_layout":[0,6,15,22,24],"format":"neuroshard-branch-growth-v1","gate":{"bootstrap_samples":10000,"capacity_advantage_lower":0.0,"capacity_advantage_net_correct":32,"confidence":0.95,"development_retention_mean":0.01,"knowledge_accuracy":0.75,"knowledge_gain_lower":0.1,"prior_correct_losses":0,"retention_upper":0.02},"generation":{"knowledge":32,"skills":256},"license":"Apache-2.0","max_length":1024,"max_seconds":14400,"parameter_limit":900000000,"parent":"d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56","parent_layout":[0,6,15,24],"purpose":"Test useful capacity added as an independently owned transformer expert while retaining the complete original model path.","question_source_prepared":"fdbb1731c954c8078ada1fad8e3372c32dd3791ea6620665e01971386e7967d5","questions":"Reuse the exact new question forms already committed in the unexecuted conditional-readout proposal. Neither development nor final has been evaluated by that proposal. Facts are admitted training material; only wording is held out. Existing skill and conversation probes measure retention.","resource_allowance":{"allocation":"knowledge-rehearsal-20260915","max_additional_instances":0,"max_hours_including_previous_work":8,"planning_cap_usd_including_previous_work":100,"retire_after_verified_preservation":true,"start_after_original_numerical_completion":true},"runtime":{"allocator":"expandable_segments:True","attention":"sdpa","autocast":"bfloat16","cpu_dispatch":"DEFAULT","cross_device_exact":false,"cuda":"12.8","deterministic_algorithms":true,"device":"cuda","gpu":"NVIDIA A10G","jinja2":"3.1.6","machine":"x86_64","mkl_instructions":"SSE4_2","numpy":"2.2.6","optimizer":"float32-adamw","parameters":"float32","python":"3.10.12","safetensors":"0.7.0","threads":2,"tokenizers":"0.22.1","torch":"2.9.1+cu128","torch_build":"34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63","transformers":"4.57.3"},"scope":"Operated transformer capacity growth and availability experiment. An explicit domain selector is not a general learned router. Adding a retained expert does not establish an equal-budget scaling advantage, independent operators, economic security or native settlement.","seeds":{"bootstrap":2026091905,"facts":2026091901,"replay":2026091902,"schedule":2026091903,"skill_probes":2026091904,"training":2026091900},"selection":"One fixed graph. Require at least75% new-question correctness, original entity-cluster gain bound, zero old correct skill losses, exact original skill answers and conversation losses, and the declared question-only selector. Commit all development evidence before any final. Require parent generation to continue after the added worker process has exited, as observed by the controller.","selector":"Use the added expert exactly when the user question contains fictional Luma directory, case-insensitively. No entity, attribute, expected answer or evaluation ID enters routing. Otherwise execute the unchanged parent through its independent three-owner process group.","split":22,"stop":"Abort on composition, integrity, numerical or deadline failure. Publish a failed gate without tuning the graph or opening an ineligible final. No native activation or issuance.","threads":2,"tokenizer":"e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e","tokenizer_files":{"chat_template.jinja":"872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788","merges.txt":"0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510","special_tokens_map.json":"2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52","tokenizer.json":"7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7","tokenizer_config.json":"5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5","vocab.json":"82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79"},"training":"No new training or tuning in this composition trial. The added tail is exactly the terminal existing-tail learner from the previously frozen1024update rehearsal. Retain all original parent tensors alongside the added trained tail. Preserve actual Adam state and training provenance.","training_job":"b8be1b5fb8d2f32f8067b76926475f45c662ca55e146f45346c50d5b1f0ceda3","training_prepared":"031d1178e288b1d1ac092885eff942e49e229a3fbfe1283db93915ba3967a0fa","training_source":"f0762276d419e8e5188f355286a53bbf5457d2d4"}
+{
+  "decoding": "Ordinary greedy tokenizer-vocabulary generation until EOS or the fixed token cap. No forced JSON prefix, class vocabulary, retrieved fact table or answer repair.",
+  "equivalence": "Before new development questions, require byte-identical output tokens on all256previous development knowledge questions compared with the learned standalone tail. This checks composition, not independent quality.",
+  "expert": "dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d",
+  "expert_layout": [
+    0,
+    6,
+    15,
+    22,
+    24
+  ],
+  "format": "neuroshard-branch-growth-v1",
+  "gate": {
+    "bootstrap_samples": 10000,
+    "capacity_advantage_lower": 0.0,
+    "capacity_advantage_net_correct": 32,
+    "confidence": 0.95,
+    "development_retention_mean": 0.01,
+    "knowledge_accuracy": 0.75,
+    "knowledge_gain_lower": 0.1,
+    "prior_correct_losses": 0,
+    "retention_upper": 0.02
+  },
+  "generation": {
+    "knowledge": 32,
+    "skills": 256
+  },
+  "license": "Apache-2.0",
+  "max_length": 1024,
+  "max_seconds": 14400,
+  "parameter_limit": 900000000,
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "parent_layout": [
+    0,
+    6,
+    15,
+    24
+  ],
+  "purpose": "Test useful capacity added as an independently owned transformer expert while retaining the complete original model path.",
+  "question_source_prepared": "fdbb1731c954c8078ada1fad8e3372c32dd3791ea6620665e01971386e7967d5",
+  "questions": "Reuse the exact new question forms already committed in the unexecuted conditional-readout proposal. Neither development nor final has been evaluated by that proposal. Facts are admitted training material; only wording is held out. Existing skill and conversation probes measure retention.",
+  "resource_allowance": {
+    "allocation": "knowledge-rehearsal-20260915",
+    "max_additional_instances": 0,
+    "max_hours_including_previous_work": 8,
+    "planning_cap_usd_including_previous_work": 100,
+    "retire_after_verified_preservation": true,
+    "start_after_original_numerical_completion": true
+  },
+  "runtime": {
+    "allocator": "expandable_segments:True",
+    "attention": "sdpa",
+    "autocast": "bfloat16",
+    "cpu_dispatch": "DEFAULT",
+    "cross_device_exact": false,
+    "cuda": "12.8",
+    "deterministic_algorithms": true,
+    "device": "cuda",
+    "gpu": "NVIDIA A10G",
+    "jinja2": "3.1.6",
+    "machine": "x86_64",
+    "mkl_instructions": "SSE4_2",
+    "numpy": "2.2.6",
+    "optimizer": "float32-adamw",
+    "parameters": "float32",
+    "python": "3.10.12",
+    "safetensors": "0.7.0",
+    "threads": 2,
+    "tokenizers": "0.22.1",
+    "torch": "2.9.1+cu128",
+    "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+    "transformers": "4.57.3"
+  },
+  "scope": "Operated transformer capacity growth and availability experiment. An explicit domain selector is not a general learned router. Adding a retained expert does not establish an equal-budget scaling advantage, independent operators, economic security or native settlement.",
+  "seeds": {
+    "bootstrap": 2026091905,
+    "facts": 2026091901,
+    "replay": 2026091902,
+    "schedule": 2026091903,
+    "skill_probes": 2026091904,
+    "training": 2026091900
+  },
+  "selection": "One fixed graph. Require at least75% new-question correctness, original entity-cluster gain bound, zero old correct skill losses, exact original skill answers and conversation losses, and the declared question-only selector. Commit all development evidence before any final. Require parent generation to continue after the added worker process has exited, as observed by the controller.",
+  "selector": "Use the added expert exactly when the user question contains fictional Luma directory, case-insensitively. No entity, attribute, expected answer or evaluation ID enters routing. Otherwise execute the unchanged parent through its independent three-owner process group.",
+  "split": 22,
+  "stop": "Abort on composition, integrity, numerical or deadline failure. Publish a failed gate without tuning the graph or opening an ineligible final. No native activation or issuance.",
+  "threads": 2,
+  "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+  "tokenizer_files": {
+    "chat_template.jinja": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788",
+    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+    "tokenizer.json": "7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7",
+    "tokenizer_config.json": "5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5",
+    "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79"
+  },
+  "training": "No new training or tuning in this composition trial. The added tail is exactly the terminal existing-tail learner from the previously frozen1024update rehearsal. Retain all original parent tensors alongside the added trained tail. Preserve actual Adam state and training provenance.",
+  "training_job": "b8be1b5fb8d2f32f8067b76926475f45c662ca55e146f45346c50d5b1f0ceda3",
+  "training_prepared": "031d1178e288b1d1ac092885eff942e49e229a3fbfe1283db93915ba3967a0fa",
+  "training_source": "f0762276d419e8e5188f355286a53bbf5457d2d4",
+  "retention_baseline": "Reuse the recorded original-parent baseline for exactly the same retained skill and conversation inputs. Bind the derived cache across owners and compare every actual parent-path token and loss exactly. Generate fresh baseline answers for the new knowledge questions. No output, dataset or gate is changed by this cache."
+}
