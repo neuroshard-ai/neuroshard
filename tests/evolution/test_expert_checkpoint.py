@@ -8,6 +8,7 @@ from transformers import LlamaConfig
 
 from neuroshard.evolution import expert_checkpoint as codec, reference_data as data
 from neuroshard.evolution.sharded import cohort_state, portable
+from neuroshard.evolution.sharded.expert_commitment import snapshot
 from test_expert_cohort_state import prepare, update, RECIPE
 
 
@@ -67,3 +68,15 @@ def test_consensus_codec_imports_no_neural_runtime():
     subprocess.run([sys.executable, '-c',
         'import sys; import neuroshard.evolution.expert_checkpoint; '
         'assert not ({"torch", "transformers", "safetensors"} & set(sys.modules))'], check=True)
+
+
+def test_in_memory_roots_equal_real_saved_weights_and_adam(tmp_path):
+    parent, objects, shard, optimizer = prepare(tmp_path)
+    parent['shards'] = [data.identity({'fixture_parent_owner': i}) for i in range(3)]
+    for step in range(3):
+        if step:
+            update(shard, optimizer, step - 1)
+        actual = snapshot(shard, optimizer, parent, 'c' * 64, step, RECIPE)
+        written = cohort_state.commit_tail(tmp_path / 'actual', shard, optimizer, parent,
+                                           objects, 'c' * 64, step, RECIPE, 5)
+        assert codec.unpack(parent, actual) == written

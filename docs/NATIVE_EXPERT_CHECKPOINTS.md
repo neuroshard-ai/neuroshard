@@ -38,3 +38,5 @@ quality approval. A metadata match is not a proof that training ran correctly.
 The second expert currently has durable checkpoints at 0/280/560; settling windows
 of at most four steps requires reconstructing and verifying the intervening
 checkpoints, not treating a 280-step jump as one accepted window.
+
+The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. GPU execution remains pending. The cached prefix still needs its own execution audit before native acceptance.
