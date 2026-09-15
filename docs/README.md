@@ -1,5 +1,8 @@
 # Protocol and development documentation
 
+[Frozen feature reuse](FROZEN_FEATURES.md) develops repeated training of an
+added shard without recomputing the immutable distributed prefix each time.
+
 | Start here | Purpose |
 | --- | --- |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |

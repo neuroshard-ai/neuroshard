@@ -1,0 +1,14 @@
+{
+  "format": "neuroshard-frozen-feature-factorization-v1",
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "prepared": "d69b098bd210ade7988cb533432a4cc0ae45a72c8b0495686ef3a7a6c7ad9c9e",
+  "arms": ["append", "tail-control"],
+  "unique_training_batches": 4,
+  "steps": 8,
+  "learning_rate": 0.00005,
+  "warmup_steps": 1,
+  "require_exact_weights_and_adam": true,
+  "require_exact_losses_and_gradient_norms": true,
+  "maximum_seconds_per_arm": 1800,
+  "scope": "Numerical equivalence and cost only. Reuse four instances after the entire frozen capacity comparison, worker recovery and any selected finals have completed. Do not change its candidates or gates. Record these diagnostic updates and resources separately. No new learning evidence, serving activation or NEURO issuance."
+}
