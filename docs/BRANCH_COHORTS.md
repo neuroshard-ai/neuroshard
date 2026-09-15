@@ -18,6 +18,22 @@ the three parent owners generate again. All retained outputs match exactly.
 These are transport and composition checks with small initialized models, not
 a second real-model learning result.
 
+`sharded.cohort_features` prepares the new expert's exact padded training
+features through its own four-member group. The three original owners retain
+their complete parent partitions. After feature production, the new owner can
+reuse those inputs for local AdamW updates while the earlier paths answer
+through their separate groups. A read-only output-head replica is needed by
+the learner; it has no optimizer and is outside the uniquely trained weights.
+
+The five-process learning test checks the cached prefix and reference tensors
+against full-model evaluation, then compares all eight updates, clipping norms,
+weights and Adam state against independent full-model autograd. Earlier paths
+answer between the new learner's first and last update, retain exactly the
+same answers, and keep all their parameters unchanged. This establishes a
+small-model execution mechanism; GPU learning quality, concurrent service
+performance, arbitrary peer admission and native settlement remain separate
+measurements.
+
 The first real-model [branch experiment](BRANCH_GROWTH.md) remains independently
 frozen. The multiple-expert module does not change its numerical source, graph,
 questions or selection. A later cohort requires its own committed training and
