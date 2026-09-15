@@ -44,8 +44,11 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
     contract = experiment
     plan, prepared = contract.validate()
     final = args.command == 'final'
-    if args.command not in ('train', 'final'):
-        raise ValueError('Require training/development or the selected final')
+    readonly = args.command in ('evaluate', 'final')
+    if args.command not in ('train', 'evaluate', 'final'):
+        raise ValueError('Require training, read-only development, or the selected final')
+    if plan.get('operation') == 'read-only' and not readonly:
+        raise ValueError('This frozen composition experiment forbids training')
     selection = contract.final_selection(plan, prepared) if final else None
     if not final and contract.SELECTION.exists():
         raise ValueError('Training is closed after selecting this cohort')
@@ -60,6 +63,8 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
                 or selected['job'] != job or selected['step'] != plan['training']['steps']
                 or data.identity(contract.graph(plan, parent, first, selected)) != selection['graph']):
             raise ValueError('Restore exactly the selected terminal graph')
+    elif readonly:
+        contract.require_checkpoint(plan, prepared, selected, parent, first)
     elif selected is not None:
         raise ValueError('This fixed learning run starts one new expert from its frozen parent')
     cache = read(args.inputs / 'retention-cache.json')
@@ -87,7 +92,7 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
             parameter.requires_grad_(False)
             del values
     optimizer = None
-    if rank == 4 and final:
+    if rank == 4 and readonly:
         incremental_state.load(args.second.parent, shard, None, selected, parent, job,
                                plan['training'], restore_optimizer=False)
     shard.eval()
@@ -136,7 +141,7 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
             before.append({'id': row['id'], **value})
         data.save(args.home / 'new-baseline.json', before)
         feature_root, production, learning = None, None, None
-        if not final:
+        if not readonly:
             training = contract.rows(prepared, args.inputs, 'train', tokenizer, plan['max_length'])
             feature_binding = {**binding, 'cut': plan['split'], 'batches': data.identity(prepared['batches']),
                                'runtime': plan['runtime']}
@@ -263,12 +268,16 @@ def run(args, device='cuda', *, experiment=contract, network_factory=None):
                                 value = float(weighted_loss(shard.logits(hidden), labels, torch.ones_like(weights))) / row['targets']
                     loss = {'id': row['id'], 'targets': row['targets'], 'loss': all_owners.exchange(value)[0]}
                     if loss != expected['losses'][index]:
+                        data.save(args.home / 'retention-failure.json',
+                                  {'role': role, 'index': index, 'expected': expected['losses'][index], 'actual': loss})
                         raise ValueError('An established conversation loss changed')
                     result['losses'].append(loss)
                 else:
                     value = answer(row['messages'][0]['content'], plan['generation']['retained_' + suffix])
                     actual = {'id': row['id'], **value}
                     if not answer_equal(actual, expected['answers'][index]):
+                        data.save(args.home / 'retention-failure.json',
+                                  {'role': role, 'index': index, 'expected': expected['answers'][index], 'actual': actual})
                         raise ValueError('An established generated answer changed')
                     result['answers'].append(actual)
                 if (index + 1) % 32 == 0:
