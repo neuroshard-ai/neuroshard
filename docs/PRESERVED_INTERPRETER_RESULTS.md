@@ -74,6 +74,11 @@ The [publication record](../config/experiments/preserved-interpreter-publication
 binds the release, numerical bundle and verification result. The download
 procedure needs no operator AWS access or GitHub login.
 
+Use the [current reproduction guide](REPRODUCE_EXPERT_GRAPH.md), which corrects
+control-receipt publication to use atomic file replacement. The initial bundled
+guide wrote the receipt directly, allowing a concurrent reader to see partial
+JSON. Model objects, frozen neural execution and recorded results are unchanged.
+
 ## What this establishes
 
 This is a passed, bounded example of accessing learned neural knowledge through
