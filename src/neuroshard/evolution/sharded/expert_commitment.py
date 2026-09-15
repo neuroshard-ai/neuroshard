@@ -5,12 +5,44 @@ not imply that every intermediate object is currently available to another
 peer; a serving/availability protocol must supply or reproduce those bytes.
 """
 import hashlib
+import json
+import struct
+import sys
 
+import numpy as np
 import torch
-from safetensors.torch import save as tensor_bytes
 
 from .. import expert_checkpoint as codec
 from ..reference_data import identity
+
+
+def tensor_commitment(values):
+    """Hash this profile's exact F32 Safetensors encoding without copying it.
+
+    Field names, dtype and metadata are deliberately restricted. Compatibility
+    tests compare this byte stream with the pinned Safetensors writer, including
+    complete weight/Adam checkpoints. This is a storage optimization only.
+    """
+    if (sys.byteorder != 'little' or set(values) not in (
+            {'weight'}, {'weight', 'step', 'exp_avg', 'exp_avg_sq'})):
+        raise ValueError('Require the fixed little-endian weight/Adam encoding')
+    header, arrays, offset = {}, [], 0
+    for key, value in sorted(values.items()):
+        if value.dtype != torch.float32 or value.device.type != 'cpu' or not value.is_contiguous():
+            raise ValueError('Commit contiguous CPU float32 arrays')
+        array = value.numpy()
+        if not bool(np.isfinite(array).all()):
+            raise ValueError('Invalid finite weight or Adam moment')
+        header[key] = {'dtype': 'F32', 'shape': list(value.shape),
+                       'data_offsets': [offset, offset + array.nbytes]}
+        offset += array.nbytes
+        arrays.append(array)
+    encoded = json.dumps(header, separators=(',', ':')).encode()
+    encoded += b' ' * (-len(encoded) % 8)
+    digest = hashlib.sha256(struct.pack('<Q', len(encoded)) + encoded)
+    for array in arrays:
+        digest.update(memoryview(array).cast('B'))
+    return {'sha256': digest.hexdigest(), 'bytes': 8 + len(encoded) + offset}
 
 
 def snapshot(shard, optimizer, parent, job, step, recipe):
@@ -32,13 +64,12 @@ def snapshot(shard, optimizer, parent, job, step, recipe):
         values = {'weight': parameter.detach().cpu().contiguous(),
                   **{key: value.detach().cpu().contiguous() for key, value in state.items()}}
         for key, value in values.items():
-            if (value.dtype != torch.float32 or not bool(torch.isfinite(value).all())
+            if (value.dtype != torch.float32
                     or (key != 'step' and value.shape != parameter.shape)):
                 raise ValueError('Invalid finite weight or Adam moment')
-        raw = tensor_bytes(values)
-        tensors[name] = {'sha256': hashlib.sha256(raw).hexdigest(), 'bytes': len(raw),
+        tensors[name] = {**tensor_commitment(values),
                          'shape': list(parameter.shape), 'optimizer_step': step}
-        del raw, values
+        del values
     if tuple(p._version for p in names.values()) != versions:
         raise ValueError('Snapshotting changed a model parameter')
     value = {'format': codec.FORMAT, 'parent': identity(parent), 'job': job, 'step': step,

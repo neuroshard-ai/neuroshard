@@ -39,4 +39,15 @@ The second expert currently has durable checkpoints at 0/280/560; settling windo
 of at most four steps requires reconstructing and verifying the intervening
 checkpoints, not treating a 280-step jump as one accepted window.
 
-The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. GPU execution remains pending. The cached prefix still needs its own execution audit before native acceptance.
+The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. The cached prefix still needs its own execution audit before native acceptance.
+
+The [first GPU attempt](../config/experiments/expert-window-replay-attempt-0.json)
+matched the first 25 updates but was stopped early because checkpoint recording
+could not finish the full trajectory within its frozen deadline. Its observations
+are preserved and the instance, disk and security group retired. The replacement
+uses a streaming encoder for the same restricted float32 Safetensors bytes,
+avoiding large temporary byte strings. Compatibility tests compare its hashes and
+lengths with the pinned writer, including ordinary complete weight/Adam
+checkpoints. The numerical training kernel, data, update identity and runtime are
+unchanged. The new plan additionally requires all 25 recorded intermediate GPU
+checkpoints to match. A completed GPU replay is still pending.
