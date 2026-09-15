@@ -32,7 +32,8 @@ def run(args):
     if final:
         selection = json.loads(base.committed(contract.SELECTION))
         if (not selection['eligible'] or selection['plan'] != data.identity(plan)
-                or selection['prepared'] != data.identity(prepared)):
+                or selection['prepared'] != data.identity(prepared)
+                or selection['graph'] != data.identity(prepared['graph'])):
             raise ValueError('Only a committed eligible branch may open finals')
     elif contract.SELECTION.exists():
         raise ValueError('Development is closed after branch selection')
