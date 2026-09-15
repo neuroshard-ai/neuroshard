@@ -3,6 +3,9 @@
 [Frozen feature reuse](FROZEN_FEATURES.md) develops repeated training of an
 added shard without recomputing the immutable distributed prefix each time.
 
+[Knowledge rehearsal](KNOWLEDGE_REHEARSAL.md) isolates repeated exposure while
+retaining the existing generated-answer and retention requirements.
+
 | Start here | Purpose |
 | --- | --- |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
