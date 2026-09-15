@@ -38,3 +38,9 @@ The first real-model [branch experiment](BRANCH_GROWTH.md) remains independently
 frozen. The multiple-expert module does not change its numerical source, graph,
 questions or selection. A later cohort requires its own committed training and
 quality contract before any training or settlement.
+
+The [second-cohort experiment](BRANCH_COHORT_LEARNING.md) connects feature
+production, local learning, retained serving and recovery into one operated
+trial. Its source and CPU integration tests are available; a passing first
+branch and complete committed input preparation are prerequisites for GPU
+execution.
