@@ -24,6 +24,10 @@ using the actual unchanged allocation, and that failure and recovery are recorde
 in the result. The numerical result and frozen helpers were unchanged.
 
 See the [five-owner reproduction procedure](REPRODUCE_COMPOSED_COHORT.md).
+The [public model release](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915) contains the new expert, training bank and
+numerical bundle. All 24 new assets passed complete anonymous SHA-256 readbacks;
+[publication records](../config/experiments/composed-cohort-public-artifacts.json)
+bind the result, public files and each owner's download requests.
 The experiment's method and original failure remain documented below.
 
 

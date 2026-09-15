@@ -1,5 +1,8 @@
 # Reproduce the five-owner continual-learning experiment
 
+Download `neuroshard-cohort-evidence.tar.gz` and `SHA256SUMS` from the
+[research release](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915).
+
 This bundle restores a second learned expert alongside the earlier expert and
 checks new answers, retention and the earlier model's operation after the new
 expert exits. `numerical-result.json` contains the closed decision. The original
