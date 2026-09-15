@@ -1,0 +1,356 @@
+{
+  "format": "neuroshard-knowledge-rehearsal-results-v1",
+  "source_commit": "f0762276d419e8e5188f355286a53bbf5457d2d4",
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "prepared": "031d1178e288b1d1ac092885eff942e49e229a3fbfe1283db93915ba3967a0fa",
+  "arms": {
+    "append": {
+      "checkpoint": "ead39902baf6a0a2c42ce3d9052ee9c9130820b1f13aa2a24002ab5053f36841",
+      "learned_state": "497ea56fb3a0754712c8fd2073c287c5a8a0ac9c11f543ee6dc2776ee9f5a95c",
+      "development": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": true,
+          "prior_correct_answers_retained": false
+        },
+        "conversation": {
+          "lower": 0.002870902990234229,
+          "mean": 0.005043378051494669,
+          "pairs": 128,
+          "upper": 0.00741095489063729
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.18359375,
+          "after": 47,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.13671875,
+            "mean": 0.18359375,
+            "pairs": 32,
+            "upper": 0.234375
+          },
+          "gains": 47,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 151,
+          "before": 151,
+          "count": 192,
+          "gains": 2,
+          "losses": 2
+        }
+      },
+      "final": null,
+      "feature_bank_root": "4f5c3b998cabdba7fd17a4f2cddfd20f183d44cd7651476d22a5ecc26f232fe7",
+      "feature_archive_bytes": 13864611840,
+      "feature_production_by_owner": [
+        {
+          "root": "4f5c3b998cabdba7fd17a4f2cddfd20f183d44cd7651476d22a5ecc26f232fe7",
+          "seconds": 417.57793555499995,
+          "sent_tensor_bytes": 27645362176,
+          "unique_batches": 128
+        },
+        {
+          "root": "4f5c3b998cabdba7fd17a4f2cddfd20f183d44cd7651476d22a5ecc26f232fe7",
+          "seconds": 417.5776098509999,
+          "sent_tensor_bytes": 13822681088,
+          "unique_batches": 128
+        },
+        {
+          "root": "4f5c3b998cabdba7fd17a4f2cddfd20f183d44cd7651476d22a5ecc26f232fe7",
+          "seconds": 417.577404021,
+          "sent_tensor_bytes": 13822681088,
+          "unique_batches": 128
+        },
+        {
+          "root": "4f5c3b998cabdba7fd17a4f2cddfd20f183d44cd7651476d22a5ecc26f232fe7",
+          "seconds": 417.57757857700005,
+          "sent_tensor_bytes": 27645362176,
+          "unique_batches": 128
+        }
+      ],
+      "training_updates": 1024,
+      "neural_update_seconds": 710.4988527840019,
+      "feature_loading_seconds": 128.26401833999148,
+      "median_update_with_load_seconds": 0.8247987299999977,
+      "peak_cuda_bytes_by_owner": [
+        2658812416,
+        3128484352,
+        3128484352,
+        10119911936
+      ],
+      "evidence_objects": [
+        {
+          "sha256": "ebcecb93fa3acab3f27a8537c738ad9464da68aa932503a383eecbf73455f20e",
+          "bytes": 8585799680,
+          "object": "research/knowledge-rehearsal-20260915/objects/ebcecb93fa3acab3f27a8537c738ad9464da68aa932503a383eecbf73455f20e",
+          "readback_verified": true
+        },
+        {
+          "sha256": "3b40ba7c78ecca3e794a1da349d4576a666b2abe58aecf27c3a17e78559ecfea",
+          "bytes": 5278812160,
+          "object": "research/knowledge-rehearsal-20260915/objects/3b40ba7c78ecca3e794a1da349d4576a666b2abe58aecf27c3a17e78559ecfea",
+          "readback_verified": true
+        }
+      ]
+    },
+    "tail-control": {
+      "checkpoint": "dbce4d1adaf9589a5b6d4899d41be21abd52b655b601fc57ff2eee1c4cc81c8d",
+      "learned_state": "73fd68ce86080a209e736d83d09d774498fcdd16266f7b4c654f87b58b7f5ea1",
+      "development": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": true,
+          "knowledge_gain": true,
+          "prior_correct_answers_retained": true
+        },
+        "conversation": {
+          "lower": 0.0024791356067373808,
+          "mean": 0.004482294081176069,
+          "pairs": 128,
+          "upper": 0.006705441465015445
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.8515625,
+          "after": 218,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.8125,
+            "mean": 0.8515625,
+            "pairs": 32,
+            "upper": 0.88671875
+          },
+          "gains": 218,
+          "losses": 0
+        },
+        "passed": true,
+        "skills": {
+          "after": 151,
+          "before": 151,
+          "count": 192,
+          "gains": 0,
+          "losses": 0
+        }
+      },
+      "final": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": true,
+          "prior_correct_answers_retained": false
+        },
+        "conversation": {
+          "lower": 0.0033818105874261614,
+          "mean": 0.006693217530658158,
+          "pairs": 256,
+          "upper": 0.010771913804634544
+        },
+        "development": false,
+        "knowledge": {
+          "accuracy": 0.7451171875,
+          "after": 763,
+          "before": 0,
+          "count": 1024,
+          "entity_cluster_delta": {
+            "lower": 0.7197265625,
+            "mean": 0.7451171875,
+            "pairs": 128,
+            "upper": 0.7705078125
+          },
+          "gains": 763,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 657,
+          "before": 650,
+          "count": 768,
+          "gains": 10,
+          "losses": 3
+        }
+      },
+      "feature_bank_root": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+      "feature_archive_bytes": 27687393280,
+      "feature_production_by_owner": [
+        {
+          "root": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+          "seconds": 459.0388675429999,
+          "sent_tensor_bytes": 27645362176,
+          "unique_batches": 128
+        },
+        {
+          "root": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+          "seconds": 459.03828253200027,
+          "sent_tensor_bytes": 13822681088,
+          "unique_batches": 128
+        },
+        {
+          "root": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+          "seconds": 459.0389779819998,
+          "sent_tensor_bytes": 13822681088,
+          "unique_batches": 128
+        },
+        {
+          "root": "1f51c646fa3e26b3ebce45ddf54186d894f40cc0a6e1f1b3ec3552469d7641f2",
+          "seconds": 459.04109802799985,
+          "sent_tensor_bytes": 27645362176,
+          "unique_batches": 128
+        }
+      ],
+      "training_updates": 1024,
+      "neural_update_seconds": 715.0261694929986,
+      "feature_loading_seconds": 450.7734000849987,
+      "median_update_with_load_seconds": 0.9584266040005787,
+      "peak_cuda_bytes_by_owner": [
+        2658812416,
+        3128484352,
+        2591580672,
+        10242202112
+      ],
+      "evidence_objects": [
+        {
+          "sha256": "0fbcd905934086ba03dcbb6d4e56dc0f227dde1ef4a5d6e7645f9010227d157d",
+          "bytes": 8585472000,
+          "object": "research/knowledge-rehearsal-20260915/objects/0fbcd905934086ba03dcbb6d4e56dc0f227dde1ef4a5d6e7645f9010227d157d",
+          "readback_verified": true
+        },
+        {
+          "sha256": "f52a2c30b68335f78a7de8c3b99a2eca84280c3afc396f5791bd345873734fff",
+          "bytes": 8580208640,
+          "object": "research/knowledge-rehearsal-20260915/objects/f52a2c30b68335f78a7de8c3b99a2eca84280c3afc396f5791bd345873734fff",
+          "readback_verified": true
+        },
+        {
+          "sha256": "7d931607a2644687471b45c5bd10ec4c40df719cdc9ba823e30f6936fe81d215",
+          "bytes": 8584417280,
+          "object": "research/knowledge-rehearsal-20260915/objects/7d931607a2644687471b45c5bd10ec4c40df719cdc9ba823e30f6936fe81d215",
+          "readback_verified": true
+        },
+        {
+          "sha256": "d5cbf25a45127a9df0b519019a40b98a60d16f88895f770b79f6bcdecd1c88a7",
+          "bytes": 1937295360,
+          "object": "research/knowledge-rehearsal-20260915/objects/d5cbf25a45127a9df0b519019a40b98a60d16f88895f770b79f6bcdecd1c88a7",
+          "readback_verified": true
+        }
+      ]
+    }
+  },
+  "finals_opened": true,
+  "learning_in_added_blocks_passed": false,
+  "learning_in_existing_tail_passed": false,
+  "capacity_advantage": null,
+  "passed": false,
+  "recovery": {
+    "required": false,
+    "performed": false,
+    "reason": "Added shard failed development; do not spend another machine on that learning candidate."
+  },
+  "resources": {
+    "terminated": true,
+    "instances": [
+      "i-00fb23c397a6c00b9",
+      "i-01cf6904ee741859f",
+      "i-0668ff1d69721d98b",
+      "i-093ec9541b8672428"
+    ],
+    "physical_instances": 4,
+    "maximum_simultaneous_workers": 4,
+    "confirmed": "2026-09-15T13:22:48.300416+00:00",
+    "volumes": [
+      "vol-00ae704232b992c2c",
+      "vol-054c0d344990ca0f0",
+      "vol-0597ac4264b240f91",
+      "vol-0836199c952397eb9"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "protected_instances_unchanged": true,
+    "per_instance": [
+      {
+        "instance": "i-093ec9541b8672428",
+        "type": "g5.2xlarge",
+        "hours": 4.431194559931755,
+        "compute_usd": 5.370607806637286,
+        "gp3_usd": 0.12308873777588207
+      },
+      {
+        "instance": "i-0668ff1d69721d98b",
+        "type": "g5.2xlarge",
+        "hours": 4.432583448820644,
+        "compute_usd": 5.372291139970621,
+        "gp3_usd": 0.12312731802279567
+      },
+      {
+        "instance": "i-01cf6904ee741859f",
+        "type": "g5.xlarge",
+        "hours": 4.432305671042866,
+        "compute_usd": 4.458899505069123,
+        "gp3_usd": 0.12311960197341294
+      },
+      {
+        "instance": "i-00fb23c397a6c00b9",
+        "type": "g5.2xlarge",
+        "hours": 4.433416782153977,
+        "compute_usd": 5.3733011399706205,
+        "gp3_usd": 0.12315046617094381
+      }
+    ],
+    "compute_usd_upper_bound": 20.57509959164765,
+    "gp3_usd_estimate": 0.4924861239430345,
+    "lifetime_tx_bytes": 915366046540,
+    "network_counters_complete": true,
+    "conservative_transfer_allowance_usd": 18.3073209308,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately."
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/knowledge-rehearsal-20260915/evidence/bc256a16e9db7a2ade58349ce8478fdd37d77ca2f4a7727492df0b4965761e2c",
+    "sha256": "bc256a16e9db7a2ade58349ce8478fdd37d77ca2f4a7727492df0b4965761e2c",
+    "bytes": 13715757,
+    "readback_verified": true,
+    "scope": "Exact sources and complete experiment evidence; model tensors are separately hashed objects. No signing keys, credentials or Git history."
+  },
+  "tokens_issued": 0,
+  "native_activated": false,
+  "scope": "Operated sharded fact-learning experiment with unchanged generated-answer and retention gates. Control and growth are distinct comparisons. No broad assistant-quality or permissionless-security claim.",
+  "post_numerical_branch": {
+    "addendum": {
+      "accounting": "Allocation costs include the original rehearsal, this branch trial and training-only CPU/GPU diagnostics. Individual phase times remain distinct.",
+      "archive_helper_after_sha256": "b71922fbec6de1a94bd68ed1c11027dae785efa07d2a20aba2d2c61e5a943935",
+      "archive_helper_original_sha256": "86434537bb01751fc6ad9995ab5d786ed4b2e55fa3a2e1bc61f03ef33219e054",
+      "cleanup": "Preserve branch success or failure with a full S3 readback, then resume the original archive and complete retirement.",
+      "deadline": "2026-09-15T16:56:46.133996+00:00",
+      "extension_sha256": "f0083fdb04993a735d221aa0220dc31aa7d85ddf312d75260b6d76a0556762d5",
+      "graph": "1740a3c4ee699f33fc5e43ed4063a99d468aa158c09f0478279ce34617ae951e",
+      "max_simultaneous_gpu_vcpus": 28,
+      "new_instances": 0,
+      "planning_cap_usd_including_all_work": 100,
+      "prepared": "4b62955d1a523261bb24a7245d03b8ea7960d0aca6ff9e8a5f8c214b42a7d8fb",
+      "purpose": "After all original rehearsal numerical work, backups, selection and eligible finals, evaluate the independently frozen transformer branch using the already learned tail. Defer the unexecuted categorical readout. No rehearsal numerical source, gate, model or data changes.",
+      "source_commit": "646123ebeff543d7acb166565660ca2bf536d226",
+      "summary_helper_after_sha256": "0f353549cb40594372bd8baf8983e0bd2147fa13a9587a42d86ddf3599111cfa",
+      "summary_helper_original_sha256": "c38504cb821812eedd68c9c8f83abff037286988abf501873c00d1a72b5000c4",
+      "time": 1789471349.7458875,
+      "pre_branch_diagnostic": {
+        "scope": "Read-only teacher-forced check of eight already-trained batches after original GPU finals; exclusive handoff lock before branch execution.",
+        "maximum_seconds": 120,
+        "source_sha256": "03421e3aaf0f6d609db8a228ac0e9ea95d93e9f0925d2fe11f8477c2768ec648"
+      }
+    },
+    "evidence": {
+      "bucket": "neuroshard-training-data",
+      "object": "research/branch-growth-20260915/evidence/f6df1970766462d888fca5962fea763c1f6b4cc04192f00a8a17dc04e948e6f2",
+      "sha256": "f6df1970766462d888fca5962fea763c1f6b4cc04192f00a8a17dc04e948e6f2",
+      "bytes": 95705313,
+      "readback_verified": true,
+      "scope": "Complete source, fixed branch graph, frozen questions, generated outcomes, observed worker exit and parent survival, plus exploratory diagnostics. Original parent and learned transformer tensors have separately verified content-addressed inventories included here."
+    }
+  },
+  "resources_scope": "The allocation lifetime and costs include the separately frozen post-numerical transformer branch experiment and training and post-final exploratory diagnostics. The categorical readout proposal was deferred before execution. Rehearsal feature and update timings above cover only their named phases."
+}

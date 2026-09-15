@@ -77,4 +77,5 @@ premature checkpoint selection. Failed development does not read final inputs.
 [Real-model feature equivalence](FROZEN_FEATURE_RESULTS.md) passed all eight
 updates in both layouts. The [prepared record](../config/experiments/knowledge-rehearsal-prepared.json)
 and [bounded execution plan](../config/experiments/knowledge-rehearsal-execution.json)
-bind the longer trial before any worker allocation. Its learning outcome remains pending.
+bind the longer trial before any worker allocation. The completed trial failed its
+frozen learning gates; see [measured results](KNOWLEDGE_REHEARSAL_RESULTS.md).
