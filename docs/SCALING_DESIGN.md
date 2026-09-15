@@ -17,6 +17,24 @@ The public 0.4.0 adapter network, the experimental full-model native lifecycle, 
 
 The useful-computation mining concept survives. It is a work allocation and settlement mechanism, not a claim that a gradient supplies Bitcoin-like block-selection security. Token issuance alone does not finance hardware in the real world or create demand for inference.
 
+## Current measured learning method
+
+The [five-owner expert graph](COMPOSED_COHORT.md) now passes a second domain's
+answer and retention gate. Three owners hold disjoint portions of the trained
+1.7B parent and preserved interpreter; two additional owners hold independently
+trained 134M tails. The added learner trained on committed parent features while
+earlier paths served. Its selected checkpoint improves the new domain, preserves
+all measured earlier answers and losses, and permits the earlier four-owner graph
+to keep serving after the added expert exits.
+
+The concrete method is to retain established model paths, train additional
+capacity against an immutable shared parent, and admit only a composition that
+passes new-answer and retention checks. Domain routing and the two-question
+composition grammar remain explicit. This result supports growing useful
+specialized capacity; broad routing, general assistant quality, admission and
+settlement of successive expert graphs remain obligations. Stored parameter
+count alone is not the result.
+
 ## Architecture: local groups, global commitments
 
 Keep a single native ledger for model versions, budgets, data admission, work obligations, disputes, quality decisions and payment. Keep bulk numerical work and immutable artifacts outside block production. The chain must be able to resolve every supported disputed transition from bounded evidence available to all validators.

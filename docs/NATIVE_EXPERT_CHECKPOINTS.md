@@ -48,6 +48,16 @@ admission, quality promotion and paid graph inference still require integration.
 This profile has passed ledger tests using actual small-model replay records. It
 has not been activated on a public network or settled the real 560-update expert.
 
+The [second-cohort learning gate](COMPOSED_COHORT.md) has now passed, and its
+[model artifacts are public](../config/experiments/composed-cohort-public-artifacts.json).
+This closes the model-side prerequisite for an operated integration of this
+specific expert. The next required run must execute the prefix audit and each
+training window through a real configured executor, settle the accepted work,
+then separately admit the passing serving graph and pay for a raw-question
+response. Its available checkpoint bytes, actual optimizer ages, composed-call
+billing and serving identity must remain bound throughout. The published replay
+reports alone cannot supply honest execution verdicts or activate serving.
+
 The audit daemon requires an operator-configured execution backend for this
 profile. A backend must execute the pinned numerical audit, return complete ordered
 coverage, and bind the claim, parent, input/output checkpoints, prepared data,
