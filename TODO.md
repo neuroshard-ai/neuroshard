@@ -54,10 +54,14 @@ before the affected work, rather than changing the target after a result.
   earned NEURO or been activated for native paid serving. Historical fixed-model
   integration is supporting evidence, not completion of this expert lifecycle.
 
-  Current implementation step: connect actual bounded numerical execution and
-  recoverable checkpoint payloads to the native audit interface. Then connect
-  quality promotion and paid graph inference. Reuse the published model and
-  original training job; this milestone does not need a new training campaign.
+  Implementation progress: the native-format training executor now loads actual
+  weights and Adam, executes a bounded window, and atomically saves a resumable
+  boundary. A separate-process CPU check reproduces the next checkpoint. See
+  [execution and checkpoint details](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/docs/NATIVE_EXPERT_CHECKPOINTS.md).
+  Next: check this backend on the pinned GPU profile, connect real prefix audits,
+  then connect quality promotion and paid graph inference. Reuse the published
+  model and original training job; this milestone does not need a new training
+  campaign.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
@@ -123,3 +127,11 @@ under the same admission rules.
   All remain open; task 3 is active. Prior expert learning, retention, replay and
   public artifact evidence are credited above. No new GPU run was needed to
   establish this checklist.
+- 2026-09-15: Task 3 implementation now has actual bounded training execution and
+  recoverable window-boundary payloads. Thirteen focused execution and native
+  settlement regression checks passed in 37.55 seconds, including a fresh process
+  restoring Adam and completing the next window, and rejection of corrupted
+  state, storage failure and an expired deadline. The 11 original numerical
+  kernel files remain unchanged. No GPU was launched. Native settlement of this
+  expert, prefix-backend integration, quality promotion and paid graph inference
+  are still required; task 3 remains open.
