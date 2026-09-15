@@ -72,11 +72,13 @@ avoiding large temporary byte strings. Compatibility tests compare its hashes an
 lengths with the pinned writer, including ordinary complete weight/Adam
 checkpoints. The numerical training kernel, data, update identity and runtime are
 unchanged. The new plan additionally requires all 25 recorded intermediate GPU
-checkpoints to match. The complete GPU replay passed all 560 updates and the
+checkpoints to match. The [complete GPU replay](../config/experiments/expert-window-replay-results.json)
+passed all 560 updates and the
 original final checkpoint in 1,188.22 seconds. All 140 windows and 560 distinct
 work identities also passed the consensus-side metadata validator without
 importing a neural runtime. Numerical reproduction uses the frozen source
-`2cac1006c7685be000699c2c8f792fc6e28208d8`.
+`2cac1006c7685be000699c2c8f792fc6e28208d8`. Its complete evidence was archived and
+read back successfully, and its GPU, disk and security group were retired.
 
 The [prefix audit plan](../config/experiments/expert-prefix-audit.json) freezes the
 other half of that verification: recomputing every cached prefix and parent
