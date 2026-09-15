@@ -62,3 +62,5 @@ This directory contains technical documentation and pinned dependency profiles. 
 Example settings and compact reproduction plans live under [config](../config). Run `python scripts/check_repository.py` after staging moves to check tracked-file boundaries and local Markdown links. CI also checks package contents so local archives, website files and manuscripts cannot enter a distribution.
 
 - [Compose the learned second expert](COMPOSED_COHORT.md): exact prompt preservation and actual two-call answers; frozen read-only experiment.
+
+- [Native expert checkpoint representation](NATIVE_EXPERT_CHECKPOINTS.md): exact frozen ages, compact references and numerical work identity.
