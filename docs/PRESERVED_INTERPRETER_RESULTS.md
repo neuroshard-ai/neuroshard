@@ -68,6 +68,12 @@ manifest lets each owner download only its assigned portions and verify their
 full SHA-256 hashes. Reproducing these published questions checks execution;
 it is not another independent quality final.
 
+All 459 published assets, including 454 model/optimizer objects, passed complete
+anonymous download and SHA-256 verification: 25,577,867,850 bytes in total.
+The [publication record](../config/experiments/preserved-interpreter-publication.json)
+binds the release, numerical bundle and verification result. The download
+procedure needs no operator AWS access or GitHub login.
+
 ## What this establishes
 
 This is a passed, bounded example of accessing learned neural knowledge through

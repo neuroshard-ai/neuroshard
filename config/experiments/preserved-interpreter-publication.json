@@ -1,0 +1,27 @@
+{
+  "format": "neuroshard-public-neural-artifacts-v1",
+  "source_commit": "47287d2a8882aae65b25f85c0a262fe9b3649624",
+  "release": {
+    "release_id": 389262781,
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-shards-20260915",
+    "tag": "research-shards-20260915",
+    "published_at": "2026-09-15T16:49:04Z",
+    "assets": 459
+  },
+  "model_objects": 454,
+  "model_object_bytes": 25570074184,
+  "numerical_bundle": {
+    "sha256": "e65f76481133f27a73d4678e8c1f80cae095f5e012481cc1b68ffd2ba15492b4",
+    "bytes": 7406489,
+    "files": 81
+  },
+  "anonymous_readback": {
+    "assets": 459,
+    "bytes": 25577867850,
+    "all_full_hashes_match": true,
+    "credentials_used": false,
+    "completed": 1789491112.0399184
+  },
+  "readback_receipts_sha256": "dd938b90343324fef1c3b978d303504df2edd62e6ced5a82fcccac3f38f53b7d",
+  "scope": "All release assets were streamed without credentials and checked against their complete SHA-256 digests. This establishes artifact availability, not independent operation or a new quality evaluation."
+}
