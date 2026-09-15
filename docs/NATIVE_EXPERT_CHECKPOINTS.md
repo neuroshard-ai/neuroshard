@@ -61,7 +61,7 @@ An operated settlement must provide those bytes or maintain an actual replay
 executor across consecutive windows. A missing execution backend cannot supply an
 honest acceptance verdict.
 
-The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. The cached prefix still needs its own execution audit before native acceptance.
+The [window replay plan](../config/experiments/expert-window-replay.json) freezes a non-issuing reconstruction of all 560 updates from the archived feature bank. Each intermediate weight/Adam commitment uses the same Safetensors bytes as a normal checkpoint; the replay records 140 windows of at most four updates and checks the actual saved 0/280/560 roots. Its CPU test reproduced the full five-owner training result. The prefix has now received the separate execution audit described below.
 
 The [first GPU attempt](../config/experiments/expert-window-replay-attempt-0.json)
 matched the first 25 updates but was stopped early because checkpoint recording
@@ -72,4 +72,25 @@ avoiding large temporary byte strings. Compatibility tests compare its hashes an
 lengths with the pinned writer, including ordinary complete weight/Adam
 checkpoints. The numerical training kernel, data, update identity and runtime are
 unchanged. The new plan additionally requires all 25 recorded intermediate GPU
-checkpoints to match. A completed GPU replay is still pending.
+checkpoints to match. The complete GPU replay passed all 560 updates and the
+original final checkpoint in 1,188.22 seconds. All 140 windows and 560 distinct
+work identities also passed the consensus-side metadata validator without
+importing a neural runtime. Numerical reproduction uses the frozen source
+`2cac1006c7685be000699c2c8f792fc6e28208d8`.
+
+The [prefix audit plan](../config/experiments/expert-prefix-audit.json) freezes the
+other half of that verification: recomputing every cached prefix and parent
+reference from the exact training records. Each of three stages loads one parent
+partition and consumes the previous stage's committed output. The final stage
+must reproduce the entire feature-bank identity consumed by training. The CPU
+test matches the actual five-process producer and rejects a changed prefix even
+when an attacker recomputes its file and manifest hashes. The
+[GPU audit passed](../config/experiments/expert-prefix-audit-results.json): all
+112 microbatches were recomputed through each of the three original parent
+partitions, and the complete feature bank matched exactly. One GPU staged one
+partition at a time, with at most 604,016,640 owned model parameters. Its numerical
+source is commit `a9b19cec807ff0eaf606ce8a849cbd3f5e31be44`; reproducing this frozen
+plan requires checking out that source. The evidence is archived with a complete
+storage readback, and the GPU, volume and security group have been retired.
+These are execution tools for a configured auditor; report files alone are not
+proof, and neither tool enables native transactions or changes supply.
