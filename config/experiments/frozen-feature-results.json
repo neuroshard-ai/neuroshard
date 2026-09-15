@@ -1,0 +1,141 @@
+{
+  "arms": {
+    "append": {
+      "artifacts": {
+        "objects": [
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/17d7eb6c55ef66d50e7942020b9a06e1b60056e0b2e944495df1c5f1434d130b",
+            "readback_verified": true,
+            "sha256": "17d7eb6c55ef66d50e7942020b9a06e1b60056e0b2e944495df1c5f1434d130b"
+          },
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/6b15c79d0a4d32e2ffa07a68e654b6b6f010876fe2a8ddf00169e1eeab931b72",
+            "readback_verified": true,
+            "sha256": "6b15c79d0a4d32e2ffa07a68e654b6b6f010876fe2a8ddf00169e1eeab931b72"
+          },
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/2073a5a3c38d129ff1c9ed34e60e824468f8140a0b8a2f557a6564d8b5cc17f9",
+            "readback_verified": true,
+            "sha256": "2073a5a3c38d129ff1c9ed34e60e824468f8140a0b8a2f557a6564d8b5cc17f9"
+          },
+          {
+            "bytes": 4060272640,
+            "object": "research/frozen-feature-probe-20260915/objects/7f507c5f2bdc139ec833a1ab0f89689e009c5cd8250b4026b30c779474f4058c",
+            "readback_verified": true,
+            "sha256": "7f507c5f2bdc139ec833a1ab0f89689e009c5cd8250b4026b30c779474f4058c"
+          }
+        ]
+      },
+      "cached_training_tensor_bytes": 0,
+      "cached_update_seconds": 5.802373670999941,
+      "distributed_training_tensor_bytes": 5023736832,
+      "distributed_update_seconds": 27.24852864799982,
+      "exact_updates": 8,
+      "feature_production_seconds": 14.619668950000005,
+      "feature_production_tensor_bytes": 2511868416,
+      "passed": true,
+      "peak_cuda_bytes_by_rank": [
+        7211565056,
+        3096898560,
+        3096898560,
+        10946998784
+      ],
+      "steps": 8,
+      "tail_states": {
+        "cached": "5a0612d1936d5a6d614d91edf8294fcbf4d2895fbf26bb1fd0754fcd8b2a4e51",
+        "distributed": "5a0612d1936d5a6d614d91edf8294fcbf4d2895fbf26bb1fd0754fcd8b2a4e51"
+      },
+      "unique_training_batches": 4,
+      "update_speed_ratio": 4.696100284645059
+    },
+    "tail-control": {
+      "artifacts": {
+        "objects": [
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/e9229a0f16b0bbba4d9db73f30b63466668b9358e2835ecf9681326e33311b01",
+            "readback_verified": true,
+            "sha256": "e9229a0f16b0bbba4d9db73f30b63466668b9358e2835ecf9681326e33311b01"
+          },
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/eb39de3c11be4e28a9d2531cdbc81b2677ba0890c56da467a487bd8b8692394f",
+            "readback_verified": true,
+            "sha256": "eb39de3c11be4e28a9d2531cdbc81b2677ba0890c56da467a487bd8b8692394f"
+          },
+          {
+            "bytes": 30720,
+            "object": "research/frozen-feature-probe-20260915/objects/2d1c9e91ce9a2fd1637ac1cd9d4589844a94991f44c4d64f6ef8cb81b31289a0",
+            "readback_verified": true,
+            "sha256": "2d1c9e91ce9a2fd1637ac1cd9d4589844a94991f44c4d64f6ef8cb81b31289a0"
+          },
+          {
+            "bytes": 4060272640,
+            "object": "research/frozen-feature-probe-20260915/objects/c63d6e9b4493b20321039c2515a1cf6e28300574d3475ef55ee5caa25bb50562",
+            "readback_verified": true,
+            "sha256": "c63d6e9b4493b20321039c2515a1cf6e28300574d3475ef55ee5caa25bb50562"
+          }
+        ]
+      },
+      "cached_training_tensor_bytes": 0,
+      "cached_update_seconds": 5.751742161000493,
+      "distributed_training_tensor_bytes": 5023736832,
+      "distributed_update_seconds": 27.105890250000357,
+      "exact_updates": 8,
+      "feature_production_seconds": 14.41560607700012,
+      "feature_production_tensor_bytes": 2511868416,
+      "passed": true,
+      "peak_cuda_bytes_by_rank": [
+        7211565056,
+        3096898560,
+        2559994880,
+        11483902464
+      ],
+      "steps": 8,
+      "tail_states": {
+        "cached": "240c5dac61323d74198ccb75321afb542132df67fbcc229d0d7591b8093ff9b6",
+        "distributed": "240c5dac61323d74198ccb75321afb542132df67fbcc229d0d7591b8093ff9b6"
+      },
+      "unique_training_batches": 4,
+      "update_speed_ratio": 4.712640012584534
+    }
+  },
+  "cost": {
+    "compute_usd_allowance": 1.2576254417591626,
+    "scope": "Separate diagnostic after the complete growth comparison. Costs included in the original allocation total; this is a sub-allocation estimate, not an additional charge.",
+    "seconds": 975.3234791755676
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "bytes": 9203550,
+    "files": 527,
+    "object": "research/frozen-feature-probe-20260915/evidence/5b1ca2b000c1bc9572ceba6a479536b7aa2c92ad18792fcfa9b875679e2290fa",
+    "readback_verified": true,
+    "scope": "Source, exact training inputs, tokenizer and complete numerical observations. Serialized feature packets and final tail/Adam states are separately preserved and fully read back.",
+    "sha256": "5b1ca2b000c1bc9572ceba6a479536b7aa2c92ad18792fcfa9b875679e2290fa"
+  },
+  "failed_attempt": {
+    "cause": "Cross-owner declaration incorrectly included distinct host names. Every owner rejected it before any optimizer update. Retry uses only agreed numerical profile and keeps host provenance separately.",
+    "preserved": "experiment/failed-attempt-1",
+    "source_commit": "fe7e7368dadc7ffa3ff93eff67e24b0c63bf8855"
+  },
+  "format": "neuroshard-frozen-feature-measured-v1",
+  "limitations": [
+    "Four A10G GPUs under one operator; heterogeneous numerical agreement is unmeasured.",
+    "Eight updates per arm over four exact padded batches. This verifies factorization, not knowledge acquisition.",
+    "A learner owns the complete two-block trainable tail and a read-only output head replica.",
+    "Frozen feature certification, native settlement and permissionless audit are not implemented by this diagnostic.",
+    "Optimizer timing excludes initial feature production, checkpoint preservation and provisioning."
+  ],
+  "native_activated": false,
+  "operators": 1,
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "passed": true,
+  "prepared": "d69b098bd210ade7988cb533432a4cc0ae45a72c8b0495686ef3a7a6c7ad9c9e",
+  "source_commit": "66829bdda0ff626ead6ac203cc61c5a6f48cd83f",
+  "tokens_issued": 0,
+  "workers": 4
+}
