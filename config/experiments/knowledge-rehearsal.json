@@ -1,0 +1,27 @@
+{
+  "format": "neuroshard-knowledge-rehearsal-v1",
+  "purpose": "Test whether repeated exposure lets an owned trainable tail learn the committed new facts while preserving established answers.",
+  "parent": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+  "base_prepared": "d69b098bd210ade7988cb533432a4cc0ae45a72c8b0495686ef3a7a6c7ad9c9e",
+  "arms": ["append", "tail-control"],
+  "epochs": 8,
+  "recipe": {
+    "steps": 1024,
+    "batch_documents": 64,
+    "warmup_steps": 8,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 2026091900,
+    "learning_rate": 0.00005
+  },
+  "schedule": "Repeat the original 128 exact ordered batches eight times. Preserve microbatch grouping, padding, tokenization, loss weights, reference KL and margin. No new training examples or evaluation records.",
+  "feature_prerequisite": "config/experiments/frozen-feature-results.json",
+  "feature_source_commit": "66829bdda0ff626ead6ac203cc61c5a6f48cd83f",
+  "prior_selection": "config/experiments/incremental-capacity-selection.json",
+  "prerequisite_rule": "Require exact real-model feature factorization in both arms and completed failure of every original short-run candidate, with no original final selected or opened.",
+  "checkpoints": [0, 512, 1024],
+  "selection_path": "config/experiments/knowledge-rehearsal-selection.json",
+  "selection_rule": "Only each arm's terminal update 1024 may qualify, using every original development gate. Both arms must finish before selection is committed. Only eligible arms may open the still-unused original knowledge final; previously exposed skill and conversation finals measure retention. Keep learning success and capacity advantage as separate claims.",
+  "stop_rule": "Abort on numerical, ownership, input-integrity or resource-bound failure; otherwise complete exactly 1024 updates. Do not extend training or tune from development/final results within this experiment.",
+  "scope": "Operated numerical learning experiment. No issuance, serving promotion, public consensus change or claim of broad assistant quality. Eight passes give each fact 96 target exposures: eight question targets and four narrative targets per pass."
+}
