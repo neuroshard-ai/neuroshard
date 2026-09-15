@@ -1,0 +1,548 @@
+{
+  "actual_operators": 1,
+  "additional_feature_diagnostic": {
+    "accounting": "Included in the allocation totals; excluded from the original 512 candidate and 64 recovery updates.",
+    "additional_cached_optimizer_updates": 16,
+    "commit": "66829bdda0ff626ead6ac203cc61c5a6f48cd83f",
+    "compute_usd_allowance": 1.2576254417591626,
+    "distributed_optimizer_updates": 16,
+    "evidence": {
+      "bucket": "neuroshard-training-data",
+      "bytes": 9203550,
+      "files": 527,
+      "object": "research/frozen-feature-probe-20260915/evidence/5b1ca2b000c1bc9572ceba6a479536b7aa2c92ad18792fcfa9b875679e2290fa",
+      "readback_verified": true,
+      "scope": "Source, exact training inputs, tokenizer and complete numerical observations. Serialized feature packets and final tail/Adam states are separately preserved and fully read back.",
+      "sha256": "5b1ca2b000c1bc9572ceba6a479536b7aa2c92ad18792fcfa9b875679e2290fa"
+    },
+    "passed": true,
+    "scope": "Separate diagnostic after the complete growth comparison. Costs included in the original allocation total; this is a sub-allocation estimate, not an additional charge.",
+    "seconds": 975.3234791755676
+  },
+  "candidate_training_updates": 512,
+  "development": [
+    {
+      "arm": "append",
+      "checkpoint": "4ea9ca77f20150117a6552de6d9dda3cc60a7744c6d5731fc23821b58879b5d8",
+      "decision": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": false,
+          "prior_correct_answers_retained": false
+        },
+        "conversation": {
+          "lower": 0.0025563591817623806,
+          "mean": 0.004639560010473517,
+          "pairs": 128,
+          "upper": 0.00718522183529865
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.05078125,
+          "after": 13,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.02734375,
+            "mean": 0.05078125,
+            "pairs": 32,
+            "upper": 0.078125
+          },
+          "gains": 13,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 152,
+          "before": 151,
+          "count": 192,
+          "gains": 2,
+          "losses": 1
+        }
+      },
+      "job": "e1fcd49a82f12708926fdf71ee6d82e900b9c449d3272a165c30c66a739917e2",
+      "learned_state": "e0fcaf75dc57302d5be407f1b23ae363827b23dc7439266a89554ef4ed0f8588",
+      "learning_rate": 5e-05,
+      "reports": [
+        {
+          "peak_cuda_bytes": 9249987072,
+          "rank": 0,
+          "seconds": 989.965375528,
+          "sha256": "c41ec6c28e525c26636d1a9adcf40dd177c108883e726b7eee0e2e17e24178c1"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 1,
+          "seconds": 989.9656671060001,
+          "sha256": "198c900cbc64139bd16c926302207ad06a8496304b284738f975f137d1090a82"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 2,
+          "seconds": 989.9613420789999,
+          "sha256": "f7f75ad7b13f9f9cd27e51b828fe90a2ed725840717d4cd08f38664322346726"
+        },
+        {
+          "peak_cuda_bytes": 3916931584,
+          "rank": 3,
+          "seconds": 989.9654075550001,
+          "sha256": "7b00f9a092de07b9b9328284ceead92218e983d6e4a36baca015ec27dd504377"
+        }
+      ]
+    },
+    {
+      "arm": "tail-control",
+      "checkpoint": "b55fd09f5489fd049b5697ea7e506f32c05c7e9307ab4c0230b22b0dd0e87874",
+      "decision": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": false,
+          "prior_correct_answers_retained": true
+        },
+        "conversation": {
+          "lower": 0.004024987770896191,
+          "mean": 0.005547567051864667,
+          "pairs": 128,
+          "upper": 0.007358237750200253
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.05859375,
+          "after": 15,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.03515625,
+            "mean": 0.05859375,
+            "pairs": 32,
+            "upper": 0.08203125
+          },
+          "gains": 15,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 152,
+          "before": 151,
+          "count": 192,
+          "gains": 1,
+          "losses": 0
+        }
+      },
+      "job": "428443881ec6d1410cc5792fdc75503aaa476f5bbca51f86fc7f04dca6ac4581",
+      "learned_state": "92c41f326c7d2344e044a3be8a82466b28efa26998e9b435fb97da74d18a88ce",
+      "learning_rate": 5e-05,
+      "reports": [
+        {
+          "peak_cuda_bytes": 9249987072,
+          "rank": 0,
+          "seconds": 961.7778898929998,
+          "sha256": "13ff69cd5ddbd2b1e43169fc6c07fb0c1afba8390ee158a4713905e214217bbc"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 1,
+          "seconds": 961.7783842299998,
+          "sha256": "358ec3ee4177316059c75b4fa74196f1c6cbadee6b952fee1c3f6c984d61f901"
+        },
+        {
+          "peak_cuda_bytes": 2592203264,
+          "rank": 2,
+          "seconds": 961.7739523949999,
+          "sha256": "6e196dd1dd09b66f0256755e814d3320c3cda3db78ef3adc7aac0ad587b7823c"
+        },
+        {
+          "peak_cuda_bytes": 4453835264,
+          "rank": 3,
+          "seconds": 961.778028362,
+          "sha256": "9a8f21278bf0495fefc911272004a8a52da0b8fd7161910b4d0c4e2c901eb4a2"
+        }
+      ]
+    },
+    {
+      "arm": "append",
+      "checkpoint": "c67b5a3f61937c167af134573196439fbdd38e60360872007914f97dfdcd2629",
+      "decision": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": false,
+          "prior_correct_answers_retained": false
+        },
+        "conversation": {
+          "lower": 0.007056733511828588,
+          "mean": 0.009281352548970535,
+          "pairs": 128,
+          "upper": 0.011611560026151827
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.04296875,
+          "after": 11,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.0234375,
+            "mean": 0.04296875,
+            "pairs": 32,
+            "upper": 0.0625
+          },
+          "gains": 11,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 150,
+          "before": 151,
+          "count": 192,
+          "gains": 2,
+          "losses": 3
+        }
+      },
+      "job": "5109f1c1cde6c3570ff7f8be6dd84dd85d6b299bfc63e05db66a1c7eb4d82a72",
+      "learned_state": "83524e32b33926b43c10796a4f697e900ddf522ababbc51842f439f88431d02b",
+      "learning_rate": 0.0002,
+      "reports": [
+        {
+          "peak_cuda_bytes": 9249987072,
+          "rank": 0,
+          "seconds": 983.595356106,
+          "sha256": "89ecea1f1af5e3917968c6541839f2f7e5e39aee70053c0e603a4441aa00c307"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 1,
+          "seconds": 983.595588055,
+          "sha256": "77cc46f9164908bc99baecd5d70e480bf113fdc4d95d68b7cefae378cd295b40"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 2,
+          "seconds": 983.5911972010003,
+          "sha256": "e73cbfd01c9b0f6d53f5098c4e668206beff4a2596bc52d0c32df74bd094f9c4"
+        },
+        {
+          "peak_cuda_bytes": 3916931584,
+          "rank": 3,
+          "seconds": 983.5951775980002,
+          "sha256": "3a330eb0342f6ad5a46e2714f3ef19fc72d14465408a33ddd7d8c4d0cc50bdc6"
+        }
+      ]
+    },
+    {
+      "arm": "tail-control",
+      "checkpoint": "6eff68cf66b2e284ba2d1afeefd5e95d29b3c8040dc93b4a4aef00a010b86f75",
+      "decision": {
+        "checks": {
+          "conversation_retention": true,
+          "knowledge_accuracy": false,
+          "knowledge_gain": false,
+          "prior_correct_answers_retained": true
+        },
+        "conversation": {
+          "lower": 0.006049572600565998,
+          "mean": 0.00800886008678726,
+          "pairs": 128,
+          "upper": 0.010083417799448928
+        },
+        "development": true,
+        "knowledge": {
+          "accuracy": 0.12890625,
+          "after": 33,
+          "before": 0,
+          "count": 256,
+          "entity_cluster_delta": {
+            "lower": 0.09375,
+            "mean": 0.12890625,
+            "pairs": 32,
+            "upper": 0.1640625
+          },
+          "gains": 33,
+          "losses": 0
+        },
+        "passed": false,
+        "skills": {
+          "after": 153,
+          "before": 151,
+          "count": 192,
+          "gains": 2,
+          "losses": 0
+        }
+      },
+      "job": "5b4c8b1de459b4e41d7749ba0ecda1243abdccaf8457ec15bcaf2648a0f2e2ae",
+      "learned_state": "1a8adc63025ae6d3bebbc5f15784f51e3731ce29ef55a9ee441937bbbfeabba2",
+      "learning_rate": 0.0002,
+      "reports": [
+        {
+          "peak_cuda_bytes": 9249987072,
+          "rank": 0,
+          "seconds": 953.1379388670002,
+          "sha256": "de4c6ce88912e025c1d33b4c9e7234ac9a781332ce8e387ee817709b936d96f8"
+        },
+        {
+          "peak_cuda_bytes": 3129106944,
+          "rank": 1,
+          "seconds": 953.1382278890005,
+          "sha256": "5894e2af36539a36bbf6a08076879aa54a3b3add75050972765b2e994c284615"
+        },
+        {
+          "peak_cuda_bytes": 2592203264,
+          "rank": 2,
+          "seconds": 953.1343276119997,
+          "sha256": "0b442d5ed4d194384fe075ba1286d1207f1652def0042758d0d880ee4cb318cd"
+        },
+        {
+          "peak_cuda_bytes": 4453835264,
+          "rank": 3,
+          "seconds": 953.137764948,
+          "sha256": "859652a7896b31aa09b3b38eb94658477b48cfeb279eacc5c125d40e0b3a6732"
+        }
+      ]
+    }
+  ],
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "bytes": 13312138,
+    "object": "research/incremental-capacity-20260915/evidence/da0419a720c4380e982c438ff7cac3a14403cfe52b9484db4cb5209728423d49",
+    "readback_verified": true,
+    "scope": "Exact sources and complete experiment evidence; model tensors are separately hashed objects. No signing keys, credentials or Git history.",
+    "sha256": "da0419a720c4380e982c438ff7cac3a14403cfe52b9484db4cb5209728423d49"
+  },
+  "execution_plan": "d87c10a19c17d83d1f6b39d2a6cc1e5d07087ab656bc1333160f667ecd185745",
+  "final": {
+    "finals_opened": false,
+    "finished": 1789461259.6523485,
+    "passed": false,
+    "phase": "development",
+    "reason": "No candidate met every frozen generated-answer and retention gate.",
+    "resources_retired": false,
+    "selection_commit": {
+      "commit": "5dc056fd95e18fefcfe6d1c18160a093aea868ad",
+      "time": 1789461252.9328797
+    }
+  },
+  "format": "neuroshard-incremental-capacity-measured-v1",
+  "limitations": [
+    "All hosts and storage were operated by one operator; this is not independent permissionless participation.",
+    "Fresh closed-book knowledge uses fictional facts present in training, with held-out question forms and separate final entities.",
+    "Previously exposed R4 probes measure answer retention, not new general assistant quality.",
+    "This comparison tests one added pair of blocks; continual useful growth requires a subsequent cohort.",
+    "Exact recovery is measured on the frozen A10G numerical runtime; heterogeneous numerical agreement is not established.",
+    "The growing checkpoint format is research-only and has not been activated in native consensus."
+  ],
+  "maximum_simultaneous_workers": 4,
+  "native_activated": false,
+  "numerical_source_commit": "0f55b9ad527aa3748fb189238c8c58d47c54952d",
+  "observations": [
+    {
+      "arm": "baseline",
+      "checkpoint": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+      "learned_state": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+      "learning_rate": null,
+      "peak_cuda_bytes_by_rank": [
+        2566658048,
+        2555036672,
+        2018132992,
+        675873792
+      ],
+      "recovery_overhead": false,
+      "tag": "baseline-dev",
+      "wall_seconds": 459.48413276672363
+    },
+    {
+      "arm": "tail-control",
+      "checkpoint": "6eff68cf66b2e284ba2d1afeefd5e95d29b3c8040dc93b4a4aef00a010b86f75",
+      "learned_state": "1a8adc63025ae6d3bebbc5f15784f51e3731ce29ef55a9ee441937bbbfeabba2",
+      "learning_rate": 0.0002,
+      "peak_cuda_bytes_by_rank": [
+        9249987072,
+        3129106944,
+        2592203264,
+        4453835264
+      ],
+      "recovery_overhead": false,
+      "tag": "control-high",
+      "wall_seconds": 981.4972717761993
+    },
+    {
+      "arm": "tail-control",
+      "checkpoint": "b55fd09f5489fd049b5697ea7e506f32c05c7e9307ab4c0230b22b0dd0e87874",
+      "learned_state": "92c41f326c7d2344e044a3be8a82466b28efa26998e9b435fb97da74d18a88ce",
+      "learning_rate": 5e-05,
+      "peak_cuda_bytes_by_rank": [
+        9249987072,
+        3129106944,
+        2592203264,
+        4453835264
+      ],
+      "recovery_overhead": false,
+      "tag": "control-low",
+      "wall_seconds": 1001.5053193569183
+    },
+    {
+      "arm": "append",
+      "checkpoint": "c67b5a3f61937c167af134573196439fbdd38e60360872007914f97dfdcd2629",
+      "learned_state": "83524e32b33926b43c10796a4f697e900ddf522ababbc51842f439f88431d02b",
+      "learning_rate": 0.0002,
+      "peak_cuda_bytes_by_rank": [
+        9249987072,
+        3129106944,
+        3129106944,
+        3916931584
+      ],
+      "recovery_overhead": false,
+      "tag": "grow-high",
+      "wall_seconds": 1011.2270238399506
+    },
+    {
+      "arm": "append",
+      "checkpoint": "4ea9ca77f20150117a6552de6d9dda3cc60a7744c6d5731fc23821b58879b5d8",
+      "learned_state": "e0fcaf75dc57302d5be407f1b23ae363827b23dc7439266a89554ef4ed0f8588",
+      "learning_rate": 5e-05,
+      "peak_cuda_bytes_by_rank": [
+        9249987072,
+        3129106944,
+        3129106944,
+        3916931584
+      ],
+      "recovery_overhead": false,
+      "tag": "grow-low",
+      "wall_seconds": 1016.4358658790588
+    },
+    {
+      "arm": "append",
+      "checkpoint": "4ea9ca77f20150117a6552de6d9dda3cc60a7744c6d5731fc23821b58879b5d8",
+      "learned_state": "e0fcaf75dc57302d5be407f1b23ae363827b23dc7439266a89554ef4ed0f8588",
+      "learning_rate": 5e-05,
+      "peak_cuda_bytes_by_rank": [
+        8355966464,
+        3128484352,
+        3128484352,
+        3916308992
+      ],
+      "recovery_overhead": true,
+      "tag": "grow-low-recovered",
+      "wall_seconds": 797.3516142368317
+    }
+  ],
+  "parent": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+  "passed": false,
+  "physical_instances": 5,
+  "placement_before_replacement": [
+    "us-east-1b",
+    "us-east-1b",
+    "us-east-1d",
+    "us-east-1b"
+  ],
+  "prepared": "d69b098bd210ade7988cb533432a4cc0ae45a72c8b0495686ef3a7a6c7ad9c9e",
+  "prepared_parent_bytes_by_rank": [
+    6040135024,
+    7248225420,
+    7248225420,
+    1610716760
+  ],
+  "recovery": {
+    "exact_development_answers_and_losses": true,
+    "exact_terminal_checkpoint_and_adam": true,
+    "passed": true,
+    "physical_replacement": {
+      "checkpoint_restored_from_s3": true,
+      "finished": 1789460150.6827724,
+      "maximum_active_workers": 4,
+      "new_instance": "i-01712b464de7e0c9f",
+      "old_instance": "i-0c45295c8289f8cdc",
+      "physical_instances_so_far": 5,
+      "rank": 3,
+      "started": 1789459475.6004105
+    },
+    "repeated_updates": 64
+  },
+  "recovery_repeated_updates": 64,
+  "replacement_quota_recovery": {
+    "cause": "EC2 reported VcpuLimitExceeded immediately after confirmed old-worker termination. Read-only inventory shows exactly three g5.2xlarge GPUs (24 vCPU); the same requested g5.xlarge would total28 under quota30.",
+    "change": "Bounded retry of the identical ClientToken/request for up to15 minutes or the original allocation deadline reserve. No numerical source, candidate, evaluation, checkpoint or instance-type change.",
+    "original_replace_helper": "131e7e8451cda10af79dae9d9d823fb0498b9836a1e798883ab9ef30ae3b3a6a",
+    "time": 1789459873.6847944,
+    "updated_replace_helper": "aea7f3f98c309f50d33bd4a165878528acd9ee73a55418a9a55de16a3c65aff6"
+  },
+  "resources": {
+    "compute_usd_upper_bound": 10.699424293074475,
+    "confirmed": "2026-09-15T08:55:22.383556+00:00",
+    "conservative_transfer_allowance_usd": 12.618061254219999,
+    "gp3_usd_estimate": 0.2559517004276499,
+    "instances": [
+      "i-01712b464de7e0c9f",
+      "i-0695f604065d73971",
+      "i-0bccde4fea6d1576b",
+      "i-0c45295c8289f8cdc",
+      "i-0da19f78786ae04bf"
+    ],
+    "lifetime_tx_bytes": 630903062711,
+    "maximum_simultaneous_workers": 4,
+    "network_counters_complete": true,
+    "per_instance": [
+      {
+        "compute_usd": 2.8045624637357394,
+        "gp3_usd": 0.0642776508923666,
+        "hours": 2.3139954321251976,
+        "instance": "i-0bccde4fea6d1576b",
+        "type": "g5.2xlarge"
+      },
+      {
+        "compute_usd": 0.7397966269401709,
+        "gp3_usd": 0.02042734225039129,
+        "hours": 0.7353843210140864,
+        "instance": "i-01712b464de7e0c9f",
+        "type": "g5.xlarge"
+      },
+      {
+        "compute_usd": 2.805909130402406,
+        "gp3_usd": 0.06430851508989746,
+        "hours": 2.3151065432363085,
+        "instance": "i-0695f604065d73971",
+        "type": "g5.2xlarge"
+      },
+      {
+        "compute_usd": 2.8022057970690724,
+        "gp3_usd": 0.06422363854668758,
+        "hours": 2.312050987680753,
+        "instance": "i-0da19f78786ae04bf",
+        "type": "g5.2xlarge"
+      },
+      {
+        "compute_usd": 1.5469502749270865,
+        "gp3_usd": 0.042714553648307,
+        "hours": 1.537723931339052,
+        "instance": "i-0c45295c8289f8cdc",
+        "type": "g5.xlarge"
+      }
+    ],
+    "physical_instances": 5,
+    "protected_instances_unchanged": true,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately.",
+    "security_group_deleted": true,
+    "terminated": true,
+    "volume_deletion_confirmed": true,
+    "volumes": [
+      "vol-059dee18c7f6cc079",
+      "vol-064609070f970c1b9",
+      "vol-087ee1e036980643f",
+      "vol-0a9fb0d2cccb13c62",
+      "vol-0dc97ee855dbb7798"
+    ]
+  },
+  "selection": {
+    "append": null,
+    "tail-control": null
+  },
+  "selection_commit": "5dc056fd95e18fefcfe6d1c18160a093aea868ad",
+  "tokens_issued": 0,
+  "types_by_rank": [
+    "g5.2xlarge",
+    "g5.2xlarge",
+    "g5.2xlarge",
+    "g5.xlarge"
+  ]
+}

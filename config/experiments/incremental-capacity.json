@@ -1,0 +1,158 @@
+{
+  "format": "neuroshard-incremental-capacity-v1",
+  "license": "Apache-2.0",
+  "cohort": 0,
+  "purpose": "Determine whether two added transformer blocks learn fresh closed-book knowledge and preserve established answers better than a matched fixed-size tail control.",
+  "parent": {
+    "checkpoint": "d57b32e38cbf416119487c3f33d6e211dfcc8d47e95c80144c1886595e779a56",
+    "state_root": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+    "layers": 24,
+    "parameters": 1711376384,
+    "step": 448,
+    "prepared": "acbc51a4587446af11ae159ec2babb68af7ccf518833a7cb44b7e1d87fde1dc9"
+  },
+  "arms": {
+    "append": {
+      "layers": 26,
+      "frozen_layers": 24,
+      "boundaries": [
+        0,
+        6,
+        15,
+        24,
+        26
+      ]
+    },
+    "tail-control": {
+      "layers": 24,
+      "frozen_layers": 22,
+      "boundaries": [
+        0,
+        6,
+        15,
+        22,
+        24
+      ]
+    }
+  },
+  "training": {
+    "steps": 128,
+    "batch_documents": 64,
+    "warmup_steps": 8,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 2026091900
+  },
+  "learning_rates": [
+    5e-05,
+    0.0002
+  ],
+  "microbatch": 8,
+  "candidate_steps": [
+    128
+  ],
+  "reference": {
+    "kl_strength": 2.0,
+    "margin_strength": 1.0,
+    "margin_min": 0.5,
+    "margin_max": 2.0
+  },
+  "batch_strata": {
+    "knowledge-question": 40,
+    "knowledge-document": 5,
+    "replay-skill": 12,
+    "replay-conversation": 7
+  },
+  "batch_order": "Ascending token length then identity; 40 QA, 5 narratives, 3 per each of four trained skill families, 7 trained conversations.",
+  "replay": {
+    "prepared_path": "config/experiments/balanced-continuation-prepared.json",
+    "prepared": "acbc51a4587446af11ae159ec2babb68af7ccf518833a7cb44b7e1d87fde1dc9",
+    "completed_updates": 64,
+    "selection": "384 trained rows per skill family, all 512 trained conversations; conversation indices cycle to supply 896 appearances, other rows used exactly once."
+  },
+  "roles": {
+    "train": 7808,
+    "dev-knowledge": 256,
+    "test-knowledge": 1024,
+    "dev-skills": 192,
+    "test-skills": 768,
+    "dev-conversation": 128,
+    "test-conversation": 256
+  },
+  "knowledge_scope": "160 fictional entities, four facts each. All facts appear in training; evaluation holds out question forms. Dev covers 32 entities; finals cover remaining 128. Eight questions per entity form the statistical clusters. No tools, retrieved facts, answer repair or answer in the evaluation prompt.",
+  "retention_scope": "Previously exposed R4 skill and conversation probes measure preservation. They are not new independent quality evidence. No evaluation record enters replay.",
+  "generation": {
+    "knowledge": 32,
+    "skills": 256,
+    "method": "Greedy until EOS or frozen token limit; score the complete generated answer."
+  },
+  "gate": {
+    "knowledge_accuracy": 0.75,
+    "knowledge_gain_lower": 0.1,
+    "prior_correct_losses": 0,
+    "development_retention_mean": 0.01,
+    "retention_upper": 0.02,
+    "bootstrap_samples": 10000,
+    "confidence": 0.95,
+    "capacity_advantage_lower": 0.0,
+    "capacity_advantage_net_correct": 32
+  },
+  "selection_rule": "For each arm choose the highest development knowledge accuracy among terminal checkpoints passing every development gate; ties select the lower learning rate. If an arm has no eligible candidate, record development failure and do not open its final. Commit actual candidate roots and complete development evidence before finals.",
+  "growth_decision": "Pass useful capacity only if the grown candidate passes all final learning and retention checks AND beats an eligible fixed-size control by at least32 answers with positive entity-cluster one-sided95% lower confidence bound. Report learning in added blocks separately from advantage over the control.",
+  "stop_rule": "Exactly two frozen rates per arm,128 updates each, no intermediate checkpoint selection. A failed trial is published. No final-driven tuning; a different method requires a new frozen trial and final question forms.",
+  "selection_path": "config/experiments/incremental-capacity-selection.json",
+  "prepared_path": "config/experiments/incremental-capacity-prepared.json",
+  "seeds": {
+    "facts": 2026091901,
+    "training": 2026091900,
+    "replay": 2026091902,
+    "schedule": 2026091903,
+    "skill_probes": 2026091904,
+    "bootstrap": 2026091905
+  },
+  "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+  "tokenizer_files": {
+    "tokenizer.json": "7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7",
+    "tokenizer_config.json": "5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5",
+    "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+    "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79",
+    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "chat_template.jinja": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788"
+  },
+  "runtime": {
+    "device": "cuda",
+    "python": "3.10.12",
+    "machine": "x86_64",
+    "torch": "2.9.1+cu128",
+    "transformers": "4.57.3",
+    "tokenizers": "0.22.1",
+    "safetensors": "0.7.0",
+    "numpy": "2.2.6",
+    "jinja2": "3.1.6",
+    "threads": 2,
+    "cuda": "12.8",
+    "cpu_dispatch": "DEFAULT",
+    "mkl_instructions": "SSE4_2",
+    "gpu": "NVIDIA A10G",
+    "parameters": "float32",
+    "optimizer": "float32-adamw",
+    "autocast": "bfloat16",
+    "attention": "sdpa",
+    "deterministic_algorithms": true,
+    "allocator": "expandable_segments:True",
+    "cross_device_exact": false,
+    "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63"
+  },
+  "threads": 2,
+  "max_length": 1024,
+  "parameter_limit": 900000000,
+  "max_seconds": 21600,
+  "resource_allowance": {
+    "max_gpu_hosts": 4,
+    "max_hours": 8,
+    "planning_cap_usd": 100,
+    "gpu": "NVIDIA A10G",
+    "stop_after_preservation": true
+  },
+  "public_network": "Research only; no ledger activation or issuance. Native adoption requires demonstrated useful capacity and a separately reviewed execution profile."
+}
