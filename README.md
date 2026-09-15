@@ -30,6 +30,8 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
+- [Preserved interpreter and learned expert](docs/PRESERVED_INTERPRETER.md): a controlled 32-question probe improves answers from 16 to 30 without changing the expert. A four-peer composition and newly worded final are being prepared; this is not yet a held-out quality pass.
+
 - [Complete LLM protocol](docs/LLM_PROTOCOL.md): native consensus and bonds, training leases/rewards, serving promotion, paid inference, locks/refunds, limits and assumptions.
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).

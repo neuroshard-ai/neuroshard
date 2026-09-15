@@ -27,7 +27,8 @@ def clean(value):
     return value
 
 
-def run(args):
+def run(args, *, experiment=contract, network_factory=None):
+    contract = experiment
     plan, prepared = contract.validate()
     final = args.command == 'final'
     if final:
@@ -93,7 +94,8 @@ def run(args):
             raise ValueError('Owners disagree on the fixed graph or numerical profile')
         data.save(args.home / 'started.json', {**binding, 'rank': rank, 'runtime': runtime,
             'owned_parameters': shard.resident_parameters})
-        net = Network(shard, wire, parent_wire, tokenizer, plan['split'])
+        net = (network_factory(args, plan, prepared, shard, wire, parent_wire, tokenizer)
+               if network_factory else Network(shard, wire, parent_wire, tokenizer, plan['split']))
 
         def answer(question, cap, use_branch):
             value = net.answer(question, cap) if use_branch else net.generate(question, cap, False)
@@ -152,6 +154,8 @@ def run(args):
                 if (index + 1) % 32 == 0:
                     print(json.dumps({'event': 'evaluated', 'rank': rank, 'role': role, 'count': index + 1}), flush=True)
             data.save(args.home / (role + '.json'), {'before': before[role], 'after': after[role]})
+        if hasattr(net, 'verify_unchanged'):
+            net.verify_unchanged()
         decision = base.decision(plan, all_rows, before, after, not final)
         decision['checks']['exact_parent_answers'] = all(clean(left) == clean(right)
             for left, right in zip(before[prefix + '-skills']['answers'], after[prefix + '-skills']['answers']))
@@ -165,7 +169,7 @@ def run(args):
         data.save(args.home / 'result.json', {**binding, 'rank': rank, 'development': not final,
             'decision': decision, 'answer_identity': digest, 'seconds': time.monotonic() - started,
             'sent_tensor_bytes': wire.sent_tensor_bytes + (parent_wire.sent_tensor_bytes if parent_wire else 0),
-            'owned_parameters': shard.resident_parameters, 'tokens_issued': 0, 'native_activated': False})
+            'owned_parameters': shard.resident_parameters + getattr(net, 'additional_parameters', 0), 'tokens_issued': 0, 'native_activated': False})
         wire.exchange('expert evaluation complete; parent continues independently')
         if rank == 3:
             return
