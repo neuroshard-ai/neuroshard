@@ -121,7 +121,9 @@ def compare(args):
     dist.init_process_group('gloo', timeout=timedelta(seconds=300))
     wire = Wire(shard.rank, world)
     try:
-        declaration = {'prepared': data.identity(prepared), 'runtime': runtime}
+        # initialize() has already checked every numerical setting against the
+        # preparation. Distinct host names remain in each owner's local report.
+        declaration = {'prepared': data.identity(prepared), 'runtime': prepared['runtime']}
         if any(value != declaration for value in wire.exchange(declaration)):
             raise ValueError('Cache owners disagree on their computation')
         limit, eos = prepared['plan']['maximum_tokens'], prepared['eos_id']
