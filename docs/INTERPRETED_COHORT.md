@@ -5,8 +5,8 @@ The new worker learns a separately owned two-layer documentation expert. The
 three parent owners and the existing expert continue answering earlier
 questions, including the original model's question interpretation.
 
-**Status: implementation and CPU integration tests; GPU training is gated by
-the first graph's completed final.** The earlier branch-cohort proposal remains
+**Status: the first graph passed its final; the second-cohort GPU run is being
+retried after an isolated controller I/O failure.** The earlier branch-cohort proposal remains
 deferred because its different prerequisite graph failed. This proposal has a
 new plan and identities; it does not change that failed result.
 
@@ -52,3 +52,34 @@ The allocation is bounded to five GPUs, six hours and a $100 planning cap, and
 starts only after the preceding allocation has been retired. The trial issues
 no tokens or serving promotion. Native graph settlement, arbitrary peer
 admission and general assistant quality require their own execution evidence.
+
+## First GPU attempt and control-file correction
+
+The [first attempt](../config/experiments/interpreted-cohort-attempt-0.json)
+completed 43 new-tail updates before a worker observed an empty control file.
+The controller used `cat > destination`, which exposes a file before its full
+JSON content arrives. The worker's JSON reader failed and its peers then lost
+their connection. Development quality and the independent final were unopened.
+The step-zero checkpoint, feature bank, complete source and observations were
+archived with full readback. All five instances, disks and the study security
+group were removed; compute was bounded at $1.48.
+
+The corrected controller validates each signal and publishes it with an atomic
+temporary-file replacement. It reads live service logs only through complete
+newline-terminated records. A regression check reproduced the original race,
+verified the actual replacement command, interrupted writes, duplicate and
+conflicting signals, and partial service records. Its decision checker still
+accepts the actual five-process CPU evidence and rejects altered answer tokens.
+The retry retains the exact prepared inputs, neural source, training recipe,
+unopened final questions, original overall deadline and $100 planning cap.
+
+Every operator must publish complete control JSON atomically. With the pinned
+repository on `PYTHONPATH`, use its existing durable helper:
+
+```python
+from neuroshard.evolution.reference_data import save
+save(home / 'new-learner-started.json', receipt)
+```
+
+The same requirement applies to the later service and process-exit receipts.
+Only write a receipt after observing the event it describes.
