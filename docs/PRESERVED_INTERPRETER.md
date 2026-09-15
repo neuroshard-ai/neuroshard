@@ -4,7 +4,9 @@ A controlled probe improved factual answers from **16/32 to 30/32** without
 changing the learned expert. The original SmolLM2-1.7B-Instruct model interpreted
 the question, then the expert answered a canonical version through ordinary
 language-model generation. This is an exploratory result on exposed questions.
-The larger distributed evaluation and separate final remain pending.
+The subsequent [four-owner final passed](PRESERVED_INTERPRETER_RESULTS.md):
+949/1,024 newly worded knowledge answers, with all 768 earlier skill outputs
+and 256 conversation losses reproduced exactly.
 
 | Interpreter | Instruction placement | Correct interpretations | End-to-end factual answers |
 | --- | --- | --- | --- |
@@ -32,7 +34,7 @@ No tokens were issued and no native serving checkpoint was activated.
 
 Three peers each hold disjoint portions of the preserved interpreter and the
 previously trained parent. A fourth owns the learned two-layer expert. No
-participant receives either whole model. The two original models contain
+participant receives either whole model. Each of the two 1.7B models contains
 1,711,376,384 parameters each; the expert adds 134,225,920, for 3,556,978,688
 stored transformer parameters. This larger graph is not an equal-budget
 scaling advantage.

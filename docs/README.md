@@ -1,8 +1,9 @@
 # Protocol and development documentation
 
-[Preserved interpretation](PRESERVED_INTERPRETER.md) tests access to a learned
-neural expert while retaining original instruction-following weights. Its
-32-question diagnostic improves 16 to 30 answers; the larger evaluation is pending.
+[Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural
+expert while retaining original instruction-following weights. The
+[four-owner final passes](PRESERVED_INTERPRETER_RESULTS.md): 949/1,024 newly
+worded knowledge answers, with all earlier outputs and losses reproduced exactly.
 
 [Frozen feature reuse](FROZEN_FEATURES.md) develops repeated training of an
 added shard without recomputing the immutable distributed prefix each time.
