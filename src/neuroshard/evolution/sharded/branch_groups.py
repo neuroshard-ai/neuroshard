@@ -17,7 +17,8 @@ class GroupWire(Wire):
     """Map logical model positions to possibly noncontiguous process ranks."""
 
     def __init__(self, global_rank, members, group):
-        if (not isinstance(members, list) or not 2 <= len(members) <= 512
+        if (type(global_rank) is not int or dist.get_rank() != global_rank
+                or not isinstance(members, list) or not 2 <= len(members) <= 512
                 or any(type(rank) is not int or rank < 0 for rank in members)
                 or members != sorted(set(members)) or global_rank not in members
                 or dist.get_process_group_ranks(group) != members):

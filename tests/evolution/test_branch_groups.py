@@ -11,7 +11,7 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from transformers import LlamaConfig
 
-from neuroshard.evolution.sharded.branch_groups import OrderedRoutes, RoutedNetwork
+from neuroshard.evolution.sharded.branch_groups import GroupWire, OrderedRoutes, RoutedNetwork
 from neuroshard.evolution.sharded.model import Partition
 from neuroshard.evolution.sharded.wire import Wire
 
@@ -63,6 +63,9 @@ def process(rank, rendezvous, output):
     groups = {rule['id']: dist.new_group([0, 1, 2, rule['owner']], timeout=timedelta(seconds=60))
               for rule in RULES}
     graph = RoutedNetwork(rank, shard, Tokenizer(), 5, OrderedRoutes(RULES), parent, groups)
+    if rank == 0:
+        with pytest.raises(ValueError, match='exact ordered members'):
+            GroupWire(1, [0, 1, 2, 4], groups['protocol'])
     all_owners = Wire(rank, 5)
     outputs = {}
     try:
