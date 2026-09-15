@@ -2,7 +2,7 @@
 
 The longer existing-tail learner reached 218/256 correct new-knowledge answers
 and preserved all 151 previously correct skill answers on development. The
-added-depth candidate failed. This composition experiment uses the successful
+added-depth candidate failed. This composition experiment uses that
 learned tail as a new expert while retaining the complete original model.
 
 Three peers hold the original 24-layer model in disjoint partitions. Its first
@@ -24,7 +24,7 @@ No new training is performed in this composition trial. The expert retains the
 exact weights and Adam provenance from the frozen 1,024-update rehearsal. The
 first GPU check must reproduce all 256 earlier knowledge outputs token for
 token. New development and final question wording was committed in an earlier,
-unexecuted readout proposal and remains unused. Its facts were training material.
+unexecuted readout proposal and was unused when this experiment was frozen. Its facts were training material.
 Old skill and conversation probes measure retention only.
 
 The recorded parent retention outputs are reused as a derived cache. Every
@@ -41,5 +41,5 @@ this graph beats every fixed-size model at equal cost or prove a scaling law.
 No token issuance or native serving promotion occurs in this experiment.
 
 The plan and prepared identities are in `config/experiments/branch-growth.json`
-and `config/experiments/branch-growth-prepared.json`. Numerical results are
-pending until complete reports are published.
+and `config/experiments/branch-growth-prepared.json`. The completed trial preserved the parent function on every measured probe,
+but failed final factual accuracy. See [results](BRANCH_GROWTH_RESULTS.md).
