@@ -1,0 +1,24 @@
+{
+  "format": "neuroshard-embedding-router-study-v1",
+  "decision": "Can input-only routing select the existing experts without their fixed domain phrases while keeping ordinary development questions on the parent?",
+  "scope": "CPU development screening of routing on previously exposed data. No new learning-quality claim, sealed final, graph promotion or token issuance.",
+  "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
+  "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+  "prototypes_per_route": 4,
+  "iterations": 12,
+  "minimum_margin": 1000000,
+  "maximum_distance": 268435456,
+  "training_per_source": {
+    "train.jsonl": 128,
+    "retained-dev-knowledge.jsonl": 128,
+    "retained-dev-skills.jsonl": 64,
+    "retained-dev-conversation.jsonl": 64
+  },
+  "gate": {
+    "original_accuracy_per_route_at_least": 0.95,
+    "changed_phrase_accuracy_per_expert_at_least": 0.95,
+    "parent_route_changes_at_most": 0
+  },
+  "resources": {"gpus": 0, "threads": 1, "maximum_seconds": 600},
+  "stop_rule": "Record the result before choosing any change. Do not use historical final tests to tune this development router."
+}
