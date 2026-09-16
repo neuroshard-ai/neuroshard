@@ -18,18 +18,31 @@ from .mixture import ProbabilityMixture
 from .planned_graph import conversation
 
 FORMAT = 'neuroshard-checked-conversation-service-v1'
+BLOCK_FORMAT = 'neuroshard-prefilled-conversation-service-v1'
 
 
 class FusedService:
     def __init__(self, net, specification, weights):
+        blocked = specification.get('format') == BLOCK_FORMAT
         fields(specification, {'format', 'graph', 'gate', 'interfaces', 'context',
-                               'chunk_tokens', 'max_tokens'}, 'Invalid checked conversation service')
+                               'decoder' if blocked else 'chunk_tokens', 'max_tokens'},
+               'Invalid checked conversation service')
         self.specification = copy.deepcopy(specification)
         spec = self.specification
-        if spec['format'] != FORMAT or spec['graph'] != identity(net.graph):
+        if spec['format'] not in (FORMAT, BLOCK_FORMAT) or spec['graph'] != identity(net.graph):
             raise ValueError('Service must bind the installed graph and its executor')
         self.context = integer(spec['context'], 2, 1024)
-        self.chunk_tokens = integer(spec['chunk_tokens'], 1, 32)
+        self.block_size = None
+        if blocked:
+            from . import blocked_inference
+            decoder = spec['decoder']
+            fields(decoder, {'format', 'block_size', 'draft'}, 'Invalid conversation decoder')
+            self.block_size = integer(decoder['block_size'], 1, 32)
+            if (decoder['format'] != blocked_inference.FORMAT or decoder['draft'] != 'hub'
+                    or self.context % self.block_size):
+                raise ValueError('Bind the complete supported block decoder and aligned context')
+        else:
+            self.chunk_tokens = integer(spec['chunk_tokens'], 1, 32)
         self.max_tokens = integer(spec['max_tokens'], 1, min(256, self.context-1))
         interfaces = spec['interfaces']
         if (not isinstance(interfaces, dict)
@@ -63,19 +76,18 @@ class FusedService:
                 expected[rule['owner']] = interfaces[rule['id']]['fusion']
         if found != expected:
             raise ValueError('Service loaded another expert interface inventory')
-        self.versions = parameter_versions(self.gate), parameter_versions(self.interface)
+        self.versions = self.parameter_versions()
 
-    def events(self, messages, max_tokens, home):
-        """Yield checked token events and one durable completion record.
+    def parameter_versions(self):
+        return tuple(parameter_versions(module) for module in (
+            self.net.shard, self.net.preserved.shard if self.net.preserved else None,
+            self.gate, self.interface))
 
-        Text is the complete decoded prefix, not an unsafe token-wise Unicode
-        delta. Messages are supplied in full; there is no silent truncation or
-        shared conversation memory between requests.
-        """
+    def request(self, messages, max_tokens):
+        """Bind a complete conversation to the installed numerical service."""
         messages = copy.deepcopy(conversation(messages))
         maximum = integer(max_tokens, 1, self.max_tokens)
-        if any(self.net.all_owners.exchange(self.versions != (
-                parameter_versions(self.gate), parameter_versions(self.interface)))):
+        if any(self.net.all_owners.exchange(self.versions != self.parameter_versions())):
             raise ValueError('Installed conversation weights changed between requests')
         prompt = self.net.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
         if len(prompt)+maximum > self.context:
@@ -85,13 +97,28 @@ class FusedService:
         request_root = identity(request)
         if self.net.all_owners.exchange(request_root) != [request_root]*self.net.world_size:
             raise ValueError('Owners disagree on the complete conversation')
+        return request
+
+    def events(self, messages, max_tokens, home):
+        """Yield checked token events and one durable completion record.
+
+        Text is the complete decoded prefix, not an unsafe token-wise Unicode
+        delta. Messages are supplied in full; there is no silent truncation or
+        shared conversation memory between requests.
+        """
+        request = self.request(messages, max_tokens)
+        request_root, prompt, maximum = identity(request), request['prompt_ids'], request['max_tokens']
         home = Path(home)
         home.mkdir(parents=True, exist_ok=False)
         save(home/'request.json', request)
         tokens, chunks = [], []
-        for chunk in stream(self.net, self.gate, prompt, maximum, self.context,
-                home/'execution', chunk_tokens=self.chunk_tokens, interface=self.interface,
-                adapt_interfaces=bool(self.specification['interfaces'])):
+        execution, options = stream, {'chunk_tokens': self.chunk_tokens} if self.block_size is None else {}
+        if self.block_size is not None:
+            from . import blocked_inference
+            execution, options = blocked_inference.stream, {'block_size': self.block_size}
+        for chunk in execution(self.net, self.gate, prompt, maximum, self.context,
+                home/'execution', interface=self.interface,
+                adapt_interfaces=bool(self.specification['interfaces']), **options):
             tokens.extend(chunk['tokens'])
             chunks.append(identity(chunk))
             yield {'kind': 'tokens', 'request': request_root, 'service': self.root,
@@ -103,3 +130,22 @@ class FusedService:
         save(home/'result.json', result)
         yield {'kind': 'complete', 'request': request_root, 'service': self.root,
                'result': identity(result), 'tokens': len(tokens), 'text': result['text']}
+
+    def verify(self, messages, tokens, max_tokens, home):
+        """Reconstruct a whole response without trusting provider cache state."""
+        from . import batched_audit, blocked_inference
+        request = self.request(messages, max_tokens)
+        folder = Path(home)
+        folder.mkdir(parents=True, exist_ok=False)
+        save(folder/'request.json', request)
+        arguments = (self.net, self.gate, request['prompt_ids'], tokens,
+                     request['max_tokens'], self.context, folder/'execution')
+        options = {'interface': self.interface, 'adapt_interfaces': bool(self.specification['interfaces'])}
+        if self.block_size is None:
+            checked = batched_audit.verify(*arguments, **options)['result']
+        else:
+            checked = blocked_inference.verify(*arguments, block_size=self.block_size, **options)
+        report = {'service': self.root, 'request': identity(request), 'tokens': list(tokens),
+                  'passed': checked['passed'], 'execution': identity(checked)}
+        save(folder/'result.json', report)
+        return report

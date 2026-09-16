@@ -71,3 +71,21 @@ eight-token program. The draft is bounded by remaining output allowance.
 The five-process CPU check passed in 17.45 seconds, including exact cache
 rollback after a multi-block prefill and proposal-independent output. GPU
 performance remains to be measured under the committed bounds.
+
+The existing `FusedService` also accepts the separate
+`neuroshard-prefilled-conversation-service-v1` format. Replace the older
+`chunk_tokens` field with a `decoder` object containing
+`format: neuroshard-prefilled-block-inference-v1`, `block_size: 16` and
+`draft: hub`; retain the complete graph, gate, interface, context and output
+commitments. The service identity changes with this prescription. The existing
+operator's `stream_fused` request then produces cumulative checked text events;
+`verify_fused` takes the service, messages, token IDs and maximum output to
+reconstruct a response from fresh owned caches. Both paths bind all conversation
+turns and the tokenizer. Neither operation authorizes native settlement.
+
+The integrated five-process check passed in 18.35 seconds. It covered multi-turn
+delivery, complete fresh replay, first-token tampering, discarded delivery,
+one-token output allowances and a changed preserved-backbone parameter between
+requests. Gate, interface and backbone versions are pinned throughout service
+use. Client concurrency, native billing and retention/privacy policy still need
+the public service integration and its own measured deployment.

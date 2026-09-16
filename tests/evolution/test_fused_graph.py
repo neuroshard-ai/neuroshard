@@ -308,6 +308,31 @@ def owner(rank, folder):
             home/('blocked-forged-'+str(rank)), **block_options)
         assert not denied['passed'] and denied['mismatches'][0] == 0
         assert denied['predicted'][0] == audited['predicted'][0]
+        from neuroshard.evolution.sharded.fused_service import BLOCK_FORMAT
+        blocked_spec = {key: value for key, value in specification.items() if key != 'chunk_tokens'}
+        blocked_spec.update(format=BLOCK_FORMAT, decoder={
+            'format': blocked_inference.FORMAT, 'block_size': 2, 'draft': 'hub'})
+        block_service = FusedService(net, blocked_spec, home/('interface-checkpoints-'+str(rank)))
+        assert block_service.root != service.root
+        delivery = list(block_service.events(conversation, 4, home/('block-conversation-'+str(rank))))
+        response = read('block-conversation-'+str(rank)+'/result.json')
+        assert response['request']['messages'] == conversation
+        assert response['tokens'] == [token for event in delivery[:-1] for token in event['tokens']]
+        replay = block_service.verify(conversation, response['tokens'], 4, home/('block-service-audit-'+str(rank)))
+        assert replay['passed'] and replay['request'] == delivery[-1]['request']
+        for _ in block_service.events(conversation, 4, home/('block-disconnected-'+str(rank))):
+            pass
+        assert read('block-disconnected-'+str(rank)+'/result.json')['tokens'] == response['tokens']
+        tampered = list(response['tokens'])
+        tampered[0] = (tampered[0]+1) % graph['parent']['config']['vocab_size']
+        if tampered[0] == net.tokenizer.eos_token_id:
+            tampered = tampered[:1]
+        elif len(tampered) < 4 and tampered[-1] != net.tokenizer.eos_token_id:
+            tampered.append(net.tokenizer.eos_token_id)
+        denial = block_service.verify(conversation, tampered, 4, home/('block-service-forged-'+str(rank)))
+        assert not denial['passed']
+        single = list(block_service.events(messages, 1, home/('block-single-'+str(rank))))
+        assert len([token for event in single[:-1] for token in event['tokens']]) == 1
         if rank == 3:
             with torch.no_grad():
                 next(service.interface.parameters()).add_(.01)
@@ -329,6 +354,15 @@ def owner(rank, folder):
                 assert 'cannot switch' in str(error)
             else:
                 raise AssertionError('A stream mixed different model versions')
+        if rank == 1:
+            with torch.no_grad():
+                next(net.preserved.shard.parameters()).add_(.01)
+        try:
+            block_service.request(messages, 1)
+        except ValueError as error:
+            assert 'between requests' in str(error)
+        else:
+            raise AssertionError('A serving backbone changed between requests')
         (home/('fused-owner-'+str(rank)+'.json')).write_text(json.dumps(observation))
     finally:
         dist.destroy_process_group()

@@ -159,6 +159,12 @@ def run(config):
                             save(folder/'events'/(str(index)+'.json'), event)
                         progress(index+1, None)
                     value, report = event, None
+                elif command['kind'] == 'verify_fused':
+                    if fused is None or command['service'] != fused.root:
+                        raise ValueError('Requested checked conversation service is not installed')
+                    value = fused.verify(command['messages'], command['tokens'], command['max_tokens'],
+                        home/'stream-audits'/command['id'])
+                    report = {'valid': value['passed'], 'service': fused.root, 'response': identity(value)}
                 elif command['kind'] == 'inference_audit':
                     report, value = inference_report(command['claim'], net)
                 elif command['kind'] == 'quality_audit':
