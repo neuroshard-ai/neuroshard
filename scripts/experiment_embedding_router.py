@@ -78,9 +78,9 @@ def choose(inputs, plan):
 
 
 def prepare(args):
-    plan = json.loads(committed(PLAN))
-    for name in SOURCES:
-        committed(ROOT / name)
+    # Preparation only writes selection metadata. Execution below still requires
+    # one commit containing the exact plan, source and selected observations.
+    plan = json.loads(PLAN.read_bytes())
     selected = choose(args.inputs, plan)
     SELECTION.write_text(json.dumps(selected, indent=2, sort_keys=True) + '\n')
     print(json.dumps({'selection': str(SELECTION), 'training': len(selected['training']),
@@ -120,6 +120,8 @@ def run(args):
     model = expert_router.fit(training, embedding_root=features.root, tokenizer_root=plan['tokenizer_root'],
                               **{key: plan[key] for key in ('prototypes_per_route', 'iterations',
                                   'minimum_margin', 'maximum_distance')})
+    if plan.get('classifier'):
+        model = expert_router.fit_classifier(training, model, **plan['classifier'])
     (args.output / 'router.json').write_text(json.dumps(model, sort_keys=True) + '\n')
     measurements = []
     for item in selected['evaluation']:

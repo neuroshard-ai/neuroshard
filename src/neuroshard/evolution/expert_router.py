@@ -1,4 +1,4 @@
-"""Bounded expert selection from frozen input embeddings and integer prototypes.
+"""Bounded expert selection from frozen input embeddings and integer models.
 
 Fitting sees only labeled training prompts. Inference sees a prompt feature
 vector, never a task label, reference answer or evaluation identifier. New
@@ -11,6 +11,7 @@ from .reference_data import identity
 from .schema import integer, root
 
 FORMAT = 'neuroshard-embedding-router-v1'
+LINEAR_FORMAT = 'neuroshard-discriminative-router-v1'
 SCALE = 16384
 MAX_DIMENSIONS = 4096
 FIELDS = {'format', 'embedding_root', 'tokenizer_root', 'training_root',
@@ -56,8 +57,11 @@ def distance(left, right):
 
 
 def validate(model):
-    if not isinstance(model, dict) or set(model) != FIELDS or model['format'] != FORMAT:
+    if not isinstance(model, dict) or model.get('format') not in (FORMAT, LINEAR_FORMAT):
         raise ValueError('Invalid integer router model')
+    expected = FIELDS | ({'classifier'} if model['format'] == LINEAR_FORMAT else set())
+    if set(model) != expected:
+        raise ValueError('Invalid integer router fields')
     for key in ('embedding_root', 'tokenizer_root', 'training_root'):
         root(model[key])
     dimensions = integer(model['dimensions'], 1, MAX_DIMENSIONS)
@@ -76,6 +80,22 @@ def validate(model):
             raise ValueError('Require bounded prototypes for every route')
         for center in centers:
             vector(center, dimensions)
+    if model['format'] == LINEAR_FORMAT:
+        classifier = model['classifier']
+        if (not isinstance(classifier, dict) or set(classifier) != {'method', 'epochs', 'training_margin', 'weights', 'biases'}
+                or classifier['method'] != 'integer-averaged-margin-perceptron-v1'
+                or not isinstance(classifier['weights'], dict) or not isinstance(classifier['biases'], dict)
+                or set(classifier['weights']) != set(prototypes) or set(classifier['biases']) != set(prototypes)):
+            raise ValueError('Invalid discriminative router classifier')
+        integer(classifier['epochs'], 1, 64)
+        integer(classifier['training_margin'], 0, 2**40)
+        for name in prototypes:
+            weights = classifier['weights'][name]
+            if not isinstance(weights, list) or len(weights) != dimensions:
+                raise ValueError('Classifier weight dimensions changed')
+            for weight in weights:
+                integer(weight, -SCALE, SCALE)
+            integer(classifier['biases'][name], -SCALE, SCALE)
     return model
 
 
@@ -144,8 +164,70 @@ def select(model, features):
               for name, centers in model['prototypes'].items()}
     ordered = sorted(scores, key=lambda name: (scores[name], name))
     best, second = ordered[:2]
+    nearest = best
+    logits = None
+    if model['format'] == LINEAR_FORMAT:
+        classifier = model['classifier']
+        logits = {name: sum(weight * value for weight, value in zip(weights, features))
+                  + classifier['biases'][name] * SCALE for name, weights in classifier['weights'].items()}
+        best, second = sorted(logits, key=lambda name: (-logits[name], name))[:2]
     margin = scores[second] - scores[best]
+    if logits is not None:
+        margin = logits[best] - logits[second]
     confident = scores[best] <= model['maximum_distance'] and margin > model['minimum_margin']
-    return {'route': best if confident else model['fallback'], 'nearest': best,
-            'confident': confident, 'margin': margin, 'distances': scores,
-            'router': identity(model), 'features': identity(features)}
+    result = {'route': best if confident else model['fallback'], 'nearest': nearest,
+              'confident': confident, 'margin': margin, 'distances': scores,
+              'router': identity(model), 'features': identity(features)}
+    if logits is not None:
+        result.update(predicted=best, logits=logits)
+    return result
+
+
+def fit_classifier(samples, prototype_model, *, epochs=24, training_margin=8388608):
+    """Learn separating directions instead of requiring nearest-centroid labels.
+
+    Lazy integer averaging includes every training step, without a dependency
+    on BLAS solvers, random shuffles or floating-point optimizer state.
+    """
+    validate(prototype_model)
+    if prototype_model['format'] != FORMAT:
+        raise ValueError('Classifier fitting requires the original prototype model')
+    integer(epochs, 1, 64)
+    integer(training_margin, 0, 2**40)
+    rows = sorted(samples, key=lambda row: row['id'])
+    if identity(rows) != prototype_model['training_root']:
+        raise ValueError('Classifier training differs from the committed prototype observations')
+    names = sorted(prototype_model['prototypes'])
+    dimensions = prototype_model['dimensions']
+    if len(rows) * dimensions * len(names) * epochs > 2**29:
+        raise ValueError('Classifier training exceeds its operation budget')
+    weights = {name: [0] * (dimensions + 1) for name in names}
+    accumulated = {name: [0] * (dimensions + 1) for name in names}
+    step = 0
+    for _ in range(epochs):
+        for row in rows:
+            step += 1
+            values = [*row['features'], SCALE]
+            scores = {name: sum(a * b for a, b in zip(weights[name], values)) for name in names}
+            target = row['route']
+            rival = min((name for name in names if name != target), key=lambda name: (-scores[name], name))
+            if scores[target] > scores[rival] + training_margin:
+                continue
+            for name, sign in ((target, 1), (rival, -1)):
+                for index, value in enumerate(values):
+                    delta = sign * value
+                    weights[name][index] += delta
+                    accumulated[name][index] += (step - 1) * delta
+    averaged = {name: [step * value - elapsed for value, elapsed in zip(weights[name], accumulated[name])]
+                for name in names}
+    magnitude = max(sum(value * value for value in values) for values in averaged.values())
+    if not magnitude:
+        raise ValueError('Classifier training produced no decision boundary')
+    denominator = math.isqrt(magnitude << 64)
+    scaled = {name: [rounded_ratio(value * (SCALE << 32), denominator) for value in values]
+              for name, values in averaged.items()}
+    classifier = {'method': 'integer-averaged-margin-perceptron-v1', 'epochs': epochs,
+                  'training_margin': training_margin,
+                  'weights': {name: values[:-1] for name, values in scaled.items()},
+                  'biases': {name: values[-1] for name, values in scaled.items()}}
+    return validate({**prototype_model, 'format': LINEAR_FORMAT, 'classifier': classifier})

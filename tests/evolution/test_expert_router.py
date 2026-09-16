@@ -88,3 +88,33 @@ def test_integer_normalization_has_no_small_vector_or_signed_rounding_bias():
     assert negative == [-value for value in positive]
     assert router.normalize([1000, 1000]) == positive
     assert [router.rounded_ratio(x, 2) for x in (-5, -3, -1, 1, 3, 5)] == [-2, -2, 0, 0, 2, 2]
+
+
+def test_discriminative_router_learns_unlabeled_decisions_and_preserves_fallback():
+    rows = samples()
+    model = router.fit_classifier(rows, fit())
+    assert model == router.fit_classifier(list(reversed(rows)), fit())
+    for name, values in [('parent', [20, 2, 1]), ('directory', [2, 20, 1]), ('protocol', [2, 1, 20])]:
+        result = router.select(model, router.normalize(values))
+        assert result['route'] == name and result['predicted'] == name
+        assert result['margin'] > 0
+    model['minimum_margin'] = 2**40
+    result = router.select(model, router.normalize([0, 15, 1]))
+    assert result['predicted'] == 'directory' and result['route'] == 'parent'
+    model['minimum_margin'] = 0
+    model['maximum_distance'] = 0
+    assert router.select(model, router.normalize([0, 15, 1]))['route'] == 'parent'
+
+
+def test_classifier_cannot_substitute_observations_or_malformed_weights():
+    rows = samples()
+    prototype = fit(rows)
+    rows[0]['route'] = 'protocol'
+    with pytest.raises(ValueError, match='committed'):
+        router.fit_classifier(rows, prototype)
+    model = router.fit_classifier(samples(), prototype)
+    for weights in (None, [], {'parent': [1, 2, 3]}):
+        altered = copy.deepcopy(model)
+        altered['classifier']['weights'] = weights
+        with pytest.raises(ValueError, match='classifier'):
+            router.validate(altered)

@@ -9,6 +9,7 @@
   "iterations": 12,
   "minimum_margin": 1000000,
   "maximum_distance": 268435456,
+  "classifier": {"epochs": 24, "training_margin": 8388608},
   "training_per_source": {
     "train.jsonl": 128,
     "retained-dev-knowledge.jsonl": 128,
