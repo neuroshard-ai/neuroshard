@@ -1,5 +1,30 @@
 # Continued interface learning and batched audit measurement
 
+The continuation completed and was rejected. Single answers stayed at 13/16,
+combined answers stayed at 2/16, and structured answers stayed at 7/8. General
+retention failed: the upper confidence bound was +0.02127 against +0.02. Both
+1,536-update arms and both exact optimizer replay checks completed. The final
+remained unopened. Mixed training response loss fell from 0.27065 to 0.01163;
+this did not transfer to better held-out combined answers. More steps on this
+interface are not the next experiment. See the
+[complete result](../config/experiments/expert-interface-continuation-results.json).
+
+Eight GPU token checks took 0.640–0.661 seconds each. The three 128-token cached
+responses took 15.44–15.68 seconds to generate. Each fixed-context check sent
+83,886,320 tensor bytes, versus 3,968,048–19,314,688 for cached generation across
+the eight cases. Six cached responses matched; two differed (one and two token
+positions). Both deliberately forged responses were rejected. These measured
+disagreements confirm that native acceptance cannot silently substitute one
+numerical method for the other.
+
+The next [frozen streaming trial](../config/experiments/checked-streaming-trial.json)
+uses those same weights and eight exposed cases. It checks the implemented
+canonical correction procedure, complete-response re-execution, two different
+chunk-boundary comparisons, and two first-token forgeries. It measures first
+checked-chunk latency, complete time and traffic under a one-hour/$10 bound.
+There is no training or quality search in this run. The candidate remains
+rejected regardless of an execution-method pass.
+
 The first owned-interface trial improved single-fact answers to 13/16 and
 combined answers to 2/16. General retention passed (upper bound +0.01412 against
 +0.02), and structured answers stayed at 7/8. It failed the combined-answer and
