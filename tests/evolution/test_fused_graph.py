@@ -199,6 +199,41 @@ def owner(rank, folder):
                           interface=adapter, adapt_interfaces=True)
         assert not rejected['result']['passed']
         assert rejected['result']['predicted'][0] == checked['result']['predicted'][0]
+        from neuroshard.evolution.sharded import canonical_stream
+        chunks = list(canonical_stream.stream(net, mixture, tokens, 4, 64,
+            home/('stream-'+str(rank)), chunk_tokens=2, interface=adapter, adapt_interfaces=True))
+        assert [token for chunk in chunks for token in chunk['tokens']] == adapted
+        assert chunks[-1]['end'] and all(chunk['checks'][-1]['result']['passed'] for chunk in chunks)
+        original_draft = canonical_stream.generate_fused
+        def changed_draft(net, gate, prompt, maximum, observation, **kwargs):
+            proposal = original_draft(net, gate, prompt, maximum, observation, **kwargs)
+            proposal[0] = (proposal[0]+1) % graph['parent']['config']['vocab_size']
+            if proposal[0] == net.tokenizer.eos_token_id:
+                return proposal[:1]
+            if len(proposal) < maximum and proposal[-1] != net.tokenizer.eos_token_id:
+                proposal.append(net.tokenizer.eos_token_id)
+            return proposal
+        canonical_stream.generate_fused = changed_draft
+        try:
+            repaired = list(canonical_stream.stream(net, mixture, tokens, 4, 64,
+                home/('repaired-stream-'+str(rank)), chunk_tokens=2, interface=adapter, adapt_interfaces=True))
+        finally:
+            canonical_stream.generate_fused = original_draft
+        assert [token for chunk in repaired for token in chunk['tokens']] == adapted
+        assert any(len(chunk['checks']) > 1 for chunk in repaired)
+        assert all(len(chunk['checks']) <= 3 for chunk in repaired)
+        if len(chunks) > 1:
+            changing = canonical_stream.stream(net, mixture, tokens, 4, 64,
+                home/('changed-stream-'+str(rank)), chunk_tokens=2, interface=adapter, adapt_interfaces=True)
+            next(changing)
+            with torch.no_grad():
+                next(mixture.parameters()).add_(.01)
+            try:
+                next(changing)
+            except ValueError as error:
+                assert 'cannot switch' in str(error)
+            else:
+                raise AssertionError('A stream mixed different model versions')
         (home/('fused-owner-'+str(rank)+'.json')).write_text(json.dumps(observation))
     finally:
         dist.destroy_process_group()
