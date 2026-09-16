@@ -1,0 +1,72 @@
+{
+  "checks": {
+    "changed_phrases": true,
+    "original_routes": true,
+    "raw_questions": true,
+    "retained_parent": true,
+    "retained_structured": true
+  },
+  "feature_profile": {
+    "dimensions": 2048,
+    "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
+    "format": "neuroshard-frozen-router-features-v1",
+    "max_tokens": 4096,
+    "normalization": "integer-unit-16384",
+    "pooling": "sum-user-token-embeddings",
+    "quantization": 4096,
+    "rounding": "nearest-ties-even",
+    "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+    "vocabulary": 49152
+  },
+  "format": "neuroshard-four-model-router-study-v1/result",
+  "gpus": 0,
+  "groups": {
+    "changed_phrase/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "changed_phrase/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "original/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "original/parent": {
+      "accuracy": 1.0,
+      "correct": 55,
+      "count": 55
+    },
+    "original/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "original/structured": {
+      "accuracy": 1.0,
+      "correct": 91,
+      "count": 91
+    },
+    "raw_question/directory": {
+      "accuracy": 1.0,
+      "correct": 1920,
+      "count": 1920
+    },
+    "raw_question/protocol": {
+      "accuracy": 0.9939024390243902,
+      "correct": 163,
+      "count": 164
+    }
+  },
+  "new_llm_learning_claimed": false,
+  "passed": true,
+  "plan": "04adfad7f5ab932514d4d221374f6923c872c33a5cb21eff043303d6981b8f6e",
+  "router": "abeec63d3d09f1603d531b70eb4cc74125cb59f41c51bf58dd101cda769b0904",
+  "scope": "Development routing across four already available numerical paths, using the same source identities and split. No new LLM weights, sealed quality result or promotion. Structured and general held-out questions must all keep their intended model.",
+  "seconds": 163.8949225989636,
+  "selection": "e0e1e69cffbb739c92dea00513089dd08417e69fc51964f88ef4d57f9db58b15"
+}

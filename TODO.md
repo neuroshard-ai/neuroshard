@@ -271,3 +271,12 @@ under the same admission rules.
   fit is frozen on the same data split. The separate three-class conversation
   regression's first allocation stopped at an Ubuntu package lock before neural
   execution; its $0.76 estimated compute and complete retirement are recorded.
+
+- 2026-09-16: Four-model routing passed on the unchanged split: 163/164 raw
+  protocol questions, 1,920/1,920 raw directory questions, all 91 structured
+  questions and all 55 general conversations. The fit/evaluation took 163.89
+  CPU seconds. Complete request data and earlier turns now reach the selected
+  general or structured model; a single-request path preserves its raw input
+  rather than substituting the planner's shorter rewrite. The actual five-process
+  context-preservation check passed in 21.90 seconds. GPU conversation evidence
+  for this extended path is still pending.

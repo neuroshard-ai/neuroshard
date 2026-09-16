@@ -136,6 +136,18 @@ def worker(rank, folder):
             mapped.model_for_route('uninstalled')
         with pytest.raises(ValueError, match='conversation executor'):
             mapped.router.answer('word6', 4)
+        history = [{'role': 'user', 'content': 'word7 word8 word9'},
+                   {'role': 'assistant', 'content': 'word10'},
+                   {'role': 'user', 'content': 'word6'}]
+        complete = mapped.answer_messages('parent', 'word6', history, whole_request=True)
+        assert complete == history and complete is not history
+        mapped.call('parent', complete, 4, 'answer')
+        assert mapped.trace[-1]['prompt_ids'] == net.tokenizer.apply_chat_template(
+            history, tokenize=True, add_generation_prompt=True)
+        focused = mapped.answer_messages('interpreter', 'word5', history)
+        assert focused[:2] == history[:2] and focused[-1]['content'].startswith('word6\n\n')
+        assert focused[-1]['content'].endswith('word5')
+        assert history[-1]['content'] == 'word6'
         (home / f'cached-rank-{rank}.json').write_text(json.dumps(records))
     finally:
         dist.destroy_process_group()

@@ -128,11 +128,20 @@ class PlannedGraphNetwork:
         return self.config['learned'].get('route_models', {}).get(
             selected, 'interpreter' if selected == 'parent' else selected)
 
-    def answer_messages(self, selected, question):
-        messages = []
+    def answer_messages(self, selected, question, conversation_messages=None, *, whole_request=False):
+        # The two older closed-book experts have a canonical question interface.
+        # General and structured tasks also need the actual user-provided data
+        # and earlier turns. A short planner rewrite is not a replacement for it.
+        if conversation_messages is not None and selected not in ('directory', 'protocol'):
+            messages = copy.deepcopy(conversation(conversation_messages))
+            if not whole_request:
+                messages[-1]['content'] += ('\n\nFor this response, answer only the following part '
+                    'of my request, using the conversation and data above:\n' + question)
+            messages[-1]['content'] = self.expert_question(selected, messages[-1]['content'])
+        else:
+            messages = [{'role': 'user', 'content': self.expert_question(selected, question)}]
         if selected == 'interpreter' and self.config['general_instruction']:
-            messages.append({'role': 'system', 'content': self.config['general_instruction']})
-        messages.append({'role': 'user', 'content': self.expert_question(selected, question)})
+            messages.insert(0, {'role': 'system', 'content': self.config['general_instruction']})
         return messages
 
     def call(self, model, messages, maximum, purpose):
@@ -188,11 +197,14 @@ class PlannedGraphNetwork:
         except (ValueError, TypeError):
             plan, error = [], 'invalid_neural_plan'
         for question in plan:
-            choice = self.route(question)
+            # A single unambiguous user request need not lose its payload merely
+            # because the planner expressed its instruction more concisely.
+            routing_question = messages[0]['content'] if len(plan) == len(messages) == 1 else question
+            choice = self.route(routing_question)
             routing.append(choice)
             selected = choice['decision']['route']
             model = self.model_for_route(selected)
-            prompt = question
+            prompt = routing_question
             if model == 'directory':
                 policy = self.net.graph['descriptor']['interpretation']
                 prefix = example_messages(policy['instruction'], policy['examples'])
@@ -204,7 +216,8 @@ class PlannedGraphNetwork:
                     error = 'invalid_directory_arguments'
                     break
                 prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
-            answer = self.call(model, self.answer_messages(model, prompt), max_tokens, 'answer')
+            answer = self.call(model, self.answer_messages(model, prompt, messages,
+                whole_request=len(plan) == 1), max_tokens, 'answer')
             answers.append({'question': question, 'expert': selected, 'text': answer})
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else
