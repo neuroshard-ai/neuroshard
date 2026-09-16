@@ -35,3 +35,11 @@ interface fix is claimed: the diagnostic's 3/8 raw directory result is a known
 limitation. A failing candidate is rejected with all outputs retained. The
 allocation is capped at 90 minutes and $20; neither success nor native serving
 admission is assumed.
+# Recorded outcome
+
+The terminal development gate failed: directory 3/8, protocol 6/8, combined
+questions 0/16; structured tasks improved from 2/8 to 7/8. General response-loss
+UCB was +0.03775 against the +0.02 limit. Both optimizer restart checks passed,
+and all five owners saved identical results. The final was not evaluated.
+See the [machine-readable result](../config/experiments/probability-mixture-results.json)
+and the next [owned-interface prescription](EXPERT_INTERFACE_TRIAL.md).

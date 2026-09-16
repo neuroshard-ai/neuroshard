@@ -139,6 +139,44 @@ def owner(rank, folder):
         synchronize(net, mixture)
         result = generate_fused(net, mixture, tokens, 4)
         assert generate_fused(net, mixture, tokens, 4) == result
+        from neuroshard.evolution.sharded.expert_interface import ExpertInterface
+        from neuroshard.evolution.sharded.interface_training import OwnedInterfaceTraining
+        recipe = {'steps': 3, 'learning_rate': .001, 'warmup_steps': 1, 'minimum_lr_ratio': .1,
+                  'weight_decay': .01, 'clip_norm': 1., 'microbatch': 1, 'general_kl': 2., 'schedule': [0]*3}
+        bank, _ = produce(net, rows, [[0, 1]], home/'interface-bank', max_length=64,
+                          max_seconds=60, include_prefix=True)
+        torch.manual_seed(925+rank)
+        local_name = graph['descriptor']['rules'][rank-3]['id'] if rank >= 3 else None
+        adapter = ExpertInterface(net.shard, identity(graph['experts'][local_name]), rank=2) if rank >= 3 else None
+        if adapter is not None:
+            adapter.eval()
+        with torch.no_grad():
+            mixture.output.bias.fill_(.5)
+        synchronize(net, mixture)
+        unchanged = generate_fused(net, mixture, tokens, 4)
+        assert generate_fused(net, mixture, tokens, 4, interface=adapter, adapt_interfaces=True) == unchanged
+        original_names = [name for name, _ in net.shard.named_owned_parameters()]
+        initial_gate, initial_adapter = copy.deepcopy(mixture), copy.deepcopy(adapter)
+        objective = {'source_ce': .5, 'route_ce': .1, 'adapter_lr': .001}
+        training = OwnedInterfaceTraining(net, mixture, adapter, rows, bank, home/'interface-bank',
+                                          recipe, objective)
+        training.advance()
+        snapshot = training.save(home/('interface-checkpoints-'+str(rank)))
+        second = training.advance()
+        terminal = training.save(home/('interface-checkpoints-'+str(rank)))
+        replay = OwnedInterfaceTraining(net, initial_gate, initial_adapter, rows, bank, home/'interface-bank',
+                                        recipe, objective)
+        replay.restore(home/('interface-checkpoints-'+str(rank)), snapshot)
+        assert replay.advance() == second
+        assert replay.save(home/('interface-replay-'+str(rank))) == terminal
+        assert [name for name, _ in net.shard.named_owned_parameters()] == original_names
+        net.verify_unchanged()
+        synchronize(net, mixture)
+        adapted = generate_fused(net, mixture, tokens, 4, interface=adapter, adapt_interfaces=True)
+        assert generate_fused(net, mixture, tokens, 4, interface=adapter, adapt_interfaces=True) == adapted
+        adapted_bank, _ = produce(net, rows, [[0, 1]], home/'adapted-bank', max_length=64,
+                                  max_seconds=60, interface=adapter, adapt_interfaces=True)
+        assert set(adapted_bank['interfaces']) == set(graph['experts'])
         (home/('fused-owner-'+str(rank)+'.json')).write_text(json.dumps(observation))
     finally:
         dist.destroy_process_group()

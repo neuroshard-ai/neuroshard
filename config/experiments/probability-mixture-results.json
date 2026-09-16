@@ -1,0 +1,171 @@
+{
+  "format": "neuroshard-probability-mixture-result-v1",
+  "source": "0bcf76de0487e2f55357b647e59d57453e74f462",
+  "result": {
+    "final_opened": false,
+    "fusion": {
+      "ablation": "794fbaf9e2986c0322ae32dd22788b79a6f7a18cecebca3a85dc1de87e410a7a",
+      "fusion": "595d30cd9ca42e0b169240c32b69ff03dc399ef566f61326e8bec6e4f77fc929"
+    },
+    "graph": "a48e4314bbfbc720552a123b8c56e5ae053ec8547cb2364c1f63c35172b8afc6",
+    "limitations": [
+      "Controlled five-owner single-administrator trial; no independent-operator evidence.",
+      "Existing two 1.7B backbones and two learned tails remain frozen; only the connection learns.",
+      "General retention uses response-only loss and published generated responses; it is not a broad human preference evaluation.",
+      "The ablation does not meet the six-item checklist requirement for a matched-total-resource no-growth comparison.",
+      "No automatic native admission, public chat release or completion of a third learning cohort is implied.",
+      "Every source executes on each generated token. There is no sparse compute saving in this trial.",
+      "Directory raw-input compatibility is only 3/8 in the development source diagnostic; a gate cannot guarantee knowledge its inputs do not make available."
+    ],
+    "passed": false,
+    "plan": "ac3f52def3533aa5030fdf58aa62c5148eec55f7460551694287acc82eab334e",
+    "reports": {
+      "dev": {
+        "checks": {
+          "general_retention": false,
+          "mixed_accuracy": false,
+          "specialist_gain_ablation": true,
+          "specialist_gain_hub": true,
+          "structured_retention": true
+        },
+        "passed": false,
+        "specialist_gains": {
+          "ablation": {
+            "groups": 20,
+            "lower_95_one_sided": 0.14634146341463414,
+            "mean": 0.28125,
+            "upper_95_one_sided": 0.45161290322580644
+          },
+          "hub": {
+            "groups": 20,
+            "lower_95_one_sided": 0.14634146341463414,
+            "mean": 0.28125,
+            "upper_95_one_sided": 0.45161290322580644
+          }
+        },
+        "strata": {
+          "directory": {
+            "accuracy": {
+              "ablation": 0.0,
+              "fusion": 0.375,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 7,
+              "lower_95_one_sided": 0.14285714285714285,
+              "mean": 0.375,
+              "upper_95_one_sided": 0.625
+            },
+            "accuracy_vs_hub": {
+              "groups": 7,
+              "lower_95_one_sided": 0.14285714285714285,
+              "mean": 0.375,
+              "upper_95_one_sided": 0.625
+            },
+            "documents": 8
+          },
+          "general": {
+            "documents": 8,
+            "loss_vs_ablation": {
+              "groups": 8,
+              "lower_95_one_sided": 0.0036116037517786026,
+              "mean": 0.013761560432612896,
+              "upper_95_one_sided": 0.027399624697864056
+            },
+            "loss_vs_hub": {
+              "groups": 8,
+              "lower_95_one_sided": 0.002911090850830078,
+              "mean": 0.01761946640908718,
+              "upper_95_one_sided": 0.03774639032781124
+            }
+          },
+          "mixed": {
+            "accuracy": {
+              "ablation": 0.0,
+              "fusion": 0.0,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 7,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.0,
+              "upper_95_one_sided": 0.0
+            },
+            "accuracy_vs_hub": {
+              "groups": 7,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.0,
+              "upper_95_one_sided": 0.0
+            },
+            "documents": 16
+          },
+          "protocol": {
+            "accuracy": {
+              "ablation": 0.0,
+              "fusion": 0.75,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 6,
+              "lower_95_one_sided": 0.4,
+              "mean": 0.75,
+              "upper_95_one_sided": 1.0
+            },
+            "accuracy_vs_hub": {
+              "groups": 6,
+              "lower_95_one_sided": 0.4,
+              "mean": 0.75,
+              "upper_95_one_sided": 1.0
+            },
+            "documents": 8
+          },
+          "structured": {
+            "accuracy": {
+              "ablation": 0.875,
+              "fusion": 0.875,
+              "hub": 0.25
+            },
+            "accuracy_vs_ablation": {
+              "groups": 8,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.0,
+              "upper_95_one_sided": 0.0
+            },
+            "accuracy_vs_hub": {
+              "groups": 8,
+              "lower_95_one_sided": 0.375,
+              "mean": 0.625,
+              "upper_95_one_sided": 0.875
+            },
+            "documents": 8
+          }
+        }
+      }
+    }
+  },
+  "all_five_reports_equal": true,
+  "optimizer_restart": {
+    "fusion": true,
+    "ablation": true
+  },
+  "resources": {
+    "terminated": [
+      "i-02105f74839a26dee",
+      "i-03ef108a2b3beafc8",
+      "i-050a70ac40cbeebab",
+      "i-05b3709e88f2de02d",
+      "i-07d81daec86a6b7d0"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 1.8547459319500001,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "controller_failure": "The controller checked for results before checking process state; normal exits between those polls were reported as failure. Complete equal reports were recovered from all five preserved archives. No execution was rerun.",
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-causal-fusion-20260916/probability-mixture-evidence.tar.gz",
+    "bytes": 197448412,
+    "sha256": "311bfff44974cb73a1e8ee30871230df842658bf479a5d15a21d29d88490d7a1"
+  }
+}

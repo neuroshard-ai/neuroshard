@@ -30,7 +30,22 @@ def commitment(fusion):
 
 
 @torch.no_grad()
-def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, source_ablation=False):
+def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, source_ablation=False, interface=None,
+                   adapt_interfaces=False):
+    if type(adapt_interfaces) is not bool or (interface is not None and not adapt_interfaces):
+        raise ValueError('Explicitly declare adapted source execution on every owner')
+    if adapt_interfaces:
+        from .expert_interface import installed
+        with installed(net, interface) as roots:
+            if not roots:
+                raise ValueError('Adapted execution requires actual installed interfaces')
+            return _generate_fused(net, fusion, token_ids, max_tokens, observation,
+                                   source_ablation=source_ablation, interfaces=roots)
+    return _generate_fused(net, fusion, token_ids, max_tokens, observation, source_ablation=source_ablation)
+
+
+@torch.no_grad()
+def _generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, source_ablation=False, interfaces=None):
     """Execute an identical committed request on every graph owner."""
     graph, wire, rank = net.graph, net.all_owners, net.rank
     probability_mixture = isinstance(fusion, ProbabilityMixture)
@@ -50,6 +65,8 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
     root = commitment(fusion)
     request = {'graph': identity(graph), 'fusion': root, 'tokens': tokens, 'max_tokens': max_tokens,
                'source_ablation': source_ablation}
+    if interfaces:
+        request['interfaces'] = interfaces
     if wire.exchange(identity(request)) != [identity(request)]*net.world_size:
         raise ValueError('Owners disagree on fused weights or the complete request')
     versions = tuple(parameter._version for parameter in fusion.parameters())
@@ -148,6 +165,8 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
                 'owned_cache_bytes': trained.cache.resident_bytes() +
                     (preserved.cache.resident_bytes() if preserved else 0),
                 'executed_positions': trained.length, 'tokens': output})
+            if interfaces:
+                observation['interfaces'] = interfaces
         return output
     finally:
         if hook is not None:

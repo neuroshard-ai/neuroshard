@@ -40,6 +40,8 @@ class Trainer:
                 or head.rank != 0 or any(parameter.requires_grad for parameter in head.parameters())):
             raise ValueError('Training changed its committed features, sources or frozen head')
         self.model, self.head, self.rows, self.bank = fusion, head, copy.deepcopy(rows), copy.deepcopy(bank)
+        if bank.get('boundary_names', []) not in ([], ['prefix']):
+            raise ValueError('Unknown frozen boundary activation inventory')
         self.home, self.recipe, self.source_ablation = Path(home), copy.deepcopy(recipe), source_ablation
         self.step, self.failed = 0, False
         self.head_versions = tuple(parameter._version for parameter in head.parameters())
@@ -57,14 +59,15 @@ class Trainer:
         values = load_file(path, device='cpu')
         selected = [self.rows[index] for index in self.bank['batches'][index]]
         if (spec['rows'] != [row['id'] for row in selected]
-                or set(values) != {'input_ids', 'labels', 'valid', *self.bank['source_names']}
+                or set(values) != {'input_ids', 'labels', 'valid', *self.bank['source_names'], *self.bank.get('boundary_names', [])}
                 or values['labels'].dtype != torch.int64 or values['input_ids'].dtype != torch.int64
                 or values['valid'].dtype != torch.bool):
             raise ValueError('Fusion feature inventory or target types changed')
         shape = tuple(spec['shape'])
         if (len(shape) != 3 or shape[0] != len(selected) or shape[2] != self.model.hub_width
                 or any(tuple(values[key].shape) != shape or values[key].dtype != torch.float32
-                       or not bool(torch.isfinite(values[key]).all()) for key in self.bank['source_names'])
+                       or not bool(torch.isfinite(values[key]).all())
+                       for key in self.bank['source_names']+self.bank.get('boundary_names', []))
                 or any(tuple(values[key].shape) != shape[:2] for key in ('input_ids', 'labels', 'valid'))):
             raise ValueError('Fusion feature shapes or finite values changed')
         for index, row in enumerate(selected):

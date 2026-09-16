@@ -16,11 +16,27 @@ from ..reference_data import identity, save, sha256
 
 
 @torch.no_grad()
-def produce(net, rows, batches, home, *, max_length, max_seconds):
+def produce(net, rows, batches, home, *, max_length, max_seconds, include_prefix=False,
+            interface=None, adapt_interfaces=False):
+    if type(adapt_interfaces) is not bool or (interface is not None and not adapt_interfaces):
+        raise ValueError('Explicitly declare adapted feature production on every owner')
+    if adapt_interfaces:
+        from .expert_interface import installed
+        with installed(net, interface) as roots:
+            if not roots:
+                raise ValueError('Adapted features require actual installed interfaces')
+            return _produce(net, rows, batches, home, max_length=max_length, max_seconds=max_seconds,
+                            include_prefix=include_prefix, interfaces=roots)
+    return _produce(net, rows, batches, home, max_length=max_length, max_seconds=max_seconds,
+                    include_prefix=include_prefix)
+
+
+@torch.no_grad()
+def _produce(net, rows, batches, home, *, max_length, max_seconds, include_prefix=False, interfaces=None):
     """Produce every prescribed batch once; callers bind its allowed data role."""
     graph, wire, rank = net.graph, net.all_owners, net.rank
     width = graph['parent']['config']['hidden_size']
-    if (type(max_seconds) is not int or not 1 <= max_seconds <= 21600
+    if (type(include_prefix) is not bool or type(max_seconds) is not int or not 1 <= max_seconds <= 21600
             or type(max_length) is not int or not 2 <= max_length <= 4096
             or not isinstance(rows, list) or not 1 <= len(rows) <= 2048
             or not isinstance(batches, list) or not 1 <= len(batches) <= 2048
@@ -45,6 +61,10 @@ def produce(net, rows, batches, home, *, max_length, max_seconds):
         # Keep every other field (including the actual device/runtime build)
         # in the shared commitment; GraphNetwork also checks the frozen profile.
         'runtime': {key: value for key, value in net.runtime.items() if key != 'host'}}
+    if include_prefix:
+        descriptor['boundary_names'] = ['prefix']
+    if interfaces:
+        descriptor['interfaces'] = interfaces
     if wire.exchange(identity(descriptor)) != [identity(descriptor)]*net.world_size:
         raise ValueError('Owners received different fusion source data or runtime')
     home = Path(home)
@@ -86,6 +106,8 @@ def produce(net, rows, batches, home, *, max_length, max_seconds):
                     wire.send(hidden, 0)
                     for owner in owners.values():
                         wire.send(captured['prefix'], owner)
+                    if include_prefix:
+                        wire.send(captured['prefix'], 0)
                     captured.clear()
             else:
                 incoming = wire.receive(2, shape, device)
@@ -96,6 +118,8 @@ def produce(net, rows, batches, home, *, max_length, max_seconds):
                 tensors['parent'] = wire.receive(2, shape, device).cpu()
                 for name, owner in owners.items():
                     tensors[name] = wire.receive(owner, shape, device).cpu()
+                if include_prefix:
+                    tensors['prefix'] = wire.receive(2, shape, device).cpu()
             if rank < 3:
                 incoming = ids if rank == 0 else wire.receive(rank-1, shape, device)
                 with autocast(device):
