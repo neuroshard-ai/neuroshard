@@ -5,6 +5,7 @@ import hashlib
 import itertools
 import json
 from pathlib import Path
+import re
 import time
 
 
@@ -30,15 +31,56 @@ def parse(text):
     return value['questions']
 
 
-def score(text, required):
+def typed_questions(text, messages):
+    """Compile required subjects and expert scope without any reference answers."""
+    def unique(pairs):
+        if len(dict(pairs)) != len(pairs):
+            raise ValueError('Duplicate model-produced key')
+        return dict(pairs)
+    value = json.loads(text, object_pairs_hook=unique)
+    if (not isinstance(value, dict) or set(value) != {'tasks'}
+            or not isinstance(value['tasks'], list) or not 1 <= len(value['tasks']) <= 2):
+        raise ValueError('Require one or two bounded neural tasks')
+    context = '\n'.join(message['content'] for message in messages)
+    questions, tasks = [], []
+    for task in value['tasks']:
+        if not isinstance(task, dict):
+            raise ValueError('Invalid neural task')
+        if task.get('expert') == 'directory':
+            if (set(task) != {'expert', 'name', 'field'} or not isinstance(task['name'], str)
+                    or not re.fullmatch(r'[A-Za-z]+(?: [A-Za-z]+){1,3}', task['name'])
+                    or not re.search(r'(?<!\w)' + re.escape(task['name']) + r'(?!\w)', context, re.I)
+                    or task['field'] not in ('city', 'profession', 'instrument', 'hobby')):
+                raise ValueError('Directory tasks require an explicit mentioned person and supported field')
+            questions.append('In the fictional Luma directory, what is ' + task['name'] + "'s " + task['field'] + '?')
+        elif task.get('expert') in ('protocol', 'parent'):
+            if (set(task) != {'expert', 'question'} or not isinstance(task['question'], str)
+                    or not task['question'].strip() or len(task['question'].encode()) > 2048):
+                raise ValueError('Require a bounded specialist or general question')
+            prefix = 'Regarding NeuroShard 0.4.0, ' if task['expert'] == 'protocol' else ''
+            questions.append(prefix + task['question'])
+        else:
+            raise ValueError('Unknown neural expert')
+        tasks.append(task)
+    return questions, tasks
+
+
+def score(text, required, messages=(), style='questions', expected_tasks=None):
     try:
-        questions = parse(text)
+        questions, tasks = typed_questions(text, messages) if style == 'typed' else (parse(text), None)
     except (ValueError, TypeError):
         return {'valid': False, 'complete': False}
+    def matches(index, position):
+        if not all(term in questions[index].casefold() for term in required[position]):
+            return False
+        if expected_tasks is None:
+            return True
+        return tasks is not None and all(tasks[index].get(key) == value
+                                        for key, value in expected_tasks[position].items())
     complete = len(questions) == len(required) and any(
-        all(all(term in question.casefold() for term in terms)
-            for question, terms in zip(order, required)) for order in itertools.permutations(questions))
-    return {'valid': True, 'complete': complete, 'questions': questions}
+        all(matches(index, position) for position, index in enumerate(order))
+        for order in itertools.permutations(range(len(questions))))
+    return {'valid': True, 'complete': complete, 'questions': questions, 'tasks': tasks}
 
 
 def main():
@@ -93,8 +135,9 @@ def main():
             raise ValueError('Interpreter tokenizer changed')
     prefix = [{'role': 'system', 'content': plan['instruction']}]
     for question, questions in plan['examples']:
+        answer = questions if plan.get('style') == 'typed' else {'questions': questions}
         prefix.extend([{'role': 'user', 'content': question},
-                       {'role': 'assistant', 'content': json.dumps({'questions': questions})}])
+                       {'role': 'assistant', 'content': json.dumps(answer)}])
     results = []
     for case in plan['cases']:
         # Evaluation terms and IDs never enter the model prompt.
@@ -111,7 +154,9 @@ def main():
         tokens = outputs[0, len(ids):].tolist()
         text = tokenizer.decode(tokens, skip_special_tokens=True)
         results.append({'id': case['id'], 'prompt_ids': ids, 'output_ids': tokens, 'text': text,
-                        'seconds': time.monotonic() - at, **score(text, case['required_terms'])})
+                        'seconds': time.monotonic() - at,
+                        **score(text, case['required_terms'], case['messages'], plan.get('style', 'questions'),
+                                case.get('expected_tasks'))})
         (args.home / 'responses.json').write_text(json.dumps(results, sort_keys=True, indent=2) + '\n')
     passed = (sum(row['complete'] for row in results) >= plan['pass_rule']['valid_and_complete_cases_at_least']
               and all(row['complete'] for row in results if row['id'].startswith(('pronoun-', 'prior-'))))
