@@ -160,6 +160,8 @@ class Application(Base):
                     value = s.get('portable_work')
                 elif request.path=='/expert_work':
                     value = s.get('expert_work')
+                elif request.path=='/planner_work':
+                    value = s.get('planner_work')
                 elif request.path=='/expert_lifecycle':
                     value = s.get('expert_lifecycle')
                 elif request.path=='/portable_lifecycle':

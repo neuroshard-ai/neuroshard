@@ -95,7 +95,8 @@ class Worker:
             raise ValueError('Audit worker genesis differs from configured commitment')
         self.chain_id = genesis['chain_id']
         self.native = genesis['app_state']['manifest'].get('auditing', {}).get('format') == auditing.QUORUM_FORMAT
-        self.portable = any(key in genesis['app_state']['manifest'] for key in ('portable_work', 'expert_work'))
+        self.portable = any(key in genesis['app_state']['manifest'] for key in
+                            ('portable_work', 'expert_work', 'planner_work'))
         from .app import code_hash
         from .runtime import check
         check()
@@ -144,7 +145,8 @@ class Worker:
                 raise OSError('Audit artifact store has less than 2 GiB free')
             try:
                 if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference',
-                                         'expert_features', 'expert_training', 'expert_quality', 'expert_inference'):
+                                         'expert_features', 'expert_training', 'expert_quality', 'expert_inference',
+                                         'planner_training'):
                     if not self.portable_backend:
                         return {'phase': 'portable_replay_backend_required', 'claim': claim['id']}
                     backend = self.portable_backend
@@ -160,7 +162,9 @@ class Worker:
                     if completed.returncode or len(completed.stdout) > 8*1024**2:
                         return {'phase': 'portable_replay_unavailable', 'claim': claim['id'],
                                 'returncode': completed.returncode}
-                    if claim['kind'] in ('expert_features', 'expert_training'):
+                    if claim['kind'] == 'planner_training':
+                        from .planner_work import replay_report
+                    elif claim['kind'] in ('expert_features', 'expert_training'):
                         from .expert_work import replay_report
                     elif claim['kind'] in ('expert_quality', 'expert_inference'):
                         from .expert_lifecycle import replay_report

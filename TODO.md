@@ -50,6 +50,11 @@ before the affected work, rather than changing the target after a result.
 
   Evidence so far: immutable ingestion and experimental lifecycle components
   exist. The growing expert architecture still uses fixed prepared jobs.
+  Bounded planner windows now connect actual replay to the existing native
+  reservation, funded audit and issuance machinery. Five-process CPU validation
+  covers three fresh audits, exact rewards and unchanged serving state. This
+  optional research profile still lacks automatic repeated planner admission
+  and separate planner promotion; it does not complete this item.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 

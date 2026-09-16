@@ -45,7 +45,18 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
-        learned, planned, fused, planned_tariff = None, None, None, None
+        learned, planned, fused, planned_tariff, planner_profile = None, None, None, None, None
+        if config.get('planner_work'):
+            from neuroshard.evolution import planner_window
+            from neuroshard.evolution.sharded import planner_window as numerical_window
+            planner_profile = read(config['planner_work'])
+            planner_rows_path = Path(config['planner_rows'])
+            if planner_rows_path.is_symlink() or planner_rows_path.stat().st_size > 128*1024**2:
+                raise ValueError('Planner rows exceed the installed input bound')
+            planner_rows = [protocol.parse_json(line) for line in planner_rows_path.read_bytes().splitlines()]
+            if planner_profile != planner_window.prescription(graph, planner_rows,
+                    planner_profile['recipe'], planner_profile['initial']):
+                raise ValueError('Installed planner inputs differ from their prescription')
         if config.get('fused_service'):
             from neuroshard.evolution.sharded.fused_service import FusedService
             fused = FusedService(net, read(config['fused_service']), Path(config['fused_weights']))
@@ -85,6 +96,8 @@ def run(config):
                 net.preserved.shard.resident_parameters if net.preserved else 0)}
         if learned is not None:
             ready['learned_service'] = learned.root
+        if planner_profile is not None:
+            ready['planner_work'] = identity(planner_profile)
         if planned is not None:
             ready['planned_service'] = planned.root
             if planned_tariff is not None:
@@ -183,6 +196,19 @@ def run(config):
                     value = fused.verify(command['messages'], command['tokens'], command['max_tokens'],
                         home/'stream-audits'/command['id'])
                     report = {'valid': value['passed'], 'service': fused.root, 'response': identity(value)}
+                elif command['kind'] in ('train_planner', 'planner_audit'):
+                    if planner_profile is None:
+                        raise ValueError('No planner work prescription is installed')
+                    destination = home/'planner-windows'/command['id']
+                    if command['kind'] == 'planner_audit':
+                        report, value = numerical_window.audit_report(command['claim'], planner_profile,
+                            net, planner_rows, Path(config['planner_checkpoints']), destination)
+                    else:
+                        if command['prescription'] != identity(planner_profile):
+                            raise ValueError('Requested planner training prescription is not installed')
+                        value = numerical_window.execute(net, planner_profile, command['input_checkpoint'],
+                            planner_rows, Path(config['planner_checkpoints']), destination, command['stop'])
+                        report = None
                 elif command['kind'] == 'inference_audit':
                     report, value = inference_report(command['claim'], net)
                 elif command['kind'] == 'quality_audit':

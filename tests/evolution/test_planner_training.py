@@ -3,6 +3,9 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+import shutil
+
+import pytest
 
 import torch
 import torch.distributed as dist
@@ -64,6 +67,57 @@ def owner(rank, folder):
         continuation_replay.restore(checkpoint_home, continued_initial)
         assert continuation_replay.advance() == continued_update
         assert continuation_replay.save(checkpoint_home) == continued_final
+        from neuroshard.evolution import planner_window
+        from neuroshard.evolution.sharded import planner_window as numerical_window
+        profile = planner_window.prescription(net.graph, rows, recipe, initial)
+        expected_window = {'format': planner_window.FORMAT, 'prescription': identity(profile),
+                           'checkpoints': [middle, final], 'updates': [second]}
+        report, actual = numerical_window.replay(net, profile, middle, expected_window, rows,
+            checkpoint_home, home/('window-replay-'+str(rank)))
+        assert report['valid'] and actual == expected_window
+        from neuroshard.evolution import planner_work
+        from test_planner_work_settlement import network, reserve, submit, finish
+        full_window = {'format': planner_window.FORMAT, 'prescription': identity(profile),
+                       'checkpoints': [initial, middle, final], 'updates': [first, second]}
+        native, signers = network(profile)
+        native = submit(reserve(native, signers, stages=2), signers, full_window)
+        verdicts = []
+        for auditor in range(3):
+            coverage, replayed = numerical_window.audit_report(native['candidate'], profile, net, rows,
+                checkpoint_home, home/('native-audit-'+str(auditor)+'-'+str(rank)))
+            assert replayed == full_window
+            verdicts.append(planner_work.replay_report(native['candidate'], coverage)['valid'])
+        settled = finish(native, signers, verdicts)
+        assert settled['issued'] == 2*settled['manifest']['params']['reward_atoms']
+        assert settled['planner_work']['checkpoint'] == final
+        assert settled['serving_root'] == profile['graph']
+        paid = planner_window.validate(profile, middle, expected_window)['work_ids']
+        with pytest.raises(ValueError, match='already been paid'):
+            planner_window.validate(profile, middle, expected_window, paid=paid)
+        forged = {**expected_window, 'updates': [{**second, 'loss': second['loss']+1}]}
+        report, actual = numerical_window.replay(net, profile, middle, forged, rows,
+            checkpoint_home, home/('forged-window-'+str(rank)))
+        assert not report['valid'] and actual == expected_window
+        before_missing = net.all_owners.sent_tensor_bytes
+        with pytest.raises(ValueError, match='unavailable'):
+            numerical_window.restore(net, profile, middle, rows, home/'absent-window-inputs')
+        assert net.all_owners.sent_tensor_bytes == before_missing
+        warm_profile = planner_window.prescription(net.graph, rows, recipe, continued_initial)
+        warm_second = continued.advance()
+        warm_final = continued.save(checkpoint_home)
+        isolated = home/('isolated-window-'+str(rank))
+        isolated.mkdir()
+        if rank == 2:
+            shutil.copy2(checkpoint_home/(continued_final['sha256']+'.safetensors'), isolated)
+            assert not (isolated/(final['sha256']+'.safetensors')).exists()
+        expected_warm = {'format': planner_window.FORMAT, 'prescription': identity(warm_profile),
+                         'checkpoints': [continued_final, warm_final], 'updates': [warm_second]}
+        report, actual = numerical_window.replay(net, warm_profile, continued_final, expected_warm, rows,
+            isolated, home/('warm-window-replay-'+str(rank)))
+        assert report['valid'] and actual == expected_warm
+        if rank == 2:
+            from neuroshard.evolution.reference_data import sha256
+            assert sha256(isolated/(warm_final['sha256']+'.safetensors')) == warm_final['sha256']
         if rank == 2:
             resumed.adapter.eval()
         with installed(net, resumed.adapter) as root:
@@ -133,3 +187,29 @@ def test_planner_gradients_restore_and_scoped_answer_preservation(tmp_path):
     mp.spawn(owner, args=(str(tmp_path),), nprocs=5, join=True)
     values = [json.loads((tmp_path/('owner-'+str(rank)+'.json')).read_text()) for rank in range(5)]
     assert values == [values[0]]*5
+
+
+def test_checkpoint_retention_is_atomic_across_filesystems_and_rejects_corrupt_existing_objects(tmp_path, monkeypatch):
+    import errno
+    from neuroshard.evolution.reference_data import sha256
+    from neuroshard.evolution.sharded.planner_window import retain
+    produced, store = tmp_path/'produced', tmp_path/'store'
+    produced.mkdir()
+    raw = produced/'raw'
+    raw.write_bytes(b'complete numerical object')
+    state = {'sha256': sha256(raw), 'bytes': raw.stat().st_size}
+    raw.rename(produced/(state['sha256']+'.safetensors'))
+    original = os.link
+
+    def cross_device(source, target):
+        if Path(source).parent == produced:
+            raise OSError(errno.EXDEV, 'fixture separate volume')
+        return original(source, target)
+
+    monkeypatch.setattr(os, 'link', cross_device)
+    retain(produced, store, state)
+    retain(produced, store, state)
+    assert list(store.iterdir()) == [store/(state['sha256']+'.safetensors')]
+    (store/(state['sha256']+'.safetensors')).write_bytes(b'corrupt')
+    with pytest.raises(ValueError, match='Retained planner object'):
+        retain(produced, store, state)

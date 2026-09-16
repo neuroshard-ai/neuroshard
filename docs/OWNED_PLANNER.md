@@ -137,3 +137,38 @@ the quoted bound. These receipts do not themselves authorize a ledger payment,
 establish economically sufficient prices or replace funded neural verification.
 The quote explicitly covers provider execution; verification and retained
 evidence require separate funded obligations before native acceptance.
+
+Bounded planner work now has an optional native settlement profile. A
+`planner_work` genesis entry commits the initial adapter and Adam state, the
+frozen assistant partitions, token batches, full optimizer schedule and
+numerical execution profile. Each `reserve_planner` names the three assistant
+owners and locks an already accepted native audit budget. A `claim_planner`
+contains one to sixteen consecutive updates, every intermediate checkpoint,
+and receipts from the reserved owners. The existing weighted audit machinery
+must accept complete replay before issuance; its honest-quorum assumption
+still applies. Equal execution-role shares sum to the fixed update reward.
+Numerical work identities exclude job titles and document annotations, while
+binding the consumed weights, Adam tensors, ordered token targets and effective
+optimizer parameters. Training never changes `serving_root`.
+
+The existing local graph operator accepts `planner_work`, `planner_rows` and
+`planner_checkpoints` configuration paths. These refer to the prescription,
+tokenized JSONL training rows and content-addressed complete checkpoint files.
+`train_planner` requests bind `prescription`, `input_checkpoint` and `stop`;
+`planner_audit` carries the native `claim`. Both use a fresh optimizer restored
+from the window's input checkpoint, and both persist every produced state.
+Only the final assistant owner stores the trainable adapter. Missing or corrupt
+input produces no positive audit report. An auditor's configured backend must
+submit a fresh execution request and return its report, without reusing another
+auditor's numerical result. Queue identifiers must be fresh for execution
+retries; native transaction retries retain the original signed transaction.
+
+The five-process CPU integration trains actual updates, performs three fresh
+complete replays, and submits their verdicts to the native state machine. It
+checks exact issuance, preserved serving state, forged and unavailable work,
+duplicate rejection, persistence and continued-training replay without earlier
+checkpoint files. This is integration validation using a tiny model and one
+administrator. The planner profile has not been operated on a new GPU-backed
+chain, does not migrate an existing genesis, and does not yet provide repeated
+data admission or a planner quality-promotion transaction. The failed frozen
+answer-plan result remains ineligible for promotion.

@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle
+from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -63,6 +63,8 @@ def genesis(chain_id, validators, manifest):
         expert_work.initialize(base)
     if 'expert_lifecycle' in manifest:
         expert_lifecycle.initialize(base)
+    if 'planner_work' in manifest:
+        planner_work.initialize(base)
     invariant(base)
     return base
 
@@ -84,6 +86,10 @@ def invariant(s):
         raise ValueError('Training issuance accounting failed')
     if len(s['paid_work']) != s['training_round']:
         raise ValueError('A numerical task must be paid at most once')
+    if 'planner_work' in s:
+        if (s['model_root'] != s['planner_work']['checkpoint']['fusion']
+                or s['serving_root'] != s['manifest']['initial_model_root']):
+            raise ValueError('Planner training cannot replace the approved serving graph')
     if 'expert_work' in s:
         serving = (expert_lifecycle.identity(s['expert_lifecycle']['serving_graph'])
                    if 'expert_lifecycle' in s else s['manifest']['initial_model_root'])
@@ -118,6 +124,8 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
             portable_work.settle(s, claim)
         elif claim.get('kind') in expert_work.KINDS:
             expert_work.settle(s, claim)
+        elif claim.get('kind') == planner_work.KIND:
+            planner_work.settle(s, claim)
         elif claim.get('kind','training')=='training':
             if claim['work_identity'] in s['paid_work']:
                 raise ValueError('Task was already paid')
@@ -272,6 +280,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         **portable_lifecycle.FIELDS,
         **expert_work.FIELDS,
         **expert_lifecycle.FIELDS,
+        **planner_work.FIELDS,
     }
     if 'auditing' in previous:
         for name in ('reserve', *auditing.CLAIM_KINDS):
@@ -284,6 +293,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     if 'expert_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS,
                                              *portable_work.FIELDS, *portable_lifecycle.FIELDS):
         raise ValueError('This genesis accepts only its prepared expert execution profile')
+    if 'planner_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS,
+            *portable_work.FIELDS, *portable_lifecycle.FIELDS, *expert_work.FIELDS, *expert_lifecycle.FIELDS):
+        raise ValueError('This genesis accepts only its prescribed planner execution profile')
     s = copy.deepcopy(previous)
     p = s['manifest']['params']
     sender = account(s,owner)
@@ -294,7 +306,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in expert_lifecycle.FIELDS:
+    if kind in planner_work.FIELDS:
+        planner_work.apply(s, owner, body, envelope)
+    elif kind in expert_lifecycle.FIELDS:
         expert_lifecycle.apply(s, owner, body, envelope)
     elif kind in expert_work.FIELDS:
         expert_work.apply(s, owner, body, envelope)
@@ -439,7 +453,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         if not claim or body['claim_id'] != claim['id']:
             raise ValueError('No matching pending claim')
         if claim.get('kind') in ('portable_training', *portable_lifecycle.SERVICE_KINDS,
-                                *expert_work.KINDS, *expert_lifecycle.KINDS):
+                                *expert_work.KINDS, *expert_lifecycle.KINDS, planner_work.KIND):
             raise ValueError('Portable work requires the native weighted replay verdict path')
         metadata = Metadata(claim['metadata'])
         record = metadata.json(claim['record_root'])
