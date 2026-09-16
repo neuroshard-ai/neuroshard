@@ -1,0 +1,24 @@
+{
+  "format": "neuroshard-causal-fusion-attempt-v1",
+  "source": "da1d49735c72c0dfc3f1f19f4a7a17946fca495b",
+  "plan": "1e35c1a67ac20276377d67ad19cdeb1f932a2f676a40ca39870afb859631358e",
+  "phase": "before_feature_production",
+  "training_updates": 0,
+  "initialization_token_equality": true,
+  "failure": "Full runtime metadata included the local hostname in the all-owner feature-bank agreement. All numerical profile fields matched; hostnames necessarily differed.",
+  "correction": "Exclude only host from the shared numerical identity; retain each full owner runtime as an observation. Existing preflight checks still enforce the committed numerical profile. Add a distinct-host five-process regression.",
+  "change_to_data_or_optimizer_or_gates": false,
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-causal-fusion-20260916/runtime-failure-evidence.tar.gz",
+    "sha256": "ac4528a2dae0a343803771feeb653acf2824bca46f015d1ac9e4b34a0ae2909d"
+  },
+  "retry": {
+    "same_plan": true,
+    "same_initial_models_and_data": true,
+    "same_optimizer_and_gates": true,
+    "absolute_deadline": "2026-09-16T18:50:08.368135+00:00",
+    "combined_planning_cap_usd": 30,
+    "separate_retirement_required": true
+  },
+  "regression": "Five owners with distinct host metadata produce an agreed feature bank; a changed numerical thread count is rejected. Causal feature production, training, checkpoint recovery and small-weight synchronization pass in the same real five-process check."
+}

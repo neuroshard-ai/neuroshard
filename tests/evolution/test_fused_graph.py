@@ -54,7 +54,20 @@ def owner(rank, folder):
         rows = [{'id': identity(['row', index]), 'input_ids': values, 'kind': 'general',
                  'labels': [-100]*(len(values)-1)+[values[-1]]}
                 for index, values in enumerate([[3, 4, 5, 6], [3, 4, 9, 8, 7, 6]])]
+        net.runtime = {**net.runtime, 'host': 'distinct-owner-'+str(rank)}
+        original_threads = net.runtime['threads']
+        if rank == 4:
+            net.runtime['threads'] += 1
+        try:
+            produce(net, rows, [[0, 1]], home/'rejected-bank', max_length=64, max_seconds=60)
+        except ValueError as error:
+            assert 'different fusion source data or runtime' in str(error)
+        else:
+            raise AssertionError('Owners accepted a changed numerical runtime')
+        net.runtime['threads'] = original_threads
         bank, traffic = produce(net, rows, [[0, 1]], home/'fusion-bank', max_length=64, max_seconds=60)
+        assert 'host' not in bank['runtime']
+        assert traffic['owner_runtime']['host'] == 'distinct-owner-'+str(rank)
         assert bank['files'][0]['shape'] == [2, 6, width]
         assert traffic['sent_tensor_bytes'] > 0
         if rank == 0:

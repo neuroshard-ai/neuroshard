@@ -40,7 +40,11 @@ def produce(net, rows, batches, home, *, max_length, max_seconds):
             raise ValueError('Invalid complete response-only fusion training tokens')
     descriptor = {'format': 'neuroshard-fusion-feature-bank-v1', 'graph': identity(graph),
         'rows': identity(rows), 'batches': batches, 'max_length': max_length,
-        'source_names': ['hub', 'parent', *graph['experts']], 'runtime': net.runtime}
+        'source_names': ['hub', 'parent', *graph['experts']],
+        # Hostnames are deployment observations, not numerical identities.
+        # Keep every other field (including the actual device/runtime build)
+        # in the shared commitment; GraphNetwork also checks the frozen profile.
+        'runtime': {key: value for key, value in net.runtime.items() if key != 'host'}}
     if wire.exchange(identity(descriptor)) != [identity(descriptor)]*net.world_size:
         raise ValueError('Owners received different fusion source data or runtime')
     home = Path(home)
@@ -123,7 +127,8 @@ def produce(net, rows, batches, home, *, max_length, max_seconds):
             save(home/'manifest.json', result)
             save(home/'resources.json', {'seconds': time.monotonic()-started,
                                         'bytes': sum(spec['bytes'] for spec in files)})
-        return result, {'seconds': time.monotonic()-started, 'sent_tensor_bytes': wire.sent_tensor_bytes-before}
+        return result, {'seconds': time.monotonic()-started, 'sent_tensor_bytes': wire.sent_tensor_bytes-before,
+                        'owner_runtime': net.runtime}
     finally:
         if hook is not None:
             hook.remove()
