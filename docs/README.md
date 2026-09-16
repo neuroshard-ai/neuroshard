@@ -13,6 +13,7 @@ retaining the existing generated-answer and retention requirements.
 
 | Start here | Purpose |
 | --- | --- |
+| [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
 | [LLM protocol](LLM_PROTOCOL.md) | Supported training, payments, consensus and model-serving rules. |
 | [Model card](MODEL_CARD.md) | Capabilities, limits, evaluation and provenance. |
@@ -62,3 +63,5 @@ This directory contains technical documentation and pinned dependency profiles. 
 Example settings and compact reproduction plans live under [config](../config). Run `python scripts/check_repository.py` after staging moves to check tracked-file boundaries and local Markdown links. CI also checks package contents so local archives, website files and manuscripts cannot enter a distribution.
 
 - [Compose the learned second expert](COMPOSED_COHORT.md): exact prompt preservation and actual two-call answers; frozen read-only experiment.
+
+- [Native expert checkpoint representation](NATIVE_EXPERT_CHECKPOINTS.md): exact frozen ages, compact references and numerical work identity.

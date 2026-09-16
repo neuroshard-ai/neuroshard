@@ -1,0 +1,100 @@
+"""Re-execute new-answer quality and check unchanged retained computations.
+
+The retained-input check is a structural argument about the exact same frozen
+executor, parameters and inputs. It preserves old errors too. It does not replace
+quality measurement on newly routed inputs or establish cross-hardware equality.
+"""
+from pathlib import Path
+
+from .. import cohort_questions, expert_lifecycle, serving_graph
+from ..reference_data import identity, read_records
+
+FORMAT = 'neuroshard-expert-graph-quality-v1'
+ROLES = ('test', 'retained-test-knowledge', 'retained-test-skills', 'retained-test-conversation')
+POLICY_FIELDS = {'format', 'baseline_graph', 'candidate_graph', 'prepared', 'roles', 'generation', 'gates'}
+
+
+def rows(policy, inputs, role):
+    spec = policy['roles'][role]
+    if Path(spec['file']).name != spec['file']:
+        raise ValueError('Quality inputs must be local committed filenames')
+    result = read_records(Path(inputs) / spec['file'], spec['sha256'])
+    if len(result) != spec['count'] or identity([row['id'] for row in result]) != spec['ids']:
+        raise ValueError('Quality inputs changed their complete ordered identities')
+    return result
+
+
+def retention(policy, inputs, baseline, candidate):
+    proofs = {}
+    for role in ROLES[1:]:
+        values = []
+        for row in rows(policy, inputs, role):
+            question = row['messages'][0]['content']
+            if role.endswith('conversation'):
+                def computation(graph):
+                    if [call['model'] for call in serving_graph.calls(graph, question, 1)] != ['parent']:
+                        return None
+                    return identity({'format': FORMAT + '/forward', 'parent': identity(graph['parent']),
+                        'input_ids': row['input_ids'], 'labels': row['labels'], 'targets': row['targets'],
+                        'executor': graph['executor_root'], 'numerical_profile': graph['numerical_profile'],
+                        'tokenizer': graph['tokenizer']})
+            else:
+                maximum = policy['generation']['retained_knowledge' if role.endswith('knowledge') else 'retained_skills']
+                def computation(graph):
+                    return serving_graph.execution_identity(graph, question, maximum)
+            before, after = computation(baseline), computation(candidate)
+            values.append({'id': row['id'], 'before': before, 'after': after,
+                           'unchanged': before is not None and before == after})
+        proofs[role] = values
+    return {'format': FORMAT + '/retained-computations', 'roles': proofs,
+            'passed': all(row['unchanged'] for values in proofs.values() for row in values)}
+
+
+def evaluate(policy, inputs, baseline, candidate, network, progress=None):
+    serving_graph.fields(policy, POLICY_FIELDS, 'Invalid frozen graph quality policy')
+    if (policy['format'] != FORMAT or policy['baseline_graph'] != identity(baseline)
+            or policy['candidate_graph'] != identity(candidate) or set(policy['roles']) != set(ROLES)):
+        raise ValueError('Quality policy differs from its complete graphs or input cohorts')
+    # Missing or corrupted bytes must fail before numerical execution starts.
+    examples = rows(policy, inputs, 'test')
+    retained = retention(policy, inputs, baseline, candidate)
+    maximum = policy['generation']['new']
+    before, after, executions = [], [], []
+    for index, row in enumerate(examples):
+        question = row['messages'][0]['content']
+        old = network.answer(question, maximum, baseline)
+        new = network.answer(question, maximum, candidate)
+        before.append({'id': row['id'], 'text': old['text']})
+        after.append({'id': row['id'], 'text': new['text']})
+        executions.append({'id': row['id'], 'before': old, 'after': new})
+        if progress:
+            progress(index + 1, len(examples))
+    decision = cohort_questions.decision(examples, before, after, policy['gates'])
+    decision['checks']['unchanged_retained_computations'] = retained['passed']
+    decision['passed'] = all(decision['checks'].values())
+    return {'format': FORMAT + '/result', 'policy': identity(policy), 'executions': executions,
+            'decision': decision, 'retention': retained}
+
+
+def quality_transcript(claim, result):
+    return {'format': expert_lifecycle.FORMAT + '/quality-transcript',
+            'binding': expert_lifecycle.transcript_binding(claim), 'result': result}
+
+
+def quality_report(claim, policy, inputs, network, progress=None):
+    if (claim['kind'] != 'expert_quality' or claim['model_root'] != identity(claim['graph'])
+            or claim['executor_root'] != claim['graph']['executor_root']
+            or claim['report']['policy_root'] != identity(policy)
+            or claim['report']['prepared'] != policy['prepared']
+            or claim['stages'] != policy['roles']['test']['count']):
+        raise ValueError('Quality audit changed its graph, executor, policy or coverage')
+    result = evaluate(policy, inputs, claim['baseline_graph'], claim['graph'], network, progress)
+    expected = {'format': expert_lifecycle.FORMAT + '/quality', 'policy_root': identity(policy),
+        'baseline_graph': identity(claim['baseline_graph']), 'candidate_graph': identity(claim['graph']),
+        'prepared': policy['prepared'], 'passed': result['decision']['passed'], 'results_root': identity(result)}
+    valid = (claim['report'] == expected and identity(quality_transcript(claim, result)) == claim['record_root'])
+    report = {'format': expert_lifecycle.FORMAT + '/replay',
+        'statement': identity(expert_lifecycle.service_statement(claim)),
+        'stages': [{'stage': index, 'valid': valid} for index in range(claim['stages'])]}
+    expert_lifecycle.replay_report(claim, report)
+    return report, result

@@ -1,0 +1,103 @@
+{
+  "baseline": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6",
+  "cache_policy": "After a prefix partition completes, the operator may discard clean file-cache pages for parent objects no future prefix partition needs. No numerical bytes are changed.",
+  "decision": "Whether the complete validated expert can earn native rewards, receive separate audited graph approval and serve a raw question paid from those rewards.",
+  "execution_roles": {
+    "auditors": [
+      0,
+      1,
+      2
+    ],
+    "maximum_speculative_windows": 1,
+    "prefix_production_owners": [
+      0,
+      1,
+      2
+    ],
+    "rule": "The owner computes each window; the next bounded window may be prepared during audits, but cannot be claimed before its parent settles.",
+    "training_owner": 4
+  },
+  "executor": "efba2f08c898acb58e53606ff8cfea7baf0fc7b63928923426aab1b6a414b91d",
+  "format": "neuroshard-native-expert-live-trial-v1",
+  "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+  "inputs": {
+    "baseline.json": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6",
+    "dev.jsonl": "22b6772f2b8fae4fe76a96ac544e6426746e76907a901a65bd6f5eaf933057e9",
+    "expert-profile.json": "a9d464c0383b357a97dd1db42dcb2346a721a4447f3cda0147ed21228f142661",
+    "graph.json": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "interpreted-cohort-prepared.json": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb",
+    "interpreted-cohort.json": "a411efc1354c51e4314fa4a8542fec7b13db6aee987d9b2c7c08d83fa51f5544",
+    "manifest.json": "375717c5cb5bf0b0773a465e76ed7f39bfd3b277b19ca526c80335a41784bb8a",
+    "objects-0.json": "177455daa229d7cb2401ef8e46e388de92640c32f90965997d651be8ebffa59d",
+    "objects-1.json": "0369e016f07a97da697f27d07cb6cf85611ef34c3409aca046012592c5da1f53",
+    "objects-2.json": "82b85796c0ea0ec36be9885964a9f91fadc0fd2975456e25ddebdfd805195896",
+    "objects-3.json": "0205301b9e994b30444ee436fdc86da12b6266dab5945d036decd8ede004033b",
+    "objects-4.json": "3a13849492c552e625600b52d0bb7926b3729e42ff725284d476bb3caea5cc6e",
+    "prefix-reference.json": "45da925e842a424f707a0c5116f906d707099091ba4dbc0443b3331fa875859a",
+    "profile.json": "efba2f08c898acb58e53606ff8cfea7baf0fc7b63928923426aab1b6a414b91d",
+    "quality-policy.json": "df94617cf414afad5598e70babe54a7ad58622324438e2c8f68caef3c941b57e",
+    "retained-computations.json": "7454b6d1385daf15e75f20e5972565130ce2cf9d31095ad61b20643e49e7fa2a",
+    "retained-dev-conversation.jsonl": "54987a5d0229544716e76ba5f3b88159c87ae69d93205e8126e713a9bc7f2f50",
+    "retained-dev-knowledge.jsonl": "ba86f65e9edfcd260e178040ee60b1d13af1a76ce1067562684108b694c5148e",
+    "retained-dev-skills.jsonl": "ae49876172c62882b672c3dbba07be6b670fb7308189141850a4e794c3863c2d",
+    "retained-test-conversation.jsonl": "f88c9a15a5707fe74f04597bba8f8ee563152aa4907b8a084907f0403502fa8d",
+    "retained-test-knowledge.jsonl": "f8662bbbe4f018e26b4e1f4d3bc33487d0ca18e54b778aa5ed8dab12d8cca707",
+    "retained-test-skills.jsonl": "2484c117cdc70adfd703ade10ad3f04e401c4eddc2827407838b517c145afe3f",
+    "serving-probe.json": "17d94f12a73bccda4c2e56837f9cd3ac37643389549853311c380af914022a47",
+    "test.jsonl": "667d1fb1cd26dc15a471d3401885f6ca608377e1ff387e2d4c31aa217b2d9763",
+    "train.jsonl": "ad5ccabcea8f5387270157f03c25ada7e0a83f627bd5e3d1e97c12abf9bea02b",
+    "window-index.json": "1bd166fcbcd78e7bcf865c6e551f263852251a5fc8b138cbbe907a7852994894"
+  },
+  "limitations": [
+    "One administrator; no independent operator or permissionless provider market is claimed.",
+    "Known specialized graph and explicit routing; not completion of all six live-LLM tasks.",
+    "Finite test sponsorship and candidate-chain NEURO; no claim of token market value or external demand."
+  ],
+  "manifest": "375717c5cb5bf0b0773a465e76ed7f39bfd3b277b19ca526c80335a41784bb8a",
+  "native_preflight": {
+    "chain_id": "neuroshard-portable-life-edb5cf2aad4e",
+    "genesis": "65b4608c2de5b384fff98471b2f221ff0e5c7ec236afd7eaef35aa427a31b1e1",
+    "height": 2,
+    "issued": 0,
+    "operators": 1,
+    "passed": true,
+    "serving_root": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6",
+    "validators": 4
+  },
+  "prefix_max_seconds": 1200,
+  "quality_policy": "df94617cf414afad5598e70babe54a7ad58622324438e2c8f68caef3c941b57e",
+  "resource_allowance": {
+    "disk_gib_per_instance": 150,
+    "instance_types": [
+      "g5.2xlarge",
+      "g5.2xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "max_hours": 6,
+    "max_simultaneous_instances": 5,
+    "paused_ranks_during_training": [
+      3
+    ],
+    "planning_cap_usd": 75,
+    "stop_timer_required": true,
+    "stop_unused_serving_owners_during_training": true
+  },
+  "retained_computations": "7454b6d1385daf15e75f20e5972565130ce2cf9d31095ad61b20643e49e7fa2a",
+  "serving_probe": "23267b19b2bcfe127959b00f47250b41cfa39dfc9ae6688a1aca25e52731711e",
+  "source_commit": "3b3cff0bd56271ed2669b15f0ca37ba104d6697a",
+  "stop_rule": "Stop on unexpected disagreement, missing evidence, unbounded progress or allocation deadline. Preserve evidence; do not relax the frozen acceptance rule.",
+  "success": [
+    "Every GPU serving probe matches the published raw output and actual neural calls.",
+    "Native prefix and 140 training windows receive real funded replay quorums; exactly 560 NEURO are issued.",
+    "All window-boundary objects remain hash-verified and retrievable from retained storage.",
+    "A separate audited passing quality decision admits the exact serving graph without additional issuance.",
+    "Earned NEURO pays an audited raw-question response with complete neural-call billing and refunds.",
+    "Forged work, temporary missing data, repeated work and restart/replay preserve the specified state and supply."
+  ],
+  "training_job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+  "training_steps": 560,
+  "window_max_seconds": 300,
+  "window_steps": 4
+}
