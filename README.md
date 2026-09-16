@@ -32,6 +32,7 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
+- [Completed native expert lifecycle](docs/NATIVE_EXPERT_LIVE_RESULT.md): 560 audited updates earned 560 NEURO, followed by separate quality promotion and inference paid from earned tokens. Full ledger and execution evidence are public; checklist item 3 is complete.
 - [Complete LLM protocol](docs/LLM_PROTOCOL.md): native consensus and bonds, training leases/rewards, serving promotion, paid inference, locks/refunds, limits and assumptions.
 - [Experiments](docs/LLM_EXPERIMENTS.md): multi-host numerical and native settlement records, model probes, failures and reproduction.
 - [Model card](docs/MODEL_CARD.md) and [immutable S3/data pipeline](docs/DATA_PIPELINE.md).
