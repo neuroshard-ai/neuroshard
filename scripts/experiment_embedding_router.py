@@ -140,6 +140,8 @@ def run(args):
     model = expert_router.fit(training, embedding_root=features.root, tokenizer_root=plan['tokenizer_root'],
                               **{key: plan[key] for key in ('prototypes_per_route', 'iterations',
                                   'minimum_margin', 'maximum_distance')})
+    if plan.get('support_calibration'):
+        model = expert_router.calibrate_support(training, model, **plan['support_calibration'])
     if plan.get('classifier'):
         model = expert_router.fit_classifier(training, model, **plan['classifier'])
     (args.output / 'router.json').write_text(json.dumps(model, sort_keys=True) + '\n')

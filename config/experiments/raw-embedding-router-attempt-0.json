@@ -1,0 +1,66 @@
+{
+  "checks": {
+    "changed_phrases": true,
+    "original_routes": true,
+    "raw_questions": false,
+    "retained_parent": false
+  },
+  "feature_profile": {
+    "dimensions": 2048,
+    "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
+    "format": "neuroshard-frozen-router-features-v1",
+    "max_tokens": 4096,
+    "normalization": "integer-unit-16384",
+    "pooling": "sum-user-token-embeddings",
+    "quantization": 4096,
+    "rounding": "nearest-ties-even",
+    "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+    "vocabulary": 49152
+  },
+  "format": "neuroshard-raw-embedding-router-study-v1/result",
+  "gpus": 0,
+  "groups": {
+    "changed_phrase/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "changed_phrase/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "original/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "original/parent": {
+      "accuracy": 0.9931506849315068,
+      "correct": 145,
+      "count": 146
+    },
+    "original/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "raw_question/directory": {
+      "accuracy": 0.9947916666666666,
+      "correct": 1910,
+      "count": 1920
+    },
+    "raw_question/protocol": {
+      "accuracy": 0.75,
+      "correct": 123,
+      "count": 164
+    }
+  },
+  "new_llm_learning_claimed": false,
+  "passed": false,
+  "plan": "447620961f10c41842c27779b03343c40220d9576450ef81fed68fef1792e4f6",
+  "router": "3c45c6e1c1ebb1723f1a59bc2d38547fb6220fd139644552a86a621fd833caff",
+  "scope": "Development router correction using the existing entity-disjoint split and training inputs. Includes previously exposed development examples; not a new sealed quality or learning claim.",
+  "seconds": 112.82066335302079,
+  "selection": "dbdb06e17724a8c89c419ada6d972e3d24855e22e3e92868125d1cb539306697"
+}

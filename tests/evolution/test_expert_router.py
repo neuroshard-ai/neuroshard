@@ -118,3 +118,21 @@ def test_classifier_cannot_substitute_observations_or_malformed_weights():
         altered['classifier']['weights'] = weights
         with pytest.raises(ValueError, match='classifier'):
             router.validate(altered)
+
+
+def test_balanced_fitting_and_support_radius_use_only_committed_training_inputs():
+    rows = samples()
+    # Unequal numbers of paraphrases must not suppress a small supported class.
+    rows += [{**row, 'id': identity({'paraphrase': index, 'source': row['id']})}
+             for index in range(4) for row in samples() if row['route'] == 'directory']
+    prototype = router.calibrate_support(rows, fit(rows, prototypes_per_route=1))
+    for row in rows:
+        assert min(router.distance(row['features'], center)
+                   for center in prototype['prototypes'][row['route']]) <= prototype['maximum_distance']
+    trained = router.fit_classifier(rows, prototype, balance_classes=True)
+    assert trained == router.fit_classifier(list(reversed(rows)), prototype, balance_classes=True)
+    assert trained['classifier']['method'] == 'integer-balanced-averaged-margin-perceptron-v1'
+    for row in samples():
+        assert router.select(trained, row['features'])['route'] == row['route']
+    with pytest.raises(ValueError, match='committed training'):
+        router.calibrate_support(rows[:-1], prototype)

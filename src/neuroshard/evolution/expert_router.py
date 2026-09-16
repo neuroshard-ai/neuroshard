@@ -83,7 +83,8 @@ def validate(model):
     if model['format'] == LINEAR_FORMAT:
         classifier = model['classifier']
         if (not isinstance(classifier, dict) or set(classifier) != {'method', 'epochs', 'training_margin', 'weights', 'biases'}
-                or classifier['method'] != 'integer-averaged-margin-perceptron-v1'
+                or classifier['method'] not in ('integer-averaged-margin-perceptron-v1',
+                                                'integer-balanced-averaged-margin-perceptron-v1')
                 or not isinstance(classifier['weights'], dict) or not isinstance(classifier['biases'], dict)
                 or set(classifier['weights']) != set(prototypes) or set(classifier['biases']) != set(prototypes)):
             raise ValueError('Invalid discriminative router classifier')
@@ -183,7 +184,19 @@ def select(model, features):
     return result
 
 
-def fit_classifier(samples, prototype_model, *, epochs=24, training_margin=8388608):
+def calibrate_support(samples, prototype_model, *, numerator=5, denominator=4):
+    """Derive a bounded support radius from fitting inputs, never held-out rows."""
+    validate(prototype_model)
+    integer(denominator, 1, 16)
+    integer(numerator, denominator, 16)
+    if identity(sorted(samples, key=lambda row: row['id'])) != prototype_model['training_root']:
+        raise ValueError('Support calibration differs from the committed training observations')
+    radius = max(min(distance(row['features'], center)
+                     for center in prototype_model['prototypes'][row['route']]) for row in samples)
+    return validate({**prototype_model, 'maximum_distance': (radius * numerator + denominator - 1) // denominator})
+
+
+def fit_classifier(samples, prototype_model, *, epochs=24, training_margin=8388608, balance_classes=False):
     """Learn separating directions instead of requiring nearest-centroid labels.
 
     Lazy integer averaging includes every training step, without a dependency
@@ -198,6 +211,14 @@ def fit_classifier(samples, prototype_model, *, epochs=24, training_margin=83886
     if identity(rows) != prototype_model['training_root']:
         raise ValueError('Classifier training differs from the committed prototype observations')
     names = sorted(prototype_model['prototypes'])
+    if type(balance_classes) is not bool:
+        raise ValueError('Require an explicit class balancing policy')
+    if balance_classes:
+        groups = {name: [row for row in rows if row['route'] == name] for name in names}
+        # Every class gets the same deterministic number of presentations. New
+        # paraphrases cannot silently reduce general-assistant retention weight.
+        rows = [groups[name][index % len(groups[name])]
+                for index in range(max(map(len, groups.values()))) for name in names]
     dimensions = prototype_model['dimensions']
     if len(rows) * dimensions * len(names) * epochs > 2**29:
         raise ValueError('Classifier training exceeds its operation budget')
@@ -226,7 +247,9 @@ def fit_classifier(samples, prototype_model, *, epochs=24, training_margin=83886
     denominator = math.isqrt(magnitude << 64)
     scaled = {name: [rounded_ratio(value * (SCALE << 32), denominator) for value in values]
               for name, values in averaged.items()}
-    classifier = {'method': 'integer-averaged-margin-perceptron-v1', 'epochs': epochs,
+    method = ('integer-balanced-averaged-margin-perceptron-v1' if balance_classes
+              else 'integer-averaged-margin-perceptron-v1')
+    classifier = {'method': method, 'epochs': epochs,
                   'training_margin': training_margin,
                   'weights': {name: values[:-1] for name, values in scaled.items()},
                   'biases': {name: values[-1] for name, values in scaled.items()}}
