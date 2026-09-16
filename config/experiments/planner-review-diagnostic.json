@@ -1,0 +1,13 @@
+{
+  "format": "neuroshard-planner-review-diagnostic-v1",
+  "plan": "385851bbccadb1a56534c19659e106e75b5c4baa78fadb3ead1a255f73206bad",
+  "script_sha256": "8bfb5d7c014d095a16e3d39c3194bbb83d1aecb3fd03d991c7e7b98cf196707c",
+  "max_tokens": 128,
+  "instruction": "You are a question editor. Correct the supplied draft using the original conversation. Return only JSON: {\"questions\":[\"standalone question\"]}. Use exactly one question per requested subject and fact, at most two questions total. Repeat each explicit person or product name in its own question. Replace all pronouns and ordinal references with the names from the conversation. Split a shared fact requested for two people into two questions. Keep the requested order. Do not answer the questions. Do not invent facts. If the draft already satisfies every rule, preserve it.",
+  "general_questions": [
+    "Why does the sky appear blue?",
+    "Why does ice float?"
+  ],
+  "scope": "One answer-blind review of all 32 exposed drafts, with unchanged scoring. Two general-model diagnostic answers. No training, promotion, route labels or expected answers in model inputs.",
+  "deadline": "2026-09-16T16:11:48Z"
+}
