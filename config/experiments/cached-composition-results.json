@@ -558,5 +558,24 @@
       }
     ]
   },
-  "conclusion": "Cache saved 93.23% of measured tensor traffic and preserved all tested tokens and replay. Conversation integration failed: 26/32 plans and 1/8 complete answers. All eight diagnostic cached/uncached pairs matched; training-format prompts recovered the learned facts. The router screen had changed but not removed domain decorations. No quality promotion or milestone completion."
+  "conclusion": "Cache saved 93.23% of measured tensor traffic and preserved all tested tokens and replay. Conversation integration failed: 26/32 plans and 1/8 complete answers. All eight diagnostic cached/uncached pairs matched; training-format prompts recovered the learned facts. The router screen had changed but not removed domain decorations. No quality promotion or milestone completion.",
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-cached-serving-20260916/cached-serving-evidence.tar.gz",
+    "sha256": "81836eeb45265669c7ac3954624fc2ab69b33d880421844b0f21e93e0a5aa60d",
+    "anonymous_readback_verified": true
+  },
+  "resources": {
+    "terminated": [
+      "i-01bc6ba13fc4e2069",
+      "i-064c024ed037dce11",
+      "i-0ce781296eac6e69c",
+      "i-0e74d57381be24574",
+      "i-0f62d8fbfde242503"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 1.5287503623733334,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  }
 }

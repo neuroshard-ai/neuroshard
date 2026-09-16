@@ -253,3 +253,12 @@ under the same admission rules.
   answer-blind raw-question router fitting on the existing entity-disjoint split.
   These changes require the next regression result; no milestone is checked.
   [Complete failed responses and diagnosis](config/experiments/cached-composition-results.json).
+
+- 2026-09-16: Corrected input-only routing passed the frozen development gate:
+  161/164 raw protocol questions, 1,920/1,920 raw directory questions, every
+  original route and all 146 retained general questions. Calibration used only
+  fitting inputs; class-balanced integer learning countered paraphrase imbalance.
+  The CPU fit and evaluation took 114.21 seconds. The next five-owner regression
+  combines this router with committed expert prompt contracts and a bounded
+  planner reminder, under the original GPU deadline and combined $25 cap.
+  These are development routing results; broad response learning remains open.
