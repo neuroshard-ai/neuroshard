@@ -50,3 +50,27 @@ failed: all 706 original prompts selected the expected route, but only 60 of
 The discriminative follow-up uses identical fitting/evaluation identities and
 gates; no reworded evaluation text is added to fitting. Neither result is an
 independent quality claim.
+
+The [discriminative result](../config/experiments/embedding-router-discriminative-result.json)
+passed this development screen in 57.83 CPU seconds: 706/706 original routes,
+80/80 reworded protocol questions, 476/480 reworded directory questions and
+146/146 retained parent routes. The [fitted model](../config/experiments/embedding-router-model.json)
+contains only integer decision parameters and training identities. Four reworded
+directory questions still fall back incorrectly. No new LLM weights were trained
+by this routing screen.
+
+`sharded.learned_graph.LearnedGraphNetwork` connects this selection to the actual
+owned parent, interpreter and expert paths. Only the embedding owner loads the
+routing table; all owners independently calculate the integer decision from its
+feature packet. A separate replay recalculates the features and every neural
+call, including interpretation. Caller-supplied route traces cannot substitute
+for execution. The service commitment binds the classifier, feature recipe,
+tokenizer, base graph and additional source. It is a development service that
+requires a new response-quality decision before native admission.
+
+The existing operator queue accepts optional `learned_service` configuration and
+`generate_learned` / `replay_learned` requests. Five real CPU processes exercised
+the three neural paths with input-token features and no domain phrases, reproduced
+the outputs, rejected an altered route trace, preserved ordinary parent output
+and served a learned request through the queue. These small numerical checks
+establish integration; the 1.7B-model answer-quality comparison remains pending.

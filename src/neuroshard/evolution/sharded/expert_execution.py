@@ -1,6 +1,6 @@
-"""Execute a native expert claim from available numerical state.
+"""Produce or audit native expert work from available numerical state.
 
-This is an auditor-side executor, never a consensus transition. Its profile,
+This is a numerical executor, never a consensus transition. Its profile,
 training plan and installed source are trusted local configuration. Claims may
 not choose them. Prefix production must already have its separate native audit;
 checking a feature bank's bytes does not certify how those features were made.
@@ -23,7 +23,7 @@ from transformers import LlamaConfig
 
 from .. import cohort_experiment, expert_checkpoint, expert_window, expert_work, reference
 from ..reference_data import identity, save
-from ..schema import root
+from ..schema import integer, root
 from . import checkpoint, feature_bank, features, incremental, incremental_state
 from .expert_commitment import snapshot
 from .expert_replay import batch_identity
@@ -38,24 +38,34 @@ def training_job(plan, prepared):
     return identity({'format': plan['format'], 'plan': identity(plan), 'prepared': identity(prepared)})
 
 
-def _context(claim, profile, plan, prepared):
-    """Reject substitutions before allocating a model or executing an update."""
-    if (set(profile) != expert_work.PROFILE_FIELDS or profile['format'] != expert_work.FORMAT
-            or claim['kind'] not in expert_work.KINDS):
+def _job_context(before, profile, plan, prepared):
+    """Validate prescribed inputs without requiring a future output checkpoint."""
+    if set(profile) != expert_work.PROFILE_FIELDS or profile['format'] != expert_work.FORMAT:
         raise ValueError('Require the configured native expert execution profile')
     parent, initial = profile['parent'], profile['checkpoint']
     expert_checkpoint.unpack(parent, initial)
-    before = claim['input_checkpoint']
+    expert_checkpoint.unpack(parent, before)
     job = training_job(plan, prepared)
     if (initial['step'] != 0 or initial['job'] != job or plan['parent'] != identity(parent)
             or plan['training'] != initial['recipe'] or plan['split'] != initial['split']
             or plan['expert_layout'] != initial['boundaries']
             or any(before[key] != initial[key] for key in ('parent', 'job', 'split', 'recipe', 'boundaries'))
-            or claim['parent_checkpoint'] != parent or claim['prepared'] != identity(prepared)
-            or claim['prepared'] != profile['prepared'] or claim['feature_root'] != profile['feature_root']
-            or claim['numerical_profile'] != profile['numerical_profile']
+            or identity(prepared) != profile['prepared']
             or prepared['schedule'] != profile['schedule']
             or len(profile['schedule']) != plan['training']['steps']):
+        raise ValueError('Claim changed the configured parent, job, data, recipe or numerical profile')
+    for key in ('feature_root', 'numerical_profile'):
+        root(profile[key])
+    return parent, before, job
+
+
+def _context(claim, profile, plan, prepared):
+    """Reject substitutions before allocating a model or executing an update."""
+    parent, before, job = _job_context(claim['input_checkpoint'], profile, plan, prepared)
+    initial = profile['checkpoint']
+    if (claim['kind'] not in expert_work.KINDS or claim['parent_checkpoint'] != parent
+            or claim['prepared'] != profile['prepared'] or claim['feature_root'] != profile['feature_root']
+            or claim['numerical_profile'] != profile['numerical_profile']):
         raise ValueError('Claim changed the configured parent, job, data, recipe or numerical profile')
     root(claim['id'])
     root(claim['record_root'])
@@ -112,15 +122,9 @@ def _persist(store, shard, optimizer, parent, sources, value):
     return destination
 
 
-def execute_training(claim, profile, plan, prepared, *, inputs, objects, bank_home,
-                     checkpoint_store, max_seconds=300):
-    """Return the native replay report only after actual bounded execution.
-
-    All paths and configuration come from the auditor, not the transaction.
-    ``checkpoint_store/<checkpoint root>`` holds the existing incremental owner
-    format plus its compact ``checkpoint.json``. A nonzero input cursor requires
-    those actual payloads; it never triggers an unbounded replay from step zero.
-    """
+def _train(before, count, profile, plan, prepared, *, inputs, objects, bank_home,
+           checkpoint_store, max_seconds=300, expected=None):
+    """Shared numerical path for producing work and independently replaying it."""
     if type(max_seconds) not in (int, float) or not math.isfinite(max_seconds) or not 0 < max_seconds <= 14400:
         raise ValueError('Declare a finite bounded execution deadline')
     started = time.monotonic()
@@ -129,9 +133,10 @@ def execute_training(claim, profile, plan, prepared, *, inputs, objects, bank_ho
         if time.monotonic() - started >= max_seconds:
             raise TimeoutError('Bounded expert execution deadline expired')
 
-    parent, before, job = _context(claim, profile, plan, prepared)
-    if claim['kind'] != 'expert_training':
-        raise ValueError('The training executor requires a training claim')
+    parent, before, job = _job_context(before, profile, plan, prepared)
+    integer(count, 1, 4)
+    if not 0 <= before['step'] < before['step'] + count <= len(profile['schedule']):
+        raise ValueError('Produce only a bounded prescribed training window')
     runtime = reference.configure(plan['runtime']['device'], plan['threads'])
     runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
     if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
@@ -164,8 +169,8 @@ def execute_training(claim, profile, plan, prepared, *, inputs, objects, bank_ho
     head = load_head(parent, objects, device)
     if shard.resident_parameters + sum(p.numel() for p in head.parameters()) > plan['parameter_limit']:
         raise ValueError('Expert and read-only head exceed the configured ownership limit')
-    stages = []
-    for offset, expected in enumerate(claim['window']['steps']):
+    stages, steps, intermediates = [], [], [current]
+    for offset in range(count):
         deadline()
         index = before['step'] + offset
         batch_index = prepared['schedule'][index]
@@ -175,21 +180,56 @@ def execute_training(claim, profile, plan, prepared, *, inputs, objects, bank_ho
                                        index, bank.microbatch, **plan['objective'])
         del packets
         after = snapshot(shard, optimizer, parent, job, index + 1, before['recipe'])
-        valid = (current == claim['intermediates'][offset]
-                 and after == claim['intermediates'][offset + 1]
-                 and all(measured[key] == expected['metrics'][key] for key in expert_window.METRICS))
+        batch = profile['batch_roots'][batch_index]
+        steps.append({'index': index, 'input_checkpoint': current['checkpoint'],
+            'output_checkpoint': after['checkpoint'], 'batch': batch,
+            'work_identity': expert_checkpoint.work_identity(parent, current, batch, profile['numerical_profile']),
+            'metrics': {key: measured[key] for key in expert_window.METRICS}})
+        valid = (expected is None or (current == expected['intermediates'][offset]
+                 and after == expected['intermediates'][offset + 1]
+                 and steps[-1] == expected['window']['steps'][offset]))
         stages.append({'stage': offset, 'valid': valid})
+        intermediates.append(after)
         current = after
     deadline()
+    window = {'format': expert_window.FORMAT, 'input': before, 'output': current,
+              'steps': steps, 'numerical_profile': profile['numerical_profile']}
+    expert_window.validate(parent, before, window, intermediates,
+        [profile['batch_roots'][i] for i in profile['schedule'][before['step']:before['step'] + count]],
+        profile['numerical_profile'])
     if all(stage['valid'] for stage in stages):
         _persist(checkpoint_store, shard, optimizer, parent, sources, current)
     deadline()
+    return {'window': window, 'intermediates': intermediates, 'stages': stages}
+
+
+def produce_training(before, count, profile, plan, prepared, **execution):
+    """Compute a new claim from prescribed inputs, with no expected trajectory.
+
+    The returned window uses the existing native claim format and is published
+    only after its complete terminal weights and optimizer state are persisted
+    and read back. This is a producer result, never an audit or quality verdict.
+    """
+    result = _train(before, count, profile, plan, prepared, **execution)
+    return {'window': result['window'], 'intermediates': result['intermediates']}
+
+
+def execute_training(claim, profile, plan, prepared, **execution):
+    """Replay a submitted claim from actual input weights and Adam state.
+
+    Paths and configuration come from the auditor. A nonzero cursor requires
+    its available boundary, never an unbounded replay from the initial model.
+    """
+    parent, before, _ = _context(claim, profile, plan, prepared)
+    if claim['kind'] != 'expert_training':
+        raise ValueError('The training executor requires a training claim')
+    actual = _train(before, claim['stages'], profile, plan, prepared, expected=claim, **execution)
     report = {'format': expert_work.FORMAT + '/replay', 'claim_id': claim['id'],
         'record_root': claim['record_root'], 'binding': {
             'parent': identity(parent), 'prepared': profile['prepared'],
             'input_checkpoint': before['checkpoint'], 'output_root': claim['output_checkpoint']['checkpoint'],
             'feature_root': profile['feature_root'], 'numerical_profile': profile['numerical_profile'],
-            'feature_claim': claim['feature_claim']}, 'stages': stages}
+            'feature_claim': claim['feature_claim']}, 'stages': actual['stages']}
     expert_work.replay_report(claim, report)
     return report
 
@@ -201,6 +241,8 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, required=True)
+    parser.add_argument('--produce', action='store_true',
+                        help='Produce a new window from an input checkpoint and step count')
     args = parser.parse_args()
     config = json.loads(args.config.read_bytes())
     fields = {'format', 'profile', 'plan', 'prepared', 'paths', 'max_seconds'}
@@ -213,6 +255,13 @@ def main():
     if len(raw) > 8 * 1024 * 1024:
         raise ValueError('Expert claim exceeds the execution request limit')
     claim = json.loads(raw)
+    if args.produce:
+        if not isinstance(claim, dict) or set(claim) != {'input_checkpoint', 'steps'}:
+            raise ValueError('Production accepts the current checkpoint and bounded step count only')
+        result = produce_training(claim['input_checkpoint'], claim['steps'], config['profile'],
+            config['plan'], config['prepared'], **config['paths'], max_seconds=config['max_seconds'])
+        print(json.dumps(result, separators=(',', ':'), allow_nan=False))
+        return
     if claim['kind'] == 'expert_features':
         from .prefix_execution import execute_features
         executor = execute_features

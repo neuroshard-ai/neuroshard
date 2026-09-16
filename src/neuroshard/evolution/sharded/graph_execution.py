@@ -158,12 +158,19 @@ class GraphNetwork:
                 or any(value != self.graph['experts'].get(name) for name, value in selected['experts'].items())):
             raise ValueError('A request cannot replace a loaded expert or interpreter')
         plan = serving_graph.calls(selected, question, max_tokens)
-        request_root = identity({'graph': identity(selected), 'question': question, 'max_tokens': max_tokens})
+        return self._run(selected, question, max_tokens, plan, OrderedRoutes(serving_graph.rules(selected)))
+
+    def _run(self, selected, question, max_tokens, plan, routes, routing=None):
+        """Execute owned paths; a learned caller additionally binds its decision."""
+        request = {'graph': identity(selected), 'question': question, 'max_tokens': max_tokens}
+        if routing is not None:
+            request['routing'] = routing
+        request_root = identity(request)
         if self.all_owners.exchange(request_root) != [request_root]*5:
             raise ValueError('Owners received different inference requests')
         self.trace = []
         previous = self.net.routes
-        self.net.routes = OrderedRoutes(serving_graph.rules(selected))
+        self.net.routes = routes
         error = None
         try:
             answer = self.net.answer(question, max_tokens)

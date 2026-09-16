@@ -102,6 +102,10 @@ class InterpretedNetwork:
     def answer(self, question, max_tokens):
         if not route(question):
             return self.trained.answer(question, max_tokens)
+        return self.answer_expert(question, max_tokens)
+
+    def answer_expert(self, question, max_tokens):
+        """Execute interpretation after an external router selected this expert."""
         value = self.interpret(question)
         values = self.trained.wire.exchange(value)
         if values[0] is None or any(row is not None and row != values[0] for row in values):

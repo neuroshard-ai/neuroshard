@@ -138,10 +138,18 @@ def validate(graph):
 
 def calls(graph, question, max_tokens):
     """Derive bounded neural calls using only user text and committed routing."""
+    selected = next((rule['id'] for rule in rules(graph) if isinstance(question, str)
+                     and rule['needle'] in question.casefold()), None)
+    return selected_calls(graph, selected, question, max_tokens)
+
+
+def selected_calls(graph, selected, question, max_tokens):
+    """Plan an already selected path; the caller must bind and audit selection."""
     if not isinstance(question, str) or not question or len(question.encode()) > 32768:
         raise ValueError('Require bounded raw user text')
     integer(max_tokens, 1, 256)
-    selected = next((rule['id'] for rule in rules(graph) if rule['needle'] in question.casefold()), None)
+    if selected is not None and selected not in graph['experts']:
+        raise ValueError('Selected expert is absent from the graph')
     if selected == 'directory':
         return [{'model': 'interpreter', 'question': question,
                  'max_tokens': graph['descriptor']['interpretation']['max_tokens']},

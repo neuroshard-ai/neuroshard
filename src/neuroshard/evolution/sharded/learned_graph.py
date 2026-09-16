@@ -1,0 +1,103 @@
+"""Route raw questions through actual owned experts using a frozen classifier.
+
+This development executor extends the measured graph's routing. Its different
+service commitment requires a new end-to-end quality decision before native
+admission. The existing native graph and its settlement format stay separate.
+"""
+import copy
+from pathlib import Path
+
+from .. import expert_router, serving_graph
+from ..reference_data import identity, sha256
+
+FORMAT = 'neuroshard-learned-graph-service-v1'
+SOURCES = ('src/neuroshard/evolution/expert_router.py',
+           'src/neuroshard/evolution/serving_graph.py',
+           'src/neuroshard/evolution/sharded/router_features.py',
+           'src/neuroshard/evolution/sharded/interpretation.py',
+           'src/neuroshard/evolution/sharded/learned_graph.py',
+           'scripts/run_native_expert_service.py')
+
+
+def configuration(graph, model, feature_profile, source_home):
+    expert_router.validate(model)
+    return {'format': FORMAT, 'graph': identity(graph), 'router': model,
+            'feature_profile': feature_profile,
+            'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
+
+
+class Decision:
+    def __init__(self, question, route):
+        self.question, self.route = question, None if route == 'parent' else route
+
+    def select(self, question):
+        if question != self.question:
+            raise ValueError('A route decision cannot be reused for another question')
+        return self.route
+
+
+class LearnedGraphNetwork:
+    def __init__(self, network, config, *, source_home, features=None):
+        serving_graph.fields(config, {'format', 'graph', 'router', 'feature_profile', 'sources'},
+                             'Invalid learned serving configuration')
+        model = expert_router.validate(config['router'])
+        embedding = network.graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
+        if (config['format'] != FORMAT or config['graph'] != identity(network.graph)
+                or model['fallback'] != 'parent'
+                or set(model['prototypes']) != {'parent', *network.graph['experts']}
+                or model['tokenizer_root'] != network.graph['tokenizer']['root']
+                or model['embedding_root'] != identity(config['feature_profile'])
+                or config['feature_profile'].get('embedding_sha256') != embedding['sha256']
+                or config['sources'] != {name: sha256(Path(source_home) / name) for name in SOURCES}):
+            raise ValueError('Learned service changed its models, features, tokenizer or source')
+        if network.rank == 0:
+            if features is None or features.profile != config['feature_profile']:
+                raise ValueError('The embedding owner needs the committed feature extractor')
+        elif features is not None:
+            raise ValueError('Only the embedding owner loads the routing table')
+        self.network, self.config, self.features = network, copy.deepcopy(config), features
+        self.root = identity(config)
+        if network.all_owners.exchange(self.root) != [self.root] * 5:
+            raise ValueError('Owners installed different learned services')
+
+    def answer(self, question, max_tokens):
+        net = self.network
+        # Validate the raw request before any collective or neural operation.
+        serving_graph.selected_calls(net.graph, None, question, max_tokens)
+        request = identity({'service': self.root, 'question': question, 'max_tokens': max_tokens})
+        if net.all_owners.exchange(request) != [request] * 5:
+            raise ValueError('Owners received different learned inference requests')
+        packet = None
+        if net.rank == 0:
+            try:
+                packet = {'features': self.features(question)}
+            except (ValueError, TypeError) as error:
+                packet = {'error': str(error)[:512]}
+        packets = net.all_owners.exchange(packet)
+        if any(value is not None for value in packets[1:]) or not isinstance(packets[0], dict):
+            raise ValueError('Only the embedding owner may produce routing features')
+        packet = packets[0]
+        if 'error' in packet:
+            raise ValueError('Routing feature extraction failed: ' + packet['error'])
+        serving_graph.fields(packet, {'features'}, 'Invalid routing feature packet')
+        observed = expert_router.select(self.config['router'], packet['features'])
+        decision = Decision(question, observed['route'])
+        plan = serving_graph.selected_calls(net.graph, decision.route, question, max_tokens)
+        routing = {'service': self.root, 'decision': observed, 'features': packet['features']}
+        original = net.net.answer_paths.get('directory')
+        if net.interpreted is not None:
+            net.net.answer_paths['directory'] = net.interpreted.answer_expert
+        try:
+            result = net._run(net.graph, question, max_tokens, plan, decision, routing)
+        finally:
+            if original is not None:
+                net.net.answer_paths['directory'] = original
+        return {'format': FORMAT + '/response', 'service': self.root, 'routing': routing, **result}
+
+    def replay(self, response):
+        """Recompute selection and every neural call; never trust a route trace."""
+        if response.get('format') != FORMAT + '/response' or response.get('service') != self.root:
+            raise ValueError('Response belongs to a different learned service')
+        request = response['request']
+        actual = self.answer(request['question'], request['max_tokens'])
+        return actual == response, actual

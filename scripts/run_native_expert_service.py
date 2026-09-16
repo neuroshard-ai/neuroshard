@@ -45,9 +45,25 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
-        save(home / 'ready.json', {'graph': identity(graph), 'executor': identity(profile),
+        learned = None
+        if config.get('learned_service'):
+            from neuroshard.evolution.sharded.learned_graph import LearnedGraphNetwork
+            from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
+            from neuroshard.evolution.sharded.portable import tensor_path
+            learned_config = read(config['learned_service'])
+            features = None
+            if rank == 0:
+                digest = learned_config['feature_profile']['embedding_sha256']
+                features = EmbeddingFeatures(tensor_path(Path(config['interpreter']), digest), digest,
+                    net.tokenizer, graph['tokenizer']['root'],
+                    max_tokens=learned_config['feature_profile']['max_tokens'])
+            learned = LearnedGraphNetwork(net, learned_config, source_home=Path(config['source_home']), features=features)
+        ready = {'graph': identity(graph), 'executor': identity(profile),
             'rank': rank, 'runtime': net.runtime, 'owned_parameters': net.shard.resident_parameters + (
-                net.preserved.shard.resident_parameters if net.preserved else 0)})
+                net.preserved.shard.resident_parameters if net.preserved else 0)}
+        if learned is not None:
+            ready['learned_service'] = learned.root
+        save(home / 'ready.json', ready)
         handled = set()
         while True:
             command = None
@@ -93,6 +109,16 @@ def run(config):
                     selected = {identity(graph): graph, identity(baseline): baseline}[command['graph']]
                     value = net.answer(command['question'], command['max_tokens'], selected)
                     report = None
+                elif command['kind'] == 'generate_learned':
+                    if learned is None or command['service'] != learned.root:
+                        raise ValueError('Requested learned service is not installed')
+                    value = learned.answer(command['question'], command['max_tokens'])
+                    report = None
+                elif command['kind'] == 'replay_learned':
+                    if learned is None:
+                        raise ValueError('Learned service is not installed')
+                    valid, value = learned.replay(command['response'])
+                    report = {'valid': valid, 'service': learned.root, 'response': identity(value)}
                 elif command['kind'] == 'inference_audit':
                     report, value = inference_report(command['claim'], net)
                 elif command['kind'] == 'quality_audit':

@@ -16,12 +16,14 @@ import torch.multiprocessing as mp
 from tokenizers import Tokenizer, models, pre_tokenizers
 from transformers import LlamaConfig, LlamaForCausalLM, PreTrainedTokenizerFast
 
-from neuroshard.evolution import expert_checkpoint, expert_lifecycle, serving_graph
+from neuroshard.evolution import expert_checkpoint, expert_lifecycle, serving_graph, expert_router
 from neuroshard.evolution.reference_data import identity, save, sha256, tokenizer_identity
 from neuroshard.evolution.sharded import checkpoint, cohort_state, incremental_state, portable
 from neuroshard.evolution.sharded.graph_execution import GraphNetwork, FORMAT, preflight
 from neuroshard.evolution.sharded.graph_service import inference_report, inference_transcript
 from neuroshard.evolution.sharded import graph_quality
+from neuroshard.evolution.sharded import learned_graph
+from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
 from neuroshard.evolution.sharded.interpretation import example_messages
 from test_expert_cohort_state import prepare, update, RECIPE
 from test_serving_graph import FIXTURE
@@ -131,6 +133,15 @@ def prepare_graph(home):
         'gates': {'single_accuracy': .75, 'composed_accuracy': .5, 'gain_lower': .1,
                   'bootstrap_samples': 100, 'bootstrap_seed': 42, 'confidence': .95}}
     save(home / 'quality-policy.json', policy)
+    embedding = assets['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+    features = EmbeddingFeatures(portable.tensor_path(interpreter, embedding), embedding,
+                                 tokenizer, graph['tokenizer']['root'])
+    observations = [{'id': identity([name, variant]), 'route': name, 'features': features(question)}
+                    for name, question in LEARNED_QUESTIONS for variant in range(2)]
+    router = expert_router.fit(observations, embedding_root=features.root,
+                               tokenizer_root=graph['tokenizer']['root'], prototypes_per_route=1)
+    router = expert_router.fit_classifier(observations, router)
+    save(home / 'learned.json', learned_graph.configuration(graph, router, features.profile, SOURCE))
     return graph, profile
 
 
@@ -138,6 +149,7 @@ QUESTIONS = ['Hello!', 'In the fictional Luma directory, where does Robin Finch 
     'Regarding NeuroShard 0.4.0, which port?',
     'NeuroShard 0.4.0: First: Which port? Second: Which token? '
     'Reply with the two short answers in order. Separate the two answers with a semicolon.']
+LEARNED_QUESTIONS = [('directory', 'word3'), ('protocol', 'word4'), ('parent', 'word5')]
 
 
 def worker(rank, home):
@@ -194,6 +206,26 @@ def worker(rank, home):
         claim['report']['passed'] = True
         report, _ = graph_quality.quality_report(claim, policy, home/'quality-inputs', net)
         assert not expert_lifecycle.replay_report(claim, report)['valid']
+        features = None
+        if rank == 0:
+            embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+            features = EmbeddingFeatures(portable.tensor_path(home/'interpreter', embedding),
+                                         embedding, net.tokenizer, graph['tokenizer']['root'])
+        automatic = learned_graph.LearnedGraphNetwork(net, read('learned.json'), source_home=SOURCE, features=features)
+        for route, question in LEARNED_QUESTIONS:
+            result = automatic.answer(question, 4)
+            assert result['routing']['decision']['route'] == route
+            assert result['outputs'][-1]['model'] == route
+            valid, replay = automatic.replay(result)
+            assert valid and replay == result
+            if route == 'parent':
+                original = net.answer(question, 4)
+                assert original['outputs'] == result['outputs'] and original['text'] == result['text']
+            if route == 'protocol':
+                forged = copy.deepcopy(result)
+                forged['routing']['decision']['route'] = 'directory'
+                assert automatic.replay(forged)[0] is False
+            results.append(result)
         save(home / ('rank-' + str(rank) + '.json'), results)
     finally:
         dist.destroy_process_group()
@@ -237,7 +269,8 @@ def queue_worker(rank, home, port):
         'graph': str(home/'graph.json'), 'profile': str(home/'profile.json'),
         'baseline': str(home/'previous.json'), 'quality_policy': str(home/'quality-policy.json'),
         'objects': str(home/'objects'), 'interpreter': str(home/'interpreter'),
-        'seed': str(home/'seed'), 'inputs': str(home/'quality-inputs'), 'source_home': str(SOURCE)})
+        'seed': str(home/'seed'), 'inputs': str(home/'quality-inputs'), 'source_home': str(SOURCE),
+        'learned_service': str(home/'learned.json')})
 
 
 def test_operator_queue_survives_idle_and_returns_the_same_five_owner_result(tmp_path):
@@ -266,6 +299,14 @@ def test_operator_queue_survives_idle_and_returns_the_same_five_owner_result(tmp
         wait(lambda: all(path.exists() for path in paths))
         values = [json.loads(path.read_bytes()) for path in paths]
         assert all(value['status'] == 'completed' and value['result'] == values[0]['result'] for value in values)
+        learned_root = identity(json.loads((tmp_path / 'learned.json').read_bytes()))
+        save(queue / ('3'*64 + '.json'), {'id': '3'*64, 'kind': 'generate_learned',
+            'service': learned_root, 'question': 'word4', 'max_tokens': 4})
+        paths = [path.parent / ('3'*64 + '.json') for path in paths]
+        wait(lambda: all(path.exists() for path in paths))
+        learned = [json.loads(path.read_bytes()) for path in paths]
+        assert all(value['status'] == 'completed' and value['result'] == learned[0]['result'] for value in learned)
+        assert learned[0]['result']['outputs'][-1]['model'] == 'protocol'
         save(queue / ('2'*64 + '.json'), {'id': '2'*64, 'kind': 'stop'})
         while not context.join(timeout=1):
             if time.monotonic() >= deadline:

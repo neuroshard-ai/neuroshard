@@ -106,6 +106,52 @@ def test_separate_auditor_resumes_real_adam_and_retries_still_execute(trajectory
     assert {p.name for p in resumed_store.iterdir()} == {root, final['checkpoint']}
 
 
+def test_producer_discovers_outputs_without_expected_claim_then_independent_auditor_replays(trajectory, tmp_path):
+    _, _, _, states, _, _ = trajectory
+    producer = configuration(trajectory, tmp_path / 'producer')
+    # No future state, expected metrics or claimed result enters this interface.
+    first = expert_execution.produce_training(states[0], 2, producer['profile'],
+        producer['plan'], producer['prepared'], **producer['paths'], max_seconds=60)
+    assert first == {key: claim_for(trajectory, 0, 2)[key] for key in ('window', 'intermediates')}
+    saved = tmp_path / 'producer' / first['window']['output']['checkpoint']
+    restarted = configuration(trajectory, tmp_path / 'replacement')
+    shutil.copytree(saved, tmp_path / 'replacement' / saved.name)
+    path = tmp_path / 'producer.json'
+    data.save(path, restarted)
+    process = subprocess.run([sys.executable, '-m', 'neuroshard.evolution.sharded.expert_execution',
+        '--config', str(path), '--produce'], input=json.dumps({
+            'input_checkpoint': first['window']['output'], 'steps': 2}),
+        capture_output=True, text=True, timeout=90)
+    assert process.returncode == 0, process.stderr
+    second = json.loads(process.stdout)
+    assert second['window']['output'] == states[4]
+    auditor = configuration(trajectory, tmp_path / 'auditor')
+    for start, end, produced in ((0, 2, first), (2, 4, second)):
+        claim = claim_for(trajectory, start, end)
+        claim.update(produced)
+        claim['output_checkpoint'] = produced['window']['output']
+        claim['record_root'] = data.identity(produced['window'])
+        claim['work_ids'] = [step['work_identity'] for step in produced['window']['steps']]
+        assert expert_work.replay_report(claim, execute(claim, auditor))['valid']
+
+
+def test_producer_bounds_and_storage_are_required_before_returning_work(trajectory, tmp_path, monkeypatch):
+    config = configuration(trajectory, tmp_path / 'producer')
+    before = trajectory[3][0]
+    for count in (0, 5, True):
+        with pytest.raises(ValueError):
+            expert_execution.produce_training(before, count, config['profile'], config['plan'],
+                config['prepared'], **config['paths'])
+
+    def unavailable(*args, **kwargs):
+        raise OSError('Producer checkpoint unavailable')
+
+    monkeypatch.setattr(expert_execution.incremental_state, 'write', unavailable)
+    with pytest.raises(OSError, match='checkpoint unavailable'):
+        expert_execution.produce_training(before, 1, config['profile'], config['plan'],
+            config['prepared'], **config['paths'])
+
+
 def test_forged_finite_measurement_is_refuted_without_publishing_checkpoint(trajectory, tmp_path):
     claim = claim_for(trajectory, 0, 2)
     claim['window']['steps'][0]['metrics']['loss'] += 1

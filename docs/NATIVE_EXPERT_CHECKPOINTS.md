@@ -174,3 +174,25 @@ plan requires checking out that source. The evidence is archived with a complete
 storage readback, and the GPU, volume and security group have been retired.
 These are execution tools for a configured auditor; report files alone are not
 proof, and neither tool enables native transactions or changes supply.
+
+## Producing previously unknown outputs
+
+The same numerical executor now exposes `produce_training(current, count,
+profile, plan, prepared, ...)`. It accepts the current checkpoint and one to four
+prescribed updates, computes the weights and Adam state, and creates the native
+window plus intermediate commitments from the actual measurements. No future
+checkpoint or expected trajectory is supplied. It returns only after the final
+boundary is persisted and read back; it does not issue an audit verdict.
+
+The existing subprocess entry point adds `--produce`; its standard input is
+`{"input_checkpoint": <current checkpoint>, "steps": <1 to 4>}`. The returned
+`window` and `intermediates` fit the existing `claim_expert` transaction. A worker
+still needs a live reservation and funded independent execution audits.
+
+A real small-model check produced two updates, transferred only the resulting
+weights and optimizer boundary to a replacement process, produced the next two
+and independently replayed both windows. It agreed with the earlier five-owner
+numerical oracle. Missing storage could not produce a claim. Fourteen focused
+executor checks passed on the second host in 44.35 seconds. This removes the
+producer's dependence on already known outputs; repeated cohort admission and
+quality promotion of an initially unknown terminal graph remain open.
