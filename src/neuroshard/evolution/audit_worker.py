@@ -95,7 +95,7 @@ class Worker:
             raise ValueError('Audit worker genesis differs from configured commitment')
         self.chain_id = genesis['chain_id']
         self.native = genesis['app_state']['manifest'].get('auditing', {}).get('format') == auditing.QUORUM_FORMAT
-        self.portable = 'portable_work' in genesis['app_state']['manifest']
+        self.portable = any(key in genesis['app_state']['manifest'] for key in ('portable_work', 'expert_work'))
         from .app import code_hash
         from .runtime import check
         check()
@@ -143,7 +143,8 @@ class Worker:
             if shutil.disk_usage(self.store.root).free < 2*1024**3:
                 raise OSError('Audit artifact store has less than 2 GiB free')
             try:
-                if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference'):
+                if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference',
+                                         'expert_features', 'expert_training', 'expert_quality', 'expert_inference'):
                     if not self.portable_backend:
                         return {'phase': 'portable_replay_backend_required', 'claim': claim['id']}
                     backend = self.portable_backend
@@ -159,7 +160,12 @@ class Worker:
                     if completed.returncode or len(completed.stdout) > 8*1024**2:
                         return {'phase': 'portable_replay_unavailable', 'claim': claim['id'],
                                 'returncode': completed.returncode}
-                    from .portable_work import replay_report
+                    if claim['kind'] in ('expert_features', 'expert_training'):
+                        from .expert_work import replay_report
+                    elif claim['kind'] in ('expert_quality', 'expert_inference'):
+                        from .expert_lifecycle import replay_report
+                    else:
+                        from .portable_work import replay_report
                     report = replay_report(claim, protocol.parse_json(completed.stdout))
                 else:
                     report = replay(self.store, claim)
@@ -264,7 +270,7 @@ def main():
     parser.add_argument('--genesis-sha256', required=True)
     parser.add_argument('--key', type=Path, required=True)
     parser.add_argument('--sponsor', action='append', default=[])
-    parser.add_argument('--portable-backend', type=Path,
+    parser.add_argument('--portable-backend', '--execution-backend', type=Path,
                         help='Local JSON command configuration for full GPU shard replay; not a remote report service')
     parser.add_argument('--objects', type=Path, required=True)
     parser.add_argument('--source', action='append', default=[], help='Read-only content-addressed artifact mirror')

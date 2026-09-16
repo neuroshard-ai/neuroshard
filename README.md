@@ -1,5 +1,7 @@
 # NeuroShard
 
+[Live LLM checklist — six fixed completion goals](TODO.md)
+
 NeuroShard is an experimental native blockchain for verifying and rewarding neural computation. Its public testnet demonstrates small-scale training and paid inference; permissionless full-model training remains under development. The goal is a collectively trained LLM whose usable capacity can expand as reliable compute joins. Keys stay on your machine and participation requires no website registration.
 
 Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruct with a 4,608-parameter trainable adapter**. Native validators replay training and inference before accepting work or paying providers. The pretrained backbone is frozen. The initial validators share one operator across two hosts; this is a working protocol baseline, with economical large-model verification and independent ownership still to solve.
@@ -30,6 +32,7 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
+- [Completed native expert lifecycle](docs/NATIVE_EXPERT_LIVE_RESULT.md): 560 audited updates earned 560 NEURO, followed by separate quality promotion and inference paid from earned tokens. Full ledger and execution evidence are public; checklist item 3 is complete.
 - [Four-owner knowledge and retention pass](docs/PRESERVED_INTERPRETER_RESULTS.md): a preserved neural interpreter plus a learned expert answers 949/1,024 newly worded questions, reproduces all 768 earlier answers and 256 conversation losses exactly, and keeps the parent serving after the expert exits. This is a bounded synthetic-knowledge result using disjoint model portions across four machines.
 
 - [Complete LLM protocol](docs/LLM_PROTOCOL.md): native consensus and bonds, training leases/rewards, serving promotion, paid inference, locks/refunds, limits and assumptions.

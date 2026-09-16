@@ -1,0 +1,139 @@
+{
+  "checks": {
+    "actual_full_audits": true,
+    "all_neural_calls_billed": true,
+    "duplicate_work_no_payment": true,
+    "forged_measurement_rejected": true,
+    "missing_bytes_prevented_payment": true,
+    "native_restart_preserved_state": true,
+    "public_evidence_available": true,
+    "replacement_hosts_resumed_same_ledger": true,
+    "separate_quality_promotion_no_issuance": true
+  },
+  "date": "2026-09-16",
+  "earned_inference": {
+    "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "id": "edb67b327430d136bed3e81439dddfac183bea60b6f9f51ba7e28786164d76ec",
+    "paid_atoms": 1313,
+    "payments": {
+      "0": 387,
+      "1": 464,
+      "2": 360,
+      "4": 102
+    },
+    "refunded_atoms": 11615,
+    "status": "completed",
+    "text": "neuroshard-ai; Ed25519"
+  },
+  "format": "neuroshard-native-expert-live-results-v1",
+  "ledger": {
+    "chain_id": "neuroshard-portable-life-edb5cf2aad4e",
+    "code_hash": "378c42056a312cf806a31bc388d925b3b2d8b5e466cdc92bafa7c3ce1b5321e7",
+    "distinct_paid_updates": 560,
+    "genesis": "65b4608c2de5b384fff98471b2f221ff0e5c7ec236afd7eaef35aa427a31b1e1",
+    "headers_checked": 16359,
+    "issued_atoms": 560000000,
+    "passed": true,
+    "reconstructed_state": "1dbcc54df79176137caa51ba35e9857e15aef5bf415460db3eb30532dde43f9e",
+    "scope": "Exact application replay against exported header commitments; no consensus light-client proof or GPU replay claim.",
+    "seconds": 817.8853816129267,
+    "serving_root": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "signed_transactions_replayed": 1728,
+    "through_state_height": 16358,
+    "validator_states_checked": 4
+  },
+  "limitations": [
+    "One administrator controlled every validator and worker.",
+    "Previously published learning job and original quality gate; no additional useful-learning cohort claimed.",
+    "Finite operated candidate; experiment resources retired after evidence preservation.",
+    "Application replay is not consensus light-client authentication.",
+    "The other five fixed live-LLM checklist items remain open."
+  ],
+  "passed": true,
+  "publication": {
+    "archive": "native-expert-evidence.tar.gz",
+    "bytes": 34157358,
+    "release": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-native-expert-20260916",
+    "sha256": "7bfc8dad2646ae7e27a8e4b750d3ad4efdcb12c2f7d39430d9f4a5a486b407eb"
+  },
+  "quality": {
+    "checks": {
+      "composed_accuracy": true,
+      "single_accuracy": true,
+      "single_gain": true,
+      "unchanged_retained_computations": true
+    },
+    "metrics": {
+      "composed": {
+        "accuracy": 0.71875,
+        "after": 23,
+        "before": 0,
+        "count": 32,
+        "gains": 23,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.890625,
+        "after": 57,
+        "before": 7,
+        "count": 64,
+        "gains": 51,
+        "losses": 1,
+        "paired_gain": {
+          "lower": 0.6875,
+          "mean": 0.78125,
+          "pairs": 64,
+          "upper": 0.875
+        }
+      }
+    },
+    "passed": true
+  },
+  "resources": {
+    "cost_scope": "Conservative compute estimate for three native integration attempts; excludes storage, prior learning and earlier backend preflight.",
+    "current_compute_usd_upper_bound": 7.493028683316666,
+    "protected_instances_unchanged": true,
+    "retired": true,
+    "temporary_security_group_deleted": true,
+    "three_integration_attempts_compute_usd_upper_bound": 31.95801481073167,
+    "volumes_deleted": true
+  },
+  "retention": {
+    "inputs": {
+      "retained-test-conversation": 256,
+      "retained-test-knowledge": 1024,
+      "retained-test-skills": 768
+    },
+    "method": "Unchanged committed computations; preserves previous errors",
+    "passed": true
+  },
+  "source_commit": "6487c69fd925bfd6817739f1dd4a11caa9cbd844",
+  "tensor_availability": {
+    "anonymous_heads": 2856,
+    "sampled_complete_sha256_gets": [
+      {
+        "bytes": 24860,
+        "sha256": "000bfea7e40ade54593730ace2c014fba5afb99629fc846a4367fe2b142051e5"
+      },
+      {
+        "bytes": 50331972,
+        "sha256": "7a593d038d4a99ec05c77a589acfb3d05b3d49bf8f0e9aa06352a86ccbdcf8b3"
+      },
+      {
+        "bytes": 201326924,
+        "sha256": "ffe773f3772dd8b1f9cee01bab11137d5c3fc35a6684cef8b638d436c71c59da"
+      }
+    ],
+    "scope": "Every catalog URL anonymously accessible with the expected size; sampled full downloads hashed. Complete private upload readbacks are published separately.",
+    "seconds": 124.35339685902,
+    "total_tensor_bytes": 228256681648
+  },
+  "training": {
+    "accepted_windows": 140,
+    "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "distinct_updates": 560,
+    "issued_neuro": 560,
+    "resumed_from": 472,
+    "updates_per_window": 4
+  }
+}

@@ -38,7 +38,9 @@ def prepare(tmp_path):
         tensors[name] = {**spec, 'shape': list(parameter.shape), 'born': 0, 'group': int(parameter.ndim < 2)}
     parent = {'format': portable.FORMAT, 'job': identity({'test': 'parent'}), 'step': 7,
               'config': portable.configuration(config), 'optimizer': portable.recipe(optimizer),
-              'tensors': tensors, 'boundaries': [0, 2, 4, 6], 'shards': [], 'parent': None, 'transition': None}
+              'tensors': tensors, 'boundaries': [0, 2, 4, 6],
+              'shards': [identity({'fixture_parent_owner': i}) for i in range(3)],
+              'parent': None, 'transition': None}
     parent['state_root'] = portable.learned_root(parent)
     portable.validate(parent)
     shard = Partition(config, [0, 2, 4, 5, 6], 3)
