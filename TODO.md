@@ -30,9 +30,13 @@ before the affected work, rather than changing the target after a result.
   [published learning result](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915).
   Continuing that interface reduced training loss without improving combined
   answers and failed retention. The next [owned planner](docs/OWNED_PLANNER.md)
-  trains call decomposition while preserving the answering weights; its
-  distributed optimizer and scoped inference checks pass, but useful held-out
-  answers remain to be measured.
+  raised correct development answers from 13/56 to 48/56 while preserving the
+  answering weights. All 16 mixed requests retrieved both correct facts, but
+  the final composer mishandled six responses. The full gate failed and final
+  evaluation remains unopened. The next frozen trial teaches output operations
+  that preserve the actual expert values and compares against that retained
+  trained planner. Repeated admitted cohorts and matched-resource growth remain
+  unproved.
 
 - [ ] **2. Continuous data admission and learning**
 

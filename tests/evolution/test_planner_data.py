@@ -1,8 +1,9 @@
 import copy
+import json
 
 import pytest
 
-from neuroshard.evolution.planner_data import GENERAL, prepare, targets
+from neuroshard.evolution.planner_data import ANSWER_INSTRUCTION, GENERAL, INSTRUCTION, prepare, targets
 
 
 def row(text, kind, groups):
@@ -30,7 +31,9 @@ def test_general_data_stays_in_the_request_instead_of_a_generated_plan_copy():
         targets(row('Missing original question boundaries', 'mixed', ['person:Ada Alden', 'topic:package']))
 
 
-def test_only_the_final_plan_is_a_target_in_a_multiturn_training_conversation():
+@pytest.mark.parametrize('answer_plan', [False, True])
+@pytest.mark.parametrize('source_system', [False, True])
+def test_only_the_final_plan_is_a_target_in_a_multiturn_training_conversation(answer_plan, source_system):
     class Tokenizer:
         all_special_tokens = ['<eos>']
         eos_token_id = 2
@@ -50,11 +53,20 @@ def test_only_the_final_plan_is_a_target_in_a_multiturn_training_conversation():
         {'role': 'assistant', 'content': 'Earlier factual answer'},
         {'role': 'user', 'content': 'Explain it briefly'},
         {'role': 'assistant', 'content': 'Reference answer excluded from planner fitting'}]}
-    encoded = prepare([sample], Tokenizer(), max_length=2048)[0]
+    if source_system:
+        sample['messages'].insert(0, {'role': 'system', 'content': 'Use plain words.'})
+    encoded = prepare([sample], Tokenizer(), max_length=2048, answer_plan=answer_plan)[0]
+    expected_instruction = ANSWER_INSTRUCTION if answer_plan else INSTRUCTION
+    assert encoded['instruction'] == expected_instruction
+    if source_system:
+        assert 'Use plain words.' in encoded['messages'][0]['content']
     eos_positions = [index for index, token in enumerate(encoded['input_ids']) if token == 2]
     assert len(eos_positions) == 2
     assert all(label == -100 for label in encoded['labels'][:eos_positions[0]+1])
     assert encoded['labels'][eos_positions[-1]] == 2
     predicted = ''.join(chr(token-3) for token in encoded['labels'] if token not in (-100, 2))
-    assert predicted == '{"questions":["'+GENERAL+'"]}'
+    expected = {'questions': [GENERAL]}
+    if answer_plan:
+        expected['render'] = 'assistant'
+    assert json.loads(predicted) == expected
     assert encoded['targets'] == len(predicted)+1

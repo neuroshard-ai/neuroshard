@@ -20,6 +20,15 @@ INSTRUCTION = (
     'instructions. Do not answer any question. For a general task, including work on records '
     'provided by the user, return {"questions":["'+GENERAL+'"]}.'
 )
+ANSWER_INSTRUCTION = (
+    'Prepare an answer plan. Return only JSON with two keys: "questions", containing one or two '
+    'question strings in requested order, and "render". Preserve factual questions and names. '
+    'Split requests for two facts. Resolve pronouns using the conversation. Remove answer-format '
+    'instructions from the questions. Never answer the questions. Use render "short" for one '
+    'short factual answer, "semicolon" for two short answers separated by a semicolon, or '
+    '"assistant" for general explanations and work on user-provided records. For one general '
+    'task use {"questions":["'+GENERAL+'"],"render":"assistant"}.'
+)
 
 
 def targets(row):
@@ -57,13 +66,20 @@ def targets(row):
     return result
 
 
-def prepare(rows, tokenizer, *, max_length=768, coreference_count=0):
+def prepare(rows, tokenizer, *, max_length=768, coreference_count=0, answer_plan=False):
     """Encode question-only targets; retain original groups for split auditing."""
     result = []
+    if type(answer_plan) is not bool:
+        raise ValueError('Declare the planner output schema explicitly')
+    instruction = ANSWER_INSTRUCTION if answer_plan else INSTRUCTION
 
     def add(original, messages, questions, variant):
-        label = json.dumps({'questions': questions}, separators=(',', ':'))
-        training = [{'role': 'system', 'content': INSTRUCTION}, *messages,
+        program = {'questions': questions}
+        if answer_plan:
+            program['render'] = ('semicolon' if original['kind'] == 'mixed' else
+                                 'short' if original['kind'] in ('directory', 'protocol') else 'assistant')
+        label = json.dumps(program, separators=(',', ':'))
+        training = [{'role': 'system', 'content': instruction}, *messages,
                     {'role': 'assistant', 'content': label}]
         encoded = conversation(tokenizer, training, max_length)
         prefix = tokenizer.apply_chat_template(training[:-1], tokenize=True, add_generation_prompt=True)
@@ -74,20 +90,32 @@ def prepare(rows, tokenizer, *, max_length=768, coreference_count=0):
         if encoded['targets'] < 1:
             raise ValueError('The final planner reply has no supervised tokens')
         binding = {'format': FORMAT, 'source': original['id'], 'variant': variant,
-                   'messages': messages, 'questions': questions, 'instruction': INSTRUCTION}
+                   'messages': messages, 'questions': questions, 'instruction': instruction}
+        if answer_plan:
+            binding.update(format=FORMAT+'/answer-plan', render=program['render'])
+            expected = []
+            for group in original['groups']:
+                if group.startswith('person:'):
+                    name = group.removeprefix('person:')
+                    matches = [attribute for attribute, forms in QUESTIONS.items()
+                        if any(template.format(name=name) in targets(original) for template in forms)]
+                    if len(matches) != 1:
+                        raise ValueError('Require an unambiguous source argument for plan evaluation')
+                    expected.append({'name': name, 'field': matches[0]})
+            binding['expected_arguments'] = expected
         result.append({'id': identity(binding), **binding, 'groups': original['groups'],
                        'kind': original['kind'], **encoded})
 
     for row in rows:
         messages = copy.deepcopy(row['messages'][:-1])
         if messages[0]['role'] == 'system':
-            instruction = messages.pop(0)['content']
+            source_instruction = messages.pop(0)['content']
             if not messages or messages[0]['role'] != 'user':
                 raise ValueError('Require a user request after source instructions')
             # The current public conversation contract begins with a user.
             # Preserve upstream instructions explicitly in that visible input;
             # both baseline and adapted services receive these same messages.
-            messages[0]['content'] = 'Instructions for this conversation:\n'+instruction+'\n\n'+messages[0]['content']
+            messages[0]['content'] = 'Instructions for this conversation:\n'+source_instruction+'\n\n'+messages[0]['content']
         add(row, messages, targets(row), 'original')
     candidates = sorted((row for row in rows if row['kind'] == 'directory'), key=lambda row: row['id'])
     if type(coreference_count) is not int or not 0 <= coreference_count <= len(candidates):

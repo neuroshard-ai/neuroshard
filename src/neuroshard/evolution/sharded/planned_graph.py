@@ -62,6 +62,11 @@ def planner_prefix(planner):
         fields.add('repeat_instruction')
         if type(planner['repeat_instruction']) is not bool:
             raise ValueError('Require an explicit planner reminder policy')
+    if 'output_format' in planner:
+        from ..answer_plan import FORMAT as ANSWER_PLAN
+        fields.add('output_format')
+        if planner['output_format'] != ANSWER_PLAN:
+            raise ValueError('Unknown neural planner output format')
     serving_graph.fields(planner, fields, 'Invalid planner policy')
     integer(planner['max_tokens'], 1, 256)
     if (not isinstance(planner['instruction'], str) or not planner['instruction'].strip()
@@ -74,14 +79,18 @@ def planner_prefix(planner):
             raise ValueError('Invalid planner example')
         prompt, answer = pair
         conversation([{'role': 'user', 'content': prompt}])
-        encoded = json.dumps({'questions': answer})
-        questions(encoded)
+        encoded = json.dumps(answer if 'output_format' in planner else {'questions': answer})
+        if 'output_format' in planner:
+            from ..answer_plan import parse
+            parse(encoded)
+        else:
+            questions(encoded)
         prefix.extend([{'role': 'user', 'content': prompt}, {'role': 'assistant', 'content': encoded}])
     return prefix
 
 
 def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
-                  planner_weights=None, composer=None):
+                  planner_weights=None, composer=None, answer_policy=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -117,6 +126,16 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         if not isinstance(composer['instruction'], str) or not 1 <= len(composer['instruction'].encode()) <= 2048:
             raise ValueError('Bound the answer composition instruction')
         result['composer'] = copy.deepcopy(composer)
+    if answer_policy is not None:
+        from ..answer_plan import validate as validate_answer_policy
+        validate_answer_policy(answer_policy, graph['experts'])
+        if planner.get('output_format') != answer_policy['format']:
+            raise ValueError('The value policy differs from the planner output schema')
+        result['answer_policy'] = copy.deepcopy(answer_policy)
+        name = 'src/neuroshard/evolution/answer_plan.py'
+        result['sources'][name] = sha256(Path(source_home)/name)
+    elif 'output_format' in planner:
+        raise ValueError('A typed planner requires its complete value policy')
     return result
 
 
@@ -130,11 +149,13 @@ class PlannedGraphNetwork:
             fields.add('planner_weights')
         if 'composer' in config:
             fields.add('composer')
+        if 'answer_policy' in config:
+            fields.add('answer_policy')
         serving_graph.fields(config, fields,
                              'Invalid planned service configuration')
         if config != configuration(network.graph, config['learned'], config['planner'], source_home,
                                    config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
-                                   config.get('planner_weights'), config.get('composer')):
+                                   config.get('planner_weights'), config.get('composer'), config.get('answer_policy')):
             raise ValueError('Planned service changed its models, sources or execution rules')
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
@@ -256,9 +277,14 @@ class PlannedGraphNetwork:
             raise ValueError('Owners received different conversations')
         self.trace = []
         raw = self.call('interpreter', self.planning_messages(messages), self.config['planner']['max_tokens'], 'planning')
-        answers, routing, error = [], [], None
+        answers, routing, arguments, error, program, rendering = [], [], [], None, None, None
         try:
-            plan = questions(raw)
+            if 'answer_policy' in self.config:
+                from ..answer_plan import parse
+                program = parse(raw)
+                plan = program['questions']
+            else:
+                plan = questions(raw)
         except (ValueError, TypeError):
             plan, error = [], 'invalid_neural_plan'
         for question in plan:
@@ -280,6 +306,7 @@ class PlannedGraphNetwork:
                 if parsed is None:
                     error = 'invalid_directory_arguments'
                     break
+                arguments.append({'question': question, 'arguments': parsed})
                 prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
             answer = self.call(model, self.answer_messages(model, prompt, messages,
                 whole_request=len(plan) == 1), max_tokens, 'answer')
@@ -287,7 +314,18 @@ class PlannedGraphNetwork:
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else
                 '\n\n'.join(row['question'] + '\n' + row['text'] for row in answers)) if error is None else ''
-        if (error is None and 'composer' in self.config
+        if error is None and program is not None and program['render'] != 'assistant':
+            from ..answer_plan import render
+            try:
+                rendering = render(program, answers, self.config['answer_policy'])
+                rendered_ids = self.net.tokenizer.encode(rendering['text'], add_special_tokens=False)
+                if len(rendered_ids) > max_tokens:
+                    raise ValueError('Rendered answer exceeds the complete output allowance')
+                rendering['token_ids'] = rendered_ids
+                text = rendering['text']
+            except (ValueError, KeyError, TypeError):
+                error, text = 'invalid_source_value_or_output_bound', ''
+        elif (error is None and 'composer' in self.config
                 and (len(answers) > 1 or any(row['expert'] in self.net.graph['experts'] for row in answers))):
             text = self.call('interpreter', self.composition_messages(messages, answers),
                 min(max_tokens, self.config['composer']['max_tokens']), 'composition')
@@ -295,6 +333,8 @@ class PlannedGraphNetwork:
                   'status': 'completed' if error is None else 'needs_clarification', 'error': error,
                   'plan': plan, 'routing': routing, 'outputs': self.trace, 'answers': answers, 'text': text,
                   'generated_tokens': sum(len(row['token_ids']) for row in self.trace)}
+        if 'answer_policy' in self.config:
+            result.update(program=program, rendering=rendering, arguments=arguments)
         self.net.verify_unchanged()
         if self.net.all_owners.exchange(identity(result)) != [identity(result)] * self.net.world_size:
             raise ValueError('Owners disagree on the complete planned response')

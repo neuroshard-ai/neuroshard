@@ -49,6 +49,21 @@ def owner(rank, folder):
         resumed.restore(checkpoint_home, middle)
         assert resumed.advance() == second
         assert resumed.save(checkpoint_home) == final
+        continued = PlannerTraining(net, rows, recipe, adapter_rank=4, max_length=64,
+            initial_weights=final, weights_home=checkpoint_home)
+        continued_initial = continued.save(checkpoint_home)
+        assert continued_initial['fusion'] == final['fusion']
+        assert continued_initial['step'] == 0
+        assert continued_initial['binding']['initial_weights'] == final
+        if rank == 2:
+            assert not continued.state.optimizer.state
+        continued_update = continued.advance()
+        continued_final = continued.save(checkpoint_home)
+        continuation_replay = PlannerTraining(net, rows, recipe, adapter_rank=4, max_length=64,
+            initial_weights=final, weights_home=checkpoint_home)
+        continuation_replay.restore(checkpoint_home, continued_initial)
+        assert continuation_replay.advance() == continued_update
+        assert continuation_replay.save(checkpoint_home) == continued_final
         if rank == 2:
             resumed.adapter.eval()
         with installed(net, resumed.adapter) as root:

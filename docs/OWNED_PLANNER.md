@@ -61,3 +61,40 @@ the supervised tokens. Four focused data checks passed in 0.05 seconds. The
 retry retains the original records, optimizer schedule, quality gates, combined
 $20 cap and absolute deadline of 2026-09-16 23:24:03 UTC. Its earlier frozen
 source and stopped allocation remain recorded.
+
+The corrected run completed. Correct development answers improved from 13/56
+to 48/56, but the frozen gates **failed** and the 144 final cases remained
+unopened. All 48 original question plans were exact. Eight pronoun plans used
+valid paraphrases instead of the required literal wording; all eight actual
+answers were correct. The experts returned both correct values for all 16 mixed
+requests, and correct values for all 24 single factual requests. The final
+composer mishandled six mixed responses and one single response. Ordinary
+answers were unchanged in 8/8 cases; structured answers reached 7/8.
+The final 16 optimizer updates replayed exactly. Complete checkpoints, outputs,
+timings and source identities are in the [published result](../config/experiments/owned-planner-results.json).
+Both allocations are retired; their combined compute upper bound was $2.70,
+with storage and transfer separate.
+
+The [next prescription](../config/experiments/owned-answer-plan-trial.json)
+starts from that retained planner, with fresh Adam and one fixed 144-update
+epoch. It teaches a bounded output program: the neural planner chooses the
+questions and either `short`, `semicolon` or `assistant` rendering. Short forms
+extract actual neural source values using each expert's declared response schema
+and preserve their order. They cannot supply an answer from labels or a lookup
+table. Open-ended composition still uses the assistant. Invalid source values,
+ambiguous JSON and output overruns fail explicitly.
+
+The comparison reuses the complete published 56-case development result from
+the **trained** planner. It verifies the original record root and every actual
+conversation before reuse. Final baseline inference executes afresh only after
+all development gates pass. Correct-answer thresholds and the prohibition on
+category regression remain unchanged; mixed accuracy must improve by another
+12.5 percentage points. Prospectively, pronoun planning is judged by the actual
+resolved name and field, together with the selected output operation, instead
+of exact synonymous question wording. Other question-plan gates remain exact.
+This change does not turn the previous failed trial into a pass.
+
+This bounded trial allows five A10G hosts for at most one hour and a $10 planning
+cap. It tests composition of existing learned facts. Three admitted cohorts,
+broader assistant quality and matched-resource growth remain separate unmet
+criteria in the fixed checklist.

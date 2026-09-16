@@ -11,7 +11,7 @@ import torch
 import torch.distributed as dist
 
 from neuroshard.evolution.fusion_data import correct
-from neuroshard.evolution.planner_data import INSTRUCTION
+from neuroshard.evolution.planner_data import ANSWER_INSTRUCTION
 from neuroshard.evolution.reference_data import identity, save, sha256
 from neuroshard.evolution.sharded.graph_execution import GraphNetwork
 from neuroshard.evolution.sharded.learned_graph import configuration as learned_configuration
@@ -25,11 +25,11 @@ def run(home, source):
     inputs = home/'inputs'
     read = lambda name: json.loads((inputs/name).read_bytes())
     plan, graph, profile, freeze = [read(name+'.json') for name in ('plan', 'graph', 'profile', 'freeze')]
-    if (plan['format'] != 'neuroshard-owned-planner-trial-v2'
+    if (plan['format'] != 'neuroshard-owned-answer-plan-trial-v1'
             or identity(plan) != freeze['plan'] or identity(graph) != freeze['graph']
-            or identity(graph) != plan['graph'] or plan['planner']['instruction'] != INSTRUCTION
+            or identity(graph) != plan['graph'] or plan['planner']['instruction'] != ANSWER_INSTRUCTION
             or sha256(source/'scripts/run_planner_trial.py') != freeze['driver']
-            or sha256(source/'config/experiments/owned-planner-trial-retry.json') != sha256(inputs/'plan.json')):
+            or sha256(source/'config/experiments/owned-answer-plan-trial.json') != sha256(inputs/'plan.json')):
         raise ValueError('Freeze the complete planner prescription before execution')
 
     def rows(role):
@@ -57,14 +57,14 @@ def run(home, source):
         learned = learned_configuration(graph, plan['routing']['model'], plan['routing']['feature_profile'],
             source, plan['routing']['route_models'])
 
-        def service(weights=None):
-            spec = configuration(graph, learned, plan['planner'], source,
+        def service(weights, typed=True):
+            spec = configuration(graph, learned, plan['planner'] if typed else plan['baseline_planner'], source,
                 plan['expert_prompts'], plan['general_instruction'], plan['routing']['scopes'],
-                weights, plan['composer'])
+                weights, plan['composer'], plan['answer_policy'] if typed else None)
             return PlannedGraphNetwork(net, spec, source_home=source, features=features,
-                planner_weights_home=output/'checkpoints')
+                planner_weights_home=output/'checkpoints' if typed else inputs)
 
-        baseline = service()
+        baseline = service(plan['initial_weights'], False)
         teacher_cache = {}
         started = time.monotonic()
 
@@ -83,6 +83,13 @@ def run(home, source):
                 category = 'coreference' if row['variant'] == 'coreference' else row['kind']
                 # Labels enter only the evaluator, after ordinary execution.
                 exact_plan = response['plan'] == row['questions'] and response['status'] == 'completed'
+                if category == 'coreference' and 'arguments' in response:
+                    # Compare the actual resolved name/field, not synonymous
+                    # surface wording such as profession versus occupation.
+                    exact_plan = (response['status'] == 'completed'
+                        and [value['arguments'] for value in response['arguments']] == row['expected_arguments'])
+                if 'program' in response:
+                    exact_plan = exact_plan and response['program'] is not None and response['program']['render'] == row['render']
                 if row['kind'] == 'general':
                     if row['id'] not in teacher_cache:
                         start = len(current.trace)
@@ -110,11 +117,44 @@ def run(home, source):
                 'exact_plans': sum(row['exact_plan'] for row in records if row['category'] == category)}
                 for category in categories}}
 
-        before = evaluate(baseline, 'dev', 'baseline')
+        # Reuse the already published complete development comparison. Model,
+        # prompts and actual messages are unchanged; final-role baselines still
+        # execute anew if the development gates permit opening that role.
+        for name, digest in plan['baseline']['files'].items():
+            if sha256(inputs/name) != digest:
+                raise ValueError('The published baseline evidence changed')
+        old_rows = {row['id']: row for row in [json.loads(line) for line in (inputs/'baseline-rows.jsonl').read_text().splitlines()]}
+        old_records = read('baseline-dev.json')
+        if identity(old_records) != plan['baseline']['records_root']:
+            raise ValueError('The complete published baseline record inventory changed')
+        old_by_input = {}
+        for record in old_records:
+            original = old_rows[record['id']]
+            key = identity([original['source'], original['variant'], original['messages']])
+            if (key in old_by_input or record['response']['service'] != plan['baseline']['service']
+                    or record['response']['request']['messages'] != original['messages']):
+                raise ValueError('Baseline evidence duplicates or changes its actual request')
+            old_by_input[key] = record
+        before_records = []
+        for row in rows('dev'):
+            key = identity([row['source'], row['variant'], row['messages']])
+            record = old_by_input.pop(key)
+            if record['category'] != ('coreference' if row['variant'] == 'coreference' else row['kind']):
+                raise ValueError('Baseline category differs from the unchanged conversation')
+            before_records.append(record)
+        if old_by_input:
+            raise ValueError('The baseline includes extra evaluated conversations')
+        before = {'records': identity(before_records), 'reused': True, 'categories': {name: {
+            'count': sum(row['category'] == name for row in before_records),
+            'correct': sum(row['correct'] for row in before_records if row['category'] == name),
+            'exact_plans': sum(row['exact_plan'] for row in before_records if row['category'] == name)}
+            for name in sorted({row['category'] for row in before_records})}}
+        save(output/'reused-baseline.json', before)
         training_rows = rows('train')
         torch.manual_seed(plan['training_seed'])
         training = PlannerTraining(net, training_rows, plan['training'],
-            adapter_rank=plan['adapter_rank'], max_length=plan['max_length'])
+            adapter_rank=plan['adapter_rank'], max_length=plan['max_length'],
+            initial_weights=plan['initial_weights'], weights_home=inputs)
         initial = training.save(output/'checkpoints')
         updates, training_resources, boundary = [], [], None
         for step in range(plan['training']['steps']):
@@ -132,7 +172,8 @@ def run(home, source):
                 'steps': plan['training']['steps'], 'owners': measurements, 'seconds': time.monotonic()-started})
         terminal = training.save(output/'checkpoints')
         resumed = PlannerTraining(net, training_rows, plan['training'],
-            adapter_rank=plan['adapter_rank'], max_length=plan['max_length'])
+            adapter_rank=plan['adapter_rank'], max_length=plan['max_length'],
+            initial_weights=plan['initial_weights'], weights_home=inputs)
         resumed.restore(output/'checkpoints', boundary)
         replay = [resumed.advance() for _ in range(plan['restart_steps'])]
         if replay != updates[-plan['restart_steps']:] or resumed.save(output/'checkpoints') != terminal:

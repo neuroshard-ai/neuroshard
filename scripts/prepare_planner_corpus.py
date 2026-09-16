@@ -21,7 +21,7 @@ def run(inputs, seed, prescription, output):
             raise ValueError('The grouped source corpus differs from the preparation prescription')
         source = [json.loads(line) for line in path.read_text().splitlines()]
         rows = prepare(source, tokenizer, max_length=plan['max_length'],
-            coreference_count=plan['coreference'][role])
+            coreference_count=plan['coreference'][role], answer_plan=plan.get('answer_plan', False))
         groups[role] = {group for row in rows for group in row['groups']}
         path = output/(role+'.jsonl')
         path.write_text(''.join(json.dumps(row, sort_keys=True, separators=(',', ':'))+'\n' for row in rows))

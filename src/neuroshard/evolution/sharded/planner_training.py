@@ -16,7 +16,7 @@ from ..reference import autocast
 from ..reference_data import identity
 from .expert_interface import ExpertInterface
 from .fused_graph import commitment
-from .interface_training import AdapterState
+from .interface_training import AdapterState, initialize_weights
 from .model import batch_tensors
 
 FORMAT = 'neuroshard-owned-planner-training-v1'
@@ -44,7 +44,8 @@ def installed(net, adapter):
 
 
 class PlannerTraining:
-    def __init__(self, net, rows, recipe, *, adapter_rank=8, max_length=1024):
+    def __init__(self, net, rows, recipe, *, adapter_rank=8, max_length=1024,
+                 initial_weights=None, weights_home=None):
         fields = {'steps', 'learning_rate', 'warmup_steps', 'minimum_lr_ratio',
                   'weight_decay', 'clip_norm', 'microbatch', 'schedule'}
         if (set(recipe) != fields or type(recipe['steps']) is not int or not 1 <= recipe['steps'] <= 4096
@@ -80,10 +81,16 @@ class PlannerTraining:
         binding = {'format': FORMAT, 'graph': identity(net.graph), 'source': source(net),
                    'rows': identity(rows), 'recipe': identity(recipe), 'max_length': max_length,
                    'adapter_rank': adapter_rank}
+        if initial_weights is not None:
+            if initial_weights['binding']['source'] != source(net):
+                raise ValueError('Initial planner weights belong to another preserved owner')
+            binding['initial_weights'] = copy.deepcopy(initial_weights)
         if net.all_owners.exchange(identity(binding)) != [identity(binding)]*net.world_size:
             raise ValueError('Owners disagree on planner training')
         if net.rank == 2:
             self.adapter = ExpertInterface(net.preserved.shard, source(net), adapter_rank)
+            if initial_weights is not None:
+                initialize_weights(self.adapter, weights_home, initial_weights)
             self.state = AdapterState(self.adapter, recipe, {**binding, 'layout': self.adapter.descriptor()})
 
     def save(self, home):
