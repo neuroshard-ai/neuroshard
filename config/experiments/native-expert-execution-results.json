@@ -1,0 +1,94 @@
+{
+  "artifacts": {
+    "all_readbacks_verified": true,
+    "bytes": 5978187447,
+    "metadata_sha256": "a4c990c5ffa93e694c60f2d36c11fd4434375509da7c0fb1f8ce2d9cc7005eba",
+    "objects": 373,
+    "publicly_downloadable": false,
+    "storage": "S3, research/native-expert-execution-20260916/objects/<sha256>"
+  },
+  "completed": true,
+  "format": "neuroshard-native-expert-execution-results-v1",
+  "limitations": [
+    "One A10G GPU and one operator. No independent audit quorum was demonstrated by this probe.",
+    "Only updates 0 through 8 were exercised by this native executor; previous full-job replay is separate evidence.",
+    "No NEURO was issued and no serving graph was activated.",
+    "The 736-second complete-prefix measurement includes the stated cache intervention and is slower than the earlier stage-at-a-time replay."
+  ],
+  "numerical": {
+    "boundaries": [
+      {
+        "checkpoint": "2cf501a316ab6f27b1923422dff78e80416760cb9e7cdab69fd689104c955a0b",
+        "step": 4,
+        "tensor_bytes": 1610716760
+      },
+      {
+        "checkpoint": "70efe8932d3b55bf98d48f4138c3142e52cc617eaddb6370d2ed1262427547a4",
+        "step": 8,
+        "tensor_bytes": 1610716760
+      }
+    ],
+    "forged_claim_updates_recomputed": 4,
+    "native_activated": false,
+    "outcomes": [
+      {
+        "label": "prefix",
+        "seconds": 736.175928973,
+        "stages": 336,
+        "valid": true
+      },
+      {
+        "label": "window-0",
+        "seconds": 52.70068293300005,
+        "stages": 4,
+        "valid": true
+      },
+      {
+        "label": "window-4",
+        "seconds": 41.145399847000135,
+        "stages": 4,
+        "valid": true
+      },
+      {
+        "label": "forged-measurement",
+        "seconds": 17.961230211000156,
+        "stages": 4,
+        "valid": false
+      },
+      {
+        "label": "missing-boundary",
+        "seconds": 4.331498431,
+        "unavailable": true
+      }
+    ],
+    "passed": true,
+    "plan": "ce8435dd5ca8fe8e470d07c6106dbaa7122c3c462e147acfeaa14e72f3c81220",
+    "seconds": 854.7275999579999,
+    "tokens_issued": 0,
+    "training_updates": 8
+  },
+  "operator_interventions": [
+    "Installed the native cryptography dependency before execution.",
+    "Corrected the controller launch script before any neural subprocess started.",
+    "Discarded disposable filesystem cache for already consumed prefix objects after partitions 0 and 1 completed; numerical files and deadline were unchanged.",
+    "Used explicit S3 Signature Version 4 after the first preservation upload failed; every final object was read back."
+  ],
+  "passed": true,
+  "plan": "ce8435dd5ca8fe8e470d07c6106dbaa7122c3c462e147acfeaa14e72f3c81220",
+  "resources": {
+    "compute_usd_upper_bound": 0.6464954736483333,
+    "confirmed": "2026-09-16T00:59:01.502689+00:00",
+    "instances": [
+      "i-02e85714f8672d9a3"
+    ],
+    "protected_instances_unchanged": true,
+    "scope": "On-demand compute estimate through confirmed termination, not an invoice. Retained object storage is separate.",
+    "security_group_deleted": true,
+    "terminated": true,
+    "volume_deletion_confirmed": true,
+    "volumes": [
+      "vol-0dee2b4528c722e68"
+    ]
+  },
+  "source_commit": "ad3692be8262360661de0f041c8d70f0e4e2539b"
+}

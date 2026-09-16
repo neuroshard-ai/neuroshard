@@ -43,8 +43,10 @@ batches and mismatched worker receipts.
 Both production and training require complete native quorum verdicts. Missing or
 negative verdicts cannot advance the expert or issue currency. Input admission
 issues no currency; accepted training pays its actual tail owner. Serving remains
-the genesis parent throughout this profile. General job activation, serving-graph
-admission, quality promotion and paid graph inference still require integration.
+the genesis parent when this work profile is used alone. The opt-in
+[expert serving profile](NATIVE_EXPERT_SERVING.md) now adds a separate quality
+decision and paid graph inference; its operated GPU integration is still pending.
+General job activation also remains open.
 This profile has passed ledger tests using actual small-model replay records. It
 has not been activated on a public network or settled the real 560-update expert.
 
@@ -88,14 +90,17 @@ Each checkpoint directory is keyed by its complete checkpoint root and contains
 worker's backend configuration supplies this command as an `argv` array and a
 hard `timeout_seconds`. Keep the reviewed source and runtime pinned; configuration
 and artifact paths must come from the operator, never from an untrusted claim.
+Install [the expert execution requirements](expert-execution-requirements.txt)
+in its isolated GPU environment; the neural-only research requirements omit the
+cryptographic dependency imported by the native report modules.
 
 The [CPU execution checks](../tests/evolution/test_expert_execution.py) reuse the
 actual five-process small-model training fixture. They cover a second process
 resuming the next window, exact output weights and Adam, repeated execution,
 forged measurements, missing/corrupted inputs and failures during persistence or
 at the deadline. This is a tested training backend, not a completed native
-deployment: its GPU compatibility still needs a bounded check. Graph quality
-promotion and paid graph inference remain unimplemented in this profile.
+deployment. Its bounded GPU execution check has now passed; the complete native
+job and the new graph serving integration remain to be operated.
 
 The same subprocess backend now also executes prefix-production claims. It
 recomputes all three parent partitions sequentially, retains all resulting
@@ -117,6 +122,16 @@ preserves the original job identity and validates all three real claim contexts
 before execution. It reuses the same GPU allocation and original deadline; model,
 data, numerical kernels and success criteria are unchanged. The original plan and
 failure record remain available.
+
+The [GPU result](../config/experiments/native-expert-execution-results.json) passed
+all 336 prefix stages, two consecutive four-update windows in separate processes,
+forged-measurement rejection and missing-boundary refusal. Both new boundaries
+retain exact weights and Adam. All 373 new objects (5.98 GB, including prefix
+packets) were uploaded and read back with matching hashes. They are retained in
+operator storage; public download of these new audit artifacts is still pending.
+The GPU, disk and temporary security group were retired. Estimated compute was
+$0.65, excluding object storage. Setup failures and the filesystem-cache
+intervention are recorded with the result.
 
 The second expert has durable weight/Adam checkpoints at 0/280/560. Reconstructing
 the intervening commitments does not make their tensor payloads durably available.

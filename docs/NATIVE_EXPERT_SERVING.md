@@ -1,0 +1,113 @@
+# Native expert graph serving
+
+The candidate implementation connects the measured parent, preserved interpreter
+and learned experts to a separate native quality decision and escrowed inference.
+It supports the published
+[composed graph](COMPOSED_COHORT.md), including its explicit routing and two-question
+grammar. General automatic expert selection remains item 1 of [the checklist](../TODO.md).
+This implementation has local numerical and ledger checks; it is not yet an
+operated native deployment of the complete 560-update expert.
+
+## Commitments and promotion
+
+`serving_graph` wraps the original research descriptor with the complete parent
+and compact expert metadata, interpreter tensor inventory, tokenizer file hashes,
+EOS/context bounds, exact interpretation prompt and executor commitment. It
+reconstructs the published graph without rewriting parent or expert optimizer
+ages. Ownership and parameter counts come from the actual tensor shapes.
+
+The opt-in `expert_lifecycle` profile freezes the earlier graph, the already
+validated terminal candidate, and the quality policy before the native replay
+job. This is integration of an existing validated trajectory, not admission of
+arbitrary future cohorts. Continuous admission still requires item 2.
+
+`claim_expert` continues to pay accepted, nonduplicate prescribed updates without
+changing serving. `quality_expert` is possible only after the complete expert and
+its feature production have settled. It requires a separate funded native audit
+quorum covering the bound quality report. An accepted passing report changes
+`serving_root`; an accepted failing report keeps the previous graph and closes
+that candidate's quality decision. Neither outcome mints additional tokens.
+Unavailable or forged reports preserve serving and permit a retry of the same
+frozen candidate and policy.
+
+## Raw questions and complete billing
+
+`infer_expert` commits the accepted graph, raw question, token limit and every
+participating provider. It locks a price covering the maximum of every neural
+call selected by the committed execution rules:
+
+| Path | Neural calls charged |
+| --- | --- |
+| Ordinary question | Parent generation |
+| Directory question | Preserved interpretation, then directory expert generation |
+| Protocol question | Protocol expert generation |
+| Explicit composed protocol question | Both protocol expert generations |
+
+`respond_expert` binds actual greedy token sequences and prompt roots for all
+those calls, the rendered text and every participating owner's signed receipt.
+The numerical auditors reconstruct prompts, execute the graph, check the actual
+outputs and reproduce the transcript commitment. A matching signature or a
+well-formed token list alone does not settle payment.
+
+The charged amount is actual generated tokens, including EOS and interpretation,
+times the request's unit price. Each call's fee is split by participating parameter
+count, with deterministic integer remainders. Unused experts receive no inference
+payment. The payer receives unused escrow; an expired unfulfilled request receives
+the full escrow. Network transaction fees and separately funded audit fees remain
+distinct. In-flight requests retain their original graph after promotion.
+
+Questions, outputs and provider receipts are public ledger data in this profile.
+The current five-owner control group receives the question, including owners
+unused by that particular neural path; configured auditors receive their replay
+inputs. This is not a private-prompt service or the final streaming chat API.
+
+## Numerical executor and retention
+
+`sharded.graph_execution.GraphNetwork` loads only each owner's parent/expert and
+interpreter portions. It reuses the evaluated generation, interpretation and
+composition kernels, verifies installed source and runtime, and records every
+actual neural call. Owners agree on the request before selecting process groups
+and compare complete outputs afterward. An oversized context is rejected without
+leaving unused owners waiting at request completion. No silent truncation occurs.
+
+`sharded.graph_service` re-executes inference claims. `sharded.graph_quality`
+re-executes the new questions against both baseline and candidate, using the
+original response-quality gates. It checks retained inputs by comparing the
+committed deterministic computations: selected models, input construction,
+tokenizer, interpretation, executor and numerical profile must remain identical.
+Conversation checks additionally bind the original causal input and target mask.
+This preserves old errors as well as correct answers. It does not establish
+hardware equivalence, artifact availability or improved answers on new inputs.
+
+The published retained cohort contains 1,024 knowledge questions, 768 skill
+questions and 256 conversation records. A metadata preflight found all their
+computations unchanged in 1.87 seconds. This avoids repeating thousands of
+unchanged neural calls during every quality audit. Newly routed inputs still
+require actual generation. This is a new audit method, separately checked from
+the earlier numerical retention run.
+
+`scripts/run_native_expert_service.py` is a bounded operator queue for the five
+owners, not a customer-facing daemon. It supports generation and separate fresh
+inference/quality audits, sends idle heartbeats, records results, and stops on an
+unavailable operation. Deployment must impose an external deadline and stage the
+exact committed inputs. Its initial transport still uses a fixed process group;
+dynamic provider replacement and coordinator recovery remain item 4.
+
+## Evidence boundaries
+
+The real five-process CPU checks execute all four serving paths, replay their
+outputs, reject fabricated response text and a falsely reported quality pass,
+and check that old paths remain identical. Ledger checks cover separate quality
+approval, failed/unavailable audits, pinned in-flight graphs, composed budgets,
+refunds and supply conservation. The ledger tests seed a post-training boundary;
+they do not claim that the real 560-update expert has earned native rewards.
+The focused graph, expert-work and portable-lifecycle suite passed 43 checks in
+155.36 seconds, including the bounded operator queue's idle and shutdown paths.
+
+The GPU training backend separately
+[passed complete prefix production and updates 0–8](../config/experiments/native-expert-execution-results.json).
+The next operated integration must verify this serving wrapper on the pinned GPU
+profile, settle the complete original expert job, admit its audited graph, and pay
+for an answer using earned NEURO. Quorum honesty and actual operator independence
+remain explicit assumptions; adding machines under one administrator does not
+demonstrate independent operators.

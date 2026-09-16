@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work
+from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -61,12 +61,14 @@ def genesis(chain_id, validators, manifest):
         portable_lifecycle.initialize(base)
     if 'expert_work' in manifest:
         expert_work.initialize(base)
+    if 'expert_lifecycle' in manifest:
+        expert_lifecycle.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
-    escrow = lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s)
+    escrow = lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s) + expert_lifecycle.escrow(s)
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -83,8 +85,10 @@ def invariant(s):
     if len(s['paid_work']) != s['training_round']:
         raise ValueError('A numerical task must be paid at most once')
     if 'expert_work' in s:
+        serving = (expert_lifecycle.identity(s['expert_lifecycle']['serving_graph'])
+                   if 'expert_lifecycle' in s else s['manifest']['initial_model_root'])
         if (s['model_root'] != s['expert_work']['checkpoint']['state_root']
-                or s['serving_root'] != s['manifest']['initial_model_root']):
+                or s['serving_root'] != serving):
             raise ValueError('Expert training cannot replace the separately approved serving model')
     if 'portable_lifecycle' in s:
         if (s['model_root'] != s['portable_work']['checkpoint']['state_root']
@@ -142,6 +146,7 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
                         proven_fault=proven_fault, reason=reason)
     lifecycle.settled(s,claim,accepted)
     portable_lifecycle.settled(s,claim,accepted)
+    expert_lifecycle.settled(s,claim,accepted)
     s['settled'].append({'id':claim['id'],'accepted':accepted,'reason':reason,
                          'kind':claim.get('kind','training'),
                          'model_root':claim['model_root'],'height':s['height']})
@@ -236,6 +241,7 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
     lifecycle.advance(s)
     auditing.advance(s)
     portable_lifecycle.advance(s)
+    expert_lifecycle.advance(s)
     invariant(s)
     return s,updates
 
@@ -265,6 +271,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         **portable_work.FIELDS,
         **portable_lifecycle.FIELDS,
         **expert_work.FIELDS,
+        **expert_lifecycle.FIELDS,
     }
     if 'auditing' in previous:
         for name in ('reserve', *auditing.CLAIM_KINDS):
@@ -287,7 +294,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in expert_work.FIELDS:
+    if kind in expert_lifecycle.FIELDS:
+        expert_lifecycle.apply(s, owner, body, envelope)
+    elif kind in expert_work.FIELDS:
         expert_work.apply(s, owner, body, envelope)
     elif kind in portable_lifecycle.FIELDS:
         portable_lifecycle.apply(s, owner, body, envelope)
@@ -429,7 +438,8 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         claim = s['candidate']
         if not claim or body['claim_id'] != claim['id']:
             raise ValueError('No matching pending claim')
-        if claim.get('kind') in ('portable_training', *portable_lifecycle.SERVICE_KINDS, *expert_work.KINDS):
+        if claim.get('kind') in ('portable_training', *portable_lifecycle.SERVICE_KINDS,
+                                *expert_work.KINDS, *expert_lifecycle.KINDS):
             raise ValueError('Portable work requires the native weighted replay verdict path')
         metadata = Metadata(claim['metadata'])
         record = metadata.json(claim['record_root'])

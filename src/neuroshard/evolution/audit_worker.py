@@ -144,7 +144,7 @@ class Worker:
                 raise OSError('Audit artifact store has less than 2 GiB free')
             try:
                 if claim.get('kind') in ('portable_training', 'portable_quality', 'portable_inference',
-                                         'expert_features', 'expert_training'):
+                                         'expert_features', 'expert_training', 'expert_quality', 'expert_inference'):
                     if not self.portable_backend:
                         return {'phase': 'portable_replay_backend_required', 'claim': claim['id']}
                     backend = self.portable_backend
@@ -162,6 +162,8 @@ class Worker:
                                 'returncode': completed.returncode}
                     if claim['kind'] in ('expert_features', 'expert_training'):
                         from .expert_work import replay_report
+                    elif claim['kind'] in ('expert_quality', 'expert_inference'):
+                        from .expert_lifecycle import replay_report
                     else:
                         from .portable_work import replay_report
                     report = replay_report(claim, protocol.parse_json(completed.stdout))
