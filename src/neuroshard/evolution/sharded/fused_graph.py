@@ -28,12 +28,12 @@ def commitment(fusion):
 
 
 @torch.no_grad()
-def generate_fused(net, fusion, token_ids, max_tokens, observation=None):
+def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, source_ablation=False):
     """Execute an identical committed request on every graph owner."""
     graph, wire, rank = net.graph, net.all_owners, net.rank
     width = graph['parent']['config']['hidden_size']
     sources = {'parent': 2, **{row['id']: row['owner'] for row in graph['descriptor']['rules']}}
-    if (set(fusion.source_widths) != set(sources) or fusion.hub_width != width
+    if (type(source_ablation) is not bool or set(fusion.source_widths) != set(sources) or fusion.hub_width != width
             or any(value != width for value in fusion.source_widths.values())
             or any(module.training for module in fusion.modules())
             or next(fusion.parameters()).device != next(net.shard.parameters()).device):
@@ -45,7 +45,8 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None):
         raise ValueError('Invalid bounded fused request')
     net.check_context(tokens, max_tokens)
     root = commitment(fusion)
-    request = {'graph': identity(graph), 'fusion': root, 'tokens': tokens, 'max_tokens': max_tokens}
+    request = {'graph': identity(graph), 'fusion': root, 'tokens': tokens, 'max_tokens': max_tokens,
+               'source_ablation': source_ablation}
     if wire.exchange(identity(request)) != [identity(request)]*net.world_size:
         raise ValueError('Owners disagree on fused weights or the complete request')
     versions = tuple(parameter._version for parameter in fusion.parameters())
@@ -79,12 +80,16 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None):
                     for name, owner in sources.items():
                         if name != 'parent':
                             wire.send(captured['prefix'], owner)
+                            if source_ablation:
+                                wire.send(hidden, owner)
                     captured.clear()
             else:
                 name = next(name for name, owner in sources.items() if owner == rank)
                 incoming = wire.receive(2, shape, device)
                 with autocast(device):
                     hidden = trained.advance(incoming, trained.length)
+                if source_ablation:
+                    hidden = wire.receive(2, shape, device)
                 for value in fusion.project(name, hidden):
                     wire.send(value, 0)
             if rank == 0:
@@ -120,6 +125,7 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None):
         net.verify_unchanged()
         if observation is not None:
             observation.update({'graph': identity(graph), 'fusion': root, 'sources': sources,
+                'source_ablation': source_ablation,
                 'seconds': time.monotonic()-started, 'first_token_seconds': first,
                 'sent_tensor_bytes': wire.sent_tensor_bytes-before,
                 'fusion_cache_bytes': cache.resident_bytes() if cache else 0,
