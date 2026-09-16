@@ -58,8 +58,9 @@ before the affected work, rather than changing the target after a result.
   weights and Adam, executes a bounded window, and atomically saves a resumable
   boundary. A separate-process CPU check reproduces the next checkpoint. See
   [execution and checkpoint details](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/docs/NATIVE_EXPERT_CHECKPOINTS.md).
-  Next: check this backend on the pinned GPU profile, connect real prefix audits,
-  then connect quality promotion and paid graph inference. Reuse the published
+  The backend also recomputes and retains the complete prefix production.
+  Next: check this backend on the pinned GPU profile, then connect native claims,
+  quality promotion and paid graph inference. Reuse the published
   model and original training job; this milestone does not need a new training
   campaign.
 
@@ -135,3 +136,9 @@ under the same admission rules.
   kernel files remain unchanged. No GPU was launched. Native settlement of this
   expert, prefix-backend integration, quality promotion and paid graph inference
   are still required; task 3 remains open.
+- 2026-09-16: Full CI passed for the resumable training backend. Added complete
+  native prefix execution with timing-independent production commitments and
+  retained feature bytes. Sixteen focused checks passed in 56.26 seconds.
+  The next GPU probe is frozen around the existing parent and updates 0–8,
+  with one GPU, a two-hour limit and a $15 planning cap. All six milestones
+  remain in scope; dependencies determine execution order and none is complete.

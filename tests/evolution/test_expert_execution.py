@@ -9,8 +9,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from neuroshard.evolution import expert_window, expert_work, reference_data as data
-from neuroshard.evolution.sharded import expert_execution, expert_replay, features, portable
+from neuroshard.evolution import cohort_experiment, expert_window, expert_work, reference_data as data
+from neuroshard.evolution.sharded import expert_execution, expert_replay, features, portable, prefix_audit, prefix_execution
 from test_expert_window_replay import test_replay_reconstructs_the_actual_five_owner_training_checkpoint as replay_fixture
 
 
@@ -182,3 +182,65 @@ def test_deadline_after_computation_cannot_publish_a_valid_result(trajectory, tm
     with pytest.raises(TimeoutError, match='deadline'):
         execute(claim_for(trajectory, 0, 2), config)
     assert not (tmp_path / 'states').exists()
+
+
+@pytest.fixture(scope='module')
+def prefix_claim(trajectory, tmp_path_factory):
+    from transformers import LlamaConfig
+    from neuroshard.evolution.sharded.model import Partition
+    home, plan, prepared, states, profile, _ = trajectory
+    original = json.loads((home / 'rank-4/features/index.json').read_bytes())
+    config = LlamaConfig(**profile['parent']['config'])
+    config._attn_implementation = 'sdpa'
+    records = cohort_experiment.rows(prepared, home / 'inputs', 'train')
+    baseline = tmp_path_factory.mktemp('prefix-producer')
+    reports, incoming = [], None
+    for rank in range(3):
+        shard = Partition(config, profile['parent']['boundaries'], rank)
+        stage = baseline / f'rank-{rank}'
+        report = prefix_audit.replay_stage(shard, profile['parent'], home / 'objects', records,
+            prepared['batches'], original['binding'], plan['split'], plan['microbatch'],
+            profile['feature_root'], stage, incoming, 60)
+        reports.append(report)
+        incoming = (stage / 'features', report)
+        del shard
+    record = prefix_execution.production_record(reports)
+    changed_times = copy.deepcopy(reports)
+    for report in changed_times:
+        report['seconds'] += 1000
+    assert prefix_execution.production_record(changed_times) == record
+    return {'kind': 'expert_features', 'id': 'a' * 64, 'input_checkpoint': states[0],
+        'parent_checkpoint': profile['parent'], 'prepared': profile['prepared'],
+        'feature_root': profile['feature_root'], 'numerical_profile': profile['numerical_profile'],
+        'stages': profile['feature_stages'], 'record_root': data.identity(record)}
+
+
+def test_native_prefix_backend_retains_real_features_for_training(trajectory, prefix_claim, tmp_path):
+    config = configuration(trajectory, tmp_path / 'states')
+    path = tmp_path / 'executor.json'
+    data.save(path, config)
+    result = subprocess.run([sys.executable, '-m', 'neuroshard.evolution.sharded.expert_execution',
+        '--config', str(path)], input=json.dumps(prefix_claim), capture_output=True, text=True, timeout=90)
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert expert_work.replay_report(prefix_claim, report)['valid']
+    assert len(report['stages']) == 336
+    produced = tmp_path / 'states/prefix' / prefix_claim['record_root'] / 'rank-2/features'
+    assert data.identity(json.loads((produced / 'index.json').read_bytes())) == prefix_claim['feature_root']
+    config['paths']['bank_home'] = str(produced)
+    training = claim_for(trajectory, 0, 2)
+    assert expert_work.replay_report(training, execute(training, config))['valid']
+
+
+@pytest.mark.parametrize('forged', ['record_root', 'feature_root'])
+def test_computed_prefix_refutes_changed_production(trajectory, prefix_claim, tmp_path, forged):
+    config = copy.deepcopy(configuration(trajectory, tmp_path / 'states'))
+    claim = copy.deepcopy(prefix_claim)
+    claim[forged] = '0' * 64
+    if forged == 'feature_root':
+        config['profile']['feature_root'] = claim[forged]
+    report = prefix_execution.execute_features(claim, config['profile'], config['plan'], config['prepared'],
+        **config['paths'], max_seconds=config['max_seconds'])
+    assert not expert_work.replay_report(claim, report)['valid']
+    assert len(report['stages']) == 336
+    assert list((tmp_path / 'states/prefix').iterdir()) == []

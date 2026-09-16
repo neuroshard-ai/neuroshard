@@ -1,4 +1,4 @@
-"""Execute one native expert training claim from available numerical state.
+"""Execute a native expert claim from available numerical state.
 
 This is an auditor-side executor, never a consensus transition. Its profile,
 training plan and installed source are trusted local configuration. Claims may
@@ -34,8 +34,8 @@ from .model import Partition
 def _context(claim, profile, plan, prepared):
     """Reject substitutions before allocating a model or executing an update."""
     if (set(profile) != expert_work.PROFILE_FIELDS or profile['format'] != expert_work.FORMAT
-            or claim['kind'] != 'expert_training'):
-        raise ValueError('Require the configured native expert training profile')
+            or claim['kind'] not in expert_work.KINDS):
+        raise ValueError('Require the configured native expert execution profile')
     parent, initial = profile['parent'], profile['checkpoint']
     expert_checkpoint.unpack(parent, initial)
     before = claim['input_checkpoint']
@@ -51,6 +51,12 @@ def _context(claim, profile, plan, prepared):
             or len(profile['schedule']) != plan['training']['steps']):
         raise ValueError('Claim changed the configured parent, job, data, recipe or numerical profile')
     root(claim['id'])
+    root(claim['record_root'])
+    if claim['kind'] == 'expert_features':
+        if (before != initial or type(claim['stages']) is not int
+                or claim['stages'] != profile['feature_stages']):
+            raise ValueError('Prefix production must cover the initial expert and every declared stage')
+        return parent, before, job
     root(claim['feature_claim'])
     start, count = before['step'], claim['stages']
     if (type(start) is not int or type(count) is not int or not 1 <= count <= 4
@@ -117,6 +123,8 @@ def execute_training(claim, profile, plan, prepared, *, inputs, objects, bank_ho
             raise TimeoutError('Bounded expert execution deadline expired')
 
     parent, before, job = _context(claim, profile, plan, prepared)
+    if claim['kind'] != 'expert_training':
+        raise ValueError('The training executor requires a training claim')
     runtime = reference.configure(plan['runtime']['device'], plan['threads'])
     runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
     if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
@@ -197,8 +205,14 @@ def main():
     raw = sys.stdin.buffer.read(8 * 1024 * 1024 + 1)
     if len(raw) > 8 * 1024 * 1024:
         raise ValueError('Expert claim exceeds the execution request limit')
-    report = execute_training(json.loads(raw), config['profile'], config['plan'], config['prepared'],
-                              **config['paths'], max_seconds=config['max_seconds'])
+    claim = json.loads(raw)
+    if claim['kind'] == 'expert_features':
+        from .prefix_execution import execute_features
+        executor = execute_features
+    else:
+        executor = execute_training
+    report = executor(claim, config['profile'], config['plan'], config['prepared'],
+                      **config['paths'], max_seconds=config['max_seconds'])
     print(json.dumps(report, separators=(',', ':'), allow_nan=False))
 
 

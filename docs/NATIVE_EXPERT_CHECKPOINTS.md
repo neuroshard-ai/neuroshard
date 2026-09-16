@@ -94,9 +94,20 @@ actual five-process small-model training fixture. They cover a second process
 resuming the next window, exact output weights and Adam, repeated execution,
 forged measurements, missing/corrupted inputs and failures during persistence or
 at the deadline. This is a tested training backend, not a completed native
-deployment: its GPU compatibility still needs a bounded check, and a production
-backend must additionally execute prefix claims. Graph quality promotion and paid
-graph inference remain unimplemented in this profile.
+deployment: its GPU compatibility still needs a bounded check. Graph quality
+promotion and paid graph inference remain unimplemented in this profile.
+
+The same subprocess backend now also executes prefix-production claims. It
+recomputes all three parent partitions sequentially, retains all resulting
+feature payloads, and checks a canonical production record that excludes timing.
+The CPU check feeds those retained outputs directly into the training executor;
+changed production records and false feature roots are refuted. Prefix verdicts
+accept or reject the complete production claim; they do not attribute fraud to
+an individual partition owner. The
+[bounded GPU probe](../config/experiments/native-expert-execution.json) freezes
+336 prefix stages and two four-update windows against the existing numerical
+trajectory, with an additional forged-measurement and missing-boundary check.
+It permits one GPU for at most two hours within a $15 planning cap.
 
 The second expert has durable weight/Adam checkpoints at 0/280/560. Reconstructing
 the intervening commitments does not make their tensor payloads durably available.
