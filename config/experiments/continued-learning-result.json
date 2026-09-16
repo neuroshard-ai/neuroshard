@@ -1,0 +1,157 @@
+{
+  "baseline": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+  "candidate": "0af8dd9e03917a44257cb76282515bcf6ee67082bb7817b77cb0eead3785f523",
+  "format": "neuroshard-continued-quality-v1",
+  "outcomes": {
+    "retention": {
+      "baseline_mean": 0.5429885388258432,
+      "bootstrap_samples": 10000,
+      "bootstrap_seed": 2026091505,
+      "candidate_mean": 0.5439298574413303,
+      "confidence": 0.95,
+      "documents": 128,
+      "mean_delta": 0.0009413186154866099,
+      "passed": true,
+      "upper": 0.0017639361947041558
+    },
+    "test-new": {
+      "generation": {
+        "accuracy_change": -0.00390625,
+        "baseline_correct": 192,
+        "candidate_correct": 191,
+        "documents": 256,
+        "families": {
+          "filter": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 64,
+            "candidate_correct": 64,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "lookup": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 64,
+            "candidate_correct": 64,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "sort": {
+            "accuracy_change": -0.015625,
+            "baseline_correct": 64,
+            "candidate_correct": 63,
+            "documents": 64,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          },
+          "total": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 0,
+            "candidate_correct": 0,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          }
+        },
+        "losses": 1,
+        "one_sided_p": 1.0,
+        "passed": false,
+        "primary": true,
+        "wins": 0
+      },
+      "loss": {
+        "baseline_mean": 0.14414085009768698,
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 2026091505,
+        "candidate_mean": 0.13600609007871278,
+        "confidence": 0.95,
+        "documents": 256,
+        "mean_delta": -0.008134760018974167,
+        "upper": -0.005688342201101044
+      },
+      "passed": false
+    },
+    "test-prior": {
+      "generation": {
+        "accuracy_change": -0.0078125,
+        "baseline_correct": 96,
+        "candidate_correct": 95,
+        "documents": 128,
+        "families": {
+          "filter": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 31,
+            "candidate_correct": 31,
+            "documents": 32,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "lookup": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 32,
+            "candidate_correct": 32,
+            "documents": 32,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "sort": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 31,
+            "candidate_correct": 31,
+            "documents": 32,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "total": {
+            "accuracy_change": -0.03125,
+            "baseline_correct": 2,
+            "candidate_correct": 1,
+            "documents": 32,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          }
+        },
+        "losses": 1,
+        "one_sided_p": 1.0,
+        "passed": false,
+        "primary": false,
+        "wins": 0
+      },
+      "loss": {
+        "baseline_mean": 0.14595433104533212,
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 2026091505,
+        "candidate_mean": 0.1383490235009746,
+        "confidence": 0.95,
+        "documents": 128,
+        "mean_delta": -0.007605307544357447,
+        "upper": -0.0029977020963979787
+      },
+      "passed": false
+    }
+  },
+  "passed": false,
+  "prepared": "1599f1ad67e37fb04e2908b32a544529a76d017d9d0f39c2969a9dc8e8ac9251",
+  "primary": "test-new generated answers",
+  "scope": "Generated-answer gain on fresh examples of four public task families, with per-family floors and public conversation retention; not general assistant quality",
+  "selection": "7a88270fe1c6c6a2a3097b9d0e24212d6ad827497248fb595567f85d495eb04c",
+  "serving": "not authorized by this decision",
+  "settlement": "not authorized by this decision"
+}
