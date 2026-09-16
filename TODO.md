@@ -280,3 +280,22 @@ under the same admission rules.
   rather than substituting the planner's shorter rewrite. The actual five-process
   context-preservation check passed in 21.90 seconds. GPU conversation evidence
   for this extended path is still pending.
+
+- 2026-09-16: Published all five owners' conversation and review outputs. The
+  corrected three-route service reached 6/8 answers and 28/32 plans. Input-scope
+  checks recovered general science answers; the four-model service reached 7/9
+  complete answers with exact replay. Two remaining planner errors prevent
+  promotion. A review pass worsened 28/32 drafts to 1/32 and is excluded from the
+  serving path. All five GPUs, volumes and the temporary security group were
+  retired; this allocation cost at most $2.34 compute, storage separate. See
+  [the complete results](config/experiments/conversation-routing-results.json).
+
+- 2026-09-16: Implemented an experimental trainable connection between owned
+  model activations. It generates one token stream through both backbones and
+  every expert tail, sharing the trained prefix once. It starts as the unchanged
+  general model and accepts projected source activations instead of rewritten
+  subquestions. Seven numerical checks passed in 18.16 seconds: actual five-owner
+  generation, exact initial seed tokens, reproducible continuation, two-owner
+  gradients matching joint execution, causal masking and request-local caches.
+  These are CPU numerical checks; this method has not yet passed an LLM learning
+  or quality gate and has no native admission. Task 1 remains open.

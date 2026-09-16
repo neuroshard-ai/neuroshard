@@ -135,6 +135,35 @@ Separate fast response delivery from final payment while defining which party be
 
 ## Measurable release gates
 
+The current question-rewriting executor has a measured coordination limit:
+the corrected run reached 6/8 complete answers; capability-scoped routing then
+recovered general answers but still failed two of nine integration cases. A
+second planner pass made the plans worse. The complete
+[responses and retirement record](../config/experiments/conversation-routing-results.json)
+remain published; these services were not promoted.
+
+The experimental `sharded/fusion.py` and `sharded/fused_graph.py` now implement
+a trainable causal connection between frozen model paths. Every path receives
+the same conversation and previously generated tokens. Source owners project
+their hidden states, and the embedding owner combines those projections with
+the general model's state to produce the next token. The trained prefix is
+computed once for all specialist tails. There is no subquestion parser in this
+path. The connection starts as an identity; after training, retention must be
+measured again even though the original model weights remain unchanged.
+
+[CALM](https://arxiv.org/abs/2401.02412) and
+[Branch-Train-Stitch](https://arxiv.org/abs/2502.00075) provide evidence for learning
+connections between frozen models. Our low-rank projected transport is a new
+implementation choice, not a reproduction of their reported results. Seven
+CPU checks cover five-owner generation, causal masking, cache continuation and
+two-owner gradient agreement. No LLM quality improvement is established yet.
+A useful trial must compare actual greedy responses with the unfused assistant
+and a matched learner without trained-specialist information; replacing expert
+states with untrained states must expose whether the new layer uses learned
+knowledge. Training and final inputs must be frozen before execution. The first
+version activates every source, so its communication and inference costs grow
+with the expert count; sparse activation is a separate unproven optimization.
+
 | Gate | Evidence required | Present status |
 | --- | --- | --- |
 | Bounded neural adjudication | Real-model dispute bytes, validator time, observer cost and cross-CPU agreement; adversarial coverage of all supported operators | Optimizer refutation implemented; full graph still uses stage replay |
