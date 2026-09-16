@@ -222,6 +222,44 @@ def owner(rank, folder):
         assert [token for chunk in repaired for token in chunk['tokens']] == adapted
         assert any(len(chunk['checks']) > 1 for chunk in repaired)
         assert all(len(chunk['checks']) <= 3 for chunk in repaired)
+        from neuroshard.evolution.sharded.fused_service import FusedService, FORMAT
+        specification = {'format': FORMAT, 'graph': identity(graph), 'gate': terminal[0],
+            'interfaces': {rule['id']: terminal[rule['owner']] for rule in graph['descriptor']['rules']},
+            'context': 64, 'chunk_tokens': 2, 'max_tokens': 4}
+        service = FusedService(net, specification, home/('interface-checkpoints-'+str(rank)))
+        conversation = messages + [{'role': 'assistant', 'content': 'word7'},
+                                   {'role': 'user', 'content': 'word8 word9'}]
+        events = list(service.events(conversation, 4, home/('conversation-'+str(rank))))
+        assert events[-1]['kind'] == 'complete'
+        assert all(event['service'] == service.root for event in events)
+        assert net.all_owners.exchange(identity(events[-1])) == [identity(events[-1])]*5
+        saved = read('conversation-'+str(rank)+'/result.json')
+        assert saved['request']['messages'] == conversation
+        assert saved['request']['prompt_ids'] == net.tokenizer.apply_chat_template(
+            conversation, tokenize=True, add_generation_prompt=True)
+        assert saved['tokens'] == [token for event in events[:-1] for token in event['tokens']]
+        # Delivery has no influence on execution: discard all events and still
+        # require the same complete, durably saved neural response.
+        for _ in service.events(conversation, 4, home/('disconnected-'+str(rank))):
+            pass
+        assert read('disconnected-'+str(rank)+'/result.json')['tokens'] == saved['tokens']
+        too_long = [{'role': 'user', 'content': 'word3 '*100}]
+        try:
+            list(service.events(too_long, 4, home/('too-long-'+str(rank))))
+        except ValueError as error:
+            assert 'context limit' in str(error)
+        else:
+            raise AssertionError('A conversation was silently truncated')
+        assert not (home/('too-long-'+str(rank))).exists()
+        if rank == 3:
+            with torch.no_grad():
+                next(service.interface.parameters()).add_(.01)
+        try:
+            list(service.events(conversation, 4, home/('changed-service-'+str(rank))))
+        except ValueError as error:
+            assert 'between requests' in str(error)
+        else:
+            raise AssertionError('A service changed one owner\'s installed interface')
         if len(chunks) > 1:
             changing = canonical_stream.stream(net, mixture, tokens, 4, 64,
                 home/('changed-stream-'+str(rank)), chunk_tokens=2, interface=adapter, adapt_interfaces=True)

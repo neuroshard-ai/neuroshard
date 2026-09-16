@@ -20,11 +20,34 @@ latency, concurrent clients, provider discovery and native billing remain
 separate requirements. The ongoing GPU learning trial uses its original frozen
 executor and does not include this later streaming implementation.
 
-This is an execution primitive, not a public HTTP service. Every model owner
-must consume the stream fully; a client disconnect must only detach delivery,
-so that it cannot leave the other owners waiting in collective communication.
-A service must separately bound its queue and decide refund/cancellation rules.
-Prompt and response confidentiality is not supplied by this primitive.
+The existing local graph service now optionally installs `FusedService` through
+its `fused_service` and `fused_weights` configuration paths. Its immutable
+specification binds the graph and executor, gate checkpoint, all expert interface
+checkpoints (or none), context, output limit and chunk size. Each owner loads
+only its own adapter; the small gate is synchronized. This does not authorize
+the specification for native settlement.
+
+The local `stream_fused` request supplies `service`, complete alternating
+`messages`, and `max_tokens`, alongside the usual fresh request identifier. It
+rejects excess context instead of truncating history. Checked events appear in
+`streams/<request>/events/`; each includes token offsets and the complete decoded
+text prefix to avoid corrupting Unicode at individual token boundaries. A final
+record commits the complete messages, tokenizer, prompt tokens and response.
+Requests carry their own history and do not share conversation memory.
+
+The queue consumes execution even if nobody reads those event files. Five CPU
+processes checked complete multi-turn delivery, the same response with delivery
+discarded, excess-context rejection before execution, and collective rejection
+when one owner changes its installed adapter. Full completion identities agree
+across owners. These checks establish behavior, not multi-turn answer quality.
+
+This remains an operator-local queue with one executing request at a time. It
+is not a public HTTP service. Queue admission, concurrent-client scheduling,
+native authorization, price/refund rules and GPU load targets still need their
+own integration. Operators and their auditors receive the complete prompt and
+response. Local records retain those bytes; confidentiality and automatic
+deletion are not provided. Public clients must not be given this filesystem
+queue directly.
 
 The numerical distinction and research sources are described in the
 [batched-audit prescription](EXPERT_INTERFACE_CONTINUATION.md). Native inference

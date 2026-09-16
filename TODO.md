@@ -111,7 +111,11 @@ before the affected work, rather than changing the target after a result.
   the larger expert graph has operated generation and public reproducible weights.
   The new candidate binds and audits all neural calls used by a raw question,
   including interpretation and composition. Those pieces are not yet the live
-  growing chat service.
+  growing chat service. An experimental local service now pins gate and owned
+  adapter checkpoints, preserves multi-turn context, and delivers only checked
+  token chunks. Its five-process CPU checks cover discarded delivery, context
+  overflow and changed owner weights; public access, native billing and GPU load
+  targets remain open. See [checked streaming](docs/CANONICAL_STREAMING.md).
 
 ## Work discipline
 

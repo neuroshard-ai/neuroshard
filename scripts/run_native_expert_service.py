@@ -45,7 +45,10 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
-        learned, planned = None, None
+        learned, planned, fused = None, None, None
+        if config.get('fused_service'):
+            from neuroshard.evolution.sharded.fused_service import FusedService
+            fused = FusedService(net, read(config['fused_service']), Path(config['fused_weights']))
         if config.get('planned_service'):
             from neuroshard.evolution.sharded.planned_graph import PlannedGraphNetwork
             from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
@@ -77,6 +80,8 @@ def run(config):
             ready['learned_service'] = learned.root
         if planned is not None:
             ready['planned_service'] = planned.root
+        if fused is not None:
+            ready['fused_service'] = fused.root
         save(home / 'ready.json', ready)
         handled = set()
         while True:
@@ -143,6 +148,17 @@ def run(config):
                         raise ValueError('Planned service is not installed')
                     valid, value = planned.replay(command['response'])
                     report = {'valid': valid, 'service': planned.root, 'response': identity(value)}
+                elif command['kind'] == 'stream_fused':
+                    if fused is None or command['service'] != fused.root:
+                        raise ValueError('Requested checked conversation service is not installed')
+                    folder = home/'streams'/command['id']
+                    # Consume independently of any external client reading the
+                    # event files. A disconnected reader cannot strand peers.
+                    for index, event in enumerate(fused.events(command['messages'], command['max_tokens'], folder)):
+                        if rank == 0:
+                            save(folder/'events'/(str(index)+'.json'), event)
+                        progress(index+1, None)
+                    value, report = event, None
                 elif command['kind'] == 'inference_audit':
                     report, value = inference_report(command['claim'], net)
                 elif command['kind'] == 'quality_audit':
