@@ -55,7 +55,12 @@ def questions(text):
 
 
 def planner_prefix(planner):
-    serving_graph.fields(planner, {'instruction', 'examples', 'max_tokens'}, 'Invalid planner policy')
+    fields = {'instruction', 'examples', 'max_tokens'}
+    if 'repeat_instruction' in planner:
+        fields.add('repeat_instruction')
+        if type(planner['repeat_instruction']) is not bool:
+            raise ValueError('Require an explicit planner reminder policy')
+    serving_graph.fields(planner, fields, 'Invalid planner policy')
     integer(planner['max_tokens'], 1, 256)
     if (not isinstance(planner['instruction'], str) or not planner['instruction'].strip()
             or len(planner['instruction'].encode()) > 4096
@@ -73,18 +78,31 @@ def planner_prefix(planner):
     return prefix
 
 
-def configuration(graph, learned, planner, source_home):
+def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction=''):
     planner_prefix(planner)
+    prompts = {} if expert_prompts is None else expert_prompts
+    if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
+        raise ValueError('Bind prompt contracts only for installed learned experts')
+    for prompt in prompts.values():
+        serving_graph.fields(prompt, {'prefix', 'suffix'}, 'Invalid expert input contract')
+        if any(not isinstance(value, str) or len(value.encode()) > 2048 for value in prompt.values()):
+            raise ValueError('Bound the expert input contract')
+    if not isinstance(general_instruction, str) or len(general_instruction.encode()) > 2048:
+        raise ValueError('Bound the general answer instruction')
     return {'format': FORMAT, 'graph': identity(graph), 'learned': copy.deepcopy(learned),
             'planner': copy.deepcopy(planner), 'answer_format': 'ordered-question-answer-v1',
+            'expert_prompts': copy.deepcopy(prompts),
+            'general_instruction': general_instruction,
             'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
 
 
 class PlannedGraphNetwork:
     def __init__(self, network, config, *, source_home, features=None):
-        serving_graph.fields(config, {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources'},
+        serving_graph.fields(config, {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
+                                     'expert_prompts', 'general_instruction'},
                              'Invalid planned service configuration')
-        if config != configuration(network.graph, config['learned'], config['planner'], source_home):
+        if config != configuration(network.graph, config['learned'], config['planner'], source_home,
+                                   config['expert_prompts'], config['general_instruction']):
             raise ValueError('Planned service changed its models, sources or execution rules')
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
@@ -92,6 +110,24 @@ class PlannedGraphNetwork:
         if network.all_owners.exchange(self.root) != [self.root] * network.world_size:
             raise ValueError('Owners installed different planned services')
         self.trace = []
+
+    def planning_messages(self, messages):
+        conversation(messages)
+        result = copy.deepcopy(self.prefix + messages)
+        if self.config['planner'].get('repeat_instruction', False):
+            result[-1]['content'] += '\n\n' + self.config['planner']['instruction']
+        return result
+
+    def expert_question(self, model, question):
+        prompt = self.config['expert_prompts'].get(model, {'prefix': '', 'suffix': ''})
+        return prompt['prefix'] + question + prompt['suffix']
+
+    def answer_messages(self, selected, question):
+        messages = []
+        if selected == 'parent' and self.config['general_instruction']:
+            messages.append({'role': 'system', 'content': self.config['general_instruction']})
+        messages.append({'role': 'user', 'content': self.expert_question(selected, question)})
+        return messages
 
     def call(self, model, messages, maximum, purpose):
         net = self.net
@@ -137,7 +173,7 @@ class PlannedGraphNetwork:
         if self.net.all_owners.exchange(identity(request)) != [identity(request)] * self.net.world_size:
             raise ValueError('Owners received different conversations')
         self.trace = []
-        raw = self.call('interpreter', self.prefix + messages, self.config['planner']['max_tokens'], 'planning')
+        raw = self.call('interpreter', self.planning_messages(messages), self.config['planner']['max_tokens'], 'planning')
         answers, routing, error = [], [], None
         try:
             plan = questions(raw)
@@ -160,7 +196,7 @@ class PlannedGraphNetwork:
                     break
                 prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
             answer = self.call('interpreter' if selected == 'parent' else selected,
-                [{'role': 'user', 'content': prompt}], max_tokens, 'answer')
+                self.answer_messages(selected, prompt), max_tokens, 'answer')
             answers.append({'question': question, 'expert': selected, 'text': answer})
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else

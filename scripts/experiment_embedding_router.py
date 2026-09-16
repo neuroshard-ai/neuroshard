@@ -9,6 +9,7 @@ import subprocess
 import time
 
 from neuroshard.evolution import expert_router
+from neuroshard.evolution.router_data import raw_questions
 from neuroshard.evolution.reference_data import identity, sha256
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,8 @@ PLAN = ROOT / 'config/experiments/embedding-router.json'
 SELECTION = ROOT / 'config/experiments/embedding-router-selection.json'
 SOURCES = ['src/neuroshard/evolution/expert_router.py',
            'src/neuroshard/evolution/sharded/router_features.py',
+           'src/neuroshard/evolution/router_data.py',
+           'src/neuroshard/evolution/incremental_facts.py',
            'scripts/experiment_embedding_router.py']
 ROLES = {'train.jsonl': 'protocol', 'dev.jsonl': 'protocol',
          'retained-dev-knowledge.jsonl': 'directory',
@@ -72,18 +75,29 @@ def choose(inputs, plan):
         raise ValueError('Router development evaluation overlaps fitting')
     if len({row['id'] for row in training + evaluation}) != len(training) + len(evaluation):
         raise ValueError('Duplicate router source identity')
-    return {'format': plan['format'] + '/selection', 'plan': identity(plan),
+    selected = {'format': plan['format'] + '/selection', 'plan': identity(plan),
             'files': files, 'training': training, 'evaluation': evaluation,
             'sources': {name: sha256(ROOT / name) for name in SOURCES}}
+    if plan.get('raw_questions'):
+        # Fail during preparation if a source format is not understood, and
+        # commit the actual augmented inputs before any classifier is fitted.
+        source_rows = {name: {row['id']: row for row in read_rows(inputs / name)} for name in ROLES}
+        selected['raw_inputs'] = {}
+        for side, items in (('training', training), ('evaluation', evaluation)):
+            variants = [{'document': item['id'], 'questions': raw_questions(
+                source_rows[item['file']][item['id']], item['route'])} for item in items]
+            selected['raw_inputs'][side] = {'root': identity(variants),
+                                            'count': sum(len(row['questions']) for row in variants)}
+    return selected
 
 
 def prepare(args):
     # Preparation only writes selection metadata. Execution below still requires
     # one commit containing the exact plan, source and selected observations.
-    plan = json.loads(PLAN.read_bytes())
+    plan = json.loads(args.plan.read_bytes())
     selected = choose(args.inputs, plan)
-    SELECTION.write_text(json.dumps(selected, indent=2, sort_keys=True) + '\n')
-    print(json.dumps({'selection': str(SELECTION), 'training': len(selected['training']),
+    args.selection.write_text(json.dumps(selected, indent=2, sort_keys=True) + '\n')
+    print(json.dumps({'selection': str(args.selection), 'training': len(selected['training']),
                       'evaluation': len(selected['evaluation']), 'commit_required_before_run': True}))
 
 
@@ -93,8 +107,8 @@ def run(args):
     from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
 
     started = time.monotonic()
-    plan = json.loads(committed(PLAN))
-    selected = json.loads(committed(SELECTION))
+    plan = json.loads(committed(args.plan))
+    selected = json.loads(committed(args.selection))
     for name in SOURCES:
         committed(ROOT / name)
     if selected != choose(args.inputs, plan):
@@ -115,8 +129,14 @@ def run(args):
         messages = rows[item['file']][item['id']]['messages']
         return user_context(messages)
 
-    training = [{'id': item['id'], 'route': item['route'], 'features': features(question(item))}
-                for item in selected['training']]
+    def variants(item):
+        return (raw_questions(rows[item['file']][item['id']], item['route'])
+                if plan.get('raw_questions') else [question(item)])
+
+    training = [{'id': (identity({'document': item['id'], 'question': text})
+                        if plan.get('raw_questions') else item['id']),
+                 'route': item['route'], 'features': features(text)}
+                for item in selected['training'] for text in variants(item)]
     model = expert_router.fit(training, embedding_root=features.root, tokenizer_root=plan['tokenizer_root'],
                               **{key: plan[key] for key in ('prototypes_per_route', 'iterations',
                                   'minimum_margin', 'maximum_distance')})
@@ -129,6 +149,8 @@ def run(args):
         changed = re.sub('neuroshard 0\\.4\\.0', 'the NeuroShard network', text, flags=re.I)
         changed = re.sub('fictional luma directory', "Luma's directory", changed, flags=re.I)
         versions = [('original', text)] + ([('changed_phrase', changed)] if changed != text else [])
+        if plan.get('raw_questions'):
+            versions += [('raw_question', value) for value in variants(item)[1:]]
         for version, prompt in versions:
             observed = expert_router.select(model, features(prompt))
             measurements.append({'id': item['id'], 'version': version, 'expected': item['route'],
@@ -149,6 +171,9 @@ def run(args):
         'changed_phrases': all(totals['changed_phrase/' + name]['accuracy'] >=
                               plan['gate']['changed_phrase_accuracy_per_expert_at_least'] for name in ('directory', 'protocol')),
         'retained_parent': parent['count'] - parent['correct'] <= plan['gate']['parent_route_changes_at_most']}
+    if plan.get('raw_questions'):
+        checks['raw_questions'] = all(totals['raw_question/' + name]['accuracy'] >=
+            plan['gate']['raw_question_accuracy_per_expert_at_least'] for name in ('directory', 'protocol'))
     result = {'format': plan['format'] + '/result', 'plan': identity(plan), 'selection': identity(selected),
               'router': identity(model), 'feature_profile': features.profile, 'checks': checks,
               'passed': all(checks.values()), 'groups': dict(totals), 'seconds': time.monotonic() - started,
@@ -164,6 +189,8 @@ def main():
     for name in ('prepare', 'run'):
         item = sub.add_parser(name)
         item.add_argument('--inputs', type=Path, required=True)
+        item.add_argument('--plan', type=Path, default=PLAN)
+        item.add_argument('--selection', type=Path, default=SELECTION)
         if name == 'run':
             item.add_argument('--seed', type=Path, required=True)
             item.add_argument('--embedding', type=Path, required=True)

@@ -242,3 +242,14 @@ under the same admission rules.
   questions, weights and scoring rules under a new executor commitment. A
   [public serving catalog](https://github.com/neuroshard-ai/neuroshard/releases/download/research-native-expert-20260916/serving-tensors.json)
   now provides CDN/GitHub replicas for all 472 required tensors.
+
+- 2026-09-16: The five-owner cached conversation trial completed and failed its
+  quality gate (26/32 plans, 1/8 complete answers). All measured cached tokens
+  matched and tensor traffic fell 93.23%; complete response replay passed. Eight
+  diagnostic pairs reproduced the failures without caching and recovered learned
+  facts when the training prompt contract was restored. The earlier router
+  screen replaced domain phrases instead of removing them. Development now binds
+  expert input contracts, supports a bounded planner reminder and freezes
+  answer-blind raw-question router fitting on the existing entity-disjoint split.
+  These changes require the next regression result; no milestone is checked.
+  [Complete failed responses and diagnosis](config/experiments/cached-composition-results.json).

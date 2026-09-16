@@ -88,9 +88,22 @@ def worker(rank, folder):
             digest = learned['feature_profile']['embedding_sha256']
             features = EmbeddingFeatures(tensor_path(home/'interpreter', digest), digest,
                                         net.tokenizer, graph['tokenizer']['root'])
-        planner = {'instruction': 'Interpret.', 'examples': [], 'max_tokens': 1}
-        planned = PlannedGraphNetwork(net, configuration(graph, learned, planner, SOURCE),
+        planner = {'instruction': 'Interpret.', 'examples': [], 'max_tokens': 1, 'repeat_instruction': True}
+        planned = PlannedGraphNetwork(net, configuration(graph, learned, planner, SOURCE,
+            {'protocol': {'prefix': 'word7 ', 'suffix': ' word8'}}, 'Answer briefly.'),
                                       source_home=SOURCE, features=features)
+        original_messages = [{'role': 'user', 'content': 'word3'}]
+        prepared_messages = planned.planning_messages(original_messages)
+        assert original_messages == [{'role': 'user', 'content': 'word3'}]
+        assert prepared_messages[-1]['content'] == 'word3\n\nInterpret.'
+        prompt = planned.expert_question('protocol', 'word3')
+        assert prompt == 'word7 word3 word8'
+        assert planned.answer_messages('parent', 'word3') == [
+            {'role': 'system', 'content': 'Answer briefly.'}, {'role': 'user', 'content': 'word3'}]
+        assert planned.answer_messages('protocol', 'word3') == [{'role': 'user', 'content': prompt}]
+        planned.call('protocol', [{'role': 'user', 'content': prompt}], 4, 'answer')
+        assert planned.trace[-1]['prompt_ids'] == net.tokenizer.apply_chat_template(
+            [{'role': 'user', 'content': prompt}], tokenize=True, add_generation_prompt=True)
         # The random tiny interpreter cannot emit JSON with one token. A real
         # failed neural plan must execute no experts, remain metered/replayable,
         # and never manufacture an answer from the evaluator or fallback text.

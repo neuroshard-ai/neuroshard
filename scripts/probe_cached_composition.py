@@ -65,7 +65,7 @@ def run(home, source):
             at = time.monotonic()
             # Only the conversation reaches neural execution. Expected terms
             # and case IDs are supplied exclusively to the scorer afterwards.
-            raw = service.call('interpreter', service.prefix + case['messages'],
+            raw = service.call('interpreter', service.planning_messages(case['messages']),
                                config['planner']['max_tokens'], 'planning')
             planner.append({'id': case['id'], 'text': raw, 'calls': service.trace,
                             'seconds': time.monotonic() - at, **score(raw, case['required_terms'])})
