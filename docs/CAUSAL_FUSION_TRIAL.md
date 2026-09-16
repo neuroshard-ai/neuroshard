@@ -1,5 +1,23 @@
 # Causal fusion of owned model shards
 
+**Result: rejected on development.** Both connections completed 512 updates and
+exactly replayed their final 16 updates from saved GPU optimizer state. The
+learned-source connection answered 0/32 specialist or mixed questions correctly;
+the source-information ablation answered 1/32. Structured answers remained 2/8.
+General-response loss increased by 0.01309 nats on average, with an upper bound
+of 0.02840 against the permitted 0.02. The final set stayed unopened.
+
+The [complete result](../config/experiments/causal-fusion-results.json) records
+the initial hostname-agreement failure, corrected execution, limits and resource
+retirement. [Public evidence](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-causal-fusion-20260916)
+includes frozen inputs, source, all saved optimizer checkpoints and generated
+responses. This small connection did not demonstrate useful knowledge transfer.
+
+The next [frozen source-interface diagnostic](../config/experiments/fusion-source-interface-probe.json)
+isolates input framing and output-head compatibility on existing development
+questions. It deliberately names the source under test; it does not demonstrate
+automatic routing or count as a new learning cohort.
+
 The question-rewriting experiments did not reliably compose answers: the latest
 scoped routing regression completed 7 of 9 answers, and reviewing the planner's
 own output worsened its result. Those failures are retained in
