@@ -1,6 +1,7 @@
 """Real bounded execution, cross-process Adam restore and unavailable inputs."""
 import copy
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -12,6 +13,40 @@ import pytest
 from neuroshard.evolution import cohort_experiment, expert_window, expert_work, reference_data as data
 from neuroshard.evolution.sharded import expert_execution, expert_replay, features, portable, prefix_audit, prefix_execution
 from test_expert_window_replay import test_replay_reconstructs_the_actual_five_owner_training_checkpoint as replay_fixture
+
+
+def distributed_reference(rank, home, parent, seed, plan, prepared, records, objects, binding):
+    from datetime import timedelta
+    import torch
+    import torch.distributed as dist
+    from transformers import LlamaConfig
+    from neuroshard.evolution import expert_checkpoint, reference
+    from neuroshard.evolution.sharded import cohort_features, incremental_state
+    from neuroshard.evolution.sharded.model import Partition
+    from neuroshard.evolution.sharded.wire import Wire
+
+    reference.configure('cpu', plan['threads'])
+    config = LlamaConfig(**parent['config'])
+    config._attn_implementation = 'sdpa'
+    shard = Partition(config, parent['boundaries'] if rank < 3 else seed['boundaries'], rank)
+    if rank < 3:
+        inherited = expert_checkpoint.parent_records(parent)
+        with torch.no_grad():
+            for name, parameter in shard.named_owned_parameters():
+                spec = inherited[name]
+                parameter.copy_(incremental_state.tensor_values(
+                    portable.tensor_path(objects, spec['sha256']), spec)['weight'])
+    shard.eval().requires_grad_(False)
+    dist.init_process_group('gloo', init_method='file://' + str(home/'rendezvous'),
+                            rank=rank, world_size=4, timeout=timedelta(seconds=60))
+    try:
+        result = cohort_features.produce(shard, Wire(rank, 4), records, prepared['batches'],
+            home/'features', binding, plan['split'], plan['microbatch'], reference_expert=seed,
+            parent=parent, objects=objects, resident_parameter_limit=plan['parameter_limit'])
+        if rank == 3:
+            data.save(home/'root.json', result)
+    finally:
+        dist.destroy_process_group()
 
 
 def test_real_archived_training_job_keeps_its_original_domain():
@@ -133,6 +168,86 @@ def test_producer_discovers_outputs_without_expected_claim_then_independent_audi
         claim['record_root'] = data.identity(produced['window'])
         claim['work_ids'] = [step['work_identity'] for step in produced['window']['steps']]
         assert expert_work.replay_report(claim, execute(claim, auditor))['valid']
+
+
+def test_fresh_cohort_from_a_trained_expert_produces_and_replays_actual_updates(trajectory, tmp_path):
+    from transformers import LlamaConfig
+    from neuroshard.evolution import expert_checkpoint
+    from neuroshard.evolution.sharded import cohort_state, incremental
+    from neuroshard.evolution.sharded.model import Partition
+
+    home, plan, prepared, states, old_profile, _ = trajectory
+    seed = states[-1]
+    objects = tmp_path/'objects'
+    shutil.copytree(home/'objects', objects, copy_function=os.link)
+    for spec in seed['tensors'].values():
+        shutil.copyfile(portable.tensor_path(portable.directory(home/'rank-4', seed['step']), spec['sha256']),
+                        portable.tensor_path(objects, spec['sha256']))
+    plan = {**copy.deepcopy(plan), 'seed_expert': {'name': 'protocol', 'checkpoint': seed}}
+    job = expert_execution.training_job(plan, prepared)
+    config = LlamaConfig(**old_profile['parent']['config'])
+    config._attn_implementation = 'sdpa'
+    shard = Partition(config, seed['boundaries'], 3)
+    optimizer = incremental.configure(shard, seed['split'], plan['training'])
+    cohort_state.initialize_tail(shard, old_profile['parent'], objects, seed['split'], seed)
+    initial = expert_checkpoint.pack(old_profile['parent'], cohort_state.commit_tail(tmp_path/'initial',
+        shard, optimizer, old_profile['parent'], objects, job, 0, plan['training'], seed['split'], initial_expert=seed))
+    assert initial['checkpoint'] != states[0]['checkpoint'] and not optimizer.state
+    profile = {key: copy.deepcopy(value) for key, value in old_profile.items()
+               if key not in ('feature_root', 'batch_roots')}
+    profile.update(format=expert_work.PROSPECTIVE, checkpoint=initial,
+                   batch_count=len(old_profile['batch_roots']), seed_expert=plan['seed_expert'])
+    paths = {'inputs': home/'inputs', 'objects': objects, 'bank_home': tmp_path/'unused',
+             'checkpoint_store': tmp_path/'producer'}
+    produced = prefix_execution.produce_features(profile, plan, prepared, **paths, max_seconds=60)
+    resolved = expert_work.resolve_prefix(profile, produced['feature_root'], produced['batch_roots'])
+    paths['bank_home'] = paths['checkpoint_store']/'prefix'/produced['transcript_root']/'rank-2/features'
+    # The retained distribution comes from the accepted expert, not from the
+    # older parent that never learned this expert's facts.
+    from neuroshard.evolution.sharded import feature_bank
+    import torch
+    bank_index = json.loads((paths['bank_home']/'index.json').read_bytes())
+    bank = feature_bank.Reader(paths['bank_home'], produced['feature_root'], bank_index['binding'],
+                               config, plan['microbatch'], len(prepared['batches']))
+    all_rows = expert_execution.training_records(plan, prepared, paths['inputs'], old_profile['parent'])
+    rows = [all_rows[index] for index in prepared['batches'][0]]
+    for packet in bank.batch(0, rows, 'cpu'):
+        with torch.no_grad():
+            assert torch.equal(shard(packet['prefix'], packet['mask']), packet['reference'])
+    assert produced['production_record']['context']['reference_expert'] == data.identity(seed)
+    # Distributed production and sequential native replay must commit exactly
+    # the same bytes, including the accepted reference, padding and row weights.
+    import torch.multiprocessing as mp
+    distributed = tmp_path/'distributed'
+    distributed.mkdir()
+    mp.spawn(distributed_reference, args=(distributed, profile['parent'], seed, plan, prepared,
+             all_rows, objects, bank_index['binding']), nprocs=4, join=True)
+    assert json.loads((distributed/'root.json').read_bytes()) == produced['feature_root']
+    actual = expert_execution.produce_training(initial, 2, resolved, plan, prepared, **paths, max_seconds=60)
+    window = actual['window']
+    claim = {'kind': 'expert_training', 'id': '1'*64, 'parent_checkpoint': profile['parent'],
+        'input_checkpoint': initial, 'output_checkpoint': window['output'], 'prepared': resolved['prepared'],
+        'feature_root': resolved['feature_root'], 'feature_claim': '2'*64,
+        'numerical_profile': resolved['numerical_profile'], 'stages': 2, 'record_root': data.identity(window),
+        'work_ids': [step['work_identity'] for step in window['steps']], **actual}
+    audit_paths = {**paths, 'checkpoint_store': tmp_path/'auditor'}
+    report = expert_execution.execute_training(claim, resolved, plan, prepared, **audit_paths, max_seconds=60)
+    assert expert_work.replay_report(claim, report)['valid']
+    forged_profile = copy.deepcopy(resolved)
+    forged_profile['seed_expert']['checkpoint'] = states[-2]
+    with pytest.raises(ValueError, match='configured parent, job'):
+        expert_execution.produce_training(initial, 1, forged_profile, plan, prepared, **paths)
+    # Later windows use only the actual current boundary, without the previous
+    # cohort's seed files. Both continuations must discover the same result.
+    for spec in seed['tensors'].values():
+        portable.tensor_path(objects, spec['sha256']).unlink()
+    before = window['output']
+    continued = expert_execution.produce_training(before, 2, resolved, plan, prepared, **paths)
+    replayed = expert_execution.produce_training(before, 2, resolved, plan, prepared, **audit_paths)
+    assert continued == replayed
+    assert continued['window']['output']['step'] == plan['training']['steps']
+    with pytest.raises(FileNotFoundError):
+        expert_execution.produce_training(initial, 1, resolved, plan, prepared, **paths)
 
 
 def test_producer_bounds_and_storage_are_required_before_returning_work(trajectory, tmp_path, monkeypatch):

@@ -158,7 +158,8 @@ def review(state, job, policy, store, tokenizer, upstream, *, history_index=None
             or plan['parent'] != data.identity(job['work']['parent'])
             or plan['split'] != job['work']['checkpoint']['split']
             or plan['expert_layout'] != job['work']['checkpoint']['boundaries']
-            or plan['parent_layout'] != job['work']['parent']['boundaries']):
+            or plan['parent_layout'] != job['work']['parent']['boundaries']
+            or plan.get('seed_expert') != job['work'].get('seed_expert')):
         raise ValueError('Source review differs from the actual prescribed training computation')
     validate_prepared(prepared, plan, job['work']['parent']['config']['vocab_size'])
     allowed = policy['sources']
@@ -169,7 +170,7 @@ def review(state, job, policy, store, tokenizer, upstream, *, history_index=None
             raise ValueError('Source publisher, license or data role is outside policy')
     groups = {role: records(prepared, role, store.get, plan['max_length'],
                            job['work']['parent']['config']['vocab_size'], tokenizer) for role in ('train', 'test')}
-    quality = review_quality(job, policy, store, groups['test'])
+    quality = review_quality(job, policy, store, groups['test'], state=state)
     rows = {row['id']: row for values in groups.values() for row in values}
     if len(rows) != sum(len(values) for values in groups.values()):
         raise ValueError('Training and evaluation contain the same conversation')
@@ -235,31 +236,77 @@ def review(state, job, policy, store, tokenizer, upstream, *, history_index=None
             'quality_policy': quality, 'mechanical_checks_passed': True, 'semantic_curation_required': True}
 
 
-def review_quality(job, policy, store, evaluation):
+def review_quality(job, policy, store, evaluation, *, state=None):
     from . import cohort_questions
     from .sharded import graph_quality
     claim = job['lifecycle']['quality']
     quality = store.json(claim['policy_root'])
     graph_quality.validate_policy(quality)
-    rule = {key: quality[key] for key in ('gates', 'generation')}
-    rule['retained_roles'] = {key: value for key, value in quality['roles'].items() if key != 'test'}
-    if (quality['format'] != graph_quality.GENERAL
+    rule = graph_quality.admission_rule(quality)
+    if (quality['format'] not in (graph_quality.GENERAL, graph_quality.CONTINUAL)
             or quality['candidate_template'] != job['lifecycle']['candidate_template']
             or quality['baseline_graph'] != data.identity(job['lifecycle']['serving_graph'])
             or quality['prepared'] != job['work']['prepared'] or quality['prepared'] != claim['prepared']
-            or quality['roles']['test']['count'] != claim['stages']
+            or graph_quality.stages(quality) != claim['stages']
             or data.identity(rule) != policy['quality_rule']):
         raise ValueError('Quality policy changed its admitted model, data, coverage or scoring rules')
-    from neuroshard.demo.protocol import parse_json
-    spec = quality['roles']['test']
-    raw = store.get(spec['sha256'])
-    if len(raw) > 32 * 1024**2:
-        raise ValueError('Quality references exceed the cohort review bound')
-    values = [parse_json(line) for line in raw.splitlines()]
-    if len(values) != spec['count'] or data.identity([row['id'] for row in values]) != spec['ids']:
-        raise ValueError('Quality input coverage differs from its commitment')
+    values = quality_rows(store, quality['roles']['test'])
     cohort_questions.validate_rows(values, release_scope=False)
     if [{key: row[key] for key in ('id', 'messages')} for row in values] != [
             {key: row[key] for key in ('id', 'messages')} for row in evaluation]:
         raise ValueError('Quality scoring must use the admitted sealed evaluation conversations')
+    if quality['format'] == graph_quality.CONTINUAL:
+        review_retention_history(quality, store, state)
     return data.identity(quality)
+
+
+def quality_rows(store, spec):
+    from neuroshard.demo.protocol import parse_json
+    raw = store.get(spec['sha256'])
+    if len(raw) > 32 * 1024**2 or digest(raw) != spec['sha256']:
+        raise ValueError('Quality references exceed or differ from their commitment')
+    values = [parse_json(line) for line in raw.splitlines()]
+    if len(values) != spec['count'] or data.identity([row['id'] for row in values]) != spec['ids']:
+        raise ValueError('Quality input coverage differs from its commitment')
+    return values
+
+
+def review_retention_history(quality, store, state):
+    """Require fixed anchors plus every earlier admitted held-out conversation.
+
+    The acceptance-rule hash remains stable across cohorts. An operator cannot
+    remove a hard old question by proposing a shorter retention manifest.
+    """
+    from . import cohort_questions
+    from .sharded import graph_quality
+    if state is None:
+        raise ValueError('Continual quality requires the current native admission history')
+    history = state['expert_lifecycle']['admission']['seen_documents']
+    role = 'retained-test-knowledge'
+    anchors = quality_rows(store, quality['retention_anchors'][role])
+    cohort_questions.validate_rows(anchors, release_scope=False)
+    expected = {row['id']: row['messages'] for row in anchors}
+    for key, document in history.items():
+        if document['role'] != 'evaluation':
+            continue
+        original = store.json(document['object'])
+        if document_identity(original['messages']) != key:
+            raise ValueError('Retained source bytes differ from admitted evaluation history')
+        if key in expected and expected[key] != original['messages']:
+            raise ValueError('A retained anchor conflicts with admission history')
+        expected[key] = original['messages']
+    actual = quality_rows(store, quality['roles'][role])
+    cohort_questions.validate_rows(actual, release_scope=False)
+    if {row['id']: row['messages'] for row in actual} != expected:
+        raise ValueError('Retain the complete initial anchors and prior admitted evaluation history')
+    protected = set(expected)
+    for name in graph_quality.ROLES[2:]:
+        rows = quality_rows(store, quality['retention_anchors'][name])
+        if name.endswith('skills'):
+            cohort_questions.validate_rows(rows, release_scope=False)
+        protected.update(row['id'] for row in rows)
+    prepared = store.json(quality['prepared'])
+    for role in ('train', 'test'):
+        rows = quality_rows(store, prepared['roles'][role])
+        if any(row['id'] in protected for row in rows):
+            raise ValueError('Protected retention inputs cannot enter fresh training or evaluation')

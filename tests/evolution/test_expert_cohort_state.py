@@ -1,11 +1,12 @@
 """New-tail recovery preserves its Adam state without copying the parent model."""
 import copy
+import shutil
 
 import pytest
 import torch
 from transformers import LlamaConfig, LlamaForCausalLM
 
-from neuroshard.evolution import reference
+from neuroshard.evolution import expert_checkpoint, reference
 from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import checkpoint, cohort_state, incremental, incremental_state, portable
 from neuroshard.evolution.sharded.model import Partition
@@ -101,3 +102,38 @@ def test_tail_checkpoint_rejects_wrong_actual_adam_age(tmp_path):
     with pytest.raises(ValueError, match='Adam age'):
         cohort_state.commit_tail(tmp_path / 'bad', shard, optimizer, parent, objects,
                                  'a' * 64, 1, RECIPE, 5)
+
+
+def test_next_cohort_inherits_accepted_weights_with_fresh_adam_and_replays(tmp_path):
+    parent, objects, shard, optimizer = prepare(tmp_path)
+    update(shard, optimizer, 0)
+    previous_home = tmp_path/'previous'
+    accepted = expert_checkpoint.pack(parent, cohort_state.commit_tail(previous_home, shard, optimizer,
+        parent, objects, 'a'*64, 1, RECIPE, 5))
+    for spec in accepted['tensors'].values():
+        shutil.copyfile(portable.tensor_path(portable.directory(previous_home, 1), spec['sha256']),
+                        portable.tensor_path(objects, spec['sha256']))
+    revised = Partition(shard.config, list(shard.boundaries), 3)
+    revised_optimizer = incremental.configure(revised, 5, RECIPE)
+    cohort_state.initialize_tail(revised, parent, objects, 5, accepted)
+    assert not revised_optimizer.state
+    for (_, old), (_, new) in zip(shard.named_owned_parameters(), revised.named_owned_parameters()):
+        assert torch.equal(old, new)
+    initial = cohort_state.commit_tail(tmp_path/'revision', revised, revised_optimizer, parent, objects,
+        'b'*64, 0, RECIPE, 5, initial_expert=accepted)
+    assert all(spec['optimizer_step'] == 0 for name, spec in initial['tensors'].items()
+               if name in accepted['tensors'])
+    update(revised, revised_optimizer, 0)
+    following = cohort_state.commit_tail(tmp_path/'revision', revised, revised_optimizer, parent, objects,
+        'b'*64, 1, RECIPE, 5)
+    replay = Partition(shard.config, list(shard.boundaries), 3)
+    replay_optimizer = incremental.configure(replay, 5, RECIPE)
+    incremental_state.load(tmp_path/'revision', replay, replay_optimizer, initial, parent, 'b'*64, RECIPE,
+                           initial_expert=accepted)
+    update(replay, replay_optimizer, 0)
+    assert cohort_state.commit_tail(tmp_path/'replay', replay, replay_optimizer, parent, objects,
+        'b'*64, 1, RECIPE, 5) == following
+    changed = copy.deepcopy(accepted)
+    changed['boundaries'][1] += 1
+    with pytest.raises(ValueError):
+        cohort_state.initialize_tail(replay, parent, objects, 5, changed)

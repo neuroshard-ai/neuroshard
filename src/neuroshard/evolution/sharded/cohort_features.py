@@ -1,7 +1,8 @@
 """Produce a new expert's training inputs without replacing the serving tail.
 
 The three parent owners keep their complete partitions. A separate four-member
-group sends frozen features and parent reference outputs to the new owner. Once
+group sends frozen features and reference outputs to the new owner. A continued
+job uses an explicitly counted, read-only copy of its accepted expert. Once
 production ends, that owner can optimize locally while earlier paths serve.
 The output head is an explicitly read-only replica, not another trained shard.
 """
@@ -9,12 +10,14 @@ The output head is an explicitly read-only replica, not another trained shard.
 import torch
 
 from ..reference import autocast
-from . import feature_bank
+from ..reference_data import identity
+from . import cohort_state, feature_bank
 from .branch import prefix
 from .model import batch_tensors
 
 
-def produce(shard, wire, records, schedule, home, binding, split, microbatch):
+def produce(shard, wire, records, schedule, home, binding, split, microbatch, *,
+            reference_expert=None, parent=None, objects=None, resident_parameter_limit=None):
     """Cache exact padded microbatches using only the new cohort's group.
 
     Logical owners 0..2 hold the complete immutable parent; owner 3 is the new
@@ -35,6 +38,21 @@ def produce(shard, wire, records, schedule, home, binding, split, microbatch):
     if (not schedule or any(not batch or any(type(i) is not int or not 0 <= i < len(records)
                                              for i in batch) for batch in schedule)):
         raise ValueError('Require a valid exact feature schedule')
+    teacher = None
+    declaration = {'binding': identity(binding),
+                   'reference': identity(reference_expert) if reference_expert is not None else None}
+    if wire.exchange(declaration) != [declaration] * 4:
+        raise ValueError('Feature producers disagree on the accepted reference')
+    if reference_expert is not None:
+        error = None
+        try:
+            teacher = cohort_state.frozen_reference(shard, parent, objects, split, reference_expert,
+                                                    resident_parameter_limit)
+        except (OSError, ValueError, KeyError, TypeError) as failure:
+            error = type(failure).__name__
+        if any(wire.exchange(error)):
+            raise ValueError('Accepted reference is unavailable or exceeds the declared owner limit')
+    versions = tuple(p._version for p in teacher.parameters()) if teacher is not None else None
     writer = feature_bank.Writer(home, binding, shard.config, microbatch) if wire.rank == 3 else None
     for indices in schedule:
         batch = [records[index] for index in indices]
@@ -46,19 +64,20 @@ def produce(shard, wire, records, schedule, home, binding, split, microbatch):
             with torch.no_grad(), autocast(shard.device_name):
                 if wire.rank == 3:
                     hidden = wire.receive(2, shape, shard.device_name)
-                    teacher = wire.receive(2, shape, shard.device_name)
-                    packets.append({'prefix': hidden, 'reference': teacher, 'ids': ids,
+                    reference = wire.receive(2, shape, shard.device_name)
+                    packets.append({'prefix': hidden, 'reference': reference, 'ids': ids,
                                     'labels': labels, 'mask': mask, 'weights': weights})
                 else:
                     incoming = ids if wire.rank == 0 else wire.receive(wire.rank - 1, shape, shard.device_name)
                     if wire.rank < 2:
                         wire.send(shard(incoming, mask), wire.rank + 1)
                     else:
-                        # Both calls start from the same frozen incoming tensor.
-                        # The full parent result is the reference, and the cut
-                        # result is the new expert's causal input.
-                        wire.send(prefix(shard, incoming, mask, split), 3)
-                        wire.send(shard(incoming, mask), 3)
+                        cut = prefix(shard, incoming, mask, split)
+                        reference = teacher(cut, mask) if teacher is not None else shard(incoming, mask)
+                        wire.send(cut, 3)
+                        wire.send(reference, 3)
         if writer is not None:
             writer.batch(batch, packets)
+    if teacher is not None and tuple(p._version for p in teacher.parameters()) != versions:
+        raise ValueError('Feature production changed the accepted frozen reference')
     return wire.exchange(writer.finish(len(schedule)) if writer else None)[3]

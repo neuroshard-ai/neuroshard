@@ -30,12 +30,23 @@ PROSPECTIVE_FIELDS = PROFILE_FIELDS - {'feature_root', 'batch_roots'} | {'batch_
 def validate_profile(profile):
     prospective = isinstance(profile, dict) and profile.get('format') == PROSPECTIVE
     fields = PROSPECTIVE_FIELDS if prospective else PROFILE_FIELDS
+    if isinstance(profile, dict) and 'seed_expert' in profile:
+        fields = fields | {'seed_expert'}
     if not isinstance(profile, dict) or set(profile) != fields or profile['format'] not in (FORMAT, PROSPECTIVE):
         raise ValueError('Invalid prescribed expert execution profile')
     before = profile['checkpoint']
     expert_checkpoint.unpack(profile['parent'], before)
     if before['step'] != 0:
         raise ValueError('Prescribe an initial expert before computing its outputs')
+    if 'seed_expert' in profile:
+        seed = profile['seed_expert']
+        if (not isinstance(seed, dict) or set(seed) != {'name', 'checkpoint'}
+                or not isinstance(seed['name'], str) or not 1 <= len(seed['name']) <= 64):
+            raise ValueError('Bind a named accepted expert for continued learning')
+        expert_checkpoint.unpack(profile['parent'], seed['checkpoint'])
+        if (seed['checkpoint']['step'] == 0 or any(seed['checkpoint'][key] != before[key]
+                for key in ('parent', 'split', 'boundaries'))):
+            raise ValueError('Continue a trained expert with the same owned architecture')
     for key in ('prepared', 'numerical_profile'):
         root(profile[key])
     integer(profile['feature_stages'], 1, 4096)

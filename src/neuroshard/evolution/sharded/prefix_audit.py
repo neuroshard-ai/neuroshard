@@ -13,7 +13,7 @@ import torch
 from .. import expert_checkpoint, reference_data as data
 from ..reference import autocast
 from ..schema import root
-from . import feature_bank, incremental_state, portable
+from . import cohort_state, feature_bank, incremental_state, portable
 from .branch import prefix
 from .model import batch_tensors
 
@@ -25,13 +25,15 @@ def stage_binding(context, rank, incoming):
 
 
 def replay_stage(shard, parent, objects, records, batches, binding, split, microbatch,
-                 target_root, home, incoming=None, max_seconds=900):
+                 target_root, home, incoming=None, max_seconds=900, *, reference_expert=None,
+                 resident_parameter_limit=None):
     """Write one replayed stage and compare the final bank with its claimed root.
 
     The caller pins the numerical runtime and source, and supplies the committed
     training records and production binding. ``incoming`` is (directory, report)
-    from the preceding replay. Only this shard's weights are loaded; tensors
-    belonging to another owner are neither read nor held by this function.
+    from the preceding replay. A continued job also loads a read-only copy of
+    its accepted expert on the last parent owner; both sets of parameters count
+    against the declared resident limit. The full backbone is never loaded.
     """
     started = time.monotonic()
     if target_root is not None:
@@ -60,9 +62,17 @@ def replay_stage(shard, parent, objects, records, batches, binding, split, micro
             del values
     shard.eval()
     versions = tuple(p._version for p in names.values())
+    teacher = None
+    if reference_expert is not None:
+        teacher = cohort_state.frozen_reference(shard, parent, objects, split, reference_expert,
+                                                resident_parameter_limit)
+        if teacher is not None:
+            teacher_versions = tuple(p._version for p in teacher.parameters())
     context = {'parent': data.identity(parent), 'binding': data.identity(binding),
                'records': data.identity(records), 'batches': data.identity(batches),
                'split': split, 'microbatch': microbatch, 'target': target_root}
+    if reference_expert is not None:
+        context['reference_expert'] = data.identity(reference_expert)
     reader = None
     if rank == 0:
         if incoming is not None:
@@ -95,7 +105,7 @@ def replay_stage(shard, parent, objects, records, batches, binding, split, micro
             with torch.no_grad(), autocast(shard.device_name):
                 if rank == 2:
                     cut = prefix(shard, hidden, mask, split)
-                    reference = shard(hidden, mask)
+                    reference = teacher(cut, mask) if teacher is not None else shard(hidden, mask)
                 else:
                     cut = shard(hidden, mask)
                     reference = cut
@@ -108,12 +118,17 @@ def replay_stage(shard, parent, objects, records, batches, binding, split, micro
     output_root = writer.finish(len(batches))
     if tuple(p._version for p in names.values()) != versions:
         raise ValueError('Prefix verification changed an immutable parent weight')
+    if teacher is not None and tuple(p._version for p in teacher.parameters()) != teacher_versions:
+        raise ValueError('Prefix verification changed the accepted frozen expert reference')
     result = {'format': FORMAT, 'rank': rank, 'context': context, 'input_root': input_root,
               'output_root': output_root, 'completed': True, 'microbatches': count,
-              'parameters': shard.resident_parameters, 'owned_names': sorted(names),
+              'parameters': shard.resident_parameters+(teacher.resident_parameters if teacher is not None else 0),
+              'owned_names': sorted(names),
               'target_checked': rank == 2 and target_root is not None,
               'valid': output_root == target_root if rank == 2 and target_root is not None else None,
               'seconds': time.monotonic() - started}
+    if reference_expert is not None:
+        result['reference_parameters'] = teacher.resident_parameters if teacher is not None else 0
     data.save(home / 'result.json', result)
     if rank == 2 and target_root is not None and not result['valid']:
         raise ValueError('Recomputed prefix and reference differ from the claimed feature bank')

@@ -5,6 +5,7 @@ composition implementations. This wrapper loads only an owner's parameters,
 checks context before execution and binds actual call outputs for settlement.
 """
 from datetime import timedelta
+import copy
 import json
 import os
 from pathlib import Path
@@ -143,6 +144,12 @@ class GraphNetwork:
                 'messages': identity(prefix), 'tokens': identity(tokens)}:
             raise ValueError('Interpreter prompt serialization changed')
         self.versions = tuple(p._version for _, p in self.shard.named_owned_parameters())
+        self.comparison = None
+        self.comparison_shard = None
+        self.comparison_versions = None
+        self.resident_parameters = self.shard.resident_parameters + (
+            preserved_shard.resident_parameters if preserved_shard is not None else 0)
+        self.resident_limit = profile['resident_parameter_limit']
         declaration = {'graph': identity(graph), 'executor': identity(profile), 'rank': rank}
         expected = [{**declaration, 'rank': i} for i in range(self.world_size)]
         if self.all_owners.exchange(declaration) != expected:
@@ -157,13 +164,63 @@ class GraphNetwork:
             raise ValueError('Serving changed a loaded model parameter')
         if self.interpreted:
             self.interpreted.verify_unchanged()
+        if (self.comparison_shard is not None and tuple(p._version for p in self.comparison_shard.parameters())
+                != self.comparison_versions):
+            raise ValueError('Quality evaluation changed its retained expert weights')
+
+    def install_comparison(self, graph, *, objects):
+        """Keep one earlier expert revision for paired quality evaluation.
+
+        Only the changed tail is additionally loaded, on its existing owner.
+        It is counted against the resident limit and never overwrites serving
+        weights. This is an evaluation facility, not a promotion operation.
+        """
+        serving_graph.validate(graph)
+        if self.comparison is not None:
+            raise ValueError('A quality executor pins one immutable comparison')
+        fixed = ('parent', 'interpreter_assets', 'interpreter_prompt', 'tokenizer',
+                 'numerical_profile', 'executor_root')
+        if (any(graph[key] != self.graph[key] for key in fixed)
+                or set(graph['experts']) != set(self.graph['experts'])
+                or graph['descriptor']['rules'] != self.graph['descriptor']['rules']
+                or graph['descriptor']['interpretation'] != self.graph['descriptor']['interpretation']):
+            raise ValueError('Compare one expert revision under the same installed paths')
+        changed = [name for name in graph['experts'] if graph['experts'][name] != self.graph['experts'][name]]
+        if len(changed) != 1:
+            raise ValueError('Paired update quality requires exactly one changed expert')
+        name = changed[0]
+        if self.all_owners.exchange(identity(graph)) != [identity(graph)] * self.world_size:
+            raise ValueError('Quality owners disagree on the retained revision')
+        error, shard = None, None
+        try:
+            owner = next(rule['owner'] for rule in graph['descriptor']['rules'] if rule['id'] == name)
+            if self.rank == owner:
+                checkpoint = graph['experts'][name]
+                expert_checkpoint.unpack(graph['parent'], checkpoint)
+                shard = Partition(self.shard.config, checkpoint['boundaries'], 3,
+                                  self.shard.device_name, self.resident_limit - self.resident_parameters)
+                with torch.no_grad():
+                    for key, parameter in shard.named_owned_parameters():
+                        spec = checkpoint['tensors'][key]
+                        values = incremental_state.tensor_values(portable.tensor_path(objects, spec['sha256']), spec)
+                        parameter.copy_(values['weight'])
+                        del values
+                shard.eval().requires_grad_(False)
+        except (OSError, ValueError, KeyError, TypeError) as failure:
+            error = type(failure).__name__
+        if any(self.all_owners.exchange(error)):
+            raise ValueError('Retained expert is unavailable or exceeds the resident owner limit')
+        self.comparison, self.comparison_name, self.comparison_shard = copy.deepcopy(graph), name, shard
+        if shard is not None:
+            self.comparison_versions = tuple(p._version for p in shard.parameters())
+            self.resident_parameters += shard.resident_parameters
 
     def answer(self, question, max_tokens, graph=None):
         selected = self.graph if graph is None else serving_graph.validate(graph)
         if any(selected[k] != self.graph[k] for k in ('parent', 'interpreter_assets',
                 'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root')):
             raise ValueError('A request cannot replace loaded models or execution rules')
-        if (selected['descriptor']['interpretation'] != self.graph['descriptor']['interpretation']
+        if selected != self.comparison and (selected['descriptor']['interpretation'] != self.graph['descriptor']['interpretation']
                 or any(value != self.graph['experts'].get(name) for name, value in selected['experts'].items())):
             raise ValueError('A request cannot replace a loaded expert or interpreter')
         plan = serving_graph.calls(selected, question, max_tokens)
@@ -180,6 +237,10 @@ class GraphNetwork:
         self.trace = []
         previous = self.net.routes
         self.net.routes = routes
+        alternate = self.comparison_shard if selected == self.comparison else None
+        compared = self.net.networks[self.comparison_name] if alternate is not None else None
+        if compared is not None:
+            original_shard, compared.shard = compared.shard, alternate
         error = None
         try:
             answer = self.net.answer(question, max_tokens)
@@ -189,6 +250,8 @@ class GraphNetwork:
             answer, error = None, str(exc)[:512]
         finally:
             self.net.routes = previous
+            if compared is not None:
+                compared.shard = original_shard
         observed = self.all_owners.exchange({'answer': answer, 'calls': self.trace, 'error': error})
         errors = [local['error'] for local in observed if local['error'] is not None]
         if errors:

@@ -237,3 +237,55 @@ def test_history_bands_never_omit_a_candidate_within_supported_distance():
             for bit in randomizer.sample(range(64), distance):
                 changed ^= 1 << bit
             assert set(bands(original)) & set(bands(changed))
+
+
+def test_continual_review_retains_all_prior_evaluations_without_changing_rules(prepared):
+    home, state, job, policy, store, _, _, _, inputs = prepared
+    quality = store.json(job['lifecycle']['quality']['policy_root'])
+
+    def row(question, answer):
+        messages = [{'role': 'user', 'content': question}, {'role': 'assistant', 'content': answer}]
+        return {'id': expert_data.document_identity(messages), 'stratum': 'single',
+                'topics': [question], 'answers': [answer], 'messages': messages}
+
+    def spec(name, rows):
+        raw = b''.join(canonical(value) + b'\n' for value in rows)
+        return {'file': name + '.jsonl', 'sha256': store.put(raw), 'count': len(rows),
+                'ids': identity([value['id'] for value in rows])}
+
+    anchor, prior = row('An initial retained fact?', 'Initial'), row('Previously admitted fact?', 'Earlier')
+    skill = row('What is two plus three?', '5')
+    knowledge = 'retained-test-knowledge'
+    anchors = {knowledge: spec('anchors', [anchor]),
+               'retained-test-skills': spec('skills', [skill]),
+               'retained-test-conversation': quality['roles']['retained-test-conversation']}
+    conversation = home/'quality-inputs'/anchors['retained-test-conversation']['file']
+    assert store.put(conversation.read_bytes()) == anchors['retained-test-conversation']['sha256']
+    quality.update(format=graph_quality.CONTINUAL, retention_gates={'max_lost_correct': 0},
+                   retention_anchors=anchors)
+    quality['roles'].update(anchors)
+    state['expert_lifecycle']['admission']['seen_documents'][prior['id']] = {
+        'role': 'evaluation', 'object': store.put_json({'messages': prior['messages']})}
+    quality['roles'][knowledge] = spec('complete-retention', [anchor, prior])
+    rule = graph_quality.admission_rule(quality)
+    policy['quality_rule'] = identity(rule)
+    claim = job['lifecycle']['quality']
+    claim.update(policy_root=store.put_json(quality), stages=graph_quality.stages(quality))
+    evaluations = expert_data.records(inputs, 'test', store.get, 64, 32)
+    assert expert_data.review_quality(job, policy, store, evaluations, state=state) == identity(quality)
+    assert claim['stages'] == quality['roles']['test']['count'] + 3
+    # Omitting a difficult old example keeps the fixed rule hash but must fail
+    # against native history, even with internally consistent new manifests.
+    quality['roles'][knowledge] = spec('missing-history', [anchor])
+    assert graph_quality.admission_rule(quality) == rule
+    claim.update(policy_root=store.put_json(quality), stages=graph_quality.stages(quality))
+    with pytest.raises(ValueError, match='prior admitted evaluation history'):
+        expert_data.review_quality(job, policy, store, evaluations, state=state)
+    quality['roles'][knowledge] = spec('complete-retention', [anchor, prior])
+    forged = copy.deepcopy(prior)
+    forged['answers'] = ['Rewritten']
+    forged['messages'][-1]['content'] = 'Rewritten'
+    quality['roles'][knowledge] = spec('rewritten-history', [anchor, forged])
+    claim.update(policy_root=store.put_json(quality), stages=graph_quality.stages(quality))
+    with pytest.raises(ValueError, match='prior admitted evaluation history'):
+        expert_data.review_quality(job, policy, store, evaluations, state=state)

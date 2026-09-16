@@ -139,6 +139,25 @@ def test_repeated_growing_jobs_preserve_ledger_and_rejected_quality_serving(enab
     assert len(admission.bookkeeping(s)['seen_jobs']) == 4 and s['issued'] == 2240 * state.PARAMS['reward_atoms']
 
 
+def test_continued_job_can_only_name_the_currently_accepted_expert(enabled):
+    s, owners = enabled
+    s = completed_boundary(s, owners)
+    job = proposed(s, 1)
+    accepted = s['expert_lifecycle']['serving_graph']['experts']['protocol']
+    job['work']['seed_expert'] = {'name': 'protocol', 'checkpoint': accepted}
+    admission.validate_job(s, job)
+    changed = copy.deepcopy(job)
+    changed['work']['seed_expert']['name'] = 'unaccepted'
+    with pytest.raises(ValueError, match='accepted serving expert'):
+        admission.validate_job(s, changed)
+    # Correctly reconstructed metadata for another job is still not the
+    # accepted source, even if its tensor payloads happen to be identical.
+    changed = copy.deepcopy(job)
+    changed['work']['seed_expert']['checkpoint'] = renamed(job['work']['parent'], accepted, 'e'*64)
+    with pytest.raises(ValueError, match='accepted serving expert'):
+        admission.validate_job(s, changed)
+
+
 def test_data_cannot_relabel_evaluation_replay_unused_or_rewind_cursors(enabled):
     s, owners = enabled
     s = completed_boundary(s, owners)

@@ -45,6 +45,9 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
+        if (set(baseline['experts']) == set(graph['experts'])
+                and baseline['experts'] != graph['experts']):
+            net.install_comparison(baseline, objects=Path(config['objects']))
         learned, planned, fused, planned_tariff, planner_profile = None, None, None, None, None
         if config.get('planner_work'):
             from neuroshard.evolution import planner_window

@@ -24,7 +24,7 @@ from transformers import LlamaConfig
 from .. import cohort_experiment, expert_checkpoint, expert_data, expert_window, expert_work, reference
 from ..reference_data import identity, save
 from ..schema import integer, root
-from . import checkpoint, feature_bank, features, incremental, incremental_state
+from . import checkpoint, cohort_state, feature_bank, features, incremental, incremental_state
 from .expert_commitment import snapshot
 from .expert_replay import batch_identity
 from .feature_probe import load_head
@@ -56,6 +56,7 @@ def _job_context(before, profile, plan, prepared):
     if (initial['step'] != 0 or initial['job'] != job or plan['parent'] != identity(parent)
             or plan['training'] != initial['recipe'] or plan['split'] != initial['split']
             or plan['expert_layout'] != initial['boundaries']
+            or plan.get('seed_expert') != profile.get('seed_expert')
             or any(before[key] != initial[key] for key in ('parent', 'job', 'split', 'recipe', 'boundaries'))
             or identity(prepared) != profile['prepared']
             or prepared['schedule'] != profile['schedule']
@@ -167,7 +168,8 @@ def _train(before, count, profile, plan, prepared, *, inputs, objects, bank_home
                       device, plan['parameter_limit'])
     optimizer = incremental.configure(shard, before['split'], before['recipe'])
     if before['step'] == 0:
-        sources = incremental_state.initialize(shard, parent, objects, 'tail-control', before['split'])
+        sources = cohort_state.initialize_tail(shard, parent, objects, before['split'],
+                                               profile.get('seed_expert', {}).get('checkpoint'))
     else:
         source = Path(checkpoint_store) / before['checkpoint']
         if json.loads((source / 'checkpoint.json').read_bytes()) != before:

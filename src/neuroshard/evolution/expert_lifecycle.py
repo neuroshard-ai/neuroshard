@@ -50,6 +50,10 @@ def initialize(state):
             or candidate['numerical_profile'] != work['numerical_profile']):
         raise ValueError('The candidate must preserve the committed earlier graph')
     expert = candidate['experts'][target]
+    if 'seed_expert' in work:
+        seed = work['seed_expert']
+        if previous['experts'].get(seed['name']) != seed['checkpoint']:
+            raise ValueError('Continued learning must start from an accepted serving expert')
     if (expert['step'] != (0 if prospective else len(work['schedule']))
             or any(expert[k] != work['checkpoint'][k] for k in ('parent', 'job', 'split', 'recipe', 'boundaries'))):
         raise ValueError('Freeze the terminal graph of this complete training job')

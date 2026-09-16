@@ -118,7 +118,9 @@ def _execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_h
                 with contextlib.redirect_stdout(sys.stderr):
                     report = prefix_audit.replay_stage(shard, parent, Path(objects), records,
                         prepared['batches'], binding, plan['split'], plan['microbatch'],
-                        None if prospective else profile['feature_root'], home, incoming, remaining())
+                        None if prospective else profile['feature_root'], home, incoming, remaining(),
+                        reference_expert=profile.get('seed_expert', {}).get('checkpoint'),
+                        resident_parameter_limit=plan['parameter_limit'])
             except ValueError:
                 # The numerical kernel writes its completed result before
                 # rejecting a differing final root. Only that observed mismatch

@@ -38,6 +38,10 @@ before the affected work, rather than changing the target after a result.
   Its exact-plan gate failed: four correct mixed replies omitted a full stop,
   and three mixed plans were invalid. The frozen result remains failed.
   Repeated admitted cohorts and matched-resource growth remain unproved.
+  Continued expert jobs can now start from accepted weights with fresh Adam.
+  Distributed feature production and native replay use that accepted expert as
+  the frozen reference. A new quality profile measures retained answers across
+  changed weights; it no longer requires an updated expert to remain identical.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -55,6 +59,10 @@ before the affected work, rather than changing the target after a result.
   covers three fresh audits, exact rewards and unchanged serving state. This
   optional research profile still lacks automatic repeated planner admission
   and separate planner promotion; it does not complete this item.
+  The continual expert quality rule also accumulates every prior admitted
+  evaluation conversation while keeping its acceptance thresholds and initial
+  assistant anchors fixed. Admission rejects omitted or rewritten history.
+  Repeated automatic operation and new GPU learning results are still required.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
@@ -162,6 +170,18 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-16: Removed three blockers to repeated expert learning: restarting
+  every job from the original parent, distilling old answers from that same
+  parent, and using unchanged weights as the only retention criterion. Accepted
+  expert initialization, actual generated-answer retention and complete prior
+  evaluation coverage now have implementation checks. Seventeen numerical
+  execution checks passed, including four-process production matching native
+  prefix replay byte for byte; eleven data-review and graph-execution checks
+  passed, including comparison of two expert revisions without replacing the
+  serving weights. Thirteen admission/checkpoint regression checks also passed.
+  This is implementation evidence, not a new model-quality gain. No GPU was
+  allocated for these changes and neither active milestone is marked complete.
 
 - 2026-09-15: Established the six fixed items from the agreed live-LLM gaps.
   All remain open; task 3 is active. Prior expert learning, retention, replay and

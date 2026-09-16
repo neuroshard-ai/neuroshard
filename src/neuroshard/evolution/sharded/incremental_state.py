@@ -119,10 +119,17 @@ def tensor_values(path, spec):
 
 
 def write(home, shard, optimizer, parent, frozen_sources, job, step, recipe,
-          mode='append', frozen_layers=None):
+          mode='append', frozen_layers=None, initial_expert=None, initial_objects=None):
     inherited = records(parent)
     frozen_layers = parent['config']['num_hidden_layers'] if frozen_layers is None else frozen_layers
     active = incremental.trainable_names(shard.config, frozen_layers)
+    if initial_expert is not None:
+        from .. import expert_checkpoint
+        expert_checkpoint.unpack(parent, initial_expert)
+        if (initial_objects is None or step != 0 or mode != 'tail-control' or initial_expert['step'] == 0
+                or initial_expert['boundaries'] != list(shard.boundaries)
+                or initial_expert['split'] != frozen_layers):
+            raise ValueError('Initialize only an identical trained expert with fresh Adam')
     pairs = shard.named_owned_parameters()
     owned_frozen = {name for name, _ in pairs if name in inherited}
     if set(frozen_sources) != owned_frozen:
@@ -131,6 +138,19 @@ def write(home, shard, optimizer, parent, frozen_sources, job, step, recipe,
     home.mkdir(parents=True, exist_ok=True)
     pending = home / ('.writing-' + uuid.uuid4().hex)
     pending.mkdir()
+
+    def stage(source, spec):
+        target = portable.tensor_path(pending, spec['sha256'])
+        if not target.exists():
+            try:
+                os.link(source, target)
+            except OSError as error:
+                if error.errno != errno.EXDEV:
+                    raise
+                shutil.copyfile(source, target)
+            if sha256(target) != spec['sha256']:
+                raise ValueError('Frozen object changed while staging checkpoint')
+
     tensors = {}
     for name, parameter in pairs:
         if parameter.requires_grad != (name in active):
@@ -141,18 +161,15 @@ def write(home, shard, optimizer, parent, frozen_sources, job, step, recipe,
             values = tensor_values(source, spec)
             if name not in active and (parameter.grad is not None or not torch.equal(parameter.detach().cpu(), values['weight'])):
                 raise ValueError('Frozen parameter changed during incremental learning')
-            if name in active and step == 0 and not torch.equal(parameter.detach().cpu(), values['weight']):
-                raise ValueError('Control must start from exactly the inherited weights')
-            target = portable.tensor_path(pending, spec['sha256'])
-            if not target.exists():
-                try:
-                    os.link(source, target)
-                except OSError as error:
-                    if error.errno != errno.EXDEV:
-                        raise
-                    shutil.copyfile(source, target)
-                if sha256(target) != spec['sha256']:
-                    raise ValueError('Frozen object changed while staging checkpoint')
+            if name in active and step == 0:
+                if initial_expert is not None:
+                    seed_spec = initial_expert['tensors'][name]
+                    seed_source = portable.tensor_path(initial_objects, seed_spec['sha256'])
+                    values = tensor_values(seed_source, seed_spec)
+                    stage(seed_source, seed_spec)
+                if not torch.equal(parameter.detach().cpu(), values['weight']):
+                    raise ValueError('Control must start from exactly the inherited weights')
+            stage(source, spec)
             del values
             if name not in active:
                 tensors[name] = spec
@@ -263,9 +280,16 @@ def initialize(shard, parent, objects, mode, frozen_layers):
     return frozen_sources
 
 
-def load(home, shard, optimizer, common, parent, job, recipe, restore_optimizer=True):
+def load(home, shard, optimizer, common, parent, job, recipe, restore_optimizer=True, *, initial_expert=None):
     import json
     validate(common, parent)
+    if initial_expert is not None:
+        from .. import expert_checkpoint
+        expert_checkpoint.unpack(parent, initial_expert)
+        if (common['step'] != 0 or initial_expert['step'] == 0
+                or initial_expert['boundaries'] != common['boundaries']
+                or initial_expert['split'] != common['frozen_layers']):
+            raise ValueError('Restore only the declared initial accepted expert weights')
     if (common['job'] != job or common['recipe'] != recipe
             or common['config'] != portable.configuration(shard.config)
             or common['boundaries'] != list(shard.boundaries)):
@@ -306,6 +330,9 @@ def load(home, shard, optimizer, common, parent, job, recipe, restore_optimizer=
                 source = portable.tensor_path(folder, inherited[name]['sha256'])
                 if name in active:
                     original = tensor_values(source, inherited[name])
+                    if initial_expert is not None:
+                        seed_spec = initial_expert['tensors'][name]
+                        original = tensor_values(portable.tensor_path(folder, seed_spec['sha256']), seed_spec)
                     if common['step'] == 0 and not torch.equal(values['weight'], original['weight']):
                         raise ValueError('Control must start from exactly the inherited weights')
                     del original

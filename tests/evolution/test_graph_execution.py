@@ -220,6 +220,31 @@ def worker(rank, home):
         altered['tokenizer']['files']['tokenizer.json'] = 'f'*64
         with pytest.raises(ValueError, match='Quality policy differs'):
             graph_quality.evaluate(policy, home/'quality-inputs', previous, altered, net)
+        comparison = copy.deepcopy(graph)
+        comparison['experts']['protocol'] = graph['experts']['directory']
+        comparison['descriptor']['experts'][1]['checkpoint'] = graph['experts']['directory']['checkpoint']
+        serving_graph.validate(comparison)
+        with pytest.raises(ValueError, match='replace a loaded expert'):
+            net.answer(QUESTIONS[2], 4, comparison)
+        resident = net.resident_parameters
+        net.install_comparison(comparison, objects=home/'objects')
+        original_forward = None
+        if rank == 4:
+            path = net.net.networks['protocol']
+            original_forward = path.forward
+            def checked_forward(*args, **kwargs):
+                assert path.shard is net.comparison_shard
+                return original_forward(*args, **kwargs)
+            path.forward = checked_forward
+            assert net.resident_parameters == resident + net.comparison_shard.resident_parameters
+        old = net.answer(QUESTIONS[2], 4, comparison)
+        assert old['graph'] == identity(comparison)
+        if original_forward is not None:
+            path.forward = original_forward
+            assert path.shard is net.shard
+        assert net.answer(QUESTIONS[2], 4) == results[2]
+        assert net.answer(QUESTIONS[2], 4, comparison) == old
+        net.verify_unchanged()
         features = None
         if rank == 0:
             embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']

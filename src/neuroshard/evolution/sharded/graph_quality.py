@@ -14,15 +14,18 @@ from ..schema import integer, root
 FORMAT = 'neuroshard-expert-graph-quality-v1'
 PROSPECTIVE = 'neuroshard-prospective-expert-graph-quality-v1'
 GENERAL = 'neuroshard-general-expert-graph-quality-v1'
+CONTINUAL = 'neuroshard-continual-expert-graph-quality-v1'
 ROLES = ('test', 'retained-test-knowledge', 'retained-test-skills', 'retained-test-conversation')
 POLICY_FIELDS = {'format', 'baseline_graph', 'candidate_graph', 'prepared', 'roles', 'generation', 'gates'}
 
 
 def validate_policy(policy):
-    prospective = isinstance(policy, dict) and policy.get('format') in (PROSPECTIVE, GENERAL)
+    prospective = isinstance(policy, dict) and policy.get('format') in (PROSPECTIVE, GENERAL, CONTINUAL)
     fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
+    if policy.get('format') == CONTINUAL:
+        fields = fields | {'retention_gates', 'retention_anchors'}
     serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
-    if policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL):
+    if policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, CONTINUAL):
         raise ValueError('Unsupported frozen graph quality policy')
     root(policy['baseline_graph'])
     root(policy['prepared'])
@@ -32,7 +35,16 @@ def validate_policy(policy):
     else:
         root(policy['candidate_graph'])
     serving_graph.fields(policy['roles'], ROLES, 'Require complete new and retained evaluation roles')
-    for spec in policy['roles'].values():
+    specs = list(policy['roles'].values())
+    if policy['format'] == CONTINUAL:
+        serving_graph.fields(policy['retention_gates'], {'max_lost_correct'}, 'Invalid measured retention gate')
+        integer(policy['retention_gates']['max_lost_correct'], 0, 0)
+        serving_graph.fields(policy['retention_anchors'], ROLES[1:], 'Pin the initial retention anchors')
+        specs.extend(policy['retention_anchors'].values())
+        for role in ROLES[2:]:
+            if policy['roles'][role] != policy['retention_anchors'][role]:
+                raise ValueError('Broader assistant retention anchors cannot change between cohorts')
+    for spec in specs:
         serving_graph.fields(spec, {'file', 'sha256', 'count', 'ids'}, 'Invalid quality role commitment')
         if not isinstance(spec['file'], str) or Path(spec['file']).name != spec['file']:
             raise ValueError('Quality inputs must be local committed filenames')
@@ -54,6 +66,23 @@ def validate_policy(policy):
     integer(gates['bootstrap_samples'], 100, 100000)
     integer(gates['bootstrap_seed'], 0, 2**32 - 1)
     return prospective
+
+
+def stages(policy):
+    """Fund every new and retained question pair that the auditor executes."""
+    roles = ROLES[:3] if policy['format'] == CONTINUAL else ('test',)
+    return sum(policy['roles'][role]['count'] for role in roles)
+
+
+def admission_rule(policy):
+    """Keep acceptance rules fixed while prior admitted evaluations accumulate."""
+    rule = {key: policy[key] for key in ('gates', 'generation')}
+    if policy['format'] == CONTINUAL:
+        rule.update(format=CONTINUAL, retention_gates=policy['retention_gates'],
+                    retained_roles=policy['retention_anchors'])
+    else:
+        rule['retained_roles'] = {key: value for key, value in policy['roles'].items() if key != 'test'}
+    return rule
 
 
 def rows(policy, inputs, role):
@@ -92,18 +121,54 @@ def retention(policy, inputs, baseline, candidate):
             'passed': all(row['unchanged'] for values in proofs.values() for row in values)}
 
 
+def measured_retention(policy, inputs, baseline, candidate, network):
+    """Allow changed expert weights only when previously correct answers survive.
+
+    The committed initial anchors and all earlier admitted evaluations are
+    enforced by data admission. Scores use the same declared short-answer
+    normalization as the new-data gate, with no learned judge or loss proxy.
+    """
+    executions, seen = {}, set()
+    for role in ROLES[1:3]:
+        examples = rows(policy, inputs, role)
+        cohort_questions.validate_rows(examples, release_scope=False)
+        maximum = policy['generation']['retained_knowledge' if role.endswith('knowledge') else 'retained_skills']
+        executions[role] = []
+        for row in examples:
+            if row['id'] in seen:
+                raise ValueError('Retained questions must have distinct identities')
+            seen.add(row['id'])
+            question = row['messages'][0]['content']
+            old = network.answer(question, maximum, baseline)
+            new = network.answer(question, maximum, candidate)
+            before = cohort_questions.correct(row, old['text'], release_scope=False)
+            after = cohort_questions.correct(row, new['text'], release_scope=False)
+            executions[role].append({'id': row['id'], 'before': old, 'after': new,
+                'before_correct': before, 'after_correct': after, 'lost_correct': before and not after})
+    # The unchanged parent forward path remains an additional check, rather
+    # than a substitute for generating the old expert and assistant answers.
+    structural = retention(policy, inputs, baseline, candidate)['roles'][ROLES[-1]]
+    lost = sum(row['lost_correct'] for values in executions.values() for row in values)
+    return {'format': CONTINUAL + '/retained-answers', 'roles': executions,
+        'conversation_computations': structural, 'lost_correct': lost,
+        'passed': lost <= policy['retention_gates']['max_lost_correct']
+                  and all(row['unchanged'] for row in structural)}
+
+
 def evaluate(policy, inputs, baseline, candidate, network, progress=None):
     prospective = validate_policy(policy)
     expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'],
                     candidate['experts'][expert_lifecycle.training_expert(policy['candidate_template'])]))
                 if prospective else policy['candidate_graph'])
-    if (policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL) or policy['baseline_graph'] != identity(baseline)
+    if (policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, CONTINUAL) or policy['baseline_graph'] != identity(baseline)
             or expected != identity(candidate) or set(policy['roles']) != set(ROLES)):
         raise ValueError('Quality policy differs from its complete graphs or input cohorts')
     # Missing or corrupted bytes must fail before numerical execution starts.
     examples = rows(policy, inputs, 'test')
-    cohort_questions.validate_rows(examples, release_scope=policy['format'] != GENERAL)
-    retained = retention(policy, inputs, baseline, candidate)
+    release_scope = policy['format'] not in (GENERAL, CONTINUAL)
+    cohort_questions.validate_rows(examples, release_scope=release_scope)
+    retained = (measured_retention(policy, inputs, baseline, candidate, network)
+                if policy['format'] == CONTINUAL else retention(policy, inputs, baseline, candidate))
     maximum = policy['generation']['new']
     before, after, executions = [], [], []
     for index, row in enumerate(examples):
@@ -116,8 +181,9 @@ def evaluate(policy, inputs, baseline, candidate, network, progress=None):
         if progress:
             progress(index + 1, len(examples))
     decision = cohort_questions.decision(examples, before, after, policy['gates'],
-                                         release_scope=policy['format'] != GENERAL)
-    decision['checks']['unchanged_retained_computations'] = retained['passed']
+                                         release_scope=release_scope)
+    check = 'retained_answers' if policy['format'] == CONTINUAL else 'unchanged_retained_computations'
+    decision['checks'][check] = retained['passed']
     decision['passed'] = all(decision['checks'].values())
     return {'format': FORMAT + '/result', 'policy': identity(policy), 'executions': executions,
             'decision': decision, 'retention': retained}
@@ -133,7 +199,7 @@ def quality_report(claim, policy, inputs, network, progress=None):
             or claim['executor_root'] != claim['graph']['executor_root']
             or claim['report']['policy_root'] != identity(policy)
             or claim['report']['prepared'] != policy['prepared']
-            or claim['stages'] != policy['roles']['test']['count']):
+            or claim['stages'] != stages(policy)):
         raise ValueError('Quality audit changed its graph, executor, policy or coverage')
     result = evaluate(policy, inputs, claim['baseline_graph'], claim['graph'], network, progress)
     expected = {'format': expert_lifecycle.FORMAT + '/quality', 'policy_root': identity(policy),
