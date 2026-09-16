@@ -55,6 +55,7 @@ retaining the existing generated-answer and retention requirements.
 | [Answer-balanced continuation](BALANCED_CONTINUATION.md) / [result](BALANCED_CONTINUATION_RESULTS.md) | Complete frozen gate passes: new answers 378→462, all 188 correct prior answers retained, three model shards. |
 | [Preserved interpretation](PRESERVED_INTERPRETER.md) | Original-model interpretation combined with a learned expert; distributed quality evaluation. |
 | [Second expert with interpretation](INTERPRETED_COHORT.md) | Separate learning owner, continued earlier serving and exact retention; execution requires the preceding final to pass. |
+| [Native expert lifecycle result](NATIVE_EXPERT_LIVE_RESULT.md) | 560 distinct audited updates, 560 NEURO, separate graph promotion, earned-token inference and complete public ledger replay; checklist item 3 complete. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 
