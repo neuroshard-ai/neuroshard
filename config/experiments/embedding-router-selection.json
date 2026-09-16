@@ -3539,9 +3539,9 @@
     "train.jsonl": "ad5ccabcea8f5387270157f03c25ada7e0a83f627bd5e3d1e97c12abf9bea02b"
   },
   "format": "neuroshard-embedding-router-study-v1/selection",
-  "plan": "a62b0271e0d30a0ab1a27e938d5b9fe08d4e45c5e21cdbeb49d8ff17b86d82d4",
+  "plan": "c39650d81c44d45c615b7bc39756f3611fc5e7125166512a9457584bacd67c07",
   "sources": {
-    "scripts/experiment_embedding_router.py": "d00e7a163d4345b26be4fe7d8d4e3ee683f21a8b447537df0697441f4994c2ed",
+    "scripts/experiment_embedding_router.py": "8daf09fdacae286c1ea8f7dec2fa936369ac0181ce34c4163b784f17d56ceaab",
     "src/neuroshard/evolution/expert_router.py": "a6bc0621567b3442b3b715e84b98da4767ac5f52d44529c02ecbd2e11cc7f15f",
     "src/neuroshard/evolution/sharded/router_features.py": "b27361bb0efddd6d6b73bb74429c7773a68e85d8a66e5b7e219a357195e00930"
   },
