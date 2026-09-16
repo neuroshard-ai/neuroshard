@@ -65,10 +65,18 @@ def prepare(rows, tokenizer, *, max_length=768, coreference_count=0):
         label = json.dumps({'questions': questions}, separators=(',', ':'))
         training = [{'role': 'system', 'content': INSTRUCTION}, *messages,
                     {'role': 'assistant', 'content': label}]
+        encoded = conversation(tokenizer, training, max_length)
+        prefix = tokenizer.apply_chat_template(training[:-1], tokenize=True, add_generation_prompt=True)
+        if encoded['input_ids'][:len(prefix)] != prefix:
+            raise ValueError('The complete planner target does not extend its exact inference prompt')
+        encoded['labels'][:len(prefix)] = [-100]*len(prefix)
+        encoded['targets'] = sum(token != -100 for token in encoded['labels'][1:])
+        if encoded['targets'] < 1:
+            raise ValueError('The final planner reply has no supervised tokens')
         binding = {'format': FORMAT, 'source': original['id'], 'variant': variant,
                    'messages': messages, 'questions': questions, 'instruction': INSTRUCTION}
         result.append({'id': identity(binding), **binding, 'groups': original['groups'],
-                       'kind': original['kind'], **conversation(tokenizer, training, max_length)})
+                       'kind': original['kind'], **encoded})
 
     for row in rows:
         messages = copy.deepcopy(row['messages'][:-1])

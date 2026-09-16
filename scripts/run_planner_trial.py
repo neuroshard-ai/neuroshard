@@ -25,11 +25,11 @@ def run(home, source):
     inputs = home/'inputs'
     read = lambda name: json.loads((inputs/name).read_bytes())
     plan, graph, profile, freeze = [read(name+'.json') for name in ('plan', 'graph', 'profile', 'freeze')]
-    if (plan['format'] != 'neuroshard-owned-planner-trial-v1'
+    if (plan['format'] != 'neuroshard-owned-planner-trial-v2'
             or identity(plan) != freeze['plan'] or identity(graph) != freeze['graph']
             or identity(graph) != plan['graph'] or plan['planner']['instruction'] != INSTRUCTION
             or sha256(source/'scripts/run_planner_trial.py') != freeze['driver']
-            or sha256(source/'config/experiments/owned-planner-trial.json') != sha256(inputs/'plan.json')):
+            or sha256(source/'config/experiments/owned-planner-trial-retry.json') != sha256(inputs/'plan.json')):
         raise ValueError('Freeze the complete planner prescription before execution')
 
     def rows(role):

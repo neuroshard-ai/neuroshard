@@ -51,3 +51,13 @@ and never adds epochs or selects another checkpoint after scoring. Five focused
 data, distributed training and conversation checks passed in 28.60 seconds
 before the prescription was frozen. This is an interface-learning experiment;
 the six-item live-LLM checklist remains unchanged.
+
+The initial allocation was stopped during bootstrap, before numerical execution:
+the shared conversation encoder labeled earlier assistant turns as well as the
+final plan. The [corrected prescription](../config/experiments/owned-planner-trial-retry.json)
+masks all preceding turns. A full check of all 1,352 prepared records reproduced
+the exact inference prefix and decoded only the intended final JSON plan from
+the supervised tokens. Four focused data checks passed in 0.05 seconds. The
+retry retains the original records, optimizer schedule, quality gates, combined
+$20 cap and absolute deadline of 2026-09-16 23:24:03 UTC. Its earlier frozen
+source and stopped allocation remain recorded.
