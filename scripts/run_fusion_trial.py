@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import time
+from functools import partial
 
 import torch
 import torch.distributed as dist
@@ -26,9 +27,13 @@ from neuroshard.evolution.sharded.graph_execution import GraphNetwork
 def run(home, source):
     read = lambda name: json.loads((home/'inputs'/name).read_bytes())
     plan, graph, profile, freeze = [read(name+'.json') for name in ('plan', 'graph', 'profile', 'freeze')]
+    method = plan.get('method', 'causal-fusion')
+    contracts = {'causal-fusion': 'causal-fusion-trial.json', 'probability-mixture': 'probability-mixture-trial.json'}
+    if method not in contracts:
+        raise ValueError('Unknown committed connection method')
     if (identity(plan) != freeze['plan'] or identity(graph) != freeze['graph']
             or sha256(source/'scripts/run_fusion_trial.py') != freeze['driver']
-            or sha256(source/'config/experiments/causal-fusion-trial.json') != sha256(home/'inputs/plan.json')):
+            or sha256(source/'config/experiments'/contracts[method]) != sha256(home/'inputs/plan.json')):
         raise ValueError('Commit the complete fusion prescription and driver before training')
     rows = {}
     for role, spec in plan['data'].items():
@@ -52,9 +57,16 @@ def run(home, source):
                 or graph['tokenizer']['root'] != plan['tokenizer']):
             raise ValueError('Trial source model inventory changed')
         device = next(net.shard.parameters()).device
+        model_class, trainer_class, loss_function = CrossShardFusion, Trainer, response_losses
+        if method == 'probability-mixture':
+            from neuroshard.evolution.sharded.mixture import ProbabilityMixture
+            from neuroshard.evolution.sharded.mixture_training import MixtureTrainer, response_losses as mixture_losses
+            model_class = ProbabilityMixture
+            trainer_class = partial(MixtureTrainer, source_head=net.shard)
+            loss_function = partial(mixture_losses, source_head=net.shard)
         torch.manual_seed(plan['initialization_seed'])
         width = graph['parent']['config']['hidden_size']
-        initial = CrossShardFusion(width, {name: width for name in ['parent', *graph['experts']]},
+        initial = model_class(width, {name: width for name in ['parent', *graph['experts']]},
                                    **plan['connection']).to(device)
         save(output/'ready.json', {'rank': rank, 'plan': identity(plan), 'graph': identity(graph),
             'runtime': net.runtime, 'fusion_parameters': sum(p.numel() for p in initial.parameters()),
@@ -76,7 +88,7 @@ def run(home, source):
         models, roots = {}, {}
         for arm in ('fusion', 'ablation'):
             model = copy.deepcopy(initial)
-            trainer = (Trainer(model, net.preserved.shard, rows['train'], banks['train'], home/'features-train',
+            trainer = (trainer_class(model, net.preserved.shard, rows['train'], banks['train'], home/'features-train',
                                plan['training'], source_ablation=arm == 'ablation') if rank == 0 else None)
             log = []
             for step in range(plan['training']['steps']):
@@ -97,7 +109,7 @@ def run(home, source):
                 terminal = trainer.save(output/('checkpoints-'+arm))
                 previous = json.loads((output/('checkpoints-'+arm)/
                     ('step-'+str(plan['training']['steps']-plan['replay_last_steps'])+'.json')).read_bytes())
-                replay = Trainer(copy.deepcopy(initial), net.preserved.shard, rows['train'], banks['train'],
+                replay = trainer_class(copy.deepcopy(initial), net.preserved.shard, rows['train'], banks['train'],
                                  home/'features-train', plan['training'], source_ablation=arm == 'ablation')
                 replay.restore(output/('checkpoints-'+arm), previous)
             for _ in range(plan['replay_last_steps']):
@@ -120,7 +132,7 @@ def run(home, source):
             banks[role], resources = produce(net, rows[role], plan['batches'][role], home/('features-'+role),
                 max_length=plan['max_length'], max_seconds=plan['feature_max_seconds'])
             save(output/('features-'+role+'.json'), {'bank': banks[role], 'resources': resources})
-            loss = (response_losses(models, net.preserved.shard, rows[role], banks[role], home/('features-'+role),
+            loss = (loss_function(models, net.preserved.shard, rows[role], banks[role], home/('features-'+role),
                                     plan['training']) if rank == 0 else None)
             loss = net.all_owners.exchange(loss)[0]
             save(output/('losses-'+role+'.json'), loss)
@@ -134,7 +146,7 @@ def run(home, source):
                 for arm in ('hub', 'fusion', 'ablation'):
                     at, before, observed = time.monotonic(), net.all_owners.sent_tensor_bytes, {}
                     if arm == 'hub':
-                        ids = generate_branch_cached(net.preserved, tokens, plan['max_new_tokens'], False) if rank < 3 else None
+                        ids = generate_branch_cached(net.preserved, tokens, plan['max_new_tokens'], False, observed) if rank < 3 else None
                         ids = net.all_owners.exchange(ids)[0]
                     else:
                         ids = generate_fused(net, models[arm], tokens, plan['max_new_tokens'], observed,
@@ -143,7 +155,9 @@ def run(home, source):
                     responses[arm] = {'text': text, 'ids': ids, 'correct': correct(text, row)}
                     save(output/('generation-'+role+'-'+str(number)+'-'+arm+'.json'),
                          {'id': row['id'], 'response': responses[arm], 'observation': observed,
-                          'seconds': time.monotonic()-at, 'sent_tensor_bytes': net.all_owners.sent_tensor_bytes-before})
+                          'seconds': time.monotonic()-at,
+                          'sent_tensor_bytes': observed.get('sent_tensor_bytes', 0) if arm == 'hub' else
+                                               net.all_owners.sent_tensor_bytes-before})
                 answers[row['id']] = responses
                 save(output/('answers-'+role+'.json'), answers)
                 save(output/'progress.json', {'phase': 'generation', 'role': role, 'documents': number+1,

@@ -16,6 +16,8 @@ from neuroshard.evolution.sharded.graph_execution import GraphNetwork
 from neuroshard.evolution.sharded.fusion_features import produce
 from neuroshard.evolution.sharded.fusion_training import Trainer
 from neuroshard.evolution.sharded.fusion_trial import synchronize, response_losses
+from neuroshard.evolution.sharded.mixture import ProbabilityMixture
+from neuroshard.evolution.sharded.mixture_training import MixtureTrainer, response_losses as mixture_losses
 from neuroshard.evolution.reference_data import identity, sha256
 from test_graph_execution import prepare_graph, SOURCE
 
@@ -113,6 +115,30 @@ def owner(rank, folder):
             assert all(set(value) == {'hub', 'fusion', 'ablation'} for value in values.values())
             assert all(all(loss > 0 for loss in value.values()) for value in values.values())
         assert wire_exchange(net) == ['trained']*5
+        torch.manual_seed(780)
+        mixture = ProbabilityMixture(width, {name: width for name in ['parent', *graph['experts']]},
+                                     rank=8, max_context=64).eval()
+        assert generate_fused(net, mixture, tokens, 4) == baseline
+        assert generate_fused(net, mixture, tokens, 4, source_ablation=True) == baseline
+        if rank == 0:
+            initial_mixture = copy.deepcopy(mixture)
+            training = MixtureTrainer(mixture, net.preserved.shard, rows, bank, home/'fusion-bank', recipe,
+                                      source_head=net.shard)
+            training.advance()
+            snapshot = training.save(home/'mixture-checkpoints')
+            second = training.advance()
+            terminal = training.save(home/'mixture-checkpoints')
+            replay = MixtureTrainer(initial_mixture, net.preserved.shard, rows, bank, home/'fusion-bank', recipe,
+                                    source_head=net.shard)
+            replay.restore(home/'mixture-checkpoints', snapshot)
+            assert replay.advance() == second
+            assert replay.save(home/'mixture-replayed') == terminal
+            values = mixture_losses({'fusion': mixture, 'ablation': copy.deepcopy(mixture)}, net.preserved.shard,
+                                     rows, bank, home/'fusion-bank', recipe, source_head=net.shard)
+            assert set(values) == {row['id'] for row in rows}
+        synchronize(net, mixture)
+        result = generate_fused(net, mixture, tokens, 4)
+        assert generate_fused(net, mixture, tokens, 4) == result
         (home/('fused-owner-'+str(rank)+'.json')).write_text(json.dumps(observation))
     finally:
         dist.destroy_process_group()

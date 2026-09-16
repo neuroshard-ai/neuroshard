@@ -3,8 +3,9 @@
 No generated subquestions, answer lookup, task labels or specialist text parsing
 occur in this executor. Every token runs the two frozen backbones and all expert
 tails. The common trained backbone prefix is evaluated once and shared by tails.
-Only projected expert activations reach the fusion receiver. This research path
-requires measured learning and a separate native admission before public use.
+Hidden fusion sends projected expert histories; probability mixing sends only
+each source's last hidden state to its frozen native output head. These research
+paths require measured learning and separate native admission before public use.
 """
 import hashlib
 import time
@@ -15,6 +16,7 @@ from ..reference import autocast
 from ..reference_data import identity
 from .cached_inference import CachedPartition
 from .fusion import FusionCache
+from .mixture import ProbabilityMixture
 
 
 def commitment(fusion):
@@ -31,6 +33,7 @@ def commitment(fusion):
 def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, source_ablation=False):
     """Execute an identical committed request on every graph owner."""
     graph, wire, rank = net.graph, net.all_owners, net.rank
+    probability_mixture = isinstance(fusion, ProbabilityMixture)
     width = graph['parent']['config']['hidden_size']
     sources = {'parent': 2, **{row['id']: row['owner'] for row in graph['descriptor']['rules']}}
     if (type(source_ablation) is not bool or set(fusion.source_widths) != set(sources) or fusion.hub_width != width
@@ -52,7 +55,7 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
     versions = tuple(parameter._version for parameter in fusion.parameters())
     trained = CachedPartition(net.shard)
     preserved = CachedPartition(net.preserved.shard) if rank < 3 else None
-    cache = FusionCache(fusion) if rank == 0 else None
+    cache = FusionCache(fusion) if rank == 0 and not probability_mixture else None
     captured, hook = {}, None
     if rank == 2:
         layer = net.shard.layers[str(graph['descriptor']['split']-1)]
@@ -75,12 +78,15 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
                 if rank < 2:
                     wire.send(hidden, rank+1)
                 else:
-                    for value in fusion.project('parent', hidden):
-                        wire.send(value, 0)
+                    if probability_mixture:
+                        wire.send(hidden[:, -1:], 0)
+                    else:
+                        for value in fusion.project('parent', hidden):
+                            wire.send(value, 0)
                     for name, owner in sources.items():
                         if name != 'parent':
                             wire.send(captured['prefix'], owner)
-                            if source_ablation:
+                            if source_ablation and not probability_mixture:
                                 wire.send(hidden, owner)
                     captured.clear()
             else:
@@ -88,13 +94,17 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
                 incoming = wire.receive(2, shape, device)
                 with autocast(device):
                     hidden = trained.advance(incoming, trained.length)
-                if source_ablation:
+                if source_ablation and not probability_mixture:
                     hidden = wire.receive(2, shape, device)
-                for value in fusion.project(name, hidden):
-                    wire.send(value, 0)
+                if probability_mixture:
+                    wire.send(hidden[:, -1:], 0)
+                else:
+                    for value in fusion.project(name, hidden):
+                        wire.send(value, 0)
             if rank == 0:
                 for name, owner in sources.items():
-                    projected[name] = tuple(wire.receive(owner, (1, count, fusion.rank), device) for _ in range(2))
+                    projected[name] = (wire.receive(owner, (1, 1, width), device) if probability_mixture else
+                        tuple(wire.receive(owner, (1, count, fusion.rank), device) for _ in range(2)))
             # The preserved general backbone receives the same global tokens.
             if rank < 3:
                 incoming = (torch.tensor([current], dtype=torch.long, device=device) if rank == 0
@@ -105,9 +115,14 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
             token = None
             if rank == 0:
                 hub = wire.receive(2, (1, 1, width), device)
-                merged = cache.advance(hub, projected, cache.length)
-                with autocast(device):
-                    logits = net.preserved.shard.logits(merged).float()
+                if probability_mixture:
+                    from .mixture_training import native_logits
+                    logits = fusion.log_probs(hub, native_logits(net.preserved.shard, net.shard,
+                        {'hub': hub, **projected}, fusion.source_widths, source_ablation))
+                else:
+                    merged = cache.advance(hub, projected, cache.length)
+                    with autocast(device):
+                        logits = net.preserved.shard.logits(merged).float()
                 if not bool(torch.isfinite(logits).all()):
                     raise ValueError('Nonfinite fused model logits')
                 token = int(logits.argmax(-1)[0, 0])
@@ -126,6 +141,7 @@ def generate_fused(net, fusion, token_ids, max_tokens, observation=None, *, sour
         if observation is not None:
             observation.update({'graph': identity(graph), 'fusion': root, 'sources': sources,
                 'source_ablation': source_ablation,
+                'method': fusion.descriptor()['format'],
                 'seconds': time.monotonic()-started, 'first_token_seconds': first,
                 'sent_tensor_bytes': wire.sent_tensor_bytes-before,
                 'fusion_cache_bytes': cache.resident_bytes() if cache else 0,
