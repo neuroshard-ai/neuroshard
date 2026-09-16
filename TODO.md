@@ -176,9 +176,18 @@ under the same admission rules.
   Allowance: five GPUs, 28 vCPUs, six hours, $75 planning cap, automatic shutdown.
   Numerical success and completion of task 3 are not yet claimed.
 
-- 2026-09-16 01:50 UTC: Launched the frozen five-GPU integration with a
-  07:50 UTC stop deadline. The controller installs pinned dependencies, checks
-  public objects, executes the native lifecycle and preserves evidence before
-  retiring resources. Results are pending. Implementation is isolated on
-  `research/native-expert-graphs` in [draft PR #50](https://github.com/neuroshard-ai/neuroshard/pull/50);
-  the existing public-chain source is unchanged.
+- 2026-09-16: The complete integration stopped during serving startup, before
+  generation or training. The runtime guard caught a different CuDNN library
+  selected by the background launcher. After correcting that path, the smaller
+  owner exhausted the remaining startup interval under file-cache pressure.
+  All five GPUs and volumes were retired; estimated compute was $1.85. The
+  [recorded failure](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/config/experiments/native-expert-live-results.json) remains
+  visible. A [same-target retry](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/config/experiments/native-expert-live-retry.json)
+  carries the original library path and releases clean unowned cache before
+  serving. Its deadline and combined $75 cap include the first attempt.
+
+- 2026-09-16 02:13 UTC: The corrected five-GPU integration is running under
+  the original 07:50 UTC stop deadline and combined $75 cap. The first attempt
+  retired every GPU and attached volume. Implementation remains isolated in
+  [draft PR #50](https://github.com/neuroshard-ai/neuroshard/pull/50), preserving
+  the source commitments of the existing public chain.
