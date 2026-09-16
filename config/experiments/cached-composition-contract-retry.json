@@ -12,5 +12,19 @@
   "same_questions_and_gates": true,
   "deadline": "2026-09-16T16:38:14.136381+00:00",
   "combined_planning_cap_usd": 25,
-  "retirement_required_before_retry": true
+  "retirement_required_before_retry": true,
+  "previous_resources": {
+    "terminated": [
+      "i-01fdf6dad17a25494",
+      "i-04cb4a67d06f4d7d0",
+      "i-09913295e58977a3d",
+      "i-0991c4d5e7c0eb218",
+      "i-0c26929e937bf51cb"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 0.7570128626466667,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  }
 }

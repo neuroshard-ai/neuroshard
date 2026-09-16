@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 from types import SimpleNamespace
 
+import pytest
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -15,6 +16,9 @@ from neuroshard.evolution.sharded.graph_execution import GraphNetwork
 from neuroshard.evolution.sharded.planned_graph import PlannedGraphNetwork, configuration
 from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
 from neuroshard.evolution.sharded.portable import tensor_path
+from neuroshard.evolution import expert_router
+from neuroshard.evolution.reference_data import identity, save
+from neuroshard.evolution.sharded import learned_graph
 from test_graph_execution import prepare_graph, SOURCE
 
 
@@ -98,8 +102,9 @@ def worker(rank, folder):
         assert prepared_messages[-1]['content'] == 'word3\n\nInterpret.'
         prompt = planned.expert_question('protocol', 'word3')
         assert prompt == 'word7 word3 word8'
-        assert planned.answer_messages('parent', 'word3') == [
+        assert planned.answer_messages('interpreter', 'word3') == [
             {'role': 'system', 'content': 'Answer briefly.'}, {'role': 'user', 'content': 'word3'}]
+        assert planned.answer_messages('parent', 'word3') == [{'role': 'user', 'content': 'word3'}]
         assert planned.answer_messages('protocol', 'word3') == [{'role': 'user', 'content': prompt}]
         planned.call('protocol', [{'role': 'user', 'content': prompt}], 4, 'answer')
         assert planned.trace[-1]['prompt_ids'] == net.tokenizer.apply_chat_template(
@@ -113,6 +118,24 @@ def worker(rank, folder):
         assert [row['purpose'] for row in response['outputs']] == ['planning']
         assert planned.replay(response) == (True, response)
         assert not planned.replay({**response, 'text': 'forged answer'})[0]
+        mapped = PlannedGraphNetwork(net, configuration(graph, read('mapped.json'), planner, SOURCE),
+                                     source_home=SOURCE, features=features)
+        for question, expected_route, model in [('word5', 'parent', 'interpreter'),
+                                                 ('word6', 'structured', 'parent')]:
+            decision = mapped.route(question)
+            assert decision['decision']['route'] == expected_route
+            actual_model = mapped.model_for_route(decision['decision']['route'])
+            assert actual_model == model
+            mapped.call(actual_model, [{'role': 'user', 'content': question}], 4, 'answer')
+            assert mapped.trace[-1]['model'] == model and mapped.trace[-1]['owners'] == [0, 1, 2]
+            selected = net.preserved if model == 'interpreter' else next(iter(net.net.networks.values()))
+            original = selected.generate(question, 4, False) if rank < 3 else None
+            observed = net.all_owners.exchange(original)
+            assert mapped.trace[-1]['token_ids'] == observed[0]['ids']
+        with pytest.raises(ValueError, match='Unknown learned route'):
+            mapped.model_for_route('uninstalled')
+        with pytest.raises(ValueError, match='conversation executor'):
+            mapped.router.answer('word6', 4)
         (home / f'cached-rank-{rank}.json').write_text(json.dumps(records))
     finally:
         dist.destroy_process_group()
@@ -120,7 +143,24 @@ def worker(rank, folder):
 
 def test_cached_graph_preserves_selected_paths_and_excludes_unowned_layers(tmp_path):
     torch.set_num_threads(1)
-    prepare_graph(tmp_path)
+    graph, _ = prepare_graph(tmp_path)
+    from transformers import PreTrainedTokenizerFast
+    tokenizer = PreTrainedTokenizerFast.from_pretrained(tmp_path/'seed', local_files_only=True)
+    digest = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+    features = EmbeddingFeatures(tensor_path(tmp_path/'interpreter', digest), digest,
+                                 tokenizer, graph['tokenizer']['root'])
+    observations = [{'id': identity([name, index]), 'route': name, 'features': features(question)}
+                    for name, question in [('directory', 'word3'), ('protocol', 'word4'),
+                                           ('parent', 'word5'), ('structured', 'word6')]
+                    for index in range(2)]
+    router = expert_router.fit(observations, embedding_root=features.root,
+                              tokenizer_root=graph['tokenizer']['root'], prototypes_per_route=1)
+    router = expert_router.fit_classifier(observations, router)
+    routes = {'parent': 'interpreter', 'structured': 'parent', 'directory': 'directory', 'protocol': 'protocol'}
+    save(tmp_path/'mapped.json', learned_graph.configuration(graph, router, features.profile, SOURCE, routes))
+    with pytest.raises(ValueError, match='Map distinct learned routes'):
+        learned_graph.configuration(graph, router, features.profile, SOURCE,
+                                    {**routes, 'structured': 'interpreter'})
     mp.spawn(worker, args=(str(tmp_path),), nprocs=5, join=True)
     rows = [json.loads((tmp_path / f'cached-rank-{rank}.json').read_bytes()) for rank in range(5)]
     assert {row['model'] for row in rows[3]} == {'directory'}

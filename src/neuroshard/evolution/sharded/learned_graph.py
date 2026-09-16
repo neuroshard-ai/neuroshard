@@ -11,6 +11,7 @@ from .. import expert_router, serving_graph
 from ..reference_data import identity, sha256
 
 FORMAT = 'neuroshard-learned-graph-service-v1'
+MAPPED = 'neuroshard-mapped-graph-service-v1'
 SOURCES = ('src/neuroshard/evolution/expert_router.py',
            'src/neuroshard/evolution/serving_graph.py',
            'src/neuroshard/evolution/sharded/router_features.py',
@@ -19,11 +20,20 @@ SOURCES = ('src/neuroshard/evolution/expert_router.py',
            'scripts/run_native_expert_service.py')
 
 
-def configuration(graph, model, feature_profile, source_home):
+def configuration(graph, model, feature_profile, source_home, route_models=None):
     expert_router.validate(model)
-    return {'format': FORMAT, 'graph': identity(graph), 'router': model,
+    result = {'format': FORMAT, 'graph': identity(graph), 'router': model,
             'feature_profile': feature_profile,
             'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
+    if route_models is not None:
+        if (not isinstance(route_models, dict) or set(route_models) != set(model['prototypes'])
+                or any(not isinstance(value, str) for value in route_models.values())
+                or set(route_models.values()) != {'parent', 'interpreter', *graph['experts']}
+                or len(set(route_models.values())) != len(route_models)
+                or route_models.get(model['fallback']) != 'interpreter'):
+            raise ValueError('Map distinct learned routes to every installed model with an assistant fallback')
+        result.update(format=MAPPED, route_models=copy.deepcopy(route_models))
+    return result
 
 
 class Decision:
@@ -38,13 +48,18 @@ class Decision:
 
 class LearnedGraphNetwork:
     def __init__(self, network, config, *, source_home, features=None):
-        serving_graph.fields(config, {'format', 'graph', 'router', 'feature_profile', 'sources'},
+        mapped = config.get('format') == MAPPED
+        fields = {'format', 'graph', 'router', 'feature_profile', 'sources'}
+        if mapped:
+            fields.add('route_models')
+        serving_graph.fields(config, fields,
                              'Invalid learned serving configuration')
         model = expert_router.validate(config['router'])
         embedding = network.graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
-        if (config['format'] != FORMAT or config['graph'] != identity(network.graph)
-                or model['fallback'] != 'parent'
-                or set(model['prototypes']) != {'parent', *network.graph['experts']}
+        if (config != configuration(network.graph, model, config['feature_profile'], source_home,
+                                     config.get('route_models'))
+                or (not mapped and (model['fallback'] != 'parent'
+                    or set(model['prototypes']) != {'parent', *network.graph['experts']}))
                 or model['tokenizer_root'] != network.graph['tokenizer']['root']
                 or model['embedding_root'] != identity(config['feature_profile'])
                 or config['feature_profile'].get('embedding_sha256') != embedding['sha256']
@@ -61,6 +76,8 @@ class LearnedGraphNetwork:
             raise ValueError('Owners installed different learned services')
 
     def answer(self, question, max_tokens):
+        if self.config['format'] == MAPPED:
+            raise ValueError('Mapped model routes require the committed conversation executor')
         net = self.network
         # Validate the raw request before any collective or neural operation.
         serving_graph.selected_calls(net.graph, None, question, max_tokens)

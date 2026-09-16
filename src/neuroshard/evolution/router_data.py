@@ -34,7 +34,7 @@ def raw_questions(row, route):
                             if message['role'] == 'user')
     if not original.strip():
         raise ValueError('A routing example needs user text')
-    if route == 'parent':
+    if route in ('parent', 'structured'):
         return [original]
     if route == 'directory':
         task = row['task']

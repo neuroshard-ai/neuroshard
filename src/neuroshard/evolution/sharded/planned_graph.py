@@ -122,9 +122,15 @@ class PlannedGraphNetwork:
         prompt = self.config['expert_prompts'].get(model, {'prefix': '', 'suffix': ''})
         return prompt['prefix'] + question + prompt['suffix']
 
+    def model_for_route(self, selected):
+        if selected not in self.config['learned']['router']['prototypes']:
+            raise ValueError('Unknown learned route')
+        return self.config['learned'].get('route_models', {}).get(
+            selected, 'interpreter' if selected == 'parent' else selected)
+
     def answer_messages(self, selected, question):
         messages = []
-        if selected == 'parent' and self.config['general_instruction']:
+        if selected == 'interpreter' and self.config['general_instruction']:
             messages.append({'role': 'system', 'content': self.config['general_instruction']})
         messages.append({'role': 'user', 'content': self.expert_question(selected, question)})
         return messages
@@ -133,14 +139,16 @@ class PlannedGraphNetwork:
         net = self.net
         ids = net.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
         net.check_context(ids, maximum)
-        expert = model != 'interpreter'
+        expert = model not in ('parent', 'interpreter')
         active = [0, 1, 2]
         if expert:
             owner = next(rule['owner'] for rule in net.graph['descriptor']['rules'] if rule['id'] == model)
             active.append(owner)
             network = net.net.networks.get(model)
-        else:
+        elif model == 'interpreter':
             network = net.preserved
+        else:
+            network = next(iter(net.net.networks.values())) if net.rank < 3 else None
         tokens = generate_branch_cached(network, ids, maximum, expert) if network is not None else None
         outputs = net.all_owners.exchange(tokens)
         if (outputs[0] is None or any(outputs[rank] != outputs[0] for rank in active)
@@ -183,8 +191,9 @@ class PlannedGraphNetwork:
             choice = self.route(question)
             routing.append(choice)
             selected = choice['decision']['route']
+            model = self.model_for_route(selected)
             prompt = question
-            if selected == 'directory':
+            if model == 'directory':
                 policy = self.net.graph['descriptor']['interpretation']
                 prefix = example_messages(policy['instruction'], policy['examples'])
                 parsed_text = self.call('interpreter', prefix + [{'role': 'user',
@@ -195,8 +204,7 @@ class PlannedGraphNetwork:
                     error = 'invalid_directory_arguments'
                     break
                 prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
-            answer = self.call('interpreter' if selected == 'parent' else selected,
-                self.answer_messages(selected, prompt), max_tokens, 'answer')
+            answer = self.call(model, self.answer_messages(model, prompt), max_tokens, 'answer')
             answers.append({'question': question, 'expert': selected, 'text': answer})
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else

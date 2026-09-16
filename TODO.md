@@ -262,3 +262,12 @@ under the same admission rules.
   combines this router with committed expert prompt contracts and a bounded
   planner reminder, under the original GPU deadline and combined $25 cap.
   These are development routing results; broad response learning remains open.
+
+- 2026-09-16: Added explicit learned-route mappings for all four installed
+  numerical paths. General conversation and the earlier trained structured-data
+  model are distinct choices; an assistant fallback cannot silently replace
+  that learned skill path. Eight focused graph checks passed in 61.71 seconds,
+  including actual five-process execution of both backbones. A four-class router
+  fit is frozen on the same data split. The separate three-class conversation
+  regression's first allocation stopped at an Ubuntu package lock before neural
+  execution; its $0.76 estimated compute and complete retirement are recorded.

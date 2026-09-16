@@ -50,7 +50,10 @@ def user_context(messages):
 
 def choose(inputs, plan):
     training, evaluation, files = [], [], {}
-    for filename, route in ROLES.items():
+    routes = plan.get('routes', ROLES)
+    if not isinstance(routes, dict) or set(routes) != set(ROLES):
+        raise ValueError('Keep the declared source inventory while selecting model routes')
+    for filename, route in routes.items():
         path = inputs / filename
         files[filename] = sha256(path)
         rows = read_rows(path)
@@ -167,12 +170,16 @@ def run(args):
     for group in totals.values():
         group['accuracy'] = group['correct'] / group['count']
     parent = totals['original/parent']
+    names = sorted(set(plan.get('routes', ROLES).values()))
     checks = {
         'original_routes': all(totals['original/' + name]['accuracy'] >=
-                              plan['gate']['original_accuracy_per_route_at_least'] for name in ('parent', 'directory', 'protocol')),
+                              plan['gate']['original_accuracy_per_route_at_least'] for name in names),
         'changed_phrases': all(totals['changed_phrase/' + name]['accuracy'] >=
                               plan['gate']['changed_phrase_accuracy_per_expert_at_least'] for name in ('directory', 'protocol')),
         'retained_parent': parent['count'] - parent['correct'] <= plan['gate']['parent_route_changes_at_most']}
+    if 'structured' in names:
+        structured = totals['original/structured']
+        checks['retained_structured'] = structured['count'] == structured['correct']
     if plan.get('raw_questions'):
         checks['raw_questions'] = all(totals['raw_question/' + name]['accuracy'] >=
             plan['gate']['raw_question_accuracy_per_expert_at_least'] for name in ('directory', 'protocol'))
