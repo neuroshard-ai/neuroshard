@@ -1,5 +1,19 @@
 # Native expert graph serving
 
+The first full GPU integration attempt stopped during startup; its
+[failure record](../config/experiments/native-expert-live-results.json) is public.
+The [corrected run](../config/experiments/native-expert-live-retry.json) retains
+the original model, job, numerical profile, native genesis and acceptance rules.
+Its result is pending.
+
+The runtime fingerprint includes the CUDA libraries actually loaded by the
+process. The tested AMI's login shell selects a different CuDNN library from a
+background service with no `LD_LIBRARY_PATH`. Deployment must preserve the
+original library selection and pass the fingerprint check before allocating
+model weights. Installing the Python requirements alone does not establish that
+the loaded runtime is identical. The original profile remains the acceptance
+criterion; a launcher mismatch must not be accepted by changing that profile.
+
 The candidate implementation connects the measured parent, preserved interpreter
 and learned experts to a separate native quality decision and escrowed inference.
 It supports the published
