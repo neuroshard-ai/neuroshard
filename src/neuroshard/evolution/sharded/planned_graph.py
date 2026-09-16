@@ -5,6 +5,7 @@ the admitted native graph implicitly. Every planner, argument and answer token
 is included in the replayable response, including an unsuccessful plan.
 """
 import copy
+from contextlib import nullcontext
 import json
 from pathlib import Path
 
@@ -79,7 +80,8 @@ def planner_prefix(planner):
     return prefix
 
 
-def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None):
+def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
+                  planner_weights=None, composer=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -98,25 +100,60 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     if route_scopes is not None:
         expert_scope.validate(route_scopes, learned['router']['prototypes'], learned['router']['fallback'])
         result['route_scopes'] = copy.deepcopy(route_scopes)
+    if planner_weights is not None:
+        from .planner_training import FORMAT as TRAINING_FORMAT
+        binding = planner_weights['binding']
+        if (binding.get('format') != TRAINING_FORMAT
+                or binding.get('source') != identity(graph['interpreter_assets']['partitions']['2'])):
+            raise ValueError('Bind planner weights to the preserved final owner')
+        result['planner_weights'] = copy.deepcopy(planner_weights)
+        for name in ('src/neuroshard/evolution/sharded/planner_training.py',
+                     'src/neuroshard/evolution/sharded/expert_interface.py',
+                     'src/neuroshard/evolution/sharded/interface_training.py'):
+            result['sources'][name] = sha256(Path(source_home)/name)
+    if composer is not None:
+        serving_graph.fields(composer, {'instruction', 'max_tokens'}, 'Invalid answer composition policy')
+        integer(composer['max_tokens'], 1, 256)
+        if not isinstance(composer['instruction'], str) or not 1 <= len(composer['instruction'].encode()) <= 2048:
+            raise ValueError('Bound the answer composition instruction')
+        result['composer'] = copy.deepcopy(composer)
     return result
 
 
 class PlannedGraphNetwork:
-    def __init__(self, network, config, *, source_home, features=None):
+    def __init__(self, network, config, *, source_home, features=None, planner_weights_home=None):
         fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
                   'expert_prompts', 'general_instruction'}
         if 'route_scopes' in config:
             fields.add('route_scopes')
+        if 'planner_weights' in config:
+            fields.add('planner_weights')
+        if 'composer' in config:
+            fields.add('composer')
         serving_graph.fields(config, fields,
                              'Invalid planned service configuration')
         if config != configuration(network.graph, config['learned'], config['planner'], source_home,
-                                   config['expert_prompts'], config['general_instruction'], config.get('route_scopes')):
+                                   config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
+                                   config.get('planner_weights'), config.get('composer')):
             raise ValueError('Planned service changed its models, sources or execution rules')
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
         self.root, self.prefix = identity(config), planner_prefix(config['planner'])
         if network.all_owners.exchange(self.root) != [self.root] * network.world_size:
             raise ValueError('Owners installed different planned services')
+        self.planner_adapter = None
+        if 'planner_weights' in config:
+            from .expert_interface import ExpertInterface
+            from .interface_training import initialize_weights
+            from .planner_training import source, installed
+            checkpoint = config['planner_weights']
+            if network.rank == 2:
+                self.planner_adapter = ExpertInterface(network.preserved.shard, source(network),
+                    checkpoint['binding']['layout']['rank']).eval()
+                initialize_weights(self.planner_adapter, planner_weights_home, checkpoint)
+            with installed(network, self.planner_adapter) as adapter_root:
+                if adapter_root != checkpoint['fusion']:
+                    raise ValueError('The installed planner differs from its service commitment')
         self.trace = []
 
     def planning_messages(self, messages):
@@ -166,13 +203,22 @@ class PlannedGraphNetwork:
             network = net.preserved
         else:
             network = next(iter(net.net.networks.values())) if net.rank < 3 else None
-        tokens = generate_branch_cached(network, ids, maximum, expert) if network is not None else None
+        planner_root, scope = None, nullcontext()
+        if purpose == 'planning' and 'planner_weights' in self.config:
+            from .planner_training import installed
+            scope = installed(net, self.planner_adapter)
+        with scope as planner_root:
+            if planner_root is not None and planner_root != self.config['planner_weights']['fusion']:
+                raise ValueError('Planner weights changed after service installation')
+            tokens = generate_branch_cached(network, ids, maximum, expert) if network is not None else None
         outputs = net.all_owners.exchange(tokens)
         if (outputs[0] is None or any(outputs[rank] != outputs[0] for rank in active)
                 or any(outputs[rank] is not None for rank in range(net.world_size) if rank not in active)):
             raise ValueError('The selected owners disagree on their neural output')
         self.trace.append({'model': model, 'purpose': purpose, 'owners': active,
                            'prompt_ids': ids, 'token_ids': outputs[0]})
+        if planner_root is not None:
+            self.trace[-1]['planner_adapter'] = planner_root
         return net.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     def route(self, question):
@@ -193,6 +239,14 @@ class PlannedGraphNetwork:
                    model['fallback']) if 'route_scopes' in self.config else None)
         decision = expert_router.select(model, packet['features'], eligible=allowed)
         return {'question': question, 'features': packet['features'], 'decision': decision}
+
+    def composition_messages(self, messages, answers):
+        """Give the answerer actual owned results and the whole conversation."""
+        result = copy.deepcopy(conversation(messages))
+        payload = [{'question': row['question'], 'source': row['expert'], 'response': row['text']}
+                   for row in answers]
+        result[-1]['content'] += '\n\nSpecialist responses:\n'+json.dumps(payload, sort_keys=True)
+        return [{'role': 'system', 'content': self.config['composer']['instruction']}, *result]
 
     def answer(self, messages, max_tokens):
         conversation(messages)
@@ -233,6 +287,10 @@ class PlannedGraphNetwork:
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else
                 '\n\n'.join(row['question'] + '\n' + row['text'] for row in answers)) if error is None else ''
+        if (error is None and 'composer' in self.config
+                and (len(answers) > 1 or any(row['expert'] in self.net.graph['experts'] for row in answers))):
+            text = self.call('interpreter', self.composition_messages(messages, answers),
+                min(max_tokens, self.config['composer']['max_tokens']), 'composition')
         result = {'format': FORMAT + '/response', 'service': self.root, 'request': request,
                   'status': 'completed' if error is None else 'needs_clarification', 'error': error,
                   'plan': plan, 'routing': routing, 'outputs': self.trace, 'answers': answers, 'text': text,

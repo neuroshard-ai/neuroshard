@@ -60,7 +60,8 @@ def run(config):
                 digest = feature_profile['embedding_sha256']
                 features = EmbeddingFeatures(tensor_path(Path(config['interpreter']), digest), digest,
                     net.tokenizer, graph['tokenizer']['root'], max_tokens=feature_profile['max_tokens'])
-            planned = PlannedGraphNetwork(net, planned_config, source_home=Path(config['source_home']), features=features)
+            planned = PlannedGraphNetwork(net, planned_config, source_home=Path(config['source_home']), features=features,
+                planner_weights_home=Path(config['planner_weights']) if config.get('planner_weights') else None)
         if config.get('learned_service'):
             from neuroshard.evolution.sharded.learned_graph import LearnedGraphNetwork
             from neuroshard.evolution.sharded.router_features import EmbeddingFeatures

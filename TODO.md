@@ -28,6 +28,11 @@ before the affected work, rather than changing the target after a result.
   reached only 2/16 and failed its gate; general retention passed. See the
   [interface result](docs/EXPERT_INTERFACE_TRIAL.md) and the earlier
   [published learning result](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915).
+  Continuing that interface reduced training loss without improving combined
+  answers and failed retention. The next [owned planner](docs/OWNED_PLANNER.md)
+  trains call decomposition while preserving the answering weights; its
+  distributed optimizer and scoped inference checks pass, but useful held-out
+  answers remain to be measured.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -94,9 +99,9 @@ before the affected work, rather than changing the target after a result.
   and token issuance alone are not evidence of independent computation or demand.
 
   Evidence so far: supply invariants, work deduplication, funded native replay
-  quorums and real replay measurements. Intermediate replay commitments do not
-  yet make every intermediate tensor payload available to a new auditor. The new
-  executor has now durably retained and read back its first two window boundaries.
+  quorums and real replay measurements. Task 3 published the complete retained
+  window payload catalog and settled all 140 windows with full audits. Complete
+  retention/storage/serving costs and a sustainable funding policy remain open.
 
 - [ ] **6. Usable chat service**
 
@@ -115,9 +120,12 @@ before the affected work, rather than changing the target after a result.
   adapter checkpoints, preserves multi-turn context, and delivers only checked
   token chunks. Five CPU processes checked discarded delivery, context overflow
   and changed owner weights. Eight GPU responses then passed full checking,
-  including corrected numerical disagreements; measured streaming cost remains
-  too high. A fixed-block implementation now targets that cost. Public access,
-  native billing and load targets remain open. See [checked streaming](docs/CANONICAL_STREAMING.md).
+  including corrected numerical disagreements. One-pass prompt prefill and
+  sixteen-token target blocks subsequently passed the frozen latency and traffic
+  bounds on all eight exposed GPU workloads: 128-token responses took 8.37–9.56
+  seconds and full replay took 1.63–1.68 seconds. The weights still fail their
+  learning-quality gate. Public access,
+  native billing and load targets remain open. See [block streaming](docs/BLOCKED_STREAMING.md).
 
 ## Work discipline
 

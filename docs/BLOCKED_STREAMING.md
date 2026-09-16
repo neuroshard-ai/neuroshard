@@ -70,7 +70,18 @@ uses exactly the same split; it does not assume equivalence to the earlier
 eight-token program. The draft is bounded by remaining output allowance.
 The five-process CPU check passed in 17.45 seconds, including exact cache
 rollback after a multi-block prefill and proposal-independent output. GPU
-performance remains to be measured under the committed bounds.
+performance was subsequently measured under the committed bounds.
+
+The [prefilled GPU result](../config/experiments/prefilled-streaming-results.json)
+passed every frozen check. All eight responses verified, both forgeries failed
+and both EOS-only drafts reproduced the output. The three 128-token responses
+took 8.37–9.56 seconds and 40.5–65.7 MB of tensor traffic. First checked output
+arrived in 0.39–1.12 seconds across all eight requests. Complete long-response
+audits took 1.63–1.68 seconds and 14.9–20.4 MB. All five A10G instances, volumes
+and the temporary security group were retired; allocated compute was at most
+$1.01, with storage and transfer separate. This establishes the prescribed
+execution bounds on these exposed workloads under one administrator. It does
+not change the rejected quality decision or complete the public-service item.
 
 The existing `FusedService` also accepts the separate
 `neuroshard-prefilled-conversation-service-v1` format. Replace the older
