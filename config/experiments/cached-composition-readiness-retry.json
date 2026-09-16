@@ -1,0 +1,15 @@
+{
+  "absolute_deadline_utc": "2026-09-16T16:38:14.136381+00:00",
+  "combined_planning_cap_usd": 25,
+  "correction": "Load all local parent and interpreter weights before a bounded readiness barrier; form inference subgroups only after all owners report readiness. Prefetch owned files and provision gp3 with 12000 IOPS and 500 MiB/s.",
+  "cpu_evidence": "Five focused graph tests passed, including delaying one parent beyond the subgroup connection timeout while preserving cached execution and complete replay.",
+  "format": "neuroshard-cached-composition-trial-v1/readiness-retry",
+  "new_executor_commitment_required": true,
+  "original_plan": "config/experiments/cached-composition-trial.json",
+  "prior_compute_usd_upper_bound": 2.3355508101966667,
+  "source_changes": [
+    "src/neuroshard/evolution/sharded/graph_execution.py"
+  ],
+  "stop_rule": "No new allocation until both earlier allocations are fully retired. Preserve every failure and obey the original absolute deadline; no extra training or quality retuning.",
+  "unchanged": "All model/optimizer tensors, neural kernels, tokenizer, 32 planner cases, eight complete conversations, answers and acceptance criteria."
+}

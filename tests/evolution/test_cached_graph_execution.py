@@ -3,6 +3,7 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+import time
 from types import SimpleNamespace
 
 import torch
@@ -25,9 +26,26 @@ def worker(rank, folder):
                             rank=rank, world_size=5, timeout=timedelta(seconds=90))
     try:
         graph = read('graph.json')
+        # Reproduce asymmetric startup: a tail finishes long before a parent.
+        # Group connection gets one second, local loading gets ten. Without
+        # the readiness barrier the fast expert's group times out first.
+        from neuroshard.evolution.sharded import graph_execution
+        original_timedelta = graph_execution.timedelta
+        graph_execution.timedelta = lambda **kw: timedelta(seconds=10 if kw['seconds'] == 1200 else 1)
+        tensor_values = graph_execution.incremental_state.tensor_values
+        first = True
+        def slow_parent(*args, **kwargs):
+            nonlocal first
+            if rank == 2 and first:
+                first = False
+                time.sleep(2.5)
+            return tensor_values(*args, **kwargs)
+        graph_execution.incremental_state.tensor_values = slow_parent
         net = GraphNetwork(graph, read('profile.json'), objects=home/'objects',
                            interpreter=home/'interpreter', seed=home/'seed',
                            source_home=SOURCE, rank=rank)
+        graph_execution.timedelta = original_timedelta
+        graph_execution.incremental_state.tensor_values = tensor_values
         records = []
         for selected in ('parent', 'directory', 'protocol', 'interpreter'):
             expert = selected in graph['experts']

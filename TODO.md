@@ -232,3 +232,13 @@ under the same admission rules.
   attempt stopped during one artifact download, before neural execution; all
   resources are retired. The [retry](config/experiments/cached-composition-retry.json)
   retains every neural input and pass rule, and changes only artifact delivery.
+
+- 2026-09-16: The cached-conversation retry retrieved all assigned tensors but
+  exposed a startup race: small experts opened their subgroup before a parent
+  finished cold weight reads. A new readiness barrier loads both local models
+  before forming inference groups. Five graph checks passed, including a
+  deliberately delayed parent and exact cached replay. Both failed GPU
+  allocations are fully retired. The next run keeps the original deadline,
+  questions, weights and scoring rules under a new executor commitment. A
+  [public serving catalog](https://github.com/neuroshard-ai/neuroshard/releases/download/research-native-expert-20260916/serving-tensors.json)
+  now provides CDN/GitHub replicas for all 472 required tensors.

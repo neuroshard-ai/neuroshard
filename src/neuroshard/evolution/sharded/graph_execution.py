@@ -76,6 +76,19 @@ class GraphNetwork:
                 parameter.requires_grad_(False)
                 del values
         self.shard.eval()
+        preserved_shard = None
+        if rank < 3:
+            manifest = graph['interpreter_assets']['partitions'][str(rank)]
+            preserved_shard = Partition(config, descriptor['parent_layout'], rank, device, profile['parameter_limit'])
+            if preserved_shard.resident_parameters + self.shard.resident_parameters > profile['resident_parameter_limit']:
+                raise ValueError('Combined local models exceed the owner limit')
+            preserved_shard.load_weights(interpreter, manifest)
+            preserved_shard.eval().requires_grad_(False)
+        # A small tail can load minutes before a parent on cold storage. Do not
+        # start a subset's connection timeout while another owner is still
+        # reading its files. All model bytes are checked before any path forms;
+        # normal execution retains the shorter process-group timeout below.
+        dist.monitored_barrier(timeout=timedelta(seconds=1200), wait_all_ranks=True)
         timeout = timedelta(seconds=300)
         parent_group = dist.new_group([0, 1, 2], timeout=timeout)
         groups = {rule['id']: dist.new_group([0, 1, 2, rule['owner']], timeout=timeout)
@@ -103,13 +116,8 @@ class GraphNetwork:
         if rank < 4:
             trained = self.net.networks['directory']
             if rank < 3:
-                manifest = graph['interpreter_assets']['partitions'][str(rank)]
-                shard = Partition(config, descriptor['parent_layout'], rank, device, profile['parameter_limit'])
-                if shard.resident_parameters + self.shard.resident_parameters > profile['resident_parameter_limit']:
-                    raise ValueError('Combined local models exceed the owner limit')
-                shard.load_weights(interpreter, manifest)
-                shard.eval().requires_grad_(False)
-                self.preserved = Network(shard, trained.wire, trained.parent_wire, self.tokenizer, descriptor['split'])
+                self.preserved = Network(preserved_shard, trained.wire, trained.parent_wire,
+                                         self.tokenizer, descriptor['split'])
             policy = descriptor['interpretation']
             self.interpreted = InterpretedNetwork(trained, self.preserved,
                 policy['instruction'], policy['examples'], policy['max_tokens'])
