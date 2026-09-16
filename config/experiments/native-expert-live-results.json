@@ -1,61 +1,139 @@
 {
-  "evidence": {
-    "final-metadata-0.tar.gz": "8ad6330effab12f8f746f58cc6c1a0cfa31ae1be2c808146912ede8426f1107a",
-    "final-metadata-1.tar.gz": "4b44b6de3d14eaec92ee09d91060b821fbf7edb17db7009d3a50c32e0db947a0",
-    "final-metadata-2.tar.gz": "5108ce1a0d0627c8c282e41c4341b3dd84a9aa7b62fd88f5484725833a68eebf",
-    "final-metadata-3.tar.gz": "8c86ec3a59641643b4fd5cc22ac356c8138049b2ebed5c1df51d136a90db5aba",
-    "final-metadata-4.tar.gz": "cfa59a4c87cd41db803030d25085b74f1a7c2afce37e161beaf34d5fdbca81b5"
+  "checks": {
+    "actual_full_audits": true,
+    "all_neural_calls_billed": true,
+    "duplicate_work_no_payment": true,
+    "forged_measurement_rejected": true,
+    "missing_bytes_prevented_payment": true,
+    "native_restart_preserved_state": true,
+    "public_evidence_available": true,
+    "replacement_hosts_resumed_same_ledger": true,
+    "separate_quality_promotion_no_issuance": true
   },
-  "failures": [
-    {
-      "cause": "The systemd service omitted the login-shell CUDA library path and loaded a different CuDNN runtime. The committed torch_build fingerprint rejected all five startups before model allocation.",
-      "fixed_by": "Carry the original LD_LIBRARY_PATH into the service launcher; retain the original numerical profile."
+  "date": "2026-09-16",
+  "earned_inference": {
+    "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "id": "edb67b327430d136bed3e81439dddfac183bea60b6f9f51ba7e28786164d76ec",
+    "paid_atoms": 1313,
+    "payments": {
+      "0": 387,
+      "1": 464,
+      "2": 360,
+      "4": 102
     },
-    {
-      "cause": "The corrective restart used the remaining startup allowance; the 16-GiB owner remained blocked on file-cache page faults while other owners waited. The controller timed out and stopped the trial.",
-      "next_change": "Evict clean unowned parent-object cache pages before serving startup; retain all numerical bytes and the original success rule."
-    }
+    "refunded_atoms": 11615,
+    "status": "completed",
+    "text": "neuroshard-ai; Ed25519"
+  },
+  "format": "neuroshard-native-expert-live-results-v1",
+  "ledger": {
+    "chain_id": "neuroshard-portable-life-edb5cf2aad4e",
+    "code_hash": "378c42056a312cf806a31bc388d925b3b2d8b5e466cdc92bafa7c3ce1b5321e7",
+    "distinct_paid_updates": 560,
+    "genesis": "65b4608c2de5b384fff98471b2f221ff0e5c7ec236afd7eaef35aa427a31b1e1",
+    "headers_checked": 16359,
+    "issued_atoms": 560000000,
+    "passed": true,
+    "reconstructed_state": "1dbcc54df79176137caa51ba35e9857e15aef5bf415460db3eb30532dde43f9e",
+    "scope": "Exact application replay against exported header commitments; no consensus light-client proof or GPU replay claim.",
+    "seconds": 817.8853816129267,
+    "serving_root": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "signed_transactions_replayed": 1728,
+    "through_state_height": 16358,
+    "validator_states_checked": 4
+  },
+  "limitations": [
+    "One administrator controlled every validator and worker.",
+    "Previously published learning job and original quality gate; no additional useful-learning cohort claimed.",
+    "Finite operated candidate; experiment resources retired after evidence preservation.",
+    "Application replay is not consensus light-client authentication.",
+    "The other five fixed live-LLM checklist items remain open."
   ],
-  "format": "neuroshard-native-expert-live-result-v1",
-  "native_genesis_unchanged": true,
-  "neural_generation_completed": false,
-  "passed": false,
-  "phase": "serving_startup",
-  "plan": "0b82afca1b5d57a43170083375385be82cff38f83d076c21a5bbb05a71e36e15",
+  "passed": true,
+  "publication": {
+    "archive": "native-expert-evidence.tar.gz",
+    "bytes": 34157358,
+    "release": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-native-expert-20260916",
+    "sha256": "7bfc8dad2646ae7e27a8e4b750d3ad4efdcb12c2f7d39430d9f4a5a486b407eb"
+  },
+  "quality": {
+    "checks": {
+      "composed_accuracy": true,
+      "single_accuracy": true,
+      "single_gain": true,
+      "unchanged_retained_computations": true
+    },
+    "metrics": {
+      "composed": {
+        "accuracy": 0.71875,
+        "after": 23,
+        "before": 0,
+        "count": 32,
+        "gains": 23,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.890625,
+        "after": 57,
+        "before": 7,
+        "count": 64,
+        "gains": 51,
+        "losses": 1,
+        "paired_gain": {
+          "lower": 0.6875,
+          "mean": 0.78125,
+          "pairs": 64,
+          "upper": 0.875
+        }
+      }
+    },
+    "passed": true
+  },
   "resources": {
-    "compute_usd_upper_bound": 1.8516422187650003,
-    "confirmed": "2026-09-16T02:10:35.847229+00:00",
-    "instances": [
-      "i-046ac3acc3e9c2ce9",
-      "i-04941587dee4dcfec",
-      "i-0fd40ab491fcd0311",
-      "i-0f67ffe19a29b7c65",
-      "i-01ee9ae2ead3fd7e8"
-    ],
+    "cost_scope": "Conservative compute estimate for three native integration attempts; excludes storage, prior learning and earlier backend preflight.",
+    "current_compute_usd_upper_bound": 7.493028683316666,
     "protected_instances_unchanged": true,
-    "scope": "Conservative on-demand compute estimate; retained storage separate.",
-    "security_group_deleted": true,
-    "terminated": true,
-    "volume_deletion_confirmed": true,
-    "volumes": [
-      "vol-0150b61c772b6c181",
-      "vol-027c065c9b92616b9",
-      "vol-07aff04d7ac14e24e",
-      "vol-053e97bea721b5806",
-      "vol-02a6d4e820875bb25"
-    ]
+    "retired": true,
+    "temporary_security_group_deleted": true,
+    "three_integration_attempts_compute_usd_upper_bound": 31.95801481073167,
+    "volumes_deleted": true
   },
-  "retry_constraints": {
-    "absolute_stop_deadline": "2026-09-16T07:50:10.946092+00:00",
-    "combined_planning_cap_usd": 75,
-    "same_model_data_and_gates": true,
-    "same_native_genesis": true,
-    "same_numerical_source": true
+  "retention": {
+    "inputs": {
+      "retained-test-conversation": 256,
+      "retained-test-knowledge": 1024,
+      "retained-test-skills": 768
+    },
+    "method": "Unchanged committed computations; preserves previous errors",
+    "passed": true
   },
-  "runtime": {
-    "expected_torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
-    "rejected_torch_build": "2cf922e1128b821f7cd9588060076eeaeae90ae176b4bd6831204c1a1df73420"
+  "source_commit": "6487c69fd925bfd6817739f1dd4a11caa9cbd844",
+  "tensor_availability": {
+    "anonymous_heads": 2856,
+    "sampled_complete_sha256_gets": [
+      {
+        "bytes": 24860,
+        "sha256": "000bfea7e40ade54593730ace2c014fba5afb99629fc846a4367fe2b142051e5"
+      },
+      {
+        "bytes": 50331972,
+        "sha256": "7a593d038d4a99ec05c77a589acfb3d05b3d49bf8f0e9aa06352a86ccbdcf8b3"
+      },
+      {
+        "bytes": 201326924,
+        "sha256": "ffe773f3772dd8b1f9cee01bab11137d5c3fc35a6684cef8b638d436c71c59da"
+      }
+    ],
+    "scope": "Every catalog URL anonymously accessible with the expected size; sampled full downloads hashed. Complete private upload readbacks are published separately.",
+    "seconds": 124.35339685902,
+    "total_tensor_bytes": 228256681648
   },
-  "tokens_issued": 0,
-  "training_updates": 0
+  "training": {
+    "accepted_windows": 140,
+    "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "distinct_updates": 560,
+    "issued_neuro": 560,
+    "resumed_from": 472,
+    "updates_per_window": 4
+  }
 }

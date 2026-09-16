@@ -4,7 +4,7 @@ NeuroShard's goal is one useful, openly available assistant whose learning and
 serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
 
-This is the fixed six-item completion checklist. **0/6 complete. Task 3 is active.**
+This is the fixed six-item completion checklist. **1/6 complete. Tasks 1 and 2 are active.**
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -38,7 +38,7 @@ before the affected work, rather than changing the target after a result.
   Evidence so far: immutable ingestion and experimental lifecycle components
   exist. The growing expert architecture still uses fixed prepared jobs.
 
-- [ ] **3. Live native training-to-inference lifecycle — ACTIVE**
+- [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
   Done when the already validated second expert completes this entire path on
   an operated NeuroShard-native candidate chain: available numerical inputs and
@@ -49,25 +49,22 @@ before the affected work, rather than changing the target after a result.
   Publish the ledger and execution evidence. Restart/replay, a forged claim,
   missing data and a repeated claim must leave supply and serving state correct.
 
-  Evidence so far: exact prefix production and all 560 updates were replayed;
-  140 bounded windows and native settlement guards pass. The operated candidate
-  chain has now accepted prefix production and its first actual training windows,
-  issuing exactly one NEURO per accepted update. Full-job completion, separate
-  quality promotion and earned-token inference remain pending. Historical
-  fixed-model integration is supporting evidence.
+  Completed 2026-09-16: actual prefix production and all 140 four-update
+  windows settled, issuing exactly 560 NEURO. A separate full-audit quality
+  decision promoted the original validated graph. A raw composed request used
+  earned NEURO, paid both neural calls and refunded unused escrow. Forged work,
+  withheld bytes, duplicates, restart and recovery onto replacement hosts were
+  checked. Full application replay verified 1,728 signed transactions, 16,359
+  headers and all four saved validator states. Numerical and ledger evidence,
+  replay instructions and the public 2,856-tensor catalog are
+  [published](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-native-expert-20260916).
+  See the [result and its limits](docs/NATIVE_EXPERT_LIVE_RESULT.md).
 
-  Implementation progress: the native-format training executor now loads actual
-  weights and Adam, executes a bounded window, and atomically saves a resumable
-  boundary. A separate-process CPU check reproduces the next checkpoint. See
-  [execution and checkpoint details](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/docs/NATIVE_EXPERT_CHECKPOINTS.md).
-  The backend also recomputes and retains the complete prefix production.
-  The pinned GPU check now passed complete prefix execution and updates 0–8,
-  with actual retained boundaries, forged-measurement rejection and missing-data
-  refusal. Graph quality promotion and paid inference now have a candidate
-  implementation with local five-process execution checks. Five GPU owners across
-  three availability zones now reproduce all four published serving cases and
-  their complete neural-call traces. The full native job is running against the
-  published model and original training job; no new learning campaign is needed.
+  This was a finite candidate operated by one administrator. Its GPU resources
+  are retired after preservation; independent operation and unattended public
+  chat remain covered by the other items. The integration reproduces the
+  previously published expert's quality gate and does not count as another
+  successful learning cohort.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
@@ -115,8 +112,9 @@ before the affected work, rather than changing the target after a result.
 
 ## Work discipline
 
-All six milestones are in scope. Task 3 currently determines execution order;
-work on billing, availability and serving supports the other fixed milestones
+All six milestones remain in scope. Item 3 is complete. Automatic useful
+composition and repeated admitted learning now determine execution order;
+billing, availability and usable serving address the other fixed milestones
 without creating additional top-level tasks.
 
 Before an expensive run, record its exact decision, reused artifacts, cheapest
@@ -199,3 +197,17 @@ under the same admission rules.
   deadline. See the dated [progress evidence](config/experiments/native-expert-live-progress.json).
   This is one administrator, a specialized graph and partial lifecycle evidence;
   all six top-level items remain open.
+
+- 2026-09-16: Completed item 3 and published its numerical and signed-ledger
+  evidence. All 560 distinct updates earned exactly 560 NEURO; the separately
+  admitted graph answered using earned-token escrow. Full replay checked 1,728
+  transactions and 16,359 headers against four validator states. All five
+  recovery GPUs, their volumes and their temporary security group are retired.
+  Three integration attempts used a conservative $31.96 compute estimate;
+  storage and previous learning runs are separate. The other five items remain
+  open. Development also adds prospective repeated-cohort admission, original-
+  data/tokenizer review and execution by three learned expert owners. These
+  mechanics do not establish three useful learning cohorts or independent
+  operators. A bounded ordinary-question decomposition screen passed 10/12
+  development cases; two lost subject context and require correction before
+  the method is used to route expert calls.

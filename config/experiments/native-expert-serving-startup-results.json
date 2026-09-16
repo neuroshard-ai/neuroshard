@@ -1,0 +1,61 @@
+{
+  "evidence": {
+    "final-metadata-0.tar.gz": "8ad6330effab12f8f746f58cc6c1a0cfa31ae1be2c808146912ede8426f1107a",
+    "final-metadata-1.tar.gz": "4b44b6de3d14eaec92ee09d91060b821fbf7edb17db7009d3a50c32e0db947a0",
+    "final-metadata-2.tar.gz": "5108ce1a0d0627c8c282e41c4341b3dd84a9aa7b62fd88f5484725833a68eebf",
+    "final-metadata-3.tar.gz": "8c86ec3a59641643b4fd5cc22ac356c8138049b2ebed5c1df51d136a90db5aba",
+    "final-metadata-4.tar.gz": "cfa59a4c87cd41db803030d25085b74f1a7c2afce37e161beaf34d5fdbca81b5"
+  },
+  "failures": [
+    {
+      "cause": "The systemd service omitted the login-shell CUDA library path and loaded a different CuDNN runtime. The committed torch_build fingerprint rejected all five startups before model allocation.",
+      "fixed_by": "Carry the original LD_LIBRARY_PATH into the service launcher; retain the original numerical profile."
+    },
+    {
+      "cause": "The corrective restart used the remaining startup allowance; the 16-GiB owner remained blocked on file-cache page faults while other owners waited. The controller timed out and stopped the trial.",
+      "next_change": "Evict clean unowned parent-object cache pages before serving startup; retain all numerical bytes and the original success rule."
+    }
+  ],
+  "format": "neuroshard-native-expert-live-result-v1",
+  "native_genesis_unchanged": true,
+  "neural_generation_completed": false,
+  "passed": false,
+  "phase": "serving_startup",
+  "plan": "0b82afca1b5d57a43170083375385be82cff38f83d076c21a5bbb05a71e36e15",
+  "resources": {
+    "compute_usd_upper_bound": 1.8516422187650003,
+    "confirmed": "2026-09-16T02:10:35.847229+00:00",
+    "instances": [
+      "i-046ac3acc3e9c2ce9",
+      "i-04941587dee4dcfec",
+      "i-0fd40ab491fcd0311",
+      "i-0f67ffe19a29b7c65",
+      "i-01ee9ae2ead3fd7e8"
+    ],
+    "protected_instances_unchanged": true,
+    "scope": "Conservative on-demand compute estimate; retained storage separate.",
+    "security_group_deleted": true,
+    "terminated": true,
+    "volume_deletion_confirmed": true,
+    "volumes": [
+      "vol-0150b61c772b6c181",
+      "vol-027c065c9b92616b9",
+      "vol-07aff04d7ac14e24e",
+      "vol-053e97bea721b5806",
+      "vol-02a6d4e820875bb25"
+    ]
+  },
+  "retry_constraints": {
+    "absolute_stop_deadline": "2026-09-16T07:50:10.946092+00:00",
+    "combined_planning_cap_usd": 75,
+    "same_model_data_and_gates": true,
+    "same_native_genesis": true,
+    "same_numerical_source": true
+  },
+  "runtime": {
+    "expected_torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+    "rejected_torch_build": "2cf922e1128b821f7cd9588060076eeaeae90ae176b4bd6831204c1a1df73420"
+  },
+  "tokens_issued": 0,
+  "training_updates": 0
+}
