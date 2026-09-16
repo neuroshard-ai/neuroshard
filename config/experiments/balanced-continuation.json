@@ -1,0 +1,216 @@
+{
+  "format": "neuroshard-balanced-continuation-v1",
+  "status": "selection-committed",
+  "license": "Apache-2.0",
+  "purpose": "Answer-balanced continuation with broader sorting coverage from the rejected consolidated checkpoint",
+  "baseline": {
+    "label": "adaptive phase-A three-worker portable checkpoint including Adam",
+    "checkpoint": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+    "state_root": "497dfd36ff77ab7db04b8bac2e66b7a548763db51552cc28ecd33171bd6d9f21",
+    "step": 128,
+    "parameters": 1711376384,
+    "layers": 24,
+    "boundaries": [
+      0,
+      6,
+      15,
+      24
+    ],
+    "includes_optimizer": true,
+    "s3": {
+      "bucket": "neuroshard-training-data",
+      "inventory": "three128",
+      "manifest_sha256": "c0b994df02e3f3b36ac72f1cf57eaa9bc54712ca0f08e542234d95fe41134373",
+      "unique_bytes": 20536696976,
+      "objects": 227
+    }
+  },
+  "parent": {
+    "checkpoint": "4f5fcde935dba361a83a65f63c1db48c479796debd574d8ea9f7e10dc959bddb",
+    "state_root": "917895b27de4ebaf9b418ca268314e70cb62e2f1c78bc2cefed7b5be020511b5",
+    "step": 384,
+    "source_selection": "59b1f0fcdb836a005f7d979afd12be999cc28858",
+    "consolidated_prepared": "af7526b07a8046ecbb0337875030eed5e2d43d48ab1b6069697ea9bee42da205",
+    "backup_receipt_sha256": "a5dea696122e002a3aa5e9b0b7f2110ae8a9f7b6b8e371834db0daf8013e1ccf",
+    "quality_status": "Rejected research endpoint; original accepted phase-A remains the final baseline"
+  },
+  "parameters": 1711376384,
+  "boundaries": [
+    0,
+    6,
+    15,
+    24
+  ],
+  "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+  "tokenizer_files": {
+    "tokenizer.json": "7d27c493c729a66ecefc837280b05d948b1ed50d130eebdbf911b1b36cf38ed7",
+    "tokenizer_config.json": "5dbff37e2d5899f5f69d86116f80733e11a790f703fd59855e2aef5717533ac5",
+    "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+    "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79",
+    "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "chat_template.jinja": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788"
+  },
+  "config_sha256": "67a3cb445147cdba56909efb817e7e0022c22bb3356e07676b68a4bca7caba31",
+  "runtime": {
+    "device": "cuda",
+    "python": "3.10.12",
+    "machine": "x86_64",
+    "torch": "2.9.1+cu128",
+    "transformers": "4.57.3",
+    "tokenizers": "0.22.1",
+    "safetensors": "0.7.0",
+    "numpy": "2.2.6",
+    "jinja2": "3.1.6",
+    "threads": 2,
+    "cuda": "12.8",
+    "cpu_dispatch": "DEFAULT",
+    "mkl_instructions": "SSE4_2",
+    "gpu": "NVIDIA A10G",
+    "parameters": "float32",
+    "optimizer": "float32-adamw",
+    "autocast": "bfloat16",
+    "attention": "sdpa",
+    "deterministic_algorithms": true,
+    "allocator": "expandable_segments:True",
+    "cross_device_exact": false,
+    "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63"
+  },
+  "threads": 2,
+  "parameter_limit": 900000000,
+  "max_length": 1024,
+  "generation_tokens": 256,
+  "max_seconds": 18000,
+  "conversation_source": {
+    "dataset": "HuggingFaceTB/smol-smoltalk",
+    "revision": "f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc",
+    "split": "test",
+    "file": "data/test-00000-of-00001.parquet",
+    "sha256": "be6773dcce145f3918ff14237b1f765affa427b0b13f6a02d397e665ac908b9a",
+    "rows": 24229,
+    "selection": "seeded permutation of row indices; first unused complete128 dev, next256 final"
+  },
+  "budget": {
+    "usd": 100,
+    "hours": 6,
+    "workers": 3,
+    "type": "g5.2xlarge",
+    "runtime": "same pinnedA10G as reasoned"
+  },
+  "training": {
+    "steps": 64,
+    "batch_documents": 64,
+    "learning_rate": 1e-06,
+    "warmup_steps": 4,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "seed": 2026091800
+  },
+  "microbatch": 8,
+  "checkpoints": [
+    416,
+    448
+  ],
+  "selectable_checkpoint": 448,
+  "reference": {
+    "checkpoint": "4f5fcde935dba361a83a65f63c1db48c479796debd574d8ea9f7e10dc959bddb",
+    "kl_strength": 2.0,
+    "margin_strength": 1.0,
+    "margin_min": 0.5,
+    "margin_max": 2.0,
+    "normalization": "Existing token-normalized KL and correct-token margin on every explicitly declared reference anchor"
+  },
+  "method": {
+    "loss_weight": "1.0 / targets per document; existing guarded objective, Python denominator and FP32 row weights",
+    "new_gradient_updates": 64,
+    "growth_layers": 0,
+    "output_routing": false,
+    "answer_repair": false,
+    "reasoning_roles": [
+      "dev-new",
+      "test-new"
+    ],
+    "instruction_variants": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "instruction_scope": "All four previously public wordings are covered in new training and development; finals contain new records, not claimed-new wording"
+  },
+  "strata": {
+    "new_sort": 1792,
+    "new_lookup": 512,
+    "new_filter": 512,
+    "replay_reasoned": 512,
+    "replay_total": 256,
+    "replay_conversation": 512
+  },
+  "batch_strata": {
+    "new_sort": 28,
+    "new_lookup": 8,
+    "new_filter": 8,
+    "replay_reasoned": 8,
+    "replay_total": 4,
+    "replay_conversation": 8
+  },
+  "roles": {
+    "train": 4096,
+    "dev-prior": 512,
+    "dev-new": 128,
+    "dev-retention": 128,
+    "test-new": 512,
+    "test-prior": 256,
+    "retention": 256
+  },
+  "seeds": {
+    "training_rng": 2026091800,
+    "train_new": 2026091801,
+    "new_tasks": 2026091802,
+    "prior_tasks": 2026091803,
+    "conversation_permutation": 2026091804,
+    "bootstrap": 2026091805,
+    "schedule": 2026091806,
+    "replay": 2026091807
+  },
+  "replay": {
+    "prepared_path": "config/experiments/reasoned-learning-prepared.json",
+    "prepared": "6dd8e4f66ce615df39d75d3dba71b1833635507c9e2857c7bc404ad34cb2267d",
+    "completed_checkpoint": "1401f5831fefd3f7c01e4badae094f6af327923d278b4c50ab16678b9b55e826",
+    "completed_step": 384,
+    "selection": "uniform seeded shuffle within each declared stratum; every selected index must occur in the completed 256-update source schedule; original messages and tokenization unchanged"
+  },
+  "exclusions": {
+    "adaptive": "config/experiments/adaptive-shards-inputs.json",
+    "continued": "config/experiments/continued-learning-prepared.json",
+    "reasoned": "config/experiments/reasoned-learning-prepared.json",
+    "policy": "Exclude every preceding role by identity and normalized content for all fresh rows. Reuse only declared, proven-trained replay rows; never old evaluation rows.",
+    "consolidated": "config/experiments/consolidated-learning-prepared.json"
+  },
+  "development_gate": {
+    "prior_losses_at_most": 0,
+    "new_net_gain_at_least": 8,
+    "family_floors": true,
+    "retain_training_parent_new_families": true,
+    "retention_mean_delta_at_most": 0.01,
+    "only_select_terminal": true
+  },
+  "quality_gate": {
+    "min_net_gain": 16,
+    "max_one_sided_p": 0.05,
+    "family_floor": true,
+    "retention_upper_at_most_nats": 0.02,
+    "confidence": 0.95,
+    "bootstrap_samples": 10000,
+    "loss_only_pass": false,
+    "candidate_lock_before_final": true,
+    "failed_final": "reported-failure",
+    "min_correct_totals": 64,
+    "baseline": "Original accepted phase-A, not the rejected training parent"
+  },
+  "open_source": {
+    "secret_evaluation": false,
+    "prepared_path": "config/experiments/balanced-continuation-prepared.json",
+    "selection_path": "config/experiments/balanced-continuation-selection.json"
+  },
+  "public_network": "No live-chain activation, issuance or serving promotion in this research trial"
+}

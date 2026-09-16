@@ -1,0 +1,1517 @@
+{
+  "application_replay_mutation_checks": {
+    "cases": [
+      {
+        "error_type": "ValueError",
+        "mutation": "missing block",
+        "reason": "Exported headers must cover every height from genesis",
+        "rejected": true
+      },
+      {
+        "error_type": "ValueError",
+        "mutation": "changed application commitment",
+        "reason": "Application commitment mismatch before block 2",
+        "rejected": true
+      },
+      {
+        "error_type": "ValueError",
+        "mutation": "omitted signed transaction",
+        "reason": "Header transaction index differs from signed transactions",
+        "rejected": true
+      },
+      {
+        "error_type": "ValueError",
+        "mutation": "forged signature with recomputed byte hashes",
+        "reason": "Signature verification failed",
+        "rejected": true
+      },
+      {
+        "error_type": "ValueError",
+        "mutation": "different consensus sources",
+        "reason": "Replay requires the exact genesis-bound consensus sources",
+        "rejected": true
+      },
+      {
+        "error_type": "ValueError",
+        "mutation": "changed saved account balance",
+        "reason": "Saved validator state differs from replay at 0",
+        "rejected": true
+      }
+    ],
+    "passed": true,
+    "scope": "Mutation checks of the exported application-history verifier; no additional GPU training."
+  },
+  "artifact_transfer_recovery": {
+    "assignment": "de3c0ee462e039c769813bc36d3fab58c7e675d0d9ec3d66371791456d058d21",
+    "checkpoint_before": "7176f8f0c7482ac8e0eff075b25c9f3737950f0f5f5d88c89dffbe1fb1847c75",
+    "controller_recovery_seconds": 384.35824632644653,
+    "failure_time": 1789441857.4193134,
+    "kind": "rsync replica-transfer timeout before claim submission",
+    "pending_end_step": 444,
+    "pending_training_repeated": false,
+    "rewards_preserved_atoms": 56000000,
+    "same_chain_and_keys": true,
+    "same_chain_restart_time": 1789442241.7775598,
+    "scope": "Operator harness restart; not independent-service failover.",
+    "transport_changes": "Partial files retained; checksum verification; 600-second I/O timeout and at most three transient retries."
+  },
+  "audit_paid_atoms": 714000000,
+  "boundaries": [
+    0,
+    6,
+    15,
+    24
+  ],
+  "checkpoint": "e2379f6f819b63508fe4648b21b9919a410f1924ce860485e0cfb65787378074",
+  "complete_answer_correct": true,
+  "complete_training_partition_replays": 144,
+  "controller_cache_pause": {
+    "pause_seconds": 897.5713491439819,
+    "pid": 1473115,
+    "resumed": 1789432385.1512914,
+    "started": 1789431487.5799422
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "bytes": 43478948,
+    "members": 864,
+    "object": "research/native-continuation-20260915/evidence/db194c786638c93f6c46eaddb5b61138b68d4afeacad9ff259f5704dde1e6688",
+    "readback_verified": true,
+    "scope": "Public inputs, exact sources, outcomes, ledger exports and complete model/witness backup receipts; no private keys or Git history. Large tensors are separate content-addressed objects.",
+    "sha256": "db194c786638c93f6c46eaddb5b61138b68d4afeacad9ff259f5704dde1e6688"
+  },
+  "exact_research_learned_state_reproduced": true,
+  "exact_research_midpoint": {
+    "actual": "095c29ee88e3a0b6c36f20e325a6f1e0ec8a284c417f1b3052f616f24a4740c5",
+    "expected": "095c29ee88e3a0b6c36f20e325a6f1e0ec8a284c417f1b3052f616f24a4740c5",
+    "passed": true,
+    "step": 416
+  },
+  "executor": "fec11e89fe7013db3713fde6dcf7df8a8dc4fcd4867e6ec96305b3c12bf33533",
+  "format": "neuroshard-native-continuation-results-v1",
+  "genesis": "29db702f851093d4e4a3563c6b6c489e03a94e66161871c37d062e6daabde965",
+  "independent_operator_trial": false,
+  "inference_issued_atoms": 0,
+  "infrastructure_operators": 1,
+  "issued_atoms": 64000000,
+  "learned_state": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+  "ledger": {
+    "application_replay": {
+      "chain_id": "neuroshard-portable-life-db24c5009097",
+      "code_hash": "6cdb99924cd00db1c25a024453802ceb471357a9c15e3c863be58a76368726a8",
+      "distinct_paid_updates": 64,
+      "genesis": "29db702f851093d4e4a3563c6b6c489e03a94e66161871c37d062e6daabde965",
+      "headers_checked": 30408,
+      "issued_atoms": 64000000,
+      "passed": true,
+      "reconstructed_state": "8b92b4debd40189fded5e6ca4440d9a70728e1a8a1cb28552bb2b1fd410e880a",
+      "scope": "Exact application replay against exported header commitments; no consensus light-client proof or GPU replay claim.",
+      "seconds": 436.81115061510354,
+      "serving_root": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+      "signed_transactions_replayed": 221,
+      "through_state_height": 30407,
+      "validator_states_checked": 4
+    },
+    "chain_id": "neuroshard-portable-life-db24c5009097",
+    "distinct_paid_updates": 64,
+    "duplicate_claim": {
+      "code": 1,
+      "reason": "Wrong nonce",
+      "rejected": true
+    },
+    "genesis": "29db702f851093d4e4a3563c6b6c489e03a94e66161871c37d062e6daabde965",
+    "genesis_normalization": "CometBFT reports initial_height 0 as 1; every other genesis field is identical.",
+    "issued_atoms": 64000000,
+    "offline_start_height": 30391,
+    "offline_validator": 3,
+    "passed": true,
+    "public_transactions": 221,
+    "rejoined": {
+      "all_equal": true,
+      "block_id": "3197F7F0B3FB82AD4E645E590ECDAC34F90746E7C811F57FC06B2FE89F0A1858",
+      "header_app_hash": "85AC565E5BD13702B32EE5E6819DDA2BBCEE8963CA57BF78DD924205C6B79D0E",
+      "height": 30407,
+      "validator_count": 4
+    },
+    "restart": {
+      "all_equal": true,
+      "block_id": "D06AF4CA9508EB54CA01D3ADC4049284C2D7BA6DA70AB2668D1FC53D6DE1652E",
+      "header_app_hash": "FCC3390F40E2BAE713258A78ABB4B1E3AA4120E0563404E495184A5023F0C657",
+      "height": 30391,
+      "validator_count": 4
+    },
+    "scope": "One operator, four CPU validator processes; a process outage, not independent ownership or host failure.",
+    "state_commitments": [
+      {
+        "committing_header_height": 30408,
+        "matches_header": true,
+        "state_height": 30407,
+        "state_sha256": "8b92b4debd40189fded5e6ca4440d9a70728e1a8a1cb28552bb2b1fd410e880a"
+      },
+      {
+        "committing_header_height": 30408,
+        "matches_header": true,
+        "state_height": 30407,
+        "state_sha256": "8b92b4debd40189fded5e6ca4440d9a70728e1a8a1cb28552bb2b1fd410e880a"
+      },
+      {
+        "committing_header_height": 30408,
+        "matches_header": true,
+        "state_height": 30407,
+        "state_sha256": "8b92b4debd40189fded5e6ca4440d9a70728e1a8a1cb28552bb2b1fd410e880a"
+      },
+      {
+        "committing_header_height": 30408,
+        "matches_header": true,
+        "state_height": 30407,
+        "state_sha256": "8b92b4debd40189fded5e6ca4440d9a70728e1a8a1cb28552bb2b1fd410e880a"
+      }
+    ],
+    "stored_genesis": "d157c10892aed6636e37bd4ac93617d444698530435d9fe9de003364db9adf37",
+    "supply_invariant": true,
+    "three_validator_progress": {
+      "all_equal": true,
+      "block_id": "5A4D03AAD0F46B0B22FC15B5C1ABE3138C6F542157D7272FD9E51A79D742E14B",
+      "header_app_hash": "A61B08BD5565CE12F1B4D50307A4E28F20F29E713E32912D74E08513A6377456",
+      "height": 30401,
+      "validator_count": 3
+    },
+    "time": 1789453852.5993752,
+    "unchanged_accounting": true
+  },
+  "limitations": [
+    "One infrastructure owner; no independent ownership trial.",
+    "All auditors replay every partition; verification cost is replicated.",
+    "Operator-staged artifacts and curated immutable recipes; no public provider or artifact market.",
+    "Four generated task families and bounded greedy answers; broad assistant quality and useful parameter growth remain unproven.",
+    "Sponsored audit prices exceed inference fees; no sustainable token-price claim."
+  ],
+  "local_ssd_cache": {
+    "completed": 1789432385.150805,
+    "native_paid_updates": 20,
+    "passed": true,
+    "ranks": [
+      {
+        "free_ssd_bytes": 357654212608,
+        "mounts": [
+          {
+            "bytes": 20537781977,
+            "files": 306,
+            "inventory_sha256": "5d1d3c43d3705306f1b1dd684ac510000e3c8fecc3bba435b78c42891757083d",
+            "kind": "audit-scratch",
+            "target": "/home/ubuntu/study-native/audits"
+          },
+          {
+            "bytes": 6040202480,
+            "files": 59,
+            "inventory_sha256": "b2f2181515c1dce8fe709eb5038137765be9cb78a78ad3b130a21ed6e6fdfd4e",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/parent"
+          },
+          {
+            "bytes": 6040202134,
+            "files": 59,
+            "inventory_sha256": "220cd78c1363dae9cfa16baa2d6fa929148b2c1b23d47f9cf565cac904bd5845",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/baseline"
+          },
+          {
+            "bytes": 7248297284,
+            "files": 84,
+            "inventory_sha256": "dc0f99716f1741cf3277a6fb1ec52d21367312a04ad9f27a7dba33e8e23a0ca4",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-1/parent"
+          },
+          {
+            "bytes": 7248296938,
+            "files": 84,
+            "inventory_sha256": "e1b5a8b49c98c2e22da1df566c0b59b5ab2fdd0fc089965b814ac037ac243b95",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-1/baseline"
+          },
+          {
+            "bytes": 7248297320,
+            "files": 84,
+            "inventory_sha256": "35d4e88b0e3932067a3ecc5c1059fa1180e2ed53a15ee4fd54072b1c9cfb6f42",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-2/parent"
+          },
+          {
+            "bytes": 7248296974,
+            "files": 84,
+            "inventory_sha256": "cb2f54545e3011cbb87369f050026ab5ae87bc60408f73e85e5b944f7392169d",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-2/baseline"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-1/quality"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-2/quality"
+          }
+        ],
+        "originals_retained_on_ebs": true,
+        "passed": true,
+        "rank": 0,
+        "time": 1789432069.3089082
+      },
+      {
+        "free_ssd_bytes": 357654200320,
+        "mounts": [
+          {
+            "bytes": 20537781967,
+            "files": 306,
+            "inventory_sha256": "13b50c054296bdab12692128a80145050f669a75b7042a7526efd41ac6311c32",
+            "kind": "audit-scratch",
+            "target": "/home/ubuntu/study-native/audits"
+          },
+          {
+            "bytes": 6040202480,
+            "files": 59,
+            "inventory_sha256": "b2f2181515c1dce8fe709eb5038137765be9cb78a78ad3b130a21ed6e6fdfd4e",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-0/parent"
+          },
+          {
+            "bytes": 6040202134,
+            "files": 59,
+            "inventory_sha256": "220cd78c1363dae9cfa16baa2d6fa929148b2c1b23d47f9cf565cac904bd5845",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-0/baseline"
+          },
+          {
+            "bytes": 7248297284,
+            "files": 84,
+            "inventory_sha256": "dc0f99716f1741cf3277a6fb1ec52d21367312a04ad9f27a7dba33e8e23a0ca4",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/parent"
+          },
+          {
+            "bytes": 7248296938,
+            "files": 84,
+            "inventory_sha256": "e1b5a8b49c98c2e22da1df566c0b59b5ab2fdd0fc089965b814ac037ac243b95",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/baseline"
+          },
+          {
+            "bytes": 7248297320,
+            "files": 84,
+            "inventory_sha256": "35d4e88b0e3932067a3ecc5c1059fa1180e2ed53a15ee4fd54072b1c9cfb6f42",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-2/parent"
+          },
+          {
+            "bytes": 7248296974,
+            "files": 84,
+            "inventory_sha256": "cb2f54545e3011cbb87369f050026ab5ae87bc60408f73e85e5b944f7392169d",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-2/baseline"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-0/quality"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-2/quality"
+          }
+        ],
+        "originals_retained_on_ebs": true,
+        "passed": true,
+        "rank": 1,
+        "time": 1789432385.1425545
+      },
+      {
+        "free_ssd_bytes": 357654224896,
+        "mounts": [
+          {
+            "bytes": 20537781957,
+            "files": 306,
+            "inventory_sha256": "f31643f57aca4ed4edfb59eeafe5b72e0153a8521be4c8207dfa6d020132bf42",
+            "kind": "audit-scratch",
+            "target": "/home/ubuntu/study-native/audits"
+          },
+          {
+            "bytes": 6040202480,
+            "files": 59,
+            "inventory_sha256": "b2f2181515c1dce8fe709eb5038137765be9cb78a78ad3b130a21ed6e6fdfd4e",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-0/parent"
+          },
+          {
+            "bytes": 6040202134,
+            "files": 59,
+            "inventory_sha256": "220cd78c1363dae9cfa16baa2d6fa929148b2c1b23d47f9cf565cac904bd5845",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-0/baseline"
+          },
+          {
+            "bytes": 7248297284,
+            "files": 84,
+            "inventory_sha256": "dc0f99716f1741cf3277a6fb1ec52d21367312a04ad9f27a7dba33e8e23a0ca4",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-1/parent"
+          },
+          {
+            "bytes": 7248296938,
+            "files": 84,
+            "inventory_sha256": "e1b5a8b49c98c2e22da1df566c0b59b5ab2fdd0fc089965b814ac037ac243b95",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/peers/rank-1/baseline"
+          },
+          {
+            "bytes": 7248297320,
+            "files": 84,
+            "inventory_sha256": "35d4e88b0e3932067a3ecc5c1059fa1180e2ed53a15ee4fd54072b1c9cfb6f42",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/parent"
+          },
+          {
+            "bytes": 7248296974,
+            "files": 84,
+            "inventory_sha256": "cb2f54545e3011cbb87369f050026ab5ae87bc60408f73e85e5b944f7392169d",
+            "kind": "immutable-reference",
+            "target": "/home/ubuntu/study-native/baseline"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-0/quality"
+          },
+          {
+            "kind": "incoming-quality-copy",
+            "target": "/home/ubuntu/study-native/peers/rank-1/quality"
+          }
+        ],
+        "originals_retained_on_ebs": true,
+        "passed": true,
+        "rank": 2,
+        "time": 1789432105.5893455
+      }
+    ],
+    "started": 1789431487.5799422
+  },
+  "manifest": "4efebd28f43de23eae4977604d3417c7decf0a01d41b45b98edc659fefc99eb7",
+  "model_growth": false,
+  "native_chain_id": "neuroshard-portable-life-db24c5009097",
+  "native_validator_hosts": 1,
+  "native_validator_processes": 4,
+  "network_allowance_counters": [
+    {
+      "allowance_counters": [
+        "bw_in_allowance_exceeded: 171071",
+        "bw_out_allowance_exceeded: 478321",
+        "pps_allowance_exceeded: 1377",
+        "conntrack_allowance_exceeded: 0",
+        "linklocal_allowance_exceeded: 0"
+      ],
+      "interface": "ens5",
+      "rank": 0,
+      "returncode": 0
+    },
+    {
+      "allowance_counters": [
+        "bw_in_allowance_exceeded: 564072",
+        "bw_out_allowance_exceeded: 344615",
+        "pps_allowance_exceeded: 21490",
+        "conntrack_allowance_exceeded: 0",
+        "linklocal_allowance_exceeded: 0"
+      ],
+      "interface": "ens5",
+      "rank": 1,
+      "returncode": 0
+    },
+    {
+      "allowance_counters": [
+        "bw_in_allowance_exceeded: 13018",
+        "bw_out_allowance_exceeded: 74221",
+        "pps_allowance_exceeded: 17308",
+        "conntrack_allowance_exceeded: 0",
+        "linklocal_allowance_exceeded: 0"
+      ],
+      "interface": "ens5",
+      "rank": 2,
+      "returncode": 0
+    }
+  ],
+  "network_observation": {
+    "counter_file": "network-allowance-counters.json",
+    "ebs": {
+      "AttachmentLimitType": "shared",
+      "EbsOptimizedInfo": {
+        "BaselineBandwidthInMbps": 850,
+        "BaselineIops": 3500,
+        "BaselineThroughputInMBps": 106.25,
+        "MaximumBandwidthInMbps": 3500,
+        "MaximumIops": 15000,
+        "MaximumThroughputInMBps": 437.5
+      },
+      "EbsOptimizedSupport": "default",
+      "EncryptionSupport": "supported",
+      "MaximumEbsAttachments": 25,
+      "NvmeSupport": "required"
+    },
+    "instance_type": "g5.2xlarge",
+    "interpretation": "Cumulative ENA counters show bandwidth and packet-rate allowances have been exceeded during this allocation; they do not isolate one transfer or establish the only cause of its duration.",
+    "network": {
+      "DefaultNetworkCardIndex": 0,
+      "EfaSupported": false,
+      "EnaSrdSupported": false,
+      "EnaSupport": "required",
+      "EncryptionInTransitSupported": true,
+      "FlexibleEnaQueuesSupport": "unsupported",
+      "Ipv4AddressesPerInterface": 15,
+      "Ipv6AddressesPerInterface": 15,
+      "Ipv6Supported": true,
+      "MaximumNetworkCards": 1,
+      "MaximumNetworkInterfaces": 4,
+      "NetworkCards": [
+        {
+          "BaselineBandwidthInGbps": 5.0,
+          "DefaultEnaQueueCountPerInterface": 8,
+          "MaximumNetworkInterfaces": 4,
+          "NetworkCardIndex": 0,
+          "NetworkPerformance": "Up to 10 Gigabit",
+          "PeakBandwidthInGbps": 10.0
+        }
+      ],
+      "NetworkPerformance": "Up to 10 Gigabit"
+    },
+    "sources": [
+      "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-network-performance-ena.html",
+      "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-network-bandwidth.html"
+    ],
+    "time": 1789430922.8187573
+  },
+  "neural_update_seconds_by_rank": [
+    1906.0346260139945,
+    1906.345077443993,
+    1906.3242807999982
+  ],
+  "numerical_source": "20fb2a44699ed349a633ffbb0828d298f8ecc698",
+  "paid_inference": [
+    {
+      "auditor_seconds": [
+        111.9148118689991,
+        108.40916307500083,
+        122.52974315299798
+      ],
+      "claim": "b66afdb68e2b138c2ffb93acd96548665b3c7fa2481888c76bd80728ae893af6",
+      "generated_tokens": 140,
+      "maximum_tokens": 256,
+      "receipt": {
+        "checkpoint": "e2379f6f819b63508fe4648b21b9919a410f1924ce860485e0cfb65787378074",
+        "height": 30387,
+        "id": "aa8248db9ab31697811b4d9040f3c3f0c99a06844b6e26d1ec057e815f31b3ad",
+        "paid_atoms": 14000,
+        "payments": [
+          4118,
+          4941,
+          4941
+        ],
+        "refunded_atoms": 11600,
+        "status": "completed",
+        "token_ids": [
+          44,
+          1637,
+          46,
+          198,
+          49,
+          38,
+          38,
+          36,
+          42,
+          216,
+          33,
+          41,
+          1672,
+          216,
+          36,
+          446,
+          216,
+          39,
+          38,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          39,
+          38,
+          198,
+          64,
+          34,
+          33,
+          36,
+          42,
+          216,
+          33,
+          38,
+          1672,
+          216,
+          33,
+          40,
+          446,
+          216,
+          34,
+          40,
+          40,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          35,
+          38,
+          36,
+          198,
+          53,
+          37,
+          39,
+          39,
+          42,
+          216,
+          33,
+          34,
+          1672,
+          216,
+          33,
+          37,
+          446,
+          216,
+          33,
+          40,
+          32,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          37,
+          36,
+          36,
+          198,
+          51,
+          39,
+          38,
+          35,
+          42,
+          216,
+          40,
+          1672,
+          216,
+          33,
+          39,
+          446,
+          216,
+          33,
+          35,
+          38,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          38,
+          40,
+          32,
+          198,
+          56,
+          37,
+          41,
+          39,
+          42,
+          216,
+          33,
+          33,
+          1672,
+          216,
+          35,
+          446,
+          216,
+          35,
+          35,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          39,
+          33,
+          35,
+          198,
+          9617,
+          1637,
+          46,
+          198,
+          39428,
+          9712,
+          1799,
+          39,
+          33,
+          35,
+          109,
+          2
+        ],
+        "workers": [
+          "03f2e969c531aa71b0e91005e82a9215573cf4870ea975af5f3b0a5d61c17f3b05",
+          "032c89a10e72b6b32093f771ebe77dc4f932334f4a820bd1a30f42f4b2f46748cb",
+          "025b9b2d09e4cf6f33bbe5297a0412dee7e3cf75bafed9e7053bb7582eadbf33cd"
+        ]
+      },
+      "response": {
+        "text": "<work>\nA664: 19 * 4 = 76; running total = 76\nP214: 16 * 18 = 288; running total = 364\nE577: 12 * 15 = 180; running total = 544\nC763: 8 * 17 = 136; running total = 680\nH597: 11 * 3 = 33; running total = 713\n</work>\n{\"total\":713}",
+        "token_ids": [
+          44,
+          1637,
+          46,
+          198,
+          49,
+          38,
+          38,
+          36,
+          42,
+          216,
+          33,
+          41,
+          1672,
+          216,
+          36,
+          446,
+          216,
+          39,
+          38,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          39,
+          38,
+          198,
+          64,
+          34,
+          33,
+          36,
+          42,
+          216,
+          33,
+          38,
+          1672,
+          216,
+          33,
+          40,
+          446,
+          216,
+          34,
+          40,
+          40,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          35,
+          38,
+          36,
+          198,
+          53,
+          37,
+          39,
+          39,
+          42,
+          216,
+          33,
+          34,
+          1672,
+          216,
+          33,
+          37,
+          446,
+          216,
+          33,
+          40,
+          32,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          37,
+          36,
+          36,
+          198,
+          51,
+          39,
+          38,
+          35,
+          42,
+          216,
+          40,
+          1672,
+          216,
+          33,
+          39,
+          446,
+          216,
+          33,
+          35,
+          38,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          38,
+          40,
+          32,
+          198,
+          56,
+          37,
+          41,
+          39,
+          42,
+          216,
+          33,
+          33,
+          1672,
+          216,
+          35,
+          446,
+          216,
+          35,
+          35,
+          43,
+          4108,
+          2719,
+          446,
+          216,
+          39,
+          33,
+          35,
+          198,
+          9617,
+          1637,
+          46,
+          198,
+          39428,
+          9712,
+          1799,
+          39,
+          33,
+          35,
+          109,
+          2
+        ]
+      },
+      "sponsor_paid_audit_atoms": 42000000
+    }
+  ],
+  "parameters": 1711376384,
+  "parent": "4f5fcde935dba361a83a65f63c1db48c479796debd574d8ea9f7e10dc959bddb",
+  "passed": true,
+  "physical_gpu_hosts": 3,
+  "preserved_prior_attempt": {
+    "chain_id": "neuroshard-portable-life-f3f13ffeec3c",
+    "evidence": {
+      "bucket": "neuroshard-training-data",
+      "bytes": 11437463,
+      "members": 383,
+      "object": "research/native-continuation-20260915/evidence/77e67840add86aaae5e974d4fa7c9971ecc86ceb854f6c7780149cae0cd4366a",
+      "readback_verified": true,
+      "scope": "Public inputs, exact sources, outcomes, ledger exports and complete model/witness backup receipts; no private keys or Git history. Large tensors are separate content-addressed objects.",
+      "sha256": "77e67840add86aaae5e974d4fa7c9971ecc86ceb854f6c7780149cae0cd4366a"
+    },
+    "inference_attempted": false,
+    "issued_atoms": 8000000,
+    "quality_attempted": false,
+    "reason": "Large quality manifests needed chunked transport; caught before evaluation. Replaced the isolated genesis after preserving both correctly settled windows.",
+    "settled_updates": 8
+  },
+  "provider_collateral_capital_atoms": 20000000,
+  "public_network_changed": false,
+  "pypi_released": false,
+  "quality": {
+    "auditor_seconds": [
+      3256.376531867998,
+      3253.401966295998,
+      3261.7869651980036
+    ],
+    "claim": "d0818c23b855ac2fbeef5833a097e8c376162684c295a14de268bc95f2d43b30",
+    "decision": {
+      "decisions": {
+        "retention": {
+          "baseline_mean": 0.5440839215270252,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091805,
+          "candidate_mean": 0.5467409929573278,
+          "confidence": 0.95,
+          "documents": 256,
+          "mean_delta": 0.0026570714303022006,
+          "passed": true,
+          "upper": 0.0040645071668066
+        },
+        "test-new": {
+          "generation": {
+            "accuracy_change": 0.1640625,
+            "baseline_correct": 378,
+            "candidate_correct": 462,
+            "documents": 512,
+            "families": {
+              "filter": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 126,
+                "candidate_correct": 126,
+                "documents": 128,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              },
+              "lookup": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 128,
+                "candidate_correct": 128,
+                "documents": 128,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              },
+              "sort": {
+                "accuracy_change": 0.0078125,
+                "baseline_correct": 120,
+                "candidate_correct": 121,
+                "documents": 128,
+                "losses": 0,
+                "one_sided_p": 0.5,
+                "wins": 1
+              },
+              "total": {
+                "accuracy_change": 0.6484375,
+                "baseline_correct": 4,
+                "candidate_correct": 87,
+                "documents": 128,
+                "losses": 1,
+                "one_sided_p": 2.223047896236262e-24,
+                "wins": 84
+              }
+            },
+            "losses": 1,
+            "one_sided_p": 1.124448645189272e-24,
+            "wins": 85
+          },
+          "passed": true
+        },
+        "test-prior": {
+          "generation": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 188,
+            "candidate_correct": 188,
+            "documents": 256,
+            "families": {
+              "filter": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 62,
+                "candidate_correct": 62,
+                "documents": 64,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              },
+              "lookup": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 64,
+                "candidate_correct": 64,
+                "documents": 64,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              },
+              "sort": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 61,
+                "candidate_correct": 61,
+                "documents": 64,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              },
+              "total": {
+                "accuracy_change": 0.0,
+                "baseline_correct": 1,
+                "candidate_correct": 1,
+                "documents": 64,
+                "losses": 0,
+                "one_sided_p": 1.0,
+                "wins": 0
+              }
+            },
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "wins": 0
+          },
+          "passed": true
+        }
+      },
+      "passed": true
+    },
+    "exact_research_answers": {
+      "test-new": {
+        "baseline_and_candidate_texts_match": true,
+        "cases": 512
+      },
+      "test-prior": {
+        "baseline_and_candidate_texts_match": true,
+        "cases": 256
+      }
+    },
+    "issued_atoms": 0,
+    "results_root": "4b875ab2a0367bbb15eae9067a483aecbdeba2dddbbbdf732387e266d939a8fa",
+    "serving_promoted_after_quality": true,
+    "sponsor_paid_audit_atoms": 614400000
+  },
+  "quality_policy": "d0e6b2518b1a86b7a5e72e45dd229a6a667e287271682751e152c35cdb1fc7d2",
+  "resource_allowance": {
+    "budget_usd": 150,
+    "count": 3,
+    "deadline": "2026-09-15T07:55:14.502066+00:00",
+    "hourly_usd_each": "1.2120000000",
+    "max_compute_usd": 36.36,
+    "max_hours": 10,
+    "name": "neuroshard-native-continuation-20260915",
+    "region": "us-east-1",
+    "security_group": "sg-0976e1eeeea0d29c3",
+    "type": "g5.2xlarge"
+  },
+  "resource_allowance_extensions": [
+    {
+      "budget_usd": 100,
+      "deadline": "2026-09-15T05:55:14.502066+00:00",
+      "max_hours": 8,
+      "reason": "Bounded time for corrected manifest transport trial; same three GPUs, no new hosts."
+    },
+    {
+      "at": "2026-09-15T00:06:07.372800+00:00",
+      "budget_usd": 150,
+      "deadline": "2026-09-15T07:55:14.502066+00:00",
+      "max_compute_usd": 36.36,
+      "max_hours": 10,
+      "reason": "Observed artifact replication and complete native replay require more time than initial estimate. Same three GPU hosts; fixed recipe, evaluation and 64-update acceptance contract."
+    }
+  ],
+  "resources": {
+    "compute_usd_upper_bound": 31.535160106990006,
+    "confirmed": "2026-09-15T06:35:45.930799+00:00",
+    "conservative_transfer_allowance_usd": 74.70578878318,
+    "instances": [
+      "i-042bee97d02389fe3",
+      "i-055f13169f3b855c8",
+      "i-0b11f0f06524c171c"
+    ],
+    "lifetime_tx_bytes": 3735289439159,
+    "network_counters_complete": true,
+    "protected_instances_unchanged": true,
+    "scope": "Planning estimate through confirmed termination, not an invoice. Counters include private and S3 traffic. Retained S3 storage accrues separately.",
+    "security_group_deleted": true,
+    "terminated": true,
+    "volume_deletion_confirmed": true,
+    "volumes": [
+      "vol-0499c66875a47dc32",
+      "vol-0b406bf6f0b9a757a",
+      "vol-0f51e7b8367e70835"
+    ]
+  },
+  "retained_training_checkpoint_bytes": 328586852334,
+  "scope": "One-operator native settlement, quality and inference integration of an already-passing fixed-size 1.7B recipe. Repeats exposed evaluation; not new independent learning evidence.",
+  "training_updates": 64,
+  "training_window_seconds_total": 17216.701382637024,
+  "training_witness_bytes": 294068410720,
+  "windows": [
+    {
+      "audit_and_settlement_seconds": 380.2470908164978,
+      "auditor_seconds": [
+        320.7323038200002,
+        339.036506594,
+        347.1477599929999
+      ],
+      "checkpoint_bytes": 20536678185,
+      "claim": "a244a09d3f2312f7b3dd53a6d6aa306a02ae4966da6e5970d96cf53072df0dd9",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 388,
+      "input_checkpoint": "4f5fcde935dba361a83a65f63c1db48c479796debd574d8ea9f7e10dc959bddb",
+      "issued_atoms": 4000000,
+      "learned_state": "b81aff5d3b65567389a95b7cf40772ae01fe2f89f272d7e8cb8d2433c68cc422",
+      "output_checkpoint": "a2b668c929a1e38ee90f4bbfd539690128d63fd134985927453339add2ed6ca1",
+      "replication_and_submission_seconds": 117.52174925804138,
+      "settlement_height": 823,
+      "start": 384,
+      "training_process_seconds": 200.765282869339,
+      "transcript_root": "6ea1855875976e13edf5cd6060ce95a074eb2f581cc91cf05f45d7b5adf8f2ad",
+      "window_seconds": 698.5341229438782,
+      "witness_bytes": 16218156113,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 457.2276749610901,
+      "auditor_seconds": [
+        387.34666462599944,
+        387.8079906130006,
+        421.855602437
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "b2e215cae2088e7a4786ebf2e48a316b1d81ed2a4f4bb5d39cc77579ed57ca8f",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 392,
+      "input_checkpoint": "a2b668c929a1e38ee90f4bbfd539690128d63fd134985927453339add2ed6ca1",
+      "issued_atoms": 4000000,
+      "learned_state": "dd8d2f445f6172a413711e01a1c02eed002a69975e2bb3e5e5f0f77a79a15618",
+      "output_checkpoint": "e30b006373236d8c2baac5c4ec5c31a6e0200bcae3953fd13570b6333cc3a952",
+      "replication_and_submission_seconds": 180.84187722206116,
+      "settlement_height": 1822,
+      "start": 388,
+      "training_process_seconds": 217.9500286579132,
+      "transcript_root": "114b080a98314cc713fb750d879c1d4198d3b6fc01993c186a784bcf0d5de5fb",
+      "window_seconds": 856.0195808410645,
+      "witness_bytes": 18363940895,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 448.6994318962097,
+      "auditor_seconds": [
+        401.3331486400002,
+        416.13942399000007,
+        404.4817509169998
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "20484fa78b449490acd68ff06155083eb4f6d39191e612f4f8615a6d10a35f73",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 396,
+      "input_checkpoint": "e30b006373236d8c2baac5c4ec5c31a6e0200bcae3953fd13570b6333cc3a952",
+      "issued_atoms": 4000000,
+      "learned_state": "50f2e1d6dae83a5891a62f64afdd39f90e1a937583dd99004bf9cccdf658169b",
+      "output_checkpoint": "546452261db8f80c7facd42178d969d3007b114bb36962f73d4f3810637723c3",
+      "replication_and_submission_seconds": 175.23953580856323,
+      "settlement_height": 2792,
+      "start": 392,
+      "training_process_seconds": 211.92685985565186,
+      "transcript_root": "bd987775e4a4056772e7538d68a48513becb187ac11001db2195dff1e683141b",
+      "window_seconds": 835.8658275604248,
+      "witness_bytes": 17270406233,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 576.4748795032501,
+      "auditor_seconds": [
+        427.31790591200024,
+        543.3041335469998,
+        436.8547318559995
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "8f67d70bf1a9ccebd279745bbb46d6aa3ac0f7cd84e3595180b37bfc1777df6c",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 400,
+      "input_checkpoint": "546452261db8f80c7facd42178d969d3007b114bb36962f73d4f3810637723c3",
+      "issued_atoms": 4000000,
+      "learned_state": "b0e1857f95ddfe78b9b5248460996364cc5128ca83efc6e7aeeb0cfdb86d56f8",
+      "output_checkpoint": "84bb0a05e7e7ccd9c62ebed05a94756c1209450cc6fc0a79264908e45fb29ced",
+      "replication_and_submission_seconds": 133.41224908828735,
+      "settlement_height": 3900,
+      "start": 396,
+      "training_process_seconds": 243.1163992881775,
+      "transcript_root": "296601b665c24a17a0da8921dc0ad7552cd0b8bce252c32f8e9c9fd962d2ad6b",
+      "window_seconds": 953.003527879715,
+      "witness_bytes": 20926135965,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 1581.3913223743439,
+      "auditor_seconds": [
+        387.7593439159991,
+        799.0364321739999,
+        422.010654744
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "974ea1052c0570de3b4bdae4bd626b276850513662a6556b9277072ca0b6bcd0",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 897.5713491439819,
+      "controller_recovery_seconds": 0,
+      "end": 404,
+      "input_checkpoint": "84bb0a05e7e7ccd9c62ebed05a94756c1209450cc6fc0a79264908e45fb29ced",
+      "issued_atoms": 4000000,
+      "learned_state": "ad1a2ec7172acd86b0906cb71223375d85920e3ca2ff22d75ecc3646092f4a50",
+      "output_checkpoint": "e7edd1180418557f476d696a605b5afd9b52173d66389fa9b35a21047cf23d22",
+      "replication_and_submission_seconds": 427.23451375961304,
+      "settlement_height": 5779,
+      "start": 400,
+      "training_process_seconds": 351.46707105636597,
+      "transcript_root": "9f62b9c4168f07ff2dc89953070abfba52eb02b09b5ec808a097242acb658771",
+      "window_seconds": 2360.092907190323,
+      "witness_bytes": 18641157733,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 486.7718677520752,
+      "auditor_seconds": [
+        418.0823104600004,
+        450.419859697,
+        433.0100695000001
+      ],
+      "checkpoint_bytes": 20536678275,
+      "claim": "00a1d2c67c2ba26dc3197250ae207d588b68f31f771a21a827806d349b9f950b",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 408,
+      "input_checkpoint": "e7edd1180418557f476d696a605b5afd9b52173d66389fa9b35a21047cf23d22",
+      "issued_atoms": 4000000,
+      "learned_state": "9f146570c9773e0162f6480406675636ab3089c14cf7bf0a41ee1e802ee3884c",
+      "output_checkpoint": "a5e25ddcc0dc5e1680955d195cf8e766573ebe3655817907abdb2e449490f758",
+      "replication_and_submission_seconds": 208.93898105621338,
+      "settlement_height": 7840,
+      "start": 404,
+      "training_process_seconds": 330.5816991329193,
+      "transcript_root": "c1ed7016a1e2c148a7af79afd36ef83c2dd8be1e1020637ee8ece93f1a3a3687",
+      "window_seconds": 1026.2925479412079,
+      "witness_bytes": 16557899039,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 468.0242600440979,
+      "auditor_seconds": [
+        419.7064668970015,
+        420.95723124100004,
+        435.97652710500006
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "d8603ed1ee90d84ecec206b2a4157bb781a97ecfc3a4e2971a292a36d78b328e",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 412,
+      "input_checkpoint": "a5e25ddcc0dc5e1680955d195cf8e766573ebe3655817907abdb2e449490f758",
+      "issued_atoms": 4000000,
+      "learned_state": "dad6a4722c0de6e583f60afac7801206f2eeb74d5a66140b1b8009327ec17604",
+      "output_checkpoint": "6593c714562fbbab1d72d2bb8f8858cb47733981d9251e78dd2af2817bbe8ff2",
+      "replication_and_submission_seconds": 181.1285490989685,
+      "settlement_height": 8830,
+      "start": 408,
+      "training_process_seconds": 202.10719966888428,
+      "transcript_root": "66f02c7cde9b84ba7ab1e89d38438a06c28c60d4e87f3b02ba0acaf5113b3b99",
+      "window_seconds": 851.2600088119507,
+      "witness_bytes": 17054531313,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 489.9428594112396,
+      "auditor_seconds": [
+        427.65891538100004,
+        445.30544070199903,
+        457.06884913799877
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "d8c363a245e596910fdbe49852e528953f698e445480b6a735a7b090256469e8",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 416,
+      "input_checkpoint": "6593c714562fbbab1d72d2bb8f8858cb47733981d9251e78dd2af2817bbe8ff2",
+      "issued_atoms": 4000000,
+      "learned_state": "095c29ee88e3a0b6c36f20e325a6f1e0ec8a284c417f1b3052f616f24a4740c5",
+      "output_checkpoint": "7d074c9d75778c183d28fa8202468603a11f80f39a4e049a7eee8cf2eb1a281d",
+      "replication_and_submission_seconds": 245.42406249046326,
+      "settlement_height": 9934,
+      "start": 412,
+      "training_process_seconds": 217.4444878101349,
+      "transcript_root": "5b8968d28034822567c91b554c1870c9a6714a0385890c596c0551afe0461cbb",
+      "window_seconds": 952.8114097118378,
+      "witness_bytes": 18890063541,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 519.706892490387,
+      "auditor_seconds": [
+        406.50325470499956,
+        462.4383393019998,
+        488.45528414099863
+      ],
+      "checkpoint_bytes": 20536678281,
+      "claim": "8c8bd9e724b1d016b08cbb572c520ccc2c79c871f3630243607448cdc795feb9",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 420,
+      "input_checkpoint": "7d074c9d75778c183d28fa8202468603a11f80f39a4e049a7eee8cf2eb1a281d",
+      "issued_atoms": 4000000,
+      "learned_state": "11b9dbb73c98111b2aa9e31e742867a62a08a742dfc34971587973e4d3d52738",
+      "output_checkpoint": "8e8d72fc110f68a09e7f785fd4015a9458d9b418f37446ef8d1c9d6d66c535bd",
+      "replication_and_submission_seconds": 246.05095171928406,
+      "settlement_height": 11065,
+      "start": 416,
+      "training_process_seconds": 207.40999603271484,
+      "transcript_root": "c80deb27e1c43bd48fd1d11b6c3a7a2e5fd210d3fde134b73f220cb50fe69357",
+      "window_seconds": 973.1678402423859,
+      "witness_bytes": 17250352735,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 537.2812068462372,
+      "auditor_seconds": [
+        429.989046667999,
+        444.9228637310007,
+        499.3460541120003
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "0b88cc8429825d415fbd364a149f8430bd097efeab4bad2097e59f2e031b1f69",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 424,
+      "input_checkpoint": "8e8d72fc110f68a09e7f785fd4015a9458d9b418f37446ef8d1c9d6d66c535bd",
+      "issued_atoms": 4000000,
+      "learned_state": "3644d7d330497ea5197c059b845e75283d7e6caec6af09374a6069955179839e",
+      "output_checkpoint": "186d18c10ea933deaad0e0ed1db80aac53db62f75f3d9c4692fb3c97ba716283",
+      "replication_and_submission_seconds": 233.03968811035156,
+      "settlement_height": 12228,
+      "start": 420,
+      "training_process_seconds": 231.5406312942505,
+      "transcript_root": "a8a0cbc147f37108115d765a8e898e61833d935d597f82b4a2cc0a8ee9bcd097",
+      "window_seconds": 1001.8615262508392,
+      "witness_bytes": 18691882681,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 509.5619480609894,
+      "auditor_seconds": [
+        413.3452763469995,
+        432.60874593100016,
+        473.893505643
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "42c6140d1fb25413b5b5333308e4149b449a40c40b8a74fd7653aac3dca975e4",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 428,
+      "input_checkpoint": "186d18c10ea933deaad0e0ed1db80aac53db62f75f3d9c4692fb3c97ba716283",
+      "issued_atoms": 4000000,
+      "learned_state": "58cf1d335da9b1ef0f7a7129ca99e19adde95829b1fdc6035767bbd3fdaddcf8",
+      "output_checkpoint": "f93de99860dae754406c09e913530377f446ee8cfe8c0ca361dc2c305172c3c5",
+      "replication_and_submission_seconds": 329.2643265724182,
+      "settlement_height": 13438,
+      "start": 424,
+      "training_process_seconds": 201.8928632736206,
+      "transcript_root": "09334aa0d2d857481e8e52369606c4a778e52551df8db173622a45ae09bd8bf0",
+      "window_seconds": 1040.7191379070282,
+      "witness_bytes": 18448875179,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 533.2544114589691,
+      "auditor_seconds": [
+        420.799191651,
+        433.81716666399916,
+        496.6386124700002
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "54c74c2b90e5938b549200807cdf425f49c654f9ee2bdccd196202c14d2c5d31",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 432,
+      "input_checkpoint": "f93de99860dae754406c09e913530377f446ee8cfe8c0ca361dc2c305172c3c5",
+      "issued_atoms": 4000000,
+      "learned_state": "a5242b5ed1b6be4adf6588c7040b267614d4a4be701fb454bf903ddcc4b49b84",
+      "output_checkpoint": "a8a3fc1ce4650deb6c8fd3fd728869ae647d83b389f4663712d975bca62ef4a2",
+      "replication_and_submission_seconds": 321.2438995838165,
+      "settlement_height": 14687,
+      "start": 428,
+      "training_process_seconds": 218.46625757217407,
+      "transcript_root": "f3b6e94701ace46aea71b3588ab8e72fe515ee1809703052c4d3a869e7eab841",
+      "window_seconds": 1072.9645686149597,
+      "witness_bytes": 19729972993,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 511.4813585281372,
+      "auditor_seconds": [
+        422.637049003999,
+        435.8772252719973,
+        466.99167497300004
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "1abf95fe742d5f12a6357eb65abfed792ba08f097fc1e4192c82aede330805a7",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 436,
+      "input_checkpoint": "a8a3fc1ce4650deb6c8fd3fd728869ae647d83b389f4663712d975bca62ef4a2",
+      "issued_atoms": 4000000,
+      "learned_state": "f981a44e2194ae3bc093a8e0c12ba80b2db1e7e0e832a5cb5068563711551543",
+      "output_checkpoint": "9f406d8397987592268c467cc2e828153ca6970eedcdd442c8573779441a385b",
+      "replication_and_submission_seconds": 295.80878591537476,
+      "settlement_height": 15866,
+      "start": 432,
+      "training_process_seconds": 211.18141508102417,
+      "transcript_root": "47216a096cf8af8efe64e1cf0cc6cd31734cdfcd7e1613396c5f2038c3d0be2e",
+      "window_seconds": 1018.4715595245361,
+      "witness_bytes": 17800069187,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 530.9048500061035,
+      "auditor_seconds": [
+        426.363386195997,
+        491.971232893,
+        492.1574575920022
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "30b5ab6de10366a730946fc6748d6d052d8f9c825695890d2582ecc665d571fe",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 440,
+      "input_checkpoint": "9f406d8397987592268c467cc2e828153ca6970eedcdd442c8573779441a385b",
+      "issued_atoms": 4000000,
+      "learned_state": "50ec44df7a94e5a100518fc757d23081d103ad8d4df574138a8268881c047e82",
+      "output_checkpoint": "7176f8f0c7482ac8e0eff075b25c9f3737950f0f5f5d88c89dffbe1fb1847c75",
+      "replication_and_submission_seconds": 202.51376676559448,
+      "settlement_height": 16953,
+      "start": 436,
+      "training_process_seconds": 211.9909427165985,
+      "transcript_root": "32b83df4de90c8c341ac0a72c9798ea02b2c50eab4e25e7ee4a033c2ea711083",
+      "window_seconds": 945.4095594882965,
+      "witness_bytes": 18839338791,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 493.4188804626465,
+      "auditor_seconds": [
+        435.817838813,
+        440.34748699099873,
+        455.55628256399723
+      ],
+      "checkpoint_bytes": 20536678287,
+      "claim": "d80428d9a6168dbd548eb16be43fec38bffb0c382a17e960d5b51e5d8f652b6d",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 384.35824632644653,
+      "end": 444,
+      "input_checkpoint": "7176f8f0c7482ac8e0eff075b25c9f3737950f0f5f5d88c89dffbe1fb1847c75",
+      "issued_atoms": 4000000,
+      "learned_state": "6729cbf329e220bff21c522c33ff0dcf57112a6384469c2eadcaaddc1c914d0e",
+      "output_checkpoint": "adb97dd1ba5e6a0f543d67ef55097f8ce546f1af560022f8b0ea49c1bc20746d",
+      "replication_and_submission_seconds": 825.7686245441437,
+      "settlement_height": 18316,
+      "start": 440,
+      "training_process_seconds": 245.99095702171326,
+      "transcript_root": "7a0c70bd85760edbcde145e9326b43a3582681014c403fadaf8cc465bb637a0a",
+      "window_seconds": 1565.1784620285034,
+      "witness_bytes": 20507360855,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    },
+    {
+      "audit_and_settlement_seconds": 494.0354359149933,
+      "auditor_seconds": [
+        426.7544864800002,
+        443.33597126300083,
+        460.7284373509974
+      ],
+      "checkpoint_bytes": 20536678185,
+      "claim": "56e1848ba04c39da2c703d440c265cc1f7f812222130e49f86038380ae6ad1e2",
+      "complete_partition_replays": 9,
+      "controller_pause_seconds": 0,
+      "controller_recovery_seconds": 0,
+      "end": 448,
+      "input_checkpoint": "adb97dd1ba5e6a0f543d67ef55097f8ce546f1af560022f8b0ea49c1bc20746d",
+      "issued_atoms": 4000000,
+      "learned_state": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+      "output_checkpoint": "e2379f6f819b63508fe4648b21b9919a410f1924ce860485e0cfb65787378074",
+      "replication_and_submission_seconds": 357.5839912891388,
+      "settlement_height": 19540,
+      "start": 444,
+      "training_process_seconds": 213.42936849594116,
+      "transcript_root": "4e94bb6adbc1cb7833c16ba5160bb07070e10acfb2e6ee9a2960b6f1bf79b66e",
+      "window_seconds": 1065.0487957000732,
+      "witness_bytes": 18878267467,
+      "worker_payments": [
+        1176464,
+        1411768,
+        1411768
+      ]
+    }
+  ],
+  "worker_earned_atoms": [
+    18823424,
+    22588288,
+    22588288
+  ],
+  "workers_started_with_zero": true
+}

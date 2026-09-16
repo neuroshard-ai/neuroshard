@@ -2,7 +2,7 @@
 
 **Design direction, September 2026.** NeuroShard's objective is a collectively trained, openly retrievable language model, maintained by a permissionless network with its own consensus. More usable resources should increase the network's ability to learn, retain knowledge and serve requests. Parameter count is one possible result of that capacity, not the admission rule or reward metric.
 
-The public 0.4.0 adapter network, the experimental full-model native lifecycle, and the proposed scaling protocol below are different maturity levels. This document chooses an architecture for further work. It does not activate unimplemented transactions or claim that the deployed network has an independent audit market.
+The public 0.4.0 adapter network, the experimental full-model native lifecycle, and the proposed scaling protocol below are different maturity levels. This document records a design direction. The numerical learning, recovery and capacity experiments must establish the method before further protocol implementation. It does not activate unimplemented transactions or claim that the deployed network has an independent audit market.
 
 ## What changes in the thesis
 
@@ -27,19 +27,30 @@ The existing pipeline proves the mechanics of partitioned full-model execution. 
 
 [DiLoCo](https://arxiv.org/abs/2311.08105) motivates reducing communication between cooperating groups. The later [Decoupled DiLoCo report](https://deepmind.google/blog/decoupled-diloco/) also studies isolation of failures between learner units. Those results concern distributed optimization and infrastructure. They do not establish Byzantine security, public admission, or economical verification of NeuroShard's work. Its published 88% goodput comparison is from simulation; its actual multi-region training experiment is separate evidence.
 
-For the first implementation of multiple learning groups, use **bounded synchronous windows** from a common accepted parent. Fix each group's data, optimizer, step count, seed, deadline and aggregation weight before work begins. Commit all outputs before accepting an aggregate. Define the outer optimizer and reduction order exactly, and give aggregation its own reproducible dispute path. A missing group either triggers the precommitted reduced-membership rule or cancels that window; the coordinator cannot silently invent a replacement contribution.
+The numerical method must define each group's data, optimizer, step count, seed, deadline and reduction order before work begins. A missing group either triggers a tested, precommitted recovery rule or cancels the work; the coordinator cannot silently invent a replacement contribution. A bounded assignment is still useful for accountability, but it does not require independently optimizing local models and averaging their weights.
 
-An [operated four-worker prototype](LOCAL_TRAINING_WINDOWS_RESULTS.md) now implements this window structure and common-checkpoint recovery. With 16 local updates per window, transmitted data falls by 93.8% against DDP and a killed worker process recovers to the exact uninterrupted state. The candidate fails retention and the quality margin against DDP, and still costs more GPU time than one worker. It therefore supplies recovery and communication evidence, not an approved learning recipe or a native aggregation transition. A separate PowerSGD probe completes synchronized compressed updates after moving dense error feedback to CPU; its learning quality and complete-state recovery remain untested.
+An [operated four-worker prototype](LOCAL_TRAINING_WINDOWS_RESULTS.md) implements local optimization windows and common-checkpoint recovery. With 16 local updates per window, transmitted data falls by 93.8% against DDP and a killed worker process recovers to the exact uninterrupted state. The candidate fails retention and the quality margin against DDP, and still costs more GPU time than one worker. It supplies recovery and communication evidence, not an approved learning recipe or a native aggregation transition.
+
+The [batched shared-gradient comparison](BATCHED_LEARNING_STUDY_RESULTS.md) supports a different numerical candidate: one shared AdamW update rule, globally normalized target loss and PowerSGD-compressed gradients with error feedback. With efficient batching on both controls, two GPUs complete 1.7B full-model training 1.45× faster than one GPU while passing the declared narrow quality/retention screen. Allocated GPU seconds increase by 38%. Both workers still hold the full model, and recovery of this method's optimizer and compression state remains untested. This candidate should first establish continuation, recovery and pooled memory before native integration or growth.
 
 Do not accept arbitrary stale updates or assign reward in proportion to gradient norm. Adding asynchronous windows, optimizer momentum, sparse experts or a changed numerical profile requires a separately tested state transition. Sparse experts may eventually reduce active compute per token, but routing, expert availability, shared layers, load imbalance and training verification remain obligations. Merely creating more experts does not solve them.
 
 ## Resource admission before growth
 
+The [adaptive shard experiment](ADAPTIVE_SHARDS_RESULTS.md) establishes exact
+two-to-three-owner redistribution of a 1.7B model and its Adam state. Its
+[native replay-quorum adapter](NATIVE_SHARD_REPLAY.md) settles bounded GPU updates
+without requiring a whole model in an auditor's GPU memory. Mandatory complete
+replay, several gigabytes of witnesses per measured window, operated membership
+and one-owner validator infrastructure remain material limits. Redistribution
+increases available memory; useful parameter growth still requires its separate
+quality comparison.
+
 Admission should describe a **service obligation**, not a self-reported machine specification. Bind the provider key, execution profile, task bounds, price, collateral, availability period and artifact-retention deadline. A resource advertisement guides scheduling; objective completion and retrieval checks establish whether its assigned service was supplied.
 
-The planner must account for weights, gradients, optimizer state, peak activations, temporary buffers and runtime overhead. The current 48M-parameter worker bound is not a memory proof. Serving capacity and complete replay capacity must be tested for a proposed larger model as well as training capacity.
+The planner must account for weights, gradients, optimizer state, peak activations, temporary buffers and runtime overhead. A parameter-count limit is not a memory proof. Serving capacity and complete replay capacity must be tested for a proposed larger model as well as training capacity.
 
-The current profile permits at most 64 partitions, caps each worker at 48M parameters, bounds individual artifacts at 256 MiB and training metadata at 512 KiB. Adding peers does not remove these bounds. A much larger model or a new numerical layout needs an explicitly versioned profile and new conformance measurements; enlarging constants without measuring verification and availability is not a scaling result.
+The earlier CPU evolution profile permits at most 64 partitions, caps each worker at 48M parameters, bounds individual artifacts at 256 MiB and training metadata at 512 KiB. The separate adaptive GPU experiment uses a 900M student-parameter limit per worker, measured CUDA admission and portable tensor files. Its native adapter admits at most four updates per claim in a dedicated genesis. These profiles are not interchangeable upgrades. Adding peers does not remove their declared bounds; a new numerical layout needs its own conformance, verification and availability measurements.
 
 Before proposing growth, require all of the following under a published policy:
 
@@ -80,7 +91,7 @@ Two simple checks constrain any proposal:
 - A fraud-only observer with replay cost `C`, probability `p` of being the successful rewarded detector, and bounty `R` has expected net reward `p*R - C`. As successful fraud becomes rare, that cannot cover a fixed positive cost. Paying honest auditing therefore belongs in the normal budget.
 - Under genuinely independent draws from a population with adversarial resource fraction `a`, `k` complete auditors all being adversarial has probability `a^k`. With fully correlated ownership or one shared replay supplier, the corresponding risk can remain `a`. For `a = 0.25` and `k = 4`, those are 0.39% and 25%, respectively. Neither number describes the current single-operator deployment, and neither is a consensus-security theorem.
 
-Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. The [funded candidate](FUNDED_AUDITING.md) now reserves existing tokens for selected auditors and gates all execution claim kinds on complete-coverage reports. Its daemon replays the entire graph, but signatures do not prove that work occurred independently. This remains an operated service with explicit sponsor selection; the public 0.4.0 reward split is unchanged.
+Require a funded audit obligation for **every** accepted training stage and all dependencies, not one cheap sampled SGD chunk per model. The earlier [funded candidate](FUNDED_AUDITING.md) reserves existing tokens for sponsor-selected auditors. The optional [native quorum profile](NATIVE_SHARD_REPLAY.md) instead snapshots bonded validator weight and requires more than two thirds to agree after complete replay. It pays completed honest auditing from escrow, including rejection of an invalid claim. Signatures still do not prove separate computation or ownership, and threshold collusion can approve a forgery. The public 0.4.0 reward split is unchanged.
 
 ## Membership and assignment
 
@@ -109,9 +120,9 @@ Separate fast response delivery from final payment while defining which party be
 | Gate | Evidence required | Present status |
 | --- | --- | --- |
 | Bounded neural adjudication | Real-model dispute bytes, validator time, observer cost and cross-CPU agreement; adversarial coverage of all supported operators | Optimizer refutation implemented; full graph still uses stage replay |
-| Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Prepaid complete replay and reporting implemented in the candidate; sponsor selection and ownership remain limitations |
-| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | The [135M run](LEARNING_MILESTONE_RESULTS.md) remains failed. A separate [1.7B generated-task contract](COOPERATIVE_LEARNING_RESULTS.md) passes narrowly; arithmetic, broad quality and independent evaluation remain open |
-| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | [Two owned GPUs](COOPERATIVE_LEARNING_RESULTS.md) agree on trained parameters but synchronize slowly; two serving replicas provide 1.67× throughput and bounded failover. No pooled memory or independent paid provider market |
+| Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Prepaid replay implemented; the optional native quorum replaces sponsor-selected identities with bonded voting weight. Independent ownership, affordable replay and reservation liveness remain requirements |
+| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | [Answer-balanced continuation](BALANCED_CONTINUATION_RESULTS.md) passes its frozen narrow gate on three 1.7B model shards: new answers 378→462/512 and all 188 correct prior answers retained. This supports one continuation recipe; broad assistant quality, additional independent cohorts and a matched-compute useful-growth result remain open. The earlier 1.85B growth candidate failed its gain margin |
+| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | [Persistent shards](SHARDED_TRAINING_RESULTS.md) pool model memory and recover after host replacement. [Adaptive shards](ADAPTIVE_SHARDS_RESULTS.md) preserve weights and Adam across two-to-three-worker redistribution. Public admission, useful growth and an independent paid provider market remain separate gates |
 | Public independence | Independent ownership of sufficient voting power and services, admission and exit, recovery logs, public genesis | Four public validator keys under one operator |
 | Sustainable service | Artifact retention/recovery, storage bounds, audit and inference funding, usable latency, privacy policy | Bounded testnet mechanisms; no established public compute economy |
 
