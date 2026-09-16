@@ -142,3 +142,9 @@ under the same admission rules.
   The next GPU probe is frozen around the existing parent and updates 0–8,
   with one GPU, a two-hour limit and a $15 planning cap. All six milestones
   remain in scope; dependencies determine execution order and none is complete.
+- 2026-09-16: The real-job preflight caught an identifier-domain mismatch missed
+  by the small earlier-cohort fixture. Stopped the driver before neural execution,
+  fixed preservation of the original interpreted-cohort job, and verified all
+  three real claim contexts. Twelve executor checks passed in 37.58 seconds.
+  The replacement probe retains the same model, data, success criteria, GPU and
+  spending deadline; the first attempt remains recorded.

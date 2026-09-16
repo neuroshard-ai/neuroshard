@@ -31,6 +31,13 @@ from .feature_probe import load_head
 from .model import Partition
 
 
+def training_job(plan, prepared):
+    """Preserve the original experiment's job domain across native adoption."""
+    if plan['format'] not in (cohort_experiment.FORMAT, 'neuroshard-interpreted-cohort-v1'):
+        raise ValueError('Unsupported original expert training contract')
+    return identity({'format': plan['format'], 'plan': identity(plan), 'prepared': identity(prepared)})
+
+
 def _context(claim, profile, plan, prepared):
     """Reject substitutions before allocating a model or executing an update."""
     if (set(profile) != expert_work.PROFILE_FIELDS or profile['format'] != expert_work.FORMAT
@@ -39,7 +46,7 @@ def _context(claim, profile, plan, prepared):
     parent, initial = profile['parent'], profile['checkpoint']
     expert_checkpoint.unpack(parent, initial)
     before = claim['input_checkpoint']
-    job = cohort_experiment.job(plan, prepared)
+    job = training_job(plan, prepared)
     if (initial['step'] != 0 or initial['job'] != job or plan['parent'] != identity(parent)
             or plan['training'] != initial['recipe'] or plan['split'] != initial['split']
             or plan['expert_layout'] != initial['boundaries']

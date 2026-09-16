@@ -14,6 +14,15 @@ from neuroshard.evolution.sharded import expert_execution, expert_replay, featur
 from test_expert_window_replay import test_replay_reconstructs_the_actual_five_owner_training_checkpoint as replay_fixture
 
 
+def test_real_archived_training_job_keeps_its_original_domain():
+    root = Path(__file__).resolve().parents[2]
+    read = lambda name: json.loads((root / 'config/experiments' / name).read_bytes())
+    plan, prepared = read('interpreted-cohort.json'), read('interpreted-cohort-prepared.json')
+    archived = read('expert-window-replay.json')['training_job']
+    assert expert_execution.training_job(plan, prepared) == archived
+    assert cohort_experiment.job(plan, prepared) != archived
+
+
 @pytest.fixture(scope='module')
 def trajectory(tmp_path_factory):
     home = tmp_path_factory.mktemp('expert-execution')

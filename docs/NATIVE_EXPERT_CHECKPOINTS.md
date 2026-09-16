@@ -109,6 +109,15 @@ an individual partition owner. The
 trajectory, with an additional forged-measurement and missing-boundary check.
 It permits one GPU for at most two hours within a $15 planning cap.
 
+The first probe's local archived-job preflight found a domain mismatch between
+the earlier cohort fixture and the actual interpreted-cohort job. The driver was
+stopped before neural execution. The
+[replacement plan](../config/experiments/native-expert-execution-retry.json)
+preserves the original job identity and validates all three real claim contexts
+before execution. It reuses the same GPU allocation and original deadline; model,
+data, numerical kernels and success criteria are unchanged. The original plan and
+failure record remain available.
+
 The second expert has durable weight/Adam checkpoints at 0/280/560. Reconstructing
 the intervening commitments does not make their tensor payloads durably available.
 An operated settlement must provide those bytes or maintain an actual replay
