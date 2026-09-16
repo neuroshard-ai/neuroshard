@@ -16,6 +16,8 @@ import requests
 
 BLOCK = 4 * 1024**2
 TRANSIENT = {408, 409, 425, 429, 500, 502, 503, 504}
+# The 1.7B tied embedding with FP32 Adam state is about 1.21 GB.
+MAX_OBJECT_BYTES = 2 * 1024**3
 
 
 class CorruptObject(ValueError):
@@ -38,7 +40,7 @@ def transfer(key, size, get_url, *, source=None, put_url=None, destination=None,
              attempts=5, max_seconds=600):
     """Upload/read back or atomically restore one content-addressed object."""
     if (not isinstance(key, str) or not re.fullmatch('[0-9a-f]{64}', key)
-            or type(size) is not int or not 0 < size <= 1024**3
+            or type(size) is not int or not 0 < size <= MAX_OBJECT_BYTES
             or type(attempts) is not int or not 1 <= attempts <= 8
             or type(max_seconds) not in (int, float) or not math.isfinite(max_seconds)
             or not 0 < max_seconds <= 1800 or (source is None) != (put_url is None)):
@@ -122,3 +124,39 @@ def transfer(key, size, get_url, *, source=None, put_url=None, destination=None,
             if pending is not None:
                 pending.unlink(missing_ok=True)
     raise UnavailableObject('Object transfer exhausted its bound')
+
+
+def restore(key, size, urls, destination, *, attempts=6, max_seconds=600):
+    """Restore the same committed bytes across configured replicas and retries.
+
+    Corrupt or unavailable responses never become a local accepted object. A
+    different replica may still provide the exact bytes. URL and authentication
+    strings stay out of returned diagnostics, including after total failure.
+    """
+    if (not isinstance(urls, (list, tuple)) or not 1 <= len(urls) <= 8
+            or any(not isinstance(url, str) or not url.startswith(('https://', 'http://')) for url in urls)
+            or type(attempts) is not int or not 1 <= attempts <= 8
+            or type(max_seconds) not in (int, float) or not math.isfinite(max_seconds)
+            or not 0 < max_seconds <= 1800):
+        raise ValueError('Require bounded configured object replicas')
+    # A corrupt preexisting cache is a local fault; do not repeatedly fetch
+    # replicas only to have transfer reject the same existing destination.
+    destination = Path(destination)
+    if destination.exists() or destination.is_symlink():
+        return {**transfer(key, size, urls[0], destination=destination,
+                           attempts=1, max_seconds=max_seconds), 'replica': None, 'failures': []}
+    deadline, failures = time.monotonic() + max_seconds, []
+    for attempt in range(attempts):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        replica = attempt % len(urls)
+        try:
+            result = transfer(key, size, urls[replica], destination=destination,
+                              attempts=1, max_seconds=remaining)
+            return {**result, 'attempts': attempt + 1, 'replica': replica, 'failures': failures}
+        except (CorruptObject, UnavailableObject) as error:
+            failures.append({'replica': replica, 'error': type(error).__name__})
+            if attempt + 1 < attempts:
+                time.sleep(min(.5 * 2**attempt, max(0, deadline - time.monotonic())))
+    raise UnavailableObject('Object ' + key + ' unavailable after ' + str(len(failures)) + ' replica attempts')

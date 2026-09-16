@@ -136,7 +136,7 @@ def training_records(plan, prepared, inputs, vocabulary):
     return records(prepared, 'train', lambda _: path.read_bytes(), plan['max_length'], vocabulary)
 
 
-def review(state, job, policy, store, tokenizer, upstream):
+def review(state, job, policy, store, tokenizer, upstream, *, history_index=None):
     """Review available raw sources and retokenize before an explicit native vote."""
     expert_admission.validate_job(state, job)
     serving_graph.fields(policy, {'format', 'tokenizer', 'max_length', 'sources', 'near_duplicate_distance', 'quality_rule'},
@@ -178,6 +178,18 @@ def review(state, job, policy, store, tokenizer, upstream):
         raise ValueError('Review every actual training and evaluation document')
     if [[groups['train'][index]['id'] for index in batch] for batch in prepared['batches']] != dataset['batches']:
         raise ValueError('Prepared feature batches differ from admitted document ownership')
+    from .expert_history import HistoryIndex
+    history = state['expert_lifecycle']['admission']['seen_documents']
+    index = history_index if history_index is not None else HistoryIndex()
+    try:
+        indexed = index.synchronize(history, store)
+        for row in rows.values():
+            signature = fingerprint('\n'.join(message['content'] for message in row['messages']))
+            if index.match(signature, distance, replay=declared[row['id']]['role'] == 'replay') is not None:
+                raise ValueError('Historical near-duplicate contamination or repeated fresh data')
+    finally:
+        if history_index is None:
+            index.close()
     signatures, originals, checks, evidence_bytes = [], {}, 0, 0
     for role, values in groups.items():
         for row in values:
@@ -219,6 +231,7 @@ def review(state, job, policy, store, tokenizer, upstream):
         checks += len(matched)
     return {'format': POLICY + '/review', 'job': data.identity(job), 'policy': data.identity(policy),
             'documents': len(rows), 'upstream_documents': checks, 'prepared': data.identity(prepared),
+            'historical_documents': indexed['documents'], 'history_root': indexed['history_root'],
             'quality_policy': quality, 'mechanical_checks_passed': True, 'semantic_curation_required': True}
 
 

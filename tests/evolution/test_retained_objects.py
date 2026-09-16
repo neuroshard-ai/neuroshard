@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from neuroshard.evolution.sharded.retained_objects import CorruptObject, transfer
+from neuroshard.evolution.sharded.retained_objects import CorruptObject, UnavailableObject, restore, transfer
 
 
 @pytest.fixture
@@ -32,8 +32,12 @@ def store():
 
         def do_GET(self):
             state['gets'] += 1
+            if self.path.startswith('/missing'):
+                self.send_response(503)
+                self.end_headers()
+                return
             body = state['object']
-            if state['corrupt']:
+            if state['corrupt'] or self.path.startswith('/bad'):
                 body = bytes([body[0] ^ 1]) + body[1:]
             self.send_response(200)
             self.send_header('Content-Length', str(len(body)))
@@ -81,3 +85,29 @@ def test_corrupt_readback_is_not_published_or_retried_as_a_network_failure(store
     with pytest.raises(CorruptObject, match='readback'):
         transfer(hashlib.sha256(body).hexdigest(), len(body), url, destination=target, max_seconds=10)
     assert state['gets'] == 1 and not target.exists() and list(tmp_path.iterdir()) == []
+
+
+def test_restore_falls_back_from_corrupt_replica_and_resumes_without_redownload(store, tmp_path):
+    url, state = store
+    body = b'one immutable object with separate providers' * 128
+    state.update(object=body, interrupt=False)
+    key, target = hashlib.sha256(body).hexdigest(), tmp_path/'restored'
+    urls = [url+'/bad?signature=do-not-log', url+'/good']
+    result = restore(key, len(body), urls, target, max_seconds=5)
+    assert result['replica'] == 1 and result['attempts'] == 2
+    assert result['failures'] == [{'replica': 0, 'error': 'CorruptObject'}]
+    assert target.read_bytes() == body and state['gets'] == 2
+    assert restore(key, len(body), urls, target, max_seconds=5)['attempts'] == 0
+    assert state['gets'] == 2
+
+
+def test_restore_total_failure_leaves_no_accepted_partial_object_or_secret(store, tmp_path):
+    url, state = store
+    body = b'public committed bytes'
+    state.update(object=body, interrupt=False)
+    key, target = hashlib.sha256(body).hexdigest(), tmp_path/'restored'
+    with pytest.raises(UnavailableObject) as failure:
+        restore(key, len(body), [url+'/missing?token=do-not-log', url+'/bad?signature=do-not-log'],
+                target, attempts=2, max_seconds=5)
+    assert 'do-not-log' not in str(failure.value) and not target.exists()
+    assert not list(tmp_path.glob('.receiving-*'))

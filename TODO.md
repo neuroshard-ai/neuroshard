@@ -222,3 +222,13 @@ under the same admission rules.
   [cached conversation trial](config/experiments/cached-composition-trial.json)
   now tests the actual model partitions, mixed answers and complete replay.
   No additional top-level milestone is complete.
+
+- 2026-09-16: Added a rebuildable historical-data index that checks new cohorts
+  against all admitted documents, reuses verified fingerprints across restart,
+  rejects near copies of old evaluation examples and preserves explicit replay.
+  Five source-data checks passed, including actual prefix production and
+  independent numerical replay. Added verified object restoration with replica
+  fallback; four HTTP fault checks passed. The first cached conversation GPU
+  attempt stopped during one artifact download, before neural execution; all
+  resources are retired. The [retry](config/experiments/cached-composition-retry.json)
+  retains every neural input and pass rule, and changes only artifact delivery.

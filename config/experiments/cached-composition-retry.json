@@ -1,0 +1,13 @@
+{
+  "absolute_deadline_utc": "2026-09-16T16:38:14.136381+00:00",
+  "combined_planning_cap_usd": 25,
+  "correction": "Mirror the same published serving tensors to the existing CDN, retain GitHub as a second replica, and perform bounded atomic hash-checked restoration with replica fallback.",
+  "first_attempt_compute_usd_upper_bound": 0.9092262919666667,
+  "format": "neuroshard-cached-composition-trial-v1/retry",
+  "neural_changes": false,
+  "original_plan": "config/experiments/cached-composition-trial.json",
+  "preserve_original_archive": true,
+  "required_before_allocation": "All 454 previously GitHub-only objects have verified stored SHA256 and anonymous CDN availability. Original trial instances, disks and security group are retired.",
+  "source_commit": "9b8f5290a611fdc46ae5bc902fc582db07f5ac02",
+  "unchanged": "Model and optimizer bytes, tokenizer, numerical profile, 32 planner cases, eight complete conversations, reference answers and pass criteria."
+}

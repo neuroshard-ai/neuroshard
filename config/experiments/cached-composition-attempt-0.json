@@ -1,0 +1,27 @@
+{
+  "attempt": 0,
+  "failure": {
+    "cause": "One public GitHub artifact exhausted three fetch attempts. The old helper omitted HTTP diagnostics, so the underlying transient cause is not established.",
+    "object": "9e04c8b4a9f254e61d9d1521a756fc8fd2668305012fa04425ee9404a67f6825",
+    "owner": 1
+  },
+  "format": "neuroshard-cached-composition-trial-v1/attempt",
+  "neural_execution_started": false,
+  "other_owners": "Four owners completed all hash-checked input downloads. No model execution started.",
+  "resources": {
+    "compute_usd_upper_bound": 0.9092262919666667,
+    "protected_unchanged": true,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate.",
+    "security_group_deleted": true,
+    "terminated": [
+      "i-005a25bce33afac63",
+      "i-0550ef7cbe7ea786f",
+      "i-085fa3885ced76b98",
+      "i-0bf788f44a8c39962",
+      "i-0c0d9fa9ad90d435a"
+    ],
+    "volumes_deleted": true
+  },
+  "source_commit": "9b8f5290a611fdc46ae5bc902fc582db07f5ac02",
+  "status": "bootstrap_failed"
+}

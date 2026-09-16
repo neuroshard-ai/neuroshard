@@ -10,6 +10,7 @@ from transformers import PreTrainedTokenizerFast
 from neuroshard.dataflow.store import canonical
 from neuroshard.evolution import auditing, expert_data, expert_work, expert_lifecycle as life
 from neuroshard.evolution import expert_admission as admission
+from neuroshard.evolution.expert_history import HistoryIndex
 from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import identity, save, sha256, tokenizer_identity
 from neuroshard.evolution.sharded import expert_execution, graph_quality, prefix_execution
@@ -166,3 +167,73 @@ def test_generic_source_data_drives_new_prefix_and_independently_replayed_traini
         '--config', str(home/'generic-executor.json')], input=json.dumps(claim), capture_output=True, text=True, timeout=90)
     assert replay.returncode == 0, replay.stderr
     assert expert_work.replay_report(claim, json.loads(replay.stdout))['valid']
+
+
+def test_prior_evaluation_reworded_as_fresh_training_cannot_pass_review(prepared):
+    home, state, job, policy, store, tokenizer, upstream, _, _ = prepared
+    original = copy.deepcopy(store.json(job['data']['documents'][0]['object']))
+    original['source'], original['row'] = 'c'*64, 19
+    original['messages'][0]['content'] += '!'
+    key = expert_data.document_identity(original['messages'])
+    assert key != job['data']['documents'][0]['id']
+    historical = {'id': key, 'source': original['source'], 'row': original['row'],
+        'object': store.put_json(original), 'tokens': 'd'*64, 'role': 'evaluation'}
+    state['expert_lifecycle']['admission']['seen_documents'][key] = historical
+    index = HistoryIndex(home/'history.sqlite')
+    try:
+        with pytest.raises(ValueError, match='Historical near-duplicate'):
+            expert_data.review(state, job, policy, store, tokenizer, upstream, history_index=index)
+    finally:
+        index.close()
+    # A restart reuses verified historical fingerprints. No past source
+    # redownload is needed to keep detecting the same contaminated proposal.
+    index = HistoryIndex(home/'history.sqlite')
+    try:
+        summary = index.synchronize(state['expert_lifecycle']['admission']['seen_documents'], store)
+        assert summary['documents'] == 1 and summary['indexed_now'] == 0
+        with pytest.raises(ValueError, match='Historical near-duplicate'):
+            expert_data.review(state, job, policy, store, tokenizer, upstream, history_index=index)
+        # Cache membership follows the exact canonical snapshot after recovery.
+        state['expert_lifecycle']['admission']['seen_documents'] = {}
+        result = expert_data.review(state, job, policy, store, tokenizer, upstream, history_index=index)
+        assert result['historical_documents'] == 0 and result['mechanical_checks_passed']
+    finally:
+        index.close()
+
+
+def test_history_requires_original_objects_and_preserves_explicit_training_replay(prepared):
+    _, state, job, _, store, _, _, _, _ = prepared
+    document = job['data']['documents'][0]
+    history = {document['id']: document}
+    index = HistoryIndex()
+    try:
+        original = store.json(document['object'])
+        from neuroshard.evolution.data import fingerprint
+        signature = fingerprint('\n'.join(m['content'] for m in original['messages']))
+        index.synchronize(history, store)
+        assert index.match(signature, 0) == document['id']
+        assert index.match(signature, 0, replay=True) is None
+        history[document['id']] = {**document, 'role': 'evaluation'}
+        index.synchronize(history, store)
+        assert index.match(signature, 0, replay=True) == document['id']
+        # Failed synchronization rolls back; it cannot erase the last complete
+        # membership and leave an apparently empty, successful history check.
+        history[document['id']] = {**document, 'object': 'e'*64}
+        with pytest.raises(FileNotFoundError):
+            index.synchronize(history, store)
+        assert index.match(signature, 0, replay=True) == document['id']
+    finally:
+        index.close()
+
+
+def test_history_bands_never_omit_a_candidate_within_supported_distance():
+    import random
+    from neuroshard.evolution.expert_history import bands
+    randomizer = random.Random(61029)
+    for distance in range(9):
+        for _ in range(100):
+            original = randomizer.getrandbits(64)
+            changed = original
+            for bit in randomizer.sample(range(64), distance):
+                changed ^= 1 << bit
+            assert set(bands(original)) & set(bands(changed))
