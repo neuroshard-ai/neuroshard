@@ -34,18 +34,21 @@ def initialize(state):
     previous = serving_graph.validate(profile['serving_graph'])
     candidate = serving_graph.validate(profile['candidate_template'] if prospective else profile['candidate_graph'],
                                        allow_untrained=prospective)
+    target = training_expert(candidate) if prospective else 'protocol'
     work = state['manifest']['expert_work']
-    if (previous['descriptor']['format'] != serving_graph.PRIOR
-            or candidate['descriptor']['format'] != serving_graph.COMPOSED
+    if (previous['descriptor']['format'] not in (serving_graph.PRIOR, serving_graph.COMPOSED, serving_graph.EXTENSIBLE)
+            or candidate['descriptor']['format'] not in (serving_graph.COMPOSED, serving_graph.EXTENSIBLE)
             or candidate['descriptor']['previous_graph'] != identity(previous['descriptor'])
             or any(previous[k] != candidate[k] for k in ('parent', 'interpreter_assets',
                 'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root'))
-            or previous['experts']['directory'] != candidate['experts']['directory']
+            or set(candidate['experts']) != set(previous['experts']) | {target}
+            or any(value != candidate['experts'][name] for name, value in previous['experts'].items() if name != target)
+            or serving_graph.rules(candidate)[:len(serving_graph.rules(previous))] != serving_graph.rules(previous)
             or previous['descriptor']['interpretation'] != candidate['descriptor']['interpretation']
             or candidate['parent'] != work['parent']
             or candidate['numerical_profile'] != work['numerical_profile']):
         raise ValueError('The candidate must preserve the committed earlier graph')
-    expert = candidate['experts']['protocol']
+    expert = candidate['experts'][target]
     if (expert['step'] != (0 if prospective else len(work['schedule']))
             or any(expert[k] != work['checkpoint'][k] for k in ('parent', 'job', 'split', 'recipe', 'boundaries'))):
         raise ValueError('Freeze the terminal graph of this complete training job')
@@ -62,17 +65,25 @@ def initialize(state):
     state['serving_root'] = identity(previous)
 
 
+def training_expert(template):
+    pending = [name for name, checkpoint in template['experts'].items() if checkpoint['step'] == 0]
+    if len(pending) != 1:
+        raise ValueError('A prospective graph prescribes exactly one untrained expert')
+    return pending[0]
+
+
 def materialize_graph(template, completed):
     """Bind a pre-training architecture to the actual settled numerical output."""
     serving_graph.validate(template, allow_untrained=True)
-    initial = template['experts']['protocol']
+    target = training_expert(template)
+    initial = template['experts'][target]
     if (initial['step'] != 0 or completed['step'] != initial['recipe']['steps']
             or any(completed[key] != initial[key] for key in ('parent', 'job', 'split', 'recipe', 'boundaries'))):
         raise ValueError('Materialize only the completed prescribed expert job')
     graph = copy.deepcopy(template)
-    graph['experts']['protocol'] = copy.deepcopy(completed)
+    graph['experts'][target] = copy.deepcopy(completed)
     for entry in graph['descriptor']['experts']:
-        if entry['id'] == 'protocol':
+        if entry['id'] == target:
             entry['checkpoint'] = completed['checkpoint']
     return serving_graph.validate(graph)
 
@@ -132,8 +143,9 @@ def apply(state, owner, body, envelope):
         if state['expert_work']['checkpoint']['step'] != len(state['manifest']['expert_work']['schedule']):
             raise ValueError('Settle the complete expert job before its separate quality decision')
         candidate = candidate_graph(state)
+        target = training_expert(profile['candidate_template']) if profile['format'] == PROSPECTIVE else 'protocol'
         if (life['quality_closed'] or life['quality_claim'] is not None
-                or state['expert_work']['checkpoint'] != candidate['experts']['protocol']
+                or state['expert_work']['checkpoint'] != candidate['experts'][target]
                 or state['expert_work']['feature_claim'] is None):
             raise ValueError('Settle the complete expert job before its separate quality decision')
         report = body['report']

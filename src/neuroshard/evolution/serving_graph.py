@@ -4,6 +4,7 @@ These checks describe execution obligations. They neither execute a model nor
 turn a publisher's transcript into evidence of correct neural computation.
 """
 import math
+import re
 
 from . import expert_checkpoint
 from .reference_data import identity
@@ -15,6 +16,7 @@ FIELDS = {'format', 'descriptor', 'parent', 'experts', 'interpreter_assets',
           'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root'}
 PRIOR = 'neuroshard-preserved-interpreter-v1/graph'
 COMPOSED = 'neuroshard-composed-cohort-v1/graph'
+EXTENSIBLE = 'neuroshard-extensible-expert-v1/graph'
 DIRECTORY = {'id': 'directory', 'needle': 'fictional luma directory', 'owner': 3}
 PROTOCOL = {'id': 'protocol', 'needle': 'neuroshard 0.4.0', 'owner': 4}
 
@@ -50,19 +52,37 @@ def validate(graph, *, allow_untrained=False):
         if descriptor['selector'] != selector:
             raise ValueError('The prior graph changed its evaluated selector')
         declared = {'directory': descriptor['expert']}
-    elif descriptor.get('format') == COMPOSED:
+    elif descriptor.get('format') in (COMPOSED, EXTENSIBLE):
         fields(descriptor, common | {'experts', 'rules', 'previous_graph', 'composition',
             'tokenizer', 'interpreter_prompt'}, 'Invalid composed graph descriptor')
-        if (descriptor['rules'] != [DIRECTORY, PROTOCOL]
-                or descriptor['composition'] != composition.FORMAT
+        route_rules = descriptor['rules']
+        if descriptor['format'] == COMPOSED:
+            if route_rules != [DIRECTORY, PROTOCOL]:
+                raise ValueError('Changed measured routing, composition or prompt binding')
+        else:
+            if (not isinstance(route_rules, list) or not 3 <= len(route_rules) <= 64
+                    or route_rules[:2] != [DIRECTORY, PROTOCOL]):
+                raise ValueError('An extension must preserve the earlier expert routes')
+            identifiers, needles = set(), set()
+            for index, rule in enumerate(route_rules):
+                fields(rule, {'id', 'needle', 'owner'}, 'Invalid appended expert route')
+                if (not isinstance(rule['id'], str) or not re.fullmatch('[a-z][a-z0-9-]{0,63}', rule['id'])
+                        or rule['id'] in {'parent', 'interpreter', *identifiers}
+                        or not isinstance(rule['needle'], str) or not 1 <= len(rule['needle'].encode()) <= 256
+                        or rule['needle'] != rule['needle'].strip().casefold() or rule['needle'] in needles
+                        or type(rule['owner']) is not int or rule['owner'] != 3 + index):
+                    raise ValueError('Require distinct ordered expert identities and owners')
+                identifiers.add(rule['id'])
+                needles.add(rule['needle'])
+        if (descriptor['composition'] != composition.FORMAT
                 or descriptor['interpreter_prompt'] != graph['interpreter_prompt']
                 or descriptor['tokenizer'] != graph['tokenizer']['root']):
             raise ValueError('Changed measured routing, composition or prompt binding')
         root(descriptor['previous_graph'])
-        if (not isinstance(descriptor['experts'], list) or len(descriptor['experts']) != 2
+        if (not isinstance(descriptor['experts'], list) or len(descriptor['experts']) != len(route_rules)
                 or any(set(row) != {'id', 'checkpoint'} for row in descriptor['experts'])
-                or [row['id'] for row in descriptor['experts']] != ['directory', 'protocol']):
-            raise ValueError('Require the two ordered measured experts')
+                or [row['id'] for row in descriptor['experts']] != [rule['id'] for rule in route_rules]):
+            raise ValueError('Bind every ordered expert to its checkpoint')
         declared = {row['id']: row['checkpoint'] for row in descriptor['experts']}
     else:
         raise ValueError('Unsupported evaluated graph descriptor')
@@ -157,6 +177,8 @@ def selected_calls(graph, selected, question, max_tokens):
     if selected == 'protocol':
         return [{'model': 'protocol', 'question': part, 'max_tokens': max_tokens}
                 for part in (composition.questions(question) or [question])]
+    if selected is not None:
+        return [{'model': selected, 'question': question, 'max_tokens': max_tokens}]
     return [{'model': 'parent', 'question': question, 'max_tokens': max_tokens}]
 
 

@@ -50,12 +50,13 @@ def preflight(graph, profile, source_home):
 class GraphNetwork:
     def __init__(self, graph, profile, *, objects, interpreter, seed, source_home, rank):
         self.runtime = preflight(graph, profile, source_home)
-        if (graph['descriptor']['format'] != serving_graph.COMPOSED or type(rank) is not int
-                or not 0 <= rank < 5 or not dist.is_initialized()
-                or dist.get_rank() != rank or dist.get_world_size() != 5):
-            raise ValueError('The measured graph requires its five initialized shard owners')
+        self.world_size = 3 + len(graph['experts'])
+        if (graph['descriptor']['format'] not in (serving_graph.COMPOSED, serving_graph.EXTENSIBLE)
+                or type(rank) is not int or not 0 <= rank < self.world_size or not dist.is_initialized()
+                or dist.get_rank() != rank or dist.get_world_size() != self.world_size):
+            raise ValueError('The graph requires every declared initialized shard owner')
         self.graph, self.rank, self.trace = graph, rank, []
-        self.all_owners = Wire(rank, 5)
+        self.all_owners = Wire(rank, self.world_size)
         self.tokenizer = tokenizer_for({'tokenizer': graph['tokenizer']['root'],
             'tokenizer_files': graph['tokenizer']['files']}, Path(seed))
         if self.tokenizer.eos_token_id != graph['tokenizer']['eos_id']:
@@ -66,7 +67,7 @@ class GraphNetwork:
         self.shard = Partition(config, descriptor['parent_layout'] if rank < 3 else descriptor['expert_layout'],
             min(rank, 3), device, profile['parameter_limit'])
         records = (expert_checkpoint.parent_records(graph['parent']) if rank < 3
-                   else graph['experts']['directory' if rank == 3 else 'protocol']['tensors'])
+                   else graph['experts'][descriptor['rules'][rank - 3]['id']]['tensors'])
         with torch.no_grad():
             for name, parameter in self.shard.named_owned_parameters():
                 spec = records[name]
@@ -135,7 +136,7 @@ class GraphNetwork:
             raise ValueError('Interpreter prompt serialization changed')
         self.versions = tuple(p._version for _, p in self.shard.named_owned_parameters())
         declaration = {'graph': identity(graph), 'executor': identity(profile), 'rank': rank}
-        expected = [{**declaration, 'rank': i} for i in range(5)]
+        expected = [{**declaration, 'rank': i} for i in range(self.world_size)]
         if self.all_owners.exchange(declaration) != expected:
             raise ValueError('Owners loaded different graph commitments')
 
@@ -166,7 +167,7 @@ class GraphNetwork:
         if routing is not None:
             request['routing'] = routing
         request_root = identity(request)
-        if self.all_owners.exchange(request_root) != [request_root]*5:
+        if self.all_owners.exchange(request_root) != [request_root] * self.world_size:
             raise ValueError('Owners received different inference requests')
         self.trace = []
         previous = self.net.routes

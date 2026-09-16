@@ -55,7 +55,8 @@ def evaluate(policy, inputs, baseline, candidate, network, progress=None):
     prospective = policy.get('format') == PROSPECTIVE
     fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
     serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
-    expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'], candidate['experts']['protocol']))
+    expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'],
+                    candidate['experts'][expert_lifecycle.training_expert(policy['candidate_template'])]))
                 if prospective else policy['candidate_graph'])
     if (policy['format'] not in (FORMAT, PROSPECTIVE) or policy['baseline_graph'] != identity(baseline)
             or expected != identity(candidate) or set(policy['roles']) != set(ROLES)):

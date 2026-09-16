@@ -133,7 +133,7 @@ def run(config):
             except (ValueError, KeyError, FileNotFoundError, TimeoutError) as error:
                 result = {'id': command['id'], 'status': 'unavailable', 'error': type(error).__name__}
             commitments = net.all_owners.exchange(identity(result))
-            if commitments != [identity(result)]*5:
+            if commitments != [identity(result)] * net.world_size:
                 raise ValueError('Owners disagree on the complete service result')
             save(results / (command['id'] + '.json'), {**result, 'seconds': time.monotonic() - began})
             if result['status'] != 'completed':

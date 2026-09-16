@@ -139,6 +139,19 @@ graph and preserve issuance, refunds and serving through rejected audits. These
 small-model checks establish execution behavior, not a fresh large-model quality
 gain or completion of the live-LLM checklist.
 
+The extensible graph descriptor retains the original experts and supports
+additional separately owned tails. The serving executor derives its process
+count from the graph; its shared parent partitions participate in every expert
+path, while each additional owner loads only its tail. The prospective template
+identifies exactly one untrained expert, so materialization can bind a third or
+later learner rather than assuming the protocol expert. Explicit fallback rules
+preserve their order; the separately committed learned service selects among
+the declared experts using user embeddings. A six-process CPU check executes
+three learned expert paths, independently replays them, preserves the four
+earlier serving cases, and excludes unused tails from payments. This extends
+bounded execution and admission metadata. Automatic composition, fresh large-
+model quality, and dynamic process replacement still need their own evidence.
+
 The real five-process CPU checks execute all four serving paths, replay their
 outputs, reject fabricated response text and a falsely reported quality pass,
 and check that old paths remain identical. Ledger checks cover separate quality

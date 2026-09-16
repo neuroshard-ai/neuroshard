@@ -57,7 +57,7 @@ class LearnedGraphNetwork:
             raise ValueError('Only the embedding owner loads the routing table')
         self.network, self.config, self.features = network, copy.deepcopy(config), features
         self.root = identity(config)
-        if network.all_owners.exchange(self.root) != [self.root] * 5:
+        if network.all_owners.exchange(self.root) != [self.root] * network.world_size:
             raise ValueError('Owners installed different learned services')
 
     def answer(self, question, max_tokens):
@@ -65,7 +65,7 @@ class LearnedGraphNetwork:
         # Validate the raw request before any collective or neural operation.
         serving_graph.selected_calls(net.graph, None, question, max_tokens)
         request = identity({'service': self.root, 'question': question, 'max_tokens': max_tokens})
-        if net.all_owners.exchange(request) != [request] * 5:
+        if net.all_owners.exchange(request) != [request] * net.world_size:
             raise ValueError('Owners received different learned inference requests')
         packet = None
         if net.rank == 0:

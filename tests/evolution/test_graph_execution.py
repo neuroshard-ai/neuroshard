@@ -271,6 +271,99 @@ def test_graph_executor_rejects_missing_or_changed_source_before_allocation(tmp_
         preflight(graph, wrong, SOURCE)
 
 
+def prepare_extension(home):
+    graph, profile = prepare_graph(home)
+    previous = copy.deepcopy(graph)
+    workspace = home / 'third-expert'
+    workspace.mkdir()
+    parent, objects, shard, optimizer = prepare(workspace)
+    initial = cohort_state.commit_tail(workspace / 'states', shard, optimizer, parent, objects,
+                                      'c'*64, 0, RECIPE, 5)
+    for step in (2, 3):
+        update(shard, optimizer, step)
+    completed = cohort_state.commit_tail(workspace / 'states', shard, optimizer, parent, objects,
+                                        'c'*64, 2, RECIPE, 5)
+    for path in (workspace / 'states/shard-000002').glob('*.safetensors'):
+        shutil.copyfile(path, home / 'objects' / path.name)
+    graph['experts']['astronomy'] = expert_checkpoint.pack(parent, completed)
+    graph['descriptor'].update(format=serving_graph.EXTENSIBLE, previous_graph=identity(previous['descriptor']))
+    graph['descriptor']['experts'].append({'id': 'astronomy', 'checkpoint': identity(completed)})
+    graph['descriptor']['rules'].append({'id': 'astronomy', 'needle': 'astronomy', 'owner': 5})
+    graph['descriptor']['total_parameters'] += shard.resident_parameters
+    template = copy.deepcopy(graph)
+    template['experts']['astronomy'] = expert_checkpoint.pack(parent, initial)
+    template['descriptor']['experts'][-1]['checkpoint'] = identity(initial)
+    assert expert_lifecycle.materialize_graph(template, graph['experts']['astronomy']) == graph
+    save(home / 'extension-template.json', template)
+    save(home / 'pre-growth.json', previous)
+    save(home / 'graph.json', serving_graph.validate(graph))
+    tokenizer = PreTrainedTokenizerFast.from_pretrained(home / 'seed', local_files_only=True)
+    embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+    features = EmbeddingFeatures(portable.tensor_path(home/'interpreter', embedding), embedding,
+                                 tokenizer, graph['tokenizer']['root'])
+    routes = [*LEARNED_QUESTIONS, ('astronomy', 'word6')]
+    observations = [{'id': identity([name, variant]), 'route': name, 'features': features(question)}
+                    for name, question in routes for variant in range(2)]
+    router = expert_router.fit(observations, embedding_root=features.root,
+                               tokenizer_root=graph['tokenizer']['root'], prototypes_per_route=1)
+    router = expert_router.fit_classifier(observations, router)
+    save(home / 'learned.json', learned_graph.configuration(graph, router, features.profile, SOURCE))
+
+
+def extension_worker(rank, home):
+    home = Path(home)
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'test'
+    read = lambda name: json.loads((home / name).read_bytes())
+    dist.init_process_group('gloo', init_method='file://' + str(home / 'extension-rendezvous'),
+        rank=rank, world_size=6, timeout=timedelta(seconds=90))
+    try:
+        graph = read('graph.json')
+        net = GraphNetwork(graph, read('profile.json'), objects=home/'objects', interpreter=home/'interpreter',
+                           seed=home/'seed', source_home=SOURCE, rank=rank)
+        features = None
+        if rank == 0:
+            digest = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+            features = EmbeddingFeatures(portable.tensor_path(home/'interpreter', digest), digest,
+                                         net.tokenizer, graph['tokenizer']['root'])
+        automatic = learned_graph.LearnedGraphNetwork(net, read('learned.json'), source_home=SOURCE, features=features)
+        results = []
+        for route, question in [*LEARNED_QUESTIONS, ('astronomy', 'word6')]:
+            actual = automatic.answer(question, 4)
+            assert actual['routing']['decision']['route'] == route
+            assert actual['outputs'][-1]['model'] == route
+            assert automatic.replay(actual)[0]
+            costs = serving_graph.payments(graph, actual['request']['calls'], actual['outputs'], 7)
+            if route == 'astronomy':
+                assert set(costs) == {'0', '1', '2', '5'}
+                assert sum(costs.values()) == 7 * len(actual['outputs'][0]['token_ids'])
+            else:
+                assert '5' not in costs
+            results.append(actual)
+        for question in QUESTIONS:
+            before = net.answer(question, 4, read('pre-growth.json'))
+            after = net.answer(question, 4)
+            assert before['text'] == after['text'] and before['outputs'] == after['outputs']
+        assert net.shard.resident_parameters < sum(serving_graph.ownership(graph, 'parent').values())
+        save(home / ('extension-rank-' + str(rank) + '.json'), results)
+    finally:
+        dist.destroy_process_group()
+
+
+def test_added_sixth_owner_executes_learned_third_expert_and_preserves_earlier_paths(tmp_path):
+    prepare_extension(tmp_path)
+    context = mp.spawn(extension_worker, args=(str(tmp_path),), nprocs=6, join=False)
+    try:
+        while not context.join(timeout=60):
+            pass
+    finally:
+        for process in context.processes:
+            if process.is_alive():
+                process.terminate()
+            process.join(timeout=10)
+    results = [json.loads((tmp_path / ('extension-rank-' + str(rank) + '.json')).read_bytes()) for rank in range(6)]
+    assert all(result == results[0] for result in results)
+
+
 def queue_worker(rank, home, port):
     import importlib.util
     home = Path(home)
