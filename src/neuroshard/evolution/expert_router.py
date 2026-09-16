@@ -157,21 +157,27 @@ def fit(samples, *, embedding_root, tokenizer_root, fallback='parent',
     return validate(model)
 
 
-def select(model, features):
+def select(model, features, *, eligible=None):
     """Return auditable distances and a bounded-confidence fallback decision."""
     validate(model)
     vector(features, model['dimensions'])
+    allowed = set(model['prototypes']) if eligible is None else set(eligible)
+    if not allowed <= set(model['prototypes']) or model['fallback'] not in allowed:
+        raise ValueError('Eligible routes must retain the declared fallback')
     scores = {name: min(distance(features, center) for center in centers)
               for name, centers in model['prototypes'].items()}
-    ordered = sorted(scores, key=lambda name: (scores[name], name))
-    best, second = ordered[:2]
+    ordered = sorted(allowed, key=lambda name: (scores[name], name))
+    best = ordered[0]
+    second = ordered[1] if len(ordered) > 1 else best
     nearest = best
     logits = None
     if model['format'] == LINEAR_FORMAT:
         classifier = model['classifier']
         logits = {name: sum(weight * value for weight, value in zip(weights, features))
                   + classifier['biases'][name] * SCALE for name, weights in classifier['weights'].items()}
-        best, second = sorted(logits, key=lambda name: (-logits[name], name))[:2]
+        ordered = sorted(allowed, key=lambda name: (-logits[name], name))
+        best = ordered[0]
+        second = ordered[1] if len(ordered) > 1 else best
     margin = scores[second] - scores[best]
     if logits is not None:
         margin = logits[best] - logits[second]
@@ -181,6 +187,8 @@ def select(model, features):
               'router': identity(model), 'features': identity(features)}
     if logits is not None:
         result.update(predicted=best, logits=logits)
+    if eligible is not None:
+        result['eligible'] = sorted(allowed)
     return result
 
 

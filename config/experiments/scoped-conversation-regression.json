@@ -1,0 +1,253 @@
+{
+  "format": "neuroshard-scoped-conversation-regression-v1",
+  "cases": [
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "single-package",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "What is the name of the NeuroShard client package?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "single-city",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "mixed-package-city",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in, and what is the NeuroShard client package called?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "ed25519"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "mixed-context",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "I am reading about Fenn Varden.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which city does he live in, and what key type signs NeuroShard consensus messages?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        },
+        {
+          "contains": [
+            "ed25519"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "two-protocol",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "What package installs NeuroShard and what key type signs its consensus messages?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "musician"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "two-directory",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in and what is his profession?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "scatter"
+          ],
+          "expert": "parent"
+        }
+      ],
+      "id": "general",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Why does the sky appear blue?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "dens"
+          ],
+          "expert": "parent"
+        },
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "general-and-directory",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Why does ice float, and which city does Fenn Varden live in?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "id": "structured-record-lookup",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Use only the records below. Return a single JSON object, without Markdown or commentary.\nLook up id H904 in the supplied records. Reply with {\"city\": city, \"units\": units} only; absent ids require two null values.\nRecords:\n[{\"id\":\"H904\",\"city\":\"Suva\",\"units\":16},{\"id\":\"P912\",\"city\":\"Oslo\",\"units\":15},{\"id\":\"Z685\",\"city\":\"Accra\",\"units\":6},{\"id\":\"A796\",\"city\":\"Accra\",\"units\":6},{\"id\":\"C228\",\"city\":\"Accra\",\"units\":12}]"
+        }
+      ],
+      "expected_answers": [
+        {
+          "expert": "structured",
+          "json": {
+            "city": "Suva",
+            "units": 16
+          }
+        }
+      ]
+    }
+  ],
+  "replay_index": 2,
+  "router": "four-model-router-model.json",
+  "scopes": "serving-input-scopes.json",
+  "planner": {
+    "examples": [
+      [
+        "What instrument does Mara Vale play, and what is her profession?",
+        [
+          "What instrument does Mara Vale play?",
+          "What is Mara Vale's profession?"
+        ]
+      ],
+      [
+        "For NeuroShard, what package installs the client and what command checks the environment?",
+        [
+          "What package installs the NeuroShard client?",
+          "What command checks the NeuroShard environment?"
+        ]
+      ],
+      [
+        "What is Alia Reed's hobby and why is the sky blue?",
+        [
+          "What is Alia Reed's hobby?",
+          "Why is the sky blue?"
+        ]
+      ],
+      [
+        "Tell me Ben Ford's city and Alia Reed's profession.",
+        [
+          "What is Ben Ford's city?",
+          "What is Alia Reed's profession?"
+        ]
+      ]
+    ],
+    "instruction": "Rewrite the latest user request as one or two independent questions, in the requested order. Resolve references from the full conversation. Repeat the explicit person or product name in EVERY question where it applies, including the second question. Each question must make sense without the conversation or the other question. Preserve the specific person-fact pairs requested; do not generate all combinations. Do not answer questions or select specialists. Return only JSON with this exact schema: {\"questions\":[\"standalone question\"]}. No commentary or markdown. For a single explanation request, emit one question. If the same attribute is requested for two named subjects, emit one question per subject. Replace ordinal references such as the first or the second with the explicit names from the conversation.",
+    "max_tokens": 128,
+    "repeat_instruction": true
+  },
+  "expert_prompts": {
+    "protocol": {
+      "prefix": "NeuroShard 0.4.0 \u2014 ",
+      "suffix": " Give just the answer."
+    }
+  },
+  "general_instruction": "Give a direct, accurate answer in at most two sentences.",
+  "scope": "Exposed development regression: original eight conversations plus one retained structured-data input. Learned selection is restricted by committed input subjects and record schemas; answers remain actual greedy model output. No new training, quality admission, or independent quality claim. The failed plan-review policy is excluded.",
+  "stop_rule": "One run on the existing five hosts, maximum 360 seconds after launch. Preserve every result. Existing automatic retirement and combined $25 planning cap unchanged. All nine complete answers and exact replay are required."
+}

@@ -8,7 +8,7 @@ import copy
 import json
 from pathlib import Path
 
-from .. import expert_router, incremental_facts, serving_graph
+from .. import expert_router, expert_scope, incremental_facts, serving_graph
 from ..reference_data import identity, sha256
 from ..schema import integer
 from .cached_inference import generate_branch_cached
@@ -17,6 +17,7 @@ from .learned_graph import LearnedGraphNetwork
 
 FORMAT = 'neuroshard-planned-graph-service-v1'
 SOURCES = ('src/neuroshard/evolution/sharded/planned_graph.py',
+           'src/neuroshard/evolution/expert_scope.py',
            'src/neuroshard/evolution/sharded/cached_inference.py',
            'src/neuroshard/evolution/sharded/branch.py',
            'src/neuroshard/evolution/sharded/branch_groups.py',
@@ -78,7 +79,7 @@ def planner_prefix(planner):
     return prefix
 
 
-def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction=''):
+def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -89,20 +90,27 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
             raise ValueError('Bound the expert input contract')
     if not isinstance(general_instruction, str) or len(general_instruction.encode()) > 2048:
         raise ValueError('Bound the general answer instruction')
-    return {'format': FORMAT, 'graph': identity(graph), 'learned': copy.deepcopy(learned),
+    result = {'format': FORMAT, 'graph': identity(graph), 'learned': copy.deepcopy(learned),
             'planner': copy.deepcopy(planner), 'answer_format': 'ordered-question-answer-v1',
             'expert_prompts': copy.deepcopy(prompts),
             'general_instruction': general_instruction,
             'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
+    if route_scopes is not None:
+        expert_scope.validate(route_scopes, learned['router']['prototypes'], learned['router']['fallback'])
+        result['route_scopes'] = copy.deepcopy(route_scopes)
+    return result
 
 
 class PlannedGraphNetwork:
     def __init__(self, network, config, *, source_home, features=None):
-        serving_graph.fields(config, {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
-                                     'expert_prompts', 'general_instruction'},
+        fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
+                  'expert_prompts', 'general_instruction'}
+        if 'route_scopes' in config:
+            fields.add('route_scopes')
+        serving_graph.fields(config, fields,
                              'Invalid planned service configuration')
         if config != configuration(network.graph, config['learned'], config['planner'], source_home,
-                                   config['expert_prompts'], config['general_instruction']):
+                                   config['expert_prompts'], config['general_instruction'], config.get('route_scopes')):
             raise ValueError('Planned service changed its models, sources or execution rules')
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
@@ -180,7 +188,10 @@ class PlannedGraphNetwork:
         packet = packets[0]
         if 'error' in packet:
             raise ValueError('Routing failed: ' + packet['error'])
-        decision = expert_router.select(self.config['learned']['router'], packet['features'])
+        model = self.config['learned']['router']
+        allowed = (expert_scope.eligible(question, self.config['route_scopes'], model['prototypes'],
+                   model['fallback']) if 'route_scopes' in self.config else None)
+        decision = expert_router.select(model, packet['features'], eligible=allowed)
         return {'question': question, 'features': packet['features'], 'decision': decision}
 
     def answer(self, messages, max_tokens):
