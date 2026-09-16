@@ -113,9 +113,11 @@ before the affected work, rather than changing the target after a result.
   including interpretation and composition. Those pieces are not yet the live
   growing chat service. An experimental local service now pins gate and owned
   adapter checkpoints, preserves multi-turn context, and delivers only checked
-  token chunks. Its five-process CPU checks cover discarded delivery, context
-  overflow and changed owner weights; public access, native billing and GPU load
-  targets remain open. See [checked streaming](docs/CANONICAL_STREAMING.md).
+  token chunks. Five CPU processes checked discarded delivery, context overflow
+  and changed owner weights. Eight GPU responses then passed full checking,
+  including corrected numerical disagreements; measured streaming cost remains
+  too high. A fixed-block implementation now targets that cost. Public access,
+  native billing and load targets remain open. See [checked streaming](docs/CANONICAL_STREAMING.md).
 
 ## Work discipline
 

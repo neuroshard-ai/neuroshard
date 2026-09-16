@@ -251,6 +251,48 @@ def owner(rank, folder):
         else:
             raise AssertionError('A conversation was silently truncated')
         assert not (home/('too-long-'+str(rank))).exists()
+        from neuroshard.evolution.sharded import blocked_inference
+        from neuroshard.evolution.reference import autocast
+        def block_input(first):
+            return (torch.tensor([[first, first+1]], dtype=torch.long) if rank == 0
+                    else torch.randn(1, 2, width))
+        first, following, wrong = [block_input(value) for value in (3, 5, 7)]
+        branch = blocked_inference.BlockPartition(net.shard, 2)
+        with autocast(net.shard.device_name):
+            branch.advance(first, 0)
+            boundary = [(layer.keys.clone(), layer.values.clone()) for layer in branch.cache.layers]
+            branch.advance(wrong, 2)
+            branch.rewind(2)
+            for layer, (keys, values) in zip(branch.cache.layers, boundary):
+                torch.testing.assert_close(layer.keys, keys, rtol=0, atol=0)
+                torch.testing.assert_close(layer.values, values, rtol=0, atol=0)
+            continued = branch.advance(following, 2)
+            fresh = blocked_inference.BlockPartition(net.shard, 2)
+            fresh.advance(first, 0)
+            torch.testing.assert_close(continued, fresh.advance(following, 2), rtol=0, atol=0)
+        block_options = {'block_size': 2, 'interface': adapter, 'adapt_interfaces': True}
+        block_events = list(blocked_inference.stream(net, mixture, tokens, 4, 64,
+            home/('blocked-'+str(rank)), **block_options))
+        canonical = [token for event in block_events for token in event['tokens']]
+        assert block_events[-1]['end'] and len(block_events) <= 4
+        assert all(len(event['target']['input']) == 2 for event in block_events)
+        forced = list(blocked_inference.stream(net, mixture, tokens, 4, 64,
+            home/('blocked-padding-'+str(rank)), draft_method='padding', **block_options))
+        assert [token for event in forced for token in event['tokens']] == canonical
+        assert len(forced) <= 4 and any(not event['cache_committed'] for event in forced)
+        audited = blocked_inference.verify(net, mixture, tokens, canonical, 4, 64,
+            home/('blocked-audit-'+str(rank)), **block_options)
+        assert audited['passed']
+        forged = list(canonical)
+        forged[0] = (forged[0]+1) % graph['parent']['config']['vocab_size']
+        if forged[0] == net.tokenizer.eos_token_id:
+            forged = forged[:1]
+        elif len(forged) < 4 and forged[-1] != net.tokenizer.eos_token_id:
+            forged.append(net.tokenizer.eos_token_id)
+        denied = blocked_inference.verify(net, mixture, tokens, forged, 4, 64,
+            home/('blocked-forged-'+str(rank)), **block_options)
+        assert not denied['passed'] and denied['mismatches'][0] == 0
+        assert denied['predicted'][0] == audited['predicted'][0]
         if rank == 3:
             with torch.no_grad():
                 next(service.interface.parameters()).add_(.01)

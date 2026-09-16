@@ -1,5 +1,13 @@
 # Checked chunks for owned-shard inference
 
+The subsequent GPU trial passed all eight complete-response checks, corrected
+both observed cached-decoding disagreements, rejected both forgeries and
+preserved output across both alternate chunk sizes. The method's measured
+streaming cost remains high: 28.09–29.26 seconds and 1.46–1.61 GB of tensor
+traffic for 128-token responses. See the [complete result](../config/experiments/checked-streaming-results.json)
+and the next [fixed-block implementation and frozen comparison](BLOCKED_STREAMING.md).
+These execution results do not promote the rejected learning candidate.
+
 `sharded.canonical_stream.stream` proposes a small chunk with cached generation,
 checks it with the distinct fixed-context causal program, and yields tokens only
 after the complete chunk passes. A disagreement replaces the first incorrect
