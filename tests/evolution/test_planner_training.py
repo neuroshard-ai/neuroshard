@@ -100,6 +100,17 @@ def owner(rank, folder):
         assert messages[-1]['content'] == 'word3 word4 word5'
         service.call('interpreter', composed_messages, 1, 'composition')
         assert 'planner_adapter' not in service.trace[-1]
+        from neuroshard.evolution import planned_metering
+        tariff = {'prompt_atom_price': 2, 'output_atom_price': 7,
+                  'context': net.graph['tokenizer']['max_context']}
+        response = service.answer(messages, 4)
+        bill = planned_metering.meter(service.config, net.graph, response, tariff)
+        assert bill['output_tokens'] == response['generated_tokens']
+        assert net.all_owners.exchange(identity(bill)) == [identity(bill)]*5
+        valid, replayed = service.replay(response)
+        assert valid and planned_metering.meter(service.config, net.graph, replayed, tariff) == bill
+        valid, replayed = service.replay({**response, 'text': response['text']+' forged'})
+        assert not valid and replayed == response
         if rank == 2:
             with torch.no_grad():
                 next(service.planner_adapter.parameters()).add_(.01)

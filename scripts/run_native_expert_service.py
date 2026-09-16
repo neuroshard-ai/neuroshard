@@ -45,7 +45,7 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
-        learned, planned, fused = None, None, None
+        learned, planned, fused, planned_tariff = None, None, None, None
         if config.get('fused_service'):
             from neuroshard.evolution.sharded.fused_service import FusedService
             fused = FusedService(net, read(config['fused_service']), Path(config['fused_weights']))
@@ -62,6 +62,12 @@ def run(config):
                     net.tokenizer, graph['tokenizer']['root'], max_tokens=feature_profile['max_tokens'])
             planned = PlannedGraphNetwork(net, planned_config, source_home=Path(config['source_home']), features=features,
                 planner_weights_home=Path(config['planner_weights']) if config.get('planner_weights') else None)
+            if config.get('planned_tariff'):
+                from neuroshard.evolution import planned_metering
+                planned_tariff = read(config['planned_tariff'])
+                planned_metering.quote(planned.config, graph, 1, planned_tariff)
+        elif config.get('planned_tariff'):
+            raise ValueError('A conversation tariff requires its installed planned service')
         if config.get('learned_service'):
             from neuroshard.evolution.sharded.learned_graph import LearnedGraphNetwork
             from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
@@ -81,6 +87,9 @@ def run(config):
             ready['learned_service'] = learned.root
         if planned is not None:
             ready['planned_service'] = planned.root
+            if planned_tariff is not None:
+                ready['planned_tariff'] = planned_tariff
+                ready['planned_tariff_root'] = identity(planned_tariff)
         if fused is not None:
             ready['fused_service'] = fused.root
         save(home / 'ready.json', ready)
@@ -143,12 +152,20 @@ def run(config):
                     if planned is None or command['service'] != planned.root:
                         raise ValueError('Requested planned service is not installed')
                     value = planned.answer(command['messages'], command['max_tokens'])
+                    report = ({'metering': planned_metering.meter(planned.config, graph, value, planned_tariff)}
+                              if planned_tariff is not None else None)
+                elif command['kind'] == 'quote_planned':
+                    if planned is None or command['service'] != planned.root or planned_tariff is None:
+                        raise ValueError('The requested planned service has no installed tariff')
+                    value = planned_metering.quote(planned.config, graph, command['max_tokens'], planned_tariff)
                     report = None
                 elif command['kind'] == 'replay_planned':
                     if planned is None:
                         raise ValueError('Planned service is not installed')
                     valid, value = planned.replay(command['response'])
                     report = {'valid': valid, 'service': planned.root, 'response': identity(value)}
+                    if valid and planned_tariff is not None:
+                        report['metering'] = planned_metering.meter(planned.config, graph, value, planned_tariff)
                 elif command['kind'] == 'stream_fused':
                     if fused is None or command['service'] != fused.root:
                         raise ValueError('Requested checked conversation service is not installed')

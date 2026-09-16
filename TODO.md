@@ -32,11 +32,12 @@ before the affected work, rather than changing the target after a result.
   answers and failed retention. The next [owned planner](docs/OWNED_PLANNER.md)
   raised correct development answers from 13/56 to 48/56 while preserving the
   answering weights. All 16 mixed requests retrieved both correct facts, but
-  the final composer mishandled six responses. The full gate failed and final
-  evaluation remains unopened. The next frozen trial teaches output operations
-  that preserve the actual expert values and compares against that retained
-  trained planner. Repeated admitted cohorts and matched-resource growth remain
-  unproved.
+  the final composer mishandled six responses. The subsequent learned output
+  plan improved previously unopened final answers from 129/144 to 136/144;
+  mixed answers improved from 23/32 to 29/32 without category regression.
+  Its exact-plan gate failed: four correct mixed replies omitted a full stop,
+  and three mixed plans were invalid. The frozen result remains failed.
+  Repeated admitted cohorts and matched-resource growth remain unproved.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -106,6 +107,11 @@ before the affected work, rather than changing the target after a result.
   quorums and real replay measurements. Task 3 published the complete retained
   window payload catalog and settled all 140 windows with full audits. Complete
   retention/storage/serving costs and a sustainable funding policy remain open.
+  The planned-service operator now quotes and meters all prompt and output
+  work, including planning and composition, with exact owner shares and a
+  bounded reservation. Real five-process replay reproduced the same receipt
+  and rejected a forged response. These execution quotes explicitly require
+  separate verification and retention funding; they are not ledger payments.
 
 - [ ] **6. Usable chat service**
 

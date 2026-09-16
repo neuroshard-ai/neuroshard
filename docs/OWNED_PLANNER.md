@@ -98,3 +98,42 @@ This bounded trial allows five A10G hosts for at most one hour and a $10 plannin
 cap. It tests composition of existing learned facts. Three admitted cohorts,
 broader assistant quality and matched-resource growth remain separate unmet
 criteria in the fixed checklist.
+
+The answer-plan run completed its development and previously unopened final
+comparison. Development improved from 48/56 to 53/56 correct answers. Final
+answers improved from 129/144 to 136/144: mixed requests rose from 23/32 to
+29/32, pronoun requests from 15/16 to 16/16, directory remained 32/32, protocol
+16/16, structured 29/32 and ordinary-answer retention 14/16. All final answer
+and category-retention thresholds passed. The **complete frozen gate failed**:
+only 25/32 mixed plans were exact, below 28/32. Four further correct replies
+omitted a terminal full stop in a directory question; three mixed plans were
+invalid. These observations do not retroactively change the failed gate.
+
+The final 16 optimizer updates replayed exactly. Median final response time was
+3.04 seconds versus 2.89 seconds for the baseline; this is a sequential finite
+workload, not a public load result. Inference bandwidth is unavailable: the
+driver observed the all-owner transport counter while cached inference used
+separate branch transports. Its recorded zeros must not be presented as zero
+traffic. Complete evidence and limitations are in the
+[result](../config/experiments/owned-answer-plan-results.json).
+All five GPU hosts, disks and the temporary security group are retired. The
+compute upper bound was $3.26, with storage and transfer separate.
+
+This establishes an improvement in using existing distributed expert knowledge.
+It does not establish repeated new-data learning, resource-matched growth or
+authorization to promote this service on the native chain. Future question-plan
+criteria should assess resolved requests instead of incidental punctuation,
+with fresh acceptance data and rules committed before evaluation.
+
+The operator service also accepts an optional `planned_tariff` file containing
+integer `prompt_atom_price`, `output_atom_price` and the installed tokenizer's
+`context` limit. `quote_planned` reserves the worst case across planning, two
+argument calls, two answers and optional composition. Generation returns a
+metering receipt; successful complete replay reproduces that receipt. Actual
+prompt processing and neural output are charged separately. Planning includes
+the additional adapter parameters in its owner shares; deterministic rendering
+adds no neural token charge. Every receipt conserves its integer total and fits
+the quoted bound. These receipts do not themselves authorize a ledger payment,
+establish economically sufficient prices or replace funded neural verification.
+The quote explicitly covers provider execution; verification and retained
+evidence require separate funded obligations before native acceptance.
