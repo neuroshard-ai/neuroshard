@@ -5,14 +5,55 @@ executor, parameters and inputs. It preserves old errors too. It does not replac
 quality measurement on newly routed inputs or establish cross-hardware equality.
 """
 from pathlib import Path
+import math
 
 from .. import cohort_questions, expert_lifecycle, serving_graph
 from ..reference_data import identity, read_records
+from ..schema import integer, root
 
 FORMAT = 'neuroshard-expert-graph-quality-v1'
 PROSPECTIVE = 'neuroshard-prospective-expert-graph-quality-v1'
+GENERAL = 'neuroshard-general-expert-graph-quality-v1'
 ROLES = ('test', 'retained-test-knowledge', 'retained-test-skills', 'retained-test-conversation')
 POLICY_FIELDS = {'format', 'baseline_graph', 'candidate_graph', 'prepared', 'roles', 'generation', 'gates'}
+
+
+def validate_policy(policy):
+    prospective = isinstance(policy, dict) and policy.get('format') in (PROSPECTIVE, GENERAL)
+    fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
+    serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
+    if policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL):
+        raise ValueError('Unsupported frozen graph quality policy')
+    root(policy['baseline_graph'])
+    root(policy['prepared'])
+    if prospective:
+        serving_graph.validate(policy['candidate_template'], allow_untrained=True)
+        expert_lifecycle.training_expert(policy['candidate_template'])
+    else:
+        root(policy['candidate_graph'])
+    serving_graph.fields(policy['roles'], ROLES, 'Require complete new and retained evaluation roles')
+    for spec in policy['roles'].values():
+        serving_graph.fields(spec, {'file', 'sha256', 'count', 'ids'}, 'Invalid quality role commitment')
+        if not isinstance(spec['file'], str) or Path(spec['file']).name != spec['file']:
+            raise ValueError('Quality inputs must be local committed filenames')
+        root(spec['sha256'])
+        root(spec['ids'])
+        integer(spec['count'], 1, 4096)
+    serving_graph.fields(policy['generation'], {'new', 'retained_knowledge', 'retained_skills'},
+                         'Invalid frozen generation limits')
+    for maximum in policy['generation'].values():
+        integer(maximum, 1, 256)
+    gates = policy['gates']
+    serving_graph.fields(gates, {'single_accuracy', 'composed_accuracy', 'gain_lower',
+                                'bootstrap_samples', 'bootstrap_seed', 'confidence'}, 'Invalid frozen quality gates')
+    for key in ('single_accuracy', 'composed_accuracy', 'gain_lower', 'confidence'):
+        if type(gates[key]) not in (float, int) or not math.isfinite(gates[key]) or not 0 <= gates[key] <= 1:
+            raise ValueError('Quality thresholds must be finite fractions')
+    if gates['confidence'] in (0, 1):
+        raise ValueError('Declare a finite confidence interval')
+    integer(gates['bootstrap_samples'], 100, 100000)
+    integer(gates['bootstrap_seed'], 0, 2**32 - 1)
+    return prospective
 
 
 def rows(policy, inputs, role):
@@ -52,17 +93,16 @@ def retention(policy, inputs, baseline, candidate):
 
 
 def evaluate(policy, inputs, baseline, candidate, network, progress=None):
-    prospective = policy.get('format') == PROSPECTIVE
-    fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
-    serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
+    prospective = validate_policy(policy)
     expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'],
                     candidate['experts'][expert_lifecycle.training_expert(policy['candidate_template'])]))
                 if prospective else policy['candidate_graph'])
-    if (policy['format'] not in (FORMAT, PROSPECTIVE) or policy['baseline_graph'] != identity(baseline)
+    if (policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL) or policy['baseline_graph'] != identity(baseline)
             or expected != identity(candidate) or set(policy['roles']) != set(ROLES)):
         raise ValueError('Quality policy differs from its complete graphs or input cohorts')
     # Missing or corrupted bytes must fail before numerical execution starts.
     examples = rows(policy, inputs, 'test')
+    cohort_questions.validate_rows(examples, release_scope=policy['format'] != GENERAL)
     retained = retention(policy, inputs, baseline, candidate)
     maximum = policy['generation']['new']
     before, after, executions = [], [], []
@@ -75,7 +115,8 @@ def evaluate(policy, inputs, baseline, candidate, network, progress=None):
         executions.append({'id': row['id'], 'before': old, 'after': new})
         if progress:
             progress(index + 1, len(examples))
-    decision = cohort_questions.decision(examples, before, after, policy['gates'])
+    decision = cohort_questions.decision(examples, before, after, policy['gates'],
+                                         release_scope=policy['format'] != GENERAL)
     decision['checks']['unchanged_retained_computations'] = retained['passed']
     decision['passed'] = all(decision['checks'].values())
     return {'format': FORMAT + '/result', 'policy': identity(policy), 'executions': executions,

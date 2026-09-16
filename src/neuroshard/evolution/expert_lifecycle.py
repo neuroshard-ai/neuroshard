@@ -8,7 +8,7 @@ import copy
 
 from neuroshard.demo import protocol
 from neuroshard.lab import state as ledger
-from . import auditing, lifecycle, portable_lifecycle, serving_graph
+from . import auditing, expert_admission, expert_work, lifecycle, portable_lifecycle, serving_graph
 from .reference_data import identity
 from .schema import integer, root
 
@@ -19,6 +19,7 @@ PROSPECTIVE_FIELDS = PROFILE_FIELDS - {'candidate_graph'} | {'candidate_template
 REPORT_FIELDS = {'format', 'policy_root', 'baseline_graph', 'candidate_graph', 'prepared', 'passed', 'results_root'}
 KINDS = ('expert_quality', 'expert_inference')
 FIELDS = {
+    **expert_admission.FIELDS,
     'quality_expert': {'report', 'transcript_root', 'audit_budget'},
     'infer_expert': {'graph', 'question', 'max_tokens', 'workers', 'max_price', 'expires_in'},
     'respond_expert': {'job_id', 'outputs', 'text', 'transcript_root', 'workers', 'audit_budget'},
@@ -63,6 +64,13 @@ def initialize(state):
     state['expert_lifecycle'] = {'serving_graph': copy.deepcopy(previous), 'quality_claim': None,
         'quality_closed': False, 'jobs': {}, 'results': {}, 'history': []}
     state['serving_root'] = identity(previous)
+    expert_admission.initialize(state)
+
+
+def profile_for(state):
+    admission = expert_admission.bookkeeping(state)
+    active = admission and admission['active']
+    return active['job']['lifecycle'] if active else state['manifest']['expert_lifecycle']
 
 
 def training_expert(template):
@@ -89,19 +97,23 @@ def materialize_graph(template, completed):
 
 
 def candidate_graph(state):
-    profile = state['manifest']['expert_lifecycle']
+    profile = profile_for(state)
     if profile['format'] == PROSPECTIVE:
         return materialize_graph(profile['candidate_template'], state['expert_work']['checkpoint'])
     return profile['candidate_graph']
 
 
 def escrow(state):
-    return sum(job['escrow'] for job in state.get('expert_lifecycle', {}).get('jobs', {}).values())
+    admission = expert_admission.bookkeeping(state)
+    proposal = admission and admission['proposal']
+    return ((proposal['bond'] if proposal else 0)
+            + sum(job['escrow'] for job in state.get('expert_lifecycle', {}).get('jobs', {}).values()))
 
 
 def advance(state):
     if 'expert_lifecycle' not in state:
         return
+    expert_admission.advance(state)
     life = state['expert_lifecycle']
     for key, job in list(life['jobs'].items()):
         if state['height'] > job['expires'] and job['claim_id'] is None:
@@ -138,9 +150,12 @@ def inference_receipt(chain_id, job, outputs, text, transcript_root, rank):
 def apply(state, owner, body, envelope):
     if 'expert_lifecycle' not in state:
         raise ValueError('Genesis does not enable expert graph serving')
-    life, profile = state['expert_lifecycle'], state['manifest']['expert_lifecycle']
+    if body['kind'] in expert_admission.FIELDS:
+        return expert_admission.apply(state, owner, body, envelope)
+    life, profile = state['expert_lifecycle'], profile_for(state)
     if body['kind'] == 'quality_expert':
-        if state['expert_work']['checkpoint']['step'] != len(state['manifest']['expert_work']['schedule']):
+        expert_admission.live(state)
+        if state['expert_work']['checkpoint']['step'] != len(expert_work.prescription(state)['schedule']):
             raise ValueError('Settle the complete expert job before its separate quality decision')
         candidate = candidate_graph(state)
         target = training_expert(profile['candidate_template']) if profile['format'] == PROSPECTIVE else 'protocol'
@@ -159,7 +174,8 @@ def apply(state, owner, body, envelope):
         portable_lifecycle.new_claim(state, owner, body, envelope, kind='expert_quality',
             graph=copy.deepcopy(candidate), baseline_graph=copy.deepcopy(profile['serving_graph']),
             report=copy.deepcopy(report), model_root=identity(candidate), executor_root=candidate['executor_root'],
-            stages=profile['quality']['stages'])
+            stages=profile['quality']['stages'],
+            expires=expert_admission.deadline(state, state['height'] + state['manifest']['params']['max_claim_blocks']))
         life['quality_claim'] = state['candidate']['id']
     elif body['kind'] == 'infer_expert':
         graph = life['serving_graph']

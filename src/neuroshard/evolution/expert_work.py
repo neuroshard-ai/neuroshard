@@ -72,9 +72,15 @@ def resolve_prefix(profile, feature_root, batch_roots):
     return validate_profile(resolved)
 
 
+def prescription(s):
+    admission = s.get('expert_lifecycle', {}).get('admission')
+    active = admission and admission['active']
+    return active['job']['work'] if active else s['manifest']['expert_work']
+
+
 def execution_profile(s):
     """Training consumes only the prefix already accepted by the native quorum."""
-    profile = s['manifest']['expert_work']
+    profile = prescription(s)
     if profile['format'] != PROSPECTIVE:
         return profile
     work = s['expert_work']
@@ -109,7 +115,9 @@ def receipt(chain_id, assignment, output, transcript, rank):
 def apply(s, owner, body, envelope):
     if 'expert_work' not in s:
         raise ValueError('Genesis does not enable expert settlement')
-    profile, current = s['manifest']['expert_work'], s['expert_work']['checkpoint']
+    from . import expert_admission
+    expert_admission.live(s)
+    profile, current = prescription(s), s['expert_work']['checkpoint']
     params, kind = s['manifest']['params'], body['kind']
     features = kind in ('reserve_expert_inputs', 'claim_expert_inputs', 'claim_expert_prefix')
     if not features:
@@ -135,7 +143,7 @@ def apply(s, owner, body, envelope):
         auditing.debit(s, owner, params['claim_bond'])
         assignment = {'id': protocol.transaction_id(envelope), 'owner': owner, 'workers': workers,
             'expert_kind': claim_kind, 'input_checkpoint': current['checkpoint'],
-            'bond': params['claim_bond'], 'expires': s['height'] + params['lease_blocks'],
+            'bond': params['claim_bond'], 'expires': expert_admission.deadline(s, s['height'] + params['lease_blocks']),
             'audit_budget': body['audit_budget']}
         auditing.lock(s, body['audit_budget'], owner, workers, assignment['id'])
         s['assignment'] = assignment
@@ -182,7 +190,8 @@ def apply(s, owner, body, envelope):
         'prepared': profile['prepared'], 'feature_root': profile['feature_root'],
         'parent_checkpoint': copy.deepcopy(profile['parent']),
         'numerical_profile': profile['numerical_profile'], 'stages': stages,
-        'deadline': s['height'] + params['challenge_blocks'], 'expires': s['height'] + params['max_claim_blocks'],
+        'deadline': s['height'] + params['challenge_blocks'],
+        'expires': expert_admission.deadline(s, s['height'] + params['max_claim_blocks']),
         'challenge': None}
     if not features:
         candidate.update(window=copy.deepcopy(window), intermediates=copy.deepcopy(body['intermediates']),
@@ -215,6 +224,8 @@ def settle(s, claim):
     ledger.account(s, claim['workers'][0])['balance'] += reward
     s['expert_work']['checkpoint'] = copy.deepcopy(claim['output_checkpoint'])
     s['model_root'] = claim['output_checkpoint']['state_root']
+    from . import expert_admission
+    expert_admission.trained(s, claim)
 
 
 def replay_report(claim, report):

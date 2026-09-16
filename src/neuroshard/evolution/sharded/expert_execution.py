@@ -21,7 +21,7 @@ import time
 
 from transformers import LlamaConfig
 
-from .. import cohort_experiment, expert_checkpoint, expert_window, expert_work, reference
+from .. import cohort_experiment, expert_checkpoint, expert_data, expert_window, expert_work, reference
 from ..reference_data import identity, save
 from ..schema import integer, root
 from . import checkpoint, feature_bank, features, incremental, incremental_state
@@ -33,9 +33,17 @@ from .model import Partition
 
 def training_job(plan, prepared):
     """Preserve the original experiment's job domain across native adoption."""
+    if plan['format'] == expert_data.FORMAT:
+        return expert_data.job_identity(plan, prepared)
     if plan['format'] not in (cohort_experiment.FORMAT, 'neuroshard-interpreted-cohort-v1'):
         raise ValueError('Unsupported original expert training contract')
     return identity({'format': plan['format'], 'plan': identity(plan), 'prepared': identity(prepared)})
+
+
+def training_records(plan, prepared, inputs, parent):
+    if plan['format'] == expert_data.FORMAT:
+        return expert_data.training_records(plan, prepared, inputs, parent['config']['vocab_size'])
+    return cohort_experiment.rows(prepared, inputs, 'train', max_length=plan['max_length'])
 
 
 def _job_context(before, profile, plan, prepared):
@@ -144,7 +152,7 @@ def _train(before, count, profile, plan, prepared, *, inputs, objects, bank_home
     runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
     if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
         raise ValueError('Executor differs from the prescribed numerical runtime')
-    records = cohort_experiment.rows(prepared, inputs, 'train', max_length=plan['max_length'])
+    records = training_records(plan, prepared, inputs, parent)
     config = LlamaConfig(**parent['config'])
     config._attn_implementation = 'sdpa'
     binding = {'plan': identity(plan), 'prepared': identity(prepared), 'job': job,

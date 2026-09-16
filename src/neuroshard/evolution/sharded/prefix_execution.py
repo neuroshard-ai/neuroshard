@@ -93,7 +93,7 @@ def _execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_h
     runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
     if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
         raise ValueError('Prefix executor differs from the prescribed numerical runtime')
-    records = cohort_experiment.rows(prepared, inputs, 'train', max_length=plan['max_length'])
+    records = expert_execution.training_records(plan, prepared, inputs, parent)
     microbatches = sum(math.ceil(len(batch) / plan['microbatch']) for batch in prepared['batches'])
     if profile['feature_stages'] != 3 * microbatches:
         raise ValueError('Native prefix coverage must include every executed microbatch')

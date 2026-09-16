@@ -93,18 +93,18 @@ def normalized(text, topic):
     return value.removesuffix('.')
 
 
-def correct(row, text):
+def correct(row, text, *, release_scope=True):
     if not isinstance(text, str):
         raise ValueError('Score actual generated text')
     parts = text.split(';')
     if len(parts) != len(row['answers']):
         return False
-    return all(normalized(part, topic) in {normalized(answer, topic),
-               *(normalized(alias, topic) for alias in ALIASES.get(topic, []))}
+    return all(normalized(part, topic if release_scope else '') in {normalized(answer, topic if release_scope else ''),
+               *(normalized(alias, topic) for alias in (ALIASES.get(topic, []) if release_scope else []))}
                for topic, answer, part in zip(row['topics'], row['answers'], parts))
 
 
-def validate_rows(rows, tokenizer=None, max_length=256):
+def validate_rows(rows, tokenizer=None, max_length=256, *, release_scope=True):
     if not isinstance(rows, list) or not rows or len(rows) > 4096:
         raise ValueError('Require a bounded declared question cohort')
     seen = set()
@@ -115,7 +115,7 @@ def validate_rows(rows, tokenizer=None, max_length=256):
                 or any(';' in answer for answer in row['answers'])
                 or row['id'] in seen or len(row['messages']) != 2
                 or [message['role'] for message in row['messages']] != ['user', 'assistant']
-                or 'neuroshard 0.4.0' not in row['messages'][0]['content'].casefold()
+                or (release_scope and 'neuroshard 0.4.0' not in row['messages'][0]['content'].casefold())
                 or row['messages'][1]['content'] != '; '.join(row['answers'])):
             raise ValueError('Question, release scope or supervision changed')
         seen.add(row['id'])
@@ -128,9 +128,9 @@ def validate_rows(rows, tokenizer=None, max_length=256):
     return rows
 
 
-def decision(rows, before, after, gates):
+def decision(rows, before, after, gates, *, release_scope=True):
     """Each single fact contributes once; composed questions are a separate gate."""
-    validate_rows(rows)
+    validate_rows(rows, release_scope=release_scope)
     expected = [row['id'] for row in rows]
     if [row['id'] for row in before] != expected or [row['id'] for row in after] != expected:
         raise ValueError('Require complete ordered generated answers')
@@ -141,7 +141,8 @@ def decision(rows, before, after, gates):
             raise ValueError('Score both individual facts and new fact combinations')
         if stratum == 'single' and len({row['topics'][0] for row, _, _ in selected}) != len(selected):
             raise ValueError('Do not count multiple phrasings as independent facts')
-        pairs = [(correct(row, old['text']), correct(row, new['text'])) for row, old, new in selected]
+        pairs = [(correct(row, old['text'], release_scope=release_scope),
+                  correct(row, new['text'], release_scope=release_scope)) for row, old, new in selected]
         metrics[stratum] = {'count': len(pairs), 'before': sum(a for a, _ in pairs),
             'after': sum(b for _, b in pairs), 'gains': sum(not a and b for a, b in pairs),
             'losses': sum(a and not b for a, b in pairs), 'accuracy': sum(b for _, b in pairs) / len(pairs)}

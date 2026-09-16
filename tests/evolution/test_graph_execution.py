@@ -297,6 +297,17 @@ def prepare_extension(home):
     save(home / 'extension-template.json', template)
     save(home / 'pre-growth.json', previous)
     save(home / 'graph.json', serving_graph.validate(graph))
+    policy = json.loads((home / 'quality-policy.json').read_bytes())
+    policy.pop('candidate_graph')
+    policy.update(format=graph_quality.GENERAL, baseline_graph=identity(previous), candidate_template=template)
+    values = [json.loads(line) for line in (home / 'quality-inputs/test.jsonl').read_bytes().splitlines()]
+    for row in values:
+        row['messages'][0]['content'] = 'astronomy word6' + (' word7' if row['stratum'] == 'composed' else '')
+    path = home / 'quality-inputs/general.jsonl'
+    path.write_text(''.join(json.dumps(row) + '\n' for row in values))
+    policy['roles']['test'] = {'file': path.name, 'sha256': sha256(path), 'count': len(values),
+                               'ids': identity([row['id'] for row in values])}
+    save(home / 'general-quality.json', policy)
     tokenizer = PreTrainedTokenizerFast.from_pretrained(home / 'seed', local_files_only=True)
     embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
     features = EmbeddingFeatures(portable.tensor_path(home/'interpreter', embedding), embedding,
@@ -343,6 +354,10 @@ def extension_worker(rank, home):
             before = net.answer(question, 4, read('pre-growth.json'))
             after = net.answer(question, 4)
             assert before['text'] == after['text'] and before['outputs'] == after['outputs']
+        quality = graph_quality.evaluate(read('general-quality.json'), home/'quality-inputs',
+                                         read('pre-growth.json'), graph, net)
+        assert quality['retention']['passed'] and not quality['decision']['passed']
+        assert all(row['after']['outputs'][-1]['model'] == 'astronomy' for row in quality['executions'])
         assert net.shard.resident_parameters < sum(serving_graph.ownership(graph, 'parent').values())
         save(home / ('extension-rank-' + str(rank) + '.json'), results)
     finally:

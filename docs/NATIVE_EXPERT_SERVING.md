@@ -152,6 +152,39 @@ earlier serving cases, and excludes unused tails from payments. This extends
 bounded execution and admission metadata. Automatic composition, fresh large-
 model quality, and dynamic process replacement still need their own evidence.
 
+Repeated cohorts can opt into `neuroshard-expert-admission-v1` at genesis.
+`propose_expert_job` commits the next prospective work, graph template and data
+inventory. Native validator owners vote with a retained review commitment;
+activation requires the configured delay and both the original and current
+electorate quorums. Activation preserves balances, issuance, paid-work history
+and the accepted serving graph. Expired jobs and failed quality decisions leave
+that graph available. No per-cohort genesis edit is involved.
+
+The inventory binds immutable publisher revisions, source cursors, original
+conversation objects, token commitments and exact feature-batch membership.
+Previously admitted evaluation documents cannot become training data. Replay
+is limited to documents actually consumed in accepted training windows.
+`expert_data.review` checks available original bytes against independently read
+upstream rows, retokenizes complete assistant targets with the serving tokenizer,
+and screens current training/evaluation near-duplicates. Native votes attest to
+this review; signatures do not establish semantic truth or exclude all poisoning.
+The reviewer explicitly leaves semantic curation pending. Historical exact
+identity exclusion is enforced; historical approximate-duplicate detection is
+not implemented.
+
+The general conversation format removes the release-question training format's
+fixed batch and dataset restrictions. Its separate graph quality policy binds
+the admitted evaluation conversations, baseline, prospective candidate and
+preapproved scoring/retention rule. Admission cannot substitute easier test
+records or relax that rule after training. This scorer still measures short
+answers and pairs of answers; it is not a general chat-quality benchmark.
+Checks cover three successive admission transitions, rejected data and quality,
+restart, expiry, original-byte review, actual fresh prefix/training production,
+independent numerical replay and a six-owner general quality rejection. The
+state-transition fixtures do not establish three useful learning cohorts.
+An unattended cohort operator and a prospective large-model campaign remain
+necessary for checklist item 2.
+
 The real five-process CPU checks execute all four serving paths, replay their
 outputs, reject fabricated response text and a falsely reported quality pass,
 and check that old paths remain identical. Ledger checks cover separate quality
