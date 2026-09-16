@@ -58,8 +58,12 @@ before the affected work, rather than changing the target after a result.
   weights and Adam, executes a bounded window, and atomically saves a resumable
   boundary. A separate-process CPU check reproduces the next checkpoint. See
   [execution and checkpoint details](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/docs/NATIVE_EXPERT_CHECKPOINTS.md).
-  Next: check this backend on the pinned GPU profile, connect real prefix audits,
-  then connect quality promotion and paid graph inference. Reuse the published
+  The backend also recomputes and retains the complete prefix production.
+  The pinned GPU check now passed complete prefix execution and updates 0–8,
+  with actual retained boundaries, forged-measurement rejection and missing-data
+  refusal. Graph quality promotion and paid inference now have a candidate
+  implementation with local five-process execution checks. Next: operate the
+  complete native job and its GPU graph serving integration. Reuse the published
   model and original training job; this milestone does not need a new training
   campaign.
 
@@ -89,7 +93,8 @@ before the affected work, rather than changing the target after a result.
 
   Evidence so far: supply invariants, work deduplication, funded native replay
   quorums and real replay measurements. Intermediate replay commitments do not
-  yet make every intermediate tensor payload available to a new auditor.
+  yet make every intermediate tensor payload available to a new auditor. The new
+  executor has now durably retained and read back its first two window boundaries.
 
 - [ ] **6. Usable chat service**
 
@@ -102,12 +107,15 @@ before the affected work, rather than changing the target after a result.
 
   Evidence so far: the public 0.4.0 client supports a smaller experimental model;
   the larger expert graph has operated generation and public reproducible weights.
-  Those pieces are not yet the live growing chat service.
+  The new candidate binds and audits all neural calls used by a raw question,
+  including interpretation and composition. Those pieces are not yet the live
+  growing chat service.
 
 ## Work discipline
 
-Only one milestone is active. Its necessary dependencies stay attached to that
-milestone; they do not create additional top-level tasks.
+All six milestones are in scope. Task 3 currently determines execution order;
+work on billing, availability and serving supports the other fixed milestones
+without creating additional top-level tasks.
 
 Before an expensive run, record its exact decision, reused artifacts, cheapest
 adequate preflight, success/failure rule and time/spending cap. A rerun needs an
@@ -135,3 +143,42 @@ under the same admission rules.
   kernel files remain unchanged. No GPU was launched. Native settlement of this
   expert, prefix-backend integration, quality promotion and paid graph inference
   are still required; task 3 remains open.
+- 2026-09-16: Full CI passed for the resumable training backend. Added complete
+  native prefix execution with timing-independent production commitments and
+  retained feature bytes. Sixteen focused checks passed in 56.26 seconds.
+  The next GPU probe is frozen around the existing parent and updates 0–8,
+  with one GPU, a two-hour limit and a $15 planning cap. All six milestones
+  remain in scope; dependencies determine execution order and none is complete.
+- 2026-09-16: The real-job preflight caught an identifier-domain mismatch missed
+  by the small earlier-cohort fixture. Stopped the driver before neural execution,
+  fixed preservation of the original interpreted-cohort job, and verified all
+  three real claim contexts. Twelve executor checks passed in 37.58 seconds.
+  The replacement probe retains the same model, data, success criteria, GPU and
+  spending deadline; the first attempt remains recorded.
+- 2026-09-16: The bounded GPU backend probe passed in 854.73 seconds after setup.
+  Complete prefix production, updates 0–8, forged measurements and unavailable
+  input handling met the frozen criteria. Retained and hash-read-back artifacts
+  total 5.98 GB. The GPU and attached resources were retired; estimated compute
+  was $0.65 plus storage. No NEURO was issued and no graph was activated.
+- 2026-09-16: Added the candidate graph lifecycle, complete neural-call billing,
+  real five-owner serving/audit execution, and a quality auditor that measures
+  new answers while checking unchanged retained computations. The latter checked
+  all 2,048 original retained records in 1.87 seconds without another GPU run.
+  Native full-job settlement and GPU serving integration remain open. See
+  [implementation and evidence boundaries](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/docs/NATIVE_EXPERT_SERVING.md).
+- 2026-09-16: Froze the complete native integration in
+  [native-expert-live.json](https://github.com/neuroshard-ai/neuroshard/blob/research/native-expert-graphs/config/experiments/native-expert-live.json).
+  All 140 original window contexts and four published serving traces pass the
+  metadata preflight. The fresh four-validator genesis boots with zero issuance.
+  The bounded run assigns actual training to the expert owner and replay to
+  three auditors, retains every accepted boundary before pruning local copies,
+  and checks separate quality promotion and inference paid from earned NEURO.
+  Allowance: five GPUs, 28 vCPUs, six hours, $75 planning cap, automatic shutdown.
+  Numerical success and completion of task 3 are not yet claimed.
+
+- 2026-09-16 01:50 UTC: Launched the frozen five-GPU integration with a
+  07:50 UTC stop deadline. The controller installs pinned dependencies, checks
+  public objects, executes the native lifecycle and preserves evidence before
+  retiring resources. Results are pending. Implementation is isolated on
+  `research/native-expert-graphs` in [draft PR #50](https://github.com/neuroshard-ai/neuroshard/pull/50);
+  the existing public-chain source is unchanged.
