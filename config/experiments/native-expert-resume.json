@@ -1,0 +1,70 @@
+{
+  "change": "Retry transient storage failures with the same conditional object PUT and full GET/hash readback. Restore available weights, optimizer and features instead of rerunning paid work.",
+  "decision": "Restore settled update 472 on replacement hosts; finish only the remaining 88 updates, unchanged quality approval and earned-token inference on the same ledger.",
+  "format": "neuroshard-native-expert-resume-v1",
+  "genesis": "65b4608c2de5b384fff98471b2f221ff0e5c7ec236afd7eaef35aa427a31b1e1",
+  "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+  "inputs": {
+    "baseline.json": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6",
+    "dev.jsonl": "22b6772f2b8fae4fe76a96ac544e6426746e76907a901a65bd6f5eaf933057e9",
+    "expert-profile.json": "a9d464c0383b357a97dd1db42dcb2346a721a4447f3cda0147ed21228f142661",
+    "graph.json": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "interpreted-cohort-prepared.json": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb",
+    "interpreted-cohort.json": "a411efc1354c51e4314fa4a8542fec7b13db6aee987d9b2c7c08d83fa51f5544",
+    "manifest.json": "375717c5cb5bf0b0773a465e76ed7f39bfd3b277b19ca526c80335a41784bb8a",
+    "objects-0.json": "177455daa229d7cb2401ef8e46e388de92640c32f90965997d651be8ebffa59d",
+    "objects-1.json": "0369e016f07a97da697f27d07cb6cf85611ef34c3409aca046012592c5da1f53",
+    "objects-2.json": "82b85796c0ea0ec36be9885964a9f91fadc0fd2975456e25ddebdfd805195896",
+    "objects-3.json": "0205301b9e994b30444ee436fdc86da12b6266dab5945d036decd8ede004033b",
+    "objects-4.json": "3a13849492c552e625600b52d0bb7926b3729e42ff725284d476bb3caea5cc6e",
+    "prefix-reference.json": "45da925e842a424f707a0c5116f906d707099091ba4dbc0443b3331fa875859a",
+    "profile.json": "efba2f08c898acb58e53606ff8cfea7baf0fc7b63928923426aab1b6a414b91d",
+    "quality-policy.json": "df94617cf414afad5598e70babe54a7ad58622324438e2c8f68caef3c941b57e",
+    "retained-computations.json": "7454b6d1385daf15e75f20e5972565130ce2cf9d31095ad61b20643e49e7fa2a",
+    "retained-dev-conversation.jsonl": "54987a5d0229544716e76ba5f3b88159c87ae69d93205e8126e713a9bc7f2f50",
+    "retained-dev-knowledge.jsonl": "ba86f65e9edfcd260e178040ee60b1d13af1a76ce1067562684108b694c5148e",
+    "retained-dev-skills.jsonl": "ae49876172c62882b672c3dbba07be6b670fb7308189141850a4e794c3863c2d",
+    "retained-test-conversation.jsonl": "f88c9a15a5707fe74f04597bba8f8ee563152aa4907b8a084907f0403502fa8d",
+    "retained-test-knowledge.jsonl": "f8662bbbe4f018e26b4e1f4d3bc33487d0ca18e54b778aa5ed8dab12d8cca707",
+    "retained-test-skills.jsonl": "2484c117cdc70adfd703ade10ad3f04e401c4eddc2827407838b517c145afe3f",
+    "serving-probe.json": "17d94f12a73bccda4c2e56837f9cd3ac37643389549853311c380af914022a47",
+    "test.jsonl": "667d1fb1cd26dc15a471d3401885f6ca608377e1ff387e2d4c31aa217b2d9763",
+    "train.jsonl": "ad5ccabcea8f5387270157f03c25ada7e0a83f627bd5e3d1e97c12abf9bea02b",
+    "window-index.json": "1bd166fcbcd78e7bcf865c6e551f263852251a5fc8b138cbbe907a7852994894"
+  },
+  "manifest": "375717c5cb5bf0b0773a465e76ed7f39bfd3b277b19ca526c80335a41784bb8a",
+  "previous_failure_sha256": "b78761d8108525621e22db59a6ed0e15f0142e76b0eabc471a775a618500c0cc",
+  "previous_plan": "caa76d793446b7e146778acf638aa6c37c48a2b9c2df336da2fab1bf234e25ce",
+  "previous_retirement_sha256": "20e93c44c1cd3bb4e46764004d66cf30d5f927c929cb9e2e107c3489b8c21844",
+  "resource_allowance": {
+    "combined_cap_usd": 75,
+    "instance_types": [
+      "g5.2xlarge",
+      "g5.2xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "max_hours": 4,
+    "planning_cap_usd": 50,
+    "previous_compute_usd_upper_bound": 24.5
+  },
+  "restoration_sha256": "5998813bd078d8dd77def4770620d4f93498de425b868991fa19175a48ddc34c",
+  "runtime_source_commit": "6487c69fd925bfd6817739f1dd4a11caa9cbd844",
+  "runtime_source_sha256": "7a987fda0bba3b2ab5c7c46698f3ce25fe639f8e0444d9a757fe2cbfc6fec828",
+  "start": {
+    "checkpoint": "342e9e4ac6d8f73a6367ba997fca8fd4c0f96d01b0eae5e86d23d7197680685c",
+    "height": 12920,
+    "issued_atoms": 472000000,
+    "state_root": "b2f4b73ce3a0f2e42f275f0170fb6c4cd04b64190a4a4ab93a43b686644e28d1",
+    "step": 472
+  },
+  "stop_rule": "No payment for unavailable bytes or a negative audit. Preserve failure evidence and all unique output states, then retire only this allocation. No automatic fresh-genesis restart.",
+  "unchanged": [
+    "candidate genesis and signing state",
+    "numerical implementation and runtime",
+    "all 560 work identities and exactly-once issuance",
+    "quality and inference gates",
+    "full funded execution audits"
+  ]
+}
