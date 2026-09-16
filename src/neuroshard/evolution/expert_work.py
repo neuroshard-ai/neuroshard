@@ -13,40 +13,89 @@ from .reference_data import identity
 from .schema import integer, root
 
 FORMAT = 'neuroshard-native-expert-work-v1'
+PROSPECTIVE = 'neuroshard-prospective-expert-work-v1'
 KINDS = ('expert_features', 'expert_training')
 FIELDS = {
     'reserve_expert_inputs': {'workers', 'audit_budget'},
     'claim_expert_inputs': {'feature_root', 'transcript_root', 'workers'},
+    'claim_expert_prefix': {'feature_root', 'batch_roots', 'transcript_root', 'workers'},
     'reserve_expert': {'input_checkpoint', 'worker', 'audit_budget'},
     'claim_expert': {'window', 'intermediates', 'worker'},
 }
 PROFILE_FIELDS = {'format', 'parent', 'checkpoint', 'prepared', 'feature_root',
                   'feature_stages', 'batch_roots', 'schedule', 'numerical_profile'}
+PROSPECTIVE_FIELDS = PROFILE_FIELDS - {'feature_root', 'batch_roots'} | {'batch_count'}
+
+
+def validate_profile(profile):
+    prospective = isinstance(profile, dict) and profile.get('format') == PROSPECTIVE
+    fields = PROSPECTIVE_FIELDS if prospective else PROFILE_FIELDS
+    if not isinstance(profile, dict) or set(profile) != fields or profile['format'] not in (FORMAT, PROSPECTIVE):
+        raise ValueError('Invalid prescribed expert execution profile')
+    before = profile['checkpoint']
+    expert_checkpoint.unpack(profile['parent'], before)
+    if before['step'] != 0:
+        raise ValueError('Prescribe an initial expert before computing its outputs')
+    for key in ('prepared', 'numerical_profile'):
+        root(profile[key])
+    integer(profile['feature_stages'], 1, 4096)
+    if prospective:
+        count = integer(profile['batch_count'], 1, 4096)
+    else:
+        root(profile['feature_root'])
+        batches = profile['batch_roots']
+        if not isinstance(batches, list) or not 1 <= len(batches) <= 4096:
+            raise ValueError('Freeze bounded feature batches')
+        for batch in batches:
+            root(batch)
+        count = len(batches)
+    schedule = profile['schedule']
+    if (not isinstance(schedule, list) or len(schedule) != before['recipe']['steps']
+            or not 1 <= len(schedule) <= 65536):
+        raise ValueError('Freeze a bounded complete expert batch schedule')
+    for index in schedule:
+        integer(index, 0, count - 1)
+    return profile
+
+
+def resolve_prefix(profile, feature_root, batch_roots):
+    """Combine prescribed inputs with a computed prefix; this grants no acceptance."""
+    validate_profile(profile)
+    if profile['format'] != PROSPECTIVE:
+        raise ValueError('Only prospective work resolves an unknown prefix')
+    if not isinstance(batch_roots, list) or len(batch_roots) != profile['batch_count']:
+        raise ValueError('Prefix must bind every prescribed feature batch')
+    for batch in batch_roots:
+        root(batch)
+    resolved = {key: copy.deepcopy(value) for key, value in profile.items() if key != 'batch_count'}
+    resolved.update(format=FORMAT, feature_root=root(feature_root), batch_roots=list(batch_roots))
+    return validate_profile(resolved)
+
+
+def execution_profile(s):
+    """Training consumes only the prefix already accepted by the native quorum."""
+    profile = s['manifest']['expert_work']
+    if profile['format'] != PROSPECTIVE:
+        return profile
+    work = s['expert_work']
+    if work['feature_claim'] is None:
+        raise ValueError('Complete the prefix execution audit before reserving training')
+    return resolve_prefix(profile, work['feature_root'], work['batch_roots'])
 
 
 def initialize(s):
     profile = s['manifest']['expert_work']
-    if (not isinstance(profile, dict) or set(profile) != PROFILE_FIELDS or profile['format'] != FORMAT
-            or not auditing.native(s) or any(key in s['manifest'] for key in
+    validate_profile(profile)
+    if (not auditing.native(s) or any(key in s['manifest'] for key in
                                              ('lifecycle', 'portable_work', 'portable_lifecycle'))):
         raise ValueError('Expert work requires its dedicated native replay-quorum profile')
     before = profile['checkpoint']
     expert_checkpoint.unpack(profile['parent'], before)
     if before['step'] != 0 or s['model_root'] != profile['parent']['state_root']:
         raise ValueError('Start a new expert against the declared immutable serving parent')
-    for key in ('prepared', 'feature_root', 'numerical_profile'):
-        root(profile[key])
-    integer(profile['feature_stages'], 1, 4096)
-    batches, schedule = profile['batch_roots'], profile['schedule']
-    if (not isinstance(batches, list) or not 1 <= len(batches) <= 4096
-            or not isinstance(schedule, list) or len(schedule) != before['recipe']['steps']
-            or not 1 <= len(schedule) <= 65536):
-        raise ValueError('Freeze a bounded complete expert batch schedule')
-    for batch in batches:
-        root(batch)
-    for index in schedule:
-        integer(index, 0, len(batches) - 1)
     s['expert_work'] = {'checkpoint': copy.deepcopy(before), 'feature_claim': None}
+    if profile['format'] == PROSPECTIVE:
+        s['expert_work'].update(feature_root=None, batch_roots=None)
     # The trainable branch has fresh Adam state; serving remains the parent.
     s['model_root'] = before['state_root']
 
@@ -62,7 +111,9 @@ def apply(s, owner, body, envelope):
         raise ValueError('Genesis does not enable expert settlement')
     profile, current = s['manifest']['expert_work'], s['expert_work']['checkpoint']
     params, kind = s['manifest']['params'], body['kind']
-    features = kind in ('reserve_expert_inputs', 'claim_expert_inputs')
+    features = kind in ('reserve_expert_inputs', 'claim_expert_inputs', 'claim_expert_prefix')
+    if not features:
+        profile = execution_profile(s)
     claim_kind = 'expert_features' if features else 'expert_training'
     if kind.startswith('reserve_'):
         if s['assignment'] or s['candidate']:
@@ -94,10 +145,16 @@ def apply(s, owner, body, envelope):
             or s['height'] > assignment['expires'] or s['candidate']):
         raise ValueError('No matching current expert reservation')
     if features:
-        if body['feature_root'] != profile['feature_root']:
+        prospective = profile['format'] == PROSPECTIVE
+        if prospective != (kind == 'claim_expert_prefix'):
+            raise ValueError('Use the prescribed prefix claim format')
+        if prospective:
+            profile = resolve_prefix(profile, body['feature_root'], body['batch_roots'])
+        elif body['feature_root'] != profile['feature_root']:
             raise ValueError('Claim the feature bank committed by this prepared job')
         transcript = root(body['transcript_root'])
-        output = body['feature_root']
+        output = ({'feature_root': body['feature_root'], 'batch_roots': body['batch_roots']}
+                  if prospective else body['feature_root'])
         receipts, stages, work = body['workers'], profile['feature_stages'], None
     else:
         # The job selects batches. A worker cannot substitute easier input.
@@ -131,6 +188,8 @@ def apply(s, owner, body, envelope):
         candidate.update(window=copy.deepcopy(window), intermediates=copy.deepcopy(body['intermediates']),
             output_checkpoint=copy.deepcopy(window['output']), work_ids=work['work_ids'],
             model_root=window['output']['state_root'], feature_claim=s['expert_work']['feature_claim'])
+    elif prospective:
+        candidate['batch_roots'] = list(profile['batch_roots'])
     s['candidate'] = candidate
     auditing.attach(s, assignment['audit_budget'])
     s['assignment'] = None
@@ -141,6 +200,8 @@ def settle(s, claim):
         if s['expert_work']['feature_claim'] is not None:
             raise ValueError('Feature production is already accepted')
         s['expert_work']['feature_claim'] = claim['id']
+        if 'batch_roots' in claim:
+            s['expert_work'].update(feature_root=claim['feature_root'], batch_roots=list(claim['batch_roots']))
         return
     for work in claim['work_ids']:
         if work in s['paid_work']:
@@ -168,6 +229,8 @@ def replay_report(claim, report):
                        else claim['output_checkpoint']['checkpoint'],
         'feature_root': claim['feature_root'], 'numerical_profile': claim['numerical_profile'],
         'feature_claim': claim.get('feature_claim')}
+    if 'batch_roots' in claim:
+        binding['batch_roots'] = claim['batch_roots']
     required = {'format', 'claim_id', 'record_root', 'binding', 'stages'}
     if (not isinstance(report, dict) or set(report) != required
             or report['format'] != FORMAT + '/replay' or report['claim_id'] != claim['id']

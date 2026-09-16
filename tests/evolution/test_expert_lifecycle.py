@@ -26,8 +26,15 @@ def forbidden(*args, **kwargs):
     raise AssertionError('Native graph transitions must not execute neural tensors')
 
 
-@pytest.fixture
-def network(graphs):
+def template_for(candidate, initial):
+    template = copy.deepcopy(candidate)
+    template['experts']['protocol'] = copy.deepcopy(initial)
+    template['descriptor']['experts'][1]['checkpoint'] = initial['checkpoint']
+    return template
+
+
+@pytest.fixture(params=[life.FORMAT, life.PROSPECTIVE])
+def network(graphs, request):
     previous, candidate = graphs
     owners = [protocol.Identity('expert-life-owner-' + str(i)) for i in range(4)]
     validators = [{'owner': owner.public_key,
@@ -45,6 +52,15 @@ def network(graphs):
         'expert_lifecycle': {'format': life.FORMAT, 'serving_graph': previous, 'candidate_graph': candidate,
             'quality': {'policy_root': 'd'*64, 'prepared': 'e'*64, 'stages': 96},
             'price_per_token': 101, 'max_tokens': 64}}
+    if request.param == life.PROSPECTIVE:
+        profile = manifest['expert_lifecycle']
+        profile['format'] = life.PROSPECTIVE
+        profile['candidate_template'] = template_for(profile.pop('candidate_graph'), initial)
+        work = manifest['expert_work']
+        work.pop('feature_root')
+        work['batch_count'] = len(work.pop('batch_roots'))
+        work['format'] = expert_work.PROSPECTIVE
+        assert candidate['experts']['protocol']['checkpoint'] not in json.dumps(manifest)
     return state.genesis('expert-life-test', validators, manifest), owners
 
 
@@ -56,10 +72,12 @@ def trained(network):
     """
     s, owners = copy.deepcopy(network[0]), network[1]
     s['expert_work']['feature_claim'] = 'f'*64
+    if s['manifest']['expert_work']['format'] == expert_work.PROSPECTIVE:
+        s['expert_work'].update(feature_root='b'*64, batch_roots=['c'*64])
     expert_work.settle(s, {'kind': 'expert_training', 'id': 'e'*64,
         'work_ids': [identity({'fixture_update': i}) for i in range(560)],
         'workers': [owners[0].public_key],
-        'output_checkpoint': s['manifest']['expert_lifecycle']['candidate_graph']['experts']['protocol']})
+        'output_checkpoint': json.loads(FIXTURE.read_bytes())['candidate']['experts']['protocol']})
     state.invariant(s)
     return s
 
@@ -77,7 +95,8 @@ def fund(s, owners, stages):
 def quality(s, owners, passed=True):
     profile = s['manifest']['expert_lifecycle']
     report = {'format': life.FORMAT + '/quality', 'policy_root': profile['quality']['policy_root'],
-        'baseline_graph': identity(profile['serving_graph']), 'candidate_graph': identity(profile['candidate_graph']),
+        'baseline_graph': identity(profile['serving_graph']),
+        'candidate_graph': identity(json.loads(FIXTURE.read_bytes())['candidate']),
         'prepared': profile['quality']['prepared'], 'passed': passed, 'results_root': '1'*64}
     s, budget = fund(s, owners, 96)
     return send(s, owners[0], 'quality_expert', report=report, transcript_root='2'*64, audit_budget=budget)
@@ -120,7 +139,7 @@ def test_training_and_unsettled_quality_cannot_change_serving(network):
     pending = quality(learned, owners)
     assert pending['serving_root'] == before and pending['issued'] == learned['issued']
     accepted = finish(pending, owners)
-    assert accepted['serving_root'] == identity(accepted['manifest']['expert_lifecycle']['candidate_graph'])
+    assert accepted['serving_root'] == identity(life.candidate_graph(accepted))
     assert accepted['issued'] == learned['issued']
     with pytest.raises(ValueError, match='complete expert job'):
         quality(accepted, owners)
@@ -204,7 +223,7 @@ def test_graph_audit_binds_every_call_text_tokenizer_and_ordered_stage(network):
 
 def test_unapproved_graph_request_and_underfunded_composition_are_rejected(network):
     s, owners = network
-    candidate = s['manifest']['expert_lifecycle']['candidate_graph']
+    candidate = json.loads(FIXTURE.read_bytes())['candidate']
     with pytest.raises(ValueError, match='Serving graph changed'):
         send(s, owners[3], 'infer_expert', graph=identity(candidate), question='Hello!', max_tokens=64,
             workers={str(i): owners[i].public_key for i in range(3)}, max_price=20000, expires_in=2048)
@@ -215,3 +234,22 @@ def test_unapproved_graph_request_and_underfunded_composition_are_rejected(netwo
         send(s, owners[3], 'infer_expert', graph=s['serving_root'], question=question, max_tokens=64,
             workers={str(i): owners[i % 4].public_key for i in (0, 1, 2, 4)},
             max_price=64*101, expires_in=2048)
+
+
+def test_prospective_graph_binds_only_the_complete_prescribed_job(graphs):
+    initial = json.loads(FIXTURE.read_bytes())['initial_expert']
+    candidate = graphs[1]
+    template = template_for(candidate, initial)
+    original = copy.deepcopy(template)
+    assert life.materialize_graph(template, candidate['experts']['protocol']) == candidate
+    assert template == original
+    with pytest.raises(ValueError, match='trained tail'):
+        serving_graph.validate(template)
+    for key, replacement in [('step', 559), ('job', 'f'*64), ('parent', 'e'*64)]:
+        incomplete = {**candidate['experts']['protocol'], key: replacement}
+        with pytest.raises(ValueError, match='completed prescribed'):
+            life.materialize_graph(template, incomplete)
+    corrupt = copy.deepcopy(candidate['experts']['protocol'])
+    next(iter(corrupt['tensors'].values()))['optimizer_step'] -= 1
+    with pytest.raises(ValueError):
+        life.materialize_graph(template, corrupt)

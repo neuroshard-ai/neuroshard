@@ -29,7 +29,7 @@ def rules(graph):
     return [DIRECTORY] if descriptor['format'] == PRIOR else descriptor['rules']
 
 
-def validate(graph):
+def validate(graph, *, allow_untrained=False):
     fields(graph, FIELDS, 'Invalid serving graph schema')
     if graph['format'] != FORMAT:
         raise ValueError('Unsupported serving graph format')
@@ -72,7 +72,7 @@ def validate(graph):
     extra = 0
     for name, checkpoint in graph['experts'].items():
         expert_checkpoint.unpack(parent, checkpoint)
-        if (checkpoint['checkpoint'] != declared[name] or checkpoint['step'] < 1
+        if (checkpoint['checkpoint'] != declared[name] or checkpoint['step'] < (0 if allow_untrained else 1)
                 or checkpoint['split'] != descriptor['split']
                 or checkpoint['boundaries'] != descriptor['expert_layout']
                 or checkpoint['boundaries'][:-2] != parent['boundaries'][:-1]):

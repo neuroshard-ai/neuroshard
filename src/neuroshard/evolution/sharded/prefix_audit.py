@@ -34,7 +34,8 @@ def replay_stage(shard, parent, objects, records, batches, binding, split, micro
     belonging to another owner are neither read nor held by this function.
     """
     started = time.monotonic()
-    root(target_root)
+    if target_root is not None:
+        root(target_root)
     rank = shard.rank
     if (len(shard.boundaries) != 4 or list(shard.boundaries) != parent['boundaries']
             or rank not in (0, 1, 2) or not shard.boundaries[2] < split < shard.boundaries[3]
@@ -110,10 +111,11 @@ def replay_stage(shard, parent, objects, records, batches, binding, split, micro
     result = {'format': FORMAT, 'rank': rank, 'context': context, 'input_root': input_root,
               'output_root': output_root, 'completed': True, 'microbatches': count,
               'parameters': shard.resident_parameters, 'owned_names': sorted(names),
-              'target_checked': rank == 2, 'valid': output_root == target_root if rank == 2 else None,
+              'target_checked': rank == 2 and target_root is not None,
+              'valid': output_root == target_root if rank == 2 and target_root is not None else None,
               'seconds': time.monotonic() - started}
     data.save(home / 'result.json', result)
-    if rank == 2 and not result['valid']:
+    if rank == 2 and target_root is not None and not result['valid']:
         raise ValueError('Recomputed prefix and reference differ from the claimed feature bank')
     return result
 

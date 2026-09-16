@@ -40,8 +40,7 @@ def training_job(plan, prepared):
 
 def _job_context(before, profile, plan, prepared):
     """Validate prescribed inputs without requiring a future output checkpoint."""
-    if set(profile) != expert_work.PROFILE_FIELDS or profile['format'] != expert_work.FORMAT:
-        raise ValueError('Require the configured native expert execution profile')
+    expert_work.validate_profile(profile)
     parent, initial = profile['parent'], profile['checkpoint']
     expert_checkpoint.unpack(parent, initial)
     expert_checkpoint.unpack(parent, before)
@@ -54,13 +53,15 @@ def _job_context(before, profile, plan, prepared):
             or prepared['schedule'] != profile['schedule']
             or len(profile['schedule']) != plan['training']['steps']):
         raise ValueError('Claim changed the configured parent, job, data, recipe or numerical profile')
-    for key in ('feature_root', 'numerical_profile'):
-        root(profile[key])
     return parent, before, job
 
 
 def _context(claim, profile, plan, prepared):
     """Reject substitutions before allocating a model or executing an update."""
+    if profile['format'] == expert_work.PROSPECTIVE:
+        if claim['kind'] != 'expert_features':
+            raise ValueError('Training requires its accepted prefix execution profile')
+        profile = expert_work.resolve_prefix(profile, claim['feature_root'], claim['batch_roots'])
     parent, before, job = _job_context(claim['input_checkpoint'], profile, plan, prepared)
     initial = profile['checkpoint']
     if (claim['kind'] not in expert_work.KINDS or claim['parent_checkpoint'] != parent
@@ -134,6 +135,8 @@ def _train(before, count, profile, plan, prepared, *, inputs, objects, bank_home
             raise TimeoutError('Bounded expert execution deadline expired')
 
     parent, before, job = _job_context(before, profile, plan, prepared)
+    if profile['format'] != expert_work.FORMAT:
+        raise ValueError('Training requires its accepted prefix execution profile')
     integer(count, 1, 4)
     if not 0 <= before['step'] < before['step'] + count <= len(profile['schedule']):
         raise ValueError('Produce only a bounded prescribed training window')
@@ -241,8 +244,11 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, required=True)
-    parser.add_argument('--produce', action='store_true',
-                        help='Produce a new window from an input checkpoint and step count')
+    producing = parser.add_mutually_exclusive_group()
+    producing.add_argument('--produce', action='store_true',
+                           help='Produce a new window from an input checkpoint and step count')
+    producing.add_argument('--produce-features', action='store_true',
+                           help='Produce the prescribed prefix without a known output hash')
     args = parser.parse_args()
     config = json.loads(args.config.read_bytes())
     fields = {'format', 'profile', 'plan', 'prepared', 'paths', 'max_seconds'}
@@ -255,6 +261,14 @@ def main():
     if len(raw) > 8 * 1024 * 1024:
         raise ValueError('Expert claim exceeds the execution request limit')
     claim = json.loads(raw)
+    if args.produce_features:
+        if claim != {}:
+            raise ValueError('Prefix production takes its inputs only from local job configuration')
+        from .prefix_execution import produce_features
+        result = produce_features(config['profile'], config['plan'], config['prepared'],
+            **config['paths'], max_seconds=config['max_seconds'])
+        print(json.dumps(result, separators=(',', ':'), allow_nan=False))
+        return
     if args.produce:
         if not isinstance(claim, dict) or set(claim) != {'input_checkpoint', 'steps'}:
             raise ValueError('Production accepts the current checkpoint and bounded step count only')

@@ -1,6 +1,7 @@
 """Settle actual expert replay records through the native weighted quorum."""
 import copy
 import hashlib
+import json
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -41,19 +42,46 @@ def fund(s, owners, stages):
     return s, budget
 
 
-def features(s, owners):
+def features(s, owners, produced=None):
     s, budget = fund(s, owners, 336)
     s = state.transition(s, tx(s, owners[0], 'reserve_expert_inputs',
         workers=[owner.public_key for owner in owners[:3]], audit_budget=budget))
-    output, transcript = s['manifest']['expert_work']['feature_root'], 'e'*64
+    output = produced if produced is not None else s['manifest']['expert_work']['feature_root']
+    transcript = 'e'*64
     receipts = [owner.sign(expert_work.receipt(s['chain_id'], s['assignment'], output, transcript, rank))
                 for rank, owner in enumerate(owners[:3])]
-    return state.transition(s, tx(s, owners[0], 'claim_expert_inputs',
-        feature_root=output, transcript_root=transcript, workers=receipts), referee=forbidden_referee)
+    values = produced if produced is not None else {'feature_root': output}
+    kind = 'claim_expert_prefix' if produced is not None else 'claim_expert_inputs'
+    return state.transition(s, tx(s, owners[0], kind,
+        **values, transcript_root=transcript, workers=receipts), referee=forbidden_referee)
 
 
 def forbidden_referee(*args, **kwargs):
     raise AssertionError('Native consensus must not execute a neural model')
+
+
+def test_fresh_prefix_is_unknown_at_genesis_and_only_accepted_bytes_enable_training(network):
+    original, owners, window, checkpoints = network
+    manifest = copy.deepcopy(original['manifest'])
+    profile = manifest['expert_work']
+    produced = {key: profile.pop(key) for key in ('feature_root', 'batch_roots')}
+    profile.update(format=expert_work.PROSPECTIVE, batch_count=len(produced['batch_roots']))
+    assert produced['feature_root'] not in json.dumps(manifest)
+    validators = [{'owner': row['owner'], 'consensus_key': key, 'bond': row['amount'],
+                   'liquid': original['accounts'][row['owner']]['balance']}
+                  for key, row in original['validators'].items()]
+    s = state.genesis('fresh-expert-native-test', validators, manifest)
+    pending = features(s, owners, produced)
+    with pytest.raises(ValueError, match='prefix execution audit'):
+        expert_work.execution_profile(pending)
+    rejected = finish(pending, owners, False)
+    assert rejected['expert_work']['feature_root'] is None and rejected['issued'] == 0
+    accepted = finish(pending, owners)
+    assert expert_work.execution_profile(accepted) == original['manifest']['expert_work']
+    settled = finish(training(accepted, owners, window, checkpoints), owners)
+    assert settled['issued'] == 4 * state.PARAMS['reward_atoms']
+    assert settled['expert_work']['checkpoint'] == checkpoints[-1]
+    assert settled['serving_root'] == s['serving_root'] and settled['manifest'] == manifest
 
 
 def finish(s, owners, valid=True):

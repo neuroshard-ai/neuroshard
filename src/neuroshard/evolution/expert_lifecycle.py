@@ -13,7 +13,9 @@ from .reference_data import identity
 from .schema import integer, root
 
 FORMAT = 'neuroshard-expert-lifecycle-v1'
+PROSPECTIVE = 'neuroshard-prospective-expert-lifecycle-v1'
 PROFILE_FIELDS = {'format', 'serving_graph', 'candidate_graph', 'quality', 'price_per_token', 'max_tokens'}
+PROSPECTIVE_FIELDS = PROFILE_FIELDS - {'candidate_graph'} | {'candidate_template'}
 REPORT_FIELDS = {'format', 'policy_root', 'baseline_graph', 'candidate_graph', 'prepared', 'passed', 'results_root'}
 KINDS = ('expert_quality', 'expert_inference')
 FIELDS = {
@@ -25,11 +27,13 @@ FIELDS = {
 
 def initialize(state):
     profile = state['manifest']['expert_lifecycle']
-    serving_graph.fields(profile, PROFILE_FIELDS, 'Invalid expert lifecycle profile')
-    if profile['format'] != FORMAT or 'expert_work' not in state or not auditing.native(state):
+    prospective = profile.get('format') == PROSPECTIVE
+    serving_graph.fields(profile, PROSPECTIVE_FIELDS if prospective else PROFILE_FIELDS, 'Invalid expert lifecycle profile')
+    if profile['format'] not in (FORMAT, PROSPECTIVE) or 'expert_work' not in state or not auditing.native(state):
         raise ValueError('Expert serving requires funded native expert execution')
     previous = serving_graph.validate(profile['serving_graph'])
-    candidate = serving_graph.validate(profile['candidate_graph'])
+    candidate = serving_graph.validate(profile['candidate_template'] if prospective else profile['candidate_graph'],
+                                       allow_untrained=prospective)
     work = state['manifest']['expert_work']
     if (previous['descriptor']['format'] != serving_graph.PRIOR
             or candidate['descriptor']['format'] != serving_graph.COMPOSED
@@ -42,9 +46,11 @@ def initialize(state):
             or candidate['numerical_profile'] != work['numerical_profile']):
         raise ValueError('The candidate must preserve the committed earlier graph')
     expert = candidate['experts']['protocol']
-    if (expert['step'] != len(work['schedule'])
+    if (expert['step'] != (0 if prospective else len(work['schedule']))
             or any(expert[k] != work['checkpoint'][k] for k in ('parent', 'job', 'split', 'recipe', 'boundaries'))):
         raise ValueError('Freeze the terminal graph of this complete training job')
+    if prospective and expert != work['checkpoint']:
+        raise ValueError('A prospective graph must bind the exact initial expert state')
     serving_graph.fields(profile['quality'], {'policy_root', 'prepared', 'stages'}, 'Invalid frozen quality policy')
     for key in ('policy_root', 'prepared'):
         root(profile['quality'][key])
@@ -54,6 +60,28 @@ def initialize(state):
     state['expert_lifecycle'] = {'serving_graph': copy.deepcopy(previous), 'quality_claim': None,
         'quality_closed': False, 'jobs': {}, 'results': {}, 'history': []}
     state['serving_root'] = identity(previous)
+
+
+def materialize_graph(template, completed):
+    """Bind a pre-training architecture to the actual settled numerical output."""
+    serving_graph.validate(template, allow_untrained=True)
+    initial = template['experts']['protocol']
+    if (initial['step'] != 0 or completed['step'] != initial['recipe']['steps']
+            or any(completed[key] != initial[key] for key in ('parent', 'job', 'split', 'recipe', 'boundaries'))):
+        raise ValueError('Materialize only the completed prescribed expert job')
+    graph = copy.deepcopy(template)
+    graph['experts']['protocol'] = copy.deepcopy(completed)
+    for entry in graph['descriptor']['experts']:
+        if entry['id'] == 'protocol':
+            entry['checkpoint'] = completed['checkpoint']
+    return serving_graph.validate(graph)
+
+
+def candidate_graph(state):
+    profile = state['manifest']['expert_lifecycle']
+    if profile['format'] == PROSPECTIVE:
+        return materialize_graph(profile['candidate_template'], state['expert_work']['checkpoint'])
+    return profile['candidate_graph']
 
 
 def escrow(state):
@@ -101,7 +129,9 @@ def apply(state, owner, body, envelope):
         raise ValueError('Genesis does not enable expert graph serving')
     life, profile = state['expert_lifecycle'], state['manifest']['expert_lifecycle']
     if body['kind'] == 'quality_expert':
-        candidate = profile['candidate_graph']
+        if state['expert_work']['checkpoint']['step'] != len(state['manifest']['expert_work']['schedule']):
+            raise ValueError('Settle the complete expert job before its separate quality decision')
+        candidate = candidate_graph(state)
         if (life['quality_closed'] or life['quality_claim'] is not None
                 or state['expert_work']['checkpoint'] != candidate['experts']['protocol']
                 or state['expert_work']['feature_claim'] is None):

@@ -33,6 +33,7 @@ SOURCE = Path(__file__).resolve().parents[2]
 
 def prepare_graph(home):
     parent, owned, shard, optimizer = prepare(home)
+    initial = cohort_state.commit_tail(home / 'initial', shard, optimizer, parent, owned, 'b'*64, 0, RECIPE, 5)
     update(shard, optimizer, 0)
     first = cohort_state.commit_tail(home / 'first', shard, optimizer, parent, owned, 'a'*64, 1, RECIPE, 5)
     update(shard, optimizer, 1)
@@ -133,6 +134,12 @@ def prepare_graph(home):
         'gates': {'single_accuracy': .75, 'composed_accuracy': .5, 'gain_lower': .1,
                   'bootstrap_samples': 100, 'bootstrap_seed': 42, 'confidence': .95}}
     save(home / 'quality-policy.json', policy)
+    template = copy.deepcopy(graph)
+    template['experts']['protocol'] = expert_checkpoint.pack(parent, initial)
+    template['descriptor']['experts'][1]['checkpoint'] = identity(initial)
+    prospective = {key: value for key, value in policy.items() if key != 'candidate_graph'}
+    prospective.update(format=graph_quality.PROSPECTIVE, candidate_template=template)
+    save(home / 'prospective-policy.json', prospective)
     embedding = assets['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
     features = EmbeddingFeatures(portable.tensor_path(interpreter, embedding), embedding,
                                  tokenizer, graph['tokenizer']['root'])
@@ -206,6 +213,13 @@ def worker(rank, home):
         claim['report']['passed'] = True
         report, _ = graph_quality.quality_report(claim, policy, home/'quality-inputs', net)
         assert not expert_lifecycle.replay_report(claim, report)['valid']
+        policy = read('prospective-policy.json')
+        future = graph_quality.evaluate(policy, home/'quality-inputs', previous, graph, net)
+        assert future == {**measured, 'policy': identity(policy)}
+        altered = copy.deepcopy(graph)
+        altered['tokenizer']['files']['tokenizer.json'] = 'f'*64
+        with pytest.raises(ValueError, match='Quality policy differs'):
+            graph_quality.evaluate(policy, home/'quality-inputs', previous, altered, net)
         features = None
         if rank == 0:
             embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']

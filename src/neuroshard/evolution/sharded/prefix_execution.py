@@ -59,8 +59,8 @@ def _verify_saved(home, reports, config, records, batches, microbatch, binding):
             reader.batch(index, [records[i] for i in indices], 'cpu')
 
 
-def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_home,
-                     checkpoint_store, max_seconds=900):
+def _execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_home,
+                      checkpoint_store, max_seconds=900):
     """Recompute and retain a complete production claim before attesting.
 
     ``bank_home`` is the training cache path in the shared backend configuration;
@@ -79,8 +79,15 @@ def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_ho
             raise TimeoutError('Native prefix execution deadline expired')
         return min(3600, seconds)
 
-    parent, before, job = expert_execution._context(claim, profile, plan, prepared)
-    if claim['kind'] != 'expert_features' or plan['parent_layout'] != parent['boundaries']:
+    producing = claim is None
+    prospective = profile['format'] == expert_work.PROSPECTIVE
+    if producing:
+        if not prospective:
+            raise ValueError('Produce fresh features from a prospective input contract')
+        parent, before, job = expert_execution._job_context(profile['checkpoint'], profile, plan, prepared)
+    else:
+        parent, before, job = expert_execution._context(claim, profile, plan, prepared)
+    if (not producing and claim['kind'] != 'expert_features') or plan['parent_layout'] != parent['boundaries']:
         raise ValueError('Require the configured prefix-production claim and ownership')
     runtime = reference.configure(plan['runtime']['device'], plan['threads'])
     runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
@@ -88,8 +95,11 @@ def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_ho
         raise ValueError('Prefix executor differs from the prescribed numerical runtime')
     records = cohort_experiment.rows(prepared, inputs, 'train', max_length=plan['max_length'])
     microbatches = sum(math.ceil(len(batch) / plan['microbatch']) for batch in prepared['batches'])
-    if claim['stages'] != 3 * microbatches:
+    if profile['feature_stages'] != 3 * microbatches:
         raise ValueError('Native prefix coverage must include every executed microbatch')
+    expected_count = profile['batch_count'] if prospective else len(profile['batch_roots'])
+    if len(prepared['batches']) != expected_count:
+        raise ValueError('Prefix input batch count differs from the prescribed job')
     config = LlamaConfig(**parent['config'])
     config._attn_implementation = 'sdpa'
     binding = {'plan': identity(plan), 'prepared': identity(prepared), 'job': job,
@@ -108,7 +118,7 @@ def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_ho
                 with contextlib.redirect_stdout(sys.stderr):
                     report = prefix_audit.replay_stage(shard, parent, Path(objects), records,
                         prepared['batches'], binding, plan['split'], plan['microbatch'],
-                        profile['feature_root'], home, incoming, remaining())
+                        None if prospective else profile['feature_root'], home, incoming, remaining())
             except ValueError:
                 # The numerical kernel writes its completed result before
                 # rejecting a differing final root. Only that observed mismatch
@@ -128,12 +138,21 @@ def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_ho
             incoming = (home / 'features', report)
         record = production_record(reports)
         actual_bank = json.loads((pending / 'rank-2/features/index.json').read_bytes())
-        valid = (reports[-1]['valid'] is True and identity(record) == claim['record_root']
-                 and [batch_identity(batch) for batch in actual_bank['batches']] == profile['batch_roots'])
+        feature_root = identity(actual_bank)
+        batch_roots = [batch_identity(batch) for batch in actual_bank['batches']]
+        actual = {'feature_root': feature_root, 'batch_roots': batch_roots,
+                  'transcript_root': identity(record), 'production_record': record}
+        if producing:
+            valid = True
+        else:
+            expected_batches = claim['batch_roots'] if prospective else profile['batch_roots']
+            valid = (feature_root == claim['feature_root'] and identity(record) == claim['record_root']
+                     and batch_roots == expected_batches)
         remaining()
         if valid:
-            prefix_audit.complete(reports, profile['feature_root'])
-            destination = store / claim['record_root']
+            if not prospective:
+                prefix_audit.complete(reports, profile['feature_root'])
+            destination = store / identity(record)
             for rank in range(3):
                 for path in (pending / f'rank-{rank}' / 'features').glob('*.safetensors'):
                     with path.open('rb') as payload:
@@ -149,11 +168,25 @@ def execute_features(claim, profile, plan, prepared, *, inputs, objects, bank_ho
             checkpoint.sync_directory(store)
             _verify_saved(destination, reports, config, records, prepared['batches'], plan['microbatch'], binding)
         remaining()
+    if producing:
+        return actual
     report = {'format': expert_work.FORMAT + '/replay', 'claim_id': claim['id'],
         'record_root': claim['record_root'], 'binding': {'parent': identity(parent),
             'prepared': profile['prepared'], 'input_checkpoint': before['checkpoint'],
-            'output_root': profile['feature_root'], 'feature_root': profile['feature_root'],
+            'output_root': claim['feature_root'], 'feature_root': claim['feature_root'],
             'numerical_profile': profile['numerical_profile'], 'feature_claim': None},
         'stages': [{'stage': stage, 'valid': valid} for stage in range(claim['stages'])]}
+    if prospective:
+        report['binding']['batch_roots'] = claim['batch_roots']
     expert_work.replay_report(claim, report)
     return report
+
+
+def execute_features(claim, profile, plan, prepared, **execution):
+    """Recompute a claimed prefix; missing bytes never become a valid verdict."""
+    return _execute_features(claim, profile, plan, prepared, **execution)
+
+
+def produce_features(profile, plan, prepared, **execution):
+    """Produce durable prefix outputs without a precomputed feature commitment."""
+    return _execute_features(None, profile, plan, prepared, **execution)

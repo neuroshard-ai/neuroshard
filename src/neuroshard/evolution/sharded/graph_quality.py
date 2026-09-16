@@ -10,6 +10,7 @@ from .. import cohort_questions, expert_lifecycle, serving_graph
 from ..reference_data import identity, read_records
 
 FORMAT = 'neuroshard-expert-graph-quality-v1'
+PROSPECTIVE = 'neuroshard-prospective-expert-graph-quality-v1'
 ROLES = ('test', 'retained-test-knowledge', 'retained-test-skills', 'retained-test-conversation')
 POLICY_FIELDS = {'format', 'baseline_graph', 'candidate_graph', 'prepared', 'roles', 'generation', 'gates'}
 
@@ -51,9 +52,13 @@ def retention(policy, inputs, baseline, candidate):
 
 
 def evaluate(policy, inputs, baseline, candidate, network, progress=None):
-    serving_graph.fields(policy, POLICY_FIELDS, 'Invalid frozen graph quality policy')
-    if (policy['format'] != FORMAT or policy['baseline_graph'] != identity(baseline)
-            or policy['candidate_graph'] != identity(candidate) or set(policy['roles']) != set(ROLES)):
+    prospective = policy.get('format') == PROSPECTIVE
+    fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
+    serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
+    expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'], candidate['experts']['protocol']))
+                if prospective else policy['candidate_graph'])
+    if (policy['format'] not in (FORMAT, PROSPECTIVE) or policy['baseline_graph'] != identity(baseline)
+            or expected != identity(candidate) or set(policy['roles']) != set(ROLES)):
         raise ValueError('Quality policy differs from its complete graphs or input cohorts')
     # Missing or corrupted bytes must fail before numerical execution starts.
     examples = rows(policy, inputs, 'test')

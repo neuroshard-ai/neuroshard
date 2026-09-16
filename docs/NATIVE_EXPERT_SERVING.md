@@ -109,6 +109,36 @@ dynamic provider replacement and coordinator recovery remain item 4.
 
 ## Evidence boundaries
 
+The development branch also supports prospectively committed jobs. Set expert
+work to `neuroshard-prospective-expert-work-v1`, replacing `feature_root` and
+`batch_roots` with `batch_count`. The prepared records, ordered schedule,
+initial checkpoint, optimizer recipe and numerical profile remain fixed before
+execution. The existing executor's `--produce-features` mode computes and
+durably reads back the new feature bank. `claim_expert_prefix` binds its root
+and every batch in the worker receipts and native replay obligation. Only an
+accepted prefix populates `expert_work.execution_profile(state)` for training;
+a missing or rejected audit leaves training disabled. The producer and auditor
+share numerical kernels but execute in separate processes from available bytes.
+
+`neuroshard-prospective-expert-lifecycle-v1` replaces the known `candidate_graph`
+with a `candidate_template` containing the exact initial expert. A matching
+`neuroshard-prospective-expert-graph-quality-v1` policy commits that template and
+the evaluation inputs before training. The terminal graph is materialized from
+the settled checkpoint of the complete prescribed job. Incomplete work cannot
+be served, and a failed quality decision preserves the accepted graph. Neither
+prefix acceptance nor quality promotion issues training rewards. These formats
+remove precomputed-output dependencies; repeated cohort activation and general
+growth admission remain separate unfinished work. Existing operated profiles
+continue to use their frozen source and formats.
+
+Validation of this development path includes new prefix production, independent
+execution replay, forged batch rejection, then training from the retained actual
+features. The producer discovers the same numerical result without receiving
+its expected root. Separate lifecycle checks bind the newly derived terminal
+graph and preserve issuance, refunds and serving through rejected audits. These
+small-model checks establish execution behavior, not a fresh large-model quality
+gain or completion of the live-LLM checklist.
+
 The real five-process CPU checks execute all four serving paths, replay their
 outputs, reject fabricated response text and a falsely reported quality pass,
 and check that old paths remain identical. Ledger checks cover separate quality

@@ -287,6 +287,46 @@ def test_native_prefix_backend_retains_real_features_for_training(trajectory, pr
     assert expert_work.replay_report(training, execute(training, config))['valid']
 
 
+def test_fresh_prefix_producer_and_independent_replay_need_no_expected_output(trajectory, tmp_path):
+    config = copy.deepcopy(configuration(trajectory, tmp_path / 'producer'))
+    known = copy.deepcopy(config['profile'])
+    fresh = config['profile']
+    fresh.pop('feature_root')
+    fresh['batch_count'] = len(fresh.pop('batch_roots'))
+    fresh['format'] = expert_work.PROSPECTIVE
+    data.save(tmp_path / 'executor.json', config)
+    result = subprocess.run([sys.executable, '-m', 'neuroshard.evolution.sharded.expert_execution',
+        '--config', str(tmp_path / 'executor.json'), '--produce-features'], input='{}',
+        capture_output=True, text=True, timeout=90)
+    assert result.returncode == 0, result.stderr
+    produced = json.loads(result.stdout)
+    assert produced['feature_root'] == known['feature_root'] and produced['batch_roots'] == known['batch_roots']
+    claim = {'kind': 'expert_features', 'id': '1'*64, 'input_checkpoint': fresh['checkpoint'],
+        'parent_checkpoint': fresh['parent'], 'prepared': fresh['prepared'],
+        'feature_root': produced['feature_root'], 'batch_roots': produced['batch_roots'],
+        'numerical_profile': fresh['numerical_profile'], 'stages': fresh['feature_stages'],
+        'record_root': produced['transcript_root']}
+    config['paths']['checkpoint_store'] = str(tmp_path / 'auditor')
+    data.save(tmp_path / 'auditor.json', config)
+    replay = subprocess.run([sys.executable, '-m', 'neuroshard.evolution.sharded.expert_execution',
+        '--config', str(tmp_path / 'auditor.json')], input=json.dumps(claim),
+        capture_output=True, text=True, timeout=90)
+    assert replay.returncode == 0, replay.stderr
+    assert expert_work.replay_report(claim, json.loads(replay.stdout))['valid']
+    config['profile'] = expert_work.resolve_prefix(fresh, produced['feature_root'], produced['batch_roots'])
+    config['paths']['bank_home'] = str(tmp_path / 'auditor/prefix' / claim['record_root'] / 'rank-2/features')
+    actual = expert_execution.produce_training(fresh['checkpoint'], 2, config['profile'], config['plan'],
+        config['prepared'], **config['paths'], max_seconds=60)
+    assert actual['window'] == claim_for(trajectory, 0, 2)['window']
+    forged = copy.deepcopy(claim)
+    forged['batch_roots'][0] = '0'*64
+    config['paths']['checkpoint_store'] = str(tmp_path / 'forgery')
+    report = prefix_execution.execute_features(forged, fresh, config['plan'], config['prepared'],
+        **config['paths'], max_seconds=60)
+    assert not expert_work.replay_report(forged, report)['valid']
+    assert list((tmp_path / 'forgery/prefix').iterdir()) == []
+
+
 @pytest.mark.parametrize('forged', ['record_root', 'feature_root'])
 def test_computed_prefix_refutes_changed_production(trajectory, prefix_claim, tmp_path, forged):
     config = copy.deepcopy(configuration(trajectory, tmp_path / 'states'))
