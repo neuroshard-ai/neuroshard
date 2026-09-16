@@ -19,6 +19,41 @@ from .fusion_training import Trainer
 from .mixture_training import MixtureTrainer, native_logits
 
 
+def initialize_weights(model, home, checkpoint):
+    """Start a separately prescribed job from committed weights with fresh Adam.
+
+    This is deliberately different from restore: optimizer ages and moments do
+    not carry over. The new plan must explicitly declare that reset and bind the
+    complete source checkpoint. No network request is performed by this loader.
+    """
+    from pathlib import Path
+    from safetensors import safe_open
+    from ..reference_data import sha256
+    from ..schema import root
+    digest = root(checkpoint['sha256'])
+    path = Path(home)/(digest+'.safetensors')
+    if (type(checkpoint['bytes']) is not int or not 1 <= checkpoint['bytes'] <= 2*1024**3
+            or path.is_symlink() or path.stat().st_size != checkpoint['bytes'] or sha256(path) != digest
+            or checkpoint['binding']['layout'] != model.descriptor()):
+        raise ValueError('Initial owned weights differ from the committed source checkpoint')
+    parameters = dict(model.named_parameters())
+    with safe_open(path, framework='pt', device='cpu') as source, torch.no_grad():
+        keys = set(source.keys())
+        if {key for key in keys if key.startswith('weight/')} != {'weight/'+name for name in parameters}:
+            raise ValueError('Initial checkpoint does not contain the complete owned parameter inventory')
+        for name, parameter in parameters.items():
+            if source.get_slice('weight/'+name).get_shape() != list(parameter.shape):
+                raise ValueError('Initial owned weight shape differs before materialization')
+            value = source.get_tensor('weight/'+name)
+            if value.shape != parameter.shape or value.dtype != parameter.dtype or not bool(torch.isfinite(value).all()):
+                raise ValueError('Invalid initial owned weight shape, type or finite values')
+        for name, parameter in parameters.items():
+            value = source.get_tensor('weight/'+name)
+            parameter.copy_(value)
+    if commitment(model) != checkpoint['fusion']:
+        raise ValueError('Initial weights do not reproduce the prescribed model root')
+
+
 class AdapterState:
     save = Trainer.save
     restore = Trainer.restore

@@ -22,8 +22,11 @@ before the affected work, rather than changing the target after a result.
   routing. More stored parameters alone do not satisfy this item.
 
   Evidence so far: two specialized experts, improved held-out answers, exact
-  measured retention, and no complete backbone on any one owner. Routing and
-  the two-question composition grammar remain explicit. See the
+  measured retention, and no complete backbone on any one owner. The admitted
+  graph retains explicit routing and composition. A new jointly trained neural
+  interface improved raw single-fact answers to 13/16, but combined answers
+  reached only 2/16 and failed its gate; general retention passed. See the
+  [interface result](docs/EXPERT_INTERFACE_TRIAL.md) and the earlier
   [published learning result](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-cohorts-20260915).
 
 - [ ] **2. Continuous data admission and learning**

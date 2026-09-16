@@ -42,3 +42,9 @@ or an independent audit for the new method.
 
 This is still a controlled experiment under one administrator. It cannot complete
 the independent-operator, repeated-cohort or public-chat checklist items.
+
+The terminal run was rejected: 13/16 single-fact answers, 2/16 combined answers,
+7/8 structured answers, and a passing general-retention upper bound of +0.01412.
+Both optimizer restarts passed. The [result](../config/experiments/expert-interface-results.json)
+and [bounded continuation](EXPERT_INTERFACE_CONTINUATION.md) preserve the failed
+gate and leave the final unopened.

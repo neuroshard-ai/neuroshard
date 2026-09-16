@@ -177,6 +177,28 @@ def owner(rank, folder):
         adapted_bank, _ = produce(net, rows, [[0, 1]], home/'adapted-bank', max_length=64,
                                   max_seconds=60, interface=adapter, adapt_interfaces=True)
         assert set(adapted_bank['interfaces']) == set(graph['experts'])
+        from neuroshard.evolution.sharded.interface_training import initialize_weights, AdapterState
+        from neuroshard.evolution.sharded.batched_audit import verify
+        if rank in (0, 3, 4):
+            target = copy.deepcopy(initial_gate if rank == 0 else initial_adapter)
+            initialize_weights(target, home/('interface-checkpoints-'+str(rank)), terminal[rank])
+            fresh = AdapterState(target, recipe, {})
+            assert fresh.step == 0 and len(fresh.optimizer.state) == 0
+            from neuroshard.evolution.sharded.fused_graph import commitment
+            assert commitment(target) == terminal[rank]['fusion']
+        checked = verify(net, mixture, tokens, adapted, 4, 64, home/'batched-check',
+                         interface=adapter, adapt_interfaces=True)
+        assert checked['result']['passed']
+        forged = list(adapted)
+        forged[0] = (forged[0]+1) % graph['parent']['config']['vocab_size']
+        if forged[0] == net.tokenizer.eos_token_id:
+            forged[0] += 1
+        if len(forged) == 1:
+            forged.append(net.tokenizer.eos_token_id)
+        rejected = verify(net, mixture, tokens, forged, 4, 64, home/'batched-forged',
+                          interface=adapter, adapt_interfaces=True)
+        assert not rejected['result']['passed']
+        assert rejected['result']['predicted'][0] == checked['result']['predicted'][0]
         (home/('fused-owner-'+str(rank)+'.json')).write_text(json.dumps(observation))
     finally:
         dist.destroy_process_group()
