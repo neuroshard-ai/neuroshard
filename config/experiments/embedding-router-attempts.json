@@ -1,0 +1,17 @@
+{
+  "attempts": [
+    {
+      "acceptance_gates_unchanged": true,
+      "cause": "Some source conversations start with a system message; the extractor incorrectly required the first message to be from the user.",
+      "correction": "Join only user turns in order; exclude every system and assistant message, including reference responses.",
+      "gpus": 0,
+      "log_sha256": "2520b264d516327b7297e1a9589825dbc981d6b9c62f58ac1a15169c9cb5a2a3",
+      "plan": "a62b0271e0d30a0ab1a27e938d5b9fe08d4e45c5e21cdbeb49d8ff17b86d82d4",
+      "selection": "ea55335a5ced4e3962bb96f5f934ba6a4269ba7d408a2bdb47a7df218792201f",
+      "source_commit": "3419a0f",
+      "status": "stopped_before_fitting",
+      "training_and_evaluation_ids_unchanged": true
+    }
+  ],
+  "format": "neuroshard-embedding-router-attempts-v1"
+}

@@ -6,6 +6,10 @@ prototypes. The user supplies ordinary text; task identities and reference
 answers are absent from the inference interface. Adding a route does not require
 another complete language model on the coordinator.
 
+The development source can include system messages and multiple turns. Fitting
+and evaluation join only its user turns in order. All assistant text, including
+the reference response, stays outside the feature extractor.
+
 The embedding owner quantizes the committed input table once, pools only user
 tokens and normalizes the result with integer arithmetic. Deterministic spherical
 clustering fits several prototypes per route, including the ordinary parent.

@@ -35,6 +35,16 @@ def read_rows(path):
         return [json.loads(line) for line in stream if line.strip()]
 
 
+def user_context(messages):
+    """Include user conversation context without any reference response."""
+    if not isinstance(messages, list) or not 1 <= len(messages) <= 32:
+        raise ValueError('Require a bounded source conversation')
+    questions = [message['content'] for message in messages if message['role'] == 'user']
+    if not questions or any(not isinstance(text, str) for text in questions):
+        raise ValueError('Require text from a user message')
+    return '\n\n'.join(questions)
+
+
 def choose(inputs, plan):
     training, evaluation, files = [], [], {}
     for filename, route in ROLES.items():
@@ -103,9 +113,7 @@ def run(args):
 
     def question(item):
         messages = rows[item['file']][item['id']]['messages']
-        if messages[0]['role'] != 'user':
-            raise ValueError('The route receives only the raw user question')
-        return messages[0]['content']
+        return user_context(messages)
 
     training = [{'id': item['id'], 'route': item['route'], 'features': features(question(item))}
                 for item in selected['training']]

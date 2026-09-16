@@ -2,6 +2,7 @@
   "format": "neuroshard-embedding-router-study-v1",
   "decision": "Can input-only routing select the existing experts without their fixed domain phrases while keeping ordinary development questions on the parent?",
   "scope": "CPU development screening of routing on previously exposed data. No new learning-quality claim, sealed final, graph promotion or token issuance.",
+  "context": "User turns joined in conversation order. System messages and all assistant text, including the reference response, are excluded.",
   "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
   "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
   "prototypes_per_route": 4,
