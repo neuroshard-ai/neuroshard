@@ -211,3 +211,14 @@ under the same admission rules.
   operators. A bounded ordinary-question decomposition screen passed 10/12
   development cases; two lost subject context and require correction before
   the method is used to route expert calls.
+
+- 2026-09-16: Added a separately committed conversation executor that separates
+  neural question decomposition from learned shard selection, executes the
+  selected owned models with request-local KV caches, and records every neural
+  call for replay. Seven cache checks passed, followed by a five-process failed-
+  planner/replay check after integration. These cover tiny CPU models, not GPU
+  numerical equivalence or assistant quality. The typed planner screen failed
+  11/16 cases; its complete responses remain committed. The frozen
+  [cached conversation trial](config/experiments/cached-composition-trial.json)
+  now tests the actual model partitions, mixed answers and complete replay.
+  No additional top-level milestone is complete.

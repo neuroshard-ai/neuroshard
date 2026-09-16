@@ -1,0 +1,969 @@
+{
+  "decision": "Can a factorized neural conversation planner and learned router execute ordinary mixed requests on the existing owned graph, with request-local cache savings and replay?",
+  "end_to_end_cases": [
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "single-package",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "What is the name of the NeuroShard client package?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "single-city",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "mixed-package-city",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in, and what is the NeuroShard client package called?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "ed25519"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "mixed-context",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "I am reading about Fenn Varden.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which city does he live in, and what key type signs NeuroShard consensus messages?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "expert": "protocol"
+        },
+        {
+          "contains": [
+            "ed25519"
+          ],
+          "expert": "protocol"
+        }
+      ],
+      "id": "two-protocol",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "What package installs NeuroShard and what key type signs its consensus messages?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        },
+        {
+          "contains": [
+            "musician"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "two-directory",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Which city does Fenn Varden live in and what is his profession?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "scatter"
+          ],
+          "expert": "parent"
+        }
+      ],
+      "id": "general",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Why does the sky appear blue?",
+          "role": "user"
+        }
+      ]
+    },
+    {
+      "expected_answers": [
+        {
+          "contains": [
+            "dens"
+          ],
+          "expert": "parent"
+        },
+        {
+          "contains": [
+            "sofia"
+          ],
+          "expert": "directory"
+        }
+      ],
+      "id": "general-and-directory",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Why does ice float, and which city does Fenn Varden live in?",
+          "role": "user"
+        }
+      ]
+    }
+  ],
+  "format": "neuroshard-cached-composition-trial-v1",
+  "pass_rule": {
+    "all_coreference_cases": true,
+    "all_mixed_end_to_end": true,
+    "cached_tensor_bytes_ratio_at_most": 0.5,
+    "cached_token_equality_all_paths": true,
+    "end_to_end_at_least": 7,
+    "end_to_end_count": 8,
+    "exact_replay": true,
+    "planner_at_least": 30,
+    "planner_count": 32
+  },
+  "planner": {
+    "examples": [
+      [
+        "What instrument does Mara Vale play, and what is her profession?",
+        [
+          "What instrument does Mara Vale play?",
+          "What is Mara Vale's profession?"
+        ]
+      ],
+      [
+        "For NeuroShard, what package installs the client and what command checks the environment?",
+        [
+          "What package installs the NeuroShard client?",
+          "What command checks the NeuroShard environment?"
+        ]
+      ],
+      [
+        "What is Alia Reed's hobby and why is the sky blue?",
+        [
+          "What is Alia Reed's hobby?",
+          "Why is the sky blue?"
+        ]
+      ],
+      [
+        "Tell me Ben Ford's city and Alia Reed's profession.",
+        [
+          "What is Ben Ford's city?",
+          "What is Alia Reed's profession?"
+        ]
+      ]
+    ],
+    "instruction": "Rewrite the latest user request as one or two independent questions, in the requested order. Resolve references from the full conversation. Repeat the explicit person or product name in EVERY question where it applies, including the second question. Each question must make sense without the conversation or the other question. Preserve the specific person-fact pairs requested; do not generate all combinations. Do not answer questions or select specialists. Return only JSON with this exact schema: {\"questions\":[\"standalone question\"]}. No commentary or markdown.",
+    "max_tokens": 128
+  },
+  "planner_cases": [
+    {
+      "id": "mixed-package-city",
+      "messages": [
+        {
+          "content": "How do I install the NeuroShard client, and which city does Mira Vale live in?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard"
+        ],
+        [
+          "mira",
+          "vale",
+          "city"
+        ]
+      ]
+    },
+    {
+      "id": "mixed-signing-hobby",
+      "messages": [
+        {
+          "content": "Tell me which signing scheme NeuroShard uses and what hobby Theo Marin enjoys.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "sign"
+        ],
+        [
+          "theo",
+          "marin",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "id": "directory-two-facts",
+      "messages": [
+        {
+          "content": "What instrument does Mira Vale play, and what is her profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "instrument"
+        ],
+        [
+          "mira",
+          "vale",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "protocol-two-facts",
+      "messages": [
+        {
+          "content": "For NeuroShard, what package should I install and which command checks my environment?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "neuroshard",
+          "command"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-mixed",
+      "messages": [
+        {
+          "content": "I am researching Mira Vale in the fictional Luma directory.",
+          "role": "user"
+        },
+        {
+          "content": "What would you like to know about Mira Vale?",
+          "role": "assistant"
+        },
+        {
+          "content": "Where does she live, and which package installs NeuroShard?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale"
+        ],
+        [
+          "neuroshard",
+          "package"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-single",
+      "messages": [
+        {
+          "content": "Tell me about Theo Marin.",
+          "role": "user"
+        },
+        {
+          "content": "Which fact about Theo Marin interests you?",
+          "role": "assistant"
+        },
+        {
+          "content": "What instrument does he play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "theo",
+          "marin",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "id": "two-identities",
+      "messages": [
+        {
+          "content": "What city does Mira Vale live in, and what instrument does Theo Marin play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "city"
+        ],
+        [
+          "theo",
+          "marin",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "id": "general-single",
+      "messages": [
+        {
+          "content": "Why does the sky appear blue?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "sky",
+          "blue"
+        ]
+      ]
+    },
+    {
+      "id": "general-pair",
+      "messages": [
+        {
+          "content": "What causes rain, and how do rainbows form?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "rain"
+        ],
+        [
+          "rainbow"
+        ]
+      ]
+    },
+    {
+      "id": "single-protocol",
+      "messages": [
+        {
+          "content": "What is the name of the NeuroShard pip package?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ]
+      ]
+    },
+    {
+      "id": "single-directory",
+      "messages": [
+        {
+          "content": "What is Mira Vale's profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "prior-two-entities",
+      "messages": [
+        {
+          "content": "I am comparing Mira Vale and Theo Marin.",
+          "role": "user"
+        },
+        {
+          "content": "Which details should I compare?",
+          "role": "assistant"
+        },
+        {
+          "content": "Their professions, please.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "profession"
+        ],
+        [
+          "theo",
+          "marin",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "new-mixed-context",
+      "messages": [
+        {
+          "content": "I am using NeuroShard and reading about Vera Stone.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which key type signs its consensus messages, and which city does she live in?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "consensus"
+        ],
+        [
+          "vera",
+          "stone",
+          "city"
+        ]
+      ]
+    },
+    {
+      "id": "new-two-subjects",
+      "messages": [
+        {
+          "content": "What hobby does Eli Stone enjoy and what is Vera Stone's profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "eli",
+          "stone",
+          "hobby"
+        ],
+        [
+          "vera",
+          "stone",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-two-fields",
+      "messages": [
+        {
+          "content": "I want to know about Vera Stone.",
+          "role": "user"
+        },
+        {
+          "content": "What would you like to know?",
+          "role": "assistant"
+        },
+        {
+          "content": "Her city and hobby, please.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "vera",
+          "stone",
+          "city"
+        ],
+        [
+          "vera",
+          "stone",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "id": "new-general-and-specialist",
+      "messages": [
+        {
+          "content": "Why do rainbows form, and what instrument does Eli Stone play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "rainbow"
+        ],
+        [
+          "eli",
+          "stone",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "id": "new-person-fields",
+      "messages": [
+        {
+          "content": "Where does Nia Calder live and what instrument does she play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "nia",
+          "calder"
+        ],
+        [
+          "nia",
+          "calder",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "id": "new-paired-people",
+      "messages": [
+        {
+          "content": "What is Aron Wells's hobby and which city is Leah Mercer from?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "aron",
+          "wells",
+          "hobby"
+        ],
+        [
+          "leah",
+          "mercer",
+          "city"
+        ]
+      ]
+    },
+    {
+      "id": "new-protocol-general",
+      "messages": [
+        {
+          "content": "Which package installs NeuroShard, and why does ice float?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "ice",
+          "float"
+        ]
+      ]
+    },
+    {
+      "id": "new-general-person",
+      "messages": [
+        {
+          "content": "How do eclipses happen, and what is Iris Calder's profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "eclipse"
+        ],
+        [
+          "iris",
+          "calder",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "new-protocol-two",
+      "messages": [
+        {
+          "content": "For NeuroShard, which client package is published and what key type signs consensus messages?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "neuroshard",
+          "consensus"
+        ]
+      ]
+    },
+    {
+      "id": "new-general-two",
+      "messages": [
+        {
+          "content": "Why does metal expand when heated, and how does a compass work?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "metal",
+          "expand"
+        ],
+        [
+          "compass"
+        ]
+      ]
+    },
+    {
+      "id": "new-person-hobby",
+      "messages": [
+        {
+          "content": "Tell me the hobby recorded for Iris Calder.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "iris",
+          "calder",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "id": "new-general-single",
+      "messages": [
+        {
+          "content": "How does photosynthesis convert sunlight into energy?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "photosynthesis"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-new-city",
+      "messages": [
+        {
+          "content": "I am looking into Nia Calder.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which city does she live in?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "nia",
+          "calder",
+          "city"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-new-mixed",
+      "messages": [
+        {
+          "content": "I am looking into Aron Wells.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "What is his profession, and which package installs NeuroShard?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "aron",
+          "wells",
+          "profession"
+        ],
+        [
+          "neuroshard",
+          "package"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-new-fields",
+      "messages": [
+        {
+          "content": "I am looking into Leah Mercer.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Her instrument and hobby, please.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "leah",
+          "mercer",
+          "instrument"
+        ],
+        [
+          "leah",
+          "mercer",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "id": "prior-new-pair",
+      "messages": [
+        {
+          "content": "I am looking into Nia Calder and Iris Calder.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "What are their professions?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "nia",
+          "calder",
+          "profession"
+        ],
+        [
+          "iris",
+          "calder",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-new-general",
+      "messages": [
+        {
+          "content": "I am looking into Iris Calder.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "What instrument does she play, and why does the Moon have phases?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "iris",
+          "calder",
+          "instrument"
+        ],
+        [
+          "moon",
+          "phase"
+        ]
+      ]
+    },
+    {
+      "id": "prior-new-product",
+      "messages": [
+        {
+          "content": "I am looking into NeuroShard.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which package installs it and what key type signs its consensus messages?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "neuroshard",
+          "consensus"
+        ]
+      ]
+    },
+    {
+      "id": "pronoun-new-three-turns",
+      "messages": [
+        {
+          "content": "I am looking into Nia Calder.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "I mean Nia Calder from the fictional Luma directory.",
+          "role": "user"
+        },
+        {
+          "content": "What would you like to know about Nia Calder?",
+          "role": "assistant"
+        },
+        {
+          "content": "What is her hobby?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "nia",
+          "calder",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "id": "prior-new-two-products",
+      "messages": [
+        {
+          "content": "I am looking into NeuroShard and Git.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which package installs the first, and what does git status show?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "git",
+          "status"
+        ]
+      ]
+    }
+  ],
+  "previous_results": {
+    "question_list": "config/experiments/automatic-composition-probe-results.json",
+    "typed": "config/experiments/typed-composition-probe-results.json"
+  },
+  "resources": {
+    "disk_gib": 100,
+    "instance_types": [
+      "g5.2xlarge",
+      "g5.2xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "max_hours": 2,
+    "planning_cap_usd": 25,
+    "region": "us-east-1"
+  },
+  "reuse": {
+    "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+    "numerical_profile": "dbce3ea2a57bf31cadf3739e8032848df7ef180aa7c28899303881d32e01477a",
+    "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+  },
+  "scope": "Development serving integration using unchanged learned weights. Sixteen planner cases are exposed development inputs and sixteen are newly frozen; end-to-end tasks use previously published knowledge. This is not another admitted learning cohort or a sealed assistant-quality result. All prompts are visible to the operator and selected providers; evidence contains tokenized prompts.",
+  "stop_rule": "One frozen run. Cache comparisons on four actual paths, then 32 planner calls, eight full conversations and one complete replay. Stop on hardware/runtime/ownership disagreement. Preserve every response and retire all allocated resources within two hours. No training, genesis changes or native promotion."
+}

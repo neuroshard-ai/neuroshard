@@ -45,7 +45,19 @@ def run(config):
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)
-        learned = None
+        learned, planned = None, None
+        if config.get('planned_service'):
+            from neuroshard.evolution.sharded.planned_graph import PlannedGraphNetwork
+            from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
+            from neuroshard.evolution.sharded.portable import tensor_path
+            planned_config = read(config['planned_service'])
+            feature_profile = planned_config['learned']['feature_profile']
+            features = None
+            if rank == 0:
+                digest = feature_profile['embedding_sha256']
+                features = EmbeddingFeatures(tensor_path(Path(config['interpreter']), digest), digest,
+                    net.tokenizer, graph['tokenizer']['root'], max_tokens=feature_profile['max_tokens'])
+            planned = PlannedGraphNetwork(net, planned_config, source_home=Path(config['source_home']), features=features)
         if config.get('learned_service'):
             from neuroshard.evolution.sharded.learned_graph import LearnedGraphNetwork
             from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
@@ -63,6 +75,8 @@ def run(config):
                 net.preserved.shard.resident_parameters if net.preserved else 0)}
         if learned is not None:
             ready['learned_service'] = learned.root
+        if planned is not None:
+            ready['planned_service'] = planned.root
         save(home / 'ready.json', ready)
         handled = set()
         while True:
@@ -119,6 +133,16 @@ def run(config):
                         raise ValueError('Learned service is not installed')
                     valid, value = learned.replay(command['response'])
                     report = {'valid': valid, 'service': learned.root, 'response': identity(value)}
+                elif command['kind'] == 'generate_planned':
+                    if planned is None or command['service'] != planned.root:
+                        raise ValueError('Requested planned service is not installed')
+                    value = planned.answer(command['messages'], command['max_tokens'])
+                    report = None
+                elif command['kind'] == 'replay_planned':
+                    if planned is None:
+                        raise ValueError('Planned service is not installed')
+                    valid, value = planned.replay(command['response'])
+                    report = {'valid': valid, 'service': planned.root, 'response': identity(value)}
                 elif command['kind'] == 'inference_audit':
                     report, value = inference_report(command['claim'], net)
                 elif command['kind'] == 'quality_audit':
