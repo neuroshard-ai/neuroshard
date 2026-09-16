@@ -50,9 +50,11 @@ before the affected work, rather than changing the target after a result.
   missing data and a repeated claim must leave supply and serving state correct.
 
   Evidence so far: exact prefix production and all 560 updates were replayed;
-  140 bounded windows and native settlement guards pass. This expert has not
-  earned NEURO or been activated for native paid serving. Historical fixed-model
-  integration is supporting evidence, not completion of this expert lifecycle.
+  140 bounded windows and native settlement guards pass. The operated candidate
+  chain has now accepted prefix production and its first actual training windows,
+  issuing exactly one NEURO per accepted update. Full-job completion, separate
+  quality promotion and earned-token inference remain pending. Historical
+  fixed-model integration is supporting evidence.
 
   Implementation progress: the native-format training executor now loads actual
   weights and Adam, executes a bounded window, and atomically saves a resumable
@@ -62,10 +64,10 @@ before the affected work, rather than changing the target after a result.
   The pinned GPU check now passed complete prefix execution and updates 0–8,
   with actual retained boundaries, forged-measurement rejection and missing-data
   refusal. Graph quality promotion and paid inference now have a candidate
-  implementation with local five-process execution checks. Next: operate the
-  complete native job and its GPU graph serving integration. Reuse the published
-  model and original training job; this milestone does not need a new training
-  campaign.
+  implementation with local five-process execution checks. Five GPU owners across
+  three availability zones now reproduce all four published serving cases and
+  their complete neural-call traces. The full native job is running against the
+  published model and original training job; no new learning campaign is needed.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
@@ -179,9 +181,21 @@ under the same admission rules.
 - 2026-09-16: The complete integration stopped during serving startup, before
   generation or training. The runtime guard caught a different CuDNN library
   selected by the background launcher. After correcting that path, the smaller
-  owner exhausted the remaining startup interval under file-cache pressure.
+  owner exhausted the remaining startup interval during cold file reads.
   All five GPUs and volumes were retired; estimated compute was $1.85. The
   [recorded failure](config/experiments/native-expert-live-results.json) remains
   visible. A [same-target retry](config/experiments/native-expert-live-retry.json)
   carries the original library path and releases clean unowned cache before
   serving. Its deadline and combined $75 cap include the first attempt.
+
+- 2026-09-16 02:54 UTC: The corrected five-GPU serving probe reproduced four
+  published responses and all six neural calls across three availability zones.
+  Actual prefix production received the configured three-auditor replay quorum.
+  The first eight updates earned exactly eight candidate-chain NEURO. Forged
+  measurements earned zero; a withheld auditor checkpoint blocked the next
+  payment; restoration resumed execution. Duplicate rejection and restart kept
+  the same checkpoint and eight-token issuance. The full 560-update run continues
+  toward separate quality approval and paid raw inference under the original
+  deadline. See the dated [progress evidence](config/experiments/native-expert-live-progress.json).
+  This is one administrator, a specialized graph and partial lifecycle evidence;
+  all six top-level items remain open.
