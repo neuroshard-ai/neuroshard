@@ -166,3 +166,12 @@ under the same admission rules.
   all 2,048 original retained records in 1.87 seconds without another GPU run.
   Native full-job settlement and GPU serving integration remain open. See
   [implementation and evidence boundaries](docs/NATIVE_EXPERT_SERVING.md).
+- 2026-09-16: Froze the complete native integration in
+  [native-expert-live.json](config/experiments/native-expert-live.json).
+  All 140 original window contexts and four published serving traces pass the
+  metadata preflight. The fresh four-validator genesis boots with zero issuance.
+  The bounded run assigns actual training to the expert owner and replay to
+  three auditors, retains every accepted boundary before pruning local copies,
+  and checks separate quality promotion and inference paid from earned NEURO.
+  Allowance: five GPUs, 28 vCPUs, six hours, $75 planning cap, automatic shutdown.
+  Numerical success and completion of task 3 are not yet claimed.
