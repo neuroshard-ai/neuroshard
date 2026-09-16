@@ -52,3 +52,22 @@ allocation is limited to one hour and a $10 planning cap. No training or model
 selection occurs. The model remains a rejected quality candidate, every target
 block executes all installed sources, and native acceptance, complete service
 economics, public concurrency and independent operation remain separate work.
+
+The [eight-token GPU result](../config/experiments/blocked-streaming-results.json)
+passed all eight fresh replays, both forgeries and both independent draft checks.
+Long responses took 11.2–13.4 seconds and 60–95 MB of tensor traffic, down from
+28.1–29.3 seconds and 1.46–1.61 GB with full-context correction. It failed the
+first-output and audit-time limits: long-response audits took 4.35–6.59 seconds.
+All five instances and their volumes were retired; allocated compute was at
+most $1.17, with storage and transfer separate.
+
+The [next frozen prescription](../config/experiments/prefilled-streaming-trial.json)
+retains the weights, eight workloads and every performance threshold. It
+prefills all complete prompt blocks in one pass, omits unused vocabulary heads
+during that pass, then uses sixteen-token target blocks. The prompt length,
+prefill rule and block width are part of the numerical request. Fresh replay
+uses exactly the same split; it does not assume equivalence to the earlier
+eight-token program. The draft is bounded by remaining output allowance.
+The five-process CPU check passed in 17.45 seconds, including exact cache
+rollback after a multi-block prefill and proposal-independent output. GPU
+performance remains to be measured under the committed bounds.

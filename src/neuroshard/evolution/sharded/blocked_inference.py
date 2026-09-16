@@ -21,7 +21,7 @@ from .fused_graph import commitment
 from .mixture import ProbabilityMixture
 from .mixture_training import native_logits
 
-FORMAT = 'neuroshard-fixed-block-inference-v1'
+FORMAT = 'neuroshard-prefilled-block-inference-v1'
 
 
 class BlockPartition(CachedPartition):
@@ -32,14 +32,18 @@ class BlockPartition(CachedPartition):
         self.block_size = block_size
 
     @torch.no_grad()
-    def advance(self, value, position):
-        shard, count = self.shard, self.block_size
+    def advance(self, value, position, *, prefill=False):
+        shard = self.shard
+        count = value.shape[1] if value.ndim >= 2 else 0
         if self.failed:
             raise ValueError('Discard a failed block cache')
         self.failed = True
         if (any(module.training for module in shard.modules())
                 or self.versions != tuple(parameter._version for parameter in shard.parameters())
-                or type(position) is not int or position != self.length or position % count
+                or type(prefill) is not bool or count < 1
+                or (prefill and (position != 0 or count % self.block_size))
+                or (not prefill and count != self.block_size)
+                or type(position) is not int or position != self.length or position % self.block_size
                 or value.ndim != (2 if shard.rank == 0 else 3) or value.shape[:2] != (1, count)
                 or value.device != next(shard.parameters()).device
                 or position+count > shard.config.max_position_embeddings
@@ -109,25 +113,28 @@ class BlockNetwork:
             raise ValueError('The fixed-block model changed during execution')
 
     @torch.no_grad()
-    def advance(self, tokens, position):
+    def advance(self, tokens, position, *, prefill=False):
         net, gate, wire, rank = self.net, self.gate, self.net.all_owners, self.net.rank
         self.unchanged()
-        if (not isinstance(tokens, list) or len(tokens) != self.block_size
+        if (type(prefill) is not bool or not isinstance(tokens, list) or not tokens
+                or (prefill and (position != 0 or len(tokens) % self.block_size))
+                or (not prefill and len(tokens) != self.block_size)
                 or any(type(token) is not int or not 0 <= token < net.graph['parent']['config']['vocab_size'] for token in tokens)):
             raise ValueError('Every owner requires the same complete fixed token block')
-        if wire.exchange(identity([position, tokens])) != [identity([position, tokens])]*net.world_size:
+        if wire.exchange(identity([position, tokens, prefill])) != [identity([position, tokens, prefill])]*net.world_size:
             raise ValueError('Owners disagree on a fixed input block')
         began, before = time.monotonic(), wire.sent_tensor_bytes
         device = net.shard.device_name
-        shape = (1, self.block_size, net.graph['parent']['config']['hidden_size'])
+        shape = (1, len(tokens), net.graph['parent']['config']['hidden_size'])
         if rank < 3:
             incoming = torch.tensor([tokens], dtype=torch.long, device=device) if rank == 0 else wire.receive(rank-1, shape, device)
             with autocast(device):
-                hidden = self.trained.advance(incoming, position)
+                hidden = self.trained.advance(incoming, position, prefill=prefill)
             if rank < 2:
                 wire.send(hidden, rank+1)
             else:
-                wire.send(hidden, 0)
+                if not prefill:
+                    wire.send(hidden, 0)
                 for name, owner in self.sources.items():
                     if name != 'parent':
                         wire.send(self.captured['prefix'], owner)
@@ -135,16 +142,21 @@ class BlockNetwork:
         else:
             incoming = wire.receive(2, shape, device)
             with autocast(device):
-                hidden = self.trained.advance(incoming, position)
-            wire.send(hidden, 0)
-        values = {name: wire.receive(owner, shape, device) for name, owner in self.sources.items()} if rank == 0 else None
+                hidden = self.trained.advance(incoming, position, prefill=prefill)
+            if not prefill:
+                wire.send(hidden, 0)
+        values = ({name: wire.receive(owner, shape, device) for name, owner in self.sources.items()}
+                  if rank == 0 and not prefill else None)
         if rank < 3:
             incoming = torch.tensor([tokens], dtype=torch.long, device=device) if rank == 0 else wire.receive(rank-1, shape, device)
             with autocast(device):
-                hidden = self.preserved.advance(incoming, position)
-            wire.send(hidden, rank+1 if rank < 2 else 0)
+                hidden = self.preserved.advance(incoming, position, prefill=prefill)
+            if rank < 2:
+                wire.send(hidden, rank+1)
+            elif not prefill:
+                wire.send(hidden, 0)
         predicted = None
-        if rank == 0:
+        if rank == 0 and not prefill:
             hub = wire.receive(2, shape, device)
             logits = gate.log_probs(hub, native_logits(net.preserved.shard, net.shard,
                 {'hub': hub, **values}, gate.source_widths, False))
@@ -152,10 +164,12 @@ class BlockNetwork:
         packet = wire.exchange({'predicted': predicted, 'seconds': time.monotonic()-began,
                                 'sent_tensor_bytes': wire.sent_tensor_bytes-before})
         predicted = packet[0]['predicted']
-        if (any(row['predicted'] is not None for row in packet[1:]) or len(predicted) != self.block_size
-                or any(type(token) is not int or not 0 <= token < net.graph['parent']['config']['vocab_size'] for token in predicted)):
+        if (any(row['predicted'] is not None for row in packet[1:])
+                or (prefill and predicted is not None)
+                or (not prefill and (not isinstance(predicted, list) or len(predicted) != self.block_size
+                    or any(type(token) is not int or not 0 <= token < net.graph['parent']['config']['vocab_size'] for token in predicted)))):
             raise ValueError('Only the output owner supplies bounded block predictions')
-        return {'position': position, 'input': tokens, 'predicted': predicted,
+        return {'position': position, 'input': tokens, 'predicted': predicted, 'prefill': prefill,
                 'owners': [{k: v for k, v in row.items() if k != 'predicted'} for row in packet]}
 
     def rewind(self, position):
@@ -180,7 +194,8 @@ def session(net, gate, block_size, prompt, max_tokens, context, interface, adapt
             raise ValueError('Adapted block execution requires installed expert interfaces')
         request = {'format': FORMAT, 'graph': identity(net.graph), 'gate': commitment(gate),
                    'interfaces': roots, 'block_size': block_size, 'context': context,
-                   'prompt': list(prompt), 'max_tokens': max_tokens}
+                   'prompt': list(prompt), 'max_tokens': max_tokens,
+                   'prefill': 'one-pass-through-complete-prompt-blocks-without-output-heads'}
         if net.all_owners.exchange(identity(request)) != [identity(request)]*net.world_size:
             raise ValueError('Owners disagree on the fixed-block numerical request')
         network = BlockNetwork(net, gate, block_size, interface)
@@ -230,10 +245,9 @@ def stream(net, gate, prompt, max_tokens, context, home, *, block_size=8,
         home.mkdir(parents=True, exist_ok=False)
         save(home/'request.json', request)
         sequence, output, records, prefill = list(prompt), [], [], []
-        position, eos = 0, net.tokenizer.eos_token_id
-        while position+block_size <= len(prompt)-1:
-            prefill.append(target.advance(sequence[position:position+block_size], position))
-            position += block_size
+        position, eos = ((len(prompt)-1)//block_size)*block_size, net.tokenizer.eos_token_id
+        if position:
+            prefill.append(target.advance(sequence[:position], 0, prefill=True))
         save(home/'prefill.json', prefill)
         while len(output) < max_tokens:
             if len(records) >= max_tokens:
@@ -241,7 +255,8 @@ def stream(net, gate, prompt, max_tokens, context, home, *, block_size=8,
             known = len(sequence)-position
             if not 1 <= known <= block_size:
                 raise ValueError('Verified prefix left its canonical query block')
-            draft, resources = proposal(net, sequence, block_size-known, draft_method)
+            missing = min(block_size-known, max_tokens-len(output)-1)
+            draft, resources = proposal(net, sequence, missing, draft_method)
             block = sequence[position:]+draft
             block += [eos]*(block_size-len(block))
             trace = target.advance(block, position)
@@ -275,7 +290,8 @@ def stream(net, gate, prompt, max_tokens, context, home, *, block_size=8,
             save(home/('event-'+str(record['index'])+'.json'), record)
             if end:
                 save(home/'result.json', {'request': request, 'tokens': output,
-                    'events': [identity(row) for row in records], 'prefill_blocks': len(prefill),
+                    'events': [identity(row) for row in records], 'prefill_calls': len(prefill),
+                    'prefill_positions': sum(len(row['input']) for row in prefill),
                     'complete': True})
             yield copy.deepcopy(record)
             if end:
@@ -300,11 +316,14 @@ def verify(net, gate, prompt, reported, max_tokens, context, home, *, block_size
         tokens = prompt+reported
         tokens += [eos]*((-len(tokens)) % block_size)
         traces, predicted = [], []
-        for position in range(0, len(tokens), block_size):
+        start = ((len(prompt)-1)//block_size)*block_size
+        if start:
+            traces.append(target.advance(tokens[:start], 0, prefill=True))
+        for position in range(start, len(tokens), block_size):
             trace = target.advance(tokens[position:position+block_size], position)
             traces.append(trace)
             predicted.extend(trace['predicted'])
-        actual = predicted[len(prompt)-1:len(prompt)+len(reported)-1]
+        actual = predicted[len(prompt)-1-start:len(prompt)+len(reported)-1-start]
         mismatches = [i for i, (given, expected) in enumerate(zip(reported, actual)) if given != expected]
         result = {'request': request, 'predicted': actual, 'passed': not mismatches,
                   'mismatches': mismatches, 'blocks': traces}

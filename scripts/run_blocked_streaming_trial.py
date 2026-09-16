@@ -22,11 +22,13 @@ from neuroshard.evolution.sharded.mixture import ProbabilityMixture
 def run(home, source):
     read = lambda name: json.loads((home/'inputs'/name).read_bytes())
     plan, graph, profile, freeze = [read(name+'.json') for name in ('plan', 'graph', 'profile', 'freeze')]
-    if (plan['format'] != 'neuroshard-blocked-streaming-trial-v1'
+    prescription = 'config/experiments/prefilled-streaming-trial.json'
+    if (plan['format'] != 'neuroshard-prefilled-streaming-trial-v1'
+            or plan['method'] != blocked.FORMAT
             or identity(plan) != freeze['plan'] or identity(graph) != freeze['graph']
             or identity(graph) != plan['graph']
             or sha256(source/'scripts/run_blocked_streaming_trial.py') != freeze['driver']
-            or sha256(source/'config/experiments/blocked-streaming-trial.json') != sha256(home/'inputs/plan.json')
+            or sha256(source/prescription) != sha256(home/'inputs/plan.json')
             or sha256(home/'inputs/dev.jsonl') != plan['data_sha256']):
         raise ValueError('Commit the complete block prescription before execution')
     rows = {row['id']: row for row in [json.loads(line) for line in (home/'inputs/dev.jsonl').read_text().splitlines()]}
@@ -67,7 +69,8 @@ def run(home, source):
                                for owner in trace['owners'])
             draft_bytes = sum(owner.get('sent_tensor_bytes', 0) for event in events for owner in event['draft_owners'])
             return {'tokens': [token for event in events for token in event['tokens']],
-                    'owners': elapsed, 'target_calls': len(events), 'prefill_blocks': len(prefill),
+                    'owners': elapsed, 'target_calls': len(events), 'prefill_calls': len(prefill),
+                    'prefill_positions': sum(len(trace['input']) for trace in prefill),
                     'target_tensor_bytes': target_bytes, 'draft_tensor_bytes': draft_bytes,
                     'tensor_bytes': target_bytes+draft_bytes}
 

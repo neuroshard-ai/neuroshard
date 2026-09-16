@@ -270,12 +270,27 @@ def owner(rank, folder):
             fresh = blocked_inference.BlockPartition(net.shard, 2)
             fresh.advance(first, 0)
             torch.testing.assert_close(continued, fresh.advance(following, 2), rtol=0, atol=0)
+            prefix = torch.cat([first, following], dim=1)
+            prefilled = blocked_inference.BlockPartition(net.shard, 2)
+            prefilled.advance(prefix, 0, prefill=True)
+            boundary = [(layer.keys.clone(), layer.values.clone()) for layer in prefilled.cache.layers]
+            prefilled.advance(wrong, 4)
+            prefilled.rewind(4)
+            for layer, (keys, values) in zip(prefilled.cache.layers, boundary):
+                torch.testing.assert_close(layer.keys, keys, rtol=0, atol=0)
+                torch.testing.assert_close(layer.values, values, rtol=0, atol=0)
+            replay = blocked_inference.BlockPartition(net.shard, 2)
+            replay.advance(prefix, 0, prefill=True)
+            torch.testing.assert_close(prefilled.advance(following, 4), replay.advance(following, 4), rtol=0, atol=0)
         block_options = {'block_size': 2, 'interface': adapter, 'adapt_interfaces': True}
         block_events = list(blocked_inference.stream(net, mixture, tokens, 4, 64,
             home/('blocked-'+str(rank)), **block_options))
         canonical = [token for event in block_events for token in event['tokens']]
         assert block_events[-1]['end'] and len(block_events) <= 4
         assert all(len(event['target']['input']) == 2 for event in block_events)
+        prefill = json.loads((home/('blocked-'+str(rank))/'prefill.json').read_bytes())
+        assert len(prefill) == 1 and prefill[0]['prefill'] and prefill[0]['predicted'] is None
+        assert prefill[0]['input'] == tokens[:((len(tokens)-1)//2)*2]
         forced = list(blocked_inference.stream(net, mixture, tokens, 4, 64,
             home/('blocked-padding-'+str(rank)), draft_method='padding', **block_options))
         assert [token for event in forced for token in event['tokens']] == canonical
