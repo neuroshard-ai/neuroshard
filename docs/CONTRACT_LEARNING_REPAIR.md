@@ -80,6 +80,14 @@ correct ordinary cases and all **15** currently correct C development answers,
 as well as pass the original all-answer, replay and metering gates. This is a
 small repair within the same cohort, not completion of TODO items 1 or 2.
 
+The first scope allocation stopped during object download, before training:
+publication receipts lacked the fetch inventory's `folder` field. Preparation
+now derives the owned `objects` destination from the checkpoint, validates
+hash and size against that checkpoint, and rejects conflicting destinations.
+The recovered allocation uses identical training bytes, recipe, schedule and
+retention inventory. Its freeze changes only to bind the corrected handoff.
+The original attempt remains recorded and is not counted as a quality run.
+
 One four-host allocation performs sharded prefix production, C training,
 replay of the final four-update window from its input state, and six-owner
 serving. Its absolute deadline is two hours, training deadline one hour and

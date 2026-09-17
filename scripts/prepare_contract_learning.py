@@ -13,6 +13,20 @@ from neuroshard.evolution.reference_data import identity, save, sha256
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def training_objects(checkpoint, catalog):
+    """Turn immutable publication receipts into the learner's fetch inventory."""
+    result = {}
+    for tensor in checkpoint['tensors'].values():
+        key = tensor['sha256']
+        spec = copy.deepcopy(catalog[key])
+        if (spec.get('sha256') != key or spec.get('bytes') != tensor['bytes']
+                or spec.get('folder', 'objects') != 'objects'):
+            raise ValueError('The fetch inventory must describe the exact owned tensor')
+        spec['folder'] = 'objects'
+        result[key] = spec
+    return result
+
+
 def prepare(original, serving, home, *, scope_repair=False):
     read = lambda p: json.loads(p.read_bytes())
     access = read(serving/'result.json')
@@ -113,8 +127,7 @@ def prepare(original, serving, home, *, scope_repair=False):
     # Reuse public per-owner inventories. C's weights are also needed by the
     # frozen feature reference on owner 2 and the sole learner on owner 3.
     catalog = read(serving/'inputs/objects-4.json')['objects']
-    c_keys = {spec['sha256'] for spec in graph['experts']['planner']['tensors'].values()}
-    c_objects = {key: catalog[key] for key in c_keys}
+    c_objects = training_objects(graph['experts']['planner'], catalog)
     for rank in range(4):
         objects = read(original/'inputs'/('objects-'+str(rank)+'.json'))
         if rank in (2, 3):
