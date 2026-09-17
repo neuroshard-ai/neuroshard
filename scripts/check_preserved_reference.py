@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""Compare exposed owned-model replies with the pinned upstream full model.
+
+This temporary numerical oracle is outside the shard network. It neither trains
+nor settles work, and cannot be used as evidence of distributed ownership.
+Only already executed prompt IDs are accepted as controls.
+"""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import time
+
+import torch
+from huggingface_hub import snapshot_download
+from safetensors.torch import save as tensor_bytes
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from neuroshard.evolution import reference
+from neuroshard.evolution.reference_data import identity, save
+
+
+def run(home):
+    request = json.loads((home/'request.json').read_bytes())
+    source = request['assets']['source']
+    runtime = reference.configure('cuda', 2)
+    began = time.monotonic()
+    folder = home/'upstream'
+    snapshot_download(source['repo'], revision=source['revision'], token=False, local_dir=folder,
+        allow_patterns=['config.json', 'model.safetensors', 'model-*.safetensors', 'model.safetensors.index.json'])
+    model = AutoModelForCausalLM.from_pretrained(folder, dtype=torch.float32,
+        attn_implementation='sdpa', local_files_only=True, trust_remote_code=False).to('cuda').eval()
+    model.requires_grad_(False)
+    config = model.config.to_dict()
+    differences = {key: {'owned':value,'upstream':config.get(key)}
+                   for key,value in request['parent_config'].items() if config.get(key)!=value}
+    tensors = {name:spec for part in request['assets']['partitions'].values() for name,spec in part['tensors'].items()}
+    state = model.state_dict()
+    mismatches = []
+    for name,spec in tensors.items():
+        raw = tensor_bytes({'weight':state[name].detach().cpu().to(torch.bfloat16).contiguous()})
+        actual = hashlib.sha256(raw).hexdigest()
+        if actual!=spec['sha256']:
+            mismatches.append({'tensor':name,'expected':spec['sha256'],'actual':actual})
+    save(home/'weights.json',{'tensor_count':len(tensors),'mismatches':mismatches,'configuration_differences':differences})
+    tokenizer = AutoTokenizer.from_pretrained(request['seed'],local_files_only=True)
+    results = []
+    with torch.no_grad():
+        for case in request['cases']:
+            current = torch.tensor([case['prompt_ids']],dtype=torch.long,device='cuda')
+            tokens, past, first = [], None, None
+            for step in range(64):
+                with reference.autocast('cuda'):
+                    value = model(input_ids=current,past_key_values=past,use_cache=True,logits_to_keep=1)
+                logits = value.logits[0,-1].float()
+                if not bool(torch.isfinite(logits).all()):
+                    raise ValueError('Upstream reference produced nonfinite logits')
+                if first is None:
+                    top = logits.topk(5)
+                    first = {'ids':top.indices.cpu().tolist(),'logits':top.values.cpu().tolist()}
+                token = int(logits.argmax())
+                tokens.append(token)
+                if token==tokenizer.eos_token_id: break
+                past = value.past_key_values
+                current = torch.tensor([[token]],dtype=torch.long,device='cuda')
+            result = {'id':case['id'],'prompt_root':identity(case['prompt_ids']),
+                'owned_tokens':case['token_ids'],'reference_tokens':tokens,
+                'exact':tokens==case['token_ids'],'text':tokenizer.decode(tokens,skip_special_tokens=True),
+                'first':first}
+            results.append(result)
+            save(home/'answers.json',results)
+            print(json.dumps({key:value for key,value in result.items() if key not in ('owned_tokens','reference_tokens','first')}),flush=True)
+    save(home/'result.json',{'request':identity(request),'runtime':runtime,'weights_match':not mismatches,
+        'configuration_differences':differences,'cases':results,'all_tokens_match':all(row['exact'] for row in results),
+        'seconds':time.monotonic()-began,'scope':'Temporary single-host numerical oracle; not a network participant.'})
+
+
+if __name__ == '__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--home',type=Path,required=True)
+    run(parser.parse_args().home)
