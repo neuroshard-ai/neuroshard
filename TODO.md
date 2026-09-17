@@ -42,6 +42,10 @@ before the affected work, rather than changing the target after a result.
   Distributed feature production and native replay use that accepted expert as
   the frozen reference. A new quality profile measures retained answers across
   changed weights; it no longer requires an updated expert to remain identical.
+  The first continued GPU trial raised new single-fact answers from 2/16 to
+  7/16, but lost eight previously correct retained answers and failed its gate.
+  Its final set stayed unopened; no serving model was promoted. See the
+  [continued-learning result](docs/CONTINUAL_EXPERT_LEARNING.md#measured-result-rejected).
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -62,7 +66,11 @@ before the affected work, rather than changing the target after a result.
   The continual expert quality rule also accumulates every prior admitted
   evaluation conversation while keeping its acceptance thresholds and initial
   assistant anchors fixed. Admission rejects omitted or rewritten history.
-  Repeated automatic operation and new GPU learning results are still required.
+  Native preparation now turns consecutive pinned source rows into reviewable
+  jobs, preserves exact accepted replay provenance, carries prior evaluations
+  forward and refuses stale state. Its inputs drove actual CPU updates and
+  fresh-process replay. Repeated automatic operation and passing cumulative GPU
+  learning results are still required.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
@@ -170,6 +178,15 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Completed and [published the continued-expert trial](docs/CONTINUAL_EXPERT_LEARNING.md#measured-result-rejected).
+  All 192 sharded updates executed; the last four replayed exactly in a fresh
+  process. New answers improved, but accuracy and retention failed. The final
+  test remained unopened, with no native activation, issuance or serving change.
+  Preserved 3.22 GB of final/input-boundary tensors with full public hash checks.
+  All four GPUs and temporary resources were retired; compute estimate $3.16,
+  storage/transfer separate. Added native cohort preparation and sealing with
+  actual numerical execution/replay checks. Tasks 1 and 2 remain open.
 
 - 2026-09-17: Prepared a fixed [continued-expert learning trial](docs/CONTINUAL_EXPERT_LEARNING.md)
   using 16 fresh protocol facts, 96 actually trained replay conversations,

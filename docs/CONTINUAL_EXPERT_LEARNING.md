@@ -1,8 +1,8 @@
 # Continuing an accepted expert
 
-The next learning decision is whether the existing sharded expert can acquire
-fresh knowledge without losing its earlier correct answers. This precedes another
-capacity expansion. It is part of tasks 1 and 2 in [the fixed checklist](../TODO.md).
+The first continued-expert trial improved some new answers but lost previously
+correct answers and was rejected. It is part of tasks 1 and 2 in
+[the fixed checklist](../TODO.md); neither task is complete.
 
 Continued jobs bind a named accepted expert in `seed_expert`. Initialization copies
 its weights and resets Adam. The parent remains immutable. Both distributed
@@ -63,3 +63,80 @@ The committed driver was exercised on four CPU processes before GPU allocation:
 it produced and persisted a new trajectory from accepted weights, generated both
 sets of development answers, rejected the failed candidate, and left final
 questions unopened. This preflight is execution evidence, not a quality gain.
+
+## Measured result: rejected
+
+The four GPU owners completed all 192 updates under source commit
+`76aeaf5864be9d757959cc57c2c3cedeaf26d259`. Full CI passed for that source.
+
+| Direct expert answers | Before | After | Previously correct answers lost |
+|---|---:|---:|---:|
+| New single facts | 2/16 | 7/16 | 0 |
+| New composed facts | 0/8 | 1/8 | 0 |
+| Retained single facts | 57/64 | 55/64 | 4 |
+| Retained composed facts | 7/32 | 6/32 | 4 |
+
+The new single-fact paired bootstrap interval was `[0.125, 0.5]`, but both
+accuracy thresholds and the retention gate failed. Five gains on other retained
+questions cannot offset the eight lost answers. One lost response changed the
+number of atomic units per NEURO from `1000000` to `1000000000`: this includes
+substantive forgetting, not only output formatting differences.
+
+The final test stayed unopened. No native job was activated, no NEURO was issued,
+and the serving model was unchanged. A fresh Python process restored the step-188
+input boundary and reproduced all four final updates exactly, including Adam.
+This establishes execution reproducibility for that window, not useful continual
+learning or an independently administered audit.
+
+The retained composed baseline is **7/32 on direct generation**. The earlier
+**23/32 serving result** used two composed expert calls; these are different
+execution paths and cannot be compared as the same benchmark. Promotion still
+requires evaluation through the actual serving graph.
+
+[Published result and artifacts](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-continual-expert-20260917)
+include generated development and retention answers, every window's metadata,
+the replay report, source/input freeze, and public step-188/192 tensor catalogs.
+All 36 preserved tensor objects passed full public download/hash checks, totaling
+3,221,433,520 bytes. The result archive is 4,886,131 bytes with SHA-256
+`3659b07782602bca462745ec95055f3479d0c741fd1466c791998e4bc2ef273c`.
+The failed trajectory was not settled; intermediate windows retain metadata and
+can be reconstructed from the frozen inputs rather than claiming complete paid
+retention of every boundary.
+
+All four temporary instances, disks and the security group were deleted.
+The conservative compute estimate is $3.16, with storage and transfer additional.
+Existing services were unchanged.
+
+This result rejects this update prescription. It does not establish that merely
+adding another expert will fix learning: a preserved old expert still needs
+correct routing, the new expert must learn its facts, and combined questions
+must pass through the serving path. Those remain explicit requirements before
+another learning or growth claim.
+
+## Preparing native cohorts
+
+`expert_preparation.prepare` now reads bounded, consecutive rows from immutable
+source descriptors and creates the native conversation, provenance, token and
+batch commitments. It starts from the ledger's cursors, records every selected
+row, and rejects missing rows, unsupported publishers and repeated conversations.
+Replay keeps its original source position and token commitment and requires an
+accepted training-window entry; an imported checkpoint does not fabricate replay
+history. Preparation can restart with the same snapshot and recover identical
+content-addressed inputs without advancing a ledger cursor.
+
+The numerical owner must produce the actual zero-update checkpoint of the
+prepared job. `expert_preparation.seal` then binds that checkpoint to the candidate
+graph and frozen quality contract, rereads the upstream data, and runs the native
+data reviewer before returning a proposal. It refuses changed admission history
+or serving state. Under the continual quality profile, the previous cohort's
+admitted evaluation questions automatically join the next retention obligation,
+including questions from a rejected candidate. The initial anchors and scoring
+rules remain fixed.
+
+Five preparation/integration checks cover restart, source replacement between
+preparation and review, stale state, missing data, replay eligibility, accumulated
+retention and actual CPU prefix production, two updates and fresh-process replay.
+They prove the prepared proposal drives the numerical executor. They do not
+measure model-quality improvement. Curator approval, assignment, audit funding,
+transaction submission and promotion still need an operated repeating loop;
+this preparation API does not complete task 2.
