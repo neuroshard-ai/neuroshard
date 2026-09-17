@@ -126,6 +126,30 @@ def test_specialist_atomic_request_keeps_format_instruction_and_no_reference_rew
     assert response['planning']['path'] == 'direct' and response['status'] == 'completed'
 
 
+def test_new_domain_gate_cannot_steal_a_confident_general_request():
+    from neuroshard.evolution import expert_router
+    from neuroshard.evolution.reference_data import identity
+    def samples(groups):
+        return [{'id': identity([name, index]), 'route': name, 'features': value}
+                for name, values in groups.items() for index, value in enumerate(values)]
+    base_rows = samples({'parent': [[16384, 0]]*2, 'protocol': [[-16384, 0]]*2})
+    base = expert_router.fit(base_rows, embedding_root='a'*64, tokenizer_root='b'*64)
+    model = expert_router.append_route(base, base_rows+samples({'directory': [[0, 16384]]*2}), 'directory')
+    guard_rows = samples({'parent': [[0, 16384]]*2, 'specialist': [[-16384, 0]]*2})
+    guard = expert_router.fit(guard_rows, embedding_root='a'*64, tokenizer_root='b'*64)
+    model['fallback_guard'] = expert_router.fit_classifier(guard_rows, guard)
+    service = object.__new__(PlannedGraphNetwork)
+    service.router = SimpleNamespace(features=lambda question: [0, 16384])
+    service.net = SimpleNamespace(rank=0, all_owners=SimpleNamespace(exchange=lambda value: [value, None]))
+    service.config = {'request_policy': policy.FORMAT, 'learned': {'router': model}}
+    old = service.route('A new unrelated instruction')
+    assert old['decision']['route'] == 'directory'
+    service.config['request_policy'] = policy.ASSISTANT_POLICY
+    new = service.route('A new unrelated instruction')
+    assert new['decision']['route'] == 'parent' and new['decision']['general_guard_applied']
+    assert new['decision']['gates'] == old['decision']['gates']
+
+
 @pytest.mark.parametrize('repaired,accepted', [
     ('{"subjects":["the Aurora telescope"]}', True),
     ('{"subjects":["the Beta telescope"]}', False),
