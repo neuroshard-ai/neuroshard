@@ -91,7 +91,7 @@ class Worker:
         self.sponsors = set(sponsors)
         self.max_stages = max_stages
         self.portable_backend = portable_backend
-        if bool(admission_backend) != bool(state_reader):
+        if admission_backend and not state_reader:
             raise ValueError('Automatic curation requires a configured reviewer and local committed state')
         self.admission_backend, self.state_reader = admission_backend, state_reader
         genesis = wire.rpc(url, 'genesis')['genesis']
@@ -121,6 +121,10 @@ class Worker:
             return {'phase': 'portable_replay_backend_required'}
         pending = self.outbox.pending()
         if pending:
+            if self.state_reader:
+                retired = self.outbox.retire_closed(self.state_reader())
+                if retired is not None:
+                    return {'phase': 'closed_operation_retired', 'evidence': retired}
             self.outbox.confirm(pending)
         service = wire.query(self.url, '/auditing')
         if service is None:
@@ -193,6 +197,17 @@ class Worker:
         else:
             salt, raw = row
             report = protocol.parse_json(raw)
+        # Replay can outlast another quorum's completion. Follow the current
+        # claim and its possibly shortened commit/reveal windows before signing.
+        latest = wire.query(self.url, '/candidate')
+        if latest is None or latest['id'] != claim['id']:
+            return {'phase': 'claim_closed_during_replay', 'claim': claim['id']}
+        claim = latest
+        service = wire.query(self.url, '/auditing')
+        budget = service['budgets'].get(claim['audit_budget'])
+        if budget is None or budget['auditors'][owner]['revealed']:
+            return {'phase': 'audit_obligation_closed', 'claim': claim['id']}
+        height = wire.query(self.url)['height']
         native = 'voting_snapshot' in budget
         if not report['valid'] and not native:
             if claim['challenge']:
@@ -203,12 +218,13 @@ class Worker:
             return {'phase': 'fraud_challenged', 'claim': claim['id'], 'stage': bad}
         selected = budget['auditors'][owner]
         if selected['commitment'] is None:
+            if height > claim['audit_commit_end']:
+                return {'phase': 'audit_commit_window_closed', 'claim': claim['id']}
             value = (auditing.verdict_commitment(self.chain_id, claim['id'], owner, auditing.coverage(claim),
                      salt, report['valid']) if native else
                      auditing.commitment(self.chain_id, claim['id'], owner, report['coverage_root'], salt))
             self.send('commit:'+claim['id'], 'audit_commit', claim_id=claim['id'], commitment=value)
             return {'phase': 'full_audit_committed', 'claim': claim['id'], 'report': report}
-        height = wire.query(self.url)['height']
         if claim['audit_commit_end'] < height <= claim['audit_reveal_end']:
             if native:
                 self.send('reveal:'+claim['id'], 'audit_verdict', claim_id=claim['id'], salt=salt,
@@ -344,8 +360,9 @@ def main():
     store = Objects(args.objects)
     store.fetchers.extend(http_source(url) for url in args.source)
     backend = json.loads(args.portable_backend.read_bytes()) if args.portable_backend else None
-    if bool(args.admission_backend) != bool(args.native_home) or bool(args.native_home) != bool(args.native_genesis_sha256):
-        parser.error('Curation requires --admission-backend, --native-home and --native-genesis-sha256 together')
+    if (bool(args.native_home) != bool(args.native_genesis_sha256)
+            or (args.admission_backend and not args.native_home)):
+        parser.error('Local recovery needs both node arguments; curation additionally requires its backend')
     from .committed_state import read
     admission_backend = json.loads(args.admission_backend.read_bytes()) if args.admission_backend else None
     state_reader = (lambda: read(args.native_home, args.native_genesis_sha256)) if args.native_home else None
