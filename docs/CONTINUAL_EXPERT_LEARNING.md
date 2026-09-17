@@ -140,3 +140,50 @@ They prove the prepared proposal drives the numerical executor. They do not
 measure model-quality improvement. Curator approval, assignment, audit funding,
 transaction submission and promotion still need an operated repeating loop;
 this preparation API does not complete task 2.
+
+
+## Isolated learning result
+
+The next trial kept accepted A/B weights and the earlier router intact, trained a
+new 134,225,920-parameter tail from accepted B, and fitted only an appended routing
+gate. All 512 sharded updates completed on four GPUs. Evaluation used the actual
+learned service and explicit two-question calls:
+
+| Answers | Before | After |
+|---|---:|---:|
+| New single facts | 2/16 | 11/16 |
+| New composed facts | 0/8 | 4/8 |
+| Retained single facts | 57/64 | 57/64 |
+| Retained composed facts | 23/32 | 23/32 |
+
+All 80 previously correct retained answers survived. Both new-answer accuracy
+gates failed. The final set remained unopened, with no native activation,
+issuance or serving promotion. A fresh process given only the step-508 boundary
+reproduced steps 509–512 exactly, including optimizer state.
+
+[Published evidence](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-isolated-expert-20260917)
+includes the complete generated answers, source freezes, preserved boundary
+tensors and full public hash checks. All four instances, disks and the temporary
+security group were deleted; compute was at most $6.42, storage/transfer additional.
+The separately frozen replacement control failed during setup and generated no
+answers; it supplies no measured growth comparison. Its failures are preserved.
+
+Every incorrect new answer selected the intended expert. Failed composed replies
+contained an incorrect constituent response. The original training variations
+mostly changed framing around an identical core question. The next intervention
+therefore adds semantic wording variations for every training topic and converts
+paired training into the atomic questions the serving parser executes. Targets
+come exclusively from the original training inventory. This is explicitly a
+development-informed intervention; it restarts from accepted B, keeps the same
+512-step recipe and gates, and leaves the original final set unopened. It is not
+a result until the frozen run has completed.
+
+The [frozen semantic trial](../config/experiments/semantic-expert-trial.json)
+contains 192 atomic training conversations: 12 per topic, interleaved in 24
+batches, with targets and provenance checked against all 96 original training
+records. Actual tokenizer validation confirmed complete response masking and
+supervised EOS on every row. The run compares appended capacity with replacing B
+using the very same learned weights; it includes fresh boundary replay, public
+terminal publication before final evaluation, and automatic resource retirement.
+The four-host allocation has a three-hour/$50 cap. This comparison matches training
+work and still does not measure equal lifetime storage and serving costs.

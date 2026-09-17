@@ -6,6 +6,7 @@ tests cross-expert execution, not arbitrary conversational planning. All answer
 labels remain inside scoring; fitting sees only committed training prompts.
 """
 import argparse
+import copy
 from datetime import timedelta
 import json
 import os
@@ -115,7 +116,9 @@ def run(home, source, phase):
                                                  release_scope=spec['release_scope'])
             results[role] = {'decision': decision, 'lost_correct': lost, 'executions': executions}
             save(output/(role+'.json'), results[role])
-        decision = results[roles[0]]['decision']
+        # The per-role files are already committed. Build the combined decision
+        # separately so their recorded logical roots still match those bytes.
+        decision = copy.deepcopy(results[roles[0]]['decision'])
         decision['checks']['retained_answers'] = not results['retained']['lost_correct']
         decision['passed'] = all(decision['checks'].values())
         result = {'format': FORMAT+'/result', 'freeze': identity(freeze), 'phase': phase,

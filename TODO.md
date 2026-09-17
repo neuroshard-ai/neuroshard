@@ -49,13 +49,18 @@ before the affected work, rather than changing the target after a result.
   The next method isolates new expert weights and appends a learned binary
   routing gate while preserving the accepted router. Six-process numerical
   validation now executes both earlier and expanded learned services on the
-  same owned shards, without duplicating the backbone. This validates execution
-  and retained paths, not a new language-quality result or another admitted cohort.
+  same owned shards, without duplicating the backbone. The four-GPU trial completed 512 updates: new single answers improved from
+  2/16 to 11/16 and composed answers from 0/8 to 4/8, preserving all 80 previously
+  correct retained answers. It failed its accuracy gate; the final stayed unopened.
+  Fresh replay reproduced the final four updates exactly. See the
+  [isolated-learning result](docs/CONTINUAL_EXPERT_LEARNING.md#isolated-learning-result).
   A separately frozen [replacement control](config/experiments/expert-replacement-control.json)
   reuses the exact new terminal weights while replacing the earlier expert.
   Learned route aliases let both routes use that fixed capacity; six-process
-  execution checked actual routing, replay and owner payments. The GPU comparison
-  is pending. This avoids duplicate training and does not equate lifetime costs.
+  execution checked actual routing, replay and owner payments. The first GPU comparison
+  failed during setup before generating answers. The next frozen trial includes
+  it in the main controller. It avoids duplicate training and does not equate
+  lifetime costs.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -79,7 +84,7 @@ before the affected work, rather than changing the target after a result.
   Native preparation now turns consecutive pinned source rows into reviewable
   jobs, preserves exact accepted replay provenance, carries prior evaluations
   forward and refuses stale state. Its inputs drove actual CPU updates and
-  fresh-process replay. Repeated automatic operation and passing cumulative GPU
+  fresh-process replay. Production source integration and passing cumulative GPU
   learning results are still required.
   A durable publisher controller now reconciles repeated native jobs, funds
   execution, submits measured quality failures for audit, and proceeds after
@@ -91,8 +96,12 @@ before the affected work, rather than changing the target after a result.
   replays per claim, including six-process quality evaluation. It issued only
   the four verified updates, rejected both quality failures, advanced source
   cursors automatically and preserved the serving graph without changing
-  genesis. Its controlled ledger clock and small synthetic models do not yet
-  establish operated continuous LLM service.
+  genesis. The operated repetition now adds publisher restart, actual repeated-
+  source rejection and nine unchanged responses from persistent accepted shards.
+  Four CometBFT validators agreed, and full replay reproduced all 74 transactions
+  across 449 headers. These small synthetic models and local source fixtures do
+  not establish operated continuous LLM learning. See the
+  [implementation and published evidence](docs/AUTOMATIC_EXPERT_COHORTS.md).
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
@@ -407,7 +416,10 @@ under the same admission rules.
   history proves its exact context closed. Five new recovery checks passed.
   The extended numerical integration also passed with publisher restart, actual
   duplicate-source rejection and nine unchanged responses from persistent
-  accepted shard processes while cohorts executed (128.51 seconds). Its operated
-  repetition is in progress. These are synthetic models and one administrator;
+  accepted shard processes while cohorts executed (128.51 seconds). The operated
+  repetition passed in 406.98 seconds. Four validator app hashes agreed and a
+  fresh replay matched all 74 transactions, 449 headers and the exact final state.
+  [Source and evidence are public](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-automatic-cohorts-20260917).
+  These are synthetic models and one administrator;
   useful cumulative LLM learning and automatic production data operation remain
   open, so neither task 1 nor task 2 is checked.
