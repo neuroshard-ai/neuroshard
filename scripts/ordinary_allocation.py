@@ -28,7 +28,23 @@ def numerical_runtime(observation):
 
 
 def describe(client, ids):
-    return [instance for row in client.describe_instances(InstanceIds=sorted(ids))['Reservations'] for instance in row['Instances']]
+    requested = set(ids)
+    if not requested:
+        return []
+    deadline, pause = time.monotonic()+120, .5
+    while True:
+        try:
+            found = [instance for row in client.describe_instances(InstanceIds=sorted(requested))['Reservations']
+                     for instance in row['Instances']]
+            if {row['InstanceId'] for row in found} == requested:
+                return found
+        except ClientError as error:
+            if error.response['Error']['Code'] not in ('InvalidInstanceID.NotFound', 'RequestLimitExceeded', 'Throttling'):
+                raise
+        if time.monotonic() >= deadline:
+            raise TimeoutError('EC2 has not yet exposed the complete owned instance inventory')
+        time.sleep(pause)
+        pause = min(8, pause*2)
 
 
 def inventories(graph, catalog):

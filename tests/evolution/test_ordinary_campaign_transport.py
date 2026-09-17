@@ -7,7 +7,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from ordinary_campaign_backend import Backend, REMOTE
-from ordinary_allocation import numerical_runtime
+from ordinary_allocation import numerical_runtime, describe
+import ordinary_allocation
+from botocore.exceptions import ClientError
 sys.path.pop(0)
 
 from neuroshard.dataflow.store import LocalStore
@@ -23,6 +25,20 @@ def test_distinct_owners_require_matching_arithmetic_not_matching_hostnames():
     assert numerical_runtime(left) == numerical_runtime(right)
     assert numerical_runtime(left) != numerical_runtime({**right, 'gpu': 'NVIDIA L40S'})
     assert numerical_runtime(left) != numerical_runtime({**right, 'threads': 1})
+
+
+def test_new_owner_discovery_retries_visibility_and_requires_the_whole_inventory(monkeypatch):
+    calls = []
+    class EC2:
+        def describe_instances(self, **request):
+            calls.append(request)
+            if len(calls) == 1:
+                raise ClientError({'Error': {'Code': 'InvalidInstanceID.NotFound'}}, 'DescribeInstances')
+            ids = ['i-one'] if len(calls) == 2 else ['i-one', 'i-two']
+            return {'Reservations': [{'Instances': [{'InstanceId': key} for key in ids]}]}
+    monkeypatch.setattr(ordinary_allocation.time, 'sleep', lambda seconds: None)
+    assert len(describe(EC2(), ['i-two', 'i-one'])) == 2
+    assert len(calls) == 3 and all(row == {'InstanceIds': ['i-one', 'i-two']} for row in calls)
 
 
 def test_public_metadata_covers_both_stores_and_monotonic_discovery(tmp_path, monkeypatch):
