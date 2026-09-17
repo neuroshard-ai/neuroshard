@@ -11,7 +11,7 @@
     "src/neuroshard/evolution/sharded/composition.py": "90a4f5a1ee31a8f71be5bf233067f5c06ab9a027d077c63284f01dc762088fc1",
     "src/neuroshard/evolution/sharded/learned_graph.py": "a84bf0c8a2e79d4afa4e0cbe9b5613e954734c03e84e2aa836c6181a6af7467a",
     "scripts/run_native_expert_service.py": "d4da76582101caa160e754d3929c1ecfd7f3bbc8976138de356e5b6778e1903a",
-    "scripts/run_expert_replacement_control.py": "f29289679aaa623e027bc74620ed4f35a1f9fc617de56c384c804786e3bd40c6"
+    "scripts/run_expert_replacement_control.py": "dc352a2f41f43532cbba2452b3316ed86a6a041213d377d45a5707b0dfdee2f9"
   },
   "prescription": {
     "training": "Reuse the exact 512-step terminal weights initialized from accepted B with fresh Adam; no additional neural updates.",

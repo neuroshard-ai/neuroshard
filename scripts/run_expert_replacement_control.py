@@ -34,8 +34,7 @@ def replacement(baseline, terminal, name):
         raise ValueError('The replacement must fit the same neural parameter budget')
     graph = copy.deepcopy(baseline)
     graph['experts'][name] = copy.deepcopy(terminal)
-    graph['descriptor'].update(format=serving_graph.EXTENSIBLE,
-                               previous_graph=identity(baseline['descriptor']))
+    graph['descriptor']['previous_graph'] = identity(baseline['descriptor'])
     for row in graph['descriptor']['experts']:
         if row['id'] == name:
             row['checkpoint'] = terminal['checkpoint']

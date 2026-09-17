@@ -418,8 +418,25 @@ def test_added_sixth_owner_executes_learned_third_expert_and_preserves_earlier_p
             if process.is_alive():
                 process.terminate()
             process.join(timeout=10)
+
+
     results = [json.loads((tmp_path / ('extension-rank-' + str(rank) + '.json')).read_bytes()) for rank in range(6)]
     assert all(result == results[0] for result in results)
+
+
+def test_replacement_keeps_the_original_two_expert_capacity_and_schema(tmp_path):
+    import runpy
+    replace = runpy.run_path(str(SOURCE/'scripts/run_expert_replacement_control.py'))['replacement']
+    prepare_extension(tmp_path)
+    baseline = json.loads((tmp_path/'pre-growth.json').read_bytes())
+    expanded = json.loads((tmp_path/'graph.json').read_bytes())
+    terminal = expanded['experts']['astronomy']
+    replacement = replace(baseline, terminal, 'protocol')
+    assert replacement['descriptor']['format'] == baseline['descriptor']['format']
+    assert replacement['descriptor']['total_parameters'] == baseline['descriptor']['total_parameters']
+    assert set(replacement['experts']) == set(baseline['experts'])
+    assert replacement['experts']['protocol'] == terminal
+    assert baseline['experts']['protocol'] != terminal
 
 
 def queue_worker(rank, home, port):
