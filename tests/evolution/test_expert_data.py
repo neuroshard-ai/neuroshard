@@ -274,6 +274,18 @@ def test_continual_review_retains_all_prior_evaluations_without_changing_rules(p
     evaluations = expert_data.records(inputs, 'test', store.get, 64, 32)
     assert expert_data.review_quality(job, policy, store, evaluations, state=state) == identity(quality)
     assert claim['stages'] == quality['roles']['test']['count'] + 3
+    # Older benchmark IDs may commit additional task metadata. Protection
+    # still follows the actual conversation, independently of that legacy ID.
+    contaminated = copy.deepcopy(quality)
+    train = expert_data.quality_rows(store, inputs['roles']['train'])
+    disguised = copy.deepcopy(anchor)
+    disguised['id'] = 'legacy-benchmark-identity'
+    disguised['messages'] = train[0]['messages']
+    disguised['answers'] = [train[0]['messages'][-1]['content']]
+    contaminated['retention_anchors'][knowledge] = spec('legacy-anchor', [disguised])
+    contaminated['roles'][knowledge] = spec('legacy-retention', [disguised, prior])
+    with pytest.raises(ValueError, match='Protected retention inputs'):
+        expert_data.review_retention_history(contaminated, store, state)
     # Omitting a difficult old example keeps the fixed rule hash but must fail
     # against native history, even with internally consistent new manifests.
     quality['roles'][knowledge] = spec('missing-history', [anchor])

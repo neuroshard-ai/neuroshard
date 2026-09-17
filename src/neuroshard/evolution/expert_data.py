@@ -295,13 +295,15 @@ def review_retention_history(quality, store, state):
     if {row['id']: row['messages'] for row in actual} != expected:
         raise ValueError('Retain the complete initial anchors and prior admitted evaluation history')
     protected = set(expected)
+    protected_messages = {document_identity(messages) for messages in expected.values()}
     for name in graph_quality.ROLES[2:]:
         rows = quality_rows(store, quality['retention_anchors'][name])
         if name.endswith('skills'):
             cohort_questions.validate_rows(rows, release_scope=False)
         protected.update(row['id'] for row in rows)
+        protected_messages.update(document_identity(row['messages']) for row in rows)
     prepared = store.json(quality['prepared'])
     for role in ('train', 'test'):
         rows = quality_rows(store, prepared['roles'][role])
-        if any(row['id'] in protected for row in rows):
+        if any(row['id'] in protected or document_identity(row['messages']) in protected_messages for row in rows):
             raise ValueError('Protected retention inputs cannot enter fresh training or evaluation')
