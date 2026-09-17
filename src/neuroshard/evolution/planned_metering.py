@@ -26,8 +26,8 @@ def limits(service, graph, maximum, tariff):
     if 'composer' in service:
         result['composition'] = min(maximum, integer(service['composer']['max_tokens'], 1, 256))
     if 'request_policy' in service:
-        from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS
-        if service['request_policy'] != REQUEST_POLICY:
+        from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS, ASSISTANT_POLICY
+        if service['request_policy'] not in (REQUEST_POLICY, ASSISTANT_POLICY):
             raise ValueError('Unknown request-preservation policy')
         result['planning_repair'] = REPAIR_TOKENS
     if any(value >= context for value in result.values()):
@@ -82,8 +82,17 @@ def meter(service, graph, response, tariff):
     payments, prompt_count, output_count, details = {}, 0, 0, []
     models = {'parent', 'interpreter', *graph['experts']}
     vocabulary, eos = graph['parent']['config']['vocab_size'], graph['tokenizer']['eos_id']
-    from .request_planning import direct_question
+    from .request_planning import direct_question, atomic_request, ASSISTANT_POLICY
     direct = 'request_policy' in service and direct_question(request['messages']) is not None
+    if service.get('request_policy') == ASSISTANT_POLICY:
+        # This checks bounded accounting, not the selector's truth. Complete
+        # neural replay still authorizes the actual general-routing decision.
+        general = response.get('planning', {}).get('path') == 'general'
+        if general and (len(outputs) != 1 or outputs[0].get('purpose') != 'answer'
+                or outputs[0].get('model') != 'interpreter'
+                or response.get('plan') != [request['messages'][-1]['content']]):
+            raise ValueError('The general path must answer the intact request once')
+        direct = general or atomic_request(request['messages']) is not None
     for index, call in enumerate(outputs):
         serving_graph.fields(call, {'model', 'purpose', 'owners', 'prompt_ids', 'token_ids'}
                              | ({'planner_adapter'} if 'planner_adapter' in call else set()),

@@ -108,3 +108,25 @@ def test_reference_repair_is_metered_once_before_expert_execution(execution):
     response['generated_tokens'] = 12
     with pytest.raises(ValueError):
         meter.meter(service, graph, response, tariff)
+
+
+def test_general_first_conversation_bills_only_its_actual_answer(execution):
+    from neuroshard.evolution.request_planning import ASSISTANT_POLICY
+    graph, service, tariff, response = execution
+    service['request_policy'] = ASSISTANT_POLICY
+    response['service'] = response['request']['service'] = identity(service)
+    response['request']['messages'] = [{'role': 'user', 'content': 'The code is indigo-62.'},
+        {'role': 'assistant', 'content': 'Understood.'},
+        {'role': 'user', 'content': 'Repeat the code. No extra text.'}]
+    response['plan'] = [response['request']['messages'][-1]['content']]
+    response['planning'] = {'path': 'general'}
+    call = copy.deepcopy(response['outputs'][0])
+    call.update(purpose='answer')
+    call.pop('planner_adapter')
+    response['outputs'], response['generated_tokens'] = [call], 2
+    report = meter.meter(service, graph, response, tariff)
+    assert len(report['calls']) == 1 and report['output_tokens'] == 2
+    assert report['unused_reserved_atoms'] + report['total_atoms'] == meter.quote(service, graph, 128, tariff)['maximum_atoms']
+    response['plan'] = ['A rewritten task']
+    with pytest.raises(ValueError, match='intact request'):
+        meter.meter(service, graph, response, tariff)
