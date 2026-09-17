@@ -61,6 +61,32 @@ def run(home):
             mismatches.append({'tensor':name,'expected':spec['sha256'],'actual':actual})
     save(home/'weights.json',{'tensor_count':len(tensors),'mismatches':mismatches,'configuration_differences':differences})
     tokenizer = AutoTokenizer.from_pretrained(request['seed'],local_files_only=True)
+    if request.get('mode') == 'structured':
+        from neuroshard.evolution import general_answer
+        from neuroshard.evolution.ordinary_quality import correct
+        results=[]
+        for case in request['cases']:
+            prompt=general_answer.messages(case['messages'])
+            ids=tokenizer.apply_chat_template(prompt,tokenize=True,add_generation_prompt=True)
+            if len(ids)+general_answer.MAX_TOKENS > 1024:
+                raise ValueError('Structured answer exceeds the owned context reservation')
+            tokens=generate(model,tokenizer,ids,general_answer.MAX_TOKENS)
+            raw=tokenizer.decode(tokens,skip_special_tokens=True)
+            try:
+                answer=general_answer.visible(raw)
+                error=None
+            except ValueError as failure:
+                answer='';error=str(failure)
+            response={'text':answer,'answering':{'status':'completed' if error is None else 'needs_clarification',
+                'error':error,'text':answer,'answers':[{'question':case['messages'][-1]['content'],'text':answer}]}}
+            result={'id':case['id'],'raw':raw,'text':answer,'token_ids':tokens,
+                'prompt_tokens':len(ids),'error':error,'correct':correct(case['scoring'],response)}
+            results.append(result);save(home/'answers.json',results)
+            print(json.dumps({'id':case['id'],'correct':result['correct'],'text':answer}),flush=True)
+        save(home/'result.json',{'request':identity(request),'runtime':runtime,'weights_match':not mismatches,
+            'configuration_differences':differences,'cases':results,'correct':sum(r['correct'] for r in results),
+            'seconds':time.monotonic()-began,'scope':'Exposed development controls, forced general path only.'})
+        return
     if request.get('mode') == 'reasoning':
         from neuroshard.evolution.ordinary_quality import correct
         results=[]
