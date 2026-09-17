@@ -90,6 +90,30 @@ def run(home, source):
         forced_replay = forced(service, atom, maximum) == previous
         save(output/'replay.json', {'service': service.root, 'automatic': valid,
                                    'forced': forced_replay})
+        retention = None
+        if 'retention' in trial:
+            from neuroshard.evolution import cohort_questions
+            path = home/'inputs/retention.json'
+            if sha256(path) != trial['retention']['sha256']:
+                raise ValueError('The earlier C answer inventory changed')
+            retained_rows = json.loads(path.read_bytes())
+            if identity(retained_rows) != trial['retention']['root']:
+                raise ValueError('The earlier C answer inventory changed')
+            outcomes = []
+            for item in retained_rows:
+                if time.monotonic()-started > trial['max_seconds']:
+                    raise TimeoutError('The frozen retention inference deadline expired')
+                control = forced(service, item['atom'], 64)
+                if len(control['outputs']) != 1 or identity(control['outputs'][0]['prompt_ids']) != item['prompt_root']:
+                    raise ValueError('Retention must use the exact earlier expert prompt')
+                correct = cohort_questions.correct(item['row'], control['answer']['text'], release_scope=False)
+                outcomes.append({'id': item['row']['id'], 'before_correct': item['before_correct'],
+                                 'correct': correct, 'control': control})
+            lost = [row['id'] for row in outcomes if row['before_correct'] and not row['correct']]
+            retention = {'count': len(outcomes), 'correct': sum(row['correct'] for row in outcomes),
+                         'previous_correct': sum(row['before_correct'] for row in outcomes), 'lost': lost,
+                         'outcomes': outcomes}
+            save(output/'retention.json', retention)
         old_passes = set(trial['previous_automatic_passes'])
         passed_ids = {row['id'] for row in rows if row['passed']}
         selected_gold = [diagnosis.routes_of(response) == [atom['expert']]
@@ -99,6 +123,9 @@ def run(home, source):
                   'retained_previous_passes': old_passes <= passed_ids,
                   'automatic_replay': valid, 'forced_replay': forced_replay,
                   'ordinary_answering': len(passed_ids) == len(rows)}
+        if retention is not None:
+            checks['prior_C_answers'] = not retention['lost']
+            checks['forced_gold_answers'] = all(row['correct'] for row in forced_cache.values())
         planning_checks = None
         if 'request_policy' in config:
             from neuroshard.evolution import planned_metering
@@ -126,6 +153,8 @@ def run(home, source):
         if planning_checks is not None:
             result['planning_checks'] = planning_checks
             result['planning_passed'] = all(planning_checks.values())
+        if retention is not None:
+            result['retention'] = {key: value for key, value in retention.items() if key != 'outcomes'}
         save(output/'result.json', result)
         net.verify_unchanged()
     finally:

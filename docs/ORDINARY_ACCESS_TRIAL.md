@@ -45,6 +45,14 @@ interface. The same grounded-edit validator applies. Its one-allocation gate
 requires preservation of all nine passing cases, with unchanged experts,
 selector and scoring. It remains an exposed development repair, not a new final.
 
+The subject-resolution revision completed at **10/15**, with no selection,
+decomposition or assembly failures, all seven retained cases passing, 21/21
+correct standalone routes and exact automatic/forced replay. Six owners saved
+identical complete transcripts. The bounded engineering gate passed; the
+unchanged all-answer quality gate failed on C's three factual errors, affecting
+five cases. [The subsequent C-only learning prescription](CONTRACT_LEARNING_REPAIR.md)
+keeps this answering policy fixed.
+
 The original assembled service used growing router `9df5d8fa` with base
 `c4b1a0a8`, rather than the earlier ordinary-question base `3766fcc3`. Its C gate
 predicted the correct class on six ordinary C questions but rejected every one
