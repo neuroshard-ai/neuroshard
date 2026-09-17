@@ -85,7 +85,13 @@ before the affected work, rather than changing the target after a result.
   development output tokens. All six owner traces agree. CPU recovery repaired
   a missing failure category without changing pass flags; the new run's replay
   verdict was not persisted before aggregation failed. All resources were
-  retired. Full ordinary access remains failed; the next cohort stays on hold.
+  retired. Subsequent request preservation and subject-only reference resolution
+  improve 7→9→10/15 without changing expert weights. The completed engineering
+  screen has zero selection/decomposition/assembly failures, all 21 standalone
+  routes correct, all seven retained cases correct, and exact automatic/forced
+  replay with six identical owner transcripts. C's three factual errors still
+  cause five failed cases. The [C-only learning repair](docs/CONTRACT_LEARNING_REPAIR.md)
+  is frozen around crossed training contracts; the next cohort remains on hold.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -239,6 +245,29 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Training C on crossed input contracts improved ordinary answers
+  **10/15 → 14/15**, forced answers **10/13 → 12/13**, and standalone C retention
+  **13/16 → 15/16**, losing no previously correct answer in either inventory.
+  Four training owners and six serving transcripts agree; fresh replay of
+  updates 104–108 and both inference replays pass. The full gate still fails on
+  one claim-window versus whole-job scope confusion. The 108-update run took
+  985 seconds; all four instances and volumes retired, compute at most $2.28
+  excluding storage/transfer. [Result and next bounded scope repair](docs/CONTRACT_LEARNING_REPAIR.md)
+  preserve the exposed-development status: no new final, cohort, promotion or
+  issuance. Tasks 1 and 2 remain open.
+
+- 2026-09-17: Repaired ordinary access using verbatim standalone requests and
+  bounded neural subject resolution with deterministic substitution. The first
+  revision scored 9/15 and failed one reference; the second scored 10/15 with
+  only the five existing knowledge failures remaining. Both retain all earlier
+  correct cases, agree across six owners, replay exactly and meter every neural
+  call. Across the same 28 ordinary/control requests, neural calls fall from
+  69 to 48 and prompt tokens from 19,207 to 7,866. All ten allocated instances,
+  their volumes and security groups were deleted; combined compute estimate
+  $2.03, storage and transfer separate. [Result manifests](config/experiments/request-planning-results.json)
+  bind the local evidence archives. No expert weights changed and no new final,
+  issuance or promotion occurred. Tasks 1 and 2 remain open.
 
 - 2026-09-17: Completed one frozen five-host ordinary-access allocation, with
   retained neural weights, a restored ordinary router, a C gate fitted on

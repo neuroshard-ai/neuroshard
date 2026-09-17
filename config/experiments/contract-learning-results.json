@@ -1,0 +1,87 @@
+{
+  "source_commit": "37902955c0a657dd9ea3a1a794969bc10409827f",
+  "freeze": "debf1f092e952dcfa066fb5bc16f4eb168666725434a1dceb85ee93de911811e",
+  "service": "e1662f75df43257281f00cdb270bbca9b7f3f62928149ac757afab1bde8bebe9",
+  "checkpoint": "f1aa762419334821aa65e2c3b3c020b18a66793e251b3663eef9cc5e2a7cdb86",
+  "training_steps": 108,
+  "training_seconds": 984.994946994,
+  "identical_training_owners": 4,
+  "identical_serving_transcripts": 6,
+  "frozen_sources_verified": true,
+  "cpu_scoring_agrees": true,
+  "ordinary": {
+    "classified": 15,
+    "count": 15,
+    "dominant": "knowledge",
+    "format": "neuroshard-ordinary-serving-diagnostic-v1/summary",
+    "mixed": false,
+    "strata": {
+      "new": {
+        "assembly": 0,
+        "decomposition": 0,
+        "knowledge": 1,
+        "passed": 7,
+        "selection": 0
+      },
+      "retained": {
+        "assembly": 0,
+        "decomposition": 0,
+        "knowledge": 0,
+        "passed": 7,
+        "selection": 0
+      }
+    },
+    "totals": {
+      "assembly": 0,
+      "decomposition": 0,
+      "knowledge": 1,
+      "passed": 14,
+      "selection": 0
+    }
+  },
+  "retention": {
+    "correct": 15,
+    "count": 16,
+    "lost": [],
+    "previous_correct": 13
+  },
+  "forced_unique": {
+    "correct": 12,
+    "count": 13,
+    "input_failures": 0
+  },
+  "planning_passed": true,
+  "quality_passed": false,
+  "inference_replay": {
+    "automatic": true,
+    "forced": true
+  },
+  "training_replay": {
+    "from": 104,
+    "through": 108,
+    "valid": true
+  },
+  "new_final_opened": false,
+  "new_cohort": false,
+  "native_promotion": false,
+  "resources": {
+    "terminated": [
+      "i-00229e48df3ba8144",
+      "i-0207b398489dc2f7b",
+      "i-05fcb7992423d6a88",
+      "i-0f9123fc729437fe0"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 2.2701364349188893,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "evidence": {
+    "local_study": ".neuroshard/contract-learning-study-20260917",
+    "archive_sha256": "10a39dc6ae1be41dad7d1a32a282d7d1a558c3e73bc6ae122462d0db32e6ff4f",
+    "bytes": 18811758,
+    "tensor_catalog_sha256": "8342870c1bba531ea22ab5209183e80e5519061a1b7d682eb49c85fc9159b03d",
+    "metadata_uploaded": false
+  }
+}

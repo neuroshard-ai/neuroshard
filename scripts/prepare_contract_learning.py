@@ -13,14 +13,18 @@ from neuroshard.evolution.reference_data import identity, save, sha256
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prepare(original, serving, home):
+def prepare(original, serving, home, *, scope_repair=False):
     read = lambda p: json.loads(p.read_bytes())
     access = read(serving/'result.json')
     if access.get('planning_passed') is not True or not all(access['planning_checks'].values()):
         raise ValueError('Measured automatic access must pass before neural repair starts')
     graph = read(serving/'inputs/graph.json')
-    if graph['experts']['planner']['checkpoint'] != '618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c':
+    starting = ('f1aa762419334821aa65e2c3b3c020b18a66793e251b3663eef9cc5e2a7cdb86' if scope_repair
+                else '618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c')
+    if graph['experts']['planner']['checkpoint'] != starting:
         raise ValueError('Repair the exact measured C checkpoint')
+    if scope_repair and access['service'] != 'e1662f75df43257281f00cdb270bbca9b7f3f62928149ac757afab1bde8bebe9':
+        raise ValueError('The scope repair starts from the verified 14/15 service')
     inputs = home/'inputs'
     inputs.mkdir(exist_ok=False)
     # The old opened final is only a historical bound in prepared metadata.
@@ -35,16 +39,21 @@ def prepare(original, serving, home):
     if sha256(inputs/'train.jsonl') != augmentation['train']['sha256']:
         raise ValueError('Freeze the exact crossed training data')
     batches = expert_curriculum.balanced_batches(annotations, batch_size=16)
-    steps = 2*len(batches)
-    if steps != 108 or len(annotations) != 864:
-        raise ValueError('This bounded intervention covers 144 questions under six contracts twice')
+    if scope_repair:
+        steps, schedule = 64, list(range(len(batches)))+list(range(5))
+        if len(annotations) != 936 or len(batches) != 59 or len(schedule) != steps:
+            raise ValueError('Scope repair covers 156 questions under six contracts, then five replay batches')
+    else:
+        steps, schedule = 2*len(batches), list(range(len(batches)))*2
+        if steps != 108 or len(annotations) != 864:
+            raise ValueError('This bounded intervention covers 144 questions under six contracts twice')
     plan, prepared = read(inputs/'plan.json'), read(inputs/'prepared.json')
     plan['seed_expert'] = {'name': 'planner', 'checkpoint': graph['experts']['planner']}
     plan['previous_graph'] = identity(graph['descriptor'])
     plan['training'] = {'steps': steps, 'learning_rate': 0.00005, 'warmup_steps': 4,
                         'weight_decay': 0.01, 'clip_norm': 1.0}
     prepared.update(plan=identity(plan), retention_cache=identity(graph), batches=batches,
-                    schedule=list(range(len(batches)))*2)
+                    schedule=schedule)
     prepared['roles']['train'] = augmentation['train']
     expert_data.validate_prepared(prepared, plan, graph['parent']['config']['vocab_size'])
     trial = read(inputs/'trial.json')
@@ -59,6 +68,11 @@ def prepare(original, serving, home):
         gates={'ordinary_cases': 'all', 'forced_gold_questions': 'all',
                'prior_C_development_correct': 'retain all', 'replay': 'exact'},
         evaluation={}, future_cohorts='Hold until the complete ordinary answering repair passes.')
+    if scope_repair:
+        trial.update(cohort='planner-scope-repair', method=(
+            'Warm-start C with fresh Adam and response-only CE. Add twelve source-grounded claim/job '
+            'scope variations; retain every earlier training topic. One complete pass plus five '
+            'balanced replay batches; terminal checkpoint only.'))
     for name, value in (('plan', plan), ('prepared', prepared), ('trial', trial)):
         save(inputs/(name+'.json'), value)
     for name in ('graph.json', 'planned.json', 'profile.json', 'router.json', 'plan.json', 'access-trial.json'):
@@ -79,7 +93,21 @@ def prepare(original, serving, home):
             'before_correct': cohort_questions.correct(row, response['text'], release_scope=False),
             'atom': {'expert': 'planner', 'gold_question': ordinary_c_question(calls[0]['question']),
                      'answer': row['answers'][0]}})
-    if len(retention) != 16 or sum(row['before_correct'] for row in retention) != 13:
+    if scope_repair:
+        current = read(serving/'retention-result.json')
+        outcomes = {row['id']: row for row in current['outcomes']}
+        if len(outcomes) != 16 or current['correct'] != 15 or current['lost']:
+            raise ValueError('Protect every newly correct C development answer')
+        for item in retention:
+            outcome = outcomes[item['row']['id']]
+            control = outcome['control']
+            if (control['error'] or control['forced_route'] != 'planner'
+                    or identity(control['outputs'][0]['prompt_ids']) != item['prompt_root']
+                    or cohort_questions.correct(item['row'], control['answer']['text'], release_scope=False)
+                        != outcome['correct']):
+                raise ValueError('The current C retention result changed prompts or scoring')
+            item['before_correct'] = outcome['correct']
+    if len(retention) != 16 or sum(row['before_correct'] for row in retention) != (15 if scope_repair else 13):
         raise ValueError('Preserve the complete published C development result')
     save(inputs/'retention.json', retention)
     # Reuse public per-owner inventories. C's weights are also needed by the
@@ -111,7 +139,15 @@ def prepare(original, serving, home):
         'acceptance': trial['gates'], 'resources': trial['resources'],
         'selection': 'Terminal checkpoint only. No development-based early stopping or checkpoint shopping.',
         'no_new_final': True, 'no_new_cohort': True, 'native_promotion': False}
-    save(ROOT/'config/experiments/contract-learning-trial.json', manifest)
+    if scope_repair:
+        manifest['semantic_intervention'] = {
+            'questions': sha256(ROOT/'config/experiments/planner-scope-questions.json'),
+            'additional_questions': 12, 'topics': ['planner-updates', 'planner-steps'],
+            'schedule': '59 complete-coverage batches followed by the first five balanced batches',
+            'prior_correct_to_preserve': {'ordinary': 14, 'C_standalone': 15},
+            'diagnostic_is_exposed': True}
+    filename = 'scope-learning-trial.json' if scope_repair else 'contract-learning-trial.json'
+    save(ROOT/'config/experiments'/filename, manifest)
     print(json.dumps(manifest))
 
 
@@ -120,5 +156,6 @@ if __name__ == '__main__':
     parser.add_argument('--original', type=Path, required=True)
     parser.add_argument('--serving', type=Path, required=True)
     parser.add_argument('--home', type=Path, required=True)
+    parser.add_argument('--scope-repair', action='store_true', help='Use the separately prescribed 14/15 C scope intervention')
     args = parser.parse_args()
-    prepare(args.original, args.serving, args.home)
+    prepare(args.original, args.serving, args.home, scope_repair=args.scope_repair)
