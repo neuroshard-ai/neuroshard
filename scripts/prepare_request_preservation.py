@@ -10,7 +10,7 @@ from neuroshard.evolution.request_planning import FORMAT
 from prepare_ordinary_access_trial import ROOT, finalize
 
 
-def prepare(previous, output):
+def prepare(previous, output, *, trial_name='request-preservation-trial.json', baseline_result=None):
     read = lambda path: json.loads(path.read_bytes())
     if output.exists():
         raise ValueError('Preserve previous trial evidence')
@@ -22,25 +22,30 @@ def prepare(previous, output):
         shutil.copytree(previous/folder, output/folder)
     for name in ('fitting.json', 'fit-result.json'):
         shutil.copyfile(previous/name, output/name)
-    shutil.copyfile(previous/'result.json', output/'previous-result.json')
+    shutil.copyfile(baseline_result or previous/'result.json', output/'previous-result.json')
     old['request_policy'] = FORMAT
     save(output/'inputs/planned.json', old)
-    finalize(output, ROOT/'config/experiments/request-preservation-trial.json')
+    if Path(trial_name).name != trial_name:
+        raise ValueError('Require a local experiment manifest filename')
+    destination = ROOT/'config/experiments'/trial_name
+    finalize(output, destination)
     trial = read(output/'inputs/access-trial.json')
     trial['decision'] = {
-        'hypothesis': 'Preserve clear single requests and ground unresolved plan references before expert calls.',
+        'hypothesis': 'Preserve clear single requests and substitute only explicit subjects for unresolved references.',
         'changed': ['request planning and its complete-call metering'],
         'preserved': ['router', 'expert checkpoints', 'expert input contracts', 'diagnostic cases', 'scoring rules'],
         'engineering_gate': 'Zero selection or decomposition failures, preserve every previously correct case, exact replay.',
         'quality_gate': 'The original all-automatic-answers gate remains unchanged and may still fail knowledge.',
         'learning': 'No training. Diagnose C separately after access is measured.'}
     save(output/'inputs/access-trial.json', trial)
-    save(ROOT/'config/experiments/request-preservation-trial.json', trial)
+    save(destination, trial)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--previous', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--trial-name', default='request-preservation-trial.json')
+    parser.add_argument('--baseline-result', type=Path)
     args = parser.parse_args()
-    prepare(args.previous, args.output)
+    prepare(args.previous, args.output, trial_name=args.trial_name, baseline_result=args.baseline_result)

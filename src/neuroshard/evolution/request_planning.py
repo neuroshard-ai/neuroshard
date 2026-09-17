@@ -16,10 +16,11 @@ START = re.compile(r'^(?:what|which|who|whose|when|where|why|how|is|are|do|does|
 COMPOUND = re.compile(r'\b(?:and|or|also|then|plus|versus|vs)\b', re.IGNORECASE)
 REPAIR_TOKENS = 128
 REPAIR_INSTRUCTION = (
-    'Replace unresolved pronouns in the supplied questions with the explicit subjects from '
-    'the conversation. Change ONLY those pronouns. Copy every other word exactly. Keep the '
-    'same number and order of questions. Do not answer or add a question. Return only JSON '
-    'with schema {"questions":["question"]}. If a reference is ambiguous, leave it unchanged.')
+    'Identify the explicit subject meant by each marked reference, using the conversation. '
+    'Return ONLY the replacement noun phrases in reference order. Do not copy the questions '
+    'or answer them. A replacement must name a subject present in the conversation; it must '
+    'not be another pronoun. Use a possessive noun phrase when needed. Return only JSON '
+    'with schema {"subjects":["explicit subject"]}. Use null for an ambiguous reference.')
 
 
 def direct_question(messages):
@@ -37,25 +38,55 @@ def needs_repair(plan):
     return any(REFERENCES.search(question) for question in plan)
 
 
+def reference_slots(plan):
+    slots = [(index, match) for index, question in enumerate(plan)
+             for match in REFERENCES.finditer(question)]
+    if not 1 <= len(slots) <= 8:
+        raise ValueError('Bound the number of references in one repair')
+    return slots
+
+
 def repair_messages(messages, plan):
     # Examples describe reference substitution, never the installed domains.
     examples = [
         ('What does the Aurora telescope measure and where is it located?',
          ['What does the Aurora telescope measure?', 'Where is it located?'],
-         ['What does the Aurora telescope measure?', 'Where is the Aurora telescope located?']),
+         ['the Aurora telescope']),
         ('Where does Ada Quinn work and what is her role?',
          ['Where does Ada Quinn work?', 'What is her role?'],
-         ['Where does Ada Quinn work?', "What is Ada Quinn's role?"]),
+         ["Ada Quinn's"]),
     ]
     def payload(conversation, questions):
-        return json.dumps({'conversation': conversation, 'questions': questions}, ensure_ascii=False)
+        slots = [{'question': questions[index][:match.start()]+'<reference>'+questions[index][match.end():],
+                  'reference': match.group()} for index, match in reference_slots(questions)]
+        return json.dumps({'conversation': conversation, 'references': slots}, ensure_ascii=False)
     result = [{'role': 'system', 'content': REPAIR_INSTRUCTION}]
     for request, before, after in examples:
         result.extend([
             {'role': 'user', 'content': payload([{'role': 'user', 'content': request}], before)},
-            {'role': 'assistant', 'content': json.dumps({'questions': after})}])
+            {'role': 'assistant', 'content': json.dumps({'subjects': after})}])
     result.append({'role': 'user', 'content': payload(messages, plan)})
     return result
+
+
+def repair_questions(before, raw, messages):
+    """The model resolves meaning; deterministic substitution preserves structure."""
+    def unique(pairs):
+        if len(dict(pairs)) != len(pairs):
+            raise ValueError('Duplicate reference repair key')
+        return dict(pairs)
+    value = json.loads(raw, object_pairs_hook=unique)
+    slots = reference_slots(before)
+    if not isinstance(value, dict) or set(value) != {'subjects'}:
+        raise ValueError('Require explicit reference subjects')
+    subjects = value['subjects']
+    if (not isinstance(subjects, list) or len(subjects) != len(slots)
+            or any(not isinstance(subject, str) or not 1 <= len(subject) <= 128 for subject in subjects)):
+        raise ValueError('Resolve each reference exactly once')
+    after = list(before)
+    for (index, match), subject in reversed(list(zip(slots, subjects))):
+        after[index] = after[index][:match.start()]+subject+after[index][match.end():]
+    return validate_repair(before, after, messages)
 
 
 def validate_repair(before, after, messages):

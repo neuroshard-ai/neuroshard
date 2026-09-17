@@ -77,8 +77,10 @@ def test_direct_serving_never_invokes_a_question_generator(monkeypatch):
 
 
 @pytest.mark.parametrize('repaired,accepted', [
-    ('{"questions":["Where is the Aurora telescope?","What does the Aurora telescope measure?"]}', True),
-    ('{"questions":["Where is the Aurora telescope?","What does the Beta telescope measure?"]}', False),
+    ('{"subjects":["the Aurora telescope"]}', True),
+    ('{"subjects":["the Beta telescope"]}', False),
+    ('{"subjects":[null]}', False),
+    ('{"subjects":["it"]}', False),
 ])
 def test_neural_reference_repair_is_bounded_and_fail_closed(monkeypatch, repaired, accepted):
     service, calls = stub_service(monkeypatch, iter([
@@ -89,3 +91,14 @@ def test_neural_reference_repair_is_bounded_and_fail_closed(monkeypatch, repaire
     assert (response['status'] == 'completed') == accepted
     if not accepted:
         assert response['answers'] == [] and response['error'] == 'invalid_reference_repair'
+
+
+def test_reference_slots_preserve_multiple_subjects_and_reject_extra_fields():
+    messages = [{'role': 'user', 'content': 'Nia Cole and Sam Vale are colleagues.'}]
+    before = ['Where does she work?', 'What is his role?']
+    assert policy.repair_questions(before, '{"subjects":["Nia Cole","Sam Vale\'s"]}', messages) == [
+        'Where does Nia Cole work?', "What is Sam Vale's role?"]
+    for raw in ('{"subjects":["Nia Cole"]}', '{"subjects":[],"subjects":[]}',
+                '{"subjects":[],"questions":[]}'):
+        with pytest.raises(ValueError):
+            policy.repair_questions(before, raw, messages)

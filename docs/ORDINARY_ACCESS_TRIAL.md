@@ -32,6 +32,19 @@ all-answer quality gate remains unchanged: C's three incorrect standalone
 answers are expected to keep it closed. No next cohort is started. The same
 five-host, two-hour absolute deadline and $25 cap apply.
 
+The first preservation attempt completed with **9/15** correct, all **21/21**
+standalone routes correct, exact automatic/forced replay and valid complete-call
+metering. Five cases still fail knowledge; one fails reference repair because
+the interpreter copied the unresolved pronoun unchanged. The engineering gate
+failed. Every previously correct case remained correct.
+
+The [subject-resolution revision](../config/experiments/request-resolution-trial.json)
+asks the interpreter only for explicit replacement subjects. Code performs the
+substitution; the model cannot rewrite, add or drop questions through this
+interface. The same grounded-edit validator applies. Its one-allocation gate
+requires preservation of all nine passing cases, with unchanged experts,
+selector and scoring. It remains an exposed development repair, not a new final.
+
 The original assembled service used growing router `9df5d8fa` with base
 `c4b1a0a8`, rather than the earlier ordinary-question base `3766fcc3`. Its C gate
 predicted the correct class on six ordinary C questions but rejected every one

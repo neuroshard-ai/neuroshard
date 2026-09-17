@@ -329,13 +329,19 @@ class PlannedGraphNetwork:
         planning = {'path': 'direct' if direct is not None else 'neural',
                     'initial_questions': list(plan), 'repair': 'none'}
         if preserve and error is None and request_planning.needs_repair(plan):
-            repaired = self.call('interpreter', request_planning.repair_messages(messages, plan),
-                                 request_planning.REPAIR_TOKENS, 'planning_repair')
             try:
-                plan = request_planning.validate_repair(plan, questions(repaired), messages)
-                planning['repair'] = 'accepted'
-            except (ValueError, TypeError):
+                repair_input = request_planning.repair_messages(messages, plan)
+            except ValueError:
                 plan, error, planning['repair'] = [], 'invalid_reference_repair', 'rejected'
+            else:
+                # Numerical disagreement or execution failure must propagate.
+                repaired = self.call('interpreter', repair_input,
+                                     request_planning.REPAIR_TOKENS, 'planning_repair')
+                try:
+                    plan = request_planning.repair_questions(plan, repaired, messages)
+                    planning['repair'] = 'accepted'
+                except (ValueError, TypeError):
+                    plan, error, planning['repair'] = [], 'invalid_reference_repair', 'rejected'
         for question in plan:
             # A single unambiguous user request need not lose its payload merely
             # because the planner expressed its instruction more concisely.
