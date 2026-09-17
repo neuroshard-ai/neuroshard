@@ -16,6 +16,10 @@ def normalized(text):
     return ' '.join(unicodedata.normalize('NFKC', text).casefold().split())
 
 
+def document_identity(messages):
+    return digest(normalized(canonical(messages).decode()).encode())
+
+
 def fingerprint(text):
     words = re.findall(r'\w+', normalized(text))
     shingles = {' '.join(words[i:i+5]) for i in range(max(1,len(words)-4))}

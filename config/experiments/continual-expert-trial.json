@@ -1,0 +1,75 @@
+{
+  "format": "neuroshard-continual-expert-trial-v1",
+  "cohort": "planner",
+  "training": {
+    "steps": 192,
+    "warmup_steps": 8,
+    "learning_rate": 5e-05,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0
+  },
+  "objective": {
+    "kl_strength": 0.2,
+    "margin_strength": 0.1,
+    "margin_min": 0.5,
+    "margin_max": 2.0
+  },
+  "method": "Accepted expert weights, fresh Adam, equal fresh/replay batches, accepted expert KL and margin on replay only.",
+  "decision": "Continue this expert only if new greedy answers improve and no previously correct retained answer is lost.",
+  "gates": {
+    "single_accuracy": 0.75,
+    "composed_accuracy": 0.75,
+    "gain_lower": 0.0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260917,
+    "confidence": 0.95
+  },
+  "max_seconds": 5400,
+  "max_tokens": 64,
+  "evaluation": {
+    "dev": {
+      "file": "dev-questions.jsonl",
+      "sha256": "07f184595557f0221111d0b0dab73aab4f4cbe8c4fb22ac46d9bbc0eafb951de",
+      "count": 24,
+      "ids": "33359012d217561afb566fcd2563e40a52a15cec02b76cc6f5c9d8fffa61f723",
+      "release_scope": false
+    },
+    "test": {
+      "file": "test-questions.jsonl",
+      "sha256": "d1397355068799a5d34d3efcf2cea4739a59ec833358081e859aaac3a90300fc",
+      "count": 24,
+      "ids": "0344b340600dc9c91de56a5c47bccc195360564105c7823e81af8e3888babf39",
+      "release_scope": false
+    },
+    "retained": {
+      "file": "retained-questions.jsonl",
+      "sha256": "f85e8cca70c874b389e5f51fdc498ee8673656c44cfa88f69f086af1fd6cb2c9",
+      "count": 96,
+      "ids": "aae1713ddd4fdeedc412a118ea5d13d65dcc9eae2ca274c376bb294ec08e0f71",
+      "release_scope": true
+    }
+  },
+  "numerical_profile": "dbce3ea2a57bf31cadf3739e8032848df7ef180aa7c28899303881d32e01477a",
+  "resources": {
+    "instance_types": [
+      "g5.2xlarge",
+      "g5.2xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "disk_gib": 200,
+    "max_hours": 2.5,
+    "planning_cap_usd": 50
+  },
+  "scope": "Direct sharded specialist learning. No automatic router, public serving promotion, issuance or independent operator claim.",
+  "replay": {
+    "prepared": "4457d373128f73e7f55d79d23aedc0e457ef4d8287f9e5ce218e48d3a577822e",
+    "rows": "637382ee5a1b4221693c14fe6281617c7ead3e1a42692a931ad96299b958adb6",
+    "starting_checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "completed_updates": 560,
+    "evidence": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-native-expert-20260916"
+  },
+  "final_rule": "Fixed terminal update only; final questions remain unopened after a failed development gate. Publish terminal decision before final evaluation.",
+  "failure_preservation": "Retain all window metadata, final tensors and the preceding four-update boundary; a pass retains the complete window payload inventory.",
+  "future_cohorts": "Admission and conversation facts are reserved for later cohorts; no continuation after a failed current gate."
+}

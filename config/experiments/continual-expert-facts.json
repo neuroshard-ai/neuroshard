@@ -1,0 +1,648 @@
+{
+  "format": "neuroshard-continual-expert-curation-v1",
+  "source_repository": "neuroshard-ai/neuroshard",
+  "source_revision": "782b11c48d89b7dff3db31f58091dcfdd4fb89bc",
+  "license": "Apache-2.0",
+  "status": "curated-inputs-not-trained",
+  "cohorts": [
+    {
+      "id": "planner",
+      "facts": [
+        {
+          "id": "planner-updates",
+          "answer": "16",
+          "train_question": "What is the maximum number of planner updates in one window?",
+          "dev_question": "How many consecutive planner updates can a claim contain at most?",
+          "test_question": "A miner wants to submit twenty planner steps together. What is the allowed maximum per window?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 168,
+            "evidence": "or not isinstance(updates, list) or not 1 <= len(updates) <= 16"
+          }
+        },
+        {
+          "id": "planner-owners",
+          "answer": "3",
+          "train_question": "How many assistant owners must reserve planner training?",
+          "dev_question": "How many worker receipts does a planner claim require?",
+          "test_question": "For a complete planner training reservation, how many participating assistant owners are required?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_work.py",
+            "sha256": "a6fdc58983e009e7fbcc6a62cb0a38674592bb0b25d4a6c1375d94a3228c19b9",
+            "line": 57,
+            "evidence": "if not isinstance(workers, list) or len(workers) != 3:"
+          }
+        },
+        {
+          "id": "planner-steps",
+          "answer": "4096",
+          "train_question": "What is the maximum number of updates in a planner recipe?",
+          "dev_question": "How many total planner steps can a prescribed schedule contain?",
+          "test_question": "A planner training recipe must fit within what maximum step count?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 58,
+            "evidence": "steps = integer(recipe['steps'], 1, 4096)"
+          }
+        },
+        {
+          "id": "planner-microbatch",
+          "answer": "16",
+          "train_question": "What is the maximum planner microbatch size?",
+          "dev_question": "How large can a planner microbatch be?",
+          "test_question": "For planner optimization, what is the largest permitted number of examples per microbatch?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 60,
+            "evidence": "integer(recipe['microbatch'], 1, 16)"
+          }
+        },
+        {
+          "id": "planner-documents",
+          "answer": "2048",
+          "train_question": "How many training rows can a planner prescription contain at most?",
+          "dev_question": "What is the upper bound on rows in one planner training job?",
+          "test_question": "A planner job has too many training records. What is the permitted maximum row count?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 61,
+            "evidence": "integer(row_count, 1, 2048)"
+          }
+        },
+        {
+          "id": "planner-batch",
+          "answer": "64",
+          "train_question": "What is the maximum number of rows in one scheduled planner batch?",
+          "dev_question": "How many examples may one complete planner batch select?",
+          "test_question": "What upper limit applies to examples selected for a single planner optimizer update?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 72,
+            "evidence": "if not isinstance(batch, list) or not 1 <= len(batch) <= 64:"
+          }
+        },
+        {
+          "id": "planner-rank",
+          "answer": "128",
+          "train_question": "What is the largest permitted planner adapter rank?",
+          "dev_question": "What upper bound does the planner impose on adapter rank?",
+          "test_question": "When choosing the rank of the owned planner adapter, what maximum is supported?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 35,
+            "evidence": "integer(binding['adapter_rank'], 1, 128)"
+          }
+        },
+        {
+          "id": "planner-parameters",
+          "answer": "64000000",
+          "train_question": "What is the planner parameter-count limit?",
+          "dev_question": "How many trainable planner parameters are permitted at most?",
+          "test_question": "A planner adapter exceeds the native window bound. What is the maximum parameter count?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 50,
+            "evidence": "if parameters > 64_000_000:"
+          }
+        },
+        {
+          "id": "planner-reserve",
+          "answer": "reserve_planner",
+          "train_question": "Which transaction reserves planner training?",
+          "dev_question": "What is the native transaction name for reserving a planner window?",
+          "test_question": "Before workers perform planner training, which transaction creates their reservation?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_work.py",
+            "sha256": "a6fdc58983e009e7fbcc6a62cb0a38674592bb0b25d4a6c1375d94a3228c19b9",
+            "line": 20,
+            "evidence": "'reserve_planner': {'input_checkpoint', 'workers', 'audit_budget'},"
+          }
+        },
+        {
+          "id": "planner-claim",
+          "answer": "claim_planner",
+          "train_question": "Which transaction submits a planner training claim?",
+          "dev_question": "What native transaction publishes a completed planner window?",
+          "test_question": "The workers finished their planner updates. Which transaction submits the work for settlement?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_work.py",
+            "sha256": "a6fdc58983e009e7fbcc6a62cb0a38674592bb0b25d4a6c1375d94a3228c19b9",
+            "line": 21,
+            "evidence": "'claim_planner': {'window', 'workers'},"
+          }
+        },
+        {
+          "id": "planner-execute",
+          "answer": "train_planner",
+          "train_question": "Which local operator command trains a planner window?",
+          "dev_question": "What is the local graph service command for planner training?",
+          "test_question": "Which operator request should produce new planner updates from the current checkpoint?",
+          "source": {
+            "path": "scripts/run_native_expert_service.py",
+            "sha256": "fb7766720d31d2ec30eef3f16a182d741792657c327aaf56af5f13bcb1c9faf2",
+            "line": 199,
+            "evidence": "elif command['kind'] in ('train_planner', 'planner_audit'):"
+          }
+        },
+        {
+          "id": "planner-audit",
+          "answer": "planner_audit",
+          "train_question": "Which local operator command audits a planner claim?",
+          "dev_question": "What request makes the graph service replay a native planner claim?",
+          "test_question": "An auditor needs a fresh execution of submitted planner work. Which local request kind should it use?",
+          "source": {
+            "path": "scripts/run_native_expert_service.py",
+            "sha256": "fb7766720d31d2ec30eef3f16a182d741792657c327aaf56af5f13bcb1c9faf2",
+            "line": 203,
+            "evidence": "if command['kind'] == 'planner_audit':"
+          }
+        },
+        {
+          "id": "planner-serving",
+          "answer": "Unchanged",
+          "train_question": "What happens to the approved serving graph after planner training settles?",
+          "dev_question": "Does settled planner training leave the approved serving graph unchanged, or replace it?",
+          "test_question": "A planner window earns its training reward. What happens to the already approved serving graph?",
+          "source": {
+            "path": "src/neuroshard/evolution/settlement.py",
+            "sha256": "025c7ac89573cab54130f7286bf80e627f87b916a7a31d9d29a3d29db700d2c6",
+            "line": 92,
+            "evidence": "raise ValueError('Planner training cannot replace the approved serving graph')"
+          }
+        },
+        {
+          "id": "planner-identity",
+          "answer": "No",
+          "train_question": "Do planner work identities include document titles?",
+          "dev_question": "Can renaming a document change its numerical planner work identity?",
+          "test_question": "Can a worker make the same numerical planner update new work merely by changing a job name?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 5,
+            "evidence": "state. Work identities omit job names and document metadata."
+          }
+        },
+        {
+          "id": "planner-state",
+          "answer": "Weights and Adam state",
+          "train_question": "What numerical state is needed to replay a planner window?",
+          "dev_question": "Which two kinds of numerical state does planner replay restore?",
+          "test_question": "To reproduce a bounded planner update exactly, what must its input checkpoint contain?",
+          "source": {
+            "path": "src/neuroshard/evolution/planner_window.py",
+            "sha256": "faec1430ad02dae2095c477c499dfea196d4efacccf1396ba7d924475b5b5150",
+            "line": 4,
+            "evidence": "acceptance must fund complete replay from the window's input weights and Adam"
+          }
+        },
+        {
+          "id": "planner-ancestor",
+          "answer": "No",
+          "train_question": "Does a continued planner window require earlier checkpoint files?",
+          "dev_question": "Must an auditor fetch earlier warm-start checkpoints to replay a later planner window?",
+          "test_question": "If the complete current planner checkpoint is available, are the earlier checkpoint files also needed for replay?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planner_window.py",
+            "sha256": "74950936ab56d68b7e1af637dfb2b281afd3752c76062cecf1f8441e3e965754",
+            "line": 31,
+            "evidence": "# does not need to fetch or replay its earlier warm-start ancestors."
+          }
+        }
+      ]
+    },
+    {
+      "id": "admission",
+      "facts": [
+        {
+          "id": "admission-sources",
+          "answer": "16",
+          "train_question": "What is the maximum number of immutable sources in one expert data proposal?",
+          "dev_question": "How many data sources may an expert cohort declare?",
+          "test_question": "One proposed expert cohort combines several datasets. What maximum source count applies?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 56,
+            "evidence": "if not isinstance(sources, dict) or not 1 <= len(sources) <= 16:"
+          }
+        },
+        {
+          "id": "admission-cursor",
+          "answer": "8192",
+          "train_question": "What is the maximum size of one expert source cursor window?",
+          "dev_question": "How many source rows may one admission window advance over at most?",
+          "test_question": "A new cohort advances a source cursor. What is the largest permitted number of rows in one window?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 70,
+            "evidence": "end = integer(window['end'], start + 1, min(start + 8192, 2**53 - 1))"
+          }
+        },
+        {
+          "id": "admission-documents",
+          "answer": "2048",
+          "train_question": "How many documents may one expert cohort declare at most?",
+          "dev_question": "What is the maximum combined training and evaluation document inventory?",
+          "test_question": "For an expert data proposal, what upper bound applies to the complete document inventory?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 74,
+            "evidence": "if not isinstance(data['documents'], list) or not 2 <= len(data['documents']) <= 2048:"
+          }
+        },
+        {
+          "id": "admission-propose",
+          "answer": "propose_expert_job",
+          "train_question": "Which transaction proposes a new expert job?",
+          "dev_question": "What native transaction submits an expert learning proposal?",
+          "test_question": "A sponsor has prepared the next expert cohort. Which transaction proposes that job?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 18,
+            "evidence": "FIELDS = {'propose_expert_job': {'job'}, 'vote_expert_job': {'proposal_id', 'approve', 'review_root'}}"
+          }
+        },
+        {
+          "id": "admission-vote",
+          "answer": "vote_expert_job",
+          "train_question": "Which transaction casts an expert-job admission vote?",
+          "dev_question": "What transaction does a validator use to vote on an expert proposal?",
+          "test_question": "After reviewing a proposed expert cohort, which transaction records a validator admission decision?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 18,
+            "evidence": "FIELDS = {'propose_expert_job': {'job'}, 'vote_expert_job': {'proposal_id', 'approve', 'review_root'}}"
+          }
+        },
+        {
+          "id": "admission-replay",
+          "answer": "Accepted training windows",
+          "train_question": "Which previous work must replay documents have been used in?",
+          "dev_question": "What kind of prior training makes a document eligible for replay?",
+          "test_question": "A sponsor wants to include older documents as replay. Which earlier training must have actually used them?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 90,
+            "evidence": "raise ValueError('Replay only the exact documents used by accepted training windows')"
+          }
+        },
+        {
+          "id": "admission-unused",
+          "answer": "No",
+          "train_question": "Can an unused document be labeled as replay data?",
+          "dev_question": "Is an admitted but untrained document eligible as replay?",
+          "test_question": "A document was admitted but never consumed by accepted training. May the next cohort count it as replay?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 88,
+            "evidence": "if (key not in admission['trained_documents'] or previous is None"
+          }
+        },
+        {
+          "id": "admission-evaluation",
+          "answer": "No",
+          "train_question": "May held-out evaluation records be used as training replay?",
+          "dev_question": "Can a sealed test document be relabeled as replay?",
+          "test_question": "A previously evaluated test record is available. Can a new expert job count it as training replay?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 89,
+            "evidence": "or previous != {**document, 'role': 'train'} or sources[source]['role'] != 'train'):"
+          }
+        },
+        {
+          "id": "admission-rewind",
+          "answer": "No",
+          "train_question": "May a new expert cohort rewind a source cursor?",
+          "dev_question": "Can a fresh source window restart at an earlier position?",
+          "test_question": "The previous admission advanced a dataset cursor. May the next fresh window move that cursor backward?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 72,
+            "evidence": "raise ValueError('Source cursors must advance consecutively')"
+          }
+        },
+        {
+          "id": "admission-quality",
+          "answer": "quality_expert",
+          "train_question": "Which transaction submits the separate expert quality decision?",
+          "dev_question": "What is the native transaction name for expert quality approval?",
+          "test_question": "After all expert updates settle, which transaction submits the evaluation used for serving promotion?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_lifecycle.py",
+            "sha256": "3312a9c4e08a6ac27a2dfc78e9e41792864f9121c14874ff774c29bf645f4560",
+            "line": 23,
+            "evidence": "'quality_expert': {'report', 'transcript_root', 'audit_budget'},"
+          }
+        },
+        {
+          "id": "admission-training",
+          "answer": "Complete training settlement",
+          "train_question": "What must finish before an expert quality claim can be submitted?",
+          "dev_question": "Which training stage must be complete before expert quality approval?",
+          "test_question": "Can an unfinished expert job be promoted? What prerequisite must finish before its quality claim?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_lifecycle.py",
+            "sha256": "3312a9c4e08a6ac27a2dfc78e9e41792864f9121c14874ff774c29bf645f4560",
+            "line": 159,
+            "evidence": "raise ValueError('Settle the complete expert job before its separate quality decision')"
+          }
+        },
+        {
+          "id": "admission-rejected",
+          "answer": "Unchanged",
+          "train_question": "What happens to serving when a new expert job is activated for training?",
+          "dev_question": "Does activating a proposed expert job leave serving unchanged, or replace it immediately?",
+          "test_question": "A cohort has passed admission and is starting training. What happens to the previously approved serving model?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 193,
+            "evidence": "life.update(quality_claim=None, quality_closed=False)"
+          }
+        },
+        {
+          "id": "admission-proposal-limit",
+          "answer": "100000",
+          "train_question": "What is the maximum configured expert proposal lifetime in blocks?",
+          "dev_question": "How high may the expert proposal_blocks setting be?",
+          "test_question": "Which upper bound applies to the block lifetime configured for expert admission proposals?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 34,
+            "evidence": "integer(config['proposal_blocks'], params['activation_blocks'] + 1, 100000)"
+          }
+        },
+        {
+          "id": "admission-job-limit",
+          "answer": "1000000",
+          "train_question": "What is the maximum configured expert job lifetime in blocks?",
+          "dev_question": "How high may the expert job_blocks setting be?",
+          "test_question": "What upper bound applies to the block lifetime configured for an admitted expert job?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_admission.py",
+            "sha256": "d713adac0e341e6eac5258796d6d01e0330f1e535d6fb624b5c987a520ef573c",
+            "line": 35,
+            "evidence": "integer(config['job_blocks'], params['max_claim_blocks'] + 1, 1000000)"
+          }
+        },
+        {
+          "id": "admission-truth",
+          "answer": "No",
+          "train_question": "Do mechanical data checks prove semantic correctness?",
+          "dev_question": "Does a successful mechanical source review prove that the data is true?",
+          "test_question": "A cohort passes byte, provenance and tokenizer checks. Does that alone establish semantic correctness?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_data.py",
+            "sha256": "8a696db824611eb4e0e5678c579f08d8c5db3eae6635bcf88266dc37097ac558",
+            "line": 235,
+            "evidence": "'quality_policy': quality, 'mechanical_checks_passed': True, 'semantic_curation_required': True}"
+          }
+        },
+        {
+          "id": "admission-duplicates",
+          "answer": "Heuristic",
+          "train_question": "Is the near-duplicate contamination check a proof or a heuristic?",
+          "dev_question": "How is the training/evaluation near-duplicate screen characterized?",
+          "test_question": "Should a successful near-duplicate screen be treated as a complete contamination proof, or as a heuristic?",
+          "source": {
+            "path": "src/neuroshard/evolution/expert_data.py",
+            "sha256": "8a696db824611eb4e0e5678c579f08d8c5db3eae6635bcf88266dc37097ac558",
+            "line": 214,
+            "evidence": "raise ValueError('Heuristic training/evaluation near-duplicate contamination')"
+          }
+        }
+      ]
+    },
+    {
+      "id": "conversation",
+      "facts": [
+        {
+          "id": "conversation-turns",
+          "answer": "31",
+          "train_question": "What is the maximum message count in a planned conversation?",
+          "dev_question": "How many messages can the planned conversation interface accept?",
+          "test_question": "Including user and assistant turns, what is the largest permitted conversation message count?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 30,
+            "evidence": "if not isinstance(messages, list) or not 1 <= len(messages) <= 31 or len(messages) % 2 != 1:"
+          }
+        },
+        {
+          "id": "conversation-bytes",
+          "answer": "32768",
+          "train_question": "What is the planned conversation byte limit?",
+          "dev_question": "How many content bytes may a planned conversation contain at most?",
+          "test_question": "What upper bound applies to the total UTF-8 content size of a planned conversation?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 39,
+            "evidence": "if size > 32768:"
+          }
+        },
+        {
+          "id": "conversation-questions",
+          "answer": "2",
+          "train_question": "How many questions may a neural plan request?",
+          "dev_question": "What is the maximum number of subquestions in one plan?",
+          "test_question": "For one planned response, how many distinct neural subquestions are allowed at most?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 52,
+            "evidence": "if (not isinstance(rows, list) or not 1 <= len(rows) <= 2"
+          }
+        },
+        {
+          "id": "conversation-question-bytes",
+          "answer": "2048",
+          "train_question": "What is the byte limit for one planned question?",
+          "dev_question": "How many UTF-8 bytes may one neural subquestion contain?",
+          "test_question": "A planner emits an oversized subquestion. What maximum byte length applies to that question?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 53,
+            "evidence": "or any(not isinstance(q, str) or not q.strip() or len(q.encode()) > 2048 for q in rows)"
+          }
+        },
+        {
+          "id": "conversation-examples",
+          "answer": "8",
+          "train_question": "What is the maximum number of planner examples?",
+          "dev_question": "How many demonstrations may a planner prompt contain?",
+          "test_question": "When configuring the planner prompt, what is the maximum number of example pairs?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 74,
+            "evidence": "or not isinstance(planner['examples'], list) or len(planner['examples']) > 8):"
+          }
+        },
+        {
+          "id": "conversation-instruction",
+          "answer": "4096",
+          "train_question": "What is the planner instruction byte limit?",
+          "dev_question": "How many bytes may the planner system instruction contain?",
+          "test_question": "What maximum UTF-8 length applies to the configured planner instruction?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 73,
+            "evidence": "or len(planner['instruction'].encode()) > 4096"
+          }
+        },
+        {
+          "id": "conversation-plan-tokens",
+          "answer": "256",
+          "train_question": "What is the maximum configured planner output-token limit?",
+          "dev_question": "How high may the planner max_tokens setting be?",
+          "test_question": "What upper bound applies to the token limit used when generating a neural plan?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 71,
+            "evidence": "integer(planner['max_tokens'], 1, 256)"
+          }
+        },
+        {
+          "id": "conversation-composer-tokens",
+          "answer": "256",
+          "train_question": "What is the maximum configured composer token limit?",
+          "dev_question": "How many tokens may the answer composer be configured to generate at most?",
+          "test_question": "What upper bound applies to the max_tokens setting of the optional answer composer?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 125,
+            "evidence": "integer(composer['max_tokens'], 1, 256)"
+          }
+        },
+        {
+          "id": "conversation-duplicates",
+          "answer": "Rejected",
+          "train_question": "What happens to a neural plan containing duplicate JSON keys?",
+          "dev_question": "How does the parser handle repeated keys in a neural question plan?",
+          "test_question": "A planner returns two JSON entries with the same key. How is that plan handled?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 47,
+            "evidence": "raise ValueError('Duplicate neural plan key')"
+          }
+        },
+        {
+          "id": "conversation-last-role",
+          "answer": "User",
+          "train_question": "Which role must end a planned conversation request?",
+          "dev_question": "Must the final message submitted for a planned response be user or assistant?",
+          "test_question": "The client sends conversation history for a new reply. Which role must its last message have?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 31,
+            "evidence": "raise ValueError('Require a bounded conversation ending with a user turn')"
+          }
+        },
+        {
+          "id": "conversation-rendering",
+          "answer": "short, semicolon, assistant",
+          "train_question": "Which three rendering operations can an answer plan select?",
+          "dev_question": "What are the allowed answer-plan rendering modes?",
+          "test_question": "Name all three operations supported by the typed answer rendering plan.",
+          "source": {
+            "path": "src/neuroshard/evolution/answer_plan.py",
+            "sha256": "ef745b85f53289e3a4322948b4927d66b6625d4bbb5a99340563340c9dd3a4c5",
+            "line": 12,
+            "evidence": "RENDERS = ('short', 'semicolon', 'assistant')"
+          }
+        },
+        {
+          "id": "conversation-expert-values",
+          "answer": "No",
+          "train_question": "May the planner supply factual answers directly to the value renderer?",
+          "dev_question": "Can the output program invent source values instead of using expert output?",
+          "test_question": "May a typed answer plan include its own facts rather than values produced by the neural experts?",
+          "source": {
+            "path": "src/neuroshard/evolution/answer_plan.py",
+            "sha256": "ef745b85f53289e3a4322948b4927d66b6625d4bbb5a99340563340c9dd3a4c5",
+            "line": 3,
+            "evidence": "This renderer has no factual lookup table. It accepts only actual neural source"
+          }
+        },
+        {
+          "id": "conversation-private-tokens",
+          "answer": "All neural calls",
+          "train_question": "Which calls are included in a planned response replay?",
+          "dev_question": "Does the replay cover just the final answer or every neural call?",
+          "test_question": "When auditing a planned response, which neural calls must be covered?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 4,
+            "evidence": "the admitted native graph implicitly. Every planner, argument and answer token"
+          }
+        },
+        {
+          "id": "conversation-prompt-contract",
+          "answer": "Installed experts",
+          "train_question": "Which experts may receive configured prompt contracts?",
+          "dev_question": "Can a prompt contract refer to an arbitrary absent expert? Which experts are allowed?",
+          "test_question": "For which model providers can the planned service configure an expert input prompt?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/planned_graph.py",
+            "sha256": "2d58f5f8cc6c8dc77559375e10f29f29e528bc2caeb02aeb23cbda711b9ac5b4",
+            "line": 97,
+            "evidence": "raise ValueError('Bind prompt contracts only for installed learned experts')"
+          }
+        },
+        {
+          "id": "conversation-mutating-weights",
+          "answer": "Rejected",
+          "train_question": "What happens if serving changes a loaded model parameter?",
+          "dev_question": "How does graph verification handle mutated serving weights?",
+          "test_question": "A loaded model weight is modified during serving. What is the verification outcome?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/graph_execution.py",
+            "sha256": "dd2930769a864502c795fe8c848a5fae61cae8bec3b33903b18716e38b0fa330",
+            "line": 157,
+            "evidence": "raise ValueError('Serving changed a loaded model parameter')"
+          }
+        },
+        {
+          "id": "conversation-truncation",
+          "answer": "Rejected",
+          "train_question": "What happens when a graph request exceeds its context limit?",
+          "dev_question": "Does graph serving silently truncate an oversized context or reject it?",
+          "test_question": "The prompt plus requested output will not fit the graph context. What happens to the request?",
+          "source": {
+            "path": "src/neuroshard/evolution/sharded/graph_execution.py",
+            "sha256": "dd2930769a864502c795fe8c848a5fae61cae8bec3b33903b18716e38b0fa330",
+            "line": 153,
+            "evidence": "raise ValueError('No silent graph context truncation')"
+          }
+        }
+      ]
+    }
+  ]
+}

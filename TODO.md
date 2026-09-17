@@ -171,6 +171,13 @@ under the same admission rules.
 
 ## Progress log
 
+- 2026-09-17: Prepared a fixed [continued-expert learning trial](docs/CONTINUAL_EXPERT_LEARNING.md)
+  using 16 fresh protocol facts, 96 actually trained replay conversations,
+  accepted-expert distillation and 192 updates. Four-process execution preflight
+  and eight preparation/data-review checks passed. The final questions stay
+  closed after a failed development gate. This records the experiment contract,
+  not a new GPU quality result or another completed milestone.
+
 - 2026-09-16: Removed three blockers to repeated expert learning: restarting
   every job from the original parent, distilling old answers from that same
   parent, and using unchanged weights as the only retention criterion. Accepted

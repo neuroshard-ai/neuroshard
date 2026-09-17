@@ -9,7 +9,7 @@ import math
 from pathlib import Path
 
 from . import expert_admission, reference_data as data, serving_graph
-from .data import fingerprint, normalized
+from .data import document_identity, fingerprint, normalized
 from .objects import digest
 from .schema import integer, root
 
@@ -23,11 +23,6 @@ def job_identity(plan, prepared):
     if plan['format'] != FORMAT:
         raise ValueError('Require the generic expert learning contract')
     return data.identity({'format': FORMAT, 'plan': data.identity(plan), 'prepared': data.identity(prepared)})
-
-
-def document_identity(messages):
-    from neuroshard.dataflow.store import canonical
-    return digest(normalized(canonical(messages).decode()).encode())
 
 
 def token_identity(row):
