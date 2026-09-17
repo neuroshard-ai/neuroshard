@@ -67,7 +67,8 @@ def allocate(home, resources, source_commit):
     path = home/'allocation.json'
     if path.exists():
         raise ValueError('An allocation inventory already exists; inspect or retire it before another launch')
-    if resources['instance_types'] != ['g6e.xlarge']*7 or set(resources['protected_instances']) != PROTECTED:
+    if (resources['instance_types'] not in (['g6e.xlarge']*7, ['g5.xlarge']*7)
+            or set(resources['protected_instances']) != PROTECTED):
         raise ValueError('Require the frozen seven-owner allocation')
     ec2 = boto3.client('ec2', region_name=resources['region'])
     protected = describe(ec2, PROTECTED)
@@ -79,11 +80,13 @@ def allocate(home, resources, source_commit):
     now = datetime.now(timezone.utc)
     deadline = now+timedelta(hours=resources['max_hours'])
     name = 'neuroshard-ordinary-'+uuid.uuid4().hex[:12]
+    rate, sku = {'g5.xlarge': (1.006, '79BRGEEZC6TARVWJ'),
+                 'g6e.xlarge': (1.861, 'HEU7PA78QPB8SDYY')}[resources['instance_types'][0]]
     allocation = {'name': name, 'region': resources['region'], 'created': now.isoformat(),
         'deadline': deadline.isoformat(), 'source_commit': source_commit, 'instances': [],
-        'resources': resources, 'hourly_rate_usd': 1.861,
+        'resources': resources, 'hourly_rate_usd': rate,
         'price_source': 'https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv',
-        'price_sku': 'HEU7PA78QPB8SDYY', 'price_effective_date': '2026-09-01'}
+        'price_sku': sku, 'price_effective_date': '2026-09-01'}
     save(path, allocation)
     try:
         group = ec2.create_security_group(GroupName=name, Description='Bounded ordinary native learning campaign',

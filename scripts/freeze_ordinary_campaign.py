@@ -118,6 +118,8 @@ def freeze(home, revision, runtime):
         'quality_rule': identity({'gates': rules['gates'], 'generation': rules['generation'],
             'format': rules['format'], 'retention_gates': rules['retention_gates'],
             'retained_roles': rules['retention_anchors']})}
+    kind, hours, allowance = {'NVIDIA A10G': ('g5.xlarge', 12, 1.1),
+                              'NVIDIA L40S': ('g6e.xlarge', 8, 2.25)}[runtime['gpu']]
     value = {'format': ordinary_operation.FORMAT, 'source_revision': revision,
         'executor': store.put_json(profile), 'baseline_graph': store.put_json(graph),
         'data_policy': store.put_json(data_policy), 'quality_rule': store.put_json(rules),
@@ -128,9 +130,9 @@ def freeze(home, revision, runtime):
         'on_quality_failure': 'Persist and audit the measured failure; retain serving; stop later training under this prescription.',
         'on_unexpected_bootstrap_pass': 'Report it and stop; never manufacture a failed candidate.',
         'curation': 'Independently source-grounded fixed corpus, exact feed comparison, retokenization, native cursor/history and cross-role checks. Not arbitrary-web truth verification.',
-        'resources': {'region': 'us-east-1', 'instance_types': ['g6e.xlarge']*7, 'disk_gib': 300,
-            'max_hours': 8, 'planning_cap_usd': 150,
-            'planning_hourly_rate_usd': 2.25,
+        'resources': {'region': 'us-east-1', 'instance_types': [kind]*7, 'disk_gib': 300,
+            'max_hours': hours, 'planning_cap_usd': 150, 'parallel_evaluations': 2,
+            'planning_hourly_rate_usd': allowance,
             'rate_status': 'Conservative planning allowance; record actual EC2 price and allocated elapsed time separately.',
             'protected_instances': ['i-0d681a8ef83f72619', 'i-06bf7f1f01e6228bb', 'i-0ebe86ca07e97cf29']},
         'comparison': {'cohort': 'admission', 'arms': ['isolated-addition', 'replace-planner'],

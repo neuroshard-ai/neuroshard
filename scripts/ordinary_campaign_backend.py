@@ -6,6 +6,7 @@ This backend launches actual partition work and ordinary answering; it cannot
 approve a job, settle a claim, mint tokens or move the serving root itself.
 """
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import argparse
 import copy
 import fcntl
@@ -13,6 +14,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 import uuid
 
 from neuroshard.dataflow.store import canonical, LocalStore
@@ -241,7 +243,37 @@ class Backend:
         save(self.home/('service-slot-'+str(slot)+'.json'), service)
         return service
 
+    @contextmanager
+    def evaluation_slot(self):
+        """Bound concurrent full services while every auditor executes afresh."""
+        count = self.freeze['resources']['parallel_evaluations']
+        if type(count) is not int or not 1 <= count <= 2:
+            raise ValueError('Bound full-model evaluation concurrency')
+        acquired = None
+        try:
+            while acquired is None:
+                self.cloud.remaining()
+                for index in range(count):
+                    lock = (self.home/('evaluation-slot-'+str(index)+'.lock')).open('a')
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        lock.close()
+                    else:
+                        acquired = lock
+                        break
+                if acquired is None:
+                    time.sleep(1)
+            yield
+        finally:
+            if acquired is not None:
+                acquired.close()
+
     def quality(self, ctx, checkpoint, claim=None):
+        with self.evaluation_slot():
+            return self.evaluate_quality(ctx, checkpoint, claim)
+
+    def evaluate_quality(self, ctx, checkpoint, claim=None):
         graph = life.materialize_graph(ctx['job']['lifecycle']['candidate_template'], checkpoint)
         quality = self.store.json(ctx['job']['lifecycle']['quality']['policy_root'])
         service = self.start_service(graph, ctx['job']['lifecycle']['serving_graph'], quality,
@@ -382,17 +414,22 @@ class Backend:
         if claim['kind'] == 'expert_quality':
             return self.quality(ctx, state['expert_work']['checkpoint'], claim)
         if claim['kind'] == 'expert_inference':
-            quality = ordinary_operation.prior_quality(state, self.store)
-            service = self.start_service(claim['graph'], claim['graph'], quality, 4+self.actor,
-                                         'inference-audit-'+claim['id'])
-            try:
-                result = self.cloud.query(service, {'id': claim['id'], 'kind': 'inference_audit', 'claim': claim})
-                if result['status'] != 'completed':
-                    raise ValueError('Ordinary inference replay was unavailable')
-                return result['report']
-            finally:
-                self.cloud.stop(service)
+            with self.evaluation_slot():
+                return self.inference_audit(claim)
         raise ValueError('The installed auditor does not support this claim')
+
+    def inference_audit(self, claim):
+        state = self.state()
+        quality = ordinary_operation.prior_quality(state, self.store)
+        service = self.start_service(claim['graph'], claim['graph'], quality, 4+self.actor,
+                                     'inference-audit-'+claim['id'])
+        try:
+            result = self.cloud.query(service, {'id': claim['id'], 'kind': 'inference_audit', 'claim': claim})
+            if result['status'] != 'completed':
+                raise ValueError('Ordinary inference replay was unavailable')
+            return result['report']
+        finally:
+            self.cloud.stop(service)
 
     def review(self, request):
         proposal = request['proposal']

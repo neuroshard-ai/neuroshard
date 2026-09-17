@@ -66,7 +66,10 @@ This measures one workload, not lifetime cost or the optimal fixed-capacity meth
 inputs. `freeze_ordinary_campaign.py` binds immutable inputs, policies, source
 revision and numerical profile. `run_ordinary_campaign.py` separates allocation,
 setup, operation and retirement. Actual runtime observations must match the
-committed profile before initialization. Seven `g6e.xlarge` instances have an
-absolute eight-hour termination deadline and a $150 planning allowance; actual
-compute and storage costs are reported separately. Allocation and retirement
-explicitly exclude the three existing protected network hosts.
+committed profile before initialization. The initial L40S allocation could not
+place the complete pool. Its partial allocation was retired. The replacement
+prescription uses seven `g5.xlarge` A10G instances, at most two concurrent fresh
+evaluations, an absolute twelve-hour termination deadline and the same $150
+planning allowance. Actual compute and storage costs are reported separately.
+The data, learning recipe, gates and matched comparison interval are unchanged.
+Allocation and retirement explicitly exclude the three protected network hosts.
