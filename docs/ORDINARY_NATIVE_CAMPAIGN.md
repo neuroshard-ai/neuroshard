@@ -109,6 +109,18 @@ Report quality, retained losses, throughput, transfer/storage and request overru
 completion of the comparison alone does not establish a benefit from growth.
 This measures one workload, not lifetime cost or the optimal fixed-capacity method.
 
+Before any full-cohort quality scoring, the observed first windows took about
+35 seconds to train but 198 seconds between successive produced boundaries,
+including publication, fresh audits and native settlement. The original
+90-minute comparison estimate was therefore too short for 32 windows plus
+quality. The [recorded resource amendment](../config/experiments/ordinary-native-repaired/resource-amendment/plan.json)
+sets 150 minutes for each identical seven-host arm. It retains the original
+growth start, including the interruption, and changes only that duration. Source,
+genesis, data, weights, learning rules, final questions and quality gates remain
+identical. This is an operational budget correction after training began and
+before full-cohort scoring; the original 90-minute target must still be reported
+separately. The original prescription remains preserved beside the amendment.
+
 `prepare_ordinary_cohorts.py` builds the training-only selectors and scoring
 inputs. `freeze_ordinary_campaign.py` binds immutable inputs, policies, source
 revision and numerical profile. `run_ordinary_campaign.py` separates allocation,
