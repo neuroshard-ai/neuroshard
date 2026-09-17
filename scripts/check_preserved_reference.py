@@ -20,6 +20,23 @@ from neuroshard.evolution import reference
 from neuroshard.evolution.reference_data import identity, save
 
 
+@torch.no_grad()
+def generate(model, tokenizer, ids, maximum):
+    current=torch.tensor([ids],dtype=torch.long,device='cuda')
+    output,past=[],None
+    for step in range(maximum):
+        with reference.autocast('cuda'):
+            value=model(input_ids=current,past_key_values=past,use_cache=True,logits_to_keep=1)
+        logits=value.logits[0,-1].float()
+        if not bool(torch.isfinite(logits).all()):
+            raise ValueError('Nonfinite reference output')
+        token=int(logits.argmax());output.append(token)
+        if token==tokenizer.eos_token_id:break
+        past=value.past_key_values
+        current=torch.tensor([[token]],dtype=torch.long,device='cuda')
+    return output
+
+
 def run(home):
     request = json.loads((home/'request.json').read_bytes())
     source = request['assets']['source']
@@ -44,6 +61,30 @@ def run(home):
             mismatches.append({'tensor':name,'expected':spec['sha256'],'actual':actual})
     save(home/'weights.json',{'tensor_count':len(tensors),'mismatches':mismatches,'configuration_differences':differences})
     tokenizer = AutoTokenizer.from_pretrained(request['seed'],local_files_only=True)
+    if request.get('mode') == 'reasoning':
+        from neuroshard.evolution.ordinary_quality import correct
+        results=[]
+        for case in request['cases']:
+            messages=case['messages']
+            reasoning=[{'role':'system','content':request['reasoning_instruction']},*messages]
+            ids=tokenizer.apply_chat_template(reasoning,tokenize=True,add_generation_prompt=True)
+            notes=generate(model,tokenizer,ids,128)
+            text=tokenizer.decode(notes,skip_special_tokens=True)
+            final=[{'role':'system','content':request['final_instruction']},*messages,
+                {'role':'assistant','content':text},{'role':'user','content':request['final_request']}]
+            ids=tokenizer.apply_chat_template(final,tokenize=True,add_generation_prompt=True)
+            tokens=generate(model,tokenizer,ids,64)
+            answer=tokenizer.decode(tokens,skip_special_tokens=True)
+            response={'text':answer,'answering':{'status':'completed','error':None,'text':answer,
+                'answers':[{'question':messages[-1]['content'],'text':answer}]}}
+            result={'id':case['id'],'notes':text,'notes_tokens':notes,'text':answer,'token_ids':tokens,
+                'correct':correct(case['scoring'],response)}
+            results.append(result);save(home/'answers.json',results)
+            print(json.dumps({'id':case['id'],'correct':result['correct'],'text':answer}),flush=True)
+        save(home/'result.json',{'request':identity(request),'runtime':runtime,'weights_match':not mismatches,
+            'configuration_differences':differences,'cases':results,'correct':sum(r['correct'] for r in results),
+            'seconds':time.monotonic()-began,'scope':'Exposed development controls, forced general path only.'})
+        return
     results = []
     with torch.no_grad():
         for case in request['cases']:

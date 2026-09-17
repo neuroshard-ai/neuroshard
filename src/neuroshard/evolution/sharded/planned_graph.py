@@ -322,7 +322,9 @@ class PlannedGraphNetwork:
         preserve = 'request_policy' in self.config
         general_first = self.config.get('request_policy') == request_planning.ASSISTANT_POLICY
         preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
-        general = preliminary is not None and preliminary['decision']['route'] == self.config['learned']['router']['fallback']
+        general = (preliminary is not None
+            and request_planning.atomic_request([messages[-1]]) is not None
+            and preliminary['decision']['route'] == self.config['learned']['router']['fallback'])
         direct = (messages[-1]['content'] if general else request_planning.atomic_request(messages)) if general_first else (
             request_planning.direct_question(messages) if preserve else None)
         raw = (json.dumps({'questions': [direct]}) if direct is not None else

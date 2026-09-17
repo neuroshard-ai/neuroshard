@@ -126,6 +126,18 @@ def test_specialist_atomic_request_keeps_format_instruction_and_no_reference_rew
     assert response['planning']['path'] == 'direct' and response['status'] == 'completed'
 
 
+def test_general_preselection_cannot_swallow_a_mixed_request(monkeypatch):
+    service, calls = stub_service(monkeypatch, iter([
+        '{"questions":["Where is the observatory?","What command starts the renderer?"]}']))
+    service.config.update(request_policy=policy.ASSISTANT_POLICY,
+                          learned={'router': {'fallback': 'parent'}})
+    monkeypatch.setattr(service, 'route', lambda question: {'question':question,'decision':{'route':'parent'}})
+    response = service.answer([{'role':'user','content':
+        'Where is the observatory and what command starts the renderer?'}],64)
+    assert calls == ['planning'] and response['planning']['path'] == 'neural'
+    assert len(response['answers']) == 2 and response['status'] == 'completed'
+
+
 def test_new_domain_gate_cannot_steal_a_confident_general_request():
     from neuroshard.evolution import expert_router
     from neuroshard.evolution.reference_data import identity
