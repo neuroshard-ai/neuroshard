@@ -299,10 +299,15 @@ if __name__ == '__main__':
             raise
     else:
         try:
-            print(json.dumps(operate(args.home, args.engine)))
+            outcome = operate(args.home, args.engine)
+            print(json.dumps(outcome))
         except BaseException as error:
             save(args.home/'execution-stopped.json', {'error': type(error).__name__,
                 'action': 'Native processes closed; preserve owned artifacts for diagnosis and durable restart before the allocation deadline.'})
             raise
         else:
-            retire(args.home)
+            if outcome['sequence']['status'] == 'complete' and not (args.home/'comparison-stop.json').exists():
+                retire(args.home)
+            else:
+                save(args.home/'quality-stopped.json', {'sequence': outcome['sequence'],
+                    'action': 'No later training under this prescription. Preserve owners for failure diagnosis within the original allocation deadline.'})
