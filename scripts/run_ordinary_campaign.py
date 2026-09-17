@@ -90,6 +90,14 @@ def create_network(backend, engine):
         'expert_admission': {'format': expert_admission.FORMAT, 'proposal_blocks': 1024,
             'job_blocks': 200000, 'data_policy': backend.freeze['data_policy'], 'initial_data': job['data']}}
     network = Network.create(backend.home/'native', manifest, engine=engine, base_port=39950)
+    # Store the effective initial height before starting any node. CometBFT
+    # treats zero as one; keeping that explicit makes file and RPC pins agree
+    # for both the publisher and the stock curator CLI.
+    network.genesis['initial_height'] = '1'
+    for node in network.config['nodes']:
+        save(Path(node['home'])/'config/genesis.json', network.genesis)
+    save(network.home/'commitments.json', {'genesis': identity(network.genesis),
+        'manifest': identity(manifest), 'chain_id': network.genesis['chain_id']})
     genesis_path = Path(network.config['nodes'][0]['home'])/'config/genesis.json'
     save(backend.home/'native.json', {'home': network.config['nodes'][0]['home'],
         'genesis_sha256': sha256(genesis_path), 'genesis_root': identity(network.genesis),
