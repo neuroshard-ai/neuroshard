@@ -1,0 +1,467 @@
+{
+  "format": "neuroshard-ordinary-serving-diagnostic-v1",
+  "decision": "What does the complete planned serving path do on ordinary development questions, and which component fails first: learned knowledge, expert selection, decomposition, or answer assembly?",
+  "checkpoint": "618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c",
+  "serving": "planned-graph-service",
+  "no_training": true,
+  "final_opened": false,
+  "semantic_final": "exposed-historical-not-this-test",
+  "limitations": [
+    "Inference-only diagnosis of one complete serving graph. It does not train, promote, issue NEURO or complete items 1 or 2.",
+    "Retained A/B questions are previously exposed development cases. New C questions use planner-cohort development wording, never the opened semantic final.",
+    "Gold standalone questions run on the same planned service. Their labels are scoring-only.",
+    "This comparison is not an equal-lifetime-cost growth result."
+  ],
+  "resources": {
+    "gpus": 5,
+    "logical_owners": 6,
+    "physical_map": [0, 1, 2, 3, 4, 4],
+    "instance_types": [
+      "g5.2xlarge",
+      "g5.2xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "disk_gib": 100,
+    "max_hours": 2,
+    "max_seconds": 3600,
+    "compute_share_usd_cap": 25,
+    "planning_cap_usd": 25,
+    "region": "us-east-1",
+    "no_training": true,
+    "retire_after": true
+  },
+  "reuse": {
+    "checkpoint": "618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c",
+    "router": "9df5d8fa395ffb3c7dc2273e3c74dfcb916434a3bac1fb3486e03baf33ff4ca1"
+  },
+  "stop_rule": "One frozen inference-only run. Classify every case. Do not train, do not open a new final, and do not reuse the semantic final.",
+  "sources": {
+    "src/neuroshard/evolution/serving_diagnosis.py": "1208a785029c3291af50a9f629c828247a69f582d134c209e93ad496209d6780",
+    "config/experiments/continual-expert-facts.json": "1c1c1ef3aae9b52f47429ea084d0fc228cef74ff78e22c5d1c455bfff1206679",
+    "scripts/score_serving_diagnosis.py": "45e462a8d1b659259ba212edfc3da3f2fe17f3d770b7f437cbee1eda733cd9bf",
+    "scripts/run_ordinary_serving_diagnostic.py": "623e02f36d542c253e9ed3e7b8dcdf6cb54ee50165177c4169afcfca6e77d498"
+  },
+  "cases": [
+    {
+      "id": "retained-single-package",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the name of the NeuroShard client package?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "protocol",
+          "terms": [
+            "neuroshard",
+            "package"
+          ],
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "gold_question": "What is the name of the NeuroShard client package?"
+        }
+      ]
+    },
+    {
+      "id": "retained-single-city",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Which city does Fenn Varden live in?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "directory",
+          "terms": [
+            "fenn",
+            "varden",
+            "city"
+          ],
+          "contains": [
+            "sofia"
+          ],
+          "gold_question": "Which city does Fenn Varden live in?"
+        }
+      ]
+    },
+    {
+      "id": "retained-mixed-package-city",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Which city does Fenn Varden live in, and what is the NeuroShard client package called?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "directory",
+          "terms": [
+            "fenn",
+            "varden",
+            "city"
+          ],
+          "contains": [
+            "sofia"
+          ],
+          "gold_question": "Which city does Fenn Varden live in?"
+        },
+        {
+          "expert": "protocol",
+          "terms": [
+            "neuroshard",
+            "package"
+          ],
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "gold_question": "What is the NeuroShard client package called?"
+        }
+      ]
+    },
+    {
+      "id": "retained-mixed-context",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am reading about Fenn Varden."
+        },
+        {
+          "role": "assistant",
+          "content": "Which details do you need?"
+        },
+        {
+          "role": "user",
+          "content": "Which city does he live in, and what key type signs NeuroShard consensus messages?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "directory",
+          "terms": [
+            "fenn",
+            "varden",
+            "city"
+          ],
+          "contains": [
+            "sofia"
+          ],
+          "gold_question": "Which city does Fenn Varden live in?"
+        },
+        {
+          "expert": "protocol",
+          "terms": [
+            "neuroshard",
+            "key"
+          ],
+          "contains": [
+            "ed25519"
+          ],
+          "gold_question": "What key type signs NeuroShard consensus messages?"
+        }
+      ]
+    },
+    {
+      "id": "retained-two-protocol",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What package installs NeuroShard and what key type signs its consensus messages?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "protocol",
+          "terms": [
+            "package",
+            "neuroshard"
+          ],
+          "contains": [
+            "neuroshard-ai"
+          ],
+          "gold_question": "What package installs NeuroShard?"
+        },
+        {
+          "expert": "protocol",
+          "terms": [
+            "key",
+            "neuroshard"
+          ],
+          "contains": [
+            "ed25519"
+          ],
+          "gold_question": "What key type signs NeuroShard consensus messages?"
+        }
+      ]
+    },
+    {
+      "id": "retained-two-directory",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Which city does Fenn Varden live in and what is his profession?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "directory",
+          "terms": [
+            "fenn",
+            "varden",
+            "city"
+          ],
+          "contains": [
+            "sofia"
+          ],
+          "gold_question": "Which city does Fenn Varden live in?"
+        },
+        {
+          "expert": "directory",
+          "terms": [
+            "fenn",
+            "varden",
+            "profession"
+          ],
+          "contains": [
+            "musician"
+          ],
+          "gold_question": "What is Fenn Varden's profession?"
+        }
+      ]
+    },
+    {
+      "id": "retained-general",
+      "stratum": "retained",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does the sky appear blue?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "parent",
+          "terms": [
+            "sky",
+            "blue"
+          ],
+          "contains": [
+            "scatter"
+          ],
+          "gold_question": "Why does the sky appear blue?"
+        }
+      ]
+    },
+    {
+      "id": "new-updates",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "How many consecutive planner updates can a claim contain at most?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "updates"
+          ],
+          "answer": "16",
+          "gold_question": "How many consecutive planner updates can a claim contain at most?"
+        }
+      ]
+    },
+    {
+      "id": "new-documents",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the upper bound on rows in one planner training job?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "job"
+          ],
+          "answer": "2048",
+          "gold_question": "What is the upper bound on rows in one planner training job?"
+        }
+      ]
+    },
+    {
+      "id": "new-batch",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "How many examples may one complete planner batch select?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "batch"
+          ],
+          "answer": "64",
+          "gold_question": "How many examples may one complete planner batch select?"
+        }
+      ]
+    },
+    {
+      "id": "new-microbatch",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "How large can a planner microbatch be?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "microbatch"
+          ],
+          "answer": "16",
+          "gold_question": "How large can a planner microbatch be?"
+        }
+      ]
+    },
+    {
+      "id": "new-execute",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the local graph service command for planner training?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "training"
+          ],
+          "answer": "train_planner",
+          "gold_question": "What is the local graph service command for planner training?"
+        }
+      ]
+    },
+    {
+      "id": "new-audit",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What request makes the graph service replay a native planner claim?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "claim"
+          ],
+          "answer": "planner_audit",
+          "gold_question": "What request makes the graph service replay a native planner claim?"
+        }
+      ]
+    },
+    {
+      "id": "new-documents-batch",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the upper bound on rows in one planner training job, and how many examples may one complete planner batch select?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "job"
+          ],
+          "answer": "2048",
+          "gold_question": "What is the upper bound on rows in one planner training job?"
+        },
+        {
+          "expert": "planner",
+          "terms": [
+            "planner",
+            "batch"
+          ],
+          "answer": "64",
+          "gold_question": "How many examples may one complete planner batch select?"
+        }
+      ]
+    },
+    {
+      "id": "new-execute-audit",
+      "stratum": "new",
+      "max_tokens": 64,
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the local graph service command for planner training, and what request makes the graph service replay a native planner claim?"
+        }
+      ],
+      "atoms": [
+        {
+          "expert": "planner",
+          "terms": [
+            "command",
+            "planner"
+          ],
+          "answer": "train_planner",
+          "gold_question": "What is the local graph service command for planner training?"
+        },
+        {
+          "expert": "planner",
+          "terms": [
+            "replay",
+            "planner"
+          ],
+          "answer": "planner_audit",
+          "gold_question": "What request makes the graph service replay a native planner claim?"
+        }
+      ]
+    }
+  ]
+}

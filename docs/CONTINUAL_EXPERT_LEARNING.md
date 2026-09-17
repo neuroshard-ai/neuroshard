@@ -241,6 +241,11 @@ It does not complete repeated admitted cohorts, ordinary-question planning,
 broader assistant quality or a comparison of equal lifetime costs. The final is
 now exposed and cannot be reused as a fresh final for later method selection.
 
+The next measurement is the inference-only
+[ordinary serving diagnostic](ORDINARY_SERVING_DIAGNOSTIC.md). It evaluates the
+complete planned serving path on ordinary development questions, including gold
+standalone controls, without training or reopening this final.
+
 The [committed result manifest](../config/experiments/semantic-expert-results.json)
 pins the evidence archive. To reproduce the metadata checks, download the
 original `source.tar.gz`, `semantic-expert-freeze.tar.gz` and completed

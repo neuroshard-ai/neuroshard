@@ -68,7 +68,11 @@ before the affected work, rather than changing the target after a result.
   answers: 38 previously correct answers lost and two newly correct. This
   comparison matches training, not total lifetime costs. No native promotion
   occurred; three successive admitted cohorts and broader ordinary-question
-  quality remain unproved.
+  quality remain unproved. The next measurement is an inference-only
+  [ordinary serving diagnostic](docs/ORDINARY_SERVING_DIAGNOSTIC.md) of the
+  complete planned path, with gold standalone controls that separate knowledge,
+  selection, decomposition and assembly. It does not train, open a new final
+  or reuse the exposed semantic final.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -222,6 +226,14 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Froze an inference-only
+  [ordinary serving diagnostic](docs/ORDINARY_SERVING_DIAGNOSTIC.md). Fifteen
+  development questions cover retained A/B knowledge and planner-cohort
+  development facts, with gold standalone controls and no explicit two-question
+  grammar. CPU tests classify knowledge, selection, decomposition and assembly
+  without neural execution. The GPU driver remains unlaunched: five owners, one
+  hour, $25 cap, no training, no new final. Tasks 1 and 2 remain open.
 
 - 2026-09-17: Published the completed semantic learning and replacement
   comparison. All 512 GPU updates completed; a fresh process reproduced the
