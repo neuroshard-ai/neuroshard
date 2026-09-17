@@ -29,8 +29,10 @@ def owner(name, boundaries):
 
 
 class Partition(nn.Module):
-    def __init__(self, config, boundaries, rank, device='cpu', parameter_limit=None):
+    def __init__(self, config, boundaries, rank, device='cpu', parameter_limit=None, *, inference_only=False):
         super().__init__()
+        if type(inference_only) is not bool:
+            raise ValueError('Declare whether this partition is inference-only')
         if (config.model_type != 'llama' or not config.tie_word_embeddings
                 or config.hidden_act != 'silu' or config.attention_dropout != 0
                 or config.rope_scaling is not None):
@@ -51,14 +53,19 @@ class Partition(nn.Module):
         self.resident_parameters = sum(p.numel() for p in self.parameters())
         if parameter_limit is not None and self.resident_parameters > parameter_limit:
             raise ValueError('Partition exceeds the worker parameter limit')
-        if device == 'cuda' and self.resident_parameters * 16 + 2 * 1024**3 > torch.cuda.mem_get_info()[0]:
-            raise ValueError('Insufficient memory for local weights, gradients, Adam and activations')
+        # Serving owns FP32 weights and bounded working storage, without
+        # gradients or Adam. Training retains the original conservative budget.
+        bytes_per_parameter = 4 if inference_only else 16
+        if device == 'cuda' and self.resident_parameters * bytes_per_parameter + 2 * 1024**3 > torch.cuda.mem_get_info()[0]:
+            raise ValueError('Insufficient memory for the declared local execution mode')
         self.to_empty(device=device)
         # Real rotary buffers are tiny; to_empty must not leave them uninitialized.
         self.rotary = LlamaRotaryEmbedding(config, device=device)
         for parameter in self.parameters():
             if parameter.dtype != torch.float32:
                 raise ValueError('This profile retains FP32 parameters')
+        if inference_only:
+            self.requires_grad_(False)
 
     def named_owned_parameters(self):
         pairs = []

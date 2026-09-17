@@ -78,7 +78,7 @@ class GraphNetwork:
         config._attn_implementation = 'sdpa'
         descriptor, device = graph['descriptor'], self.runtime['device']
         self.shard = Partition(config, descriptor['parent_layout'] if rank < 3 else descriptor['expert_layout'],
-            min(rank, 3), device, profile['parameter_limit'])
+            min(rank, 3), device, profile['parameter_limit'], inference_only=True)
         records = (expert_checkpoint.parent_records(graph['parent']) if rank < 3
                    else graph['experts'][descriptor['rules'][rank - 3]['id']]['tensors'])
         with torch.no_grad():
@@ -92,7 +92,8 @@ class GraphNetwork:
         preserved_shard = None
         if rank < 3:
             manifest = graph['interpreter_assets']['partitions'][str(rank)]
-            preserved_shard = Partition(config, descriptor['parent_layout'], rank, device, profile['parameter_limit'])
+            preserved_shard = Partition(config, descriptor['parent_layout'], rank, device, profile['parameter_limit'],
+                                        inference_only=True)
             if preserved_shard.resident_parameters + self.shard.resident_parameters > profile['resident_parameter_limit']:
                 raise ValueError('Combined local models exceed the owner limit')
             preserved_shard.load_weights(interpreter, manifest)
@@ -210,7 +211,8 @@ class GraphNetwork:
                 checkpoint = graph['experts'][name]
                 expert_checkpoint.unpack(graph['parent'], checkpoint)
                 shard = Partition(self.shard.config, checkpoint['boundaries'], 3,
-                                  self.shard.device_name, self.resident_limit - self.resident_parameters)
+                                  self.shard.device_name, self.resident_limit - self.resident_parameters,
+                                  inference_only=True)
                 with torch.no_grad():
                     for key, parameter in shard.named_owned_parameters():
                         spec = checkpoint['tensors'][key]
