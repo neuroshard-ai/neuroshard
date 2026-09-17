@@ -58,6 +58,24 @@ def general_requests():
         'We will implement the service in Rust.\nWhich language have we chosen? Give only its name.',
         'Translate the next word into German. Give only the result.\nhouse',
     ])
+    for index in range(32):
+        left, right = 19+index, 71+index
+        first, second = ('orange', 'purple') if index % 2 else ('white', 'black')
+        result.extend([
+            f'The {first} box holds {left} marbles. The {second} box holds {right}.\n'
+            'Which box has more marbles? Give just its color.',
+            f'The {first} basket contains {right} oranges and the {second} basket contains {left}.\n'
+            'Which basket has fewer oranges? Answer with its color alone.',
+            f'Box X contains {left} cards; box Y contains {right}.\n'
+            'Which box contains the larger number of cards?',
+        ])
+    for premise in ('Is every triangle a polygon', 'Is every circle an ellipse',
+                    'Is every cube a solid', 'Does every hexagon have six sides',
+                    'Is every quadrilateral a trapezoid', 'Is every mammal an animal',
+                    'Is every bird a robin', 'Is every parallelogram a quadrilateral'):
+        for constraint in ('Answer only yes or no.', 'Give just the answer.',
+                           'Reply with a single word.', 'Explain your reasoning.'):
+            result.append(premise+'? '+constraint)
     return result
 
 
@@ -81,7 +99,7 @@ def fitting_rows(previous):
     return [{'id': identity({'request': row['question']}), **row} for _, row in sorted(rows.items())]
 
 
-def run(campaign, embedding, home):
+def run(campaign, embedding, home, reuse=None):
     from transformers import AutoTokenizer
     from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
     home.mkdir(parents=True, exist_ok=False)
@@ -112,7 +130,21 @@ def run(campaign, embedding, home):
     feature = config['learned']['feature_profile']
     tokenizer = AutoTokenizer.from_pretrained(campaign/'compiled/seed',local_files_only=True)
     features = EmbeddingFeatures(embedding,feature['embedding_sha256'],tokenizer,graph['tokenizer']['root'],max_tokens=feature['max_tokens'])
-    samples = [{'id':row['id'],'route':row['route'],'features':features(row['question'])} for row in rows]
+    cached = {}
+    if reuse is not None:
+        prior = json.loads((reuse/'prescription.json').read_bytes())
+        prior_guard = json.loads((reuse/'guard.json').read_bytes())
+        prior_samples = {row['id']: row for row in json.loads((reuse/'samples.json').read_bytes())}
+        if (prior['previous_fitting'] != prescription['previous_fitting']
+                or prior_guard['embedding_root'] != features.root):
+            raise ValueError('Only reuse features from the same immutable fitting inventory')
+        cached = {row['id']: prior_samples[row['id']] for row in prior['rows']
+                  if row['id'] in prior_samples and prior_samples[row['id']]['route'] == row['route']}
+        prescription['feature_cache'] = {name: sha256(reuse/name)
+                                        for name in ('prescription.json', 'samples.json', 'guard.json')}
+        save(home/'prescription.json', prescription)
+    samples = [cached[row['id']] if row['id'] in cached and cached[row['id']]['route'] == row['route'] else
+        {'id':row['id'],'route':row['route'],'features':features(row['question'])} for row in rows]
     if features.profile != feature:
         raise ValueError('General routing changed the frozen embedding definition')
     save(home/'samples.json',samples)
@@ -140,5 +172,6 @@ if __name__ == '__main__':
     parser.add_argument('--campaign',type=Path,required=True)
     parser.add_argument('--embedding',type=Path,required=True)
     parser.add_argument('--home',type=Path,required=True)
+    parser.add_argument('--reuse',type=Path)
     args=parser.parse_args()
-    run(args.campaign,args.embedding,args.home)
+    run(args.campaign,args.embedding,args.home,args.reuse)
