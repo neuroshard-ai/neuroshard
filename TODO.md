@@ -102,6 +102,11 @@ before the affected work, rather than changing the target after a result.
   across 449 headers. These small synthetic models and local source fixtures do
   not establish operated continuous LLM learning. See the
   [implementation and published evidence](docs/AUTOMATIC_EXPERT_COHORTS.md).
+  Structured immutable feeds now preserve original messages for that native
+  preparation path. Restart-safe publication, cross-window reads and independent
+  source review passed; all nine objects for a three-window, 192-conversation
+  feed passed full public S3/CDN hash checks. This supplies the transport and
+  preparation bridge; operated GPU integration and useful promotion remain open.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 

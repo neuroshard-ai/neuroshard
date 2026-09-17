@@ -70,3 +70,35 @@ Tasks 1 and 2 remain open. The source-selection and numerical commands in this
 integration use local synthetic fixtures. Connecting the controller to a live
 immutable feed and deployed GPU owners, and automatically promoting successive
 candidates that pass cumulative LLM answer-quality gates, remain required.
+
+
+## Structured immutable source feeds
+
+`expert_source.collect` publishes bounded windows of original conversation
+messages, preserving roles, source revision, license and row positions. Held-out
+windows additionally preserve their scoring metadata. Each window and feed head
+is content-addressed; published updates append to the previous inventory. A
+crash after upload but before journal acknowledgement recreates the same objects
+and does not skip rows. Publication and native admission have separate cursors.
+
+`expert_source.Feed` reads directly from the existing local or S3 object stores
+and is the `upstream` argument accepted by `expert_preparation.prepare` and
+`seal`. It verifies hashes, byte bounds, row counts and contiguous windows. A
+running reader accepts only an extension of its pinned head. Missing data raises
+an availability error rather than becoming a rejected or silently skipped row.
+The curator still checks allowed publishers, original source correspondence,
+tokenization, historical duplicates and contamination before approving admission.
+An immutable feed is not evidence that its publisher's content is true or safe.
+
+Five checks cover cross-window reads, publisher and reader restart, an
+upload-before-journal crash, rollback/overlap rejection, corrupted or missing
+objects, bounded S3 reads and actual native proposal preparation and review.
+The semantic trial's 192 training conversations were also published in three
+64-row windows: nine immutable S3 objects, 42,090 bytes, all verified through full
+public downloads. The reconstructed conversations exactly match the training
+source; this publication opens no evaluation set and admits no native job.
+
+A deployment's installed preparation command can consume this reader and return
+the sealed job to the existing `Operator`. The complete integration with deployed
+GPU owners and passing cumulative LLM quality remains outstanding; the collector
+and feed reader do not claim that integration by themselves.
