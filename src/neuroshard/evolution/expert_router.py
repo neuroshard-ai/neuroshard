@@ -105,7 +105,10 @@ def validate(model):
 
 
 def validate_growth(model):
-    if set(model) != FIELDS | {'base', 'additions'}:
+    expected = FIELDS | {'base', 'additions'}
+    if 'fallback_guard' in model:
+        expected.add('fallback_guard')
+    if set(model) != expected:
         raise ValueError('Invalid isolated router fields')
     base = model['base']
     if not isinstance(base, dict) or base.get('format') not in (FORMAT, LINEAR_FORMAT):
@@ -116,6 +119,14 @@ def validate_growth(model):
         raise ValueError('Bound the number of admitted routing additions')
     prototypes = copy.deepcopy(base['prototypes'])
     fixed = ('embedding_root', 'tokenizer_root', 'dimensions', 'fallback')
+    if 'fallback_guard' in model:
+        guard = model['fallback_guard']
+        if not isinstance(guard, dict) or guard.get('format') != LINEAR_FORMAT:
+            raise ValueError('The general fallback guard must be a learned binary classifier')
+        validate(guard)
+        if (set(guard['prototypes']) != {base['fallback'], 'specialist'}
+                or any(guard[key] != base[key] for key in fixed)):
+            raise ValueError('The fallback guard changed features or retained routes')
     for addition in additions:
         if not isinstance(addition, dict) or set(addition) != {'route', 'gate'}:
             raise ValueError('Bind each isolated route to its learned binary gate')
@@ -169,6 +180,8 @@ def append_route(previous, samples, route, *, minimum_margin=0, prototypes_per_r
         prototypes={**copy.deepcopy(previous['prototypes']), route: copy.deepcopy(gate['prototypes'][route])},
         training_root=identity({'base': base['training_root'],
             'additions': [row['gate']['training_root'] for row in additions]}))
+    if 'fallback_guard' in previous:
+        model['fallback_guard'] = copy.deepcopy(previous['fallback_guard'])
     return validate(model)
 
 
@@ -240,6 +253,11 @@ def select(model, features, *, eligible=None):
         base_allowed = allowed & set(model['base']['prototypes'])
         original = select(model['base'], features, eligible=base_allowed)
         chosen, gates = original, []
+        guard = None
+        if 'fallback_guard' in model:
+            guard = select(model['fallback_guard'], features)
+            if guard['confident'] and guard['route'] == model['fallback']:
+                chosen = guard
         for addition in model['additions']:
             if addition['route'] not in allowed:
                 continue
@@ -249,6 +267,8 @@ def select(model, features, *, eligible=None):
                 chosen = decision
         result = {key: chosen[key] for key in ('route', 'nearest', 'confident', 'margin')}
         result.update(router=identity(model), features=identity(features), base=original, gates=gates)
+        if guard is not None:
+            result['fallback_guard'] = guard
         if eligible is not None:
             result['eligible'] = sorted(allowed)
         return result

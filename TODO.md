@@ -73,6 +73,13 @@ before the affected work, rather than changing the target after a result.
   complete planned path, with gold standalone controls that separate knowledge,
   selection, decomposition and assembly. It does not train, open a new final
   or reuse the exposed semantic final.
+  That screen completed with 1/15 ordinary answers passing: 12 selection
+  failures and two decomposition failures. The
+  [ordinary access candidate](docs/ORDINARY_ACCESS_TRIAL.md) restores the earlier
+  ordinary-question base and fits the new selector on separate training inputs.
+  Its CPU preflight selects all 21 standalone gold routes (13 distinct
+  questions). Automatic neural answers and forced-expert controls still require
+  the frozen inference run; routing scores alone do not complete access.
 
 - [ ] **2. Continuous data admission and learning**
 

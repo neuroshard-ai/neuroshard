@@ -96,7 +96,10 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
         raise ValueError('Bind prompt contracts only for installed learned experts')
     for prompt in prompts.values():
-        serving_graph.fields(prompt, {'prefix', 'suffix'}, 'Invalid expert input contract')
+        fields = {'prefix', 'suffix'} | ({'context'} if 'context' in prompt else set())
+        serving_graph.fields(prompt, fields, 'Invalid expert input contract')
+        if 'context' in prompt and prompt['context'] not in ('standalone', 'conversation'):
+            raise ValueError('Declare whether an expert accepts standalone questions or conversation')
         if any(not isinstance(value, str) or len(value.encode()) > 2048 for value in prompt.values()):
             raise ValueError('Bound the expert input contract')
     if not isinstance(general_instruction, str) or len(general_instruction.encode()) > 2048:
@@ -198,7 +201,9 @@ class PlannedGraphNetwork:
         # The two older closed-book experts have a canonical question interface.
         # General and structured tasks also need the actual user-provided data
         # and earlier turns. A short planner rewrite is not a replacement for it.
-        if conversation_messages is not None and selected not in ('directory', 'protocol'):
+        standalone = (selected in ('directory', 'protocol') or
+                      self.config['expert_prompts'].get(selected, {}).get('context') == 'standalone')
+        if conversation_messages is not None and not standalone:
             messages = copy.deepcopy(conversation(conversation_messages))
             if not whole_request:
                 messages[-1]['content'] += ('\n\nFor this response, answer only the following part '
@@ -269,6 +274,25 @@ class PlannedGraphNetwork:
         result[-1]['content'] += '\n\nSpecialist responses:\n'+json.dumps(payload, sort_keys=True)
         return [{'role': 'system', 'content': self.config['composer']['instruction']}, *result]
 
+    def answer_atom(self, selected, question, routing_question, messages, max_tokens, *, whole_request):
+        """Use the same expert input contract for serving and diagnostic controls."""
+        model = self.model_for_route(selected)
+        prompt, argument = routing_question, None
+        if model == 'directory':
+            policy = self.net.graph['descriptor']['interpretation']
+            prefix = example_messages(policy['instruction'], policy['examples'])
+            parsed_text = self.call('interpreter', prefix + [{'role': 'user',
+                'content': json.dumps(question) + '\n\n' + policy['instruction']}],
+                policy['max_tokens'], 'directory_arguments')
+            parsed = interpretation(parsed_text, question)
+            if parsed is None:
+                return None, None, 'invalid_directory_arguments'
+            argument = {'question': question, 'arguments': parsed}
+            prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
+        text = self.call(model, self.answer_messages(model, prompt, messages,
+            whole_request=whole_request), max_tokens, 'answer')
+        return {'question': question, 'expert': selected, 'text': text}, argument, None
+
     def answer(self, messages, max_tokens):
         conversation(messages)
         integer(max_tokens, 1, 256)
@@ -294,23 +318,13 @@ class PlannedGraphNetwork:
             choice = self.route(routing_question)
             routing.append(choice)
             selected = choice['decision']['route']
-            model = self.model_for_route(selected)
-            prompt = routing_question
-            if model == 'directory':
-                policy = self.net.graph['descriptor']['interpretation']
-                prefix = example_messages(policy['instruction'], policy['examples'])
-                parsed_text = self.call('interpreter', prefix + [{'role': 'user',
-                    'content': json.dumps(question) + '\n\n' + policy['instruction']}],
-                    policy['max_tokens'], 'directory_arguments')
-                parsed = interpretation(parsed_text, question)
-                if parsed is None:
-                    error = 'invalid_directory_arguments'
-                    break
-                arguments.append({'question': question, 'arguments': parsed})
-                prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
-            answer = self.call(model, self.answer_messages(model, prompt, messages,
-                whole_request=len(plan) == 1), max_tokens, 'answer')
-            answers.append({'question': question, 'expert': selected, 'text': answer})
+            answer, argument, error = self.answer_atom(selected, question, routing_question,
+                messages, max_tokens, whole_request=len(plan) == 1)
+            if error is not None:
+                break
+            if argument is not None:
+                arguments.append(argument)
+            answers.append(answer)
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else
                 '\n\n'.join(row['question'] + '\n' + row['text'] for row in answers)) if error is None else ''
