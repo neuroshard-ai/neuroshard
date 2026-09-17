@@ -34,6 +34,24 @@ def test_history_cannot_be_silently_discarded():
         {'role': 'user', 'content': 'What is the range?'}]) is None
 
 
+@pytest.mark.parametrize('utterance', [
+    'What is 38 plus 46? Give only the number.',
+    'Can updating a record change its identifier?',
+    'Return the words in lowercase, without explanation.',
+])
+def test_atomic_intent_keeps_constraints_and_self_references(utterance):
+    assert policy.atomic_request([{'role': 'user', 'content': utterance}]) == utterance
+
+
+@pytest.mark.parametrize('utterance', [
+    'Where is the observatory and what does it measure?',
+    'What is the capacity? Also, what is the range?',
+    'Explain the forecast and then compare the two stations.',
+])
+def test_multiple_intents_still_need_decomposition(utterance):
+    assert policy.atomic_request([{'role': 'user', 'content': utterance}]) is None
+
+
 def test_repair_preserves_content_order_and_grounded_subjects():
     messages = [{'role': 'user', 'content': 'Where does Nia Cole work and what is her role?'}]
     before = ['Where does Nia Cole work?', 'What is her role?']
@@ -74,6 +92,38 @@ def test_direct_serving_never_invokes_a_question_generator(monkeypatch):
     response = service.answer([{'role': 'user', 'content': request}], 64)
     assert response['status'] == 'completed' and response['plan'] == [request]
     assert response['planning']['path'] == 'direct' and calls == []
+
+
+def test_general_conversation_preserves_original_intent_without_planning(monkeypatch):
+    service, calls = stub_service(monkeypatch, iter([]))
+    service.config.update(request_policy=policy.ASSISTANT_POLICY,
+                          learned={'router': {'fallback': 'parent'}})
+    seen = []
+    monkeypatch.setattr(service, 'route', lambda question: {'question': question,
+        'decision': {'route': 'parent'}})
+    def answer(selected, question, routing_question, messages, maximum, *, whole_request):
+        seen.append((selected, messages, whole_request))
+        return {'question': question, 'expert': selected, 'text': '47'}, None, None
+    monkeypatch.setattr(service, 'answer_atom', answer)
+    messages = [{'role': 'user', 'content': 'Set the counter to forty.'},
+        {'role': 'assistant', 'content': 'The unrelated station is named Zephyr.'},
+        {'role': 'user', 'content': 'Add seven to it. Return only the number.'}]
+    response = service.answer(messages, 64)
+    assert calls == [] and seen == [('parent', messages, True)]
+    assert response['planning']['path'] == 'general' and response['status'] == 'completed'
+    assert response['plan'] == [messages[-1]['content']]
+    assert 'Zephyr' not in response['planning']['preselection']['question']
+    assert 'forty' in response['planning']['preselection']['question']
+
+
+def test_specialist_atomic_request_keeps_format_instruction_and_no_reference_rewrite(monkeypatch):
+    service, calls = stub_service(monkeypatch, iter([]))
+    service.config.update(request_policy=policy.ASSISTANT_POLICY,
+                          learned={'router': {'fallback': 'parent'}})
+    request = 'Can updating a record change its identifier? Answer only yes or no.'
+    response = service.answer([{'role': 'user', 'content': request}], 64)
+    assert calls == [] and response['plan'] == [request]
+    assert response['planning']['path'] == 'direct' and response['status'] == 'completed'
 
 
 @pytest.mark.parametrize('repaired,accepted', [

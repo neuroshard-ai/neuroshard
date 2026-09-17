@@ -8,6 +8,7 @@ import json
 import re
 
 FORMAT = 'preserve-single-and-ground-references-v1'
+ASSISTANT_POLICY = 'route-general-and-preserve-user-intent-v2'
 REFERENCES = re.compile(
     r'\b(?:he|she|it|they|him|her|his|its|them|their|theirs|this|these|those|former|latter)\b',
     re.IGNORECASE)
@@ -30,6 +31,29 @@ def direct_question(messages):
     if (len(text.encode()) > 2048 or not START.search(text) or not text.endswith('?')
             or text.count('?') != 1 or REFERENCES.search(text) or COMPOUND.search(text)
             or any(char in text for char in '\n\r.;:,"`[]{}')):
+        return None
+    return text
+
+
+def routing_context(messages):
+    """Route from user-provided context; assistant guesses cannot add subjects."""
+    return '\n'.join(message['content'] for message in messages if message['role'] == 'user')
+
+
+def atomic_request(messages):
+    """Preserve an instruction and its output constraints as one request.
+
+    This recognizes syntax only. It never extracts an answer, identifies a
+    specialist, or resolves a reference. Multiple questions and explicit second
+    requests keep the neural decomposition path.
+    """
+    if len(messages) != 1:
+        return None
+    text = messages[0]['content'].strip()
+    if (len(text.encode()) > 2048 or text.count('?') > 1
+            or re.search(r'\b(?:and|also|then)\s+(?:what|which|who|whose|when|where|why|how|'
+                         r'is|are|do|does|can|could|would|will|should|tell|explain|compare|'
+                         r'translate|calculate|list|show)\b', text, re.IGNORECASE)):
         return None
     return text
 

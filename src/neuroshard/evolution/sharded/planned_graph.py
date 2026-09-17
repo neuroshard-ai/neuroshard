@@ -142,9 +142,11 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     elif 'output_format' in planner:
         raise ValueError('A typed planner requires its complete value policy')
     if request_policy is not None:
-        from ..request_planning import FORMAT as REQUEST_POLICY
-        if request_policy != REQUEST_POLICY or answer_policy is not None:
+        from ..request_planning import FORMAT as REQUEST_POLICY, ASSISTANT_POLICY
+        if request_policy not in (REQUEST_POLICY, ASSISTANT_POLICY) or answer_policy is not None:
             raise ValueError('Require the declared untyped request-preservation policy')
+        if request_policy == ASSISTANT_POLICY and 'fallback_guard' not in learned['router']:
+            raise ValueError('The general-first policy requires its learned fallback guard')
         result['request_policy'] = request_policy
         name = 'src/neuroshard/evolution/request_planning.py'
         result['sources'][name] = sha256(Path(source_home)/name)
@@ -272,6 +274,14 @@ class PlannedGraphNetwork:
         allowed = (expert_scope.eligible(question, self.config['route_scopes'], model['prototypes'],
                    model['fallback']) if 'route_scopes' in self.config else None)
         decision = expert_router.select(model, packet['features'], eligible=allowed)
+        from ..request_planning import ASSISTANT_POLICY
+        guard = decision.get('fallback_guard')
+        if (self.config.get('request_policy') == ASSISTANT_POLICY and guard
+                and guard['confident'] and guard['route'] == model['fallback']):
+            # A newly added domain cannot override a confident learned general
+            # decision. Retain every original gate observation for replay.
+            decision = {**decision, **{name: guard[name] for name in ('route', 'nearest', 'confident', 'margin')},
+                        'general_guard_applied': True}
         return {'question': question, 'features': packet['features'], 'decision': decision}
 
     def composition_messages(self, messages, answers):
@@ -310,7 +320,11 @@ class PlannedGraphNetwork:
         self.trace = []
         from .. import request_planning
         preserve = 'request_policy' in self.config
-        direct = request_planning.direct_question(messages) if preserve else None
+        general_first = self.config.get('request_policy') == request_planning.ASSISTANT_POLICY
+        preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
+        general = preliminary is not None and preliminary['decision']['route'] == self.config['learned']['router']['fallback']
+        direct = (messages[-1]['content'] if general else request_planning.atomic_request(messages)) if general_first else (
+            request_planning.direct_question(messages) if preserve else None)
         raw = (json.dumps({'questions': [direct]}) if direct is not None else
                self.call('interpreter', self.planning_messages(messages),
                          self.config['planner']['max_tokens'], 'planning'))
@@ -324,9 +338,12 @@ class PlannedGraphNetwork:
                 plan = questions(raw)
         except (ValueError, TypeError):
             plan, error = [], 'invalid_neural_plan'
-        planning = {'path': 'direct' if direct is not None else 'neural',
+        planning = {'path': 'general' if general else 'direct' if direct is not None else 'neural',
                     'initial_questions': list(plan), 'repair': 'none'}
-        if preserve and error is None and request_planning.needs_repair(plan):
+        if preliminary is not None:
+            planning['preselection'] = preliminary
+        if (preserve and not (general_first and direct is not None)
+                and error is None and request_planning.needs_repair(plan)):
             try:
                 repair_input = request_planning.repair_messages(messages, plan)
             except ValueError:
@@ -344,7 +361,7 @@ class PlannedGraphNetwork:
             # A single unambiguous user request need not lose its payload merely
             # because the planner expressed its instruction more concisely.
             routing_question = messages[0]['content'] if len(plan) == len(messages) == 1 else question
-            choice = self.route(routing_question)
+            choice = preliminary if general else self.route(routing_question)
             routing.append(choice)
             selected = choice['decision']['route']
             answer, argument, error = self.answer_atom(selected, question, routing_question,
