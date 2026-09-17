@@ -103,8 +103,20 @@ def create_network(backend, engine):
     return network
 
 
+def rpc_genesis_commitment(genesis, urls):
+    """Pin CometBFT's normalized document without relaxing its app-state pin."""
+    expected = copy.deepcopy(genesis)
+    if expected.get('initial_height') == '0':
+        expected['initial_height'] = '1'
+    for url in urls:
+        if client.rpc(url, 'genesis')['genesis'] != expected:
+            raise ValueError('Native RPC genesis differs from the committed genesis')
+    return identity(expected)
+
+
 def commands(backend, network):
     native = json.loads((backend.home/'native.json').read_bytes())
+    rpc_genesis = rpc_genesis_commitment(network.genesis, network.urls)
     base = [sys.executable, str(ROOT/'scripts/ordinary_campaign_backend.py'), '--home', str(backend.home)]
     publisher_backend = {'argv': [*base, '--actor', '0'], 'timeout_seconds': 14400}
     config = {'workers': {'prefix': [key.public_key for key in backend.keys],
@@ -122,7 +134,7 @@ def commands(backend, network):
         save(backend.home/('auditor-'+str(actor)+'-execution.json'), execution)
         save(backend.home/('auditor-'+str(actor)+'-curation.json'), review)
         auditors.append([sys.executable, '-m', 'neuroshard.evolution.audit_worker', '--home', str(backend.home/('auditor-'+str(actor))),
-            '--rpc', native['rpc'], '--genesis-sha256', native['genesis_root'],
+            '--rpc', native['rpc'], '--genesis-sha256', rpc_genesis,
             '--native-home', native['home'], '--native-genesis-sha256', native['genesis_sha256'],
             '--key', str(network.home/('owner-'+str(actor)+'.key')), '--max-stages', '4096',
             '--objects', str(backend.home/'compiled/objects'),

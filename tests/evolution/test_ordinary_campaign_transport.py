@@ -8,6 +8,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from ordinary_campaign_backend import Backend, REMOTE
 from ordinary_allocation import numerical_runtime, describe
+from run_ordinary_campaign import rpc_genesis_commitment
+import run_ordinary_campaign
 import ordinary_allocation
 from botocore.exceptions import ClientError
 sys.path.pop(0)
@@ -16,7 +18,23 @@ from neuroshard.dataflow.store import LocalStore
 from neuroshard.evolution import expert_source
 from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import save
+from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import retained_objects
+
+
+def test_rpc_height_normalization_keeps_every_validators_app_state_pinned(monkeypatch):
+    genesis = {'initial_height': '0', 'chain_id': 'frozen', 'app_state': {'model': 'accepted'}}
+    normalized = {**genesis, 'initial_height': '1'}
+    observed = {'one': normalized, 'two': normalized}
+    monkeypatch.setattr(run_ordinary_campaign.client, 'rpc', lambda url, method: {'genesis': observed[url]})
+    assert rpc_genesis_commitment(genesis, observed) == identity(normalized)
+    assert genesis['initial_height'] == '0'
+    observed['two'] = {**normalized, 'app_state': {'model': 'substituted'}}
+    with pytest.raises(ValueError, match='committed genesis'):
+        rpc_genesis_commitment(genesis, observed)
+    observed['two'] = {**normalized, 'initial_height': '2'}
+    with pytest.raises(ValueError, match='committed genesis'):
+        rpc_genesis_commitment(genesis, observed)
 
 
 def test_distinct_owners_require_matching_arithmetic_not_matching_hostnames():
