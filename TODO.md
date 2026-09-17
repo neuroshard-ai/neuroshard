@@ -49,7 +49,8 @@ before the affected work, rather than changing the target after a result.
   The next method isolates new expert weights and appends a learned binary
   routing gate while preserving the accepted router. Six-process numerical
   validation now executes both earlier and expanded learned services on the
-  same owned shards, without duplicating the backbone. The four-GPU trial completed 512 updates: new single answers improved from
+  same owned shards, without duplicating the backbone. The four-GPU trial
+  completed 512 updates: new single answers improved from
   2/16 to 11/16 and composed answers from 0/8 to 4/8, preserving all 80 previously
   correct retained answers. It failed its accuracy gate; the final stayed unopened.
   Fresh replay reproduced the final four updates exactly. See the
@@ -57,10 +58,17 @@ before the affected work, rather than changing the target after a result.
   A separately frozen [replacement control](config/experiments/expert-replacement-control.json)
   reuses the exact new terminal weights while replacing the earlier expert.
   Learned route aliases let both routes use that fixed capacity; six-process
-  execution checked actual routing, replay and owner payments. The first GPU comparison
-  failed during setup before generating answers. The next frozen trial includes
-  it in the main controller. It avoids duplicate training and does not equate
-  lifetime costs.
+  execution checked actual routing, replay and owner payments. The first GPU
+  comparison failed during setup before generating answers. A separate later
+  [semantic training trial](docs/CONTINUAL_EXPERT_LEARNING.md#semantic-learning-and-replacement-result)
+  completed that comparison. Its development gate passed (13/16 single, 6/8
+  composed), then the previously unopened final failed (13/16 single, 5/8
+  composed; 6/8 required). The added expert preserved all 80 previously correct
+  answers. Replacing B with identical trained weights scored 44/96 retained
+  answers: 38 previously correct answers lost and two newly correct. This
+  comparison matches training, not total lifetime costs. No native promotion
+  occurred; three successive admitted cohorts and broader ordinary-question
+  quality remain unproved.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -214,6 +222,17 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Published the completed semantic learning and replacement
+  comparison. All 512 GPU updates completed; a fresh process reproduced the
+  final four updates exactly. Six primary owners and five replacement owners
+  agreed; rescoring with the frozen implementation reproduced every recorded
+  score and gate. Development passed, but final composed accuracy failed.
+  Preserved all 80 previously correct answers with the addition; replacement
+  lost 38 and gained two. Published all result metadata and the two retained
+  numerical boundaries. All four GPUs, disks and the temporary security group
+  were deleted; compute upper bound $7.05, storage/transfer separate. Tasks 1
+  and 2 remain open; the exposed final cannot serve as a fresh final again.
 
 - 2026-09-17: Completed and [published the continued-expert trial](docs/CONTINUAL_EXPERT_LEARNING.md#measured-result-rejected).
   All 192 sharded updates executed; the last four replayed exactly in a fresh

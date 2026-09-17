@@ -137,9 +137,10 @@ Five preparation/integration checks cover restart, source replacement between
 preparation and review, stale state, missing data, replay eligibility, accumulated
 retention and actual CPU prefix production, two updates and fresh-process replay.
 They prove the prepared proposal drives the numerical executor. They do not
-measure model-quality improvement. Curator approval, assignment, audit funding,
-transaction submission and promotion still need an operated repeating loop;
-this preparation API does not complete task 2.
+measure model-quality improvement. The subsequent
+[operated repeating controller](AUTOMATIC_EXPERT_COHORTS.md) covers admission,
+funding, execution and rejected quality with small synthetic models. Connecting
+that loop to passing cumulative LLM learning remains part of task 2.
 
 
 ## Isolated learning result
@@ -173,10 +174,11 @@ contained an incorrect constituent response. The original training variations
 mostly changed framing around an identical core question. The next intervention
 therefore adds semantic wording variations for every training topic and converts
 paired training into the atomic questions the serving parser executes. Targets
-come exclusively from the original training inventory. This is explicitly a
-development-informed intervention; it restarts from accepted B, keeps the same
-512-step recipe and gates, and leaves the original final set unopened. It is not
-a result until the frozen run has completed.
+come exclusively from the original training inventory. This was explicitly a
+development-informed intervention: it restarted from accepted B, kept the same
+512-step recipe and gates, and left the original final unopened until the
+development gate passed and the terminal decision was published. Its completed
+result is recorded below; the earlier isolated trial remains failed.
 
 The [frozen semantic trial](../config/experiments/semantic-expert-trial.json)
 contains 192 atomic training conversations: 12 per topic, interleaved in 24
@@ -185,5 +187,66 @@ records. Actual tokenizer validation confirmed complete response masking and
 supervised EOS on every row. The run compares appended capacity with replacing B
 using the very same learned weights; it includes fresh boundary replay, public
 terminal publication before final evaluation, and automatic resource retirement.
-The four-host allocation has a three-hour/$50 cap. This comparison matches training
+The four-host allocation had a three-hour/$50 cap. This comparison matches training
 work and still does not measure equal lifetime storage and serving costs.
+
+## Semantic learning and replacement result
+
+The four GPU owners completed all 512 updates under source commit
+`9ba3adda2dbcf97abc678d46e3cea073d07f2296`; its full CI passed. The development
+gate passed, after which the controller published the terminal checkpoint and
+service commitment and opened the fixed final set. No further training occurred.
+
+| Evaluation | Accepted baseline | Added expert | Replacement using identical trained weights |
+| --- | ---: | ---: | ---: |
+| Development, new single answers | 2/16 | 13/16 | 13/16 |
+| Development, new composed answers | 0/8 | 6/8 | 6/8 |
+| Final, new single answers | 2/16 | 13/16 | 13/16 |
+| Final, new composed answers | 0/8 | 5/8 | 5/8 |
+| Retained answers, both phases | 80/96 | 80/96 | 44/96 |
+
+The addition lost **zero** previously correct answers. Replacement lost **38**
+previously correct answers and gained two others. Thus 44/96 is its total retained
+set accuracy, not 44 preserved previously correct answers. The terminal weights,
+training computation and new-answer scores match between the two arms. This is
+evidence about isolation on this workload; it does not establish that growth
+beats every alternative use of equal total resources.
+
+The complete final gate **failed**: composed answers required 6/8 and reached
+5/8. Single-answer accuracy and paired gain passed; the paired gain interval was
+`[0.5, 0.875]`. The operative retention rule was zero lost previously correct
+answers, fixed before training. The three incorrect atomic answers confused the
+whole-job record limit with the batch limit, the batch limit with the microbatch
+limit, and the training request with the audit request. Each failed composed
+answer contained one of these incorrect atomic responses.
+
+The [published result and raw evidence](https://github.com/neuroshard-ai/neuroshard/releases/tag/research-semantic-expert-20260917)
+include complete answer transcripts, the replacement arm, all four owners'
+metadata archives, frozen-input references and resource retirement. All six
+primary logical owners and all five replacement owners agreed. Rescoring with
+the frozen implementation reproduced every answer score, paired interval, gate
+and execution root. A fresh process restored only the step-508 input boundary and
+reproduced the final four updates exactly, including optimizer state.
+
+The 36 retained tensor objects contain both step-508 and step-512 boundaries,
+totaling 3,221,433,520 bytes; their complete public downloads were hash-verified
+before retirement. Earlier windows retain metadata, not a claim of complete
+funded historical tensor availability. No native job was activated, no NEURO was
+issued and no serving graph was promoted. All four temporary instances, disks and
+the security group were deleted. The compute upper bound was $7.05, with storage
+and transfer additional.
+
+This is a specialized, explicit two-question experiment under one administrator.
+It does not complete repeated admitted cohorts, ordinary-question planning,
+broader assistant quality or a comparison of equal lifetime costs. The final is
+now exposed and cannot be reused as a fresh final for later method selection.
+
+The [committed result manifest](../config/experiments/semantic-expert-results.json)
+pins the evidence archive. To reproduce the metadata checks, download the
+original `source.tar.gz`, `semantic-expert-freeze.tar.gz` and completed
+`semantic-expert-evidence.tar.gz` from that release. Extract the frozen source
+into `result-source/` and the two evidence archives into the working directory.
+Run `verify_results.py`, then `score_results.py` in an environment with the
+repository's numerical dependencies. These checks score saved real responses;
+replaying neural work separately requires the published tensors and frozen GPU
+execution profile.

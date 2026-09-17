@@ -1,0 +1,153 @@
+{
+  "format": "neuroshard-semantic-expert-trial-result-v1",
+  "source_commit": "9ba3adda2dbcf97abc678d46e3cea073d07f2296",
+  "freeze": "824439c37cc6832d76a184a43283e468fc5199089438824955f1c9a29f51509e",
+  "checkpoint": "618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c",
+  "training": {
+    "steps": 512,
+    "seconds": 4460.861870604001,
+    "conversations": 192,
+    "trainable_parameters": 134225920
+  },
+  "development": {
+    "checks": {
+      "composed_accuracy": true,
+      "retained_answers": true,
+      "single_accuracy": true,
+      "single_gain": true
+    },
+    "metrics": {
+      "composed": {
+        "accuracy": 0.75,
+        "after": 6,
+        "before": 0,
+        "count": 8,
+        "gains": 6,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.8125,
+        "after": 13,
+        "before": 2,
+        "count": 16,
+        "gains": 11,
+        "losses": 0,
+        "paired_gain": {
+          "lower": 0.5,
+          "mean": 0.6875,
+          "pairs": 16,
+          "upper": 0.875
+        }
+      }
+    },
+    "passed": true
+  },
+  "final": {
+    "checks": {
+      "composed_accuracy": false,
+      "retained_answers": true,
+      "single_accuracy": true,
+      "single_gain": true
+    },
+    "metrics": {
+      "composed": {
+        "accuracy": 0.625,
+        "after": 5,
+        "before": 0,
+        "count": 8,
+        "gains": 5,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.8125,
+        "after": 13,
+        "before": 2,
+        "count": 16,
+        "gains": 11,
+        "losses": 0,
+        "paired_gain": {
+          "lower": 0.5,
+          "mean": 0.6875,
+          "pairs": 16,
+          "upper": 0.875
+        }
+      }
+    },
+    "passed": false
+  },
+  "final_opened": true,
+  "retention": {
+    "before_correct": 80,
+    "added_correct": 80,
+    "replacement_correct": 44,
+    "replacement_lost_previously_correct": 38,
+    "replacement_newly_correct": 2
+  },
+  "replacement": {
+    "checkpoint": "618e3eb0ab52eb688cfa1d17961a124b940ba9267f3e0bc316e151748af7e14c",
+    "neural_parameters": 3691204608,
+    "additional_training_updates": 0,
+    "development_correct": {
+      "dev": 19,
+      "retained": 44
+    },
+    "final_correct": {
+      "retained": 44,
+      "test": 18
+    }
+  },
+  "verification": {
+    "owner_agreement": {
+      "replacement/dev": 5,
+      "replacement/test": 5,
+      "primary/dev": 6,
+      "primary/test": 6
+    },
+    "execution_roots_match": true,
+    "scores_recomputed": true,
+    "frozen_gates_recomputed": true,
+    "fresh_training_replay": {
+      "valid": true,
+      "from_step": 508,
+      "through_step": 512,
+      "fresh_process": true,
+      "only_input_boundary_supplied": true
+    }
+  },
+  "preservation": {
+    "objects": 36,
+    "bytes": 3221433520,
+    "full_public_get_verified": true
+  },
+  "resources": {
+    "terminated": [
+      "i-0076cc0e2062e309a",
+      "i-041f42f85d89960e4",
+      "i-09776167559605ced",
+      "i-0ec5f1f44296273a5"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 7.050501540138888,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "native_activated": false,
+  "tokens_issued": 0,
+  "passed": false,
+  "limitations": [
+    "One administrator and four GPU hosts; no independent operator evidence.",
+    "The comparison reuses identical training and terminal weights; it does not match lifetime storage, verification or serving costs.",
+    "Explicit two-question composition and specialized factual evaluation; no ordinary-chat, broad-assistant or three-successive-admitted-cohort claim.",
+    "Development passed; the final composed-answer gate failed at 5/8 against a required 6/8. No threshold changed after scoring.",
+    "The final is now exposed and cannot be reused as a fresh final for subsequent method selection.",
+    "Every window retains metadata, but complete numerical payloads are retained only for the terminal and preceding boundaries. This trajectory was not settled.",
+    "The earlier isolated trial remains failed with its final unopened and its replacement setup failure; this is a separate later frozen experiment."
+  ],
+  "evidence": {
+    "release": "https://github.com/neuroshard-ai/neuroshard/releases/tag/research-semantic-expert-20260917",
+    "archive": "semantic-expert-evidence.tar.gz",
+    "sha256": "9880f4aebef5f726e95adb06d175bef20d0133b0369b2db660fb1ffc78081587",
+    "bytes": 23309053
+  }
+}
