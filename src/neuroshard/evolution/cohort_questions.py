@@ -134,6 +134,17 @@ def decision(rows, before, after, gates, *, release_scope=True):
     expected = [row['id'] for row in rows]
     if [row['id'] for row in before] != expected or [row['id'] for row in after] != expected:
         raise ValueError('Require complete ordered generated answers')
+    return paired_decision(rows, [correct(row, old['text'], release_scope=release_scope)
+                                 for row, old in zip(rows, before)],
+                           [correct(row, new['text'], release_scope=release_scope)
+                            for row, new in zip(rows, after)], gates)
+
+
+def paired_decision(rows, before, after, gates):
+    """Shared statistics for prospectively declared complete response scores."""
+    if (len(rows) != len(before) or len(rows) != len(after)
+            or any(type(value) is not bool for value in before + after)):
+        raise ValueError('Require one Boolean score per declared response')
     metrics = {}
     for stratum in ('single', 'composed'):
         selected = [(row, old, new) for row, old, new in zip(rows, before, after) if row['stratum'] == stratum]
@@ -141,8 +152,7 @@ def decision(rows, before, after, gates, *, release_scope=True):
             raise ValueError('Score both individual facts and new fact combinations')
         if stratum == 'single' and len({row['topics'][0] for row, _, _ in selected}) != len(selected):
             raise ValueError('Do not count multiple phrasings as independent facts')
-        pairs = [(correct(row, old['text'], release_scope=release_scope),
-                  correct(row, new['text'], release_scope=release_scope)) for row, old, new in selected]
+        pairs = [(old, new) for _, old, new in selected]
         metrics[stratum] = {'count': len(pairs), 'before': sum(a for a, _ in pairs),
             'after': sum(b for _, b in pairs), 'gains': sum(not a and b for a, b in pairs),
             'losses': sum(a and not b for a, b in pairs), 'accuracy': sum(b for _, b in pairs) / len(pairs)}

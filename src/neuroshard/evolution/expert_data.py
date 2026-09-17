@@ -166,6 +166,10 @@ def review(state, job, policy, store, tokenizer, upstream, *, history_index=None
     groups = {role: records(prepared, role, store.get, plan['max_length'],
                            job['work']['parent']['config']['vocab_size'], tokenizer) for role in ('train', 'test')}
     quality = review_quality(job, policy, store, groups['test'], state=state)
+    scoring = store.json(quality)
+    from . import ordinary_quality
+    ordinary = scoring['format'] == ordinary_quality.FORMAT
+    scoring_rows = {row['id']: row for row in quality_rows(store, scoring['roles']['test'])} if ordinary else {}
     rows = {row['id']: row for values in groups.values() for row in values}
     if len(rows) != sum(len(values) for values in groups.values()):
         raise ValueError('Training and evaluation contain the same conversation')
@@ -221,6 +225,10 @@ def review(state, job, policy, store, tokenizer, upstream, *, history_index=None
             if position in expected:
                 if row.get('messages') != expected[position]['messages']:
                     raise ValueError('Original messages differ from the pinned upstream row')
+                key = document_identity(row['messages'])
+                if key in scoring_rows and any(row.get(name) != scoring_rows[key].get(name)
+                                               for name in ordinary_quality.METADATA):
+                    raise ValueError('Ordinary scoring labels differ from the pinned upstream row')
                 matched.add(position)
         if matched != set(expected):
             raise ValueError('Pinned upstream omitted admitted source records')
@@ -238,7 +246,7 @@ def review_quality(job, policy, store, evaluation, *, state=None):
     quality = store.json(claim['policy_root'])
     graph_quality.validate_policy(quality)
     rule = graph_quality.admission_rule(quality)
-    if (quality['format'] not in (graph_quality.GENERAL, graph_quality.CONTINUAL)
+    if (quality['format'] not in (graph_quality.GENERAL, *graph_quality.MEASURED)
             or quality['candidate_template'] != job['lifecycle']['candidate_template']
             or quality['baseline_graph'] != data.identity(job['lifecycle']['serving_graph'])
             or quality['prepared'] != job['work']['prepared'] or quality['prepared'] != claim['prepared']
@@ -246,11 +254,17 @@ def review_quality(job, policy, store, evaluation, *, state=None):
             or data.identity(rule) != policy['quality_rule']):
         raise ValueError('Quality policy changed its admitted model, data, coverage or scoring rules')
     values = quality_rows(store, quality['roles']['test'])
-    cohort_questions.validate_rows(values, release_scope=False)
+    graph_quality.validate_rows(quality, values)
     if [{key: row[key] for key in ('id', 'messages')} for row in values] != [
             {key: row[key] for key in ('id', 'messages')} for row in evaluation]:
         raise ValueError('Quality scoring must use the admitted sealed evaluation conversations')
-    if quality['format'] == graph_quality.CONTINUAL:
+    if (quality['format'] == graph_quality.ORDINARY) != ('answering' in job['lifecycle']['serving_graph']):
+        raise ValueError('The admitted baseline must use the complete answering quality path')
+    if quality['format'] == graph_quality.ORDINARY:
+        from .answering import load
+        for graph in (job['lifecycle']['serving_graph'], quality['candidate_template']):
+            load(graph, store)
+    if quality['format'] in graph_quality.MEASURED:
         review_retention_history(quality, store, state)
     return data.identity(quality)
 
@@ -279,7 +293,7 @@ def review_retention_history(quality, store, state):
     history = state['expert_lifecycle']['admission']['seen_documents']
     role = 'retained-test-knowledge'
     anchors = quality_rows(store, quality['retention_anchors'][role])
-    cohort_questions.validate_rows(anchors, release_scope=False)
+    graph_quality.validate_rows(quality, anchors)
     expected = {row['id']: row['messages'] for row in anchors}
     for key, document in history.items():
         if document['role'] != 'evaluation':
@@ -291,15 +305,30 @@ def review_retention_history(quality, store, state):
             raise ValueError('A retained anchor conflicts with admission history')
         expected[key] = original['messages']
     actual = quality_rows(store, quality['roles'][role])
-    cohort_questions.validate_rows(actual, release_scope=False)
+    graph_quality.validate_rows(quality, actual)
     if {row['id']: row['messages'] for row in actual} != expected:
         raise ValueError('Retain the complete initial anchors and prior admitted evaluation history')
+    if quality['format'] == graph_quality.ORDINARY:
+        from . import expert_lifecycle, ordinary_quality
+        previous = store.json(expert_lifecycle.profile_for(state)['quality']['policy_root'])
+        if previous['format'] != graph_quality.ORDINARY:
+            raise ValueError('Ordinary admission requires an ordinary bootstrap quality contract')
+        prior = {}
+        for spec in (quality['retention_anchors'][role], previous['roles'][role], previous['roles']['test']):
+            for row in quality_rows(store, spec):
+                metadata = {name: row.get(name) for name in ordinary_quality.METADATA}
+                if row['id'] in prior and prior[row['id']] != metadata:
+                    raise ValueError('Earlier ordinary scoring contracts conflict')
+                prior[row['id']] = metadata
+        if any(prior.get(row['id']) != {name: row.get(name) for name in ordinary_quality.METADATA}
+               for row in actual):
+            raise ValueError('Retained ordinary scoring criteria cannot change between cohorts')
     protected = set(expected)
     protected_messages = {document_identity(messages) for messages in expected.values()}
     for name in graph_quality.ROLES[2:]:
         rows = quality_rows(store, quality['retention_anchors'][name])
-        if name.endswith('skills'):
-            cohort_questions.validate_rows(rows, release_scope=False)
+        if name.endswith('skills') or quality['format'] == graph_quality.ORDINARY:
+            graph_quality.validate_rows(quality, rows)
         protected.update(row['id'] for row in rows)
         protected_messages.update(document_identity(row['messages']) for row in rows)
     prepared = store.json(quality['prepared'])

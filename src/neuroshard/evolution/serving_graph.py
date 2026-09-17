@@ -32,7 +32,8 @@ def rules(graph):
 
 
 def validate(graph, *, allow_untrained=False):
-    fields(graph, FIELDS, 'Invalid serving graph schema')
+    fields(graph, FIELDS | ({'answering'} if isinstance(graph, dict) and 'answering' in graph else set()),
+           'Invalid serving graph schema')
     if graph['format'] != FORMAT:
         raise ValueError('Unsupported serving graph format')
     parent, descriptor = graph['parent'], graph['descriptor']
@@ -153,11 +154,16 @@ def validate(graph, *, allow_untrained=False):
         raise ValueError('Unsupported interpretation prompt placement')
     for key in ('numerical_profile', 'executor_root'):
         root(graph[key])
+    if 'answering' in graph:
+        from .answering import validate_descriptor
+        validate_descriptor(graph['answering'], graph)
     return graph
 
 
 def calls(graph, question, max_tokens):
     """Derive bounded neural calls using only user text and committed routing."""
+    if 'answering' in graph:
+        raise ValueError('Complete answering requires its committed policy executor')
     selected = next((rule['id'] for rule in rules(graph) if isinstance(question, str)
                      and rule['needle'] in question.casefold()), None)
     return selected_calls(graph, selected, question, max_tokens)

@@ -134,3 +134,88 @@ def test_oversized_upstream_is_closed_without_publishing_a_partial_window(tmp_pa
         expert_source.collect(home, store, source(), upstream, count=4)
     assert closed and not (home/'conversation-feed.json').exists()
     assert not list(store.root.iterdir())
+
+
+def test_ordinary_feed_preserves_multiturn_inputs_and_frozen_scoring(tmp_path):
+    from neuroshard.evolution import ordinary_quality
+    from test_ordinary_quality import question
+    value = question('How many remain?', ['3'], [{'role': 'user', 'content': 'Five apples, two eaten.'},
+                                                {'role': 'assistant', 'content': 'Understood.'}])
+    value.pop('id')
+    value.update(quality_format=ordinary_quality.FORMAT, answer_aliases=[['Three.']], case_sensitive=[False])
+    spec = {**source(), 'role': 'heldout', 'split': 'heldout'}
+    store = LocalStore(tmp_path/'feed')
+    window = expert_source.publish_window(store, spec, 0, [value])
+    head = expert_source.append(store, None, [window])
+    assert expert_source.Feed(store, head)(spec, 0, 1) == [value]
+    bad = copy.deepcopy(value)
+    bad['quality_format'] = 'unknown'
+    with pytest.raises(ValueError):
+        expert_source.publish_window(store, spec, 1, [bad])
+
+
+def test_complete_policy_and_ordinary_feed_seal_into_the_same_native_job(prepared):
+    from neuroshard.evolution import answering, expert_data, expert_router, ordinary_quality
+    from neuroshard.evolution.sharded import graph_quality, learned_graph, planned_graph
+    from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
+    from neuroshard.evolution.sharded.portable import tensor_path
+    from test_graph_execution import SOURCE
+    from test_ordinary_quality import question
+
+    args, windows, quality = arguments(prepared)
+    state, plan, policy, objects, tokenizer, original_reader = args
+    home, _, original, _, _, _, _, _, _ = prepared
+    previous = original['lifecycle']['serving_graph']
+    template = original['lifecycle']['candidate_template']
+    digest = previous['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']['sha256']
+    features = EmbeddingFeatures(tensor_path(home/'interpreter', digest), digest, tokenizer, policy['tokenizer'])
+    samples = [{'id': identity([name, variant]), 'route': name, 'features': features(text)}
+               for name, text in [('parent', 'word1'), ('directory', 'word3'), ('protocol', 'word4'),
+                                  ('astronomy', 'word5')] for variant in range(2)]
+    for graph in (previous, template):
+        selected = [row for row in samples if row['route'] in {'parent', *graph['experts']}]
+        router = expert_router.fit(selected, embedding_root=features.root, tokenizer_root=policy['tokenizer'],
+                                   prototypes_per_route=1)
+        config = planned_graph.configuration(graph,
+            learned_graph.configuration(graph, router, features.profile, SOURCE),
+            {'instruction': 'word2', 'examples': [], 'max_tokens': 4}, SOURCE)
+        graph.update(answering.attach(graph, config, objects))
+    quality.update(format=graph_quality.ORDINARY, baseline_graph=identity(previous), candidate_template=template)
+    quality['generation']['retained_conversation'] = 4
+    quality['retention_gates'] = {'max_lost_correct': 0,
+        'minimum_accuracy': {role: .5 for role in graph_quality.ROLES[1:]}}
+    for number, role in enumerate(graph_quality.ROLES[1:]):
+        quality['roles'][role] = expert_preparation.record_set(objects, role,
+            [question('Separate retained word'+str(number+20)+'?', ['word30'])])
+    quality['retention_anchors'] = {role: quality['roles'][role] for role in graph_quality.ROLES[1:]}
+    policy['quality_rule'] = identity(graph_quality.admission_rule(quality))
+    state['manifest']['expert_admission']['data_policy'] = plan['data_policy'] = identity(policy)
+    state['manifest']['expert_lifecycle']['quality']['policy_root'] = objects.put_json(quality)
+    state['manifest']['expert_lifecycle']['max_tokens'] = 4
+    state['expert_lifecycle']['admission']['active'] = None
+    published, roots = LocalStore(home/'ordinary-feed'), []
+    for selection in windows:
+        spec = selection['source']
+        values = original_reader(spec, 0, 2)
+        if spec['role'] == 'heldout':
+            values = [{**row, 'quality_format': ordinary_quality.FORMAT} for row in values]
+        fields = {'messages'} if spec['role'] == 'train' else {'messages', *ordinary_quality.METADATA}
+        values = [{key: row[key] for key in fields if key in row} for row in values]
+        roots.append(expert_source.publish_window(published, spec, 0, values))
+    head = expert_source.append(published, None, roots)
+    reader = expert_source.Feed(published, head)
+    bundle = expert_preparation.prepare(*args[:-1], reader, windows=windows, batch_size=1)
+    inputs = objects.json(bundle['prepared'])
+    initial = renamed(previous['parent'], original['work']['checkpoint'], expert_data.job_identity(plan, inputs))
+    job, review = expert_preparation.seal(state, bundle, initial, template, quality, policy, objects, tokenizer, reader)
+    assert review['mechanical_checks_passed'] and review['upstream_documents'] == 4
+    admitted = objects.json(job['lifecycle']['quality']['policy_root'])
+    assert admitted['candidate_template']['answering'] == template['answering']
+    assert admitted['baseline_graph'] == identity(previous) and job['lifecycle']['quality']['stages'] == 5
+    def changed_labels(spec, start, count):
+        values = copy.deepcopy(reader(spec, start, count))
+        if spec['role'] == 'heldout':
+            values[0]['case_sensitive'] = [True]
+        return values
+    with pytest.raises(ValueError, match='scoring labels differ from the pinned upstream'):
+        expert_data.review(state, job, policy, objects, tokenizer, changed_labels)

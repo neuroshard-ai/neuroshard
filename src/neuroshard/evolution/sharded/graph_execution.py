@@ -49,7 +49,19 @@ def preflight(graph, profile, source_home):
 
 
 class GraphNetwork:
-    def __init__(self, graph, profile, *, objects, interpreter, seed, source_home, rank):
+    def __init__(self, graph, profile, *, objects, interpreter, seed, source_home, rank, policy_store=None):
+        from ..objects import Objects
+        self.source_home = Path(source_home)
+        self.interpreter_home = Path(interpreter)
+        self.policy_store = policy_store
+        self.answering_services = {}
+        self.answering_features = {}
+        if 'answering' in graph:
+            from ..answering import core, load
+            from .planned_graph import validate_configuration
+            if self.policy_store is None:
+                self.policy_store = Objects(Path(objects)/'policies')
+            validate_configuration(core(graph), load(graph, self.policy_store), self.source_home)
         self.runtime = preflight(graph, profile, source_home)
         self.world_size = 3 + len(graph['experts'])
         if (graph['descriptor']['format'] not in (serving_graph.COMPOSED, serving_graph.EXTENSIBLE)
@@ -217,6 +229,10 @@ class GraphNetwork:
 
     def answer(self, question, max_tokens, graph=None):
         selected = self.graph if graph is None else serving_graph.validate(graph)
+        if 'answering' in selected:
+            from .answering_service import execute
+            messages = [{'role': 'user', 'content': question}] if isinstance(question, str) else question
+            return execute(self, selected, messages, max_tokens)
         if any(selected[k] != self.graph[k] for k in ('parent', 'interpreter_assets',
                 'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root')):
             raise ValueError('A request cannot replace loaded models or execution rules')

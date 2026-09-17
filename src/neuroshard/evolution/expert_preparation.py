@@ -8,7 +8,7 @@ import copy
 
 from neuroshard.dataflow.store import canonical
 from . import cohort_questions, cohorts, expert_admission, expert_checkpoint, expert_data
-from . import expert_lifecycle, expert_work
+from . import expert_lifecycle, expert_work, ordinary_quality
 from .reference_data import identity
 from .schema import integer
 
@@ -42,7 +42,7 @@ def retain_history(state, quality, store):
     """
     from .sharded import graph_quality
     quality = copy.deepcopy(quality)
-    if quality['format'] != graph_quality.CONTINUAL:
+    if quality['format'] not in graph_quality.MEASURED:
         return quality
     role = 'retained-test-knowledge'
     anchors = expert_data.quality_rows(store, quality['retention_anchors'][role])
@@ -139,7 +139,7 @@ def prepare(state, plan, policy, store, tokenizer, upstream, *, windows, replay_
             add(row, document, role)
             if role == 'test':
                 questions.append({**{name: copy.deepcopy(original[name])
-                                     for name in ('stratum', 'topics', 'answers')},
+                                     for name in ordinary_quality.METADATA if name in original},
                                   'id': row['id'], 'messages': row['messages']})
             found += 1
         if found != count:
@@ -167,7 +167,10 @@ def prepare(state, plan, policy, store, tokenizer, upstream, *, windows, replay_
                                 'messages': row['messages'], 'license': source['license']}):
             raise ValueError('Replay changed the actually trained original conversation')
         add(row, {**document, 'role': 'replay'}, 'train')
-    cohort_questions.validate_rows(questions, release_scope=False)
+    if 'answering' in graph:
+        ordinary_quality.validate_rows(questions)
+    else:
+        cohort_questions.validate_rows(questions, release_scope=False)
     # A fixed interleaving keeps rehearsal distributed through the schedule.
     fresh = [i for i, row in enumerate(groups['train']) if not row['distill']]
     replay = [i for i, row in enumerate(groups['train']) if row['distill']]

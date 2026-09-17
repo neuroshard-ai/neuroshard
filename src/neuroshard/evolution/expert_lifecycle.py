@@ -8,7 +8,7 @@ import copy
 
 from neuroshard.demo import protocol
 from neuroshard.lab import state as ledger
-from . import auditing, expert_admission, expert_work, lifecycle, portable_lifecycle, serving_graph
+from . import answering, auditing, expert_admission, expert_work, lifecycle, portable_lifecycle, serving_graph
 from .reference_data import identity
 from .schema import integer, root
 
@@ -23,6 +23,7 @@ FIELDS = {
     'quality_expert': {'report', 'transcript_root', 'audit_budget'},
     'infer_expert': {'graph', 'question', 'max_tokens', 'workers', 'max_price', 'expires_in'},
     'respond_expert': {'job_id', 'outputs', 'text', 'transcript_root', 'workers', 'audit_budget'},
+    'respond_answering': {'job_id', 'response', 'transcript_root', 'workers', 'audit_budget'},
 }
 
 
@@ -47,6 +48,7 @@ def initialize(state):
             or serving_graph.rules(candidate)[:len(serving_graph.rules(previous))] != serving_graph.rules(previous)
             or previous['descriptor']['interpretation'] != candidate['descriptor']['interpretation']
             or candidate['parent'] != work['parent']
+            or ('answering' in previous) != ('answering' in candidate)
             or candidate['numerical_profile'] != work['numerical_profile']):
         raise ValueError('The candidate must preserve the committed earlier graph')
     expert = candidate['experts'][target]
@@ -65,6 +67,9 @@ def initialize(state):
     integer(profile['quality']['stages'], 1, 4096)
     integer(profile['price_per_token'], 1, 10**9)
     integer(profile['max_tokens'], 1, 256)
+    if 'answering' in previous:
+        for graph in (previous, candidate):
+            answering.quote(graph, profile['max_tokens'], profile['price_per_token'])
     state['expert_lifecycle'] = {'serving_graph': copy.deepcopy(previous), 'quality_claim': None,
         'quality_closed': False, 'jobs': {}, 'results': {}, 'history': []}
     state['serving_root'] = identity(previous)
@@ -136,6 +141,8 @@ def service_statement(claim):
         value.update(report=claim['report'], baseline_graph=claim['baseline_graph'])
     elif claim['kind'] == 'expert_inference':
         value.update(job_id=claim['job_id'], request=claim['request'], outputs=claim['outputs'], text=claim['text'])
+        if 'answering' in claim['graph']:
+            value['response'] = claim['response']
     else:
         raise ValueError('Unknown expert service')
     return value
@@ -149,6 +156,12 @@ def inference_receipt(chain_id, job, outputs, text, transcript_root, rank):
     return {'domain': FORMAT + '/response', 'chain_id': chain_id, 'job_id': job['id'],
         'graph': identity(job['graph']), 'request': identity(job['request']), 'outputs': outputs,
         'text': text, 'transcript_root': transcript_root, 'rank': rank}
+
+
+def answering_receipt(chain_id, job, response, transcript_root, rank):
+    return {'domain': FORMAT + '/answering-response', 'chain_id': chain_id, 'job_id': job['id'],
+        'graph': identity(job['graph']), 'request': identity(job['request']),
+        'response': identity(response), 'transcript_root': transcript_root, 'rank': rank}
 
 
 def apply(state, owner, body, envelope):
@@ -186,19 +199,29 @@ def apply(state, owner, body, envelope):
         if root(body['graph']) != identity(graph) or len(life['jobs']) >= 16:
             raise ValueError('Serving graph changed or inference queue is full')
         maximum = integer(body['max_tokens'], 1, profile['max_tokens'])
-        plan = serving_graph.calls(graph, body['question'], maximum)
-        needed = {rank for call in plan for rank in serving_graph.ownership(graph, call['model'])}
+        if 'answering' in graph:
+            messages = ([{'role': 'user', 'content': body['question']}]
+                        if isinstance(body['question'], str) else body['question'])
+            answering.conversation(messages)
+            request = {'messages': copy.deepcopy(messages), 'max_tokens': maximum}
+            needed = {str(rank) for rank in range(3 + len(graph['experts']))}
+            minimum_price = answering.quote(graph, maximum, profile['price_per_token'])['maximum_atoms']
+        else:
+            plan = serving_graph.calls(graph, body['question'], maximum)
+            request = {'question': body['question'], 'max_tokens': maximum, 'calls': plan}
+            needed = {rank for call in plan for rank in serving_graph.ownership(graph, call['model'])}
+            minimum_price = serving_graph.maximum_price(graph, plan, profile['price_per_token'])
         workers = body['workers']
         if not isinstance(workers, dict) or set(workers) != needed:
             raise ValueError('Assign exactly every participating graph owner')
         for worker in workers.values():
             ledger.public_key(worker)
-        amount = integer(body['max_price'], serving_graph.maximum_price(graph, plan, profile['price_per_token']), 2**60)
+        amount = integer(body['max_price'], minimum_price, 2**60)
         duration = integer(body['expires_in'], state['manifest']['params']['max_claim_blocks'] + 1, 100000)
         auditing.debit(state, owner, amount)
         key = protocol.transaction_id(envelope)
         life['jobs'][key] = {'id': key, 'payer': owner, 'graph': copy.deepcopy(graph),
-            'request': {'question': body['question'], 'max_tokens': maximum, 'calls': plan},
+            'request': request,
             'workers': copy.deepcopy(workers), 'unit_price': profile['price_per_token'], 'escrow': amount,
             'expires': state['height'] + duration, 'claim_id': None}
     elif body['kind'] == 'respond_expert':
@@ -206,6 +229,8 @@ def apply(state, owner, body, envelope):
         if not job or job['workers']['0'] != owner or job['claim_id'] or state['height'] > job['expires']:
             raise ValueError('No matching available expert inference assignment')
         graph, outputs, text = job['graph'], body['outputs'], body['text']
+        if 'answering' in graph:
+            raise ValueError('A complete answering job requires its entire replayable response')
         payments = serving_graph.payments(graph, job['request']['calls'], outputs, job['unit_price'])
         if not isinstance(text, str) or len(text.encode()) > 32768 or sum(payments.values()) > job['escrow']:
             raise ValueError('Response text or price exceeds its bounds')
@@ -221,6 +246,31 @@ def apply(state, owner, body, envelope):
             job_id=job['id'], graph=copy.deepcopy(graph), model_root=identity(graph),
             executor_root=graph['executor_root'], request=copy.deepcopy(job['request']),
             outputs=copy.deepcopy(outputs), text=text, stages=sum(len(output['token_ids']) for output in outputs),
+            expires=min(job['expires'], state['height'] + state['manifest']['params']['max_claim_blocks']))
+        job['claim_id'] = state['candidate']['id']
+    elif body['kind'] == 'respond_answering':
+        job = life['jobs'].get(root(body['job_id']))
+        if (not job or 'answering' not in job['graph'] or job['workers']['0'] != owner
+                or job['claim_id'] or state['height'] > job['expires']):
+            raise ValueError('No matching available complete answering assignment')
+        response = body['response']
+        answering.check_request(response, job['request'])
+        payments = answering.payments(job['graph'], job['request']['max_tokens'], response, job['unit_price'])
+        if sum(payments.values()) > job['escrow']:
+            raise ValueError('The complete response exceeds its reserved price')
+        receipts = body['workers']
+        if not isinstance(receipts, dict) or set(receipts) != set(job['workers']):
+            raise ValueError('Require complete answering receipts from every assigned owner')
+        for rank, signed in receipts.items():
+            payload, signer = protocol.verify(signed)
+            if signer != job['workers'][rank] or payload != answering_receipt(
+                    state['chain_id'], job, response, body['transcript_root'], rank):
+                raise ValueError('An owner changed the answering graph, conversation or response')
+        portable_lifecycle.new_claim(state, owner, body, envelope, kind='expert_inference',
+            job_id=job['id'], graph=copy.deepcopy(job['graph']), model_root=identity(job['graph']),
+            executor_root=job['graph']['executor_root'], request=copy.deepcopy(job['request']),
+            outputs=copy.deepcopy(response['outputs']), text=response['text'], response=copy.deepcopy(response),
+            stages=response['generated_tokens'],
             expires=min(job['expires'], state['height'] + state['manifest']['params']['max_claim_blocks']))
         job['claim_id'] = state['candidate']['id']
 
@@ -243,7 +293,9 @@ def settled(state, claim, accepted):
     job = life['jobs'][claim['job_id']]
     job['claim_id'] = None
     if accepted:
-        payments = serving_graph.payments(job['graph'], job['request']['calls'], claim['outputs'], job['unit_price'])
+        payments = (answering.payments(job['graph'], job['request']['max_tokens'], claim['response'], job['unit_price'])
+                    if 'answering' in job['graph'] else
+                    serving_graph.payments(job['graph'], job['request']['calls'], claim['outputs'], job['unit_price']))
         paid = sum(payments.values())
         for rank, amount in payments.items():
             ledger.account(state, job['workers'][rank])['balance'] += amount

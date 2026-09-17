@@ -18,6 +18,8 @@ from .learned_graph import LearnedGraphNetwork
 
 FORMAT = 'neuroshard-planned-graph-service-v1'
 SOURCES = ('src/neuroshard/evolution/sharded/planned_graph.py',
+           'src/neuroshard/evolution/answering.py',
+           'src/neuroshard/evolution/sharded/answering_service.py',
            'src/neuroshard/evolution/expert_scope.py',
            'src/neuroshard/evolution/sharded/cached_inference.py',
            'src/neuroshard/evolution/sharded/branch.py',
@@ -149,27 +151,23 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     return result
 
 
+def validate_configuration(graph, config, source_home):
+    fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
+                  'expert_prompts', 'general_instruction'}
+    fields |= {'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy'} & set(config)
+    serving_graph.fields(config, fields, 'Invalid planned service configuration')
+    if config != configuration(graph, config['learned'], config['planner'], source_home,
+                               config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
+                               config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
+                               config.get('request_policy')):
+        raise ValueError('Planned service changed its models, sources or execution rules')
+    from .learned_graph import validate_configuration as validate_learned
+    validate_learned(graph, config['learned'], source_home)
+
+
 class PlannedGraphNetwork:
     def __init__(self, network, config, *, source_home, features=None, planner_weights_home=None):
-        fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
-                  'expert_prompts', 'general_instruction'}
-        if 'route_scopes' in config:
-            fields.add('route_scopes')
-        if 'planner_weights' in config:
-            fields.add('planner_weights')
-        if 'composer' in config:
-            fields.add('composer')
-        if 'answer_policy' in config:
-            fields.add('answer_policy')
-        if 'request_policy' in config:
-            fields.add('request_policy')
-        serving_graph.fields(config, fields,
-                             'Invalid planned service configuration')
-        if config != configuration(network.graph, config['learned'], config['planner'], source_home,
-                                   config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
-                                   config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
-                                   config.get('request_policy')):
-            raise ValueError('Planned service changed its models, sources or execution rules')
+        validate_configuration(network.graph, config, source_home)
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
         self.root, self.prefix = identity(config), planner_prefix(config['planner'])

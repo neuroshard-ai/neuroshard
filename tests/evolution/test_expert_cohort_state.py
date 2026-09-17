@@ -14,11 +14,11 @@ from neuroshard.evolution.sharded.model import Partition
 RECIPE = {'steps': 2, 'warmup_steps': 0, 'learning_rate': .0003, 'weight_decay': .01, 'clip_norm': 1.}
 
 
-def prepare(tmp_path):
+def prepare(tmp_path, context=64):
     torch.set_num_threads(1)
     torch.manual_seed(14)
     config = LlamaConfig(vocab_size=32, hidden_size=16, intermediate_size=32, num_hidden_layers=6,
-                        num_attention_heads=2, num_key_value_heads=1, max_position_embeddings=64,
+                        num_attention_heads=2, num_key_value_heads=1, max_position_embeddings=context,
                         tie_word_embeddings=True, attention_dropout=0.)
     config._attn_implementation = 'sdpa'
     model = LlamaForCausalLM(config).float()

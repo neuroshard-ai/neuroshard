@@ -45,6 +45,9 @@ def checked(store, key, maximum):
 
 def record(value, role):
     fields = {'messages'} | ({'stratum', 'topics', 'answers'} if role == 'heldout' else set())
+    ordinary = isinstance(value, dict) and role == 'heldout' and 'quality_format' in value
+    if ordinary:
+        fields |= {'quality_format'} | ({'answer_aliases', 'case_sensitive'} & set(value))
     if not isinstance(value, dict) or set(value) != fields or len(canonical(value)) > 256*1024:
         raise ValueError('Require bounded structured source conversations and declared scoring metadata')
     messages = value['messages']
@@ -63,9 +66,13 @@ def record(value, role):
     if messages[-1]['role'] != 'assistant':
         raise ValueError('Complete the final assistant turn')
     if role == 'heldout':
-        from . import cohort_questions
+        from . import cohort_questions, ordinary_quality
         from .data import document_identity
-        cohort_questions.validate_rows([{**value, 'id': document_identity(messages)}], release_scope=False)
+        rows = [{**value, 'id': document_identity(messages)}]
+        if ordinary:
+            ordinary_quality.validate_rows(rows)
+        else:
+            cohort_questions.validate_rows(rows, release_scope=False)
     return value
 
 

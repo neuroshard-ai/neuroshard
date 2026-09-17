@@ -31,8 +31,8 @@ from test_serving_graph import FIXTURE
 SOURCE = Path(__file__).resolve().parents[2]
 
 
-def prepare_graph(home):
-    parent, owned, shard, optimizer = prepare(home)
+def prepare_graph(home, context=64):
+    parent, owned, shard, optimizer = prepare(home, context=context)
     initial = cohort_state.commit_tail(home / 'initial', shard, optimizer, parent, owned, 'b'*64, 0, RECIPE, 5)
     update(shard, optimizer, 0)
     first = cohort_state.commit_tail(home / 'first', shard, optimizer, parent, owned, 'a'*64, 1, RECIPE, 5)
@@ -85,7 +85,7 @@ def prepare_graph(home):
         interpretation={'instruction': 'Interpret.', 'examples': [], 'max_tokens': 1,
             'instruction_placement': 'after-quoted-question', 'invalid': 'Use the original question.'},
         interpreter={**provenance, 'weight_sha256': identity(provenance), 'partitioned_assets': identity(assets)})
-    graph['tokenizer'] = {'root': tokenizer_identity(tokenizer), 'eos_id': 2, 'max_context': 64,
+    graph['tokenizer'] = {'root': tokenizer_identity(tokenizer), 'eos_id': 2, 'max_context': context,
                           'files': {path.name: sha256(path) for path in seed.iterdir()}}
     prefix = example_messages('Interpret.', [])
     graph['interpreter_prompt'] = {'format': 'name-field-json-v1', 'messages': identity(prefix),

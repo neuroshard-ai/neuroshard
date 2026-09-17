@@ -7,7 +7,7 @@ quality measurement on newly routed inputs or establish cross-hardware equality.
 from pathlib import Path
 import math
 
-from .. import cohort_questions, expert_lifecycle, serving_graph
+from .. import cohort_questions, expert_lifecycle, ordinary_quality, serving_graph
 from ..reference_data import identity, read_records
 from ..schema import integer, root
 
@@ -15,30 +15,41 @@ FORMAT = 'neuroshard-expert-graph-quality-v1'
 PROSPECTIVE = 'neuroshard-prospective-expert-graph-quality-v1'
 GENERAL = 'neuroshard-general-expert-graph-quality-v1'
 CONTINUAL = 'neuroshard-continual-expert-graph-quality-v1'
+ORDINARY = ordinary_quality.FORMAT
+MEASURED = (CONTINUAL, ORDINARY)
 ROLES = ('test', 'retained-test-knowledge', 'retained-test-skills', 'retained-test-conversation')
 POLICY_FIELDS = {'format', 'baseline_graph', 'candidate_graph', 'prepared', 'roles', 'generation', 'gates'}
 
 
 def validate_policy(policy):
-    prospective = isinstance(policy, dict) and policy.get('format') in (PROSPECTIVE, GENERAL, CONTINUAL)
+    prospective = isinstance(policy, dict) and policy.get('format') in (PROSPECTIVE, GENERAL, *MEASURED)
     fields = POLICY_FIELDS - {'candidate_graph'} | {'candidate_template'} if prospective else POLICY_FIELDS
-    if policy.get('format') == CONTINUAL:
+    if policy.get('format') in MEASURED:
         fields = fields | {'retention_gates', 'retention_anchors'}
     serving_graph.fields(policy, fields, 'Invalid frozen graph quality policy')
-    if policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, CONTINUAL):
+    if policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, *MEASURED):
         raise ValueError('Unsupported frozen graph quality policy')
     root(policy['baseline_graph'])
     root(policy['prepared'])
     if prospective:
         serving_graph.validate(policy['candidate_template'], allow_untrained=True)
         expert_lifecycle.training_expert(policy['candidate_template'])
+        if (policy['format'] == ORDINARY) != ('answering' in policy['candidate_template']):
+            raise ValueError('Complete answering graphs require ordinary response quality')
     else:
         root(policy['candidate_graph'])
     serving_graph.fields(policy['roles'], ROLES, 'Require complete new and retained evaluation roles')
     specs = list(policy['roles'].values())
-    if policy['format'] == CONTINUAL:
-        serving_graph.fields(policy['retention_gates'], {'max_lost_correct'}, 'Invalid measured retention gate')
+    if policy['format'] in MEASURED:
+        retention_fields = {'max_lost_correct'} | ({'minimum_accuracy'} if policy['format'] == ORDINARY else set())
+        serving_graph.fields(policy['retention_gates'], retention_fields, 'Invalid measured retention gate')
         integer(policy['retention_gates']['max_lost_correct'], 0, 0)
+        if policy['format'] == ORDINARY:
+            minimum = policy['retention_gates']['minimum_accuracy']
+            serving_graph.fields(minimum, ROLES[1:], 'Declare useful measured retention floors')
+            if any(type(value) not in (int, float) or not math.isfinite(value) or not 0 < value <= 1
+                   for value in minimum.values()):
+                raise ValueError('Retention floors must require some correct actual answers')
         serving_graph.fields(policy['retention_anchors'], ROLES[1:], 'Pin the initial retention anchors')
         specs.extend(policy['retention_anchors'].values())
         for role in ROLES[2:]:
@@ -51,7 +62,10 @@ def validate_policy(policy):
         root(spec['sha256'])
         root(spec['ids'])
         integer(spec['count'], 1, 4096)
-    serving_graph.fields(policy['generation'], {'new', 'retained_knowledge', 'retained_skills'},
+    generation = {'new', 'retained_knowledge', 'retained_skills'}
+    if policy['format'] == ORDINARY:
+        generation.add('retained_conversation')
+    serving_graph.fields(policy['generation'], generation,
                          'Invalid frozen generation limits')
     for maximum in policy['generation'].values():
         integer(maximum, 1, 256)
@@ -70,19 +84,25 @@ def validate_policy(policy):
 
 def stages(policy):
     """Fund every new and retained question pair that the auditor executes."""
-    roles = ROLES[:3] if policy['format'] == CONTINUAL else ('test',)
+    roles = ROLES if policy['format'] == ORDINARY else ROLES[:3] if policy['format'] == CONTINUAL else ('test',)
     return sum(policy['roles'][role]['count'] for role in roles)
 
 
 def admission_rule(policy):
     """Keep acceptance rules fixed while prior admitted evaluations accumulate."""
     rule = {key: policy[key] for key in ('gates', 'generation')}
-    if policy['format'] == CONTINUAL:
-        rule.update(format=CONTINUAL, retention_gates=policy['retention_gates'],
+    if policy['format'] in MEASURED:
+        rule.update(format=policy['format'], retention_gates=policy['retention_gates'],
                     retained_roles=policy['retention_anchors'])
     else:
         rule['retained_roles'] = {key: value for key, value in policy['roles'].items() if key != 'test'}
     return rule
+
+
+def validate_rows(policy, values):
+    if policy['format'] == ORDINARY:
+        return ordinary_quality.validate_rows(values)
+    return cohort_questions.validate_rows(values, release_scope=False)
 
 
 def rows(policy, inputs, role):
@@ -129,30 +149,38 @@ def measured_retention(policy, inputs, baseline, candidate, network):
     normalization as the new-data gate, with no learned judge or loss proxy.
     """
     executions, seen = {}, set()
-    for role in ROLES[1:3]:
+    ordinary = policy['format'] == ORDINARY
+    for role in (ROLES[1:] if ordinary else ROLES[1:3]):
         examples = rows(policy, inputs, role)
-        cohort_questions.validate_rows(examples, release_scope=False)
-        maximum = policy['generation']['retained_knowledge' if role.endswith('knowledge') else 'retained_skills']
+        validate_rows(policy, examples)
+        maximum = policy['generation']['retained_' + role.rsplit('-', 1)[1]]
         executions[role] = []
         for row in examples:
             if row['id'] in seen:
                 raise ValueError('Retained questions must have distinct identities')
             seen.add(row['id'])
-            question = row['messages'][0]['content']
+            question = row['messages'][:-1] if ordinary else row['messages'][0]['content']
             old = network.answer(question, maximum, baseline)
             new = network.answer(question, maximum, candidate)
-            before = cohort_questions.correct(row, old['text'], release_scope=False)
-            after = cohort_questions.correct(row, new['text'], release_scope=False)
+            before = (ordinary_quality.correct(row, old) if ordinary else
+                      cohort_questions.correct(row, old['text'], release_scope=False))
+            after = (ordinary_quality.correct(row, new) if ordinary else
+                     cohort_questions.correct(row, new['text'], release_scope=False))
             executions[role].append({'id': row['id'], 'before': old, 'after': new,
                 'before_correct': before, 'after_correct': after, 'lost_correct': before and not after})
     # The unchanged parent forward path remains an additional check, rather
     # than a substitute for generating the old expert and assistant answers.
-    structural = retention(policy, inputs, baseline, candidate)['roles'][ROLES[-1]]
+    structural = [] if ordinary else retention(policy, inputs, baseline, candidate)['roles'][ROLES[-1]]
     lost = sum(row['lost_correct'] for values in executions.values() for row in values)
-    return {'format': CONTINUAL + '/retained-answers', 'roles': executions,
+    accuracy = {role: sum(row['after_correct'] for row in values)/len(values)
+                for role, values in executions.items()}
+    floors = (all(accuracy[role] >= threshold for role, threshold in
+                  policy['retention_gates']['minimum_accuracy'].items()) if ordinary else True)
+    return {'format': policy['format'] + '/retained-answers', 'roles': executions,
+        **({'accuracy': accuracy, 'minimum_accuracy_passed': floors} if ordinary else {}),
         'conversation_computations': structural, 'lost_correct': lost,
         'passed': lost <= policy['retention_gates']['max_lost_correct']
-                  and all(row['unchanged'] for row in structural)}
+                  and floors and all(row['unchanged'] for row in structural)}
 
 
 def evaluate(policy, inputs, baseline, candidate, network, progress=None):
@@ -160,29 +188,40 @@ def evaluate(policy, inputs, baseline, candidate, network, progress=None):
     expected = (identity(expert_lifecycle.materialize_graph(policy['candidate_template'],
                     candidate['experts'][expert_lifecycle.training_expert(policy['candidate_template'])]))
                 if prospective else policy['candidate_graph'])
-    if (policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, CONTINUAL) or policy['baseline_graph'] != identity(baseline)
+    if (policy['format'] not in (FORMAT, PROSPECTIVE, GENERAL, *MEASURED) or policy['baseline_graph'] != identity(baseline)
             or expected != identity(candidate) or set(policy['roles']) != set(ROLES)):
         raise ValueError('Quality policy differs from its complete graphs or input cohorts')
+    ordinary = policy['format'] == ORDINARY
+    if ordinary != ('answering' in baseline) or ordinary != ('answering' in candidate):
+        raise ValueError('Evaluate the complete answering system on both sides of promotion')
     # Missing or corrupted bytes must fail before numerical execution starts.
     examples = rows(policy, inputs, 'test')
-    release_scope = policy['format'] not in (GENERAL, CONTINUAL)
-    cohort_questions.validate_rows(examples, release_scope=release_scope)
+    release_scope = policy['format'] not in (GENERAL, *MEASURED)
+    if ordinary:
+        ordinary_quality.validate_rows(examples)
+    else:
+        cohort_questions.validate_rows(examples, release_scope=release_scope)
+    # Verify every retained file before the first forward pass, too.
+    for role in ROLES[1:]:
+        values = rows(policy, inputs, role)
+        if ordinary:
+            ordinary_quality.validate_rows(values)
     retained = (measured_retention(policy, inputs, baseline, candidate, network)
-                if policy['format'] == CONTINUAL else retention(policy, inputs, baseline, candidate))
+                if policy['format'] in MEASURED else retention(policy, inputs, baseline, candidate))
     maximum = policy['generation']['new']
     before, after, executions = [], [], []
     for index, row in enumerate(examples):
-        question = row['messages'][0]['content']
+        question = row['messages'][:-1] if ordinary else row['messages'][0]['content']
         old = network.answer(question, maximum, baseline)
         new = network.answer(question, maximum, candidate)
-        before.append({'id': row['id'], 'text': old['text']})
-        after.append({'id': row['id'], 'text': new['text']})
+        before.append(old if ordinary else {'id': row['id'], 'text': old['text']})
+        after.append(new if ordinary else {'id': row['id'], 'text': new['text']})
         executions.append({'id': row['id'], 'before': old, 'after': new})
         if progress:
             progress(index + 1, len(examples))
-    decision = cohort_questions.decision(examples, before, after, policy['gates'],
-                                         release_scope=release_scope)
-    check = 'retained_answers' if policy['format'] == CONTINUAL else 'unchanged_retained_computations'
+    decision = (ordinary_quality.decision(examples, before, after, policy['gates']) if ordinary else
+                cohort_questions.decision(examples, before, after, policy['gates'], release_scope=release_scope))
+    check = 'retained_answers' if policy['format'] in MEASURED else 'unchanged_retained_computations'
     decision['checks'][check] = retained['passed']
     decision['passed'] = all(decision['checks'].values())
     return {'format': FORMAT + '/result', 'policy': identity(policy), 'executions': executions,

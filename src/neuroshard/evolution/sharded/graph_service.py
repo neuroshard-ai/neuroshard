@@ -3,7 +3,7 @@
 Callers provide a locally configured GraphNetwork. Every verdict invokes its
 actual neural path; a miner's report is never accepted as an execution result.
 """
-from .. import expert_lifecycle, serving_graph
+from .. import answering, expert_lifecycle, serving_graph
 from ..reference_data import identity
 
 
@@ -17,6 +17,8 @@ def inference_report(claim, network):
             or claim['executor_root'] != claim['graph']['executor_root']):
         raise ValueError('Invalid committed graph inference obligation')
     request = claim['request']
+    if 'answering' in claim['graph']:
+        return answering_report(claim, network)
     serving_graph.fields(request, {'question', 'max_tokens', 'calls'}, 'Invalid raw graph request')
     if request['calls'] != serving_graph.calls(claim['graph'], request['question'], request['max_tokens']):
         raise ValueError('Claim changed the request-derived neural calls')
@@ -28,6 +30,26 @@ def inference_report(claim, network):
     result = network.answer(request['question'], request['max_tokens'], claim['graph'])
     expected = {'graph': identity(claim['graph']), 'request': request,
                 'outputs': claim['outputs'], 'text': claim['text']}
+    valid = result == expected and identity(inference_transcript(claim, result)) == claim['record_root']
+    report = {'format': expert_lifecycle.FORMAT + '/replay',
+        'statement': identity(expert_lifecycle.service_statement(claim)),
+        'stages': [{'stage': index, 'valid': valid} for index in range(claim['stages'])]}
+    expert_lifecycle.replay_report(claim, report)
+    return report, result
+
+
+def answering_report(claim, network):
+    request, response = claim['request'], claim['response']
+    serving_graph.fields(request, {'messages', 'max_tokens'}, 'Invalid complete conversation request')
+    answering.conversation(request['messages'])
+    answering.check_request(response, request)
+    answering.payments(claim['graph'], request['max_tokens'], response, 1)
+    if (claim['outputs'] != response['outputs'] or claim['text'] != response['text']
+            or claim['stages'] != response['generated_tokens']):
+        raise ValueError('Audit the complete answering response and every neural output token')
+    result = network.answer(request['messages'], request['max_tokens'], claim['graph'])
+    expected = {'graph': identity(claim['graph']), 'request': request, 'outputs': claim['outputs'],
+                'text': claim['text'], 'answering': response}
     valid = result == expected and identity(inference_transcript(claim, result)) == claim['record_root']
     report = {'format': expert_lifecycle.FORMAT + '/replay',
         'statement': identity(expert_lifecycle.service_statement(claim)),

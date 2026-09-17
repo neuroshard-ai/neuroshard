@@ -61,6 +61,29 @@ class Decision:
         return self.route
 
 
+def validate_configuration(graph, config, source_home):
+    """Check router/model/source commitments before allocating neural weights."""
+    mapped = config.get('format') == MAPPED
+    aliased = config.get('format') == ALIASED_COMPOSING
+    composing = config.get('format') in (COMPOSING, ALIASED_COMPOSING)
+    fields = {'format', 'graph', 'router', 'feature_profile', 'sources'}
+    if mapped or aliased:
+        fields.add('route_models')
+    if composing:
+        fields.add('composition')
+    serving_graph.fields(config, fields, 'Invalid learned serving configuration')
+    model = expert_router.validate(config['router'])
+    embedding = graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
+    if (config != configuration(graph, model, config['feature_profile'], source_home,
+                               config.get('route_models'), compose=composing)
+            or (not mapped and not aliased and (model['fallback'] != 'parent'
+                or set(model['prototypes']) != {'parent', *graph['experts']}))
+            or model['tokenizer_root'] != graph['tokenizer']['root']
+            or model['embedding_root'] != identity(config['feature_profile'])
+            or config['feature_profile'].get('embedding_sha256') != embedding['sha256']):
+        raise ValueError('Learned service changed its models, features, tokenizer or source')
+
+
 class LearnedGraphNetwork:
     def __init__(self, network, config, *, source_home, features=None, graph=None):
         # A growing deployment can retain its earlier service on a subset of
@@ -72,27 +95,7 @@ class LearnedGraphNetwork:
                 or any(value != network.graph['experts'].get(name) for name, value in selected['experts'].items())
                 or any(rule not in network.graph['descriptor']['rules'] for rule in selected['descriptor']['rules'])):
             raise ValueError('Retained learned service differs from installed frozen expert paths')
-        mapped = config.get('format') == MAPPED
-        aliased = config.get('format') == ALIASED_COMPOSING
-        composing = config.get('format') in (COMPOSING, ALIASED_COMPOSING)
-        fields = {'format', 'graph', 'router', 'feature_profile', 'sources'}
-        if mapped or aliased:
-            fields.add('route_models')
-        if composing:
-            fields.add('composition')
-        serving_graph.fields(config, fields,
-                             'Invalid learned serving configuration')
-        model = expert_router.validate(config['router'])
-        embedding = network.graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
-        if (config != configuration(selected, model, config['feature_profile'], source_home,
-                                     config.get('route_models'), compose=composing)
-                or (not mapped and not aliased and (model['fallback'] != 'parent'
-                    or set(model['prototypes']) != {'parent', *selected['experts']}))
-                or model['tokenizer_root'] != network.graph['tokenizer']['root']
-                or model['embedding_root'] != identity(config['feature_profile'])
-                or config['feature_profile'].get('embedding_sha256') != embedding['sha256']
-                or config['sources'] != {name: sha256(Path(source_home) / name) for name in SOURCES}):
-            raise ValueError('Learned service changed its models, features, tokenizer or source')
+        validate_configuration(selected, config, source_home)
         if network.rank == 0:
             if features is None or features.profile != config['feature_profile']:
                 raise ValueError('The embedding owner needs the committed feature extractor')
