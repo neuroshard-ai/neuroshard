@@ -252,6 +252,17 @@ under the same admission rules.
 
 ## Progress log
 
+- 2026-09-17: The complete ordinary interface now passes **25/25 retained
+  knowledge, 10/12 general skills and 8/8 conversations**, with no earlier
+  correct answer lost and exact replay across actual owned shards. A separately
+  frozen prospective assistant screen then passes **10/12 skills and 6/8
+  conversations**, including exact replay; its four failed answers remain
+  recorded. The twenty fresh cases join cumulative retention unchanged. The
+  renewed three-cohort native prescription preserves all original neural
+  training/final bytes, domain gates and thresholds. This is a measured
+  answering improvement; repeated useful native cohorts remain unproved and
+  items 1 and 2 stay open. [Results and limits](docs/ORDINARY_NATIVE_CAMPAIGN.md).
+
 - 2026-09-17: Completed the C scope continuation: **15/15 ordinary answers**,
   **13/13 unique forced controls**, and **16/16 C preservation questions**.
   All earlier correct tested answers survived, with identical neural outputs

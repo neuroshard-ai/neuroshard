@@ -14,6 +14,53 @@ multi-turn conversations are fixed preservation anchors. These are bounded
 assistant tasks, not a claim of frontier-model capability. Evaluation labels and
 answers reach the scorer only; the answering system receives the conversation.
 
+The initial bootstrap exposed a general-answering failure before any full cohort
+was trained. Its real prefix and one update were independently replayed and
+accepted; the measured quality failure was audited and rejected, keeping serving
+unchanged. The repaired answering system now has the following measured results:
+
+| Screen | Knowledge | General skills | Conversations | Previously correct lost |
+| --- | ---: | ---: | ---: | ---: |
+| Original native bootstrap baseline | 24/25 | 3/12 | 4/8 | — |
+| First general-interface diagnostic, failed | 22/25 | 6/12 | 5/8 | 4 |
+| Complete worked-answer development diagnostic | 25/25 | 10/12 | 8/8 | 0 |
+| Separately frozen prospective assistant screen | — | 10/12 | 6/8 | Fresh cases |
+
+Both final rows used automatic selection and actual owned shards, and replayed
+their first complete response exactly. The prospective screen passed its
+precommitted 75% floor in each category. It still failed four questions: one
+comparison was routed incorrectly, a conversation calculation was wrong, a
+sort was wrong, and a word-position answer was wrong. Those failures remain in
+the record; these results establish bounded assistant competence, not broad
+ChatGPT-level capability or another learned cohort.
+
+The repair preserves mixed-question decomposition and earlier free-form replies,
+fits a general/specialist guard using separate training inputs, and uses bounded
+worked reasoning for explicitly constrained general requests. Its six worked
+examples contain neither the installed expert facts nor evaluation answers.
+The final-answer boundary only extracts generated text; it cannot certify its
+truth. All reasoning tokens are included in complete replay and native billing.
+A temporary full-model oracle outside the stopped network first matched all
+218 preserved tensors and all ten control token streams. Two earlier reasoning
+methods scored 12/20; an explicit final-answer reminder scored 18/20 before
+integration. The full-model oracle was deleted before distributed evaluation.
+
+The [development outputs](../config/experiments/general-interface-worked/diagnostic-result.json)
+and [prospective outputs](../config/experiments/general-assistant-holdout-results/result.json)
+bind the measured complete replies. The
+[renewed prescription](../config/experiments/ordinary-native-repaired/operation.json)
+retains every unopened admission/conversation/feed training and final byte,
+domain gate, training recipe and quality threshold. All twenty prospective
+assistant cases join retention, yielding 25 knowledge, 24 skill and 16
+conversation anchors. No full cohort has passed or been promoted under this
+renewed prescription yet. Checklist items 1 and 2 remain open.
+
+Serving allocation now reserves FP32 weights and working memory without
+reserving gradients or Adam; training retains its original conservative guard.
+The parameter and context limits are unchanged. Numerical checks preserve exact
+owned outputs while checking that inference cannot bypass the parameter limit.
+The renewed native source commitment includes this allocation correction.
+
 Each full job uses 128 updates, batch size 16, microbatch 4, maximum training
 length 256, learning rate 0.00005, four warmup updates, weight decay 0.01 and
 gradient clipping at 1. Only its terminal checkpoint is eligible. A new tail
