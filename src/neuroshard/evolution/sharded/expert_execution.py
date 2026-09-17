@@ -103,7 +103,7 @@ def _context(claim, profile, plan, prepared):
     return parent, before, job
 
 
-def _persist(store, shard, optimizer, parent, sources, value):
+def _persist(store, shard, optimizer, parent, sources, value, *, seed_expert=None, objects=None):
     """Publish a complete boundary atomically; retries verify existing bytes."""
     common = expert_checkpoint.unpack(parent, value)
     store = Path(store)
@@ -113,7 +113,8 @@ def _persist(store, shard, optimizer, parent, sources, value):
         with tempfile.TemporaryDirectory(prefix='.writing-', dir=store) as temporary:
             pending = Path(temporary)
             meta = incremental_state.write(pending, shard, optimizer, parent, sources,
-                value['job'], value['step'], value['recipe'], 'tail-control', value['split'])
+                value['job'], value['step'], value['recipe'], 'tail-control', value['split'],
+                initial_expert=seed_expert, initial_objects=objects)
             if identity(meta) != common['shards'][shard.rank]:
                 raise ValueError('Persisted tensor bytes differ from the computed checkpoint')
             save(pending / 'checkpoint.json', value)
@@ -128,8 +129,33 @@ def _persist(store, shard, optimizer, parent, sources, value):
     # Re-read every owned object, including original parent provenance and Adam.
     if json.loads((destination / 'checkpoint.json').read_bytes()) != value:
         raise ValueError('Existing checkpoint metadata differs from the computed boundary')
-    incremental_state.load(destination, shard, optimizer, common, parent, value['job'], value['recipe'])
+    incremental_state.load(destination, shard, optimizer, common, parent, value['job'], value['recipe'],
+                           initial_expert=seed_expert)
     return destination
+
+
+def initialize(parent, plan, prepared, *, objects, checkpoint_store):
+    """Persist actual zero-update weights before a prospective job is sealed."""
+    if plan['format'] != expert_data.FORMAT or plan['parent'] != identity(parent):
+        raise ValueError('Initialize one prepared native expert job')
+    expert_checkpoint.parent_records(parent)
+    expert_data.validate_prepared(prepared, plan, parent['config']['vocab_size'])
+    if plan['parent_layout'] != parent['boundaries']:
+        raise ValueError('Initialization changed the accepted partition layout')
+    runtime = reference.configure(plan['runtime']['device'], plan['threads'])
+    runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
+    if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
+        raise ValueError('Initialization changed its prescribed numerical runtime')
+    config = LlamaConfig(**parent['config'])
+    config._attn_implementation = 'sdpa'
+    boundaries = plan['expert_layout']
+    shard = Partition(config, boundaries, len(boundaries)-2, runtime['device'], plan['parameter_limit'])
+    optimizer = incremental.configure(shard, plan['split'], plan['training'])
+    seed = plan.get('seed_expert', {}).get('checkpoint')
+    sources = cohort_state.initialize_tail(shard, parent, Path(objects), plan['split'], seed)
+    value = snapshot(shard, optimizer, parent, training_job(plan, prepared), 0, plan['training'])
+    _persist(checkpoint_store, shard, optimizer, parent, sources, value, seed_expert=seed, objects=Path(objects))
+    return value
 
 
 def _train(before, count, profile, plan, prepared, *, inputs, objects, bank_home,

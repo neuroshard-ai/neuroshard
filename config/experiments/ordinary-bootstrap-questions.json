@@ -1,0 +1,10 @@
+{
+  "format": "neuroshard-ordinary-bootstrap-rejection-v1",
+  "purpose": "Score an honestly measured one-update candidate before the three full cohorts. Failure must leave accepted serving available. Unexpected success is reported and stops this prescription.",
+  "questions": [
+    {"topic": "admission-sources", "question": "For an expert data proposal, what limit applies to the count of pinned sources?"},
+    {"topic": "admission-cursor", "question": "An expert source cursor may advance by at most how many records in one window?"},
+    {"topic": "admission-proposal-limit", "question": "In blocks, what upper bound does configuration impose on an expert proposal's lifetime?"},
+    {"topic": "admission-job-limit", "question": "What is the largest allowed expert job duration, measured in blocks?"}
+  ]
+}

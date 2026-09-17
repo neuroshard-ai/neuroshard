@@ -44,6 +44,77 @@ def production_record(reports):
     return {'format': expert_work.FORMAT + '/production', 'context': context, 'partitions': partitions}
 
 
+def owned_stage(rank, profile, plan, prepared, *, inputs, objects, home, incoming=None, max_seconds=900):
+    """Execute one native production stage on the host owning that partition.
+
+    A configured auditor launches all three stages freshly and transfers only
+    their committed activations. One stage report alone is never an audit
+    verdict. This uses the same numerical kernel as sequential full replay.
+    """
+    if profile['format'] != expert_work.PROSPECTIVE or type(rank) is not int or rank not in range(3):
+        raise ValueError('Require one owned stage of a prospective prefix job')
+    parent, _, job = expert_execution._job_context(profile['checkpoint'], profile, plan, prepared)
+    records = expert_execution.training_records(plan, prepared, inputs, parent)
+    microbatches = sum(math.ceil(len(batch)/plan['microbatch']) for batch in prepared['batches'])
+    if (profile['feature_stages'] != 3*microbatches or profile['batch_count'] != len(prepared['batches'])
+            or plan['parent_layout'] != parent['boundaries']):
+        raise ValueError('An owned prefix stage must cover the complete admitted input inventory')
+    runtime = reference.configure(plan['runtime']['device'], plan['threads'])
+    runtime['allocator'] = os.environ.get('PYTORCH_CUDA_ALLOC_CONF')
+    if not plan['runtime'] or any(runtime.get(key) != value for key, value in plan['runtime'].items()):
+        raise ValueError('Owned prefix execution changed its prescribed numerical runtime')
+    binding = {'plan': identity(plan), 'prepared': identity(prepared), 'job': job,
+        'previous_graph': plan['previous_graph'], 'retention_cache': prepared['retention_cache'],
+        'cut': plan['split'], 'batches': identity(prepared['batches']), 'runtime': plan['runtime']}
+    config = LlamaConfig(**parent['config'])
+    config._attn_implementation = 'sdpa'
+    shard = Partition(config, parent['boundaries'], rank, runtime['device'], plan['parameter_limit'])
+    with contextlib.redirect_stdout(sys.stderr):
+        return prefix_audit.replay_stage(shard, parent, Path(objects), records, prepared['batches'],
+            binding, plan['split'], plan['microbatch'], None, Path(home), incoming, max_seconds,
+            reference_expert=profile.get('seed_expert', {}).get('checkpoint'),
+            resident_parameter_limit=plan['parameter_limit'])
+
+
+def owned_production(profile, plan, prepared, records, reports, bank):
+    """Assemble complete freshly executed stages; hashes alone are not proof."""
+    parent, _, job = expert_execution._job_context(profile['checkpoint'], profile, plan, prepared)
+    binding = {'plan': identity(plan), 'prepared': identity(prepared), 'job': job,
+        'previous_graph': plan['previous_graph'], 'retention_cache': prepared['retention_cache'],
+        'cut': plan['split'], 'batches': identity(prepared['batches']), 'runtime': plan['runtime']}
+    context = {'parent': identity(parent), 'binding': identity(binding), 'records': identity(records),
+        'batches': identity(prepared['batches']), 'split': plan['split'], 'microbatch': plan['microbatch'],
+        'target': None}
+    if 'seed_expert' in profile:
+        context['reference_expert'] = identity(profile['seed_expert']['checkpoint'])
+    record = production_record(reports)
+    if (profile['format'] != expert_work.PROSPECTIVE or record['context'] != context
+            or reports[0]['microbatches']*3 != profile['feature_stages']
+            or identity(bank) != reports[-1]['output_root']
+            or len(bank['batches']) != profile['batch_count']):
+        raise ValueError('Owned production differs from its complete prescribed numerical inputs')
+    return {'feature_root': identity(bank), 'batch_roots': [batch_identity(batch) for batch in bank['batches']],
+            'transcript_root': identity(record), 'production_record': record}
+
+
+def owned_verdict(claim, profile, plan, prepared, production):
+    """Bind a configured auditor's *fresh* distributed execution to its claim."""
+    parent, before, _ = expert_execution._context(claim, profile, plan, prepared)
+    if claim['kind'] != 'expert_features' or profile['format'] != expert_work.PROSPECTIVE:
+        raise ValueError('Require a prospective feature-production audit')
+    valid = (production['feature_root'] == claim['feature_root']
+        and production['batch_roots'] == claim['batch_roots']
+        and production['transcript_root'] == claim['record_root'])
+    report = {'format': expert_work.FORMAT+'/replay', 'claim_id': claim['id'], 'record_root': claim['record_root'],
+        'binding': {'parent': identity(parent), 'prepared': profile['prepared'],
+            'input_checkpoint': before['checkpoint'], 'output_root': claim['feature_root'],
+            'feature_root': claim['feature_root'], 'numerical_profile': profile['numerical_profile'],
+            'feature_claim': None, 'batch_roots': claim['batch_roots']},
+        'stages': [{'stage': index, 'valid': valid} for index in range(claim['stages'])]}
+    expert_work.replay_report(claim, report)
+    return report
+
+
 def _verify_saved(home, reports, config, records, batches, microbatch, binding):
     """Check the retained numerical payloads, including a preexisting result."""
     for rank, report in enumerate(reports):

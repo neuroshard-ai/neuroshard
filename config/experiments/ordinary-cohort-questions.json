@@ -1,0 +1,202 @@
+{
+  "format": "neuroshard-ordinary-cohort-questions-v1",
+  "license": "Apache-2.0",
+  "source_revision": "5c1f7bb5f7e2485ea0e09db3327a79e8b0bdeaa7",
+  "status": "Preparation inputs; training requires the complete campaign freeze.",
+  "admission": {
+    "admission-sources": {
+      "training": [
+        "How many distinct immutable datasets can a NeuroShard expert proposal name?",
+        "What is the source-count ceiling for one NeuroShard expert cohort?",
+        "In NeuroShard data admission, how many source entries may one proposal contain?"
+      ],
+      "test": "I'm collecting datasets for a NeuroShard expert job. How many separate sources can that one submission list?"
+    },
+    "admission-cursor": {
+      "training": [
+        "How far may a source cursor advance in one NeuroShard expert admission window?",
+        "What is the maximum row span of an expert-admission source window in NeuroShard?",
+        "For NeuroShard expert admission, give the per-window source-cursor advance limit."
+      ],
+      "test": "For NeuroShard's expert-admission cursor, what is the largest row interval a single window can cover?"
+    },
+    "admission-documents": {
+      "training": [
+        "What is the total document-count ceiling for a NeuroShard expert cohort?",
+        "How many training and evaluation documents together can one NeuroShard expert proposal declare?",
+        "What upper bound applies to the complete document inventory of a NeuroShard expert data proposal?"
+      ],
+      "test": "When I total every document in a NeuroShard expert cohort's inventory, what limit must I stay under or equal to?"
+    },
+    "admission-propose": {
+      "training": [
+        "Name the NeuroShard transaction that offers a new expert-training job for admission.",
+        "Which transaction should a NeuroShard publisher send to propose an expert job?",
+        "What is the transaction kind for submitting a fresh expert-job proposal in NeuroShard?"
+      ],
+      "test": "I have a prepared expert job for NeuroShard. Which transaction kind submits it to admission?"
+    },
+    "admission-vote": {
+      "training": [
+        "Name the NeuroShard transaction for a validator's vote on an expert-job proposal.",
+        "Which transaction records approval or rejection of expert-job admission in NeuroShard?",
+        "What transaction kind carries a NeuroShard expert curator's admission vote?"
+      ],
+      "test": "As a NeuroShard validator reviewing a proposed expert job, which transaction do I use to cast my admission decision?"
+    },
+    "admission-replay": {
+      "training": [
+        "Replay documents in NeuroShard must have appeared in which kind of earlier training work?",
+        "What previously accepted work makes a document eligible for NeuroShard training replay?",
+        "Which earlier training records must contain a document before NeuroShard can admit it as replay?"
+      ],
+      "test": "What kind of earlier work must have actually consumed a document before NeuroShard allows replaying it?"
+    },
+    "admission-unused": {
+      "training": [
+        "Can NeuroShard replay a document that was admitted but never actually trained?",
+        "Is merely selecting an unused document enough to qualify it as NeuroShard replay?",
+        "May a NeuroShard publisher call an unconsumed training document replay?"
+      ],
+      "test": "A NeuroShard document was selected but no accepted update used it. Is it eligible to be declared replay?"
+    },
+    "admission-evaluation": {
+      "training": [
+        "Can NeuroShard move an old held-out evaluation record into training replay?",
+        "Is a previously admitted test conversation eligible for NeuroShard rehearsal training?",
+        "May a NeuroShard expert replay documents whose admitted role was evaluation?"
+      ],
+      "test": "Can I use a past NeuroShard held-out test conversation as replay for my next training job?"
+    },
+    "admission-rewind": {
+      "training": [
+        "Can a NeuroShard expert proposal move its source cursor backwards?",
+        "Are gaps or rewinds permitted when advancing a NeuroShard expert-admission cursor?",
+        "May the next NeuroShard expert cohort restart an already advanced source cursor at zero?"
+      ],
+      "test": "After NeuroShard has advanced an admission source cursor, may a later cohort lower that cursor?"
+    },
+    "admission-quality": {
+      "training": [
+        "Name the NeuroShard transaction that submits an expert's measured quality report.",
+        "Which transaction proposes the separate expert-quality decision after NeuroShard training?",
+        "What is the expert quality-claim transaction kind in NeuroShard?"
+      ],
+      "test": "Which NeuroShard transaction carries the quality decision that is separate from the training claims?"
+    },
+    "admission-training": {
+      "training": [
+        "What must be complete before NeuroShard accepts a separate expert-quality claim?",
+        "Which settlement prerequisite precedes the NeuroShard expert-quality decision?",
+        "Before claiming quality for a NeuroShard expert, what must finish for the entire training job?"
+      ],
+      "test": "What prerequisite must the whole NeuroShard training job satisfy before its quality report may be claimed?"
+    },
+    "admission-rejected": {
+      "training": [
+        "Does activating a NeuroShard expert training job alter the current serving model, or leave it unchanged?",
+        "What is the status of the accepted NeuroShard serving graph when another expert job activates?",
+        "When NeuroShard starts a newly admitted training job, what happens to its existing serving graph?"
+      ],
+      "test": "A NeuroShard expert job has just activated and has no quality approval yet. What happens to the accepted serving graph?"
+    },
+    "admission-proposal-limit": {
+      "training": [
+        "What is the implementation ceiling, in blocks, for NeuroShard's expert proposal lifetime setting?",
+        "How large may the expert proposal_blocks configuration be in NeuroShard?",
+        "Give the maximum supported proposal lifetime for NeuroShard expert admission, in blocks."
+      ],
+      "test": "What largest block count does the NeuroShard implementation permit for the expert proposal-lifetime configuration?"
+    },
+    "admission-job-limit": {
+      "training": [
+        "What is the implementation ceiling, in blocks, for an admitted NeuroShard expert job's configured lifetime?",
+        "How large may NeuroShard's expert job_blocks setting be?",
+        "Give the maximum supported lifetime setting for a NeuroShard expert training job, in blocks."
+      ],
+      "test": "How many blocks is the largest expert-job lifetime that NeuroShard's configuration validator allows?"
+    },
+    "admission-truth": {
+      "training": [
+        "Does passing NeuroShard's mechanical source review prove that a conversation is factually true?",
+        "Do source hashes and token checks establish semantic truth in NeuroShard?",
+        "Can NeuroShard's mechanical admission checks alone certify factual correctness?"
+      ],
+      "test": "If a conversation passes NeuroShard's mechanical data checks, does that alone prove its semantic correctness?"
+    },
+    "admission-duplicates": {
+      "training": [
+        "Is NeuroShard's near-duplicate contamination screening a heuristic or a mathematical proof?",
+        "How is the reliability of NeuroShard's near-duplicate data screen characterized?",
+        "What kind of check is NeuroShard's near-duplicate contamination detector: proof or heuristic?"
+      ],
+      "test": "Should NeuroShard's near-duplicate screen be described as a heuristic or as proof that contamination is absent?"
+    }
+  },
+  "conversation": {
+    "conversation-turns": {
+      "training": ["How many messages may a NeuroShard planned-service request contain in total?", "What is the message-count ceiling for a NeuroShard planned conversation?", "Give the maximum allowed total of user and assistant messages in NeuroShard's planned serving request."],
+      "test": "Counting both speakers' messages, what is the largest conversation the NeuroShard planned service accepts?"
+    },
+    "conversation-bytes": {
+      "training": ["What byte ceiling applies to all message contents in a NeuroShard planned request?", "How many UTF-8 bytes can a NeuroShard planned conversation contain in total?", "Give the aggregate content-size cap, in bytes, for NeuroShard planned conversations."],
+      "test": "What byte budget limits the combined message text sent to NeuroShard's planned conversation service?"
+    },
+    "conversation-questions": {
+      "training": ["How many standalone questions may one NeuroShard neural plan contain?", "What is the question-count cap for NeuroShard's neural decomposition output?", "At most how many question strings can NeuroShard's untyped planner return?"],
+      "test": "What is the largest number of separate questions accepted from NeuroShard's neural question planner?"
+    },
+    "conversation-question-bytes": {
+      "training": ["What byte limit applies to each individual question in a NeuroShard neural plan?", "How many UTF-8 bytes may a single NeuroShard planned question occupy?", "Give the per-question text-size cap in NeuroShard's neural decomposition schema."],
+      "test": "What is the permitted byte length of one question string emitted by NeuroShard's question planner?"
+    },
+    "conversation-examples": {
+      "training": ["How many demonstrations can NeuroShard's planner prompt configuration include?", "What is the example-count ceiling in NeuroShard's planner configuration?", "Give the largest allowed number of prompt examples for the NeuroShard question planner."],
+      "test": "What maximum number of examples can I configure in the NeuroShard planner prompt?"
+    },
+    "conversation-instruction": {
+      "training": ["What byte limit constrains the NeuroShard planner's instruction string?", "How many bytes may the configured question-planner instruction contain in NeuroShard?", "Give the instruction-text size ceiling for NeuroShard's planner configuration."],
+      "test": "How many bytes can the instruction in NeuroShard's planner configuration occupy at most?"
+    },
+    "conversation-plan-tokens": {
+      "training": ["What is the implementation ceiling for configured planner generation tokens in NeuroShard?", "How high may NeuroShard's planner max_tokens configuration be set?", "Give the maximum supported output-token setting for NeuroShard's question planner."],
+      "test": "What largest max_tokens value does NeuroShard's planner configuration validator support?"
+    },
+    "conversation-composer-tokens": {
+      "training": ["What is the implementation ceiling for the NeuroShard composer's configured output tokens?", "How high can a NeuroShard composer max_tokens setting be?", "Give the largest supported token limit in NeuroShard's composer configuration."],
+      "test": "What maximum output-token setting is accepted by NeuroShard's composer configuration validator?"
+    },
+    "conversation-duplicates": {
+      "training": ["How does NeuroShard handle repeated JSON keys in a neural question plan?", "Are duplicate keys in NeuroShard's neural-plan JSON accepted or rejected?", "What happens to a NeuroShard neural plan that repeats a JSON key?"],
+      "test": "If NeuroShard's neural planner outputs the same JSON key twice, how is that plan handled?"
+    },
+    "conversation-last-role": {
+      "training": ["Which speaker must have the last message in a NeuroShard planned request?", "What role is required for the final message submitted to NeuroShard planned serving?", "Must the final turn of a NeuroShard planned conversation come from the user or assistant?"],
+      "test": "Which role must the last message have when submitting a conversation to NeuroShard's planned service?"
+    },
+    "conversation-rendering": {
+      "training": ["Name the three rendering operations supported by NeuroShard's typed answer-plan schema.", "Which render values does the NeuroShard typed answer-plan implementation recognize?", "List the three allowed render modes for a NeuroShard typed answer plan."],
+      "test": "What are all three rendering-operation names recognized by NeuroShard's typed answer-plan implementation?"
+    },
+    "conversation-expert-values": {
+      "training": ["May a NeuroShard question planner invent factual values for the typed renderer?", "Can factual answers from the NeuroShard planner itself replace actual neural source results in value rendering?", "Is the NeuroShard typed renderer allowed to treat planner-supplied facts as expert outputs?"],
+      "test": "Can NeuroShard's planner directly supply factual answer values instead of having the value renderer use actual expert responses?"
+    },
+    "conversation-private-tokens": {
+      "training": ["Which neural calls are covered when NeuroShard replays an entire planned response?", "Does complete NeuroShard planned-response replay cover just answers or all neural calls?", "What is the neural-call scope of NeuroShard's complete planned-response replay?"],
+      "test": "Which calls must be included when checking a complete NeuroShard planned-response replay?"
+    },
+    "conversation-prompt-contract": {
+      "training": ["Which expert set may receive NeuroShard's configured input prompt contracts?", "Are NeuroShard expert prompt contracts restricted to installed experts or arbitrary expert names?", "What experts are eligible for prompt contracts in a NeuroShard planned-service configuration?"],
+      "test": "To which experts does NeuroShard permit attaching prompt contracts in its planned-service configuration?"
+    },
+    "conversation-mutating-weights": {
+      "training": ["How does NeuroShard handle a serving execution that modifies a loaded parameter?", "Is a NeuroShard serving run accepted or rejected if a model weight changes during generation?", "What happens when NeuroShard's serving integrity check detects a modified loaded weight?"],
+      "test": "If an inference run changes a loaded NeuroShard model parameter, what does the serving integrity check do?"
+    },
+    "conversation-truncation": {
+      "training": ["What happens to a NeuroShard graph request that exceeds the context allowance?", "Does NeuroShard silently truncate an oversized graph prompt or reject it?", "How is a NeuroShard graph request handled when its prompt and generation reservation exceed context?"],
+      "test": "How does NeuroShard handle a graph inference request whose prompt plus reserved output will not fit the context?"
+    }
+  }
+}
