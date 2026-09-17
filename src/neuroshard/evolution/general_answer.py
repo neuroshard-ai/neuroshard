@@ -6,7 +6,7 @@ Parsing establishes an output boundary; it cannot establish answer correctness.
 """
 import json
 
-FORMAT = 'worked-general-answer-v1'
+FORMAT = 'worked-general-answer-v2'
 MAX_TOKENS = 256
 INSTRUCTION = (
     'Solve the final user request in the supplied conversation. Use earlier turns as context. '
@@ -44,7 +44,8 @@ def messages(conversation):
         result.extend([
             {'role': 'user', 'content': payload([{'role': 'user', 'content': request}])},
             {'role': 'assistant', 'content': answer}])
-    return [*result, {'role': 'user', 'content': payload(conversation)}]
+    return [*result, {'role': 'user', 'content': payload(conversation) +
+        '\n\nWork through this request briefly. End with ANSWER: followed by only the requested answer.'}]
 
 
 def visible(text):
