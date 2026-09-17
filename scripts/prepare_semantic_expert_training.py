@@ -12,7 +12,7 @@ from neuroshard.evolution import expert_curriculum, expert_data
 from neuroshard.evolution.reference_data import identity, read_records, save, sha256, tokenizer_identity
 
 
-def prepare(source, destination, variations, tokenizer_home):
+def prepare(source, destination, variations, tokenizer_home, *, cross_contracts=False, excluded=None):
     source, destination = Path(source), Path(destination)
     original = json.loads((source/'prepared.json').read_bytes())
     plan = json.loads((source/'plan.json').read_bytes())
@@ -30,6 +30,11 @@ def prepare(source, destination, variations, tokenizer_home):
     variations = json.loads(Path(variations).read_bytes())
     questions, provenance = expert_curriculum.augment(training, annotations, variations,
         inventory=spec['ids'], cohort='planner-semantic-training')
+    if cross_contracts:
+        if excluded is None:
+            raise ValueError('Crossed training requires an explicit exclusion inventory')
+        questions, crossing = expert_curriculum.cross_contracts(questions, excluded)
+        provenance = {'augmentation': provenance, 'crossing': crossing}
     source_root = identity(provenance)
     rows = [expert_data.encode(tokenizer, row['messages'], plan['max_length'],
                               source=source_root, position=index) for index, row in enumerate(questions)]
@@ -66,6 +71,10 @@ if __name__ == '__main__':
     parser.add_argument('--destination', type=Path, required=True)
     parser.add_argument('--variations', type=Path, required=True)
     parser.add_argument('--tokenizer', type=Path, required=True)
+    parser.add_argument('--cross-contracts', action='store_true')
+    parser.add_argument('--exclude', type=Path, help='JSON list of evaluation question strings, without answers')
     args = parser.parse_args()
-    report = prepare(args.source, args.destination, args.variations, args.tokenizer)
+    report = prepare(args.source, args.destination, args.variations, args.tokenizer,
+                     cross_contracts=args.cross_contracts,
+                     excluded=json.loads(args.exclude.read_bytes()) if args.exclude else None)
     print(json.dumps({key: value for key, value in report.items() if key != 'batches'}))

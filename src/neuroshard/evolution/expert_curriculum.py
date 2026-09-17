@@ -101,3 +101,47 @@ def balanced_batches(questions, batch_size=8):
     order = [topics[name][position] for position in range(max(map(len, topics.values())))
              for name in names if position < len(topics[name])]
     return [order[start:start+batch_size] for start in range(0, len(order), batch_size)]
+
+
+def cross_contracts(questions, excluded):
+    """Teach each training question under every declared wrapper and bare wording.
+
+    Targets come only from the supplied atomic training conversations. Excluded
+    questions are compared after unwrapping, so no wrapper can conceal a match.
+    This changes training data only; it adds no serving lookup or answer table.
+    """
+    from .access_routing import ordinary_c_question, question_key
+    forbidden = {question_key(text) for text in excluded}
+    cores, omitted = {}, set()
+    for row in questions:
+        if (row['stratum'] != 'single' or len(row['topics']) != 1 or len(row['answers']) != 1
+                or len(row['messages']) != 2 or row['messages'][-1]['content'] != row['answers'][0]
+                or document_identity(row['messages']) != row['id']):
+            raise ValueError('Cross complete atomic training conversations only')
+        text = ordinary_c_question(row['messages'][0]['content'])
+        key = question_key(text)
+        if key in forbidden:
+            omitted.add(key)
+            continue
+        target = (row['topics'][0], row['answers'][0])
+        if key in cores and cores[key]['target'] != target:
+            raise ValueError('One ordinary question cannot have conflicting training targets')
+        value = cores.setdefault(key, {'text': text, 'target': target, 'parents': []})
+        value['parents'].append(row['id'])
+    if not cores or len(cores)*(len(PREFIXES)+1) > 2048:
+        raise ValueError('Crossed training exceeds the bounded cohort inventory')
+    result, provenance = [], []
+    for key in sorted(cores):
+        source = cores[key]
+        topic, answer = source['target']
+        for prefix, suffix in (*PREFIXES, ('', '')):
+            messages = [{'role': 'user', 'content': prefix+source['text']+suffix},
+                        {'role': 'assistant', 'content': answer}]
+            item = {'id': document_identity(messages), 'cohort': 'crossed-contract-repair',
+                    'stratum': 'single', 'topics': [topic], 'answers': [answer], 'messages': messages}
+            result.append(item)
+            provenance.append({'id': item['id'], 'training_parents': sorted(source['parents']),
+                               'question': key, 'prefix': prefix, 'suffix': suffix})
+    return result, {'format': FORMAT+'/crossed-contracts', 'training': identity(questions),
+                    'excluded': identity(sorted(forbidden)), 'omitted': sorted(omitted),
+                    'distinct_questions': len(cores), 'examples': provenance}

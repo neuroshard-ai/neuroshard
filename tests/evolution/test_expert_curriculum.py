@@ -90,3 +90,23 @@ def test_batches_cover_every_document_once_even_with_uneven_topic_counts():
     batches = curriculum.balanced_batches(rows, batch_size=2)
     assert sorted(index for batch in batches for index in batch) == list(range(len(rows)))
     assert all(len({rows[index]['topics'][0] for index in batch}) == len(batch) for batch in batches)
+
+
+def test_crossed_contracts_decouple_wording_from_wrapper_and_keep_targets():
+    from neuroshard.evolution.access_routing import ordinary_c_question
+    # Only framed examples are admitted by the actual C training contract.
+    rows = [row for row in run(inputs())[0] if row['messages'][0]['content'].startswith(
+        tuple(prefix for prefix, _ in curriculum.PREFIXES))]
+    excluded = ordinary_c_question(rows[0]['messages'][0]['content'])
+    crossed, report = curriculum.cross_contracts(rows, [excluded.upper().rstrip('?')])
+    assert report['omitted']
+    assert len(crossed) == report['distinct_questions']*(len(curriculum.PREFIXES)+1)
+    assert all(excluded not in row['messages'][0]['content'] for row in crossed)
+    assert len({row['id'] for row in crossed}) == len(crossed)
+    parents = {row['id']: row for row in rows}
+    for row, origin in zip(crossed, report['examples']):
+        assert all(row['answers'] == parents[key]['answers'] for key in origin['training_parents'])
+    corrupted = copy.deepcopy(rows)
+    corrupted[0]['messages'][-1]['content'] = 'wrong'
+    with pytest.raises(ValueError, match='atomic'):
+        curriculum.cross_contracts(corrupted, [])
