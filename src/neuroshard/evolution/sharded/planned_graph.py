@@ -213,8 +213,16 @@ class PlannedGraphNetwork:
     def model_for_route(self, selected):
         if selected not in self.config['learned']['router']['prototypes']:
             raise ValueError('Unknown learned route')
-        return self.config['learned'].get('route_models', {}).get(
+        mapped = self.config['learned'].get('route_models', {}).get(
             selected, 'interpreter' if selected == 'parent' else selected)
+        from .learned_graph import ALIASED_COMPOSING
+        if (self.config['learned'].get('format') == ALIASED_COMPOSING
+                and selected == self.config['learned']['router']['fallback'] and mapped == 'parent'):
+            # The lower-level composing graph names its shared prefix parent.
+            # Planned conversation uses the preserved assistant for that same
+            # fallback, including when specialist routes alias an older tail.
+            return 'interpreter'
+        return mapped
 
     def answer_messages(self, selected, question, conversation_messages=None, *, whole_request=False):
         # The two older closed-book experts have a canonical question interface.

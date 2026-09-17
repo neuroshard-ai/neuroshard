@@ -6,6 +6,21 @@ from neuroshard.evolution import request_planning as policy
 from neuroshard.evolution.sharded.planned_graph import PlannedGraphNetwork
 
 
+def test_specialist_aliases_preserve_the_planned_assistant_fallback():
+    from neuroshard.evolution.sharded.learned_graph import ALIASED_COMPOSING, MAPPED
+    service = object.__new__(PlannedGraphNetwork)
+    service.config = {'learned': {'format': ALIASED_COMPOSING,
+        'router': {'fallback':'parent','prototypes':{'parent':{},'old':{},'new':{}}},
+        'route_models': {'parent':'parent','old':'old','new':'old'}}}
+    assert service.model_for_route('parent') == 'interpreter'
+    assert service.model_for_route('old') == service.model_for_route('new') == 'old'
+    # A separately declared structured route must still reach the trained
+    # backbone; only the composing policy's general fallback is translated.
+    service.config['learned'].update(format=MAPPED, route_models={'parent':'interpreter','old':'parent','new':'old'})
+    assert service.model_for_route('parent') == 'interpreter'
+    assert service.model_for_route('old') == 'parent'
+
+
 @pytest.mark.parametrize('utterance', [
     'Where is the Aurora telescope located?',
     'How many samples fit in a sensor packet?',

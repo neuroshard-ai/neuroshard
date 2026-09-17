@@ -46,7 +46,7 @@ def freeze(home, revision, runtime):
             if any(sha256(ROOT/path) != value for path, value in section['sources'].items()):
                 raise ValueError('Recompile policies after changing their actual execution source')
     ordinary = policy_objects['admission']['configuration']
-    route_models = {name: ('interpreter' if name == 'parent' else 'planner' if name == 'admission' else name)
+    route_models = {name: ('planner' if name == 'admission' else name)
                     for name in ordinary['learned']['router']['prototypes']}
     learned_control = learned_graph.configuration(core, ordinary['learned']['router'],
         ordinary['learned']['feature_profile'], ROOT, route_models, compose=True)
