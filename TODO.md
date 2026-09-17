@@ -89,9 +89,15 @@ before the affected work, rather than changing the target after a result.
   improve 7→9→10/15 without changing expert weights. The completed engineering
   screen has zero selection/decomposition/assembly failures, all 21 standalone
   routes correct, all seven retained cases correct, and exact automatic/forced
-  replay with six identical owner transcripts. C's three factual errors still
-  cause five failed cases. The [C-only learning repair](docs/CONTRACT_LEARNING_REPAIR.md)
-  is frozen around crossed training contracts; the next cohort remains on hold.
+  replay with six identical owner transcripts. The
+  [C-only learning repair](docs/CONTRACT_LEARNING_REPAIR.md) then improves
+  10→14→15/15 through crossed training contracts and source-grounded claim/job
+  scope contrasts. All 13 distinct forced controls and all 16 C development
+  questions pass; no previously correct tested answer is lost. Six complete
+  serving transcripts agree, and fresh training/inference replay passes.
+  This repairs the exposed ordinary diagnostic. It does not count as a new
+  admitted cohort or independent holdout; repeated prospective learning and
+  operated native admission remain the next proof.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -245,6 +251,19 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Completed the C scope continuation: **15/15 ordinary answers**,
+  **13/13 unique forced controls**, and **16/16 C preservation questions**.
+  All earlier correct tested answers survived, with identical neural outputs
+  for all seven retained A/B/general conversations. The 64 updates took 575.6
+  seconds. Four training owners and six serving transcripts agree; fresh
+  replay of updates 60–64 and both inference replays pass. A preceding setup
+  attempt failed before training because publication receipts lacked the
+  fetch destination; the corrected handoff passes local regression checks.
+  [Evidence and limits](docs/CONTRACT_LEARNING_REPAIR.md) retain both attempts.
+  Both allocations and their volumes are deleted; compute estimates are $1.68
+  for the passing run and $0.67 for setup failure, with storage/transfer separate.
+  No new final, cohort, issuance or native promotion; tasks 1 and 2 remain open.
 
 - 2026-09-17: Training C on crossed input contracts improved ordinary answers
   **10/15 → 14/15**, forced answers **10/13 → 12/13**, and standalone C retention

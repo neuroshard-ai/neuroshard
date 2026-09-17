@@ -88,6 +88,40 @@ The recovered allocation uses identical training bytes, recipe, schedule and
 retention inventory. Its freeze changes only to bind the corrected handoff.
 The original attempt remains recorded and is not counted as a quality run.
 
+The corrected allocation **passed the original development gate**:
+ordinary conversations **14/15 → 15/15**, unique forced controls **12/13 → 13/13**,
+and C's standalone preservation inventory **15/16 → 16/16**. No previously
+correct tested answer was lost. The claim-window answer changed from `4096`
+to `16`; the complete-job answer stayed correct. All seven retained A/B/general
+conversations kept identical neural outputs, including the mixed requests.
+The 64 updates took 575.6 seconds; serving evaluation took 124.8 seconds.
+Four training owners and six complete serving transcripts agree. A fresh
+process reproduced updates 60–64 exactly, and automatic/forced inference
+replays passed. CPU rescoring agrees with the frozen scorer.
+
+The resulting research service is
+`3b3d5a2160eb1bec670a03beb85d14df23fbf24d192741416b4658c08c9d0ddb`,
+with C checkpoint
+`7d976925e8ff9d3c7588c2eed5ac9852a02d454318842093fcc353e7fa2338fb`.
+The [result manifest](../config/experiments/scope-learning-results.json) binds
+the source, local evidence archive, object catalog and retirement record.
+The [setup failure](../config/experiments/scope-learning-setup-failure.json)
+is also retained. Both final numerical boundaries are available by immutable
+public object hashes; metadata remains local and committed by archive digest.
+Both allocations are fully retired, including their volumes and temporary
+security groups; the three protected hosts are unchanged. The successful scope
+run's conservative compute estimate is $1.68 and its failed setup's is $0.67.
+Including both earlier inference repairs and the 108-step C repair, this
+recorded sequence totals $6.64 in estimated compute. Storage and transfer are
+separate. No native issuance or serving promotion occurred.
+
+This closes the measured ordinary-serving obstruction on the existing exposed
+development inventory. It does **not** count as a third admitted cohort or an
+independent holdout pass. The next learning proof must use prospectively frozen
+ordinary questions for new data, protect prior behavior, and run
+through native admission and separate quality promotion. This is the remaining
+work in TODO items 1 and 2, whose completion criteria are unchanged.
+
 One four-host allocation performs sharded prefix production, C training,
 replay of the final four-update window from its input state, and six-owner
 serving. Its absolute deadline is two hours, training deadline one hour and

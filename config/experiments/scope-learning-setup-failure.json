@@ -1,0 +1,30 @@
+{
+  "source_commit": "eddaa957457266afdc2298f0828819842efb8609",
+  "phase": "object_download",
+  "error": "Publication receipts had no downloader folder field",
+  "trained_updates": 0,
+  "quality_evaluated": false,
+  "resources": {
+    "terminated": [
+      "i-03185ea4fa24874e8",
+      "i-069387cf18786bf6c",
+      "i-0a6072fd6c0cd63d2",
+      "i-0fe924329905c034c"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 0.6652136189955555,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "evidence": {
+    "study": ".neuroshard/scope-learning-study-20260917",
+    "sha256": "9614f069c6c41f647cf5f96c1c41d5137585c56cb877d4b5d0610466da78fcf8",
+    "bytes": 15543598
+  },
+  "recovery": {
+    "source_commit": "3074fb9323e6962b5ba1836c826dde6654f02830",
+    "same_training_prescription": true,
+    "change": "Derive destination from the owned checkpoint; validate all fetch inventories before allocation"
+  }
+}
