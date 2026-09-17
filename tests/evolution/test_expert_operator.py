@@ -92,6 +92,7 @@ class Node:
 
 
 def build(home, node, owners, backend, feed):
+    home.mkdir(parents=True, exist_ok=True)
     outbox = Outbox(home/'outbox.sqlite', 'fixture://local', node.state['chain_id'], owners[0],
                     rpc=node.rpc, query=node.query)
     workers = {'prefix': [protocol.Identity('operator-prefix-'+str(i)).public_key for i in range(3)],
@@ -257,3 +258,45 @@ def test_local_state_reader_observes_committed_wal_and_checks_genesis(enabled, t
             read(tmp_path, 'f'*64)
     finally:
         db.close()
+
+
+def test_rejected_feed_entry_is_journaled_without_transactions_or_model_changes(enabled, tmp_path):
+    original, owners = enabled
+    node = Node(trained(enabled))
+    # Isolate source selection here; quality transitions are covered above.
+    node.state['expert_lifecycle']['quality_closed'] = True
+    baseline = copy.deepcopy(node.state)
+    entries = iter([{'rejected_data': {'entry': 'd'*64,
+        'review': {'mechanical_checks_passed': False, 'reason': 'Duplicate protected evaluation input'}}},
+        next_cohort(node.state)])
+    operator, outbox = build(tmp_path, node, owners, lambda _: pytest.fail('No numerical work before admission'),
+                             lambda _: next(entries))
+    try:
+        assert operator.tick()['phase'] == 'data_rejected'
+        assert node.state == baseline and not node.broadcasts
+        assert operator.tick()['phase'] == 'cohort_prepared'
+        assert operator.tick()['kind'] == 'propose_expert_job'
+        assert len(node.broadcasts) == 1
+    finally:
+        operator.close()
+        outbox.close()
+
+
+def test_slow_preparation_retries_when_native_admission_changes(enabled, tmp_path):
+    original, owners = enabled
+    node = Node(trained(enabled))
+    node.state['expert_lifecycle']['quality_closed'] = True
+
+    def prepare(state):
+        job = next_cohort(state)
+        node.state['data_root'] = 'b'*64  # Another accepted cohort during preparation.
+        return job
+
+    operator, outbox = build(tmp_path, node, owners, None, prepare)
+    try:
+        assert operator.tick()['phase'] == 'prepared_snapshot_changed'
+        assert not node.broadcasts
+        assert operator.db.execute('SELECT count(*) FROM cohorts').fetchone()[0] == 0
+    finally:
+        operator.close()
+        outbox.close()

@@ -101,6 +101,24 @@ class Operator:
             self.db.execute('INSERT INTO cohorts VALUES (?,?,NULL)', (key, canonical(job)))
         return key
 
+    def reject_data(self, result):
+        """Quarantine a reviewed feed entry before funding or signing a job.
+
+        The preparation command's durable history includes this outcome, so it
+        can select the next immutable entry instead of retrying rejected data.
+        A transient fetch/execution exception is not a rejection.
+        """
+        from .schema import root
+        if (set(result) != {'entry', 'review'} or not isinstance(result['review'], dict)
+                or result['review'].get('mechanical_checks_passed') is not False):
+            raise ValueError('Rejected feed data needs its identity and failed review evidence')
+        key = 'data/'+root(result['entry'])
+        outcome = {'phase': 'data_rejected', 'cohort': key, 'review': result['review']}
+        with self.db:
+            self.db.execute('INSERT INTO cohorts VALUES (?,?,?)',
+                            (key, canonical({'rejected_data': result}), canonical(outcome)))
+        return outcome
+
     def execute(self, scope, request):
         """Persist the exact result before any claim can be signed.
 
@@ -160,6 +178,11 @@ class Operator:
                 job = self.next_job(copy.deepcopy(state))
                 if job is None:
                     return {'phase': 'no_new_cohort'}
+                if set(job) == {'rejected_data'}:
+                    return self.reject_data(job['rejected_data'])
+                from .expert_preparation import snapshot
+                if snapshot(self.read_state()) != snapshot(state):
+                    return {'phase': 'prepared_snapshot_changed'}
                 key = self.enqueue(state, job)
             return {'phase': 'cohort_prepared', 'cohort': key}
         key, raw = pending[0]
@@ -305,8 +328,10 @@ def main():
             if old:
                 request = protocol.parse_json(old[0])
             result = operator.execute(scope, request)
+            if set(result) == {'rejected_data'}:
+                return result
             if set(result) != {'job'}:
-                raise ValueError('Preparation must return a sealed native job, or job:null when the feed ends')
+                raise ValueError('Preparation must return a sealed job, job:null, or a failed data review')
             if result['job'] is None:
                 # No selection or numerical work happened. Permit polling for
                 # later immutable feed entries without changing a signed intent.

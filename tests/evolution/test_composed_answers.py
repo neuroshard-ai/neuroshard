@@ -74,3 +74,15 @@ def test_configuration_reserialization_keeps_the_original_prompt_bytes():
     assert json.dumps(sorted_examples[0][1]) != original[-1]['content'], 'Reproduce the actual failed prompt change'
     assert example_messages('Interpret.', examples) == original
     assert example_messages('Interpret.', sorted_examples) == original
+def test_contextual_pairs_preserve_each_question_and_raw_answer_instructions():
+    from neuroshard.evolution.sharded.composition import independent_questions, questions
+    request = ('NeuroShard research protocol: First: How many updates? Second: Which optimizer? '
+               'Provide only the answer. Separate the two short answers with a semicolon, in question order.')
+    assert questions(request) is None  # Legacy native grammar remains exact.
+    assert independent_questions(request) == [
+        'NeuroShard research protocol: How many updates? Provide only the answer.',
+        'NeuroShard research protocol: Which optimizer? Provide only the answer.']
+    unrelated = request.replace('NeuroShard research protocol:', 'For the university laboratory:')
+    assert independent_questions(unrelated)[0] == 'For the university laboratory: How many updates? Provide only the answer.'
+    assert independent_questions(request.replace('First: How many updates?', 'First: First: How many updates?')) is None
+    assert independent_questions('First: How many? Second: Why? Write an essay.') is None

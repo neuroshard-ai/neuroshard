@@ -81,8 +81,13 @@ before the affected work, rather than changing the target after a result.
   rejection. Recovery checks reproduce committed-before-acknowledgement
   crashes without duplicate transactions. Configured curator reviews share the
   auditor's sole signer and journal their own approvals or rejections. These
-  controller checks use explicit numerical fixtures; an operated repeated
-  numerical loop is still required.
+  recovery checks use explicit numerical fixtures. A further two-cohort
+  integration now executes real prefix production, training and three neural
+  replays per claim, including six-process quality evaluation. It issued only
+  the four verified updates, rejected both quality failures, advanced source
+  cursors automatically and preserved the serving graph without changing
+  genesis. Its controlled ledger clock and small synthetic models do not yet
+  establish operated continuous LLM service.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 

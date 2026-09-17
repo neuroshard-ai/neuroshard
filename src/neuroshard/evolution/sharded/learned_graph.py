@@ -13,7 +13,7 @@ from . import composition
 
 FORMAT = 'neuroshard-learned-graph-service-v1'
 MAPPED = 'neuroshard-mapped-graph-service-v1'
-COMPOSING = 'neuroshard-learned-composed-service-v1'
+COMPOSING = 'neuroshard-learned-composed-service-v2'
 SOURCES = ('src/neuroshard/evolution/expert_router.py',
            'src/neuroshard/evolution/serving_graph.py',
            'src/neuroshard/evolution/sharded/router_features.py',
@@ -39,7 +39,7 @@ def configuration(graph, model, feature_profile, source_home, route_models=None,
             raise ValueError('Map distinct learned routes to every installed model with an assistant fallback')
         result.update(format=MAPPED, route_models=copy.deepcopy(route_models))
     elif compose:
-        result.update(format=COMPOSING, composition=composition.FORMAT)
+        result.update(format=COMPOSING, composition=composition.ROUTED_FORMAT)
     return result
 
 
@@ -98,7 +98,7 @@ class LearnedGraphNetwork:
     def answer(self, question, max_tokens):
         if self.config['format'] == MAPPED:
             raise ValueError('Mapped model routes require the committed conversation executor')
-        parts = composition.questions(question) if self.config['format'] == COMPOSING else None
+        parts = composition.independent_questions(question) if self.config['format'] == COMPOSING else None
         if parts is not None:
             # Choose an expert for each actual subquestion. A new fact and an
             # earlier fact can therefore execute on different frozen tails.
@@ -109,7 +109,7 @@ class LearnedGraphNetwork:
             serving_graph.payments(self.graph, calls, outputs, 1)
             return {'format': FORMAT+'/response', 'service': self.root, 'graph': identity(self.graph),
                 'request': {'question': question, 'max_tokens': max_tokens, 'calls': calls},
-                'routing': {'service': self.root, 'composition': composition.FORMAT,
+                'routing': {'service': self.root, 'composition': composition.ROUTED_FORMAT,
                             'parts': [{'question': part, 'routing': value['routing']}
                                       for part, value in zip(parts, values)]},
                 'outputs': outputs, 'text': '; '.join(value['text'] for value in values)}

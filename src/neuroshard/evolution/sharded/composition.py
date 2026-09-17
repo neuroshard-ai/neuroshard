@@ -7,6 +7,7 @@ composition primitive, not a general natural-language planner.
 import re
 
 FORMAT = 'neuroshard-two-question-calls-v1'
+ROUTED_FORMAT = 'neuroshard-contextual-two-question-calls-v1'
 PATTERN = re.compile(
     r'\ANeuroShard 0\.4\.0: First: (.+?) Second: (.+?) '
     r'Reply with the two short answers in order\. '
@@ -24,6 +25,29 @@ def questions(request):
         return None
     return ['Regarding NeuroShard 0.4.0, ' + part + ' Please provide just the answer.'
             for part in parts]
+
+
+def independent_questions(request):
+    """Retain raw context and answer instructions for explicit question pairs.
+
+    This syntax is opt-in through the learned service's new commitment. Legacy
+    native composition keeps its existing grammar and serialization unchanged.
+    The parser contains no dataset roles, domain labels, facts or answers.
+    """
+    prior = questions(request)
+    if prior is not None:
+        return prior
+    match = re.fullmatch(r'([^?]*?)First: ([^?]+\?) Second: ([^?]+\?)([^?]*)', request, re.S)
+    if match is None:
+        return None
+    prefix, first, second, suffix = match.groups()
+    directive = re.fullmatch(
+        r'(.*?)\s+Separate the two (?:short )?answers with a semicolon(?:, in question order)?\.', suffix, re.S)
+    if directive is None or any(marker in prefix+first+second+suffix
+                                for marker in ('First: ', 'Second: ')):
+        return None
+    instruction = directive.group(1)
+    return [prefix + part + instruction for part in (first, second)]
 
 
 class ComposedAnswers:
