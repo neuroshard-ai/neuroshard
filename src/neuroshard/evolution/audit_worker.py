@@ -81,7 +81,8 @@ def replay(store, claim):
 
 
 class Worker:
-    def __init__(self, home, url, genesis_hash, key, sponsors, store, max_stages=64, portable_backend=None):
+    def __init__(self, home, url, genesis_hash, key, sponsors, store, max_stages=64, portable_backend=None,
+                 *, admission_backend=None, state_reader=None):
         self.home, self.url, self.store = Path(home), url, store
         self.home.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.lock = (self.home/'worker.lock').open('a')
@@ -90,6 +91,9 @@ class Worker:
         self.sponsors = set(sponsors)
         self.max_stages = max_stages
         self.portable_backend = portable_backend
+        if bool(admission_backend) != bool(state_reader):
+            raise ValueError('Automatic curation requires a configured reviewer and local committed state')
+        self.admission_backend, self.state_reader = admission_backend, state_reader
         genesis = wire.rpc(url, 'genesis')['genesis']
         if digest(canonical(genesis)) != genesis_hash:
             raise ValueError('Audit worker genesis differs from configured commitment')
@@ -107,6 +111,7 @@ class Worker:
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.execute('PRAGMA synchronous=FULL')
         self.db.execute('CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, salt TEXT, report BLOB)')
+        self.db.execute('CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, policy TEXT, report BLOB)')
 
     def send(self, operation, kind, **fields):
         return self.outbox.send(operation, kind, **fields)
@@ -131,6 +136,8 @@ class Worker:
                 return {'phase': 'audit_offer_accepted', 'budget': key}
         claim = wire.query(self.url, '/candidate')
         if not claim:
+            if not active and self.admission_backend:
+                return self.review_admission()
             return {'phase': 'idle'}
         budget = service['budgets'].get(claim['audit_budget'])
         if (not budget or owner not in budget['auditors'] or not budget['auditors'][owner]['bond']
@@ -212,6 +219,54 @@ class Worker:
             return {'phase': 'full_audit_revealed', 'claim': claim['id']}
         return {'phase': 'waiting_for_reveal', 'claim': claim['id']}
 
+    def review_admission(self):
+        """Curate with this worker's sole signer, after existing audit duties.
+
+        Approval is an explicit local policy decision following real source
+        review. A successful mechanical report alone is never an approval.
+        The publisher cannot choose the command or supply its output.
+        """
+        from . import expert_admission
+        from .expert_operator import command
+        from .reference_data import identity
+        state = self.state_reader()
+        if state['chain_id'] != self.chain_id:
+            raise ValueError('Curator state belongs to another network')
+        admission = expert_admission.bookkeeping(state)
+        if admission is None or admission['proposal'] is None:
+            return {'phase': 'idle'}
+        proposal = admission['proposal']
+        owner = self.owner.public_key
+        if (owner in proposal['votes'] or owner not in proposal['electorate']
+                or not any(row['owner'] == owner for row in state['validators'].values())):
+            return {'phase': 'idle'}
+        key, policy = proposal['id'], identity(self.admission_backend)
+        old = self.db.execute('SELECT policy,report FROM reviews WHERE id=?', (key,)).fetchone()
+        if old:
+            if old[0] != policy:
+                raise ValueError('Restart changed the policy for an already reviewed proposal')
+            result = protocol.parse_json(old[1])
+        else:
+            result = command(self.admission_backend, {'phase': 'review', 'state': state, 'proposal': proposal})
+            if (set(result) != {'proposal', 'job', 'approve', 'review'}
+                    or result['proposal'] != key or result['job'] != identity(proposal['job'])
+                    or type(result['approve']) is not bool or not isinstance(result['review'], dict)
+                    or (result['approve'] and result['review'].get('mechanical_checks_passed') is not True)):
+                raise ValueError('Curator backend omitted the bound review or explicit admission decision')
+            with self.db:
+                self.db.execute('INSERT INTO reviews VALUES (?,?,?)', (key, policy, canonical(result)))
+        # Review can be slow. Re-read before signing; a closed proposal is not
+        # a reason to spend the account nonce on a predictably stale vote.
+        current = expert_admission.bookkeeping(self.state_reader())
+        if not current or not current['proposal'] or current['proposal']['id'] != key:
+            return {'phase': 'reviewed_proposal_closed', 'proposal': key}
+        if owner in current['proposal']['votes']:
+            return {'phase': 'admission_vote_already_committed', 'proposal': key}
+        self.send('curate:'+key, 'vote_expert_job', proposal_id=key,
+                  approve=result['approve'], review_root=identity(result))
+        return {'phase': 'admission_review_submitted', 'proposal': key, 'approve': result['approve'],
+                'review_root': identity(result)}
+
     @staticmethod
     def availability_stage(claim, key):
         metadata = Metadata(claim['metadata'])
@@ -279,13 +334,27 @@ def main():
     parser.add_argument('--objects', type=Path, required=True)
     parser.add_argument('--source', action='append', default=[], help='Read-only content-addressed artifact mirror')
     parser.add_argument('--max-stages', type=int, default=64)
+    parser.add_argument('--admission-backend', type=Path,
+                        help='Local source-review and curation policy command; never publisher supplied')
+    parser.add_argument('--native-home', type=Path, help='Own full-node home, required for automatic curation')
+    parser.add_argument('--native-genesis-sha256', help='SHA-256 of that local genesis file, required for curation')
     parser.add_argument('--once', action='store_true')
     args = parser.parse_args()
     os.umask(0o077)
     store = Objects(args.objects)
     store.fetchers.extend(http_source(url) for url in args.source)
     backend = json.loads(args.portable_backend.read_bytes()) if args.portable_backend else None
-    worker = Worker(args.home, args.rpc, args.genesis_sha256, args.key, args.sponsor, store, args.max_stages, backend)
+    if bool(args.admission_backend) != bool(args.native_home) or bool(args.native_home) != bool(args.native_genesis_sha256):
+        parser.error('Curation requires --admission-backend, --native-home and --native-genesis-sha256 together')
+    from .committed_state import read
+    admission_backend = json.loads(args.admission_backend.read_bytes()) if args.admission_backend else None
+    state_reader = (lambda: read(args.native_home, args.native_genesis_sha256)) if args.native_home else None
+    if state_reader:
+        local = protocol.parse_json((args.native_home/'config/genesis.json').read_bytes())
+        if digest(canonical(local)) != args.genesis_sha256:
+            raise ValueError('Curator full node differs from the audit worker genesis')
+    worker = Worker(args.home, args.rpc, args.genesis_sha256, args.key, args.sponsor, store, args.max_stages, backend,
+                    admission_backend=admission_backend, state_reader=state_reader)
     try:
         while True:
             try:

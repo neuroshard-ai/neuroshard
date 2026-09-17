@@ -9,23 +9,28 @@ from pathlib import Path
 
 from .. import expert_router, serving_graph
 from ..reference_data import identity, sha256
+from . import composition
 
 FORMAT = 'neuroshard-learned-graph-service-v1'
 MAPPED = 'neuroshard-mapped-graph-service-v1'
+COMPOSING = 'neuroshard-learned-composed-service-v1'
 SOURCES = ('src/neuroshard/evolution/expert_router.py',
            'src/neuroshard/evolution/serving_graph.py',
            'src/neuroshard/evolution/sharded/router_features.py',
            'src/neuroshard/evolution/sharded/interpretation.py',
+           'src/neuroshard/evolution/sharded/composition.py',
            'src/neuroshard/evolution/sharded/learned_graph.py',
            'scripts/run_native_expert_service.py')
 
 
-def configuration(graph, model, feature_profile, source_home, route_models=None):
+def configuration(graph, model, feature_profile, source_home, route_models=None, *, compose=False):
     expert_router.validate(model)
     result = {'format': FORMAT, 'graph': identity(graph), 'router': model,
             'feature_profile': feature_profile,
             'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
     if route_models is not None:
+        if compose:
+            raise ValueError('Mapped routes compose through the separately committed neural planner')
         if (not isinstance(route_models, dict) or set(route_models) != set(model['prototypes'])
                 or any(not isinstance(value, str) for value in route_models.values())
                 or set(route_models.values()) != {'parent', 'interpreter', *graph['experts']}
@@ -33,6 +38,8 @@ def configuration(graph, model, feature_profile, source_home, route_models=None)
                 or route_models.get(model['fallback']) != 'interpreter'):
             raise ValueError('Map distinct learned routes to every installed model with an assistant fallback')
         result.update(format=MAPPED, route_models=copy.deepcopy(route_models))
+    elif compose:
+        result.update(format=COMPOSING, composition=composition.FORMAT)
     return result
 
 
@@ -47,19 +54,31 @@ class Decision:
 
 
 class LearnedGraphNetwork:
-    def __init__(self, network, config, *, source_home, features=None):
+    def __init__(self, network, config, *, source_home, features=None, graph=None):
+        # A growing deployment can retain its earlier service on a subset of
+        # the installed owners. It must use precisely their accepted weights.
+        selected = network.graph if graph is None else serving_graph.validate(graph)
+        if (any(selected[key] != network.graph[key] for key in ('parent', 'interpreter_assets',
+                'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root'))
+                or selected['descriptor']['interpretation'] != network.graph['descriptor']['interpretation']
+                or any(value != network.graph['experts'].get(name) for name, value in selected['experts'].items())
+                or any(rule not in network.graph['descriptor']['rules'] for rule in selected['descriptor']['rules'])):
+            raise ValueError('Retained learned service differs from installed frozen expert paths')
         mapped = config.get('format') == MAPPED
+        composing = config.get('format') == COMPOSING
         fields = {'format', 'graph', 'router', 'feature_profile', 'sources'}
         if mapped:
             fields.add('route_models')
+        if composing:
+            fields.add('composition')
         serving_graph.fields(config, fields,
                              'Invalid learned serving configuration')
         model = expert_router.validate(config['router'])
         embedding = network.graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
-        if (config != configuration(network.graph, model, config['feature_profile'], source_home,
-                                     config.get('route_models'))
+        if (config != configuration(selected, model, config['feature_profile'], source_home,
+                                     config.get('route_models'), compose=composing)
                 or (not mapped and (model['fallback'] != 'parent'
-                    or set(model['prototypes']) != {'parent', *network.graph['experts']}))
+                    or set(model['prototypes']) != {'parent', *selected['experts']}))
                 or model['tokenizer_root'] != network.graph['tokenizer']['root']
                 or model['embedding_root'] != identity(config['feature_profile'])
                 or config['feature_profile'].get('embedding_sha256') != embedding['sha256']
@@ -71,6 +90,7 @@ class LearnedGraphNetwork:
         elif features is not None:
             raise ValueError('Only the embedding owner loads the routing table')
         self.network, self.config, self.features = network, copy.deepcopy(config), features
+        self.graph = copy.deepcopy(selected)
         self.root = identity(config)
         if network.all_owners.exchange(self.root) != [self.root] * network.world_size:
             raise ValueError('Owners installed different learned services')
@@ -78,9 +98,27 @@ class LearnedGraphNetwork:
     def answer(self, question, max_tokens):
         if self.config['format'] == MAPPED:
             raise ValueError('Mapped model routes require the committed conversation executor')
+        parts = composition.questions(question) if self.config['format'] == COMPOSING else None
+        if parts is not None:
+            # Choose an expert for each actual subquestion. A new fact and an
+            # earlier fact can therefore execute on different frozen tails.
+            # This bounded explicit grammar is not a natural-language planner.
+            values = [self.single(part, max_tokens) for part in parts]
+            calls = [call for value in values for call in value['request']['calls']]
+            outputs = [item for value in values for item in value['outputs']]
+            serving_graph.payments(self.graph, calls, outputs, 1)
+            return {'format': FORMAT+'/response', 'service': self.root, 'graph': identity(self.graph),
+                'request': {'question': question, 'max_tokens': max_tokens, 'calls': calls},
+                'routing': {'service': self.root, 'composition': composition.FORMAT,
+                            'parts': [{'question': part, 'routing': value['routing']}
+                                      for part, value in zip(parts, values)]},
+                'outputs': outputs, 'text': '; '.join(value['text'] for value in values)}
+        return self.single(question, max_tokens)
+
+    def single(self, question, max_tokens):
         net = self.network
         # Validate the raw request before any collective or neural operation.
-        serving_graph.selected_calls(net.graph, None, question, max_tokens)
+        serving_graph.selected_calls(self.graph, None, question, max_tokens)
         request = identity({'service': self.root, 'question': question, 'max_tokens': max_tokens})
         if net.all_owners.exchange(request) != [request] * net.world_size:
             raise ValueError('Owners received different learned inference requests')
@@ -99,13 +137,13 @@ class LearnedGraphNetwork:
         serving_graph.fields(packet, {'features'}, 'Invalid routing feature packet')
         observed = expert_router.select(self.config['router'], packet['features'])
         decision = Decision(question, observed['route'])
-        plan = serving_graph.selected_calls(net.graph, decision.route, question, max_tokens)
+        plan = serving_graph.selected_calls(self.graph, decision.route, question, max_tokens)
         routing = {'service': self.root, 'decision': observed, 'features': packet['features']}
         original = net.net.answer_paths.get('directory')
         if net.interpreted is not None:
             net.net.answer_paths['directory'] = net.interpreted.answer_expert
         try:
-            result = net._run(net.graph, question, max_tokens, plan, decision, routing)
+            result = net._run(self.graph, question, max_tokens, plan, decision, routing)
         finally:
             if original is not None:
                 net.net.answer_paths['directory'] = original

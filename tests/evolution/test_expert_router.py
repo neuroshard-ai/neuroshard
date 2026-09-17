@@ -136,3 +136,46 @@ def test_balanced_fitting_and_support_radius_use_only_committed_training_inputs(
         assert router.select(trained, row['features'])['route'] == row['route']
     with pytest.raises(ValueError, match='committed training'):
         router.calibrate_support(rows[:-1], prototype)
+
+
+def test_isolated_growth_preserves_the_accepted_router_and_routes_unlabeled_inputs():
+    previous = router.fit_classifier(samples(), fit())
+    frozen = copy.deepcopy(previous)
+    extra = [{'id': identity(['growth-training', i]), 'route': 'fresh',
+              'features': router.normalize([-10, i-1, 0])} for i in range(3)]
+    candidate = router.append_route(previous, samples()+extra, 'fresh')
+    assert previous == frozen and candidate['base'] == frozen
+    assert candidate == router.append_route(previous, list(reversed(samples()+extra)), 'fresh')
+    assert router.select(candidate, router.normalize([-15, 0, 0]))['route'] == 'fresh'
+    for row in samples():
+        decision = router.select(candidate, row['features'])
+        assert decision['route'] == router.select(previous, row['features'])['route']
+        assert decision['base'] == router.select(previous, row['features'], eligible=set(previous['prototypes']))
+    # A later gate appends capacity without changing either earlier classifier.
+    next_rows = [{'id': identity(['later-growth', i]), 'route': 'later',
+                  'features': router.normalize([0, -10, i-1])} for i in range(3)]
+    later = router.append_route(candidate, samples()+extra+next_rows, 'later')
+    assert later['base'] == frozen and later['additions'][:-1] == candidate['additions']
+    assert router.select(later, router.normalize([0, -15, 0]))['route'] == 'later'
+    assert router.select(later, router.normalize([-15, 0, 0]), eligible=set(candidate['prototypes'])) == {
+        **router.select(candidate, router.normalize([-15, 0, 0]), eligible=set(candidate['prototypes'])),
+        'router': identity(later)}
+
+
+def test_growth_rejects_changed_features_unknown_labels_and_recursive_model_trees():
+    previous = fit()
+    extra = [{'id': identity(['growth-training', i]), 'route': 'fresh',
+              'features': router.normalize([-10, i-1, 0])} for i in range(3)]
+    candidate = router.append_route(previous, samples()+extra, 'fresh')
+    changed = copy.deepcopy(candidate)
+    changed['additions'][0]['gate']['tokenizer_root'] = '4'*64
+    with pytest.raises(ValueError, match='replace earlier routes or features'):
+        router.validate(changed)
+    changed = copy.deepcopy(candidate)
+    changed['base'] = candidate
+    with pytest.raises(ValueError, match='flat bounded'):
+        router.validate(changed)
+    with pytest.raises(ValueError, match='known prompt routes'):
+        router.append_route(previous, [*samples(), {**extra[0], 'answer': 'leaked target'}], 'fresh')
+    with pytest.raises(ValueError, match='new bounded capacity'):
+        router.append_route(previous, samples(), 'protocol')

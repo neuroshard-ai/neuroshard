@@ -5,6 +5,7 @@ vector, never a task label, reference answer or evaluation identifier. New
 prototypes still require an end-to-end response/retention gate before adoption.
 """
 from collections import defaultdict
+import copy
 import math
 
 from .reference_data import identity
@@ -12,6 +13,7 @@ from .schema import integer, root
 
 FORMAT = 'neuroshard-embedding-router-v1'
 LINEAR_FORMAT = 'neuroshard-discriminative-router-v1'
+GROWING_FORMAT = 'neuroshard-isolated-router-v1'
 SCALE = 16384
 MAX_DIMENSIONS = 4096
 FIELDS = {'format', 'embedding_root', 'tokenizer_root', 'training_root',
@@ -57,6 +59,8 @@ def distance(left, right):
 
 
 def validate(model):
+    if isinstance(model, dict) and model.get('format') == GROWING_FORMAT:
+        return validate_growth(model)
     if not isinstance(model, dict) or model.get('format') not in (FORMAT, LINEAR_FORMAT):
         raise ValueError('Invalid integer router model')
     expected = FIELDS | ({'classifier'} if model['format'] == LINEAR_FORMAT else set())
@@ -98,6 +102,74 @@ def validate(model):
                 integer(weight, -SCALE, SCALE)
             integer(classifier['biases'][name], -SCALE, SCALE)
     return model
+
+
+def validate_growth(model):
+    if set(model) != FIELDS | {'base', 'additions'}:
+        raise ValueError('Invalid isolated router fields')
+    base = model['base']
+    if not isinstance(base, dict) or base.get('format') not in (FORMAT, LINEAR_FORMAT):
+        raise ValueError('Keep a single original router and a flat bounded gate sequence')
+    validate(base)
+    additions = model['additions']
+    if not isinstance(additions, list) or not 1 <= len(additions) <= 64 - len(base['prototypes']):
+        raise ValueError('Bound the number of admitted routing additions')
+    prototypes = copy.deepcopy(base['prototypes'])
+    fixed = ('embedding_root', 'tokenizer_root', 'dimensions', 'fallback')
+    for addition in additions:
+        if not isinstance(addition, dict) or set(addition) != {'route', 'gate'}:
+            raise ValueError('Bind each isolated route to its learned binary gate')
+        route, gate = addition['route'], addition['gate']
+        if not isinstance(gate, dict) or gate.get('format') not in (FORMAT, LINEAR_FORMAT):
+            raise ValueError('An addition must be a bounded binary classifier')
+        validate(gate)
+        if (not isinstance(route, str) or route in prototypes
+                or set(gate['prototypes']) != {base['fallback'], route}
+                or any(gate[key] != base[key] for key in fixed)):
+            raise ValueError('An isolated addition cannot replace earlier routes or features')
+        prototypes[route] = copy.deepcopy(gate['prototypes'][route])
+    if (model['prototypes'] != prototypes or any(model[key] != base[key] for key in fixed)
+            or model['minimum_margin'] != 0 or model['maximum_distance'] != 2**40
+            or model['training_root'] != identity({'base': base['training_root'],
+                'additions': [row['gate']['training_root'] for row in additions]})):
+        raise ValueError('Isolated router changed its retained model or gate commitments')
+    return model
+
+
+def append_route(previous, samples, route, *, minimum_margin=0, prototypes_per_route=4,
+                 iterations=12, epochs=16):
+    """Learn only the new/earlier decision; never refit an accepted router.
+
+    Positives are new expert training prompts; negatives are actual prior
+    training prompts and assistant examples. Held-out retention inputs are
+    evaluated after fitting, never turned into additional negative examples.
+    No claim is made that a learned gate has zero false positives.
+    """
+    validate(previous)
+    if route in previous['prototypes'] or len(previous['prototypes']) >= 64:
+        raise ValueError('A routing addition must name new bounded capacity')
+    if not isinstance(samples, list):
+        raise ValueError('Require prompt-only observations for the new gate')
+    fitting = []
+    for row in samples:
+        if (not isinstance(row, dict) or set(row) != {'id', 'route', 'features'}
+                or row['route'] not in {route, *previous['prototypes']}):
+            raise ValueError('Gate fitting accepts known prompt routes and features only')
+        fitting.append({**row, 'route': route if row['route'] == route else previous['fallback']})
+    gate = fit(fitting, embedding_root=previous['embedding_root'], tokenizer_root=previous['tokenizer_root'],
+               fallback=previous['fallback'], minimum_margin=minimum_margin,
+               prototypes_per_route=prototypes_per_route, iterations=iterations)
+    gate = fit_classifier(fitting, calibrate_support(fitting, gate), epochs=epochs, balance_classes=True)
+    base = previous['base'] if previous['format'] == GROWING_FORMAT else previous
+    additions = copy.deepcopy(previous['additions']) if previous['format'] == GROWING_FORMAT else []
+    additions.append({'route': route, 'gate': gate})
+    model = {key: copy.deepcopy(base[key]) for key in FIELDS}
+    model.update(format=GROWING_FORMAT, base=copy.deepcopy(base), additions=additions,
+        minimum_margin=0, maximum_distance=2**40,
+        prototypes={**copy.deepcopy(previous['prototypes']), route: copy.deepcopy(gate['prototypes'][route])},
+        training_root=identity({'base': base['training_root'],
+            'additions': [row['gate']['training_root'] for row in additions]}))
+    return validate(model)
 
 
 def fit(samples, *, embedding_root, tokenizer_root, fallback='parent',
@@ -164,6 +236,22 @@ def select(model, features, *, eligible=None):
     allowed = set(model['prototypes']) if eligible is None else set(eligible)
     if not allowed <= set(model['prototypes']) or model['fallback'] not in allowed:
         raise ValueError('Eligible routes must retain the declared fallback')
+    if model['format'] == GROWING_FORMAT:
+        base_allowed = allowed & set(model['base']['prototypes'])
+        original = select(model['base'], features, eligible=base_allowed)
+        chosen, gates = original, []
+        for addition in model['additions']:
+            if addition['route'] not in allowed:
+                continue
+            decision = select(addition['gate'], features)
+            gates.append({'route': addition['route'], 'decision': decision})
+            if decision['route'] == addition['route']:
+                chosen = decision
+        result = {key: chosen[key] for key in ('route', 'nearest', 'confident', 'margin')}
+        result.update(router=identity(model), features=identity(features), base=original, gates=gates)
+        if eligible is not None:
+            result['eligible'] = sorted(allowed)
+        return result
     scores = {name: min(distance(features, center) for center in centers)
               for name, centers in model['prototypes'].items()}
     ordered = sorted(allowed, key=lambda name: (scores[name], name))

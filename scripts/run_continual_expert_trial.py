@@ -9,6 +9,7 @@ from datetime import timedelta
 import json
 import os
 from pathlib import Path
+import shutil
 import time
 
 import torch
@@ -27,6 +28,7 @@ from neuroshard.evolution.sharded.model import Partition
 from neuroshard.evolution.sharded.wire import Wire
 
 FORMAT = 'neuroshard-continual-expert-trial-v1'
+ISOLATED = 'neuroshard-isolated-expert-training-v1'
 
 
 def run(home, source):
@@ -34,12 +36,15 @@ def run(home, source):
     read = lambda name: json.loads((inputs/name).read_bytes())
     trial, parent, plan, prepared, freeze = [read(name+'.json') for name in
                                            ('trial', 'parent', 'plan', 'prepared', 'freeze')]
-    if (trial['format'] != FORMAT or identity(trial) != freeze['trial']
+    isolated = trial['format'] == ISOLATED
+    if (trial['format'] not in (FORMAT, ISOLATED) or identity(trial) != freeze['trial']
             or identity(plan) != freeze['plan'] or identity(prepared) != freeze['prepared']
             or sha256(source/'scripts/run_continual_expert_trial.py') != freeze['driver']
             or plan['parent'] != identity(parent) or not plan.get('seed_expert')
             or plan['training'] != trial['training'] or plan['objective'] != trial['objective']):
         raise ValueError('Freeze the entire continued-learning prescription before execution')
+    if isolated and (trial.get('retain_boundaries') != 2 or trial.get('evaluation_mode') != 'separate-frozen-serving'):
+        raise ValueError('Isolated training retains the terminal replay boundary and requires a separate serving gate')
     for path, expected in freeze['sources'].items():
         if Path(path).is_absolute() or '..' in Path(path).parts or sha256(source/path) != expected:
             raise ValueError('Frozen trial execution source changed')
@@ -117,7 +122,7 @@ def run(home, source):
             save(output/(arm+'-'+role+'.json'), outcomes)
             return values, outcomes
 
-        before = {role: evaluate(role, 'before') for role in ('dev', 'retained')}
+        before = {} if isolated else {role: evaluate(role, 'before') for role in ('dev', 'retained')}
         initial = None
         if rank == 3:
             optimizer = incremental.configure(shard, plan['split'], plan['training'])
@@ -154,12 +159,25 @@ def run(home, source):
                     inputs=inputs, objects=home/'objects', bank_home=output/'features',
                     checkpoint_store=output/'checkpoints', max_seconds=300)
                 save(output/f'window-{current["step"]:06d}.json', receipt)
+                if isolated:
+                    # No ledger settlement is claimed by this method study.
+                    # Keep all window metadata but only the final replay pair;
+                    # do not accumulate hundreds of GB of unsettled tensors.
+                    keep = {receipt['window'][key]['checkpoint'] for key in ('input', 'output')}
+                    for path in (output/'checkpoints').iterdir():
+                        if path.is_dir() and len(path.name) == 64 and path.name not in keep:
+                            shutil.rmtree(path)
             receipt = owners.exchange(receipt)[3]
             current = receipt['window']['output']
             save(output/'progress.json', {'checkpoint': current['checkpoint'], 'step': current['step']})
             if rank == 0:
                 print(json.dumps({'event': 'trained', 'step': current['step']}), flush=True)
         save(output/'terminal-checkpoint.json', current)
+        if isolated:
+            save(output/'training.json', {'format': ISOLATED+'/result', 'freeze': identity(freeze),
+                'checkpoint': current, 'steps': current['step'], 'seconds': time.monotonic()-started,
+                'quality_evaluated': False, 'native_activated': False, 'tokens_issued': 0})
+            return
         if rank == 3:
             incremental_state.load(output/'checkpoints'/current['checkpoint'], shard, None,
                 expert_checkpoint.unpack(parent, current),

@@ -46,6 +46,11 @@ before the affected work, rather than changing the target after a result.
   7/16, but lost eight previously correct retained answers and failed its gate.
   Its final set stayed unopened; no serving model was promoted. See the
   [continued-learning result](docs/CONTINUAL_EXPERT_LEARNING.md#measured-result-rejected).
+  The next method isolates new expert weights and appends a learned binary
+  routing gate while preserving the accepted router. Six-process numerical
+  validation now executes both earlier and expanded learned services on the
+  same owned shards, without duplicating the backbone. This validates execution
+  and retained paths, not a new language-quality result or another admitted cohort.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -71,6 +76,13 @@ before the affected work, rather than changing the target after a result.
   forward and refuses stale state. Its inputs drove actual CPU updates and
   fresh-process replay. Repeated automatic operation and passing cumulative GPU
   learning results are still required.
+  A durable publisher controller now reconciles repeated native jobs, funds
+  execution, submits measured quality failures for audit, and proceeds after
+  rejection. Recovery checks reproduce committed-before-acknowledgement
+  crashes without duplicate transactions. Configured curator reviews share the
+  auditor's sole signer and journal their own approvals or rejections. These
+  controller checks use explicit numerical fixtures; an operated repeated
+  numerical loop is still required.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 

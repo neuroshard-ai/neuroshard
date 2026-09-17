@@ -299,6 +299,8 @@ def test_graph_executor_rejects_missing_or_changed_source_before_allocation(tmp_
 def prepare_extension(home):
     graph, profile = prepare_graph(home)
     previous = copy.deepcopy(graph)
+    retained_service = json.loads((home/'learned.json').read_bytes())
+    save(home/'retained-learned.json', retained_service)
     workspace = home / 'third-expert'
     workspace.mkdir()
     parent, objects, shard, optimizer = prepare(workspace)
@@ -340,9 +342,8 @@ def prepare_extension(home):
     routes = [*LEARNED_QUESTIONS, ('astronomy', 'word6')]
     observations = [{'id': identity([name, variant]), 'route': name, 'features': features(question)}
                     for name, question in routes for variant in range(2)]
-    router = expert_router.fit(observations, embedding_root=features.root,
-                               tokenizer_root=graph['tokenizer']['root'], prototypes_per_route=1)
-    router = expert_router.fit_classifier(observations, router)
+    router = expert_router.append_route(retained_service['router'], observations, 'astronomy',
+                                        prototypes_per_route=1)
     save(home / 'learned.json', learned_graph.configuration(graph, router, features.profile, SOURCE))
 
 
@@ -362,6 +363,8 @@ def extension_worker(rank, home):
             features = EmbeddingFeatures(portable.tensor_path(home/'interpreter', digest), digest,
                                          net.tokenizer, graph['tokenizer']['root'])
         automatic = learned_graph.LearnedGraphNetwork(net, read('learned.json'), source_home=SOURCE, features=features)
+        retained = learned_graph.LearnedGraphNetwork(net, read('retained-learned.json'), source_home=SOURCE,
+            features=features, graph=read('pre-growth.json'))
         results = []
         for route, question in [*LEARNED_QUESTIONS, ('astronomy', 'word6')]:
             actual = automatic.answer(question, 4)
@@ -374,6 +377,8 @@ def extension_worker(rank, home):
                 assert sum(costs.values()) == 7 * len(actual['outputs'][0]['token_ids'])
             else:
                 assert '5' not in costs
+                old = retained.answer(question, 4)
+                assert old['text'] == actual['text'] and old['outputs'] == actual['outputs']
             results.append(actual)
         for question in QUESTIONS:
             before = net.answer(question, 4, read('pre-growth.json'))
