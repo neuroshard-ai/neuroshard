@@ -439,6 +439,24 @@ def test_replacement_keeps_the_original_two_expert_capacity_and_schema(tmp_path)
     assert baseline['experts']['protocol'] != terminal
 
 
+def test_replacement_profile_binds_alias_code_and_refuses_neural_kernel_changes():
+    import runpy
+    import pytest
+    bind = runpy.run_path(str(SOURCE/'scripts/run_expert_replacement_control.py'))['execution_profile']
+    alias = 'src/neuroshard/evolution/sharded/learned_graph.py'
+    kernel = 'src/neuroshard/evolution/sharded/graph_execution.py'
+    previous = {'sources': {alias: 'a'*64, kernel: sha256(SOURCE/kernel)}}
+    with pytest.raises(ValueError, match='prospectively committed'):
+        bind(previous, {}, SOURCE)
+    contract = {'executor_source_updates': {alias: sha256(SOURCE/alias)}}
+    bound = bind(previous, contract, SOURCE)
+    assert bound['sources'][alias] == sha256(SOURCE/alias)
+    assert previous['sources'][alias] == 'a'*64
+    contract['executor_source_updates'][kernel] = sha256(SOURCE/kernel)
+    with pytest.raises(ValueError, match='numerical execution'):
+        bind(previous, contract, SOURCE)
+
+
 def queue_worker(rank, home, port):
     import importlib.util
     home = Path(home)

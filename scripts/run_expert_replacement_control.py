@@ -26,6 +26,23 @@ from neuroshard.evolution.sharded.router_features import EmbeddingFeatures
 FORMAT = 'neuroshard-training-matched-replacement-control-v1'
 
 
+def execution_profile(original, contract, source):
+    """Bind the already declared routing/client changes, preserving kernels."""
+    allowed = {'src/neuroshard/evolution/audit_worker.py',
+               'src/neuroshard/evolution/transactions.py',
+               'src/neuroshard/evolution/sharded/learned_graph.py'}
+    updates = contract.get('executor_source_updates', {})
+    if set(updates) - (allowed & set(original['sources'])):
+        raise ValueError('Replacement control cannot change numerical execution sources')
+    profile = copy.deepcopy(original)
+    for name, previous in profile['sources'].items():
+        expected = updates.get(name, previous)
+        if sha256(source/name) != expected:
+            raise ValueError('Control executor source was not prospectively committed')
+        profile['sources'][name] = expected
+    return profile
+
+
 def replacement(baseline, terminal, name):
     """Replace one equal-shaped tail, preserving the fixed neural capacity."""
     old = baseline['experts'][name]
@@ -63,13 +80,15 @@ def run(home, source, phase):
     if terminal['job'] != expert_data.job_identity(plan, read('prepared.json')):
         raise ValueError('Replacement came from another numerical job')
     graph = replacement(baseline, terminal, contract['replace_expert'])
+    profile = execution_profile(read('graph-profile.json'), contract, source)
+    graph['executor_root'] = identity(profile)
     rank = int(os.environ['RANK'])
     dist.init_process_group('gloo', timeout=timedelta(seconds=1800))
     output = home/('replacement-'+phase)
     output.mkdir(exist_ok=False)
     started = time.monotonic()
     try:
-        net = GraphNetwork(graph, read('graph-profile.json'), objects=home/'objects',
+        net = GraphNetwork(graph, profile, objects=home/'objects',
             interpreter=home/'interpreter', seed=home/'seed', source_home=source, rank=rank)
         features, packet = None, None
         if rank == 0:
