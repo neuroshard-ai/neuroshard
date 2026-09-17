@@ -14,6 +14,7 @@ from . import composition
 FORMAT = 'neuroshard-learned-graph-service-v1'
 MAPPED = 'neuroshard-mapped-graph-service-v1'
 COMPOSING = 'neuroshard-learned-composed-service-v2'
+ALIASED_COMPOSING = 'neuroshard-aliased-composed-service-v1'
 SOURCES = ('src/neuroshard/evolution/expert_router.py',
            'src/neuroshard/evolution/serving_graph.py',
            'src/neuroshard/evolution/sharded/router_features.py',
@@ -30,7 +31,14 @@ def configuration(graph, model, feature_profile, source_home, route_models=None,
             'sources': {name: sha256(Path(source_home) / name) for name in SOURCES}}
     if route_models is not None:
         if compose:
-            raise ValueError('Mapped routes compose through the separately committed neural planner')
+            if (not isinstance(route_models, dict) or set(route_models) != set(model['prototypes'])
+                    or any(not isinstance(value, str) for value in route_models.values())
+                    or set(route_models.values()) != {'parent', *graph['experts']}
+                    or route_models.get(model['fallback']) != 'parent'):
+                raise ValueError('Map every learned route onto the retained experts and unchanged fallback')
+            result.update(format=ALIASED_COMPOSING, route_models=copy.deepcopy(route_models),
+                          composition=composition.ROUTED_FORMAT)
+            return result
         if (not isinstance(route_models, dict) or set(route_models) != set(model['prototypes'])
                 or any(not isinstance(value, str) for value in route_models.values())
                 or set(route_models.values()) != {'parent', 'interpreter', *graph['experts']}
@@ -65,9 +73,10 @@ class LearnedGraphNetwork:
                 or any(rule not in network.graph['descriptor']['rules'] for rule in selected['descriptor']['rules'])):
             raise ValueError('Retained learned service differs from installed frozen expert paths')
         mapped = config.get('format') == MAPPED
-        composing = config.get('format') == COMPOSING
+        aliased = config.get('format') == ALIASED_COMPOSING
+        composing = config.get('format') in (COMPOSING, ALIASED_COMPOSING)
         fields = {'format', 'graph', 'router', 'feature_profile', 'sources'}
-        if mapped:
+        if mapped or aliased:
             fields.add('route_models')
         if composing:
             fields.add('composition')
@@ -77,7 +86,7 @@ class LearnedGraphNetwork:
         embedding = network.graph['interpreter_assets']['partitions']['0']['tensors']['model.embed_tokens.weight']
         if (config != configuration(selected, model, config['feature_profile'], source_home,
                                      config.get('route_models'), compose=composing)
-                or (not mapped and (model['fallback'] != 'parent'
+                or (not mapped and not aliased and (model['fallback'] != 'parent'
                     or set(model['prototypes']) != {'parent', *selected['experts']}))
                 or model['tokenizer_root'] != network.graph['tokenizer']['root']
                 or model['embedding_root'] != identity(config['feature_profile'])
@@ -98,7 +107,8 @@ class LearnedGraphNetwork:
     def answer(self, question, max_tokens):
         if self.config['format'] == MAPPED:
             raise ValueError('Mapped model routes require the committed conversation executor')
-        parts = composition.independent_questions(question) if self.config['format'] == COMPOSING else None
+        parts = (composition.independent_questions(question)
+                 if self.config['format'] in (COMPOSING, ALIASED_COMPOSING) else None)
         if parts is not None:
             # Choose an expert for each actual subquestion. A new fact and an
             # earlier fact can therefore execute on different frozen tails.
@@ -136,9 +146,12 @@ class LearnedGraphNetwork:
             raise ValueError('Routing feature extraction failed: ' + packet['error'])
         serving_graph.fields(packet, {'features'}, 'Invalid routing feature packet')
         observed = expert_router.select(self.config['router'], packet['features'])
-        decision = Decision(question, observed['route'])
+        route = self.config.get('route_models', {}).get(observed['route'], observed['route'])
+        decision = Decision(question, route)
         plan = serving_graph.selected_calls(self.graph, decision.route, question, max_tokens)
         routing = {'service': self.root, 'decision': observed, 'features': packet['features']}
+        if self.config['format'] == ALIASED_COMPOSING:
+            routing['model'] = route
         original = net.net.answer_paths.get('directory')
         if net.interpreted is not None:
             net.net.answer_paths['directory'] = net.interpreted.answer_expert

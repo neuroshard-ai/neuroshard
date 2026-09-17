@@ -1,0 +1,23 @@
+{
+  "format": "neuroshard-training-matched-replacement-control-v1",
+  "primary_freeze": "9b875dfd6d1d71d82ca51f551b5d7702c9dee188f0c56cc7c2acdcf683a438ec",
+  "replace_expert": "protocol",
+  "max_seconds": 2400,
+  "sources": {
+    "src/neuroshard/evolution/expert_router.py": "3c21e75875e8a10cb4ffeb3ad3b8d4c6c9192ce7707a723535d88fbbcfda5aef",
+    "src/neuroshard/evolution/serving_graph.py": "bb9ffa8bf942c3069621f6170b79f757761564e246b096eb67755a1ed7f75d7b",
+    "src/neuroshard/evolution/sharded/router_features.py": "b27361bb0efddd6d6b73bb74429c7773a68e85d8a66e5b7e219a357195e00930",
+    "src/neuroshard/evolution/sharded/interpretation.py": "9128065803e3a306b6374fa321ebcfdb9f932d6b28768a4ea483abf5ae3dd1b0",
+    "src/neuroshard/evolution/sharded/composition.py": "90a4f5a1ee31a8f71be5bf233067f5c06ab9a027d077c63284f01dc762088fc1",
+    "src/neuroshard/evolution/sharded/learned_graph.py": "a84bf0c8a2e79d4afa4e0cbe9b5613e954734c03e84e2aa836c6181a6af7467a",
+    "scripts/run_native_expert_service.py": "d4da76582101caa160e754d3929c1ecfd7f3bbc8976138de356e5b6778e1903a",
+    "scripts/run_expert_replacement_control.py": "f29289679aaa623e027bc74620ed4f35a1f9fc617de56c384c804786e3bd40c6"
+  },
+  "prescription": {
+    "training": "Reuse the exact 512-step terminal weights initialized from accepted B with fresh Adam; no additional neural updates.",
+    "routing": "Reuse the same training-fitted isolated router; map old protocol and new planner routes onto the replacement protocol weights.",
+    "evaluation": "Unchanged development and retention inventories; final only if the primary published terminal opens it. Never select weights or routing using control scores.",
+    "resources": "Use the recorded four-host allocation and its existing retirement deadline. Execute five logical owners and the original number of neural parameters.",
+    "limitation": "Training-matched capacity ablation; lifetime storage, verification and serving costs are not claimed equal."
+  }
+}

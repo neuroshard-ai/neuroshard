@@ -51,6 +51,11 @@ before the affected work, rather than changing the target after a result.
   validation now executes both earlier and expanded learned services on the
   same owned shards, without duplicating the backbone. This validates execution
   and retained paths, not a new language-quality result or another admitted cohort.
+  A separately frozen [replacement control](config/experiments/expert-replacement-control.json)
+  reuses the exact new terminal weights while replacing the earlier expert.
+  Learned route aliases let both routes use that fixed capacity; six-process
+  execution checked actual routing, replay and owner payments. The GPU comparison
+  is pending. This avoids duplicate training and does not equate lifetime costs.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -392,3 +397,17 @@ under the same admission rules.
   gradients matching joint execution, causal masking and request-local caches.
   These are CPU numerical checks; this method has not yet passed an LLM learning
   or quality gate and has no native admission. Task 1 remains open.
+
+- 2026-09-17: The automatic numerical loop completed two real training cohorts
+  against four operated CometBFT validators: four updates earned four trial
+  NEURO, both measured quality failures were rejected, and serving stayed pinned.
+  A driver waiting for the original audit deadline initially missed the shortened
+  reveal window; that failed attempt is retained. Auditor recovery now follows
+  current deadlines and may retire an unknown signed audit only when committed
+  history proves its exact context closed. Five new recovery checks passed.
+  The extended numerical integration also passed with publisher restart, actual
+  duplicate-source rejection and nine unchanged responses from persistent
+  accepted shard processes while cohorts executed (128.51 seconds). Its operated
+  repetition is in progress. These are synthetic models and one administrator;
+  useful cumulative LLM learning and automatic production data operation remain
+  open, so neither task 1 nor task 2 is checked.

@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import time
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
@@ -31,6 +32,40 @@ from test_native_audit_quorum import verdicts
 from test_settlement import blocks
 
 SOURCE = Path(__file__).resolve().parents[2]
+
+
+def serving_owner(rank, home):
+    """Keep the accepted shards loaded while another cohort executes."""
+    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'test'
+    home = Path(home)
+    graph = json.loads((home/'continuous-serving/graph.json').read_bytes())
+    dist.init_process_group('gloo', init_method='file://'+str(home/'continuous-serving/rendezvous'),
+                            rank=rank, world_size=3+len(graph['experts']), timeout=timedelta(seconds=120))
+    try:
+        profile = json.loads((home/'profile.json').read_bytes())
+        net = GraphNetwork(graph, profile, objects=home/'objects', interpreter=home/'interpreter',
+                           seed=home/'seed', source_home=SOURCE, rank=rank)
+        previous = None
+        while True:
+            request = [None]
+            if rank == 0:
+                path = home/'continuous-serving/request.json'
+                if path.exists():
+                    request[0] = json.loads(path.read_bytes())
+            dist.broadcast_object_list(request, src=0)
+            request = request[0]
+            if request and request.get('stop'):
+                break
+            if request and request['id'] != previous:
+                assert request['serving_root'] == identity(graph)
+                answer = net.answer('word3 word7', 3)
+                destination = home/'continuous-serving'/(request['id']+'.owner-'+str(rank)+'.json')
+                save(destination.with_suffix('.partial'), {'context': request, 'answer': answer})
+                destination.with_suffix('.partial').replace(destination)
+                previous = request['id']
+            time.sleep(.1)
+    finally:
+        dist.destroy_process_group()
 
 
 def quality_owner(rank, home, request):
@@ -72,7 +107,34 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
     serving = node.state['serving_root']
     worker_keys = [protocol.Identity('operator-prefix-'+str(i)) for i in range(3)]
     training_key = protocol.Identity('operator-training')
-    contexts, calls = {}, []
+    contexts, calls, serving_checks = {}, [], []
+    serving_home = home/'continuous-serving'
+    serving_home.mkdir()
+    save(serving_home/'graph.json', initial_job['lifecycle']['serving_graph'])
+    serving_processes = mp.spawn(serving_owner, args=(str(home),),
+        nprocs=3+len(initial_job['lifecycle']['serving_graph']['experts']), join=False)
+
+    def request_serving(label):
+        request = {'id': str(len(serving_checks)), 'phase': label, 'height': node.state['height'],
+                   'serving_root': node.state['serving_root']}
+        save(serving_home/'next.json', request)
+        (serving_home/'next.json').replace(serving_home/'request.json')
+        return request
+
+    def check_serving(request):
+        paths = [serving_home/(request['id']+'.owner-'+str(i)+'.json')
+                 for i in range(len(serving_processes.processes))]
+        deadline = time.monotonic()+120
+        while not all(path.exists() for path in paths):
+            assert all(process.is_alive() for process in serving_processes.processes)
+            if time.monotonic() > deadline:
+                raise TimeoutError('Accepted serving shards did not answer during the cohort')
+            time.sleep(.1)
+        responses = [json.loads(path.read_bytes()) for path in paths]
+        assert all(row == responses[0] for row in responses)
+        if serving_checks:
+            assert responses[0]['answer'] == serving_checks[0]['answer']
+        serving_checks.append(responses[0])
 
     def records(source, start, count):
         original = upstream(source, 0, 2)
@@ -91,6 +153,16 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
         plan['previous_graph'] = identity(state['expert_lifecycle']['serving_graph']['descriptor'])
         quality = store.json(initial_job['lifecycle']['quality']['policy_root'])
         windows = [{'source': source, 'count': 2} for source in initial_job['data']['sources'].values()]
+        rejected_entry = identity({'windows': windows, 'fixture': 'repeated-original-rows'})
+        if not operator.db.execute('SELECT id FROM cohorts WHERE id=?', ('data/'+rejected_entry,)).fetchone():
+            try:
+                expert_preparation.prepare(state, plan, policy, store, tokenizer,
+                    lambda source, start, count: upstream(source, 0, count), windows=windows, batch_size=1)
+            except ValueError as error:
+                assert 'Fresh selection repeats admitted history' in str(error)
+                return {'rejected_data': {'entry': rejected_entry,
+                    'review': {'mechanical_checks_passed': False, 'reason': str(error)}}}
+            raise AssertionError('Repeated original documents were admitted as fresh data')
         bundle = expert_preparation.prepare(state, plan, policy, store, tokenizer, records, windows=windows, batch_size=1)
         inputs = store.json(bundle['prepared'])
         initial = renamed(initial_job['work']['parent'], initial_job['work']['checkpoint'], expert_data.job_identity(plan, inputs))
@@ -142,7 +214,7 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
         assert all(result == results[0] for result in results)
         return results[0], candidate
 
-    def backend(request):
+    def execute_backend(request):
         job, phase, work = request['job'], request['phase'], request['work']
         ctx = context(job)
         calls.append((identity(job), phase))
@@ -172,13 +244,28 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
                  'baseline_graph': job['lifecycle']['serving_graph'], 'stages': job['lifecycle']['quality']['stages']}
         return {'report': report, 'transcript_root': identity(graph_quality.quality_transcript(claim, measured))}
 
+    def backend(request):
+        probe = request_serving(request['phase'])
+        result = execute_backend(request)
+        check_serving(probe)
+        return result
+
     operator, outbox = build(home/'operator', node, owners, backend, next_job)
-    audited = []
+    audited, restarted = [], False
     try:
+        check_serving(request_serving('initial'))
         for _ in range(80):
             result = operator.tick()
-            if result['phase'] == 'no_new_cohort':
+            if result['phase'] in ('no_new_cohort', 'cohort_budget_complete'):
                 break
+            if result['phase'] == 'quality_rejected' and not restarted:
+                operator.close()
+                outbox.close()
+                operator, outbox = build(home/'operator', node, owners, backend, next_job)
+                restarted = True
+                check_serving(request_serving('publisher-restarted-after-rejection'))
+            if result['phase'] == 'data_rejected':
+                check_serving(request_serving('repeated-source-rejected'))
             admission = expert_admission.bookkeeping(node.state)
             if admission['proposal']:
                 proposal = admission['proposal']
@@ -219,7 +306,9 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
         else:
             raise AssertionError('Automatic native loop failed to reach the end of its feed')
         outcomes = [json.loads(row[0]) for row in operator.db.execute('SELECT outcome FROM cohorts')]
-        assert [row['phase'] for row in outcomes] == ['quality_rejected', 'quality_rejected']
+        assert [row['phase'] for row in outcomes] == ['quality_rejected', 'data_rejected', 'quality_rejected']
+        assert restarted and len(serving_checks) == 9
+        save(home/'continuous-serving/results.json', serving_checks)
         assert audited == ['expert_features', 'expert_training', 'expert_quality']*2
         assert node.state['issued'] == 4*settlement.PARAMS['reward_atoms']
         assert len(expert_admission.bookkeeping(node.state)['trained_documents']) == 4
@@ -229,3 +318,12 @@ def test_two_automatic_cohorts_execute_replay_and_reject_quality_without_overwri
     finally:
         operator.close()
         outbox.close()
+        save(serving_home/'next.json', {'stop': True})
+        (serving_home/'next.json').replace(serving_home/'request.json')
+        try:
+            serving_processes.join(timeout=10)
+        finally:
+            for process in serving_processes.processes:
+                if process.is_alive():
+                    process.terminate()
+                process.join(timeout=10)

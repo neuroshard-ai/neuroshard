@@ -365,6 +365,19 @@ def extension_worker(rank, home):
         automatic = learned_graph.LearnedGraphNetwork(net, read('learned.json'), source_home=SOURCE, features=features)
         retained = learned_graph.LearnedGraphNetwork(net, read('retained-learned.json'), source_home=SOURCE,
             features=features, graph=read('pre-growth.json'))
+        smaller = read('pre-growth.json')
+        aliases = {name: name for name in read('learned.json')['router']['prototypes']}
+        aliases['astronomy'] = 'protocol'
+        config = learned_graph.configuration(smaller, read('learned.json')['router'],
+            read('learned.json')['feature_profile'], SOURCE, aliases, compose=True)
+        consolidated = learned_graph.LearnedGraphNetwork(net, config, source_home=SOURCE,
+                                                        features=features, graph=smaller)
+        redirected = consolidated.answer('word6', 4)
+        assert redirected['routing']['decision']['route'] == 'astronomy'
+        assert redirected['routing']['model'] == 'protocol'
+        assert redirected['outputs'][-1]['model'] == 'protocol'
+        assert '5' not in serving_graph.payments(smaller, redirected['request']['calls'], redirected['outputs'], 7)
+        assert consolidated.replay(redirected)[0]
         results = []
         for route, question in [*LEARNED_QUESTIONS, ('astronomy', 'word6')]:
             actual = automatic.answer(question, 4)
