@@ -25,6 +25,11 @@ def limits(service, graph, maximum, tariff):
               'answer': maximum}
     if 'composer' in service:
         result['composition'] = min(maximum, integer(service['composer']['max_tokens'], 1, 256))
+    if 'request_policy' in service:
+        from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS
+        if service['request_policy'] != REQUEST_POLICY:
+            raise ValueError('Unknown request-preservation policy')
+        result['planning_repair'] = REPAIR_TOKENS
     if any(value >= context for value in result.values()):
         raise ValueError('Reserve room for every complete neural prompt and output')
     return result
@@ -33,7 +38,8 @@ def limits(service, graph, maximum, tariff):
 def quote(service, graph, maximum, tariff):
     bounds = limits(service, graph, maximum, tariff)
     counts = {'planning': 1, 'directory_arguments': 2, 'answer': 2,
-              **({'composition': 1} if 'composition' in bounds else {})}
+              **({'composition': 1} if 'composition' in bounds else {}),
+              **({'planning_repair': 1} if 'planning_repair' in bounds else {})}
     # Reserve each call's maximum prompt and output separately. This is a
     # conservative bound even when one token class costs more than the other.
     prompt_tokens = sum((tariff['context']-1)*count for count in counts.values())
@@ -76,6 +82,8 @@ def meter(service, graph, response, tariff):
     payments, prompt_count, output_count, details = {}, 0, 0, []
     models = {'parent', 'interpreter', *graph['experts']}
     vocabulary, eos = graph['parent']['config']['vocab_size'], graph['tokenizer']['eos_id']
+    from .request_planning import direct_question
+    direct = 'request_policy' in service and direct_question(request['messages']) is not None
     for index, call in enumerate(outputs):
         serving_graph.fields(call, {'model', 'purpose', 'owners', 'prompt_ids', 'token_ids'}
                              | ({'planner_adapter'} if 'planner_adapter' in call else set()),
@@ -83,7 +91,9 @@ def meter(service, graph, response, tariff):
         purpose, model = call['purpose'], call['model']
         if (not isinstance(purpose, str) or not isinstance(model, str)
                 or purpose not in counts or model not in models
-                or (index == 0) != (purpose == 'planning')
+                or (not direct and (index == 0) != (purpose == 'planning'))
+                or (direct and purpose in ('planning', 'planning_repair'))
+                or (purpose == 'planning_repair' and (index != 1 or outputs[0]['purpose'] != 'planning'))
                 or purpose != 'answer' and model != 'interpreter'
                 or purpose == 'composition' and index != len(outputs)-1):
             raise ValueError('Invalid service call order or model')

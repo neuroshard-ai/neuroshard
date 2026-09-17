@@ -87,7 +87,7 @@ def source_list(path):
                 and any(isinstance(target, ast.Name) and target.id == 'SOURCES' for target in node.targets))
 
 
-def finalize(home):
+def finalize(home, trial_path=None):
     read = lambda name: json.loads((home/'inputs'/name).read_bytes())
     profile, graph, planned = [read(name+'.json') for name in ('profile', 'graph', 'planned')]
     profile['sources'] = {str(path.relative_to(ROOT)): sha256(path)
@@ -102,12 +102,19 @@ def finalize(home):
         config = planned['learned'] if key == 'learned' else planned
         config['sources'] = {name: sha256(ROOT/name) for name in
                             source_list('src/neuroshard/evolution/sharded/'+path)}
+    if 'request_policy' in planned:
+        name = 'src/neuroshard/evolution/request_planning.py'
+        planned['sources'][name] = sha256(ROOT/name)
     for name, value in [('profile', profile), ('graph', graph), ('planned', planned)]:
         save(home/'inputs'/(name+'.json'), value)
     paths = ['scripts/run_ordinary_access_trial.py', 'scripts/prepare_ordinary_access_trial.py',
              'config/experiments/ordinary-access-general-training.json',
              'src/neuroshard/evolution/access_routing.py', 'src/neuroshard/evolution/serving_diagnosis.py',
              'src/neuroshard/evolution/sharded/planned_graph.py', 'src/neuroshard/evolution/expert_router.py']
+    if 'request_policy' in planned:
+        paths += ['src/neuroshard/evolution/request_planning.py',
+                  'src/neuroshard/evolution/planned_metering.py',
+                  'scripts/prepare_request_preservation.py']
     trial = {'format': 'neuroshard-ordinary-access-trial-v1', 'no_neural_training': True,
         'final_opened': False, 'max_seconds': 3600, 'diagnostic': identity(read('plan.json')),
         'service': identity(planned), 'router': identity(planned['learned']['router']),
@@ -122,7 +129,7 @@ def finalize(home):
                        'forced_controls_never_count_as_automatic': True},
         'stop_rule': 'One inference allocation. Preserve complete traces and retire. No cohort training or promotion.'}
     save(home/'inputs/access-trial.json', trial)
-    save(ROOT/'config/experiments/ordinary-access-trial.json', trial)
+    save(trial_path or ROOT/'config/experiments/ordinary-access-trial.json', trial)
     print(json.dumps({'service': trial['service'], 'router': trial['router'],
                       'commit_required_before_GPU': True}))
 

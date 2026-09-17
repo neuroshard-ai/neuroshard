@@ -7,6 +7,31 @@ execution source. It uses the same 15 exposed development conversations as the
 ordinary serving diagnostic. It opens no new final and cannot complete the
 three-cohort learning milestone.
 
+## Request-preservation candidate
+
+The next [frozen candidate](../config/experiments/request-preservation-trial.json)
+keeps the measured router and every expert unchanged. A conservative syntax
+check sends a clear, single-turn standalone question verbatim to the selector;
+compound, contextual and ambiguous inputs retain neural decomposition. If a
+decomposed question still contains a referential pronoun, one bounded neural
+call proposes an explicit subject. Validation permits only pronoun substitutions
+grounded in the conversation, preserving other words, question count and order.
+An invalid repair fails closed. This grounding restriction does not prove that
+the chosen referent is semantically correct.
+
+The complete service binds the policy and its source. Metering reserves the
+possible repair and charges every actual neural call, including failed repairs;
+direct requests incur no planner call. This is an experimental English request
+policy, not a general natural-language parser or an elected permanent planner.
+
+One inference-only allocation uses the same exposed development cases and
+unchanged scorer. The engineering decision requires zero planning/selection
+failures in both ordinary requests and standalone controls, retention of all
+seven previously correct cases, replay and complete-call metering. The original
+all-answer quality gate remains unchanged: C's three incorrect standalone
+answers are expected to keep it closed. No next cohort is started. The same
+five-host, two-hour absolute deadline and $25 cap apply.
+
 The original assembled service used growing router `9df5d8fa` with base
 `c4b1a0a8`, rather than the earlier ordinary-question base `3766fcc3`. Its C gate
 predicted the correct class on six ordinary C questions but rejected every one

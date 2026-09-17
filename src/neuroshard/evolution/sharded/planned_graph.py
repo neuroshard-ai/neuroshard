@@ -90,7 +90,7 @@ def planner_prefix(planner):
 
 
 def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
-                  planner_weights=None, composer=None, answer_policy=None):
+                  planner_weights=None, composer=None, answer_policy=None, request_policy=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -139,6 +139,13 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         result['sources'][name] = sha256(Path(source_home)/name)
     elif 'output_format' in planner:
         raise ValueError('A typed planner requires its complete value policy')
+    if request_policy is not None:
+        from ..request_planning import FORMAT as REQUEST_POLICY
+        if request_policy != REQUEST_POLICY or answer_policy is not None:
+            raise ValueError('Require the declared untyped request-preservation policy')
+        result['request_policy'] = request_policy
+        name = 'src/neuroshard/evolution/request_planning.py'
+        result['sources'][name] = sha256(Path(source_home)/name)
     return result
 
 
@@ -154,11 +161,14 @@ class PlannedGraphNetwork:
             fields.add('composer')
         if 'answer_policy' in config:
             fields.add('answer_policy')
+        if 'request_policy' in config:
+            fields.add('request_policy')
         serving_graph.fields(config, fields,
                              'Invalid planned service configuration')
         if config != configuration(network.graph, config['learned'], config['planner'], source_home,
                                    config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
-                                   config.get('planner_weights'), config.get('composer'), config.get('answer_policy')):
+                                   config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
+                                   config.get('request_policy')):
             raise ValueError('Planned service changed its models, sources or execution rules')
         self.net, self.config = network, copy.deepcopy(config)
         self.router = LearnedGraphNetwork(network, config['learned'], source_home=source_home, features=features)
@@ -300,7 +310,12 @@ class PlannedGraphNetwork:
         if self.net.all_owners.exchange(identity(request)) != [identity(request)] * self.net.world_size:
             raise ValueError('Owners received different conversations')
         self.trace = []
-        raw = self.call('interpreter', self.planning_messages(messages), self.config['planner']['max_tokens'], 'planning')
+        from .. import request_planning
+        preserve = 'request_policy' in self.config
+        direct = request_planning.direct_question(messages) if preserve else None
+        raw = (json.dumps({'questions': [direct]}) if direct is not None else
+               self.call('interpreter', self.planning_messages(messages),
+                         self.config['planner']['max_tokens'], 'planning'))
         answers, routing, arguments, error, program, rendering = [], [], [], None, None, None
         try:
             if 'answer_policy' in self.config:
@@ -311,6 +326,16 @@ class PlannedGraphNetwork:
                 plan = questions(raw)
         except (ValueError, TypeError):
             plan, error = [], 'invalid_neural_plan'
+        planning = {'path': 'direct' if direct is not None else 'neural',
+                    'initial_questions': list(plan), 'repair': 'none'}
+        if preserve and error is None and request_planning.needs_repair(plan):
+            repaired = self.call('interpreter', request_planning.repair_messages(messages, plan),
+                                 request_planning.REPAIR_TOKENS, 'planning_repair')
+            try:
+                plan = request_planning.validate_repair(plan, questions(repaired), messages)
+                planning['repair'] = 'accepted'
+            except (ValueError, TypeError):
+                plan, error, planning['repair'] = [], 'invalid_reference_repair', 'rejected'
         for question in plan:
             # A single unambiguous user request need not lose its payload merely
             # because the planner expressed its instruction more concisely.
@@ -349,6 +374,8 @@ class PlannedGraphNetwork:
                   'generated_tokens': sum(len(row['token_ids']) for row in self.trace)}
         if 'answer_policy' in self.config:
             result.update(program=program, rendering=rendering, arguments=arguments)
+        if preserve:
+            result['planning'] = planning
         self.net.verify_unchanged()
         if self.net.all_owners.exchange(identity(result)) != [identity(result)] * self.net.world_size:
             raise ValueError('Owners disagree on the complete planned response')

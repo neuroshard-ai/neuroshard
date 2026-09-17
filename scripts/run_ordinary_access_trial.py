@@ -99,6 +99,20 @@ def run(home, source):
                   'retained_previous_passes': old_passes <= passed_ids,
                   'automatic_replay': valid, 'forced_replay': forced_replay,
                   'ordinary_answering': len(passed_ids) == len(rows)}
+        planning_checks = None
+        if 'request_policy' in config:
+            from neuroshard.evolution import planned_metering
+            tariff = {'prompt_atom_price': 1, 'output_atom_price': 1,
+                      'context': graph['tokenizer']['max_context']}
+            receipts = [planned_metering.meter(config, graph, response, tariff)
+                        for response in [*(trace['response'] for trace in traces), *gold_cache.values()]]
+            save(output/'metering.json', {'tariff': tariff, 'ledger_payment': False, 'receipts': receipts})
+            planning_checks = {
+                'ordinary_access': all(row['ordinary'] not in ('selection', 'decomposition') for row in rows),
+                'gold_access': all(mode not in ('selection', 'decomposition') for row in rows for mode in row['gold']),
+                'retained_previous_passes': old_passes <= passed_ids,
+                'automatic_replay': valid, 'forced_replay': forced_replay,
+                'complete_call_metering': True}
         result = {'format': 'neuroshard-ordinary-access-trial-v1/result', 'trial': identity(trial),
             'service': service.root, 'rows': rows, 'summary': diagnosis.summarize(rows),
             'checks': checks, 'passed': all(checks.values()),
@@ -109,6 +123,9 @@ def run(home, source):
                               'input_failures': sum(row['error'] is not None for row in forced_cache.values())},
             'traces': identity(traces), 'neural_updates': 0, 'tokens_issued': 0,
             'native_activated': False, 'final_opened': False, 'seconds': time.monotonic()-started}
+        if planning_checks is not None:
+            result['planning_checks'] = planning_checks
+            result['planning_passed'] = all(planning_checks.values())
         save(output/'result.json', result)
         net.verify_unchanged()
     finally:

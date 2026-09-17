@@ -74,3 +74,37 @@ def test_metering_import_does_not_load_neural_runtime():
     subprocess.run([sys.executable, '-c',
         'import sys; from neuroshard.evolution import planned_metering; assert "torch" not in sys.modules'],
         check=True, timeout=15)
+
+
+def test_preserved_requests_pay_actual_calls_and_reserve_one_reference_repair(execution):
+    from neuroshard.evolution.request_planning import FORMAT
+    graph, service, tariff, response = execution
+    service['request_policy'] = FORMAT
+    response['service'] = response['request']['service'] = identity(service)
+    response['request']['messages'] = [{'role': 'user', 'content': 'What command starts the renderer?'}]
+    response['outputs'] = response['outputs'][1:]
+    response['generated_tokens'] = 6
+    report = meter.meter(service, graph, response, tariff)
+    assert len(report['calls']) == 3
+    assert meter.quote(service, graph, 128, tariff)['call_limits']['planning_repair'] == 1
+    response['request']['messages'][0]['content'] = 'What does the renderer do and how does it work?'
+    with pytest.raises(ValueError, match='order'):
+        meter.meter(service, graph, response, tariff)
+
+
+def test_reference_repair_is_metered_once_before_expert_execution(execution):
+    from neuroshard.evolution.request_planning import FORMAT
+    graph, service, tariff, response = execution
+    service['request_policy'] = FORMAT
+    response['service'] = response['request']['service'] = identity(service)
+    response['request']['messages'] = [{'role': 'user', 'content': 'What does the renderer do and how does it work?'}]
+    repair = copy.deepcopy(response['outputs'][0])
+    repair['purpose'] = 'planning_repair'
+    repair.pop('planner_adapter')
+    response['outputs'].insert(1, repair)
+    response['generated_tokens'] = 10
+    assert meter.meter(service, graph, response, tariff)['total_atoms'] == 15*2+10*7
+    response['outputs'].insert(2, copy.deepcopy(repair))
+    response['generated_tokens'] = 12
+    with pytest.raises(ValueError):
+        meter.meter(service, graph, response, tariff)
