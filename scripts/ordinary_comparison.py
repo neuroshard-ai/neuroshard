@@ -19,10 +19,32 @@ from neuroshard.evolution.reference_data import identity, save
 from neuroshard.evolution.sharded import graph_quality
 
 
+def resources(cloud):
+    """Observe OS byte counters and retained disk usage on every actual owner."""
+    def one(rank):
+        script = '''import json,pathlib,os,subprocess
+from datetime import datetime,timezone
+folder='/home/ubuntu/native-expert-live'
+network={}
+for iface in pathlib.Path('/sys/class/net').iterdir():
+    if iface.name!='lo':
+        network[iface.name]={key:int((iface/'statistics'/key).read_text()) for key in ('rx_bytes','tx_bytes')}
+disk=os.statvfs(folder)
+print(json.dumps({'time':datetime.now(timezone.utc).isoformat(),'network':network,
+    'retained_directory_bytes':int(subprocess.check_output(['du','-sb',folder]).split()[0]),
+    'filesystem_used_bytes':(disk.f_blocks-disk.f_bfree)*disk.f_frsize}))
+'''
+        return str(rank), json.loads(cloud.command(rank, ['python3', '-c', script], timeout=120).stdout)
+    with ThreadPoolExecutor(max_workers=7) as pool:
+        return dict(pool.map(one, range(7)))
+
+
 def start_growth(home, job_label):
+    from ordinary_cloud import Cloud
     path = Path(home)/'comparison-growth-start.json'
     value = {'label': job_label, 'started': datetime.now(timezone.utc).isoformat()}
     if not path.exists():
+        value['resources'] = resources(Cloud(home))
         save(path, value)
     return json.loads(path.read_bytes())
 
@@ -125,10 +147,12 @@ def run(backend, state):
         completed = life.materialize_graph(native['lifecycle']['candidate_template'], state['expert_work']['checkpoint'])
         growth = benchmark(backend, completed, native['lifecycle']['serving_graph'], quality, growth_end, 'growth')
         save(growth_file, {'started': growth_started, 'deadline': growth_end, 'serving': growth,
+                           'resources_after': resources(backend.cloud),
                            'quality': json.loads((ctx['directory']/'quality-0.json').read_bytes())['result']})
     started_path = home/'control-start.json'
     if not started_path.exists():
-        save(started_path, {'started': datetime.now(timezone.utc).timestamp()})
+        save(started_path, {'started': datetime.now(timezone.utc).timestamp(),
+                           'resources': resources(backend.cloud)})
     control_started = json.loads(started_path.read_bytes())['started']
     control_end = control_started+budget
 
@@ -200,7 +224,10 @@ def run(backend, state):
     control = json.loads(quality_marker.read_bytes())['result']
     result = {'passed': True, 'comparison_completed': True, 'seconds_per_arm': budget,
         'hosts_per_arm': 7, 'disk_gib_per_host': backend.freeze['resources']['disk_gib'],
-        'growth': growth, 'control': {'started': control_started, 'deadline': control_end,
+        'growth': {**growth, 'resources_before': json.loads((backend.home/'comparison-growth-start.json').read_bytes())['resources']},
+        'control': {'started': control_started, 'deadline': control_end,
+                                     'resources_before': json.loads(started_path.read_bytes())['resources'],
+                                     'resources_after': resources(backend.cloud),
                                      'quality': control, 'serving': control_serving},
         'shadow_issued_atoms': 0,
         'growth_preferred_by_preservation': bool(growth['quality']['decision']['passed']
