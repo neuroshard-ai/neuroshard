@@ -5,6 +5,7 @@ answers. The generated reasoning is replayed and billed with the visible answer.
 Parsing establishes an output boundary; it cannot establish answer correctness.
 """
 import json
+import re
 
 FORMAT = 'worked-general-answer-v2'
 MAX_TOKENS = 256
@@ -36,6 +37,13 @@ EXAMPLES = (
 
 def payload(conversation):
     return json.dumps(conversation, ensure_ascii=False, separators=(',', ':'))
+
+
+def applies(conversation):
+    """Use worked output for user-requested constraints; retain free-form replies."""
+    return any(message['role'] == 'user' and re.search(
+        r'\b(?:only|just)\b|without adding|no (?:extra|additional) (?:text|words)',
+        message['content'], re.IGNORECASE) for message in conversation)
 
 
 def messages(conversation):

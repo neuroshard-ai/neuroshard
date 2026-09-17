@@ -130,3 +130,30 @@ def test_general_first_conversation_bills_only_its_actual_answer(execution):
     response['plan'] = ['A rewritten task']
     with pytest.raises(ValueError, match='intact request'):
         meter.meter(service, graph, response, tariff)
+
+
+def test_worked_answers_bill_reasoning_and_native_payments_conserve_supply(execution):
+    from neuroshard.evolution import answering, general_answer
+    from neuroshard.evolution.request_planning import ASSISTANT_POLICY
+    graph, service, tariff, response = execution
+    service.update(request_policy=ASSISTANT_POLICY, general_answer_policy=general_answer.FORMAT)
+    response['service'] = response['request']['service'] = identity(service)
+    response['request'].update(max_tokens=4, messages=[{'role':'user','content':'Return only the sum.'}])
+    response.update(plan=['Return only the sum.'], planning={'path':'general'}, text='47')
+    call = copy.deepcopy(response['outputs'][0])
+    call.update(purpose='general_answer', token_ids=[9]*70+[2])
+    call.pop('planner_adapter')
+    response['outputs'], response['generated_tokens'] = [call], 71
+    report = meter.meter(service, graph, response, tariff)
+    assert report['output_tokens'] == 71 and report['total_atoms'] == 3*2+71*7
+    assert report['unused_reserved_atoms'] + report['total_atoms'] == meter.quote(service, graph, 4, tariff)['maximum_atoms']
+    bound = {**graph, 'answering': answering.descriptor(service, graph, identity(service))}
+    assert sum(answering.payments(bound, 4, response, 7).values()) == 71*7
+    changed = copy.deepcopy(bound)
+    del changed['answering']['limits']['general_answer']
+    with pytest.raises(ValueError):
+        answering.payments(changed, 4, response, 7)
+    call['token_ids'] = [9]*257+[2]
+    response['generated_tokens'] = 258
+    with pytest.raises(ValueError):
+        meter.meter(service, graph, response, tariff)

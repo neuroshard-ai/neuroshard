@@ -25,6 +25,11 @@ def limits(service, graph, maximum, tariff):
               'answer': maximum}
     if 'composer' in service:
         result['composition'] = min(maximum, integer(service['composer']['max_tokens'], 1, 256))
+    if 'general_answer_policy' in service:
+        from .general_answer import FORMAT as GENERAL_ANSWER, MAX_TOKENS
+        if service['general_answer_policy'] != GENERAL_ANSWER:
+            raise ValueError('Unknown worked general answer policy')
+        result['general_answer'] = MAX_TOKENS
     if 'request_policy' in service:
         from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS, ASSISTANT_POLICY
         if service['request_policy'] not in (REQUEST_POLICY, ASSISTANT_POLICY):
@@ -39,6 +44,7 @@ def quote(service, graph, maximum, tariff):
     bounds = limits(service, graph, maximum, tariff)
     counts = {'planning': 1, 'directory_arguments': 2, 'answer': 2,
               **({'composition': 1} if 'composition' in bounds else {}),
+              **({'general_answer': 2} if 'general_answer' in bounds else {}),
               **({'planning_repair': 1} if 'planning_repair' in bounds else {})}
     # Reserve each call's maximum prompt and output separately. This is a
     # conservative bound even when one token class costs more than the other.
@@ -88,7 +94,7 @@ def meter(service, graph, response, tariff):
         # This checks bounded accounting, not the selector's truth. Complete
         # neural replay still authorizes the actual general-routing decision.
         general = response.get('planning', {}).get('path') == 'general'
-        if general and (len(outputs) != 1 or outputs[0].get('purpose') != 'answer'
+        if general and (len(outputs) != 1 or outputs[0].get('purpose') not in ('answer', 'general_answer')
                 or outputs[0].get('model') != 'interpreter'
                 or response.get('plan') != [request['messages'][-1]['content']]):
             raise ValueError('The general path must answer the intact request once')
@@ -109,6 +115,8 @@ def meter(service, graph, response, tariff):
         counts[purpose] += 1
         if counts[purpose] > offer['call_limits'][purpose]:
             raise ValueError('Service call inventory exceeds its reservation')
+        if counts['answer'] + counts.get('general_answer', 0) > 2:
+            raise ValueError('Require at most two complete answers to one request')
         expected_adapter = service.get('planner_weights', {}).get('fusion') if purpose == 'planning' else None
         if (('planner_adapter' in call) != (expected_adapter is not None)
                 or call.get('planner_adapter') != expected_adapter):

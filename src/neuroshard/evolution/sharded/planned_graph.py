@@ -92,7 +92,7 @@ def planner_prefix(planner):
 
 
 def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
-                  planner_weights=None, composer=None, answer_policy=None, request_policy=None):
+                  planner_weights=None, composer=None, answer_policy=None, request_policy=None, general_answer_policy=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -150,18 +150,27 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         result['request_policy'] = request_policy
         name = 'src/neuroshard/evolution/request_planning.py'
         result['sources'][name] = sha256(Path(source_home)/name)
+    if general_answer_policy is not None:
+        from .. import general_answer, request_planning
+        if (general_answer_policy != general_answer.FORMAT
+                or request_policy != request_planning.ASSISTANT_POLICY):
+            raise ValueError('Bind worked general answers to the complete general-routing policy')
+        result['general_answer_policy'] = general_answer_policy
+        name = 'src/neuroshard/evolution/general_answer.py'
+        result['sources'][name] = sha256(Path(source_home)/name)
     return result
 
 
 def validate_configuration(graph, config, source_home):
     fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
                   'expert_prompts', 'general_instruction'}
-    fields |= {'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy'} & set(config)
+    fields |= {'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
+               'general_answer_policy'} & set(config)
     serving_graph.fields(config, fields, 'Invalid planned service configuration')
     if config != configuration(graph, config['learned'], config['planner'], source_home,
                                config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
                                config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
-                               config.get('request_policy')):
+                               config.get('request_policy'), config.get('general_answer_policy')):
         raise ValueError('Planned service changed its models, sources or execution rules')
     from .learned_graph import validate_configuration as validate_learned
     validate_learned(graph, config['learned'], source_home)
@@ -307,8 +316,22 @@ class PlannedGraphNetwork:
                 return None, None, 'invalid_directory_arguments'
             argument = {'question': question, 'arguments': parsed}
             prompt = incremental_facts.question({'name': parsed['name']}, parsed['field'], 'train', 0)
-        text = self.call(model, self.answer_messages(model, prompt, messages,
-            whole_request=whole_request), max_tokens, 'answer')
+        from .. import general_answer
+        if (model == 'interpreter' and 'general_answer_policy' in self.config
+                and general_answer.applies(messages)):
+            context = [message for message in self.answer_messages(model, prompt, messages,
+                whole_request=whole_request) if message['role'] != 'system']
+            raw = self.call(model, general_answer.messages(context), general_answer.MAX_TOKENS, 'general_answer')
+            try:
+                text = general_answer.visible(raw)
+                if (self.trace[-1]['token_ids'][-1] != self.net.tokenizer.eos_token_id
+                        or len(self.net.tokenizer.encode(text, add_special_tokens=False)) > max_tokens):
+                    raise ValueError('Require a completed answer inside the visible output allowance')
+            except ValueError:
+                return None, None, 'invalid_general_answer'
+        else:
+            text = self.call(model, self.answer_messages(model, prompt, messages,
+                whole_request=whole_request), max_tokens, 'answer')
         return {'question': question, 'expert': selected, 'text': text}, argument, None
 
     def answer(self, messages, max_tokens):

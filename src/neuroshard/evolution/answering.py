@@ -14,7 +14,7 @@ from .serving_diagnosis import conversation
 FORMAT = 'neuroshard-complete-answering-v1'
 MAX_POLICY_BYTES = 8 * 1024 * 1024
 COUNTS = {'planning': 1, 'planning_repair': 1, 'directory_arguments': 2,
-          'answer': 2, 'composition': 1}
+          'answer': 2, 'general_answer': 2, 'composition': 1}
 
 
 def core(graph):
@@ -139,6 +139,8 @@ def payments(graph, maximum, response, unit_price):
         counts[purpose] += 1
         if counts[purpose] > offer['call_counts'][purpose]:
             raise ValueError('Too many neural calls for this request')
+        if counts['answer'] + counts.get('general_answer', 0) > 2:
+            raise ValueError('Require at most two complete answers to one request')
         prompt, tokens = call['prompt_ids'], call['token_ids']
         if (not isinstance(prompt, list) or not prompt or not isinstance(tokens, list)
                 or not 1 <= len(tokens) <= offer['limits'][purpose]

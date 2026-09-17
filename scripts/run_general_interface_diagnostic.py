@@ -12,7 +12,7 @@ from pathlib import Path
 import subprocess
 import uuid
 
-from neuroshard.evolution import answering, ordinary_quality
+from neuroshard.evolution import answering, general_answer, ordinary_quality
 from neuroshard.evolution.data import document_identity
 from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import identity, save, sha256
@@ -42,11 +42,12 @@ def assemble(campaign, home):
             previous['learned']['feature_profile'], ROOT,
             previous['learned'].get('route_models'), compose=True)
         options = {key: previous[key] for key in ('route_scopes', 'planner_weights', 'composer',
-                   'answer_policy', 'request_policy') if key in previous}
+                   'answer_policy', 'request_policy', 'general_answer_policy') if key in previous}
         if name == 'after':
             options['request_policy'] = ASSISTANT_POLICY
+            options['general_answer_policy'] = general_answer.FORMAT
         configs[name] = planned_graph.configuration(graph, learned, previous['planner'], ROOT,
-            previous['expert_prompts'], previous['general_instruction'] if name == 'before' else GENERAL_INSTRUCTION,
+            previous['expert_prompts'], previous['general_instruction'],
             **options)
         graphs[name] = answering.attach(graph, configs[name], store)
         save(home/(name+'-graph.json'), graphs[name])

@@ -52,7 +52,9 @@ def freeze(home, revision, runtime):
         ordinary['learned']['feature_profile'], ROOT, route_models, compose=True)
     prompts_control = {name: spec for name, spec in ordinary['expert_prompts'].items() if name in core['experts']}
     control_configuration = planned_graph.configuration(core, learned_control, ordinary['planner'], ROOT,
-        prompts_control, ordinary['general_instruction'], request_policy=ordinary['request_policy'])
+        prompts_control, ordinary['general_instruction'], **{name: ordinary[name] for name in (
+            'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
+            'general_answer_policy') if name in ordinary})
     control_graph = answering.attach(core, control_configuration, store)
     sources, windows = {}, []
 
