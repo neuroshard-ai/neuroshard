@@ -7,6 +7,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from ordinary_campaign_backend import Backend, REMOTE
+from ordinary_allocation import numerical_runtime
 sys.path.pop(0)
 
 from neuroshard.dataflow.store import LocalStore
@@ -14,6 +15,14 @@ from neuroshard.evolution import expert_source
 from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import save
 from neuroshard.evolution.sharded import retained_objects
+
+
+def test_distinct_owners_require_matching_arithmetic_not_matching_hostnames():
+    left = {'host': 'owner-one', 'gpu': 'NVIDIA A10G', 'torch': 'pinned', 'threads': 2}
+    right = {**left, 'host': 'owner-two'}
+    assert numerical_runtime(left) == numerical_runtime(right)
+    assert numerical_runtime(left) != numerical_runtime({**right, 'gpu': 'NVIDIA L40S'})
+    assert numerical_runtime(left) != numerical_runtime({**right, 'threads': 1})
 
 
 def test_public_metadata_covers_both_stores_and_monotonic_discovery(tmp_path, monkeypatch):

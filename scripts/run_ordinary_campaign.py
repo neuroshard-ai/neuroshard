@@ -293,11 +293,16 @@ if __name__ == '__main__':
         source_check(args.home)
         try:
             print(json.dumps(bootstrap(args.home, json.loads((args.home/'catalog.json').read_bytes()))))
-        except BaseException:
-            retire(args.home)
+        except BaseException as error:
+            save(args.home/'setup-stopped.json', {'error': type(error).__name__,
+                'action': 'Preserve the bounded allocation for diagnosis and retry; absolute cloud retirement remains armed.'})
             raise
     else:
         try:
             print(json.dumps(operate(args.home, args.engine)))
-        finally:
+        except BaseException as error:
+            save(args.home/'execution-stopped.json', {'error': type(error).__name__,
+                'action': 'Native processes closed; preserve owned artifacts for diagnosis and durable restart before the allocation deadline.'})
+            raise
+        else:
             retire(args.home)

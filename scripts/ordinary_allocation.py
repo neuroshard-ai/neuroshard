@@ -21,6 +21,12 @@ ROOT = Path(__file__).resolve().parents[1]
 AMI = 'ami-0efd0f6e601922cad'
 
 
+def numerical_runtime(observation):
+    # Match the established sharded-training convention: a hostname identifies
+    # an owner, not its arithmetic. Keep every actual numerical field.
+    return {key: value for key, value in observation.items() if key != 'host'}
+
+
 def describe(client, ids):
     return [instance for row in client.describe_instances(InstanceIds=sorted(ids))['Reservations'] for instance in row['Instances']]
 
@@ -206,7 +212,7 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv
         runtime = json.loads(cloud.python(rank, ['-c', 'import os,json; from neuroshard.evolution import reference; '
             'r=reference.configure("cuda",2); r["allocator"]=os.environ.get("PYTORCH_CUDA_ALLOC_CONF"); print(json.dumps(r))'], timeout=180).stdout)
         save(home/('runtime-'+str(rank)+'.json'), runtime)
-        return runtime
+        return numerical_runtime(runtime)
 
     with ThreadPoolExecutor(max_workers=7) as pool:
         runtimes = list(pool.map(one, range(7)))
@@ -246,9 +252,14 @@ def retire(home):
                 time.sleep(2)
         else:
             raise TimeoutError('Disposable security group still has dependencies')
-    volumes = client.describe_volumes(Filters=[{'Name': 'tag:Name', 'Values': [allocation['name']]}])['Volumes']
-    if volumes:
-        raise ValueError('Retired campaign still has surviving tagged volumes')
+    until = time.monotonic()+180
+    while True:
+        volumes = client.describe_volumes(Filters=[{'Name': 'tag:Name', 'Values': [allocation['name']]}])['Volumes']
+        if not volumes:
+            break
+        if time.monotonic() >= until:
+            raise ValueError('Retired campaign still has surviving tagged volumes')
+        time.sleep(3)
     protected = {row['InstanceId']: row['State']['Name'] for row in describe(client, PROTECTED)}
     if protected != json.loads((home/'protected-before.json').read_bytes()):
         raise ValueError('A protected host changed state during this campaign')
