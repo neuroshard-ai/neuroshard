@@ -8,7 +8,7 @@ import sys
 import pytest
 
 from neuroshard.evolution import serving_diagnosis as diagnosis
-from neuroshard.evolution.reference_data import identity
+from neuroshard.evolution.reference_data import identity, sha256
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,7 +80,9 @@ def test_wrong_expert_is_selection_and_composer_loss_is_assembly():
 
 
 def test_committed_inventory_excludes_finals_and_explicit_grammar():
-    diagnosis.validate(PLAN, FACTS, ROOT)
+    # This inventory was frozen against its historical source commit. Current
+    # source binding is exercised independently below, without rewriting it.
+    diagnosis.validate(PLAN, FACTS)
     user = ' '.join(message['content'] for case in PLAN['cases']
                     for message in case['messages'] if message['role'] == 'user')
     assert 'First:' not in user and 'Second:' not in user
@@ -89,6 +91,28 @@ def test_committed_inventory_excludes_finals_and_explicit_grammar():
     assert {case['stratum'] for case in PLAN['cases']} == {'retained', 'new'}
     assert any(atom['expert'] == 'planner' for case in PLAN['cases'] for atom in case['atoms'])
     assert PLAN['no_training'] is True and PLAN['final_opened'] is False
+
+
+def test_changed_source_is_rejected(tmp_path):
+    plan = copy.deepcopy(PLAN)
+    for name in diagnosis.SOURCES:
+        target = tmp_path/name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT/name).read_bytes())
+        plan['sources'][name] = sha256(target)
+    diagnosis.validate(plan, FACTS, tmp_path)
+    (tmp_path/diagnosis.SOURCES[0]).write_text('changed source')
+    with pytest.raises(ValueError, match='Frozen diagnostic source changed'):
+        diagnosis.validate(plan, FACTS, tmp_path)
+
+
+def test_failed_gold_control_is_classified_even_when_ordinary_reply_passes():
+    case = PLAN['cases'][0]
+    ordinary = response([case['atoms'][0]['gold_question']], ['protocol'], ['neuroshard-ai'], 'neuroshard-ai')
+    gold = response([], [], [], '', status='needs_clarification', error='invalid_neural_plan')
+    row = diagnosis.diagnose(case, ordinary, [gold])
+    assert row['ordinary'] is None and row['mode'] == 'decomposition' and not row['passed']
+    assert diagnosis.summarize([row])['totals']['decomposition'] == 1
 
 
 def test_explicit_grammar_or_opened_final_cannot_be_added():

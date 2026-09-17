@@ -78,8 +78,14 @@ before the affected work, rather than changing the target after a result.
   [ordinary access candidate](docs/ORDINARY_ACCESS_TRIAL.md) restores the earlier
   ordinary-question base and fits the new selector on separate training inputs.
   Its CPU preflight selects all 21 standalone gold routes (13 distinct
-  questions). Automatic neural answers and forced-expert controls still require
-  the frozen inference run; routing scores alone do not complete access.
+  questions). The frozen GPU run completed all 15 conversations: strict passes
+  improved from 1 to 7, with zero selection failures, five knowledge failures
+  and three decomposition failures. Forced experts answered 10/13 distinct
+  questions correctly. C's three wrong facts exactly reproduce its earlier
+  development output tokens. All six owner traces agree. CPU recovery repaired
+  a missing failure category without changing pass flags; the new run's replay
+  verdict was not persisted before aggregation failed. All resources were
+  retired. Full ordinary access remains failed; the next cohort stays on hold.
 
 - [ ] **2. Continuous data admission and learning**
 
@@ -233,6 +239,15 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-17: Completed one frozen five-host ordinary-access allocation, with
+  retained neural weights, a restored ordinary router, a C gate fitted on
+  separate training inputs, and forced-expert controls. Recovered all 15 saved
+  transcripts after an aggregate-scorer failure; strict passes improved 1→7,
+  while remaining knowledge/planning failures keep access closed. Forty-four
+  focused checks pass. All GPU instances, volumes and the temporary security
+  group were deleted; compute estimate $1.16, other charges separate. No next
+  learning cohort, native promotion or issuance was performed.
 
 - 2026-09-17: Froze an inference-only
   [ordinary serving diagnostic](docs/ORDINARY_SERVING_DIAGNOSTIC.md). Fifteen

@@ -88,6 +88,8 @@ def run(home, source):
         valid, _ = service.replay(first)
         atom, maximum, previous = first_forced
         forced_replay = forced(service, atom, maximum) == previous
+        save(output/'replay.json', {'service': service.root, 'automatic': valid,
+                                   'forced': forced_replay})
         old_passes = set(trial['previous_automatic_passes'])
         passed_ids = {row['id'] for row in rows if row['passed']}
         selected_gold = [diagnosis.routes_of(response) == [atom['expert']]

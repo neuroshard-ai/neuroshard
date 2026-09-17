@@ -1,0 +1,167 @@
+{
+  "automatic_gold_routes": {
+    "correct": 17,
+    "count": 21
+  },
+  "checks": {
+    "automatic_gold_selection": false,
+    "ordinary_answering": false,
+    "replay_verdict_recorded": false,
+    "retained_previous_passes": true
+  },
+  "final_opened": false,
+  "forced_unique": {
+    "correct": 10,
+    "count": 13,
+    "input_failures": 0
+  },
+  "format": "neuroshard-ordinary-access-trial-v1/recovered-result",
+  "native_activated": false,
+  "neural_updates": 0,
+  "passed": false,
+  "recovery": {
+    "complete_owners": 6,
+    "complete_traces_agree": true,
+    "historical_pass_flags_unchanged": true,
+    "repaired_missing_categories": [
+      "retained-mixed-package-city"
+    ],
+    "scorer_sha256": "6489dad1a7ba066046362f0f8b0b2aa207865f3ec1cbcde755085baeaf9e9471"
+  },
+  "replay": {
+    "automatic": null,
+    "forced": null,
+    "status": "verdicts not persisted before aggregate failure"
+  },
+  "service": "6060f1ca53f63681bb85d6365f4d6c42092c18cf457244e0da58f2abb1b3d867",
+  "source_commit": "8af5a685c556ac77cddbc0df077333467fa6743e",
+  "summary": {
+    "classified": 15,
+    "count": 15,
+    "dominant": "knowledge",
+    "format": "neuroshard-ordinary-serving-diagnostic-v1/summary",
+    "mixed": true,
+    "strata": {
+      "new": {
+        "assembly": 0,
+        "decomposition": 1,
+        "knowledge": 5,
+        "passed": 2,
+        "selection": 0
+      },
+      "retained": {
+        "assembly": 0,
+        "decomposition": 2,
+        "knowledge": 0,
+        "passed": 5,
+        "selection": 0
+      }
+    },
+    "totals": {
+      "assembly": 0,
+      "decomposition": 3,
+      "knowledge": 5,
+      "passed": 7,
+      "selection": 0
+    }
+  },
+  "tokens_issued": 0,
+  "traces": "78b9b5cc127d57583ecdabd7aad84bf97d9dd554d45d834a28a63b0012cfb1fe",
+  "trial": "68bd0f12e4c48a5d987b07530ef40bb84c056fdb5fbc94629e6b5062ecf1bfc8",
+  "resources": {
+    "terminated": [
+      "i-013fc4f967a952a05",
+      "i-01e9d74492547161a",
+      "i-07acd6d18cd09c54c",
+      "i-0c429ab81d0339acb",
+      "i-0e3b55f7f7563a6b4"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 1.1628022470033335,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "cpu_routing": {
+    "correct": 21,
+    "count": 21,
+    "unique_questions": 13
+  },
+  "prior_C_tokens": {
+    "count": 6,
+    "identical": true,
+    "prior_development_sha256": "a0f05e897de8e29067b16c74813e51b23357a7a3e6e5ebabfa996fb7d789bc75",
+    "rows": [
+      {
+        "prior_correct": false,
+        "prior_id": "403b6c674561bd570d2ff29f404e24661cffbf4871a960f5ed32668a7680e877",
+        "question": "How many consecutive planner updates can a claim contain at most?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "4096"
+      },
+      {
+        "prior_correct": false,
+        "prior_id": "9cb6e1d94fc685b1de31d75e4bb689102680b4b035b89294e61ebc909c54734c",
+        "question": "What is the upper bound on rows in one planner training job?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "64"
+      },
+      {
+        "prior_correct": true,
+        "prior_id": "0f1e6f0d248f2a977fef79e565fef86ed63c9aea2b50dee76edaab5629a7f11e",
+        "question": "How many examples may one complete planner batch select?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "64"
+      },
+      {
+        "prior_correct": true,
+        "prior_id": "dc28e17251cd2288c07a8d63b1025c8a94f8024eed0259a41f57a10259ff924e",
+        "question": "How large can a planner microbatch be?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "16"
+      },
+      {
+        "prior_correct": true,
+        "prior_id": "0ad37405df1a16e98ec060613ec13781991f0d12ce0946a8e3fc8435e5d9be6a",
+        "question": "What is the local graph service command for planner training?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "train_planner"
+      },
+      {
+        "prior_correct": false,
+        "prior_id": "9b50aafede77d70e0749016bc3d91e1030aa6358e85bb717825b203b42180b06",
+        "question": "What request makes the graph service replay a native planner claim?",
+        "same_prompt_root": true,
+        "same_token_ids": true,
+        "text": "claim_planner"
+      }
+    ]
+  },
+  "evidence": {
+    "archive": "ordinary-access-evidence.tar.gz",
+    "sha256": "c2a7d323183742a881d4003607d21156f5bb59e7e7d5e06d4c31e8f367a7b3ce",
+    "bytes": 16414577,
+    "status": "local; not uploaded"
+  },
+  "selector_fitting": {
+    "base": "3766fcc38ddd2f62e6a445c347ba96907c2972cc3c3713258b5b0d88c7edfd6f",
+    "by_route": {
+      "directory": 584,
+      "parent": 208,
+      "planner": 336,
+      "protocol": 350
+    },
+    "provenance": {
+      "excluded_questions": "6a2161e028d842e8604211b18f4cc093a9637cbaabd9b84f1223f75c567fb7b4",
+      "omitted": [],
+      "rows": "3615ee8c67d45b879ac13f496a9250149fc2185e4e78c0ef55fc3b462855c8a1"
+    },
+    "router": "57dddbafdb08667c50bb05cd2f8a2e973e2009d24b375823a97d4dcfd72e92dd",
+    "rows": 1478
+  }
+}

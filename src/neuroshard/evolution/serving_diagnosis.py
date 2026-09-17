@@ -201,6 +201,10 @@ def diagnose(case, response, gold_responses=None):
     for atom, gold_response in zip(case['atoms'], gold_responses or []):
         gold.append(classify(gold_case(atom, case.get('max_tokens', 64)), gold_response))
     primary = 'knowledge' if any(mode == 'knowledge' for mode in gold) else ordinary
+    if primary is None and any(gold):
+        # A correct ordinary reply does not erase a failed standalone control.
+        # Preserve the existing pass rule while giving that failure a category.
+        primary = next(mode for mode in gold if mode is not None)
     return {'id': case['id'], 'stratum': case['stratum'], 'passed': ordinary is None and not any(gold),
             'mode': primary, 'ordinary': ordinary, 'gold': gold,
             'plan': list(response.get('plan') or []),
