@@ -36,6 +36,8 @@ def source_check(home):
     freeze = json.loads((home/'source-freeze.json').read_bytes())
     if any(sha256(ROOT/path) != digest for path, digest in freeze['sources'].items()):
         raise ValueError('Campaign source differs from its pre-training commitment')
+    if any(sha256(home/'compiled'/path) != digest for path, digest in freeze['compiled_files'].items()):
+        raise ValueError('Compiled campaign inputs differ from their pre-training commitment')
     if subprocess.check_output(['git', 'rev-parse', freeze['revision']], cwd=ROOT).decode().strip() != freeze['revision']:
         raise ValueError('The declared source commit is unavailable')
     operation = json.loads((home/'operation.json').read_bytes())

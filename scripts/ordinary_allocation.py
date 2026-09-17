@@ -105,6 +105,10 @@ def allocate(home, resources, source_commit):
             'runcmd': [['systemctl', 'daemon-reload'], ['systemctl', 'enable', '--now', 'neuroshard-experiment-stop.timer']]}
         subnets = sorted(ec2.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [source['VpcId']]}])['Subnets'],
                          key=lambda value: (value['AvailabilityZone'], value['SubnetId']))
+        if ec2.describe_vpcs(VpcIds=[source['VpcId']])['Vpcs'][0]['IsDefault']:
+            # EC2 can select available capacity across the default VPC's zones.
+            # This changes placement only, never the frozen hardware or method.
+            subnets.insert(0, {'SubnetId': None, 'AvailabilityZone': None})
         preferred = None
         for rank, kind in enumerate(resources['instance_types']):
             ordered = sorted(subnets, key=lambda value: value['AvailabilityZone'] != preferred) if preferred else subnets
@@ -113,10 +117,11 @@ def allocate(home, resources, source_commit):
                     'Purpose': 'ordinary-native-campaign', 'Rank': str(rank), 'ExpiresAt': deadline.isoformat(),
                     'BudgetUSD': str(resources['planning_cap_usd']), 'Source': source_commit}.items()]
                 request = {'ImageId': AMI, 'InstanceType': kind, 'MinCount': 1, 'MaxCount': 1, 'KeyName': source['KeyName'],
-                    'ClientToken': uuid.uuid5(uuid.NAMESPACE_URL, name+'/'+str(rank)+'/'+subnet['SubnetId']).hex,
+                    'ClientToken': uuid.uuid5(uuid.NAMESPACE_URL, name+'/'+str(rank)+'/'+str(subnet['SubnetId'])).hex,
                     'UserData': '#cloud-config\n'+json.dumps(cloud), 'InstanceInitiatedShutdownBehavior': 'terminate',
                     'MetadataOptions': {'HttpTokens': 'required', 'HttpPutResponseHopLimit': 1},
-                    'NetworkInterfaces': [{'DeviceIndex': 0, 'SubnetId': subnet['SubnetId'], 'Groups': [group],
+                    'NetworkInterfaces': [{'DeviceIndex': 0,
+                                          **({'SubnetId': subnet['SubnetId']} if subnet['SubnetId'] else {}), 'Groups': [group],
                                           'AssociatePublicIpAddress': True, 'DeleteOnTermination': True}],
                     'BlockDeviceMappings': [{'DeviceName': image['RootDeviceName'], 'Ebs': {
                         'VolumeSize': resources['disk_gib'], 'VolumeType': 'gp3', 'Iops': 12000,
@@ -126,12 +131,15 @@ def allocate(home, resources, source_commit):
                     instance = ec2.run_instances(**request)['Instances'][0]
                 except ClientError as error:
                     if error.response['Error']['Code'] in ('InsufficientInstanceCapacity', 'Unsupported'):
+                        allocation.setdefault('capacity_failures', []).append({'rank': rank,
+                            'subnet': subnet['SubnetId'], 'error': error.response['Error']})
+                        save(path, allocation)
                         continue
                     raise
                 if instance['InstanceId'] in PROTECTED:
                     raise ValueError('A protected instance entered the disposable allocation')
                 allocation['instances'].append({'rank': rank, 'InstanceId': instance['InstanceId']})
-                preferred = subnet['AvailabilityZone']
+                preferred = instance['Placement']['AvailabilityZone']
                 save(path, allocation)
                 break
             else:
