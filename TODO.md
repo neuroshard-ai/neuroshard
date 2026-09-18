@@ -16,7 +16,8 @@ before the affected work, rather than changing the target after a result.
   Conversation training improved ordinary single answers 1→15/16 and combined
   answers 1→14/16, losing no previously correct retained answers. Three quality
   audits agreed and native quality promoted the graph. A comparison-controller
-  failure stopped the campaign before the next two cohorts; the equal-resource
+  failure stopped the initial attempt before the next two cohorts. The same-ledger
+  continuation is now running on replacement owners; the equal-resource
   comparison remains incomplete. See the
   [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
 
@@ -140,7 +141,10 @@ before the affected work, rather than changing the target after a result.
   substituted source, trained the first full cohort and promoted its passing
   graph. The comparison between cohorts failed, so repeated useful admission
   remains incomplete. Concurrent context installation and terminal comparison
-  budget handling are repaired; resumption has not yet been demonstrated.
+  budget handling are repaired. Seven replacement owners restored the accepted
+  graph, and the same chain resumed with its original signing journals and
+  issuance. Full replay of the interrupted history passed 39,929 headers and
+  446 transactions. The comparison continuation and remaining cohorts are pending.
 
   Done when the network repeatedly admits immutable data with provenance,
   deduplication and contamination/poisoning checks; funds and assigns a bounded

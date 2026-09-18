@@ -179,8 +179,10 @@ did not start; their finals remain unopened.
 
 The supervisor reached its runtime limit at 17:58 UTC on September 18. All four
 saved validators agree at height 39,928, with 129,000,000 issued atoms: 128 full
-cohort updates and one bootstrap update. Supply invariants pass. Full historical
-ledger replay and the campaign's final paid-inference request remain pending.
+cohort updates and one bootstrap update. Supply invariants pass. The historical
+application replay subsequently passed all 39,929 headers and 446 transactions,
+reproducing the exact saved state. The campaign's final paid-inference request
+remains pending.
 The [interrupted result](../config/experiments/admission-native-campaign-20260918/results/interrupted-result.json)
 preserves these limits explicitly. The seven disposable instances, their volumes
 and their security group are gone; protected instances retain their prior states.
@@ -193,6 +195,36 @@ The controller also treated an expired comparison interval as retryable,
 continuing until the outer runtime limit. The repair serializes context
 installation, checks immutable inputs without rewriting them, records failure
 locations without copying private inputs, and makes comparison budget exhaustion
-terminal. Eighteen targeted regression checks pass. The original execution
-checkout and frozen numerical recipe remain unchanged; no replacement GPU run
-has been launched for this repair.
+terminal. Eighteen targeted regression checks passed before the continuation
+below. The numerical recipe and consensus source bytes are unchanged.
+
+## Continuation with replacement owners
+
+The [continuation contract](../config/experiments/admission-native-recovery-20260918/plan.json)
+preserves the completed growth arm, original genesis, checkpoint, signing
+journals and issuance. Only the interrupted fixed-capacity arm restarts from
+step zero under its unchanged 9,000-second, seven-owner, 300-GiB-per-owner
+prescription. The earlier incomplete attempt remains recorded and costed.
+The replacement allocation has a separate 12-hour/$150 limit and retires by
+09:35 UTC on September 19; the controller stops fifteen minutes earlier.
+
+All seven replacement owners match the original numerical runtime and the
+committed execution source. They restored the accepted graph and answered the
+live probe correctly before the native controller restarted. Additional
+orchestration repairs serialize feed discovery, prevent stale readers from
+moving the feed cursor backwards, and stop persistent backend failures instead
+of retrying for hours. Twenty targeted transport/comparison checks passed.
+The first 128 shadow updates have now reproduced exactly with 96 fresh training
+audits and zero extra issuance. Full quality audits and the matched serving
+interval are still running; feed and audit finals remain unopened.
+
+The [first-admission evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/a42d4a3a3ef083720fae12e7c2e12f3dc3889d9deb9dae880533a10592fc6abd)
+contains the complete earlier application history, public genesis, final state,
+offline replay script, numerical reports, quality results and checkpoint
+publication receipts. Use the
+[matching execution source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/b7f0c7cae45fed3df4708c3d937c56bd1e4f2350b4b69a6c5934bdbfb8a2a6d6).
+The [continuation commitments](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/ecc78a1afe54908649824e3dbb7536b264ddb918ca71bd1d43925e46c8e080d6)
+and all evidence archives passed full public byte-hash readback. Application
+replay verifies accounting and state transitions; the numerical reports record
+separate GPU re-execution. All operators remain under one administrator.
+Checklist items 1 and 2 remain open until the complete frozen criteria pass.
