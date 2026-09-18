@@ -19,6 +19,10 @@ from neuroshard.evolution.reference_data import identity, save
 from neuroshard.evolution.sharded import graph_quality
 
 
+class ComparisonBudgetExceeded(TimeoutError):
+    """An exhausted comparison interval cannot be repaired by retrying."""
+
+
 def resources(cloud):
     """Observe OS byte counters and retained disk usage on every actual owner."""
     def one(rank):
@@ -124,6 +128,16 @@ def benchmark(backend, graph, baseline, quality, until, label):
 
 
 def run(backend, state):
+    try:
+        return _run(backend, state)
+    except ComparisonBudgetExceeded as error:
+        result = {'passed': False, 'comparison_completed': False,
+                  'reason': str(error), 'failure': 'comparison_budget_exhausted'}
+        save(backend.home/'comparison/result.json', result)
+        return result
+
+
+def _run(backend, state):
     from ordinary_campaign_backend import Backend
     home = backend.home/'comparison'
     home.mkdir(exist_ok=True)
@@ -162,9 +176,10 @@ def run(backend, state):
 
     def remaining():
         if datetime.now(timezone.utc).timestamp() >= control_end:
-            raise TimeoutError('The fixed-capacity control exceeded its equal total host interval')
+            raise ComparisonBudgetExceeded('The fixed-capacity control exceeded its equal total host interval')
         backend.cloud.remaining()
 
+    remaining()
     # Every claim below was actually committed and independently audited on the
     # growth trajectory. The control re-executes it without signing or payment.
     claims = [json.loads(path.read_bytes()) for path in ctx['directory'].glob('claim-*-actor-1.json')]

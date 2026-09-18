@@ -11,10 +11,12 @@ import argparse
 import copy
 import fcntl
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 
 from neuroshard.dataflow.store import canonical, LocalStore
@@ -131,17 +133,31 @@ class Backend:
         plan = self.store.json(prepared['plan'])
         values = {'job.json': job, 'work.json': job['work'], 'prepared.json': prepared,
                   'plan.json': plan, 'parent.json': job['work']['parent']}
-        for name, value in values.items():
-            save(directory/name, value)
         rows = {role+'.jsonl': self.store.get(spec['sha256']) for role, spec in prepared['roles'].items()}
-        for name, raw in rows.items():
-            (directory/name).write_bytes(raw)
         marker = directory/'installed.json'
-        if not marker.exists():
-            files = {'jobs/'+key+'/'+name: value for name, value in {**values, **rows}.items()}
-            with ThreadPoolExecutor(max_workers=7) as pool:
-                list(pool.map(lambda rank: self.cloud.bundle(rank, files), range(7)))
-            save(marker, {'job': key, 'inputs': identity(prepared)})
+        expected = {'job': key, 'inputs': identity(prepared)}
+        # Quality auditors share one immutable context. Serialize its first
+        # installation and leave existing readers' files untouched on retries.
+        with (directory/'installation.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if marker.exists():
+                if (json.loads(marker.read_bytes()) != expected
+                        or any((directory/name).read_bytes() != canonical(value)
+                               for name, value in values.items())
+                        or any((directory/name).read_bytes() != raw for name, raw in rows.items())):
+                    raise ValueError('Installed immutable job context differs from its commitment')
+            else:
+                for name, value in values.items():
+                    save(directory/name, value)
+                for name, raw in rows.items():
+                    with (directory/name).open('wb') as output:
+                        output.write(raw)
+                        output.flush()
+                        os.fsync(output.fileno())
+                files = {'jobs/'+key+'/'+name: value for name, value in {**values, **rows}.items()}
+                with ThreadPoolExecutor(max_workers=7) as pool:
+                    list(pool.map(lambda rank: self.cloud.bundle(rank, files), range(7)))
+                save(marker, expected)
         return {'key': key, 'directory': directory, 'remote': REMOTE+'/jobs/'+key,
                 'job': job, 'prepared': prepared, 'plan': plan}
 
@@ -442,6 +458,30 @@ class Backend:
                 'approve': True, 'review': {**report, 'source_evidence': self.freeze['source_evidence']}}
 
 
+def invoke(home, actor, audit, request):
+    """Keep failure locations even when the operator suppresses child stderr."""
+    try:
+        backend = Backend(home, actor)
+        if audit:
+            return backend.audit(request)
+        if request['phase'] == 'prepare':
+            return backend.prepare(request)
+        if request['phase'] == 'review':
+            return backend.review(request)
+        return backend.execute(request)
+    except Exception as error:
+        # Do not copy exception messages, commands, inputs, or credentials.
+        evidence = {'actor': actor, 'audit': audit, 'request_root': identity(request),
+                    'exception': type(error).__name__,
+                    'frames': [{'file': frame.filename, 'line': frame.lineno, 'function': frame.name}
+                               for frame in traceback.extract_tb(error.__traceback__)[-16:]]}
+        try:
+            save(Path(home)/'backend-failures'/(str(time.time_ns())+'-'+str(actor)+'.json'), evidence)
+        except OSError:
+            pass
+        raise
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--home', type=Path, required=True)
@@ -449,13 +489,5 @@ if __name__ == '__main__':
     parser.add_argument('--audit', action='store_true')
     args = parser.parse_args()
     request = json.load(sys.stdin)
-    backend = Backend(args.home, args.actor)
-    if args.audit:
-        result = backend.audit(request)
-    elif request['phase'] == 'prepare':
-        result = backend.prepare(request)
-    elif request['phase'] == 'review':
-        result = backend.review(request)
-    else:
-        result = backend.execute(request)
+    result = invoke(args.home, args.actor, args.audit, request)
     sys.stdout.write(json.dumps(result))

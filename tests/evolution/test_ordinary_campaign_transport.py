@@ -15,6 +15,7 @@ from ordinary_allocation import numerical_runtime, describe
 from run_ordinary_campaign import rpc_genesis_commitment
 import run_ordinary_campaign
 import ordinary_allocation
+import ordinary_campaign_backend
 import portable_native_trial
 from botocore.exceptions import ClientError
 sys.path.pop(0)
@@ -25,6 +26,67 @@ from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import save
 from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import retained_objects
+
+
+def context_backend(tmp_path, bundle):
+    from types import SimpleNamespace
+    backend = object.__new__(Backend)
+    backend.jobs = tmp_path/'jobs'
+    backend.jobs.mkdir(exist_ok=True)
+    backend.store = Objects(tmp_path/'objects')
+    plan = backend.store.put_json({'immutable': 'plan'})
+    rows = backend.store.put(b'{"text":"source-backed input"}\n')
+    prepared = backend.store.put_json({'plan': plan, 'roles': {'train': {'sha256': rows}}})
+    backend.cloud = SimpleNamespace(bundle=bundle)
+    return backend, {'work': {'prepared': prepared, 'parent': {'fixture': 'parent'}}}
+
+
+def test_concurrent_auditors_install_one_immutable_context(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    calls = []
+    backend, job = context_backend(tmp_path, lambda rank, files: calls.append(rank))
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        contexts = list(pool.map(lambda _: backend.context(job, branch='quality'), range(3)))
+    assert len({context['key'] for context in contexts}) == 1
+    assert sorted(calls) == list(range(7))
+    assert (contexts[0]['directory']/'train.jsonl').read_bytes() == b'{"text":"source-backed input"}\n'
+
+
+def test_reused_context_never_rewrites_auditors_open_inputs(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    backend, job = context_backend(tmp_path, lambda *args: None)
+    context = backend.context(job, branch='quality')
+    folder = context['directory']
+    files = {path: (path.stat().st_ino, path.stat().st_mtime_ns)
+             for path in folder.iterdir() if path.name != 'installation.lock'}
+    def forbidden(*args, **kwargs):
+        raise AssertionError('An installed immutable context must not be rewritten')
+    monkeypatch.setattr(ordinary_campaign_backend, 'save', forbidden)
+    backend.cloud.bundle = forbidden
+    with (folder/'job.json').open('rb') as existing_reader:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            list(pool.map(lambda _: backend.context(job, branch='quality'), range(3)))
+        assert json.loads(existing_reader.read()) == job
+    assert files == {path: (path.stat().st_ino, path.stat().st_mtime_ns) for path in files}
+    (folder/'train.jsonl').write_bytes(b'altered input')
+    with pytest.raises(ValueError, match='immutable job context'):
+        backend.context(job, branch='quality')
+
+
+def test_backend_failure_keeps_location_without_copying_sensitive_values(tmp_path, monkeypatch):
+    def fail(*args):
+        raise RuntimeError('secret command or signed URL must stay out of evidence')
+    monkeypatch.setattr(ordinary_campaign_backend, 'Backend', fail)
+    with pytest.raises(RuntimeError):
+        ordinary_campaign_backend.invoke(tmp_path, 2, True, {'phase': 'quality', 'private': 'secret-input'})
+    files = list((tmp_path/'backend-failures').glob('*.json'))
+    assert len(files) == 1
+    raw = files[0].read_text()
+    evidence = json.loads(raw)
+    assert evidence['exception'] == 'RuntimeError'
+    assert evidence['frames'][-1]['function'] == 'fail'
+    assert evidence['actor'] == 2 and evidence['audit'] is True
+    assert 'secret' not in raw and 'signed URL' not in raw
 
 
 def metadata_archive(name, raw):

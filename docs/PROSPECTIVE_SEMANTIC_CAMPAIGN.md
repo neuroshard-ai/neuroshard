@@ -156,3 +156,43 @@ The stopped bootstrap and admission repair have a
 The [publication manifest](../config/experiments/fine-native-campaign-20260918/results/publication.json)
 links matching source archives and the offline replay script. All published
 objects passed full hash readback.
+
+## First prospective admission; campaign interrupted
+
+The conversation cohort completed all 128 verified updates and passed its
+previously unopened ordinary-question final. Single answers improved **1→15/16**
+and combined answers **1→14/16**, with **zero previously correct retained answers
+lost**. All three fresh quality auditors reproduced the complete result across
+105 stages each. Native quality promoted graph
+`c2e18d4a527d7740462ac889c2888c560b37421a6e44020d4961b911b55a1bc5`
+at height 8,843. The [measured evidence](../config/experiments/admission-native-campaign-20260918/results/learning-evidence.json)
+records result hashes and the published final checkpoint. This is **one of the
+three required prospective cohorts**; checklist items 1 and 2 remain open.
+
+The equal-resource comparison did not finish. Its fixed-capacity arm reproduced
+all 32 training windows, then repeatedly failed while preparing concurrent
+quality audits. The producer and two completed quality audits measured 15/16
+single and 13/16 combined answers, losing six retained answers. The third audit
+and fixed-capacity serving interval did not complete. Those partial scores do
+not constitute a completed equal-resource comparison. Feed and audit cohorts
+did not start; their finals remain unopened.
+
+The supervisor reached its runtime limit at 17:58 UTC on September 18. All four
+saved validators agree at height 39,928, with 129,000,000 issued atoms: 128 full
+cohort updates and one bootstrap update. Supply invariants pass. Full historical
+ledger replay and the campaign's final paid-inference request remain pending.
+The [interrupted result](../config/experiments/admission-native-campaign-20260918/results/interrupted-result.json)
+preserves these limits explicitly. The seven disposable instances, their volumes
+and their security group are gone; protected instances retain their prior states.
+
+The deployed context installer let concurrent auditors overwrite the same
+`.pending` metadata file. A [deterministic CPU reproduction](../config/experiments/admission-native-campaign-20260918/results/context-race.json)
+produces two failed writers out of three. The historical backend discarded
+stderr, so this reproduction cannot establish its exact original exception.
+The controller also treated an expired comparison interval as retryable,
+continuing until the outer runtime limit. The repair serializes context
+installation, checks immutable inputs without rewriting them, records failure
+locations without copying private inputs, and makes comparison budget exhaustion
+terminal. Eighteen targeted regression checks pass. The original execution
+checkout and frozen numerical recipe remain unchanged; no replacement GPU run
+has been launched for this repair.
