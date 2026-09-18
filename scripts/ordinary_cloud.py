@@ -7,6 +7,7 @@ remain on their partition owners or stream between them without a local copy.
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import fcntl
+import inspect
 import io
 import json
 from pathlib import Path
@@ -24,6 +25,43 @@ REPO = '/home/ubuntu/neuroshard-study'
 PYTHON = REPO+'/.neuroshard/venv/bin/python'
 PUBLIC = 'https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/'
 PROTECTED = {'i-0d681a8ef83f72619', 'i-06bf7f1f01e6228bb', 'i-0ebe86ca07e97cf29'}
+
+
+def install_bundle(directory, stream):
+    """Publish complete files without truncating another service's open policy."""
+    import os
+    from pathlib import Path
+    import shutil
+    import tarfile
+    import tempfile
+
+    base = Path(directory).resolve()
+    with tarfile.open(fileobj=stream, mode='r|gz') as archive:
+        for member in archive:
+            relative = Path(member.name)
+            if relative.is_absolute() or '..' in relative.parts or not member.isfile():
+                raise ValueError('Bound metadata archive paths and file types')
+            target = base/relative
+            if not target.resolve().is_relative_to(base):
+                raise ValueError('Metadata archive escapes its installed directory')
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fd, temporary = tempfile.mkstemp(prefix='.bundle-', dir=target.parent)
+            try:
+                with os.fdopen(fd, 'wb') as output, archive.extractfile(member) as source:
+                    shutil.copyfileobj(source, output)
+                    if output.tell() != member.size:
+                        raise ValueError('Incomplete metadata archive member')
+                    output.flush()
+                    os.fsync(output.fileno())
+                os.replace(temporary, target)
+                descriptor = os.open(target.parent, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+            finally:
+                if os.path.exists(temporary):
+                    os.unlink(temporary)
 
 
 def semantic_assets(policies, manifest):
@@ -123,7 +161,8 @@ class Cloud:
                 info = tarfile.TarInfo(name)
                 info.size, info.mode = len(raw), 0o600
                 archive.addfile(info, io.BytesIO(raw))
-        self.command(physical, ['tar', '-xzf', '-', '-C', REMOTE], input=stream.getvalue(), timeout=180)
+        script = inspect.getsource(install_bundle)+'\nimport sys\ninstall_bundle(sys.argv[1], sys.stdin.buffer)'
+        self.command(physical, ['python3', '-c', script, REMOTE], input=stream.getvalue(), timeout=180)
 
     def copy_directory(self, source, destination, old, new):
         """Stream activations between owners; the receiving reader checks hashes."""

@@ -1,12 +1,16 @@
 """Campaign discovery reads the published bytes, including flat feed objects."""
 import json
+import io
+import os
 from pathlib import Path
 import sys
+import tarfile
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
 from ordinary_campaign_backend import Backend, REMOTE
+from ordinary_cloud import install_bundle
 from ordinary_allocation import numerical_runtime, describe
 from run_ordinary_campaign import rpc_genesis_commitment
 import run_ordinary_campaign
@@ -21,6 +25,55 @@ from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import save
 from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import retained_objects
+
+
+def metadata_archive(name, raw):
+    stream = io.BytesIO()
+    with tarfile.open(fileobj=stream, mode='w:gz') as archive:
+        member = tarfile.TarInfo(name)
+        member.size = len(raw)
+        archive.addfile(member, io.BytesIO(raw))
+    stream.seek(0)
+    return stream
+
+
+def test_bundle_keeps_concurrent_policy_readers_on_complete_bytes(tmp_path, monkeypatch):
+    target = tmp_path/'policy'
+    before, after = b'accepted policy', b'new complete policy'*10000
+    target.write_bytes(before)
+    replace = os.replace
+    def observe(temporary, destination):
+        # Observe exactly at publication, after writing the new bytes. The old
+        # tar extraction truncated this very inode before readers finished.
+        assert target.read_bytes() == before
+        assert Path(temporary).read_bytes() == after
+        replace(temporary, destination)
+    monkeypatch.setattr(os, 'replace', observe)
+    with target.open('rb') as existing_reader:
+        install_bundle(tmp_path, metadata_archive('policy', after))
+        assert existing_reader.read() == before
+    assert target.read_bytes() == after
+    assert not list(tmp_path.glob('.bundle-*'))
+
+
+def test_interrupted_bundle_preserves_existing_policy(tmp_path, monkeypatch):
+    import shutil
+    target = tmp_path/'policy'
+    target.write_bytes(b'accepted')
+    def interrupt(source, destination):
+        destination.write(source.read(3))
+        raise OSError('interrupted transfer')
+    monkeypatch.setattr(shutil, 'copyfileobj', interrupt)
+    with pytest.raises(OSError, match='interrupted transfer'):
+        install_bundle(tmp_path, metadata_archive('policy', b'replacement'))
+    assert target.read_bytes() == b'accepted'
+    assert not list(tmp_path.glob('.bundle-*'))
+
+
+@pytest.mark.parametrize('name', ['../escape', '/escape'])
+def test_bundle_refuses_paths_outside_installation(tmp_path, name):
+    with pytest.raises(ValueError, match='archive paths'):
+        install_bundle(tmp_path, metadata_archive(name, b'bad'))
 
 
 def test_native_startup_reports_an_exited_node_without_waiting_for_rpc_timeout(tmp_path, monkeypatch):
