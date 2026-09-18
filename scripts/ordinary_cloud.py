@@ -6,6 +6,7 @@ remain on their partition owners or stream between them without a local copy.
 """
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+import fcntl
 import io
 import json
 from pathlib import Path
@@ -196,6 +197,28 @@ class Cloud:
         return [0, 1, 2, *[3+(index % 4) for index in range(len(graph['experts']))]]
 
     def service(self, key, graph, baseline, profile, quality, inputs, policy_store, *, slot):
+        """Reap an interrupted group before reusing its communication slot."""
+        if type(slot) is not int or not 0 <= slot <= 15:
+            raise ValueError('Choose a configured nonoverlapping process-group slot')
+        registry = self.home/('service-slot-'+str(slot)+'.json')
+        with (self.home/('service-launch-'+str(slot)+'.lock')).open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if registry.exists():
+                self.stop(json.loads(registry.read_bytes()))
+            try:
+                return self._start_service(key, graph, baseline, profile, quality, inputs, policy_store, slot=slot)
+            except BaseException:
+                if registry.exists():
+                    partial = json.loads(registry.read_bytes())
+                    if partial['key'] == key:
+                        try:
+                            self.stop(partial)
+                        except Exception as error:
+                            save(self.home/('service-cleanup-failed-'+key+'.json'),
+                                 {'service': partial, 'error': str(error)[:1024]})
+                raise
+
+    def _start_service(self, key, graph, baseline, profile, quality, inputs, policy_store, *, slot):
         """Load a whole answering system across its physical partition owners."""
         placement = self.placement(graph)
         folder = 'services/'+key
@@ -233,12 +256,15 @@ class Cloud:
             path = REMOTE+'/'+folder+'/config-'+str(rank)+'.json'
             self.put(physical, path, config)
             configurations.append(path)
+        service = {'key': key, 'graph': identity(graph), 'placement': placement, 'units': units,
+                   'folder': REMOTE+'/'+folder, 'slot': slot}
+        # This durable descriptor precedes every process start. A controller
+        # killed during initialization can therefore clean all owners on retry.
+        save(self.home/('service-slot-'+str(slot)+'.json'), service)
         with ThreadPoolExecutor(max_workers=7) as pool:
             list(pool.map(lambda rank: self.start(placement[rank], units[rank],
                 [REPO+'/scripts/run_native_expert_service.py', '--config', configurations[rank]],
                 rank=rank, world=len(placement), port=31000+slot), range(len(placement))))
-        service = {'key': key, 'graph': identity(graph), 'placement': placement, 'units': units,
-                   'folder': REMOTE+'/'+folder, 'slot': slot}
         deadline = time.monotonic()+min(600, self.remaining())
         while time.monotonic() < deadline:
             ready = []
@@ -278,5 +304,20 @@ class Cloud:
         raise TimeoutError('The complete serving request exceeded its bound')
 
     def stop(self, service):
-        for rank, physical in enumerate(service['placement']):
-            self.command(physical, ['sudo', 'systemctl', 'stop', service['units'][rank]], timeout=45)
+        def stop_owner(item):
+            rank, physical = item
+            try:
+                self.command(physical, ['sudo', 'systemctl', 'stop', service['units'][rank]], timeout=45)
+            except subprocess.CalledProcessError as error:
+                if error.returncode == 5 and b'not loaded' in (error.stderr or b''):
+                    return None
+                return {'rank': rank, 'physical': physical, 'error': type(error).__name__}
+            except Exception as error:
+                return {'rank': rank, 'physical': physical, 'error': type(error).__name__}
+            return None
+        # An unreachable owner must not prevent every other group member from
+        # releasing its CPU/GPU memory and rendezvous connections.
+        with ThreadPoolExecutor(max_workers=7) as pool:
+            failures = [value for value in pool.map(stop_owner, enumerate(service['placement'])) if value]
+        if failures:
+            raise OSError('Serving cleanup could not reach every owner: '+json.dumps(failures))

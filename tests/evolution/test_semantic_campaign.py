@@ -1,16 +1,51 @@
 import copy
+import json
 from pathlib import Path
 import sys
+import subprocess
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]/'scripts'))
-from ordinary_cloud import semantic_assets, REMOTE
+from ordinary_cloud import Cloud, semantic_assets, REMOTE
 from prepare_semantic_cohorts import append_gate
 sys.path.pop(0)
 
 from neuroshard.evolution import expert_router, semantic_questions
 from neuroshard.evolution.reference_data import identity
+from neuroshard.evolution.reference_data import save
+
+
+def test_partial_startup_and_previous_orphan_release_their_communication_slot(tmp_path):
+    cloud = object.__new__(Cloud)
+    cloud.home = tmp_path
+    active = {'interrupted'}
+    save(tmp_path/'service-slot-4.json', {'key': 'interrupted'})
+    cloud.stop = lambda service: active.discard(service['key'])
+    def start(key, *args, **kwargs):
+        assert not active
+        save(tmp_path/'service-slot-4.json', {'key': key})
+        active.add(key)
+        raise RuntimeError('one owner failed during startup')
+    cloud._start_service = start
+    with pytest.raises(RuntimeError, match='one owner failed'):
+        cloud.service('partial', {}, {}, {}, {}, {}, None, slot=4)
+    assert not active
+
+
+def test_unreachable_owner_does_not_leave_other_group_members_running():
+    cloud = object.__new__(Cloud)
+    attempted = []
+    def command(rank, argv, **kwargs):
+        attempted.append(rank)
+        if rank == 0:
+            raise subprocess.CalledProcessError(255, argv, stderr=b'connection unavailable')
+        if rank == 1:
+            raise subprocess.CalledProcessError(5, argv, stderr=b'Unit missing.service not loaded.')
+    cloud.command = command
+    with pytest.raises(OSError, match='every owner'):
+        cloud.stop({'placement': [0, 1, 2, 3], 'units': ['a', 'b', 'c', 'd']})
+    assert sorted(attempted) == [0, 1, 2, 3]
 
 
 def semantic_policy(model='original'):
