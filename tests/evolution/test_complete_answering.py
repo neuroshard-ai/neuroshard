@@ -159,7 +159,7 @@ def owner(rank, home):
         dist.destroy_process_group()
 
 
-def test_real_shards_use_committed_policy_and_refute_forged_complete_answer(complete):
+def test_real_shards_use_committed_policy_and_refute_forged_complete_answer(complete, monkeypatch):
     home, _, graph, config, store, _ = complete
     mp.spawn(owner, args=(str(home),), nprocs=5, join=True)
     results = [json.loads((home/('complete-owner-'+str(rank)+'.json')).read_bytes()) for rank in range(5)]
@@ -217,6 +217,59 @@ def test_real_shards_use_committed_policy_and_refute_forged_complete_answer(comp
     assert receipt['paid_atoms'] + receipt['refunded_atoms'] == maximum
     assert paid['issued'] == 0 and paid['serving_root'] == identity(graph)
     assert receipt['text'] == result['text'] and receipt['outputs'] == result['outputs']
+
+    # Exercise the actual campaign postlude against native transitions using
+    # that real distributed response. A different price and a longer claim
+    # horizon expose underfunding, invalid expiry, rank encoding and signer bugs.
+    from types import SimpleNamespace
+    sys.path.insert(0, str(SOURCE/'scripts'))
+    import run_ordinary_campaign as campaign
+    sys.path.pop(0)
+    long_manifest = copy.deepcopy(manifest)
+    long_manifest['params'] = {**settlement.PARAMS, 'max_claim_blocks': 20000}
+    current = settlement.genesis('campaign-paid-test', validators, long_manifest)
+    operations = {}
+
+    class Box:
+        def __init__(self, path, url, chain, owner):
+            assert owner.public_key == owners[0].public_key
+        def send(self, operation, kind, **fields):
+            nonlocal current
+            before_jobs = set(current['expert_lifecycle']['jobs'])
+            before_budgets = set(current['auditing']['budgets'])
+            current = send(current, owners[0], kind, **fields)
+            if kind == 'infer_expert':
+                operations[operation] = (set(current['expert_lifecycle']['jobs'])-before_jobs).pop()
+            elif kind == 'fund_audit':
+                operations[operation] = (set(current['auditing']['budgets'])-before_budgets).pop()
+        def logical_id(self, operation):
+            return operations[operation]
+        def close(self):
+            pass
+
+    def until(check, **kwargs):
+        nonlocal current
+        if current['candidate'] is not None:
+            current = finish(current, owners)
+        elif not check():
+            budget = operations['ordinary-paid/fund']
+            for auditor in owners[:3]:
+                current = send(current, auditor, 'accept_audit', budget_id=budget)
+        assert check()
+
+    def respond(service, request):
+        assert request['question'] == result['request']['messages']
+        assert request['max_tokens'] == result['request']['max_tokens']
+        return {'status': 'completed', 'result': result, 'seconds': 0}
+
+    monkeypatch.setattr(campaign, 'Outbox', Box)
+    backend = SimpleNamespace(home=home/'driver', state=lambda: current,
+        serving=lambda state: None, cloud=SimpleNamespace(query=respond))
+    network = SimpleNamespace(owners=owners, urls=['http://unused'], until=until)
+    settled = campaign.paid_inference(backend, network, messages=result['request']['messages'])
+    assert settled['paid_atoms'] == result['answering']['generated_tokens']*7
+    assert settled['paid_atoms']+settled['refunded_atoms'] == answering.quote(graph, 4, 7)['maximum_atoms']
+    assert current['issued'] == 0
 
 
 def test_complete_answering_ledger_import_stays_tensor_free():

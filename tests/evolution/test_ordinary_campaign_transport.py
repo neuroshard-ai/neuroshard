@@ -11,6 +11,7 @@ from ordinary_allocation import numerical_runtime, describe
 from run_ordinary_campaign import rpc_genesis_commitment
 import run_ordinary_campaign
 import ordinary_allocation
+import portable_native_trial
 from botocore.exceptions import ClientError
 sys.path.pop(0)
 
@@ -22,13 +23,30 @@ from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import retained_objects
 
 
+def test_native_startup_reports_an_exited_node_without_waiting_for_rpc_timeout(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    network = object.__new__(portable_native_trial.Network)
+    network.home, network.processes, network.urls = tmp_path, [], ['http://unused']
+    network.config = {'engine': 'unused', 'nodes': [{'home': str(tmp_path), 'abci': 29952}]}
+    children = iter([SimpleNamespace(pid=1, poll=lambda: None), SimpleNamespace(pid=2, poll=lambda: 1)])
+    monkeypatch.setattr(portable_native_trial.subprocess, 'Popen', lambda *args, **kwargs: next(children))
+    def forbidden(*args, **kwargs):
+        raise AssertionError('A failed child must be detected before polling unavailable RPC')
+    monkeypatch.setattr(portable_native_trial.client, 'query', forbidden)
+    with pytest.raises(RuntimeError, match='node 0 stopped during startup'):
+        network.start()
+
+
 @pytest.mark.parametrize('claim_blocks', [8192, 20000])
 def test_final_paid_request_allows_the_configured_native_claim_window(tmp_path, monkeypatch, claim_blocks):
     from types import SimpleNamespace
     from neuroshard.evolution import answering
+    from neuroshard.demo import protocol
+    coordinator = protocol.Identity('paid-coordinator')
     graph = {'experts': {'learned': {}}}
     state = {'expert_lifecycle': {'serving_graph': graph}, 'chain_id': 'test',
-             'manifest': {'params': {'max_claim_blocks': claim_blocks}}}
+             'manifest': {'params': {'max_claim_blocks': claim_blocks},
+                          'expert_lifecycle': {'price_per_token': 1, 'max_tokens': 64}}}
     class ObservedRequest(Exception):
         pass
     class Box:
@@ -40,13 +58,14 @@ def test_final_paid_request_allows_the_configured_native_claim_window(tmp_path, 
             # 10,000-block request fails it on the ordinary GPU network.
             assert claim_blocks+1 <= body['expires_in'] <= 100000
             assert body['max_price'] == 64 and len(body['workers']) == 4
+            assert isinstance(body['workers'], dict) and body['workers']['0'] == coordinator.public_key
             raise ObservedRequest
         def close(self):
             pass
     monkeypatch.setattr(run_ordinary_campaign, 'Outbox', Box)
     monkeypatch.setattr(answering, 'quote', lambda graph, tokens, price: {'maximum_atoms': 64})
     backend = SimpleNamespace(home=tmp_path, state=lambda: state)
-    network = SimpleNamespace(urls=['http://unused'], owners=[object()])
+    network = SimpleNamespace(urls=['http://unused'], owners=[coordinator])
     with pytest.raises(ObservedRequest):
         run_ordinary_campaign.paid_inference(backend, network)
 

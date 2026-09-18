@@ -92,7 +92,9 @@ def create_network(backend, engine):
         'expert_work': job['work'], 'expert_lifecycle': job['lifecycle'],
         'expert_admission': {'format': expert_admission.FORMAT, 'proposal_blocks': 1024,
             'job_blocks': 200000, 'data_policy': backend.freeze['data_policy'], 'initial_data': job['data']}}
-    network = Network.create(backend.home/'native', manifest, engine=engine, base_port=39950)
+    # Keep listeners below Linux's ordinary ephemeral range. Outbound peer
+    # connections must not take another validator's port during a restart.
+    network = Network.create(backend.home/'native', manifest, engine=engine, base_port=29950)
     # Store the effective initial height before starting any node. CometBFT
     # treats zero as one; keeping that explicit makes file and RPC pins agree
     # for both the publisher and the stock curator CLI.
@@ -155,25 +157,28 @@ def commands(backend, network):
     return publisher, auditors
 
 
-def paid_inference(backend, network):
+def paid_inference(backend, network, *, messages=None):
     """After publisher shutdown, reuse its sole durable outbox for one reply."""
     from neuroshard.evolution import answering
     from neuroshard.evolution.sharded.graph_service import inference_transcript
     state = backend.state()
     graph = state['expert_lifecycle']['serving_graph']
-    owners = [protocol.Identity.load_or_create(backend.home/'keys'/('serving-'+str(rank)+'.key'))
-              for rank in range(3+len(graph['experts']))]
+    profile = life.profile_for(state)
+    maximum = min(64, profile['max_tokens'])
+    owners = [network.owners[0], *[protocol.Identity.load_or_create(
+        backend.home/'keys'/('serving-'+str(rank)+'.key')) for rank in range(1, 3+len(graph['experts']))]]
     box = Outbox(backend.home/'publisher/outbox.sqlite', network.urls[0], state['chain_id'], network.owners[0])
     try:
-        quote = answering.quote(graph, 64, 1)
-        messages = [{'role': 'user', 'content': 'What is the name of the NeuroShard client package?'}]
-        box.send('ordinary-paid/request', 'infer_expert', graph=identity(graph), question=messages, max_tokens=64,
-            workers=[owner.public_key for owner in owners], max_price=quote['maximum_atoms'],
+        quote = answering.quote(graph, maximum, profile['price_per_token'])
+        if messages is None:
+            messages = [{'role': 'user', 'content': 'What is the name of the NeuroShard client package?'}]
+        box.send('ordinary-paid/request', 'infer_expert', graph=identity(graph), question=messages, max_tokens=maximum,
+            workers={str(rank): owner.public_key for rank, owner in enumerate(owners)}, max_price=quote['maximum_atoms'],
             expires_in=max(10000, state['manifest']['params']['max_claim_blocks']+1))
         job_id = box.logical_id('ordinary-paid/request')
         job = backend.state()['expert_lifecycle']['jobs'][job_id]
         response = backend.cloud.query(backend.serving(backend.state()), {'id': identity({'paid': job_id}),
-            'kind': 'generate', 'graph': identity(graph), 'question': messages, 'max_tokens': 64})
+            'kind': 'generate', 'graph': identity(graph), 'question': messages, 'max_tokens': maximum})
         if response['status'] != 'completed':
             raise ValueError('Paid ordinary inference was unavailable')
         value = response['result']
@@ -187,9 +192,9 @@ def paid_inference(backend, network):
         budget = box.logical_id('ordinary-paid/fund')
         network.until(lambda: auditing.enough(backend.state()['auditing']['budgets'][budget], lambda row: bool(row['bond'])), seconds=180)
         box.send('ordinary-paid/respond', 'respond_answering', job_id=job_id, response=value['answering'],
-            transcript_root=transcript, audit_budget=budget, workers=[owner.sign(
-                life.answering_receipt(state['chain_id'], job, value['answering'], transcript, rank))
-                for rank, owner in enumerate(owners)])
+            transcript_root=transcript, audit_budget=budget, workers={str(rank): owner.sign(
+                life.answering_receipt(state['chain_id'], job, value['answering'], transcript, str(rank)))
+                for rank, owner in enumerate(owners)})
         network.until(lambda: job_id in backend.state()['expert_lifecycle']['results'], seconds=1800)
         outcome = backend.state()['expert_lifecycle']['results'][job_id]
         if outcome.get('status') != 'completed' or backend.state()['issued'] != state['issued']:

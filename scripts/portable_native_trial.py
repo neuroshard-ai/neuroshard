@@ -71,7 +71,14 @@ class Network:
                     process = subprocess.Popen(command, stdout=log, stderr=log)
                 self.processes.append(process)
         save(self.home / 'processes.json', {'pids': [p.pid for p in self.processes]})
-        self.until(lambda: all(client.query(url)['height'] > 1 for url in self.urls), 120)
+        def ready():
+            for index, process in enumerate(self.processes):
+                if process.poll() is not None:
+                    role = 'app' if index % 2 == 0 else 'node'
+                    raise RuntimeError('Native '+role+' '+str(index//2)+' stopped during startup; inspect '
+                                       +str(self.home/(role+'-'+str(index//2)+'.log')))
+            return all(client.query(url)['height'] > 1 for url in self.urls)
+        self.until(ready, 120)
         return self
 
     @staticmethod
