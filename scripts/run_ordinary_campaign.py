@@ -46,7 +46,34 @@ def source_check(home):
     if 'auxiliary_assets' in operation and identity(json.loads(
             (home/'auxiliary-assets.json').read_bytes())) != operation['auxiliary_assets']:
         raise ValueError('The committed auxiliary neural asset inventory changed')
+    if 'continuation' in freeze and identity(json.loads(
+            (home/'continuation.json').read_bytes())) != freeze['continuation']:
+        raise ValueError('The prospectively committed continuation changed')
     return freeze, operation
+
+
+def backend_failures(previous, outcome, now):
+    """Stop persistent backend retries while permitting brief RPC outages."""
+    if outcome.get('phase') != 'waiting_for_backend_or_node':
+        return None
+    previous = previous or {'first': now, 'attempts': 0}
+    current = {**previous, 'attempts': previous['attempts']+1}
+    current['stop'] = current['attempts'] >= 3 and now-current['first'] >= 120
+    return current
+
+
+def publisher_outcome(path, start):
+    with path.open('rb') as source:
+        source.seek(0, os.SEEK_END)
+        end = source.tell()
+        source.seek(max(start, end-65536))
+        lines = source.read().splitlines()
+    if not lines:
+        raise RuntimeError('Native publisher exited without an outcome')
+    value = json.loads(lines[-1])
+    if not isinstance(value, dict) or 'phase' not in value:
+        raise ValueError('Native publisher returned an invalid outcome')
+    return value
 
 
 def initial_job(backend):
@@ -228,6 +255,7 @@ def operate(home, engine):
         network = create_network(backend, engine)
     auditors, publisher = [], None
     launches, probes, last_probe = 0, 0, 0.
+    failures, publisher_start = None, 0
     try:
         publisher_command, auditor_commands = commands(backend, network)
         for actor, command in enumerate(auditor_commands, 1):
@@ -255,7 +283,15 @@ def operate(home, engine):
             if publisher is None or publisher.poll() is not None:
                 if publisher is not None and publisher.returncode:
                     raise RuntimeError('The native publisher process failed')
+                if publisher is not None:
+                    outcome = publisher_outcome(home/'publisher.log', publisher_start)
+                    failures = backend_failures(failures, outcome, time.monotonic())
+                    if failures and failures['stop']:
+                        save(home/'backend-retry-stop.json', {
+                            **failures, 'outcome': outcome, 'height': state['height']})
+                        raise RuntimeError('Persistent backend failures stopped the campaign; inspect backend-failures')
                 with (home/'publisher.log').open('ab') as log:
+                    publisher_start = log.tell()
                     publisher = subprocess.Popen(publisher_command, stdout=log, stderr=log, cwd=ROOT)
                 launches += 1
             if time.monotonic()-last_probe > 120:

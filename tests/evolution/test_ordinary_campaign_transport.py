@@ -274,8 +274,39 @@ def test_public_metadata_covers_both_stores_and_monotonic_discovery(tmp_path, mo
     backend.advance_feed(1)
     assert backend.feed(source, 0, 2) == rows
     assert json.loads((tmp_path/'feed-head.json').read_bytes())['entry'] == 1
+    # An auditor created before the publisher advances must not roll discovery
+    # back when its delayed constructor installs the earlier cursor.
+    backend.advance_feed(0)
+    assert backend.feed(source, 0, 2) == rows
+    assert json.loads((tmp_path/'feed-head.json').read_bytes())['entry'] == 1
     descriptor = json.loads(backend.transport.get(second))
     public[descriptor['records']['sha256']] = b'x'*descriptor['records']['bytes']
     backend.advance_feed(1)
     with pytest.raises(ValueError, match='bounded commitment'):
         backend.feed(source, 0, 2)
+
+
+def test_persistent_backend_failures_stop_without_rejecting_brief_outages():
+    fail = {'phase': 'waiting_for_backend_or_node'}
+    progress = {'phase': 'waiting_for_audit'}
+    window = run_ordinary_campaign.backend_failures(None, fail, 10)
+    window = run_ordinary_campaign.backend_failures(window, fail, 11)
+    window = run_ordinary_campaign.backend_failures(window, fail, 12)
+    assert window['stop'] is False
+    window = run_ordinary_campaign.backend_failures(window, fail, 130)
+    assert window['stop'] is True and window['attempts'] == 4
+    assert run_ordinary_campaign.backend_failures(window, progress, 131) is None
+    restarted = run_ordinary_campaign.backend_failures(None, fail, 300)
+    assert restarted['first'] == 300 and restarted['attempts'] == 1
+    assert restarted['stop'] is False
+
+
+def test_publisher_outcome_uses_only_the_completed_invocation(tmp_path):
+    log = tmp_path/'publisher.log'
+    log.write_bytes(b'{"phase":"waiting_for_backend_or_node"}\n')
+    start = log.stat().st_size
+    with log.open('ab') as output:
+        output.write(b'optional diagnostic\n{"phase":"submitted"}\n')
+    assert run_ordinary_campaign.publisher_outcome(log, start) == {'phase': 'submitted'}
+    with pytest.raises(RuntimeError, match='without an outcome'):
+        run_ordinary_campaign.publisher_outcome(log, log.stat().st_size)

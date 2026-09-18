@@ -76,6 +76,16 @@ class Backend:
 
     def advance_feed(self, entry):
         """Read the immutable published head/window chain into a fresh cache."""
+        if type(entry) is not int or not 0 <= entry < len(self.freeze['feed_heads']):
+            raise ValueError('Unknown prospectively frozen source discovery step')
+        with (self.home/'feed-head.lock').open('a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            path = self.home/'feed-head.json'
+            if path.exists():
+                entry = max(entry, json.loads(path.read_bytes())['entry'])
+            self._advance_feed(entry)
+
+    def _advance_feed(self, entry):
         from neuroshard.evolution.sharded.retained_objects import restore
         if type(entry) is not int or not 0 <= entry < len(self.freeze['feed_heads']):
             raise ValueError('Unknown prospectively frozen source discovery step')
