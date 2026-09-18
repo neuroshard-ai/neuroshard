@@ -120,6 +120,11 @@ before the affected work, rather than changing the target after a result.
   answers 0→11/16 with zero retained-correct losses. Three fresh quality audits
   agreed; native quality rejected the candidate. Subsequent selector repairs
   use that opened set as development only. No fresh cohort was admitted.
+  The complete repaired service reaches 15/16 single and 13/16 combined answers
+  on those opened cases, with no regressions, no retained-correct losses and
+  exact replay. It learns question distinctions inside the retrieved expert
+  while preserving the earlier fallback. This is a development pass; three
+  newly admitted cohorts and the resource comparison are still required.
 
 - [ ] **2. Continuous data admission and learning**
 

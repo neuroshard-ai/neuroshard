@@ -8,6 +8,20 @@ The chain issued 129 trial NEURO for 128 full-cohort updates plus bootstrap.
 Later cohort finals remain unopened; the matched-resource comparison did not
 run. The [result and ordinary replies](../config/experiments/semantic-native-campaign-20260918/results/full-cohort-audit-result.json)
 preserve the failure. Checklist items 1 and 2 remain incomplete.
+Full application replay reproduced 446 signed transactions and all 9,398
+exported headers, including the final state at height 9,397.
+
+An inference-only development repair then improved singles 13→15/16 and
+combined answers 11→13/16 on the same weights, with zero regressions and zero
+retained-correct losses. Knowledge retention reached 33/33; skills remained
+20/24 and conversations 14/16. All earlier neural responses and a fresh combined
+request replayed exactly. A small integer classifier now distinguishes questions
+within the retrieved expert; the original parent-selection boundary remains
+unchanged. The parser also preserves ordinary fronted and possessive question
+spans. An off-the-shelf duplicate-question model failed development and was
+discarded. The [complete repair result](../config/experiments/semantic-fine-serving-20260918/results/result.json)
+passes the development accuracy floors, without new neural training, a new
+final, native promotion or successful-cohort credit.
 
 This trial addresses live-LLM items 1 and 2. It starts from the accepted
 directory/protocol/planner-expert seed and learns escrow, conversation and
