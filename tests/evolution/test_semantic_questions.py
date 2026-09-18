@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from neuroshard.evolution import semantic_questions as semantics
+from neuroshard.evolution import expert_router
 from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded.planned_graph import PlannedGraphNetwork
 
@@ -57,6 +58,116 @@ def test_fine_selection_learns_distinctions_without_changing_parent_admission():
     assert changed['retrieval']['intent'] == 'range' and changed['intent'] == 'weight'
     assert changed['selected']['route'] == 'sensor'
     assert next(row['label'] for row in fitted['rows'] if row['id'] == changed['training_id']) == 'weight'
+
+
+def admission_policy():
+    rows = [{'id': identity([route, index]), 'route': route, 'features': [feature]}
+            for route, feature in [('parent', -10000), ('legacy', 10000)] for index in range(2)]
+    preserved = expert_router.fit(rows, embedding_root='a'*64, tokenizer_root='b'*64)
+    return semantics.fit_admission(fine_policy(), preserved)
+
+
+def test_admission_rejection_overrides_a_nearby_specialist_example():
+    fitted = admission_policy()
+    model = fitted['admission']
+    # A committed domain rejection must win even if retrieval hits a specialist
+    # exactly and the fine classifier is certain about the corresponding fact.
+    for name in model['classifier']['weights']:
+        model['classifier']['weights'][name] = [0]*384
+        model['classifier']['biases'][name] = 16384 if name == 'parent' else -16384
+    selected = semantics.Index(fitted, {'parent', 'legacy', 'sensor'}).select([10000, 3000]+[0]*382)
+    assert selected['retrieval']['intent'] == 'range'
+    assert selected['admission']['route'] == 'parent'
+    assert selected['selected'] is None and 'classification' not in selected
+
+
+@pytest.mark.parametrize('attack', ['training', 'encoder', 'fallback', 'overlap', 'missing_base_route'])
+def test_admission_binds_training_and_the_preserved_route_inventory(attack):
+    fitted = admission_policy()
+    routes = {'parent', 'legacy', 'sensor'}
+    if attack == 'training':
+        fitted['admission']['training_root'] = 'c'*64
+    elif attack == 'encoder':
+        fitted['admission']['embedding_root'] = 'c'*64
+    elif attack == 'fallback':
+        fitted['admission']['fallback'] = 'sensor'
+    elif attack == 'overlap':
+        fitted['preserved_router']['prototypes']['sensor'] = [[10000]]
+    else:
+        routes.remove('legacy')
+    with pytest.raises(ValueError):
+        semantics.validate(fitted, routes)
+
+
+def test_new_coarse_gate_cannot_steal_a_request_before_semantic_admission():
+    fitted = admission_policy()
+    preserved = fitted['preserved_router']
+    samples = [{'id': identity([name, index]), 'route': name, 'features': [value]}
+               for name, value in [('parent', -10000), ('legacy', 10000), ('sensor', 10000)]
+               for index in range(2)]
+    coarse = expert_router.append_route(preserved, samples, 'sensor')
+    gate = coarse['additions'][0]['gate']
+    gate['maximum_distance'] = 2**40
+    for name in gate['classifier']['weights']:
+        gate['classifier']['weights'][name] = [0]
+        gate['classifier']['biases'][name] = 16384 if name == 'sensor' else -16384
+    assert expert_router.select(coarse, [10000])['route'] == 'sensor'
+    service = object.__new__(PlannedGraphNetwork)
+    service.config = {'semantic_questions': fitted, 'learned': {'router': coarse}}
+    service.router = SimpleNamespace(features=lambda question: [10000])
+    service.net = SimpleNamespace(rank=0, all_owners=SimpleNamespace(exchange=lambda packet: [packet, None]))
+    service.semantic_index = semantics.Index(fitted, {'parent', 'legacy', 'sensor'})
+    features = [-10000, 0]+[0]*382
+    service.semantic_features = lambda question: {'profile': identity(fitted['encoder']),
+        'input_ids': [101, 25, 102], 'features': features}
+    original = service.route('Which key does the earlier protocol use?')
+    assert original['decision']['route'] == 'legacy'
+    assert service.semantic_route(original)['decision']['route'] == 'legacy'
+    features[:] = [10000, 3000]+[0]*382
+    selected = service.semantic_route(original)
+    assert selected['decision']['route'] == 'sensor'
+    assert selected['previous_decision']['route'] == 'legacy'
+    assert selected['semantic']['selected']['question'] == 'What is the sensor range?'
+
+
+def test_admission_checks_a_standalone_question_resolved_from_conversation(monkeypatch):
+    from neuroshard.evolution.request_planning import SPAN_POLICY
+    fitted = admission_policy()
+    service = object.__new__(PlannedGraphNetwork)
+    service.root, service.prefix = 'service', []
+    service.config = {'semantic_questions': fitted, 'request_policy': SPAN_POLICY,
+        'planner': {'max_tokens': 64}, 'learned': {'router': {'fallback': 'parent',
+        'prototypes': {'parent': [], 'legacy': [], 'sensor': []}}},
+        'expert_prompts': {'sensor': {'prefix': '', 'suffix': '', 'context': 'standalone'}},
+        'general_instruction': ''}
+    service.semantic_index = semantics.Index(fitted, {'parent', 'legacy', 'sensor'})
+    encoded, calls = [], []
+    def features(question):
+        encoded.append(question)
+        return {'profile': identity(fitted['encoder']), 'input_ids': [101, 25, 102],
+                'features': [10000, 3000]+[0]*382}
+    service.semantic_features = features
+    def exchange(value):
+        return [value, None] if isinstance(value, dict) and 'encoding' in value else [value, value]
+    service.net = SimpleNamespace(rank=0, world_size=2, verify_unchanged=lambda: None,
+                                 all_owners=SimpleNamespace(exchange=exchange))
+    monkeypatch.setattr(service, 'route', lambda question: {'question': question,
+        'features': [10000], 'decision': {'route': 'legacy'}})
+    def call(model, messages, maximum, purpose):
+        service.trace.append({'token_ids': [9, 2]})
+        if purpose == 'planning':
+            return '{"questions":["What is the sensor range?"]}'
+        calls.append((model, messages))
+        return 'owned neural answer'
+    monkeypatch.setattr(service, 'call', call)
+    messages = [{'role': 'user', 'content': 'I am evaluating the sensor.'},
+                {'role': 'assistant', 'content': 'Which specification do you need?'},
+                {'role': 'user', 'content': 'How far can it measure?'}]
+    result = service.answer(messages, 64)
+    assert result['planning']['path'] == 'neural'
+    assert encoded == ['What is the sensor range?']
+    assert calls == [('sensor', [{'role': 'user', 'content': 'What is the sensor range?'}])]
+    assert result['request']['messages'] == messages
 
 
 @pytest.mark.parametrize('attack', ['group', 'training', 'encoder', 'label', 'dimensions', 'format'])

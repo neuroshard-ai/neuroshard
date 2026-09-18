@@ -25,7 +25,8 @@ def neural_response(value):
     return identity({key:body[key] for key in ('plan','answers','outputs','text','status','error')})
 
 
-def assemble(campaign, job_home, home, semantic_policy=None, request_policy=request_planning.LOSSLESS_POLICY):
+def assemble(campaign, job_home, home, semantic_policy=None,
+             request_policy=request_planning.LOSSLESS_POLICY, checkpoint=None):
     if not (job_home/'quality-0.json').exists():
         raise ValueError('Use only a previously opened quality result')
     old = Objects(campaign/'compiled/objects')
@@ -44,7 +45,8 @@ def assemble(campaign, job_home, home, semantic_policy=None, request_policy=requ
             profile['sources'][name] = sha256(ROOT/name)
     original = job['lifecycle']['candidate_template']
     previous = answering.load(original, old)
-    checkpoint = json.loads((job_home/'produce-124-actor-0.json').read_bytes())['result']['window']['output']
+    if checkpoint is None:
+        checkpoint = json.loads((job_home/'produce-124-actor-0.json').read_bytes())['result']['window']['output']
     template = copy.deepcopy(answering.core(original))
     template['executor_root'] = identity(profile)
 

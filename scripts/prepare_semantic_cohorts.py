@@ -31,8 +31,11 @@ def read(path):
     return json.loads(Path(path).read_bytes())
 
 
-def prepare(home, previous, general, facts, encoder, *, order=ORDER, fine_intents=False, bootstrap=None):
+def prepare(home, previous, general, facts, encoder, *, order=ORDER, fine_intents=False,
+            bootstrap=None, semantic_admission=False):
     order = tuple(order)
+    if type(semantic_admission) is not bool or (semantic_admission and not fine_intents):
+        raise ValueError('Semantic admission requires per-expert fine intent selection')
     if (len(order) != 3 or len(set(order)) != 3 or type(fine_intents) is not bool
             or any(not isinstance(name, str) or not name or len(name) > 32
                    or any(char not in 'abcdefghijklmnopqrstuvwxyz0123456789_-' for char in name) for name in order)):
@@ -135,10 +138,12 @@ def prepare(home, previous, general, facts, encoder, *, order=ORDER, fine_intent
         'questions': identity(questions), 'encoder': identity(read(encoder)),
         'features': identity(initial['learned']['feature_profile']), 'source_facts': sha256(facts),
         'driver': sha256(__file__), 'batch': 1, 'coarse_epochs': 16,
-        'semantic_method': ('Preserved nearest-question domain gate, then per-expert integer intent classifiers.'
+        'semantic_method': ('Learned expert admission; preserve accepted routing on rejection; per-expert intent selection.'
+            if semantic_admission else 'Preserved nearest-question domain gate, then per-expert integer intent classifiers.'
             if fine_intents else 'Nearest committed training question; earlier examples mean preserve base routing.'),
         'composition': SPAN_POLICY if fine_intents else LOSSLESS_POLICY,
-        'fine_intents': fine_intents, 'old_final_used_for_training': False,
+        'fine_intents': fine_intents, 'semantic_admission': semantic_admission,
+        'old_final_used_for_training': False,
         'previous_failed_cohort_counted': False, 'neural_training_started': False,
         'quality_rule': identity(rules), 'expert_steps': 128, 'learning_rate': .00005,
         'seconds_per_comparison_arm': 9000,
@@ -213,6 +218,7 @@ def compile_policies(home):
     initial, graph, catalog = (read(compiled/name) for name in
         ('baseline-configuration.json', 'baseline-core.json', 'source-catalog.json'))
     model, encoder = initial['learned']['router'], read(home/'encoder.json')
+    preserved_router = copy.deepcopy(model)
     baseline = answering.attach(graph, configuration(graph, model, initial), store)
     policies = {'baseline': baseline['answering']['policy_root']}
     topology, cohorts, intents = copy.deepcopy(graph), {}, {}
@@ -228,6 +234,8 @@ def compile_policies(home):
             'features': features[row['id']]['semantic']} for row in rows], encoder, intents)
         if plan.get('fine_intents', False):
             semantic = semantic_questions.fit_intents(semantic)
+        if plan.get('semantic_admission', False):
+            semantic = semantic_questions.fit_admission(semantic, preserved_router)
         topology = ordinary_cohorts.extend(topology, name, graph['experts']['planner'])
         bound = answering.attach(topology, configuration(topology, model,
             {**initial, 'semantic_questions': semantic}), store)

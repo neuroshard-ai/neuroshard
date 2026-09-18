@@ -160,8 +160,16 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         name = 'src/neuroshard/evolution/general_answer.py'
         result['sources'][name] = sha256(Path(source_home)/name)
     if semantic_questions is not None:
-        from ..semantic_questions import validate as validate_semantics
+        from ..semantic_questions import ADMISSION_FORMAT, validate as validate_semantics
         validate_semantics(semantic_questions, learned['router']['prototypes'])
+        if semantic_questions['format'] == ADMISSION_FORMAT:
+            from ..request_planning import ASSISTANT_POLICIES
+            preserved = semantic_questions['preserved_router']
+            if any(preserved[name] != learned['router'][name]
+                   for name in ('dimensions', 'embedding_root', 'tokenizer_root', 'fallback')):
+                raise ValueError('Preserved admission routing changed its feature interpretation')
+            if request_policy in ASSISTANT_POLICIES and 'fallback_guard' not in preserved:
+                raise ValueError('Preserve the accepted general-assistant guard')
         result['semantic_questions'] = copy.deepcopy(semantic_questions)
         for name in ('src/neuroshard/evolution/semantic_questions.py',
                      'src/neuroshard/evolution/sharded/semantic_features.py'):
@@ -314,7 +322,19 @@ class PlannedGraphNetwork:
         model = self.config['learned']['router']
         allowed = (expert_scope.eligible(question, self.config['route_scopes'], model['prototypes'],
                    model['fallback']) if 'route_scopes' in self.config else None)
-        decision = expert_router.select(model, packet['features'], eligible=allowed)
+        from ..semantic_questions import ADMISSION_FORMAT
+        semantic = self.config.get('semantic_questions', {})
+        if semantic.get('format') == ADMISSION_FORMAT:
+            # New coarse gates cannot acquire a request before semantic admission.
+            # This also preserves the accepted route for requests whose context
+            # or structure makes standalone question matching inappropriate.
+            model = semantic['preserved_router']
+            base_allowed = None if allowed is None else set(allowed) & set(model['prototypes'])
+            decision = expert_router.select(model, packet['features'], eligible=base_allowed)
+            if allowed is not None:
+                decision['eligible'] = allowed
+        else:
+            decision = expert_router.select(model, packet['features'], eligible=allowed)
         from ..request_planning import ASSISTANT_POLICIES
         guard = decision.get('fallback_guard')
         if (self.config.get('request_policy') in ASSISTANT_POLICIES and guard
@@ -408,6 +428,7 @@ class PlannedGraphNetwork:
             raise ValueError('Owners received different conversations')
         self.trace = []
         from .. import request_planning
+        from ..semantic_questions import ADMISSION_FORMAT
         preserve = 'request_policy' in self.config
         general_first = self.config.get('request_policy') in request_planning.ASSISTANT_POLICIES
         span_policy = self.config.get('request_policy')
@@ -461,7 +482,9 @@ class PlannedGraphNetwork:
             # because the planner expressed its instruction more concisely.
             routing_question = messages[0]['content'] if len(plan) == len(messages) == 1 else question
             choice = preliminary if general else self.route(routing_question)
-            if len(messages) == 1:
+            resolved_admission = (self.config.get('semantic_questions', {}).get('format') == ADMISSION_FORMAT
+                                  and planning['path'] == 'neural')
+            if len(messages) == 1 or resolved_admission:
                 if (preliminary is not None and 'semantic' in preliminary
                         and preliminary['question'] == routing_question):
                     choice = preliminary
