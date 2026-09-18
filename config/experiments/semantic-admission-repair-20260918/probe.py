@@ -44,12 +44,13 @@ def classify(model, vectors):
 
 
 def main(campaign, output):
+    output.mkdir(parents=True, exist_ok=True)
     read = lambda name: json.loads((campaign / name).read_bytes())
     fitting = read('compiled/selector-fitting.json')['rows']
     features = {row['id']: row['semantic'] for row in read('features.json')}
     encoder = read('encoder.json')
     order = read('input-plan.json')['order']
-    folds = {row['id']: int(row['document'][:8], 16) % 4 for row in fitting}
+    folds = {row['id']: int(row.get('document', row['id'])[:8], 16) % 4 for row in fitting}
     for cohort in order:
         annotations = read('compiled/' + cohort + '/training-annotations.json')
         families = {topic: sorted({row['core'] for row in annotations if row['topic'] == topic})
