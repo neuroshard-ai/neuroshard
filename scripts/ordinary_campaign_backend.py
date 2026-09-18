@@ -355,6 +355,8 @@ class Backend:
         if sequence['entry'] == 2:
             from ordinary_comparison import run
             comparison = run(self, state)
+            if comparison.get('pending') is True:
+                return {'job': None}
             if not comparison['passed']:
                 save(self.home/'comparison-stop.json', comparison)
                 return {'job': None}

@@ -149,6 +149,10 @@ def run(backend, state):
         save(growth_file, {'started': growth_started, 'deadline': growth_end, 'serving': growth,
                            'resources_after': resources(backend.cloud),
                            'quality': json.loads((ctx['directory']/'quality-0.json').read_bytes())['result']})
+        # Each arm fits the installed backend's four-hour call bound; both
+        # arms together need not. Resume the control through the next ordinary
+        # publisher poll, using the durable growth result and unchanged budget.
+        return {'pending': True, 'completed_arm': 'growth'}
     started_path = home/'control-start.json'
     if not started_path.exists():
         save(started_path, {'started': datetime.now(timezone.utc).timestamp(),
