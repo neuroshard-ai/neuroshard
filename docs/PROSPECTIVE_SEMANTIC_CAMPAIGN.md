@@ -46,3 +46,17 @@ probe. No genesis, signing state, training input or quality gate was reset.
 The [recovery source and commitments](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/fd8d69762cbe1bb57095d2e4d2ed215a72119284f0dbcc20bd30e28c51712e42)
 preserve the operational amendments separately from the original frozen
 inputs. The three full learning cohorts remain pending at this recovery point.
+
+After recovery, all three bootstrap audits reproduced the producer's complete
+result across 73 stages each. The chain rejected that deliberately weak
+candidate at height 1,792, preserving its serving graph and the single verified
+update's 1,000,000 issued atoms. The controller then rejected an internally
+hash-consistent feed whose substituted answer contradicted the pinned source.
+These exercise rejection and recovery; they are not useful admitted cohorts.
+
+Before either comparison arm began, its controller scheduling was amended to
+return after saving the growth arm and resume the control on the next publisher
+poll. Both 9,000-second intervals remain unchanged. This prevents their combined
+duration from exceeding the installed four-hour backend call limit. Thirteen
+targeted checks passed; the [source update and commitment](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7236b395b3f311a656e5fc32a02a1fb48e624db3dc86da71c68d84f5f77ad00a)
+are published against the recovery source above.
