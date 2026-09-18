@@ -94,3 +94,19 @@ preserved genesis, the checkpoint, serving graph and 13,000,000 issued atoms
 at height 2,905. This demonstrates controller recovery with serving available,
 not replacement of unavailable shard owners or independent-provider failover.
 It does not erase the earlier startup outage.
+
+## Fresh campaign after the development repair
+
+The next frozen campaign starts again from accepted A/B/C and learns
+**conversation → feed → audit**. The opened escrow final is development only.
+Conversation and feed finals retain their original bytes; a third, source-backed
+audit cohort supplies an unopened final. Each expert, selector and complete
+serving policy is bound before training. No answer text enters the question index.
+
+The [complete operation](../config/experiments/fine-native-campaign-20260918/operation.json)
+and [source/input commitment](../config/experiments/fine-native-campaign-20260918/source-freeze.json)
+retain the existing quality, retention and equal-resource comparison gates.
+All seven owners reproduced the committed runtime and every execution source.
+The resource allowance remains $250 cumulatively across this reused allocation;
+all disposable hosts retire by 18:13 UTC on September 18. This is a prospective
+trial, not evidence that either checklist item has passed.
