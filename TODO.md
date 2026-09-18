@@ -107,6 +107,14 @@ before the affected work, rather than changing the target after a result.
   answers; it also failed. Selection and wording-sensitive knowledge remain
   unresolved. Neither result counts toward the required three admitted cohorts.
 
+  [Semantic question access](docs/SEMANTIC_QUESTION_ACCESS.md) now repairs the
+  opened complete-service diagnostic: 15/16 single, 13/16 combined, zero retained
+  answers lost and exact replay. A small frozen semantic encoder selects a
+  canonical training question; the existing expert generates its answer from
+  weights. The question index contains no answers. This is a development repair,
+  with no new final, neural expert training or native promotion. Three fresh
+  admitted cohorts and the matched-resource comparison remain required.
+
 - [ ] **2. Continuous data admission and learning**
 
   Done when the network repeatedly admits immutable data with provenance,

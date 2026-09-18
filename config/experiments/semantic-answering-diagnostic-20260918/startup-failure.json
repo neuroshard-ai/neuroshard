@@ -1,0 +1,1 @@
+{"corrected_source": "c769bfde54c40ae212cba524c79912d72e2c004a", "error": "Answering policy was incorrectly decoded under the 2,000,000-byte demo message limit despite its declared 8 MiB bound.", "neural_expert_training": false, "retry": "semantic-answering-diagnostic-20260918b", "scoring_started": false}
