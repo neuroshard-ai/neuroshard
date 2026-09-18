@@ -60,3 +60,14 @@ poll. Both 9,000-second intervals remain unchanged. This prevents their combined
 duration from exceeding the installed four-hour backend call limit. Thirteen
 targeted checks passed; the [source update and commitment](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7236b395b3f311a656e5fc32a02a1fb48e624db3dc86da71c68d84f5f77ad00a)
 are published against the recovery source above.
+
+The full escrow job then passed native admission and three exact prefix audits.
+After twelve verified updates, a controlled restart paused new scheduling,
+drained outstanding work, and stopped the controller and all four research
+validator processes. The already-running accepted shards returned identical
+complete responses before, during and after that interruption. Restart
+preserved genesis, the checkpoint, serving graph and 13,000,000 issued atoms
+(twelve full-cohort updates plus bootstrap); all four validators agreed again
+at height 2,905. This demonstrates controller recovery with serving available,
+not replacement of unavailable shard owners or independent-provider failover.
+It does not erase the earlier startup outage.

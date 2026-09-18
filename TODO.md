@@ -168,6 +168,14 @@ before the affected work, rather than changing the target after a result.
   bootstrap. No useful cohort was promoted. Repeated useful automatic admission
   remains open; the rejection machinery alone does not complete this task.
 
+  The [prospective semantic campaign](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md)
+  now reproduces bootstrap rejection with three exact audits, refuses a
+  hash-consistent substituted source answer, and automatically admits the next
+  real GPU job. A controlled restart after twelve verified updates preserves
+  checkpoint and issuance; accepted shards return identical responses while
+  the controller and research validator processes are down. An earlier startup
+  outage remains recorded. Useful repeated promotion is still pending.
+
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
   Done when the already validated second expert completes this entire path on
