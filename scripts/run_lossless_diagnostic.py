@@ -77,14 +77,17 @@ def assemble(campaign, job_home, home, semantic_policy=None, request_policy=requ
     previous_neural.update({row['id']:neural_response(row['after'])
         for rows in measured['retention']['roles'].values() for row in rows})
     save(home/'previous-neural.json',previous_neural)
+    previous_encoder = previous.get('semantic_questions', {}).get('encoder')
+    candidate_encoder = None if semantic_policy is None else semantic_policy['encoder']
     plan = {'format':('neuroshard-semantic-question-diagnostic-v1' if semantic_policy is not None
                      else 'neuroshard-literal-question-diagnostic-v1'),
         'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT).decode().strip(),
         'driver':sha256(Path(__file__)), 'before':identity(before), 'after':identity(after),
         'profile':identity(profile), 'quality':identity(quality), 'prior_result':identity(measured),
         'previous_neural':identity(previous_neural),
-        'neural_weights_unchanged':semantic_policy is None, 'answering_expert_weights_unchanged':True,
-        'semantic_encoder_added': None if semantic_policy is None else identity(semantic_policy['encoder']),
+        'neural_weights_unchanged':previous_encoder == candidate_encoder, 'answering_expert_weights_unchanged':True,
+        'semantic_encoder_added': (identity(candidate_encoder)
+            if candidate_encoder is not None and previous_encoder != candidate_encoder else None),
         'new_final_opened':False, 'native_promotion':False,
         'max_seconds':1800, 'scope':'Exposed development diagnostic; original failed result remains failed.'}
     save(home/'diagnostic.json',plan)
