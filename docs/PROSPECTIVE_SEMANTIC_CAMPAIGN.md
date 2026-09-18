@@ -150,3 +150,9 @@ toward useful learning. The opened bootstrap remains a rejection exercise.
 All seven owners match the committed execution source and runtime. The same
 18:13 UTC retirement deadline and cumulative $250 allowance apply; no new
 instances or additional allocation time were added.
+
+The stopped bootstrap and admission repair have a
+[public evidence archive](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/46c47dc8d2512bfd82cc4337b7915ccd15e1d0f41d28b754f788823a04c83c7b).
+The [publication manifest](../config/experiments/fine-native-campaign-20260918/results/publication.json)
+links matching source archives and the offline replay script. All published
+objects passed full hash readback.
