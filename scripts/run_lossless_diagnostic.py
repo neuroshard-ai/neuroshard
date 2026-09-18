@@ -25,7 +25,7 @@ def neural_response(value):
     return identity({key:body[key] for key in ('plan','answers','outputs','text','status','error')})
 
 
-def assemble(campaign, job_home, home):
+def assemble(campaign, job_home, home, semantic_policy=None):
     if not (job_home/'quality-0.json').exists():
         raise ValueError('Use only a previously opened quality result')
     old = Objects(campaign/'compiled/objects')
@@ -38,23 +38,28 @@ def assemble(campaign, job_home, home):
     operation = json.loads((campaign/'operation.json').read_bytes())
     profile = copy.deepcopy(old.json(operation['executor']))
     profile['sources'] = {name: sha256(ROOT/name) for name in profile['sources']}
+    if semantic_policy is not None:
+        for name in ('src/neuroshard/evolution/semantic_questions.py',
+                     'src/neuroshard/evolution/sharded/semantic_features.py'):
+            profile['sources'][name] = sha256(ROOT/name)
     original = job['lifecycle']['candidate_template']
     previous = answering.load(original, old)
     checkpoint = json.loads((job_home/'produce-124-actor-0.json').read_bytes())['result']['window']['output']
     template = copy.deepcopy(answering.core(original))
     template['executor_root'] = identity(profile)
 
-    def bind(core, policy):
+    def bind(core, policy, semantics=None):
         learned = learned_graph.configuration(core, previous['learned']['router'],
             previous['learned']['feature_profile'], ROOT,
             previous['learned'].get('route_models'), compose=True)
         options = {key: previous[key] for key in ('route_scopes', 'planner_weights', 'composer',
             'answer_policy', 'general_answer_policy') if key in previous}
         config = planned_graph.configuration(core, learned, previous['planner'], ROOT,
-            previous['expert_prompts'], previous['general_instruction'], request_policy=policy, **options)
+            previous['expert_prompts'], previous['general_instruction'], request_policy=policy,
+            semantic_questions=semantics, **options)
         return answering.attach(core, config, store)
 
-    template = bind(template, request_planning.LOSSLESS_POLICY)
+    template = bind(template, request_planning.LOSSLESS_POLICY, semantic_policy)
     after = life.materialize_graph(template, checkpoint)
     before = bind(answering.core(after), previous['request_policy'])
     if answering.core(before) != answering.core(after):
@@ -72,12 +77,15 @@ def assemble(campaign, job_home, home):
     previous_neural.update({row['id']:neural_response(row['after'])
         for rows in measured['retention']['roles'].values() for row in rows})
     save(home/'previous-neural.json',previous_neural)
-    plan = {'format':'neuroshard-literal-question-diagnostic-v1',
+    plan = {'format':('neuroshard-semantic-question-diagnostic-v1' if semantic_policy is not None
+                     else 'neuroshard-literal-question-diagnostic-v1'),
         'source':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT).decode().strip(),
         'driver':sha256(Path(__file__)), 'before':identity(before), 'after':identity(after),
         'profile':identity(profile), 'quality':identity(quality), 'prior_result':identity(measured),
         'previous_neural':identity(previous_neural),
-        'neural_weights_unchanged':True, 'new_final_opened':False, 'native_promotion':False,
+        'neural_weights_unchanged':semantic_policy is None, 'answering_expert_weights_unchanged':True,
+        'semantic_encoder_added': None if semantic_policy is None else identity(semantic_policy['encoder']),
+        'new_final_opened':False, 'native_promotion':False,
         'max_seconds':1800, 'scope':'Exposed development diagnostic; original failed result remains failed.'}
     save(home/'diagnostic.json',plan)
     return plan

@@ -92,7 +92,8 @@ def planner_prefix(planner):
 
 
 def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
-                  planner_weights=None, composer=None, answer_policy=None, request_policy=None, general_answer_policy=None):
+                  planner_weights=None, composer=None, answer_policy=None, request_policy=None, general_answer_policy=None,
+                  semantic_questions=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -158,6 +159,13 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         result['general_answer_policy'] = general_answer_policy
         name = 'src/neuroshard/evolution/general_answer.py'
         result['sources'][name] = sha256(Path(source_home)/name)
+    if semantic_questions is not None:
+        from ..semantic_questions import validate as validate_semantics
+        validate_semantics(semantic_questions, learned['router']['prototypes'])
+        result['semantic_questions'] = copy.deepcopy(semantic_questions)
+        for name in ('src/neuroshard/evolution/semantic_questions.py',
+                     'src/neuroshard/evolution/sharded/semantic_features.py'):
+            result['sources'][name] = sha256(Path(source_home)/name)
     return result
 
 
@@ -165,12 +173,13 @@ def validate_configuration(graph, config, source_home):
     fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
                   'expert_prompts', 'general_instruction'}
     fields |= {'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
-               'general_answer_policy'} & set(config)
+               'general_answer_policy', 'semantic_questions'} & set(config)
     serving_graph.fields(config, fields, 'Invalid planned service configuration')
     if config != configuration(graph, config['learned'], config['planner'], source_home,
                                config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
                                config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
-                               config.get('request_policy'), config.get('general_answer_policy')):
+                               config.get('request_policy'), config.get('general_answer_policy'),
+                               config.get('semantic_questions')):
         raise ValueError('Planned service changed its models, sources or execution rules')
     from .learned_graph import validate_configuration as validate_learned
     validate_learned(graph, config['learned'], source_home)
@@ -198,6 +207,21 @@ class PlannedGraphNetwork:
                 if adapter_root != checkpoint['fusion']:
                     raise ValueError('The installed planner differs from its service commitment')
         self.trace = []
+        if 'semantic_questions' in config:
+            from ..semantic_questions import Index, PARAMETERS
+            from .semantic_features import SemanticFeatures
+            policy = config['semantic_questions']
+            self.semantic_index = Index(policy, config['learned']['router']['prototypes'])
+            self.semantic_features = None
+            if network.rank == 0:
+                key = identity(policy['encoder'])
+                if key not in network.answering_features:
+                    if network.resident_parameters + PARAMETERS > network.resident_limit:
+                        raise ValueError('The semantic encoder exceeds its owner resident limit')
+                    network.answering_features[key] = SemanticFeatures(policy['encoder'],
+                        network.policy_store.root, network.runtime['device'])
+                    network.resident_parameters += PARAMETERS
+                self.semantic_features = network.answering_features[key]
 
     def planning_messages(self, messages):
         conversation(messages)
@@ -309,6 +333,40 @@ class PlannedGraphNetwork:
         result[-1]['content'] += '\n\nSpecialist responses:\n'+json.dumps(payload, sort_keys=True)
         return [{'role': 'system', 'content': self.config['composer']['instruction']}, *result]
 
+    def semantic_route(self, choice):
+        """Recognize a training question's meaning; keep all answers in weights."""
+        from ..request_planning import atomic_request
+        if ('semantic_questions' not in self.config or 'semantic' in choice
+                or atomic_request([{'role': 'user', 'content': choice['question']}]) is None):
+            return choice
+        packet = None
+        if self.net.rank == 0:
+            try:
+                packet = {'encoding': self.semantic_features(choice['question'])}
+            except ValueError as error:
+                packet = {'error': str(error)[:256]}
+        packets = self.net.all_owners.exchange(packet)
+        if any(value is not None for value in packets[1:]) or not isinstance(packets[0], dict):
+            raise ValueError('Only the declared owner computes semantic features')
+        packet = packets[0]
+        if 'error' in packet:
+            raise ValueError('Semantic routing failed: '+packet['error'])
+        encoding = packet['encoding']
+        if encoding['profile'] != identity(self.config['semantic_questions']['encoder']):
+            raise ValueError('Semantic features changed the committed encoder')
+        decision = self.semantic_index.select(encoding['features'])
+        selected = decision['selected']
+        allowed = choice['decision'].get('eligible')
+        if selected is not None and allowed is not None and selected['route'] not in allowed:
+            decision = {**decision, 'selected': None, 'excluded_by_scope': True}
+            selected = None
+        result = {**choice, 'semantic': {**decision, 'encoding': encoding}}
+        if selected is not None:
+            result['previous_decision'] = copy.deepcopy(choice['decision'])
+            result['decision'] = {'route': selected['route'], 'method': decision['policy'],
+                                  'training_id': decision['training_id']}
+        return result
+
     def answer_atom(self, selected, question, routing_question, messages, max_tokens, *, whole_request):
         """Use the same expert input contract for serving and diagnostic controls."""
         model = self.model_for_route(selected)
@@ -355,6 +413,8 @@ class PlannedGraphNetwork:
         explicit = (request_planning.explicit_questions(messages)
                     if self.config.get('request_policy') == request_planning.LOSSLESS_POLICY else None)
         preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
+        if preliminary is not None and len(messages) == 1:
+            preliminary = self.semantic_route(preliminary)
         general = (preliminary is not None
             and request_planning.atomic_request([messages[-1]]) is not None
             and preliminary['decision']['route'] == self.config['learned']['router']['fallback'])
@@ -399,8 +459,16 @@ class PlannedGraphNetwork:
             # because the planner expressed its instruction more concisely.
             routing_question = messages[0]['content'] if len(plan) == len(messages) == 1 else question
             choice = preliminary if general else self.route(routing_question)
+            if len(messages) == 1:
+                if (preliminary is not None and 'semantic' in preliminary
+                        and preliminary['question'] == routing_question):
+                    choice = preliminary
+                choice = self.semantic_route(choice)
             routing.append(choice)
             selected = choice['decision']['route']
+            canonical = choice.get('semantic', {}).get('selected')
+            if canonical is not None:
+                routing_question = canonical['question']
             answer, argument, error = self.answer_atom(selected, question, routing_question,
                 messages, max_tokens, whole_request=len(plan) == 1)
             if error is not None:
