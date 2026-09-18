@@ -43,6 +43,9 @@ def source_check(home):
     operation = json.loads((home/'operation.json').read_bytes())
     if identity(operation) != freeze['operation']:
         raise ValueError('The complete campaign prescription changed after freezing')
+    if 'auxiliary_assets' in operation and identity(json.loads(
+            (home/'auxiliary-assets.json').read_bytes())) != operation['auxiliary_assets']:
+        raise ValueError('The committed auxiliary neural asset inventory changed')
     return freeze, operation
 
 

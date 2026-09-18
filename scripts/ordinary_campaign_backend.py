@@ -332,7 +332,7 @@ class Backend:
         if sequence['status'] != 'next':
             return {'job': None}
         if sequence['entry'] == 1 and not any(row.get('phase') == 'data_rejected' for row in request['history']):
-            spec = self.freeze['sources']['admission/train']
+            spec = self.freeze['sources'][self.freeze['entries'][1]['name']+'/train']
             expected = self.store.json(spec['records'])
             altered = copy.deepcopy(expected)
             altered[0]['messages'][-1]['content'] = 'This substituted answer is not supported by the pinned source.'
@@ -351,7 +351,7 @@ class Backend:
             raise ValueError('The installed curator accepted a substituted source target')
         if sequence['entry'] == 1:
             from ordinary_comparison import start_growth
-            start_growth(self.home, 'admission')
+            start_growth(self.home, self.freeze['entries'][1]['name'])
         if sequence['entry'] == 2:
             from ordinary_comparison import run
             comparison = run(self, state)

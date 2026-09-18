@@ -25,6 +25,40 @@ PUBLIC = 'https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260
 PROTECTED = {'i-0d681a8ef83f72619', 'i-06bf7f1f01e6228bb', 'i-0ebe86ca07e97cf29'}
 
 
+def semantic_assets(policies, manifest):
+    """Require a complete hash-bound public inventory for each neural encoder."""
+    from neuroshard.evolution.semantic_questions import FILES, validate
+    requested = {}
+    for policy in policies:
+        config = policy['configuration']
+        semantic = config.get('semantic_questions')
+        if semantic is None:
+            continue
+        validate(semantic, config['learned']['router']['prototypes'])
+        encoder = semantic['encoder']
+        key = identity(encoder)
+        inventory = manifest.get('encoders', {}).get(key)
+        if not isinstance(inventory, dict) or set(inventory.get('files', {})) != FILES:
+            raise ValueError('Publish the complete pinned semantic encoder before serving')
+        requested.setdefault(key, {})
+        for name, digest in encoder['files'].items():
+            spec = inventory['files'][name]
+            if (set(spec) != {'sha256', 'bytes'} or spec['sha256'] != digest
+                    or type(spec['bytes']) is not int or not 1 <= spec['bytes'] <= 256*1024**2):
+                raise ValueError('The semantic asset inventory changed its committed bytes')
+            requested[key][digest] = {'bytes': spec['bytes'],
+                'path': REMOTE+'/objects/policies/semantic-encoders/'+key+'/'+name}
+        for name, spec in inventory.get('notices', {}).items():
+            from neuroshard.evolution.schema import root
+            if (name not in {'LICENSE', 'README.md'} or set(spec) != {'sha256', 'bytes'}
+                    or type(spec['bytes']) is not int or not 1 <= spec['bytes'] <= 1024**2):
+                raise ValueError('Bound the accompanying encoder license and model card')
+            digest = root(spec['sha256'])
+            requested[key][digest] = {'bytes': spec['bytes'],
+                'path': REMOTE+'/objects/policies/semantic-encoders/'+key+'/'+name}
+    return requested
+
+
 class Cloud:
     def __init__(self, home):
         self.home = Path(home).resolve()
@@ -174,9 +208,20 @@ class Cloud:
         files = {paths['graph']: graph, paths['baseline']: baseline, paths['profile']: profile,
                  paths['quality_policy']: quality}
         files.update({folder+'/inputs/'+name: raw for name, raw in inputs.items()})
+        policies = []
         for value in (graph, baseline):
             key_policy = value['answering']['policy_root']
-            files['objects/policies/'+key_policy[:2]+'/'+key_policy] = policy_store.get(key_policy)
+            raw = policy_store.get(key_policy)
+            files['objects/policies/'+key_policy[:2]+'/'+key_policy] = raw
+            from neuroshard.evolution.answering import policy_json
+            policies.append(policy_json(raw))
+        inventory = self.home/'auxiliary-assets.json'
+        assets = semantic_assets(policies, json.loads(inventory.read_bytes()) if inventory.exists() else {})
+        for encoder_root, objects in assets.items():
+            # The encoder belongs only to the complete service's coordinator.
+            # Fresh observers restore the same immutable bytes from public storage.
+            receipt = self.assets(placement[0], {'action': 'fetch', 'objects': objects})
+            save(self.home/('semantic-assets-'+key+'-'+encoder_root+'.json'), receipt)
         with ThreadPoolExecutor(max_workers=7) as pool:
             list(pool.map(lambda physical: self.bundle(physical, files), sorted(set(placement))))
         configurations = []

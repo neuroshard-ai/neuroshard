@@ -72,7 +72,7 @@ def benchmark(backend, graph, baseline, quality, until, label):
     """Spend the remaining equal interval on the predeclared prompt workload."""
     fitting = json.loads((backend.home/'compiled/selector-fitting.json').read_bytes())['rows']
     prompts = []
-    for route in ('parent', 'directory', 'protocol', 'planner', 'admission'):
+    for route in ('parent', 'directory', 'protocol', 'planner', backend.freeze['comparison']['cohort']):
         prompts.extend(row['question'] for row in sorted(
             [row for row in fitting if row['route'] == route], key=lambda row: row['id'])[:16])
     if len(prompts) != 80:
@@ -132,7 +132,7 @@ def run(backend, state):
         return json.loads(done.read_bytes())
     native = state['expert_lifecycle']['admission']['active']['job']
     ctx = backend.context(native)
-    if life.training_expert(native['lifecycle']['candidate_template']) != 'admission':
+    if life.training_expert(native['lifecycle']['candidate_template']) != backend.freeze['comparison']['cohort']:
         raise ValueError('Compare the declared first full cohort before starting later jobs')
     budget = backend.freeze['comparison']['seconds_per_arm']
     growth_started = datetime.fromisoformat(json.loads((backend.home/'comparison-growth-start.json').read_bytes())['started']).timestamp()

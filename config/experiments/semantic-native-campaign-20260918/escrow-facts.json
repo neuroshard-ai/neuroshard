@@ -1,0 +1,215 @@
+{
+  "source_revision": "5c1f7bb5f7e2485ea0e09db3327a79e8b0bdeaa7",
+  "cohort": "escrow",
+  "facts": [
+    {
+      "id": "escrow-request",
+      "answer": "infer_expert",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "'infer_expert': {'graph', 'question', 'max_tokens', 'workers', 'max_price', 'expires_in'},",
+      "training": [
+        "Which transaction requests paid NeuroShard expert inference?",
+        "What is the transaction kind for reserving an expert answer in NeuroShard?",
+        "Which NeuroShard transaction opens an inference request against the serving graph?",
+        "What transaction starts an expert-inference job with a price reservation?"
+      ],
+      "test": "I want to reserve payment for a NeuroShard expert answer. What transaction kind should I send?"
+    },
+    {
+      "id": "escrow-complete-response",
+      "answer": "respond_answering",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "'respond_answering': {'job_id', 'response', 'transcript_root', 'workers', 'audit_budget'},",
+      "training": [
+        "Which transaction submits a complete NeuroShard answering-system response?",
+        "What transaction carries the whole replayable response for a complete answering job?",
+        "Which NeuroShard response kind is used when the graph includes an answering policy?",
+        "What transaction submits the complete conversation-response transcript for expert inference?"
+      ],
+      "test": "The NeuroShard job uses a complete answering policy. Which response transaction carries its full response object?"
+    },
+    {
+      "id": "escrow-simple-response",
+      "answer": "respond_expert",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "'respond_expert': {'job_id', 'outputs', 'text', 'transcript_root', 'workers', 'audit_budget'},",
+      "training": [
+        "Which transaction submits a raw expert response without a complete answering policy?",
+        "What transaction returns outputs and text for plain NeuroShard expert inference?",
+        "Which response kind handles the expert graph path that has no answering policy?",
+        "What transaction is used for a non-complete expert inference response?"
+      ],
+      "test": "My NeuroShard inference graph has no complete answering policy. What transaction kind submits its output tokens and text?"
+    },
+    {
+      "id": "escrow-queue",
+      "answer": "16",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "if root(body['graph']) != identity(graph) or len(life['jobs']) >= 16:",
+      "training": [
+        "How many active expert inference jobs may NeuroShard keep at once?",
+        "What is the expert-inference queue capacity in NeuroShard?",
+        "At what number of outstanding expert inference jobs is the queue full?",
+        "What is the maximum simultaneous job count for the expert inference queue?"
+      ],
+      "test": "How many outstanding paid expert requests can the NeuroShard inference queue contain before another request is refused?"
+    },
+    {
+      "id": "escrow-text",
+      "answer": "32768",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "if not isinstance(text, str) or len(text.encode()) > 32768 or sum(payments.values()) > job['escrow']:",
+      "training": [
+        "What is the maximum byte length of a raw NeuroShard expert response text?",
+        "How many encoded text bytes may a respond_expert submission contain at most?",
+        "What byte ceiling applies to the text in a plain expert inference response?",
+        "What is the raw expert-response text size limit measured in bytes?"
+      ],
+      "test": "For a plain NeuroShard expert response, how large may the encoded text field be in bytes?"
+    },
+    {
+      "id": "escrow-token-limit",
+      "answer": "256",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "integer(profile['max_tokens'], 1, 256)",
+      "training": [
+        "What is the largest configured output-token limit in the expert lifecycle profile?",
+        "How high may the expert-inference profile set its maximum generated-token count?",
+        "What upper bound validates max_tokens in a NeuroShard expert lifecycle profile?",
+        "What is the maximum permitted profile-level token allowance for expert inference?"
+      ],
+      "test": "When configuring the NeuroShard expert lifecycle, what is the highest valid value of its output-token allowance?"
+    },
+    {
+      "id": "escrow-unit-price",
+      "answer": "1000000000",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "integer(profile['price_per_token'], 1, 10**9)",
+      "training": [
+        "What is the maximum expert-inference price per token in ledger atoms?",
+        "How many atoms per token may an expert lifecycle profile charge at most?",
+        "What numeric ceiling validates price_per_token for NeuroShard expert inference?",
+        "What is the upper bound on the configured expert-inference token price, in atoms?"
+      ],
+      "test": "In ledger atoms, how high can the configured per-token price for NeuroShard expert inference be?"
+    },
+    {
+      "id": "escrow-reservation-limit",
+      "answer": "1152921504606846976",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "amount = integer(body['max_price'], minimum_price, 2**60)",
+      "training": [
+        "What is the largest expert-inference max_price reservation in atoms, written as a decimal integer?",
+        "What decimal atom count is the upper bound on one expert inference price reservation?",
+        "How large may the maximum-price escrow for an expert request be, in decimal ledger atoms?",
+        "What is the numeric ceiling on max_price for a paid expert request, expressed in base ten?"
+      ],
+      "test": "What decimal number of atoms is the largest price reservation accepted for a single NeuroShard expert inference request?"
+    },
+    {
+      "id": "escrow-expiry-limit",
+      "answer": "100000",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "duration = integer(body['expires_in'], state['manifest']['params']['max_claim_blocks'] + 1, 100000)",
+      "training": [
+        "What is the maximum expires_in duration for an expert inference request, in blocks?",
+        "How many blocks may a NeuroShard expert inference request remain open at most?",
+        "What upper limit applies to the block lifetime of a paid expert request?",
+        "What is the largest allowed expiry interval for an expert-inference job?"
+      ],
+      "test": "Measured in blocks, what is the longest expiry interval allowed when opening a NeuroShard expert inference request?"
+    },
+    {
+      "id": "escrow-expiry-minimum",
+      "answer": "max_claim_blocks + 1",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "duration = integer(body['expires_in'], state['manifest']['params']['max_claim_blocks'] + 1, 100000)",
+      "training": [
+        "What expression gives the minimum expert-inference expires_in value?",
+        "How is the smallest permitted expiry interval for an expert request defined?",
+        "What formula sets the lower bound on a paid expert request lifetime?",
+        "Express the minimum expert-inference expiry duration using max_claim_blocks."
+      ],
+      "test": "Using the manifest parameter name, what expression sets the shortest permitted expiry interval for an expert inference request?"
+    },
+    {
+      "id": "escrow-coordinator",
+      "answer": "0",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "job['workers']['0'] != owner",
+      "training": [
+        "Which assigned worker rank may submit an expert inference response transaction?",
+        "What worker rank is authorized to coordinate submission of the expert answer?",
+        "Which numeric worker key must match the sender of an expert response?",
+        "What is the submitting worker rank for a complete expert answering response?"
+      ],
+      "test": "Among a paid NeuroShard request's assigned workers, which numeric rank must own the response submission?"
+    },
+    {
+      "id": "escrow-completed",
+      "answer": "completed",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "life['results'][job['id']] = {'id': job['id'], 'status': 'completed', 'graph': identity(job['graph']),",
+      "training": [
+        "What status string is recorded after an expert inference claim is accepted?",
+        "Which result status marks successful settlement of a paid expert answer?",
+        "What value does the expert-inference result status receive on accepted settlement?",
+        "What is the stored status for a successfully paid NeuroShard expert inference job?"
+      ],
+      "test": "After an expert answer passes replay and settles, which status value does NeuroShard write into the inference result?"
+    },
+    {
+      "id": "escrow-paid-field",
+      "answer": "paid_atoms",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "'paid_atoms': paid, 'refunded_atoms': job['escrow'] - paid, 'height': state['height']}",
+      "training": [
+        "Which completed expert-inference result field records the actual atom payment?",
+        "What is the result key for atoms paid to the expert inference workers?",
+        "Which field stores the spent atom amount in a settled expert response?",
+        "What result field contains the payment total after expert inference settlement?"
+      ],
+      "test": "In a settled NeuroShard expert inference result, what field name tells me how many atoms were actually paid?"
+    },
+    {
+      "id": "escrow-refund-field",
+      "answer": "refunded_atoms",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "'paid_atoms': paid, 'refunded_atoms': job['escrow'] - paid, 'height': state['height']}",
+      "training": [
+        "Which completed expert-inference result field records refunded atoms?",
+        "What result key stores the unused expert-inference escrow returned to its payer?",
+        "Which field contains the refunded portion of an expert request price reservation?",
+        "What is the result field for unspent atoms refunded after expert inference settles?"
+      ],
+      "test": "What field in the completed expert inference result reports the atoms returned from the unused reservation?"
+    },
+    {
+      "id": "escrow-current-graph",
+      "answer": "no",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "if root(body['graph']) != identity(graph) or len(life['jobs']) >= 16:",
+      "training": [
+        "May a paid expert inference request name a graph other than the current serving graph?",
+        "Can an expert request use a graph hash different from the accepted serving graph?",
+        "Does NeuroShard allow opening paid expert inference against a non-serving graph?",
+        "May a requester choose an arbitrary graph instead of the active expert serving graph?"
+      ],
+      "test": "Will NeuroShard accept a paid expert inference request if its graph hash differs from the graph currently serving answers?"
+    },
+    {
+      "id": "escrow-refund-recipient",
+      "answer": "payer",
+      "path": "src/neuroshard/evolution/expert_lifecycle.py",
+      "evidence": "ledger.account(state, job['payer'])['balance'] += job['escrow'] - paid",
+      "training": [
+        "Who receives the unused reservation after a paid expert answer settles?",
+        "Which participant gets the unspent expert-inference escrow back?",
+        "Who is credited with the difference between reserved and spent expert-inference atoms?",
+        "Which party receives the leftover price reservation from an accepted expert response?"
+      ],
+      "test": "After paying the expert workers, to which participant does NeuroShard return the remainder of the reserved inference payment?"
+    }
+  ],
+  "purpose": "New prospectively sealed cohort after admission final was opened; no diagnostic wording reused."
+}
