@@ -9,6 +9,8 @@ import re
 
 FORMAT = 'preserve-single-and-ground-references-v1'
 ASSISTANT_POLICY = 'route-general-and-preserve-user-intent-v2'
+LOSSLESS_POLICY = 'preserve-explicit-question-spans-v3'
+ASSISTANT_POLICIES = (ASSISTANT_POLICY, LOSSLESS_POLICY)
 REFERENCES = re.compile(
     r'\b(?:he|she|it|they|him|her|his|its|them|their|theirs|this|these|those|former|latter)\b',
     re.IGNORECASE)
@@ -56,6 +58,44 @@ def atomic_request(messages):
                          r'translate|calculate|list|show)\b', text, re.IGNORECASE)):
         return None
     return text
+
+
+def explicit_questions(messages):
+    """Keep two already stated questions, including their local context.
+
+    This is a conservative syntactic shortcut, not an antecedent or truth
+    oracle. Quotation, shared output instructions, personal references and
+    references without a preceding local noun phrase keep neural planning.
+    No question wording, capitalization or domain scope is regenerated.
+    """
+    if len(messages) != 1:
+        return None
+    text = messages[0]['content'].strip()
+    if (len(text.encode()) > 2048 or text.count('?') != 2 or not text.endswith('?')
+            or any(char in text for char in '\"“”`[]{}')):
+        return None
+    pieces = text.split('?')[:-1]
+    pieces[1] = re.sub(r'^\s*(?:also|and|separately|additionally|furthermore)\b[, ]*',
+                       '', pieces[1], flags=re.IGNORECASE)
+    result = [piece.strip()+'?' for piece in pieces]
+    if len(set(result)) != 2:
+        return None
+    for question in result:
+        if (atomic_request([{'role': 'user', 'content': question}]) is None
+                or not any(START.search(sentence.strip())
+                           for sentence in re.split(r'[.!,:]\s+', question))):
+            return None
+        for reference in REFERENCES.finditer(question):
+            # Personal and cross-question anaphora require the existing
+            # neural path. An explicit local noun phrase can retain its own
+            # object/possessive reference intact for the answerer to interpret.
+            if reference.group().casefold() in {'he', 'she', 'him', 'her', 'his', 'they',
+                                                'them', 'their', 'theirs', 'former', 'latter'}:
+                return None
+            prefix = question[:reference.start()]
+            if not re.search(r'\b(?:a|an|the)\s+[A-Za-z][\w-]+\b', prefix, re.IGNORECASE):
+                return None
+    return result
 
 
 def needs_repair(plan):

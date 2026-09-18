@@ -142,10 +142,10 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     elif 'output_format' in planner:
         raise ValueError('A typed planner requires its complete value policy')
     if request_policy is not None:
-        from ..request_planning import FORMAT as REQUEST_POLICY, ASSISTANT_POLICY
-        if request_policy not in (REQUEST_POLICY, ASSISTANT_POLICY) or answer_policy is not None:
+        from ..request_planning import FORMAT as REQUEST_POLICY, ASSISTANT_POLICIES
+        if request_policy not in (REQUEST_POLICY, *ASSISTANT_POLICIES) or answer_policy is not None:
             raise ValueError('Require the declared untyped request-preservation policy')
-        if request_policy == ASSISTANT_POLICY and 'fallback_guard' not in learned['router']:
+        if request_policy in ASSISTANT_POLICIES and 'fallback_guard' not in learned['router']:
             raise ValueError('The general-first policy requires its learned fallback guard')
         result['request_policy'] = request_policy
         name = 'src/neuroshard/evolution/request_planning.py'
@@ -153,7 +153,7 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
     if general_answer_policy is not None:
         from .. import general_answer, request_planning
         if (general_answer_policy != general_answer.FORMAT
-                or request_policy != request_planning.ASSISTANT_POLICY):
+                or request_policy not in request_planning.ASSISTANT_POLICIES):
             raise ValueError('Bind worked general answers to the complete general-routing policy')
         result['general_answer_policy'] = general_answer_policy
         name = 'src/neuroshard/evolution/general_answer.py'
@@ -291,9 +291,9 @@ class PlannedGraphNetwork:
         allowed = (expert_scope.eligible(question, self.config['route_scopes'], model['prototypes'],
                    model['fallback']) if 'route_scopes' in self.config else None)
         decision = expert_router.select(model, packet['features'], eligible=allowed)
-        from ..request_planning import ASSISTANT_POLICY
+        from ..request_planning import ASSISTANT_POLICIES
         guard = decision.get('fallback_guard')
-        if (self.config.get('request_policy') == ASSISTANT_POLICY and guard
+        if (self.config.get('request_policy') in ASSISTANT_POLICIES and guard
                 and guard['confident'] and guard['route'] == model['fallback']):
             # A newly added domain cannot override a confident learned general
             # decision. Retain every original gate observation for replay.
@@ -351,14 +351,17 @@ class PlannedGraphNetwork:
         self.trace = []
         from .. import request_planning
         preserve = 'request_policy' in self.config
-        general_first = self.config.get('request_policy') == request_planning.ASSISTANT_POLICY
+        general_first = self.config.get('request_policy') in request_planning.ASSISTANT_POLICIES
+        explicit = (request_planning.explicit_questions(messages)
+                    if self.config.get('request_policy') == request_planning.LOSSLESS_POLICY else None)
         preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
         general = (preliminary is not None
             and request_planning.atomic_request([messages[-1]]) is not None
             and preliminary['decision']['route'] == self.config['learned']['router']['fallback'])
         direct = (messages[-1]['content'] if general else request_planning.atomic_request(messages)) if general_first else (
             request_planning.direct_question(messages) if preserve else None)
-        raw = (json.dumps({'questions': [direct]}) if direct is not None else
+        raw = (json.dumps({'questions': explicit}) if explicit is not None else
+               json.dumps({'questions': [direct]}) if direct is not None else
                self.call('interpreter', self.planning_messages(messages),
                          self.config['planner']['max_tokens'], 'planning'))
         answers, routing, arguments, error, program, rendering = [], [], [], None, None, None
@@ -371,11 +374,12 @@ class PlannedGraphNetwork:
                 plan = questions(raw)
         except (ValueError, TypeError):
             plan, error = [], 'invalid_neural_plan'
-        planning = {'path': 'general' if general else 'direct' if direct is not None else 'neural',
+        planning = {'path': 'explicit' if explicit is not None else
+                    'general' if general else 'direct' if direct is not None else 'neural',
                     'initial_questions': list(plan), 'repair': 'none'}
         if preliminary is not None:
             planning['preselection'] = preliminary
-        if (preserve and not (general_first and direct is not None)
+        if (preserve and explicit is None and not (general_first and direct is not None)
                 and error is None and request_planning.needs_repair(plan)):
             try:
                 repair_input = request_planning.repair_messages(messages, plan)

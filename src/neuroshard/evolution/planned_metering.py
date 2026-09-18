@@ -31,8 +31,8 @@ def limits(service, graph, maximum, tariff):
             raise ValueError('Unknown worked general answer policy')
         result['general_answer'] = MAX_TOKENS
     if 'request_policy' in service:
-        from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS, ASSISTANT_POLICY
-        if service['request_policy'] not in (REQUEST_POLICY, ASSISTANT_POLICY):
+        from .request_planning import FORMAT as REQUEST_POLICY, REPAIR_TOKENS, ASSISTANT_POLICIES
+        if service['request_policy'] not in (REQUEST_POLICY, *ASSISTANT_POLICIES):
             raise ValueError('Unknown request-preservation policy')
         result['planning_repair'] = REPAIR_TOKENS
     if any(value >= context for value in result.values()):
@@ -88,9 +88,9 @@ def meter(service, graph, response, tariff):
     payments, prompt_count, output_count, details = {}, 0, 0, []
     models = {'parent', 'interpreter', *graph['experts']}
     vocabulary, eos = graph['parent']['config']['vocab_size'], graph['tokenizer']['eos_id']
-    from .request_planning import direct_question, atomic_request, ASSISTANT_POLICY
+    from .request_planning import direct_question, atomic_request, explicit_questions, ASSISTANT_POLICIES, LOSSLESS_POLICY
     direct = 'request_policy' in service and direct_question(request['messages']) is not None
-    if service.get('request_policy') == ASSISTANT_POLICY:
+    if service.get('request_policy') in ASSISTANT_POLICIES:
         # This checks bounded accounting, not the selector's truth. Complete
         # neural replay still authorizes the actual general-routing decision.
         general = response.get('planning', {}).get('path') == 'general'
@@ -99,6 +99,11 @@ def meter(service, graph, response, tariff):
                 or response.get('plan') != [request['messages'][-1]['content']]):
             raise ValueError('The general path must answer the intact request once')
         direct = general or atomic_request(request['messages']) is not None
+        explicit = explicit_questions(request['messages']) if service['request_policy'] == LOSSLESS_POLICY else None
+        if explicit is not None:
+            if response.get('planning', {}).get('path') != 'explicit' or response.get('plan') != explicit:
+                raise ValueError('Explicit questions must preserve the complete literal spans')
+            direct = True
     for index, call in enumerate(outputs):
         serving_graph.fields(call, {'model', 'purpose', 'owners', 'prompt_ids', 'token_ids'}
                              | ({'planner_adapter'} if 'planner_adapter' in call else set()),

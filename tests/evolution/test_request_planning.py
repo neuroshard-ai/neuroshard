@@ -67,6 +67,33 @@ def test_multiple_intents_still_need_decomposition(utterance):
     assert policy.atomic_request([{'role': 'user', 'content': utterance}]) is None
 
 
+@pytest.mark.parametrize('joiner', [' ', ' Also, ', ' And ', '\n', ' Separately, '])
+def test_explicit_questions_keep_local_context_scope_and_case(joiner):
+    first = "For the sensor's packet cursor, what is the largest row interval?"
+    second = 'a record is waiting. What must the record do before its report is accepted?'
+    assert policy.explicit_questions([{'role':'user','content':first+joiner+second}]) == [first, second]
+
+
+@pytest.mark.parametrize('utterance', [
+    'Where does Nia Cole work? What is her role?',
+    'Where is the telescope? What does it measure?',
+    'What is the capacity? What color is its lid?',
+    'Where is the station and who maintains the station? What does the sensor measure?',
+    'What does "ready?" mean? Explain it.',
+    'Where is the station? What does the sensor measure? Reply using JSON.',
+    'Where is the station? What does the sensor measure? Who owns the station?',
+])
+def test_ambiguous_or_constrained_spans_stay_with_neural_planning(utterance):
+    assert policy.explicit_questions([{'role':'user','content':utterance}]) is None
+
+
+def test_explicit_questions_do_not_drop_earlier_turns():
+    assert policy.explicit_questions([
+        {'role':'user','content':'The station is called Aurora.'},
+        {'role':'assistant','content':'Understood.'},
+        {'role':'user','content':'Where is the station? What does the sensor measure?'}]) is None
+
+
 def test_repair_preserves_content_order_and_grounded_subjects():
     messages = [{'role': 'user', 'content': 'Where does Nia Cole work and what is her role?'}]
     before = ['Where does Nia Cole work?', 'What is her role?']
@@ -107,6 +134,31 @@ def test_direct_serving_never_invokes_a_question_generator(monkeypatch):
     response = service.answer([{'role': 'user', 'content': request}], 64)
     assert response['status'] == 'completed' and response['plan'] == [request]
     assert response['planning']['path'] == 'direct' and calls == []
+
+
+def test_explicit_spans_answer_both_original_questions_without_neural_rewrites(monkeypatch):
+    service, calls = stub_service(monkeypatch, iter([]))
+    service.config.update(request_policy=policy.LOSSLESS_POLICY,
+                          learned={'router':{'fallback':'parent'}})
+    first = 'What must the sensor packet contain before its checksum is calculated?'
+    second = 'which command starts the renderer?'
+    response = service.answer([{'role':'user','content':first+' Also, '+second}],64)
+    assert response['plan'] == [first, second] and calls == []
+    assert response['planning']['path'] == 'explicit'
+    assert response['status'] == 'completed' and len(response['answers']) == 2
+
+
+def test_lossless_policy_still_repairs_external_references_neurally(monkeypatch):
+    service, calls = stub_service(monkeypatch, iter([
+        '{"questions":["Where is the Aurora telescope?","What does it measure?"]}',
+        '{"subjects":["the Aurora telescope"]}']))
+    service.config.update(request_policy=policy.LOSSLESS_POLICY,
+                          learned={'router':{'fallback':'parent'}})
+    response = service.answer([{'role':'user','content':
+        'Where is the Aurora telescope? Also, what does it measure?'}],64)
+    assert calls == ['planning','planning_repair']
+    assert response['status'] == 'completed'
+    assert response['plan'][-1] == 'What does the Aurora telescope measure?'
 
 
 def test_general_conversation_preserves_original_intent_without_planning(monkeypatch):

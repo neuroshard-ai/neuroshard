@@ -110,6 +110,24 @@ def test_reference_repair_is_metered_once_before_expert_execution(execution):
         meter.meter(service, graph, response, tariff)
 
 
+def test_literal_question_spans_bill_answers_and_reject_rewritten_plans(execution):
+    from neuroshard.evolution.request_planning import LOSSLESS_POLICY
+    graph, service, tariff, response = execution
+    service['request_policy'] = LOSSLESS_POLICY
+    response['service'] = response['request']['service'] = identity(service)
+    questions = ['Where is the Aurora telescope?', 'what command starts the renderer?']
+    response['request']['messages'] = [{'role':'user','content':' Also, '.join(questions)}]
+    response['plan'], response['planning'] = questions, {'path':'explicit'}
+    response['outputs'] = response['outputs'][1:]
+    response['generated_tokens'] = 6
+    report = meter.meter(service, graph, response, tariff)
+    assert [call['purpose'] for call in report['calls']] == ['directory_arguments','answer','answer']
+    assert report['total_atoms']+report['unused_reserved_atoms'] == meter.quote(service,graph,128,tariff)['maximum_atoms']
+    response['plan'] = [questions[0], questions[1].capitalize()]
+    with pytest.raises(ValueError, match='literal spans'):
+        meter.meter(service,graph,response,tariff)
+
+
 def test_general_first_conversation_bills_only_its_actual_answer(execution):
     from neuroshard.evolution.request_planning import ASSISTANT_POLICY
     graph, service, tariff, response = execution
