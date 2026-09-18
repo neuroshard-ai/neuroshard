@@ -31,3 +31,18 @@ a sustainable permissionless verification or inference price.
 
 Neither live-LLM item is complete until its measured criteria pass. The prior
 15/16 single and 13/16 composed development repair is supporting evidence.
+
+The bootstrap exposed two controller transport faults before any full-cohort
+final opened. Interrupted service startup leaked worker groups, and concurrent
+archive extraction could truncate a shared policy while another service read
+it. Recovery now records groups before startup, cleans every reachable owner,
+and installs metadata with atomic file replacement. Twenty targeted checks
+passed, including interrupted writes and readers holding the previous file.
+Owner 3 required a reboot. Serving was interrupted during recovery; this is
+not evidence of uninterrupted availability. The same chain then resumed with
+all four validators agreeing at height 1,295 and a successful accepted-model
+probe. No genesis, signing state, training input or quality gate was reset.
+
+The [recovery source and commitments](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/fd8d69762cbe1bb57095d2e4d2ed215a72119284f0dbcc20bd30e28c51712e42)
+preserve the operational amendments separately from the original frozen
+inputs. The three full learning cohorts remain pending at this recovery point.
