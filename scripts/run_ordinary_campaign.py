@@ -168,7 +168,8 @@ def paid_inference(backend, network):
         quote = answering.quote(graph, 64, 1)
         messages = [{'role': 'user', 'content': 'What is the name of the NeuroShard client package?'}]
         box.send('ordinary-paid/request', 'infer_expert', graph=identity(graph), question=messages, max_tokens=64,
-            workers=[owner.public_key for owner in owners], max_price=quote['maximum_atoms'], expires_in=10000)
+            workers=[owner.public_key for owner in owners], max_price=quote['maximum_atoms'],
+            expires_in=max(10000, state['manifest']['params']['max_claim_blocks']+1))
         job_id = box.logical_id('ordinary-paid/request')
         job = backend.state()['expert_lifecycle']['jobs'][job_id]
         response = backend.cloud.query(backend.serving(backend.state()), {'id': identity({'paid': job_id}),

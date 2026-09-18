@@ -22,6 +22,35 @@ from neuroshard.evolution.reference_data import identity
 from neuroshard.evolution.sharded import retained_objects
 
 
+@pytest.mark.parametrize('claim_blocks', [8192, 20000])
+def test_final_paid_request_allows_the_configured_native_claim_window(tmp_path, monkeypatch, claim_blocks):
+    from types import SimpleNamespace
+    from neuroshard.evolution import answering
+    graph = {'experts': {'learned': {}}}
+    state = {'expert_lifecycle': {'serving_graph': graph}, 'chain_id': 'test',
+             'manifest': {'params': {'max_claim_blocks': claim_blocks}}}
+    class ObservedRequest(Exception):
+        pass
+    class Box:
+        def __init__(self, *args):
+            pass
+        def send(self, logical, kind, **body):
+            assert kind == 'infer_expert'
+            # This is the lifecycle's actual admission bound. The prior fixed
+            # 10,000-block request fails it on the ordinary GPU network.
+            assert claim_blocks+1 <= body['expires_in'] <= 100000
+            assert body['max_price'] == 64 and len(body['workers']) == 4
+            raise ObservedRequest
+        def close(self):
+            pass
+    monkeypatch.setattr(run_ordinary_campaign, 'Outbox', Box)
+    monkeypatch.setattr(answering, 'quote', lambda graph, tokens, price: {'maximum_atoms': 64})
+    backend = SimpleNamespace(home=tmp_path, state=lambda: state)
+    network = SimpleNamespace(urls=['http://unused'], owners=[object()])
+    with pytest.raises(ObservedRequest):
+        run_ordinary_campaign.paid_inference(backend, network)
+
+
 def test_rpc_height_normalization_keeps_every_validators_app_state_pinned(monkeypatch):
     genesis = {'initial_height': '0', 'chain_id': 'frozen', 'app_state': {'model': 'accepted'}}
     normalized = {**genesis, 'initial_height': '1'}
