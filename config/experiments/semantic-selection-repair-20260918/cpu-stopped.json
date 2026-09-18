@@ -1,0 +1,1 @@
+{"progress": {"done": 6, "count": 85}, "reason": "Single-thread CPU throughput is too low; use the existing idle tail GPU with a separately committed execution profile. No result was scored or promoted."}

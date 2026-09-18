@@ -410,8 +410,10 @@ class PlannedGraphNetwork:
         from .. import request_planning
         preserve = 'request_policy' in self.config
         general_first = self.config.get('request_policy') in request_planning.ASSISTANT_POLICIES
-        explicit = (request_planning.explicit_questions(messages)
-                    if self.config.get('request_policy') == request_planning.LOSSLESS_POLICY else None)
+        span_policy = self.config.get('request_policy')
+        explicit = (request_planning.explicit_questions(messages,
+                    extended=span_policy == request_planning.SPAN_POLICY)
+                    if span_policy in (request_planning.LOSSLESS_POLICY, request_planning.SPAN_POLICY) else None)
         preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
         if preliminary is not None and len(messages) == 1:
             preliminary = self.semantic_route(preliminary)

@@ -62,9 +62,14 @@ def run(home):
     (home/'model-inventory.json').write_text(json.dumps(inventory, sort_keys=True)+'\n')
     torch.set_num_threads(1)
     torch.use_deterministic_algorithms(True)
+    device = plan['device']
+    if device not in ('cpu', 'cuda'):
+        raise ValueError('Require an explicit supported execution device')
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
     model = AutoModelForSequenceClassification.from_pretrained(
         model_home, local_files_only=True, use_safetensors=True,
-        torch_dtype=torch.float32, attn_implementation='eager').eval()
+        torch_dtype=torch.float32, attn_implementation='eager').to(device).eval()
     tokenizer = AutoTokenizer.from_pretrained(model_home, local_files_only=True)
     results = []
     started = time.monotonic()
@@ -78,7 +83,7 @@ def run(home):
                                    return_tensors='pt', padding=True, truncation=False)
                 if inputs['input_ids'].shape[1] > 512:
                     raise ValueError('Do not truncate a question to obtain a match')
-                logits = model(**inputs).logits.flatten()
+                logits = model(**inputs.to(device)).logits.flatten()
                 scores.extend(round(float(value)*65536) for value in logits)
             ranked = sorted(zip(candidates, scores), key=lambda pair: (-pair[1], pair[0]['id']))
             best, score = ranked[0]
@@ -89,7 +94,7 @@ def run(home):
                            for candidate, score in ranked]})
             (home/'progress.json').write_text(json.dumps({'done': len(results), 'count': len(rows)})+'\n')
     result = {'model': MODEL, 'revision': REVISION, 'files': inventory,
-        'parameters': sum(p.numel() for p in model.parameters()), 'device': 'cpu',
+        'parameters': sum(p.numel() for p in model.parameters()), 'device': device,
         'torch': torch.__version__, 'seconds': time.monotonic()-started,
         'answers_received': False, 'training': False, 'new_final': False, 'results': results}
     (home/'result.json').write_text(json.dumps(result, sort_keys=True)+'\n')

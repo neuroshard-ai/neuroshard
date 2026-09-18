@@ -83,8 +83,9 @@ def test_explicit_questions_keep_local_context_scope_and_case(joiner):
     'Where is the station? What does the sensor measure? Reply using JSON.',
     'Where is the station? What does the sensor measure? Who owns the station?',
 ])
-def test_ambiguous_or_constrained_spans_stay_with_neural_planning(utterance):
-    assert policy.explicit_questions([{'role':'user','content':utterance}]) is None
+@pytest.mark.parametrize('extended', [False, True])
+def test_ambiguous_or_constrained_spans_stay_with_neural_planning(utterance, extended):
+    assert policy.explicit_questions([{'role':'user','content':utterance}], extended=extended) is None
 
 
 def test_explicit_questions_do_not_drop_earlier_turns():
@@ -144,6 +145,27 @@ def test_explicit_spans_answer_both_original_questions_without_neural_rewrites(m
     second = 'which command starts the renderer?'
     response = service.answer([{'role':'user','content':first+' Also, '+second}],64)
     assert response['plan'] == [first, second] and calls == []
+    assert response['planning']['path'] == 'explicit'
+    assert response['status'] == 'completed' and len(response['answers']) == 2
+
+
+@pytest.mark.parametrize('first,second', [
+    ('My underwater sensor has no radio. What stores its readings?',
+     'from which station do we retrieve measurements?'),
+    ('After the ticket expires, to which passenger is the deposit returned?',
+     'what is the largest baggage allowance?'),
+    ('Our recorder has failed. What controls its power supply?',
+     'with which instrument is the voltage measured?'),
+])
+def test_v4_keeps_fronted_questions_and_local_possessive_context(monkeypatch, first, second):
+    service, calls = stub_service(monkeypatch, iter([]))
+    service.config.update(request_policy=policy.SPAN_POLICY,
+                          learned={'router': {'fallback': 'parent'}})
+    messages = [{'role': 'user', 'content': first+' Also, '+second}]
+    # The old policy's behavior remains reproducible under its existing name.
+    assert policy.explicit_questions(messages) is None
+    response = service.answer(messages, 64)
+    assert calls == [] and response['plan'] == [first, second]
     assert response['planning']['path'] == 'explicit'
     assert response['status'] == 'completed' and len(response['answers']) == 2
 
