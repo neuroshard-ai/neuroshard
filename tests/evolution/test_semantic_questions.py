@@ -29,6 +29,50 @@ def test_question_index_returns_access_paths_without_answers_and_preserves_rejec
     assert selected['training_id']==min(ids)
 
 
+def fine_policy():
+    samples = [{'id': identity([name, index]), 'route': name, 'features': [x, y]+[0]*382}
+               for name, x, y in [('parent', -10000, 0), ('range', 10000, 3000), ('weight', 10000, -3000)]
+               for index in range(2)]
+    base = semantics.build(samples, policy()['encoder'], {
+        'range': {'route': 'sensor', 'question': 'What is the sensor range?'},
+        'weight': {'route': 'sensor', 'question': 'What is the sensor weight?'}})
+    return semantics.fit_intents(base)
+
+
+def test_fine_selection_learns_distinctions_without_changing_parent_admission():
+    fitted = fine_policy()
+    assert semantics.fit_intents(fitted) == fitted
+    index = semantics.Index(fitted, {'parent', 'sensor'})
+    assert index.select([10000, 3000]+[0]*382)['intent'] == 'range'
+    assert index.select([10000, -3000]+[0]*382)['intent'] == 'weight'
+    # Even a pathological committed classifier cannot override a parent hit.
+    model = fitted['classifiers']['sensor']
+    for name in model['classifier']['weights']:
+        model['classifier']['weights'][name] = [0]*384
+        model['classifier']['biases'][name] = 16384 if name == 'weight' else -16384
+    index = semantics.Index(fitted, {'parent', 'sensor'})
+    parent = index.select([-10000, 0]+[0]*382)
+    assert parent['selected'] is None and 'classification' not in parent
+    changed = index.select([10000, 3000]+[0]*382)
+    assert changed['retrieval']['intent'] == 'range' and changed['intent'] == 'weight'
+    assert changed['selected']['route'] == 'sensor'
+    assert next(row['label'] for row in fitted['rows'] if row['id'] == changed['training_id']) == 'weight'
+
+
+@pytest.mark.parametrize('attack', ['group', 'training', 'encoder', 'label', 'dimensions', 'format'])
+def test_fine_classifier_cannot_change_its_training_features_or_expert(attack):
+    fitted = fine_policy()
+    model = fitted['classifiers']['sensor']
+    if attack == 'group': fitted['classifiers']['foreign'] = fitted['classifiers'].pop('sensor')
+    elif attack == 'training': model['training_root'] = 'b'*64
+    elif attack == 'encoder': model['embedding_root'] = 'b'*64
+    elif attack == 'label': fitted['intents']['weight']['route'] = 'foreign'
+    elif attack == 'dimensions': model['dimensions'] = 383
+    elif attack == 'format': fitted['format'] = semantics.FORMAT
+    with pytest.raises(ValueError):
+        semantics.validate(fitted, {'parent', 'sensor', 'foreign'})
+
+
 @pytest.mark.parametrize('attack',['answer','route','vector','length','duplicate','label','encoder','training'])
 def test_unbound_or_oversized_access_material_is_rejected(attack):
     p=policy()

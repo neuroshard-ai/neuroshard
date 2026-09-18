@@ -115,6 +115,12 @@ before the affected work, rather than changing the target after a result.
   with no new final, neural expert training or native promotion. Three fresh
   admitted cohorts and the matched-resource comparison remain required.
 
+  The [prospective semantic campaign](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md)
+  completed 128 verified updates, improving singles 1→13/16 and combined
+  answers 0→11/16 with zero retained-correct losses. Three fresh quality audits
+  agreed; native quality rejected the candidate. Subsequent selector repairs
+  use that opened set as development only. No fresh cohort was admitted.
+
 - [ ] **2. Continuous data admission and learning**
 
   Done when the network repeatedly admits immutable data with provenance,

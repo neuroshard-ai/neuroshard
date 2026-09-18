@@ -25,7 +25,7 @@ def neural_response(value):
     return identity({key:body[key] for key in ('plan','answers','outputs','text','status','error')})
 
 
-def assemble(campaign, job_home, home, semantic_policy=None):
+def assemble(campaign, job_home, home, semantic_policy=None, request_policy=request_planning.LOSSLESS_POLICY):
     if not (job_home/'quality-0.json').exists():
         raise ValueError('Use only a previously opened quality result')
     old = Objects(campaign/'compiled/objects')
@@ -59,9 +59,9 @@ def assemble(campaign, job_home, home, semantic_policy=None):
             semantic_questions=semantics, **options)
         return answering.attach(core, config, store)
 
-    template = bind(template, request_planning.LOSSLESS_POLICY, semantic_policy)
+    template = bind(template, request_policy, semantic_policy)
     after = life.materialize_graph(template, checkpoint)
-    before = bind(answering.core(after), previous['request_policy'])
+    before = bind(answering.core(after), previous['request_policy'], previous.get('semantic_questions'))
     if answering.core(before) != answering.core(after):
         raise ValueError('Question preservation must not change neural weights or topology')
     quality = copy.deepcopy(old.json(job['lifecycle']['quality']['policy_root']))

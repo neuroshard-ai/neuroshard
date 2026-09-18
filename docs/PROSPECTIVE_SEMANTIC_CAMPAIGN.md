@@ -1,5 +1,14 @@
 # Prospective ordinary learning with semantic access
 
+The first full cohort **failed**: single answers improved 1→13/16 and combined
+answers 0→11/16, short of the required 12/16. No retained-correct answer was
+lost. All three fresh quality auditors reproduced all 105 stages. Native quality
+rejected the candidate at height 9,383, preserving the accepted serving graph.
+The chain issued 129 trial NEURO for 128 full-cohort updates plus bootstrap.
+Later cohort finals remain unopened; the matched-resource comparison did not
+run. The [result and ordinary replies](../config/experiments/semantic-native-campaign-20260918/results/full-cohort-audit-result.json)
+preserve the failure. Checklist items 1 and 2 remain incomplete.
+
 This trial addresses live-LLM items 1 and 2. It starts from the accepted
 directory/protocol/planner-expert seed and learns escrow, conversation and
 feed cohorts in that order. The opened, rejected admission cohort contributes
