@@ -132,3 +132,28 @@ evaluations, an absolute twelve-hour termination deadline and the same $150
 planning allowance. Actual compute and storage costs are reported separately.
 The data, learning recipe, gates and matched comparison interval are unchanged.
 Allocation and retirement explicitly exclude the three protected network hosts.
+
+## Completed full cohort: rejected
+
+The admission cohort completed all 128 updates. Ninety-six fresh training
+audits matched the 32 four-update windows. All three fresh quality audits
+matched all 105 evaluated conversations. Singles improved 3→13/16; combined
+answers improved 2→9/16, below the required 12/16. No previously correct
+retained answer was lost. Skills stayed 20/24, conversations 14/16, and
+knowledge improved 25→29/33. The knowledge inventory includes eight questions
+from the rejected bootstrap; they are evaluation history, not accepted learning.
+
+Native quality rejected the candidate at height 8,978. Serving stayed unchanged.
+The ledger issued 129 NEURO for 129 verified updates, including the bootstrap's
+one update. Full application replay reproduced 446 signed transactions and
+8,995 headers, including the final state at height 8,994. These validators and
+auditors remain under one administrator. Replay proves neither independent
+ownership nor useful learning. The matched-resource control did not run;
+later cohort finals stayed unopened. At the original 90-minute deadline only
+100 full-cohort updates were complete: that original operational target failed.
+
+The [result](../config/experiments/ordinary-native-repaired/results/result.json),
+[ordinary replies](../config/experiments/ordinary-native-repaired/results/ordinary-answers.json)
+and [ledger replay](../config/experiments/ordinary-native-repaired/results/ledger-replay.json)
+record the failure. The exposed admission final is development data now.
+Checklist items 1 and 2 remain incomplete.

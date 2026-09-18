@@ -99,6 +99,14 @@ before the affected work, rather than changing the target after a result.
   admitted cohort or independent holdout; repeated prospective learning and
   operated native admission remain the next proof.
 
+  The first full [ordinary native cohort](docs/ORDINARY_NATIVE_CAMPAIGN.md#completed-full-cohort-rejected)
+  completed 128 verified updates: single answers improved 3→13/16 and combined
+  answers 2→9/16, preserving every previously correct retained answer. It failed
+  the 12/16 combined-answer gate and was rejected. A subsequent inference-only
+  literal-question diagnostic reached 11/16 combined but regressed two diagnostic
+  answers; it also failed. Selection and wording-sensitive knowledge remain
+  unresolved. Neither result counts toward the required three admitted cohorts.
+
 - [ ] **2. Continuous data admission and learning**
 
   Done when the network repeatedly admits immutable data with provenance,
@@ -144,6 +152,13 @@ before the affected work, rather than changing the target after a result.
   source review passed; all nine objects for a three-window, 192-conversation
   feed passed full public S3/CDN hash checks. This supplies the transport and
   preparation bridge; operated GPU integration and useful promotion remain open.
+
+  The full ordinary cohort now exercises real immutable data, GPU shards, 96
+  training audits, three complete quality audits and native rejection while
+  accepted serving remains available. Full ledger replay matched 446 signed
+  transactions and 8,995 headers; 129 verified updates issued 129 NEURO including
+  bootstrap. No useful cohort was promoted. Repeated useful automatic admission
+  remains open; the rejection machinery alone does not complete this task.
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
