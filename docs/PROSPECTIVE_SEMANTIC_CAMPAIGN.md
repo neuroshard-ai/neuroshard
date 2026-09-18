@@ -119,3 +119,34 @@ The separate [development repair archive](https://dwquwt9gkkeil.cloudfront.net/r
 preserves complete before/after responses. All three public archives passed
 full byte-hash readback. Ledger replay requires neither signing keys nor GPUs;
 reproducing neural work additionally requires the published numerical assets.
+
+## Admission ownership repair before full training
+
+The fresh conversation campaign was stopped after its one-update bootstrap.
+The bootstrap exposed three lost retained answers: two protocol requests were
+stolen by the new coarse gate, and semantic nearest-question retrieval stole an
+arithmetic request. No full cohort started and none of its three finals opened.
+All three numerical quality audits agreed on rejection. The stopped ledger
+replayed 35 transactions and 1,577 headers, issuing exactly one trial NEURO.
+
+The repaired policy gives new experts one admission decision learned from
+training-only semantic vectors. Rejection uses the preserved A/B/C selector,
+including its general-assistant guard. The existing per-expert classifier picks
+the question inside an admitted expert. Standalone questions resolved by the
+planner from conversational history also receive this admission check. The
+original v1/v2 policies retain their behavior.
+
+The [complete seven-owner diagnostic](../config/experiments/admission-serving-diagnostic-20260918/results/accepted-retention.json)
+preserved all 59 originally correct answers and recovered all three regressions.
+Prior neural responses and a fresh composed request replayed exactly. No weights
+were trained; the one-update expert still answered none of the four new facts.
+This repairs serving ownership and makes no useful-learning claim. Ninety
+targeted checks passed.
+
+The [new frozen operation](../config/experiments/admission-native-campaign-20260918/operation.json)
+retries conversation, feed and audit using unchanged training questions, final
+bytes and acceptance gates. Only the three unopened full-cohort finals can count
+toward useful learning. The opened bootstrap remains a rejection exercise.
+All seven owners match the committed execution source and runtime. The same
+18:13 UTC retirement deadline and cumulative $250 allowance apply; no new
+instances or additional allocation time were added.
