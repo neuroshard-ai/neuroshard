@@ -110,3 +110,12 @@ All seven owners reproduced the committed runtime and every execution source.
 The resource allowance remains $250 cumulatively across this reused allocation;
 all disposable hosts retire by 18:13 UTC on September 18. This is a prospective
 trial, not evidence that either checklist item has passed.
+
+The failed cohort's [full public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/fa21391d630a73d1837e430d54ba8a90165c4c8e067cc6d73a521b050160e66f)
+includes all exported blocks, public genesis, final state, complete quality
+results, numerical publication receipts and an offline application replay script.
+Use the [matching execution source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/31e22b39eeaac8fc0065a0ff86a60a3ef2475008b4441aca291fd74e1dc2bf21).
+The separate [development repair archive](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/46128910e6d43575ca15f08639fda0c024bb9456b40605e1fd2fd9fb80e2ddfe)
+preserves complete before/after responses. All three public archives passed
+full byte-hash readback. Ledger replay requires neither signing keys nor GPUs;
+reproducing neural work additionally requires the published numerical assets.
