@@ -20,7 +20,7 @@ from neuroshard.evolution import answering, expert_router, ordinary_cohorts, sem
 from neuroshard.evolution.access_routing import question_key
 from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import identity, save, sha256
-from neuroshard.evolution.request_planning import LOSSLESS_POLICY
+from neuroshard.evolution.request_planning import LOSSLESS_POLICY, SPAN_POLICY
 from prepare_ordinary_cohorts import configuration
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,7 +31,12 @@ def read(path):
     return json.loads(Path(path).read_bytes())
 
 
-def prepare(home, previous, general, facts, encoder):
+def prepare(home, previous, general, facts, encoder, *, order=ORDER, fine_intents=False, bootstrap=None):
+    order = tuple(order)
+    if (len(order) != 3 or len(set(order)) != 3 or type(fine_intents) is not bool
+            or any(not isinstance(name, str) or not name or len(name) > 32
+                   or any(char not in 'abcdefghijklmnopqrstuvwxyz0123456789_-' for char in name) for name in order)):
+        raise ValueError('Declare exactly three bounded distinct cohort names')
     compiled = home/'compiled'
     compiled.mkdir(parents=True, exist_ok=False)
     old = Objects(previous/'objects')
@@ -43,10 +48,12 @@ def prepare(home, previous, general, facts, encoder):
         raise ValueError('Start from the earlier accepted ABC seed, never the opened failed cohort')
     fresh = read(facts)
     catalog = read(previous/'source-catalog.json')
-    if fresh['source_revision'] != catalog['revision'] or fresh['cohort'] != ORDER[0]:
+    if (fresh['source_revision'] != catalog['revision'] or fresh['cohort'] not in order
+            or any(name not in catalog['cohorts'] for name in order if name != fresh['cohort'])
+            or set(order) & set(graph['experts'])):
         raise ValueError('Ground all three prospective cohorts in one pinned source revision')
-    catalog['cohorts'] = {ORDER[0]: fresh['facts'], **{name: catalog['cohorts'][name] for name in ORDER[1:]}}
-    catalog['order'] = list(ORDER)
+    catalog['cohorts'] = {name: fresh['facts'] if name == fresh['cohort'] else catalog['cohorts'][name] for name in order}
+    catalog['order'] = list(order)
     evidence = ordinary_cohorts.source_evidence(catalog, lambda revision, path:
         subprocess.check_output(['git', 'show', revision+':'+path], cwd=ROOT))
     if any(len(values) != 16 for values in catalog['cohorts'].values()):
@@ -69,12 +76,12 @@ def prepare(home, previous, general, facts, encoder):
             raise ValueError('Training inventories disagree about a preserved prompt')
         rows.setdefault(row['id'], {**row, 'intent': 'parent'})
     base_ids = sorted(rows)
-    for name in ORDER:
+    for name in order:
         train, annotations = ordinary_cohorts.training(catalog['cohorts'][name])
         folder = compiled/name
         folder.mkdir()
         (folder/'training.jsonl').write_bytes(b''.join(canonical(row)+b'\n' for row in train))
-        if name in ORDER[1:]:
+        if name != fresh['cohort']:
             shutil.copyfile(previous/name/'final.jsonl', folder/'final.jsonl')
         else:
             (folder/'final.jsonl').write_bytes(b''.join(canonical(row)+b'\n'
@@ -93,15 +100,21 @@ def prepare(home, previous, general, facts, encoder):
     heldout.update(question_key(row['messages'][-2]['content']) for values in anchors.values() for row in values)
     if any(question_key(row['question']) in heldout for row in rows.values()):
         raise ValueError('Evaluation questions cannot become selector training inputs')
-    bootstrap = {'questions': [
+    if bootstrap is None:
+        if order[0] != 'escrow':
+            raise ValueError('Provide separately frozen bootstrap questions for the first cohort')
+        bootstrap = {'questions': [
         {'topic': 'escrow-request', 'question': 'Which NeuroShard transaction reserves my payment before an expert generates an answer?'},
         {'topic': 'escrow-complete-response', 'question': 'What transaction returns the complete answering-system response to an inference customer?'},
         {'topic': 'escrow-paid-field', 'question': 'After a paid expert answer completes, which ledger field states the amount that was charged?'},
         {'topic': 'escrow-refund-field', 'question': 'When a paid expert job leaves an unused reservation, which result field states the refund?'}]}
+    if (set(bootstrap) != {'questions'} or len(bootstrap['questions']) != 4
+            or len({row['topic'] for row in bootstrap['questions']}) != 4):
+        raise ValueError('Declare four distinct bootstrap facts')
     if any(question_key(row['question']) in heldout | {question_key(q['question']) for q in questions}
            for row in bootstrap['questions']):
         raise ValueError('The bootstrap exercise must use distinct prospective wording')
-    if not {row['topic'] for row in bootstrap['questions']} <= {fact['id'] for fact in fresh['facts']}:
+    if not {row['topic'] for row in bootstrap['questions']} <= {fact['id'] for fact in catalog['cohorts'][order[0]]}:
         raise ValueError('Bootstrap questions must refer to actual pinned source facts')
     rules = read(previous/'quality-rule.json')
     for spec in rules['retention_anchors'].values():
@@ -118,12 +131,14 @@ def prepare(home, previous, general, facts, encoder):
     save(home/'questions.json', questions)
     save(home/'encoder.json', read(encoder))
     save(home/'feature-profile.json', initial['learned']['feature_profile'])
-    plan = {'format': 'neuroshard-prospective-semantic-cohorts-v1', 'order': list(ORDER),
+    plan = {'format': 'neuroshard-prospective-semantic-cohorts-v1', 'order': list(order),
         'questions': identity(questions), 'encoder': identity(read(encoder)),
         'features': identity(initial['learned']['feature_profile']), 'source_facts': sha256(facts),
         'driver': sha256(__file__), 'batch': 1, 'coarse_epochs': 16,
-        'semantic_method': 'Nearest committed training question; earlier examples mean preserve base routing.',
-        'composition': LOSSLESS_POLICY, 'old_final_used_for_training': False,
+        'semantic_method': ('Preserved nearest-question domain gate, then per-expert integer intent classifiers.'
+            if fine_intents else 'Nearest committed training question; earlier examples mean preserve base routing.'),
+        'composition': SPAN_POLICY if fine_intents else LOSSLESS_POLICY,
+        'fine_intents': fine_intents, 'old_final_used_for_training': False,
         'previous_failed_cohort_counted': False, 'neural_training_started': False,
         'quality_rule': identity(rules), 'expert_steps': 128, 'learning_rate': .00005,
         'seconds_per_comparison_arm': 9000,
@@ -201,15 +216,18 @@ def compile_policies(home):
     baseline = answering.attach(graph, configuration(graph, model, initial), store)
     policies = {'baseline': baseline['answering']['policy_root']}
     topology, cohorts, intents = copy.deepcopy(graph), {}, {}
-    initial['request_policy'] = LOSSLESS_POLICY
-    for index, name in enumerate(ORDER):
-        included = {'parent', 'directory', 'protocol', 'planner', *ORDER[:index+1]}
+    initial['request_policy'] = plan['composition']
+    order = tuple(plan['order'])
+    for index, name in enumerate(order):
+        included = {'parent', 'directory', 'protocol', 'planner', *order[:index+1]}
         rows = [row for row in fitting['rows'] if row['route'] in included]
         samples = [{'id': row['id'], 'route': row['route'], 'features': features[row['id']]['coarse']} for row in rows]
         model = append_gate(model, samples, name, reference)
         intents.update({fact['id']: {'route': name, 'question': fact['training'][0]} for fact in catalog['cohorts'][name]})
         semantic = semantic_questions.build([{'id': row['id'], 'route': row['intent'],
             'features': features[row['id']]['semantic']} for row in rows], encoder, intents)
+        if plan.get('fine_intents', False):
+            semantic = semantic_questions.fit_intents(semantic)
         topology = ordinary_cohorts.extend(topology, name, graph['experts']['planner'])
         bound = answering.attach(topology, configuration(topology, model,
             {**initial, 'semantic_questions': semantic}), store)

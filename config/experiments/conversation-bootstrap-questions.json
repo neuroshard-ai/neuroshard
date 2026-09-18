@@ -1,0 +1,8 @@
+{
+  "questions": [
+    {"topic": "conversation-turns", "question": "How many chat messages may one NeuroShard planned request contain at most?"},
+    {"topic": "conversation-questions", "question": "What is the most questions the NeuroShard neural planner can return in a single plan?"},
+    {"topic": "conversation-last-role", "question": "In a NeuroShard planned conversation submitted for answering, which role must the final message have?"},
+    {"topic": "conversation-mutating-weights", "question": "If a NeuroShard serving process mutates one of its loaded model parameters, what is the outcome?"}
+  ]
+}
