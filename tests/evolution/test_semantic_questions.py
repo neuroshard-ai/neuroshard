@@ -95,3 +95,17 @@ def test_complete_service_uses_canonical_neural_question_but_preserves_user_requ
     history=[{'role':'user','content':'The sensor is aboard a ship.'},{'role':'assistant','content':'Understood.'},*messages]
     service.answer(history,64)
     assert encoded==[] and calls==[('interpreter',history)]
+
+
+def test_policy_artifact_uses_its_declared_bound_without_relaxing_network_messages():
+    import json
+    from neuroshard.evolution import answering
+    from neuroshard.demo import protocol, work
+    value={'encoded_index':'a'*(work.MAX_MESSAGE_BYTES+100)}
+    raw=json.dumps(value).encode()
+    assert answering.policy_json(raw)==value
+    with pytest.raises(ValueError,match='demo limit'):protocol.parse_json(raw)
+    for malformed in (b'{"id":1,"id":2}',b'{"number":NaN}',b'{"number":Infinity}'):
+        with pytest.raises(ValueError):answering.policy_json(malformed)
+    with pytest.raises(ValueError,match='object bound'):
+        answering.policy_json(b' '*(answering.MAX_POLICY_BYTES+1))

@@ -4,6 +4,7 @@ The ledger validates bounded obligations. Policy loading and funded numerical
 replay establish which conversation and neural calls actually produced a reply.
 """
 import copy
+import json
 
 from neuroshard.dataflow.store import canonical
 from . import planned_metering, serving_graph
@@ -15,6 +16,25 @@ FORMAT = 'neuroshard-complete-answering-v1'
 MAX_POLICY_BYTES = 8 * 1024 * 1024
 COUNTS = {'planning': 1, 'planning_repair': 1, 'directory_arguments': 2,
           'answer': 2, 'general_answer': 2, 'composition': 1}
+
+
+def policy_json(raw):
+    """Decode a policy artifact under its own limit, preserving strict JSON."""
+    if len(raw) > MAX_POLICY_BYTES:
+        raise ValueError('The complete answering policy exceeds its object bound')
+
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError('Duplicate JSON key')
+            result[key] = value
+        return result
+
+    def bad_constant(_value):
+        raise ValueError('Nonfinite JSON number')
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=bad_constant)
 
 
 def core(graph):
@@ -85,10 +105,7 @@ def load(graph, store):
     value = graph['answering']
     validate_descriptor(value, graph)
     raw = store.get(value['policy_root'])
-    if len(raw) > MAX_POLICY_BYTES:
-        raise ValueError('The complete answering policy exceeds its object bound')
-    from neuroshard.demo.protocol import parse_json
-    payload = parse_json(raw)
+    payload = policy_json(raw)
     serving_graph.fields(payload, {'format', 'configuration'}, 'Invalid answering policy object')
     if identity(payload) != value['policy_root'] or payload['format'] != FORMAT + '/policy':
         raise ValueError('The answering policy object changed')
