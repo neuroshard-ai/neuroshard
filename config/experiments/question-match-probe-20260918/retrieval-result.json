@@ -1,0 +1,1 @@
+{"admission":{"correct":30,"count":52},"model":"90e747b268ce70aeaeb85cb32879bfe481ea43c2402a0d4bf4246c32e6ad827b","other":{"count":79,"false_positives":0},"scope":"Opened development only; train-only classifier; no new final; optimized exact integer offline fitting exceeds reference fitting operation cap.","seconds":75.07330756261945}
