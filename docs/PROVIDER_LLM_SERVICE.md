@@ -249,20 +249,47 @@ The [provider guide](PROVIDER_RUNTIME.md) and [chat guide](HOSTED_CHAT.md) descr
 the implemented interfaces. The trial endpoints are disposable; they are not a
 permanent public service or a replacement for the public 0.4.0 network.
 
-## Sixth allocation: combined-output latency fails; recovery measurement ongoing
+## Sixth allocation: both recoveries pass; combined-output latency fails
 
 Frozen source `8ac29c7bbde61434c1a5cfb23881b78227dab23a` settled both warmups
 and all six ordinary requests, with three complete replays per reply and zero
 issuance. Cold readiness was 302.79 seconds. The combined question first became
 visible at **46.79 seconds**, missing the unchanged **45-second** limit; its
 complete generated reply arrived at 47.18 seconds. It remains a failed complete
-performance trial even if the remaining recovery measurements pass.
+performance trial despite both passing recovery measurements.
 
 The fresh coordinator successfully restored only its committed files while
 surviving owners retained their model caches. Three full replays matched, and
 the recovered request settled exactly once in **624.12 seconds**, below the
-1,500-second limit. Backbone-loss measurement, final costs, replay and retirement
-are still pending in this interim record.
+1,500-second limit. Replacing a killed backbone owner then settled in
+**644.87 seconds**, also after three complete matching replays. Each replacement
+uses a fresh key, endpoint and empty model cache; surviving owners keep their
+resident weights. In total, ten requests settled once after thirty real complete
+replays, with no inference issuance.
+
+| Ordinary request | First visible output | Complete generation | Settled, including funding |
+| --- | ---: | ---: | ---: |
+| Client package | 26.34 s | 29.99 s | 100.38 s |
+| Retained directory | 32.93 s | 36.38 s | 161.91 s |
+| General explanation | 23.90 s | 39.18 s | 170.12 s |
+| Constrained arithmetic | 30.41 s | 32.11 s | 105.75 s |
+| Multi-turn recall | 29.39 s | 31.26 s | 106.21 s |
+| Combined question | **46.79 s — failed** | 47.18 s | 175.65 s |
+
+Application replay reproduces **2,534 headers, 294 accepted transactions and
+all seven saved states**, with ten settled claims and zero issuance. Every
+disposable instance, volume and the security group was retired at 19:06 UTC;
+protected hosts retained their previous states. The standalone conservative
+cost is **$24.86**, including $5.43 compute and 92.63 GB of measured aggregate
+interface traffic. The six attempts total **$111.06**. The sixth frozen cost
+gate also passes at $119.86 including its $95 prior-attempt reserve, below $125.
+
+[Public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7f9f3ac1509231cc9a904bc4d5ed8f1ecb1e74d57f6eca994a73cef7d7b0cc1f)
+and [matching source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/f7101ebf3e8a74e72938dd2a8ea9438654d28fb559fc1b4e9c7b4d70d74ed284)
+passed full public hash readback. The 159 allowlisted files include every reply,
+stream observation, full numerical replay, payment/refund, replacement receipt,
+application replay, cost and retirement record. No private keys or node backups
+are included.
 
 The correction emits a completed visible answer part while the next part runs.
 It does not change routing, generated tokens or final rendering, expose planner
@@ -272,3 +299,5 @@ HTTPS execution and complete-answer replay. The next freeze keeps every request,
 model, latency threshold and fault unchanged, reserves $120 for earlier attempts
 inside a $160 cumulative cap, and forbids allocation before both preceding
 recoveries pass, resources are retired and complete prior costs fit that reserve.
+Those preconditions passed; source `95a19b87026bce91a1bc567da3c0e1988db3b011`
+began its corrective allocation at 19:07 UTC with a 21:07 UTC hard deadline.

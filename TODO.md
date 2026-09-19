@@ -292,6 +292,16 @@ before the affected work, rather than changing the target after a result.
   and all four stored states. This uses a small synthetic graph on one host;
   accepted-LLM load/cost evidence and independent operation remain required.
 
+  The accepted LLM now passes actual fresh-coordinator and fresh-backbone
+  replacement across seven hosts in five availability zones, with survivors
+  retaining cached weights. Recovered requests settled once in 624.12 and
+  644.87 seconds after three complete numerical replays each. The same trial's
+  combined-answer visibility failed its 45-second gate at 46.79 seconds, so the
+  complete serving trial remains failed. All resources are retired and native
+  replay matches all seven saved states. See [results and public evidence](docs/PROVIDER_LLM_SERVICE.md).
+  Independent administration, the declared soak and public-market admission
+  resistance remain open; separate EC2 hosts do not establish separate operators.
+
 - [ ] **5. Affordable verification and sustainable incentives**
 
   Done when every accepted obligation has available evidence, complete funded
@@ -311,6 +321,13 @@ before the affected work, rather than changing the target after a result.
   bounded reservation. Real five-process replay reproduced the same receipt
   and rejected a forged response. These execution quotes explicitly require
   separate verification and retention funding; they are not ledger payments.
+
+  The [finite sponsorship](docs/FINITE_SPONSORSHIP.md) now declares complete
+  allocation, controller, network and retention accounting under a $1,000
+  bounded research budget. Actual hosted requests prepay complete audits and
+  settle all unused execution/provider/audit funds without inference issuance.
+  Final aggregate cost publication awaits the frozen delivery correction.
+  This does not establish a token price, independent demand or unlimited funding.
 
 - [ ] **6. Usable chat service**
 
