@@ -3,12 +3,16 @@
   "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
   "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
   "retry": {
-    "previous_source": "03fc78a",
-    "previous_result": "Stopped before requests: the preparation script selected the earlier baseline executor, whose numerical_profile differs from the final accepted graph. All nine complete referees rejected it before loading model weights.",
-    "change": "Resolve the executor from the accepted graph's content-addressed executor_root. Validate graph/profile numerical identity and all source commitments on the CPU before allocating or fetching tensors.",
+    "previous_source": "c359ad98543f74f402c3b2692371e7dde6188ddd",
+    "previous_result": "The second setup loaded all nine reference owners successfully, then stopped before requests because the controller opened customer wallets before creating them. The first setup had selected an earlier executor profile; that separate failure and its correction remain published.",
+    "change": "Create and validate both customer wallets before allocation. Exercise controller settlement locally against real signed native transitions, including its separate-thread connections to the same durable audit journals, before further GPU use. Retain exact executor lookup and pre-allocation source/numerical checks.",
+    "history": [
+      {"source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004", "cause": "Earlier baseline executor selected instead of the final accepted executor; no loaded reference group or requests."},
+      {"source": "c359ad98543f74f402c3b2692371e7dde6188ddd", "cause": "Missing controller wallet creation after successful model load; no requests or payments."}
+    ],
     "unchanged": ["accepted weights", "ordinary requests", "generation", "latency and settlement bounds", "faults", "replay count"],
     "aggregate_budget_usd": 100,
-    "prior_allocation_allowance_usd": 30,
+    "prior_allocation_allowance_usd": 45,
     "cold_readiness": "Includes both paid warm-up responses and their complete settlements, so both provider replicas have actually loaded and answered. The earlier failed setup did not measure cold readiness or any answer."
   },
   "learning": {"train": false, "new_final": false, "quality_claim": false, "new_tokens_issued": 0},

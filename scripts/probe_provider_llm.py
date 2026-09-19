@@ -36,6 +36,11 @@ def read(path):
     return json.loads(Path(path).read_bytes())
 
 
+def customer_wallets(home):
+    """Create local customer identities before allocating any paid resources."""
+    return [wire.Wallet(home/f'customer-{index}/account.key', create=True) for index in range(2)]
+
+
 def parallel(function, values):
     with ThreadPoolExecutor(max_workers=7) as pool:
         return list(pool.map(function, values))
@@ -256,7 +261,8 @@ def audit_service(cloud, graph, providers):
             except subprocess.CalledProcessError:
                 if not cloud.active(physical, service['units'][rank]):
                     raise RuntimeError('The complete numerical referee stopped during initialization')
-                return None
+        if len(values) != len(service['placement']):
+            return None
         if any(row['graph'] != identity(graph) or row['executor'] != graph['executor_root'] for row in values):
             raise ValueError('Numerical referees loaded a different answering system')
         return values
@@ -277,15 +283,33 @@ def settle(cloud, network, service, claim, folder):
             raise ValueError('The native provider response failed complete numerical replay')
         save(folder/f'replay-{index}.json', result)
         reports.append({'report': result['report'], 'seconds': time.monotonic()-started})
-    coverage, salts = auditing.coverage(claim), [secrets.token_hex(32) for _ in range(3)]
-    for index in range(3):
-        commitment = auditing.verdict_commitment(network.genesis['chain_id'], claim['id'],
-            network.owners[index].public_key, coverage, salts[index], True)
-        network.send(index, claim['id']+'/commit', 'audit_commit', claim_id=claim['id'], commitment=commitment)
-    until(lambda: network.query()['height'] > network.query('/candidate')['audit_commit_end'])
-    for index in range(3):
-        network.send(index, claim['id']+'/reveal', 'audit_verdict', claim_id=claim['id'],
-                     coverage_root=coverage, salt=salts[index], valid=True)
+    coverage = auditing.coverage(claim)
+    intent_path = folder/'audit-intent.json'
+    if not intent_path.exists():
+        save(intent_path, {'claim': claim['id'], 'coverage': coverage,
+                           'salts': [secrets.token_hex(32) for _ in range(3)]})
+    intent = read(intent_path)
+    if intent['claim'] != claim['id'] or intent['coverage'] != coverage:
+        raise ValueError('Durable audit intent belongs to a different complete obligation')
+    # SQLite connections belong to their creating thread. Keep each validator's
+    # existing durable journal, with a connection opened in this audit thread.
+    # The single audit worker exclusively writes these accounts during a batch;
+    # the caller joins it before signing acceptance for another batch.
+    boxes = [Outbox(network.home/f'outbox-{i}.sqlite', network.urls[0], network.genesis['chain_id'], owner,
+                    rpc=network.outboxes[i].rpc, query=network.outboxes[i].query)
+             for i, owner in enumerate(network.owners[:3])]
+    try:
+        for index in range(3):
+            commitment = auditing.verdict_commitment(network.genesis['chain_id'], claim['id'],
+                network.owners[index].public_key, coverage, intent['salts'][index], True)
+            boxes[index].send(claim['id']+'/commit', 'audit_commit', claim_id=claim['id'], commitment=commitment)
+        until(lambda: network.query()['height'] > network.query('/candidate')['audit_commit_end'])
+        for index in range(3):
+            boxes[index].send(claim['id']+'/reveal', 'audit_verdict', claim_id=claim['id'],
+                         coverage_root=coverage, salt=intent['salts'][index], valid=True)
+    finally:
+        for box in boxes:
+            box.close()
     result = network.settled(claim['id'], seconds=180)
     if not result['settlement']['accepted'] or result['status']['issued'] != 0:
         raise ValueError('Inference settlement changed supply or rejected the replayed claim')
@@ -342,8 +366,13 @@ def batch(cloud, network, graph, service, providers, customers, cases, maximum, 
                     offers[str(case['fault_rank'])] = replacement['offer']
                     network.send(3, row['id']+'/replace', 'replace_hosted_job', job_id=row['job_id'],
                         offers=offers, audit_budget=row['budget_id'])
+                    replacement_view = network.query('/hosting/job', {'job_id': row['job_id']})
+                    if (replacement_view['lease']['assignment_root'] == epoch
+                            or identity(replacement_view['job']['request']) != row['quote']['request_root']):
+                        raise ValueError('Replacement failed to fence the old execution and preserve the request')
                     start_provider(cloud, replacement)
                     fault['replacement'] = replacement
+                    fault['new_assignment'] = replacement_view['lease']['assignment_root']
                     save(cloud.home/'cases'/case['id']/'fault.json', fault)
                     continue
                 coordinator = lease['providers']['0']
@@ -385,6 +414,8 @@ def batch(cloud, network, graph, service, providers, customers, cases, maximum, 
             if audit_future is not None and audit_future.done():
                 audit_future.result()
             if all(row['phase'] == 'finished' for row in rows):
+                if audit_future is not None:
+                    audit_future.result()
                 break
             time.sleep(.1)
         else:
@@ -410,6 +441,8 @@ def batch(cloud, network, graph, service, providers, customers, cases, maximum, 
         save(cloud.home/'cases'/case['id']/'audit-payment.json', audited[0])
         if row['id'] in faults:
             cancel_offline_offer(cloud, faults[row['id']]['lost'])
+        if 'fault_rank' in case and (row['id'] not in faults or faults[row['id']]['replacement'] is None):
+            raise ValueError('The declared owner-loss recovery was not actually exercised')
     return list(measurements.values())
 
 
@@ -524,6 +557,7 @@ def run(args):
     boxes, providers = [], []
     started = time.monotonic()
     try:
+        wallets = customer_wallets(home)
         allocate(home, freeze['resources'], revision)
         cloud = Cloud(home)
         bootstrap(cloud, prepared, revision, engine)
@@ -537,8 +571,7 @@ def run(args):
         service = audit_service(cloud, graph, providers)
         save(home/'cold-assets.json', {'seconds': time.monotonic()-restoring})
         customers = []
-        for index in range(2):
-            wallet = wire.Wallet(home/f'customer-{index}/account.key')
+        for index, wallet in enumerate(wallets):
             network.send(3, f'customer-{index}/fund', 'transfer', to=wallet.public_key, amount=3_000_000_000)
             node = LocalNode(network.urls[index], network.genesis['chain_id'], identity(manifest))
             box = Outbox(home/f'customer-{index}/transactions.sqlite', node.url, node.chain_id, wallet)
