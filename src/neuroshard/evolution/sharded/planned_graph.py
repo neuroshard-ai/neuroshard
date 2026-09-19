@@ -25,7 +25,8 @@ SOURCES = ('src/neuroshard/evolution/sharded/planned_graph.py',
            'src/neuroshard/evolution/sharded/branch.py',
            'src/neuroshard/evolution/sharded/branch_groups.py',
            'src/neuroshard/evolution/sharded/interpretation.py',
-           'src/neuroshard/evolution/incremental_facts.py')
+           'src/neuroshard/evolution/incremental_facts.py',
+           'src/neuroshard/evolution/serving_stream.py')
 
 
 def conversation(messages):
@@ -319,7 +320,13 @@ class PlannedGraphNetwork:
         with scope as planner_root:
             if planner_root is not None and planner_root != self.config['planner_weights']['fusion']:
                 raise ValueError('Planner weights changed after service installation')
-            tokens = generate_branch_cached(network, ids, maximum, expert) if network is not None else None
+            stream = (purpose == 'composition' or purpose in ('answer', 'general_answer')
+                      and getattr(self, 'stream_answer', False))
+            callback = (self.observer.tokens(net.tokenizer, worked=purpose == 'general_answer')
+                        if stream and net.rank == 0 and hasattr(self, 'observer')
+                        and self.observer.callback is not None else None)
+            tokens = (generate_branch_cached(network, ids, maximum, expert, on_tokens=callback)
+                      if network is not None else None)
         outputs = net.all_owners.exchange(tokens)
         if (outputs[0] is None or any(outputs[rank] != outputs[0] for rank in active)
                 or any(outputs[rank] is not None for rank in range(net.world_size) if rank not in active)):
@@ -470,7 +477,9 @@ class PlannedGraphNetwork:
                 whole_request=whole_request), max_tokens, 'answer')
         return {'question': question, 'expert': selected, 'text': text}, argument, None
 
-    def answer(self, messages, max_tokens):
+    def answer(self, messages, max_tokens, *, on_text=None):
+        from ..serving_stream import Observer
+        self.observer = Observer(on_text if on_text is not None and self.net.rank == 0 else None)
         conversation(messages)
         integer(max_tokens, 1, 256)
         request = {'service': self.root, 'messages': copy.deepcopy(messages), 'max_tokens': max_tokens}
@@ -546,6 +555,8 @@ class PlannedGraphNetwork:
             canonical = choice.get('semantic', {}).get('selected')
             if canonical is not None:
                 routing_question = canonical['question']
+            self.stream_answer = (len(plan) == 1 and (program is None or program['render'] == 'assistant')
+                and not ('composer' in self.config and selected in self.net.graph['experts']))
             answer, argument, error = self.answer_atom(selected, question, routing_question,
                 messages, max_tokens, whole_request=len(plan) == 1)
             if error is not None:
@@ -582,6 +593,7 @@ class PlannedGraphNetwork:
         self.net.verify_unchanged()
         if self.net.all_owners.exchange(identity(result)) != [identity(result)] * self.net.world_size:
             raise ValueError('Owners disagree on the complete planned response')
+        self.observer.text(text)
         return result
 
     def replay(self, response):

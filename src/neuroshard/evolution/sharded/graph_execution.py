@@ -271,12 +271,12 @@ class GraphNetwork:
             self.comparison_versions = tuple(p._version for p in shard.parameters())
             self.resident_parameters += shard.resident_parameters
 
-    def answer(self, question, max_tokens, graph=None):
+    def answer(self, question, max_tokens, graph=None, *, on_text=None):
         selected = self.graph if graph is None else serving_graph.validate(graph)
         if 'answering' in selected:
             from .answering_service import execute
             messages = [{'role': 'user', 'content': question}] if isinstance(question, str) else question
-            return execute(self, selected, messages, max_tokens)
+            return execute(self, selected, messages, max_tokens, on_text=on_text)
         if any(selected[k] != self.graph[k] for k in ('parent', 'interpreter_assets',
                 'interpreter_prompt', 'tokenizer', 'numerical_profile', 'executor_root')):
             raise ValueError('A request cannot replace loaded models or execution rules')

@@ -4,78 +4,20 @@ This is the opt-in provider research profile. The running public 0.4.0 network
 does not enable these transactions. No network input installs executable code.
 """
 import argparse
-import base64
-import copy
 import fcntl
 import json
 from pathlib import Path
 import threading
 import time
-from urllib.parse import urlsplit
 
-from neuroshard.client import wire
+from neuroshard.client.local_node import LocalNode as PinnedNode
 from neuroshard.demo import protocol
 from . import expert_lifecycle, provider_assets, provider_transport as transport
 from .reference_data import identity, save
-from .schema import root
 from .transactions import Outbox
 
 
-class LocalNode:
-    """Authority is the operator's full node, with an explicitly pinned genesis.
-
-    These ABCI queries have no light-client proofs. Consequently remote RPC
-    endpoints are deliberately unsupported for assignment authorization.
-    """
-    def __init__(self, url, chain_id, manifest_root, *, rpc=wire.rpc, clock=time.monotonic,
-                 cache_seconds=.25, stall_seconds=30):
-        parsed = urlsplit(url)
-        if (parsed.scheme != 'http' or parsed.hostname not in ('127.0.0.1', '::1')
-                or parsed.path not in ('', '/') or parsed.username or parsed.password
-                or parsed.query or parsed.fragment):
-            raise ValueError('Authorize assignments only through the local full-node loopback RPC')
-        self.url, self.chain_id, self.rpc, self.clock = url, chain_id, rpc, clock
-        self.cache_seconds, self.stall_seconds = cache_seconds, stall_seconds
-        self.lock, self.cached = threading.RLock(), {}
-        self.height, self.advanced = -1, clock()
-        if identity(self.query('/manifest')) != root(manifest_root):
-            raise ValueError('The local full node has a different genesis manifest')
-        status = self.rpc(url, 'status', timeout=5)
-        if status['node_info']['network'] != chain_id or status['sync_info']['catching_up']:
-            raise transport.Unavailable('The local full node is on another chain or still synchronizing')
-
-    def query(self, path, data=None):
-        params = {'path': path, 'prove': False}
-        if data is not None:
-            params['data'] = wire.canonical(data).hex()
-        response = self.rpc(self.url, 'abci_query', params, timeout=5)['response']
-        if response.get('code', 0):
-            raise transport.Unavailable('The local full node refused the provider query')
-        return wire.parse(base64.b64decode(response['value'], validate=True))
-
-    def snapshot(self, job_id, *, refresh=False):
-        job_id = root(job_id)
-        with self.lock:
-            now = self.clock()
-            cached = self.cached.get(job_id)
-            if not refresh and cached and now - cached[0] < self.cache_seconds:
-                return copy.deepcopy(cached[1])
-            try:
-                snapshot = self.query('/hosting/job', {'job_id': job_id})
-            except (OSError, ValueError) as error:
-                self.cached.pop(job_id, None)
-                raise transport.Unavailable('The local validating node is unavailable') from error
-            if snapshot['chain_id'] != self.chain_id or snapshot['height'] < self.height:
-                raise transport.Unavailable('Local chain identity or committed height changed')
-            if snapshot['height'] > self.height:
-                self.height, self.advanced = snapshot['height'], now
-            if now - self.advanced >= self.stall_seconds:
-                raise transport.Unavailable('Local consensus has stopped advancing')
-            if len(self.cached) >= 16 and job_id not in self.cached:
-                del self.cached[min(self.cached, key=lambda key: self.cached[key][0])]
-            self.cached[job_id] = (now, snapshot)
-            return copy.deepcopy(snapshot)
-
+class LocalNode(PinnedNode):
     def lookup(self, job_id):
         snapshot = self.snapshot(job_id)
         state = {**snapshot, 'hosting': {'leases': {job_id: snapshot['lease']}}}
@@ -99,10 +41,10 @@ def response_claim(job, result):
     return claim, transcript
 
 
-def execute(job, network, peer):
+def execute(job, network, peer, *, on_text=None):
     """Compute locally, then authenticate every owner's identical result."""
     request = job['request']
-    result = network.answer(request.get('messages', request.get('question')), request['max_tokens'])
+    result = network.answer(request.get('messages', request.get('question')), request['max_tokens'], on_text=on_text)
     claim, transcript = response_claim(job, result)
     rank = str(peer.rank)
     receipt = (expert_lifecycle.answering_receipt(peer.routing['chain_id'], job, claim['response'],
@@ -125,7 +67,7 @@ def execute(job, network, peer):
     return {'claim': claim, 'transcript': transcript, 'submission': payload}
 
 
-def run_job(config, node, owner, box, outbox, job_id, cache=None):
+def run_job(config, node, owner, box, outbox, job_id, cache=None, events=None):
     """One capacity slot; restart requires native replacement of its epoch."""
     from .sharded.graph_execution import GraphNetwork
     from .sharded.peer_wire import ServingMesh
@@ -139,6 +81,8 @@ def run_job(config, node, owner, box, outbox, job_id, cache=None):
     if assigned['certificate'] != certificate or assigned['endpoint'] != config['advertise']:
         raise ValueError('The native assignment pins a different local endpoint or certificate')
     epoch = lease['assignment_root']
+    if events is not None and rank == 0:
+        events.begin(job, snapshot['chain_id'], epoch)
     home = Path(config['home'])/'jobs'/job_id/epoch
     home.mkdir(parents=True, exist_ok=True)
     # A restarted transport cannot know which frame acknowledgements remote
@@ -187,7 +131,10 @@ def run_job(config, node, owner, box, outbox, job_id, cache=None):
                 cache[model_key] = network
         else:
             network.rebind(ServingMesh(peer))
-        result = execute(job, network, peer)
+        callback = (lambda text: events.emit(job_id, epoch, text=text)) if events is not None and rank == 0 else None
+        result = execute(job, network, peer, on_text=callback)
+        if events is not None and rank == 0:
+            events.emit(job_id, epoch, text=result['claim']['text'], status='generated')
         save(home/'result.json', result)
         if rank == 0:
             while node.query('/candidate') is not None:
@@ -199,6 +146,8 @@ def run_job(config, node, owner, box, outbox, job_id, cache=None):
             kind = submission.pop('kind')
             receipt = outbox.send('response-'+epoch, kind, **submission)
             save(home/'submitted.json', receipt)
+            if events is not None:
+                events.emit(job_id, epoch, status='submitted')
         return result
     finally:
         peer.close()
@@ -224,7 +173,9 @@ def main():
             return
         node = LocalNode(config['node_rpc'], config['chain_id'], config['manifest_root'])
         box = transport.Mailbox(owner.public_key, node.lookup, timeout=config['frame_seconds'])
-        server = transport.Server((config['bind'], config['port']), tls, box)
+        from .provider_stream import StreamLog
+        events = StreamLog(owner, node.snapshot)
+        server = transport.Server((config['bind'], config['port']), tls, box, events=events)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         outbox = Outbox(home/'transactions.sqlite', config['node_rpc'], config['chain_id'], owner)
@@ -276,12 +227,14 @@ def main():
                         continue
                     attempted.add(lease['assignment_root'])
                     try:
-                        run_job(config, node, owner, box, outbox, job_id, cache)
+                        run_job(config, node, owner, box, outbox, job_id, cache, events)
                     except (OSError, ValueError, RuntimeError) as error:
                         # Keep failures local and bounded; don't print conversations,
                         # keys, signed frames or object-store credentials.
                         save(home/'last-failure.json', {'job_id': job_id,
                             'assignment_root': lease['assignment_root'], 'error': type(error).__name__})
+                        if config['rank'] == 0:
+                            events.emit(job_id, lease['assignment_root'], text='', status='failed')
                     if args.job:
                         return
                 time.sleep(.5)

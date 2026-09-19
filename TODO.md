@@ -314,6 +314,13 @@ before the affected work, rather than changing the target after a result.
 
 - [ ] **6. Usable chat service**
 
+  Current development adds [native hosted chat](docs/HOSTED_CHAT.md): complete
+  bounded quotes, durable funding/reservation, actual token-time draft delivery,
+  assignment authentication and graph/tokenizer-pinned conversation history.
+  Native expiry and lost-acknowledgement checks return every unused budget
+  without a second payment. The accepted-model operated latency/load trial and
+  public deployment remain required; this does not close the item.
+
   Done when the accepted growing graph serves ordinary multi-turn requests with
   streaming, versioned context/tokenizer handling, bounded prices, correct
   expiry/refunds and concurrent clients. Meet a published, prospectively frozen

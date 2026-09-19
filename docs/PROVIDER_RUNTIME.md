@@ -93,9 +93,14 @@ not the process's local log.
 Model files remain in the configured home for reuse; local cache management and
 the host filesystem quota remain the operator's responsibility. Transcripts and
 failure records are local and persist across restarts. Current assignments,
-prompts and final responses are public ledger data. Providers, auxiliary model
+prompts, neural-call token IDs and final responses are public ledger data. Providers, auxiliary model
 owners and auditors see the text needed for execution. TLS protects connections;
 this profile does not offer private conversations or ledger erasure.
+
+The [hosted chat client](HOSTED_CHAT.md) obtains a complete quote, funds native
+verification and reserves provider capacity. The coordinator exposes a bounded
+certificate-pinned `/v1/events` endpoint authenticated by the customer's wallet.
+Visible drafts are provisional; only native replay settlement is authoritative.
 
 Validation: adversarial native accounting, authenticated transport/retries,
 partition-only HTTP restoration and five-process real neural equivalence cover

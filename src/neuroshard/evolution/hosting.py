@@ -4,7 +4,7 @@ Advertisements are service offers, not hardware or independence proofs. Existing
 complete funded replay authorizes payment. This opt-in module never issues NEURO.
 """
 import copy
-from urllib.parse import urlsplit
+from neuroshard.client.provider_wire import endpoint
 
 from neuroshard.demo import protocol
 from neuroshard.lab import state as ledger
@@ -27,18 +27,6 @@ FIELDS = {
     'accept_hosted_job': {'job_id', 'assignment_root'},
     'replace_hosted_job': {'job_id', 'offers', 'audit_budget'},
 }
-
-
-def endpoint(value):
-    if not isinstance(value, str) or not 1 <= len(value.encode()) <= 512:
-        raise ValueError('Require a bounded provider HTTPS endpoint')
-    parsed = urlsplit(value)
-    if (parsed.scheme != 'https' or not parsed.hostname or parsed.username is not None
-            or parsed.password is not None or parsed.query or parsed.fragment
-            or parsed.path not in ('', '/') or any(c.isspace() for c in value)
-            or parsed.port is not None and not 1 <= parsed.port <= 65535):
-        raise ValueError('Require a provider HTTPS origin without credentials or paths')
-    return value.rstrip('/')
 
 
 def initialize(state):

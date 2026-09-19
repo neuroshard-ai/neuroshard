@@ -34,7 +34,7 @@ def selected_graph(network, graph):
         network.verify_unchanged()
 
 
-def execute(network, graph, messages, maximum):
+def execute(network, graph, messages, maximum, *, on_text=None):
     from .planned_graph import PlannedGraphNetwork, conversation
     serving_graph.validate(graph)
     conversation(messages)
@@ -58,7 +58,7 @@ def execute(network, graph, messages, maximum):
             service = PlannedGraphNetwork(network, config, source_home=network.source_home,
                 features=features, planner_weights_home=network.policy_store.root)
             network.answering_services[key] = service
-        response = service.answer(messages, maximum)
+        response = service.answer(messages, maximum, on_text=on_text)
     request = {'messages': copy.deepcopy(messages), 'max_tokens': maximum}
     return {'graph': key, 'request': request, 'outputs': response['outputs'],
             'text': response['text'], 'answering': response}

@@ -9,6 +9,7 @@ from neuroshard.dataflow.store import canonical
 from ..provider_transport import MAX_CONTROL, MAX_TENSOR
 
 SOURCES = ('src/neuroshard/evolution/provider_transport.py',
+           'src/neuroshard/client/provider_wire.py',
            'src/neuroshard/evolution/sharded/peer_wire.py',
            'src/neuroshard/evolution/sharded/branch_groups.py')
 

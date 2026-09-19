@@ -7,10 +7,7 @@ import time
 from urllib.request import Request, urlopen
 
 from neuroshard.demo import protocol, work
-
-
-class Rejected(ValueError):
-    pass
+from neuroshard.client.wire import Rejected
 
 
 def http(url, body=None, timeout=30):

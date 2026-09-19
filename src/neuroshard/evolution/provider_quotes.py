@@ -98,4 +98,4 @@ def quote(state, question, maximum, *, provider_ceiling=2**60, publisher=None):
         'transaction_fee_allowance_atoms': transaction_fees,
         'maximum_debit_atoms': execution + provider_fees + verification + transaction_fees,
         'retry_policy': 'Unclaimed attempts may reuse the reserved audit budget; rejected claims require new funding',
-        'visibility': 'Prompts and final responses are public; assigned providers and auditors process the conversation'}
+        'visibility': 'Conversation, neural-call tokens and final responses are public; providers and auditors process them'}

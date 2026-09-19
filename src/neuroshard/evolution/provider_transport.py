@@ -9,7 +9,6 @@ import base64
 import hashlib
 import http.client
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import ipaddress
 import json
 import os
 from pathlib import Path
@@ -17,7 +16,6 @@ import socket
 import ssl
 import threading
 import time
-from urllib.parse import urlsplit
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -26,7 +24,7 @@ from cryptography.x509.oid import NameOID
 
 from neuroshard.dataflow.store import canonical
 from neuroshard.demo import protocol
-from .hosting import endpoint
+from neuroshard.client.provider_wire import PinnedConnection, Unavailable
 from .schema import integer, root
 from .serving_graph import fields
 
@@ -36,10 +34,6 @@ MAX_TENSOR = 64 * 1024**2
 HEADER_LIMIT = 8192
 FRAME_FIELDS = {'format', 'chain_id', 'job_id', 'assignment_root', 'source', 'destination',
                 'members', 'channel', 'sequence', 'bytes', 'sha256'}
-
-
-class Unavailable(RuntimeError):
-    pass
 
 
 def certificate(home, identity):
@@ -249,8 +243,9 @@ class Server(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, address, tls, mailbox, *, max_connections=32):
+    def __init__(self, address, tls, mailbox, *, max_connections=32, events=None):
         self.tls, self.mailbox = tls, mailbox
+        self.events = events
         self.slots = threading.BoundedSemaphore(max_connections)
         super().__init__(address, Handler)
 
@@ -291,6 +286,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         key, reserved = None, False
         try:
+            if self.path == '/v1/events':
+                if (self.server.events is None or self.headers.get('Transfer-Encoding') is not None
+                        or len(self.headers.get_all('Content-Length', [])) != 1):
+                    raise ValueError('Require a bounded visible stream request')
+                count = int(self.headers['Content-Length'])
+                if not 1 <= count <= 8192:
+                    raise ValueError('Stream request exceeds its bound')
+                raw = self.rfile.read(count)
+                if len(raw) != count:
+                    raise ValueError('Truncated stream request')
+                result = canonical(self.server.events.read(protocol.parse_json(raw)))
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Content-Length', str(len(result)))
+                self.end_headers()
+                self.wfile.write(result)
+                return
             if self.path != '/v1/frame' or self.headers.get('Transfer-Encoding') is not None:
                 raise ValueError('Unsupported provider request')
             header = self.headers.get('X-NeuroShard-Frame', '')
@@ -330,38 +343,6 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header('Connection', 'close')
             self.send_header('Content-Length', '0')
             self.end_headers()
-
-
-class PinnedConnection(http.client.HTTPSConnection):
-    def __init__(self, address, fingerprint, *, timeout=30, allow_private=False):
-        parsed = urlsplit(endpoint(address))
-        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        tls.minimum_version = ssl.TLSVersion.TLSv1_3
-        tls.check_hostname = False
-        tls.verify_mode = ssl.CERT_NONE  # The exact ledger certificate is checked before sending data.
-        super().__init__(parsed.hostname, parsed.port or 443, timeout=timeout, context=tls)
-        self.fingerprint, self.allow_private = root(fingerprint), allow_private
-
-    def connect(self):
-        addresses = socket.getaddrinfo(self.host, self.port, type=socket.SOCK_STREAM)
-        for family, kind, proto, _name, address in addresses:
-            ip = ipaddress.ip_address(address[0])
-            if not self.allow_private and not ip.is_global:
-                continue
-            raw = socket.socket(family, kind, proto)
-            raw.settimeout(self.timeout)
-            raw.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            try:
-                raw.connect(address)
-                self.sock = self._context.wrap_socket(raw, server_hostname=self.host)
-                if hashlib.sha256(self.sock.getpeercert(binary_form=True)).hexdigest() != self.fingerprint:
-                    self.close()
-                    raise ValueError('Provider TLS certificate differs from the native assignment')
-                return
-            except BaseException:
-                raw.close()
-                raise
-        raise ValueError('Provider endpoint has no permitted public address')
 
 
 class Peer:

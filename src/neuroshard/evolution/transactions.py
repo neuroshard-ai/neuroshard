@@ -11,7 +11,7 @@ import time
 from http.client import HTTPException
 
 from neuroshard.dataflow.store import canonical
-from neuroshard.demo import client as wire, protocol
+from neuroshard.client import wire
 
 
 class ClosedOperation(wire.Rejected):
@@ -41,6 +41,9 @@ class Outbox:
                               'AND id NOT IN (SELECT id FROM retired)').fetchone()
         return row[0] if row else None
 
+    def recorded(self, operation):
+        return self.db.execute('SELECT 1 FROM operations WHERE id=?', (operation,)).fetchone() is not None
+
     def retire_closed(self, state):
         """Recover a stale audit/vote only from trusted committed native state.
 
@@ -56,7 +59,7 @@ class Outbox:
                 or state['manifest'].get('auditing', {}).get('format') != 'neuroshard-native-quorum-audit-v1'):
             raise ValueError('Retirement requires this account network\'s committed native state')
         raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
-        body, owner = protocol.verify(protocol.parse_json(raw))
+        body, owner = wire.verify(wire.parse(raw))
         if owner != self.owner.public_key or body['chain_id'] != self.chain_id:
             raise ValueError('Outbox envelope belongs to another account or chain')
         kind, closed = body['kind'], None
@@ -82,7 +85,7 @@ class Outbox:
         row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
         if row is None:
             raise ValueError('Unknown outbox operation')
-        return protocol.transaction_id(protocol.parse_json(row[0]))
+        return wire.transaction_id(wire.parse(row[0]))
 
     def retire_hosted(self, snapshot):
         """Retire a pending provider operation only after its native epoch closes.
@@ -95,7 +98,7 @@ class Outbox:
         if operation is None:
             return None
         raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
-        body, owner = protocol.verify(protocol.parse_json(raw))
+        body, owner = wire.verify(wire.parse(raw))
         kind = body['kind']
         if kind not in ('accept_hosted_job', 'respond_expert', 'respond_answering'):
             return None
@@ -104,7 +107,7 @@ class Outbox:
             raise ValueError('Require the provider account and its own committed chain snapshot')
         old = body.get('assignment_root')
         if old is None:
-            receipt, signer = protocol.verify(body['workers']['0'])
+            receipt, signer = wire.verify(body['workers']['0'])
             if signer != owner or receipt['job_id'] != body['job_id']:
                 raise ValueError('The coordinator receipt belongs to another job or account')
             old = receipt.get('assignment_root')
@@ -129,7 +132,7 @@ class Outbox:
         if operation is None:
             return None
         row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
-        return protocol.verify(protocol.parse_json(row[0]))[0]
+        return wire.verify(wire.parse(row[0]))[0]
 
     def send(self, operation, kind, *, timeout=60, **fields):
         intent = canonical({'kind': kind, **fields})
@@ -159,7 +162,7 @@ class Outbox:
         # They are different identifiers and cannot be used interchangeably.
         txid = hashlib.sha256(row[0]).hexdigest().upper()
         if row[1] is not None:
-            return self.result(protocol.parse_json(row[1]), txid)
+            return self.result(wire.parse(row[1]), txid)
         deadline = time.monotonic() + timeout
         submitted = False
         while time.monotonic() < deadline:
