@@ -159,6 +159,46 @@ def test_hosted_customer_imports_without_a_numerical_runtime():
     subprocess.run([sys.executable, '-c', code], check=True, timeout=10)
 
 
+def test_two_customers_with_the_same_quote_reserve_distinct_capacity_atomically(tmp_path, customer_chain):
+    chain, owners = customer_chain
+    # Ten keys each advertise one slot: a second replica for every model rank.
+    for offer_id, offer in list(chain.state['hosting']['offers'].items()):
+        if offer['graph'] != chain.state['serving_root']:
+            continue
+        key = next(o for o in owners if o.public_key == offer['owner'])
+        chain.state = send(chain.state, key, 'cancel_expert_offer', offer_id=offer_id)
+    for rank in range(5):
+        replica = protocol.Identity('replica-customer-fixture-' + str(rank))
+        chain.state = send(chain.state, owners[0], 'transfer', to=replica.public_key, amount=100_000_000)
+        chain.state = send(chain.state, replica, 'register_provider', endpoint=f'https://replica-{rank}.example',
+            certificate='e'*64, collateral=50*hosting.PROFILE['lease_bond'])
+        for key in (owners[rank], replica):
+            chain.state = send(chain.state, key, 'offer_expert', graph=chain.state['serving_root'], rank=rank,
+                fee=100 + rank, capacity=1, expires_in=10000)
+    customers, boxes, rows = [], [], []
+    try:
+        for index, owner in enumerate((owners[3], owners[2])):
+            home = tmp_path/str(index)
+            home.mkdir()
+            customer, box = client(home, chain, owner)
+            customers.append(customer)
+            boxes.append(box)
+            rows.append(customer.prepare(MESSAGES, 4, 10**9))
+        assert rows[0]['quote']['offers'] == rows[1]['quote']['offers']
+        for customer, row in zip(customers, rows):
+            customer.tick(row)
+            accept(chain, owners, row['budget_id'])
+        views = [customer.tick(row)['snapshot'] for customer, row in zip(customers, rows)]
+        for rank in range(5):
+            assert views[0]['job']['workers'][str(rank)] != views[1]['job']['workers'][str(rank)]
+        for row, view in zip(rows, views):
+            assert chain.state['auditing']['budgets'][row['budget_id']]['publisher'] == view['job']['workers']['0']
+        settlement.invariant(chain.state)
+    finally:
+        for box in boxes:
+            box.close()
+
+
 def test_ambiguous_refused_reservation_retires_only_after_native_audit_closure(tmp_path, customer_chain):
     chain, owners = customer_chain
     customer, box = client(tmp_path, chain, owners[3])

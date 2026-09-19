@@ -18,6 +18,7 @@
     {"id": "backbone-loss", "messages": [{"role": "user", "content": "Explain why the sky looks blue in two sentences."}], "fault_rank": 1, "replacement_physical": 5}
   ],
   "generation": {"max_tokens": 64, "rule": "unchanged accepted greedy generation"},
+  "warmup": {"requests": 2, "one_per_replica": true, "messages": [{"role": "user", "content": "Say hello."}], "max_tokens": 4, "settle_and_include_all_costs": true},
   "load": {"concurrent_customers": 2, "ordinary_requests": 6, "fault_requests": 2, "complete_replays_per_claim": 3},
   "targets": {
     "cold_ready_seconds": 600,
@@ -33,6 +34,7 @@
   },
   "streaming": "Record genuine token-time visible snapshots. Never expose internal planning/worked text in chat. Drafts remain unverified until native settlement. Report structured/empty responses that cannot produce an early visible token rather than excluding them.",
   "latency_population": "All six ordinary requests, including both customers and multi-turn/composed requests. Report cold restoration separately. Nearest-rank p95; six samples establish a bounded demonstration, not a population latency guarantee.",
+  "predeployment_clarification": "Two paid warm-up requests load both replica groups before the six-request warm latency population. Each receives full verification; all their time and costs count. Declared before any GPU allocation or service measurement.",
   "resources": {
     "region": "us-east-1",
     "instance_types": ["g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge"],

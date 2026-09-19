@@ -139,6 +139,12 @@ def reserve_audit(state, job, budget_id, publisher):
              'request_root': identity(job['request'])}
     if budget.get('scope') != scope or budget['sponsor'] != job['payer']:
         raise ValueError('Hosted audit funding must belong to this exact customer, graph and request')
+    if budget['reservation'] is not None:
+        raise ValueError('Hosted verification funding is already reserved')
+    # The customer commits the workload before discovery reserves capacity.
+    # Native atomic selection may choose another available coordinator; only
+    # this exact payer/request can bind the previously unclaimed budget to it.
+    budget['publisher'] = publisher
     auditing.lock(state, budget_id, publisher, list(job['workers'].values()), job['id'])
 
 
@@ -331,7 +337,11 @@ def apply(state, owner, body, envelope):
         ranks, _ = required(state, graph, body['question'], maximum)
         ceiling = integer(body['max_provider_fee'], 0, 2**60)
         duration = integer(body['expires_in'], 1, 100000)
-        selected = select(state, graph, ranks, body['offers'], height + duration, ceiling)
+        if body['offers'] == 'discover':
+            from .provider_quotes import choose
+            _, selected = choose(state, graph, height + duration, ceiling)
+        else:
+            selected = select(state, graph, ranks, body['offers'], height + duration, ceiling)
         workers = {rank: row['owner'] for rank, row in selected.items()}
         fields = {key: body[key] for key in ('graph', 'question', 'max_tokens', 'max_price', 'expires_in')}
         expert_lifecycle.apply(state, owner, {'kind': 'infer_expert', **fields, 'workers': workers},

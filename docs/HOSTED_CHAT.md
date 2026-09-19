@@ -31,6 +31,11 @@ full verification funding and a transaction-fee allowance. It expires after 64
 blocks. Discovery does not reserve capacity. No model or GPU dependencies are
 loaded by the client. The local full node is a separate service.
 
+The signed request asks native settlement to select available offers atomically
+inside that price ceiling. Two customers may read the same indicative quote;
+their committed reservations acquire different available capacity. A quote is
+not a guarantee of a particular provider key.
+
 `fund_hosted_audit` binds the verification reservation to this customer, graph
 and complete conversation hash. Another customer cannot front-run that budget,
 and its selected coordinator cannot attach it to unrelated neural work. The

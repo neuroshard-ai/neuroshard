@@ -199,7 +199,7 @@ class Customer:
             if not recorded and 3*accepted <= 2*sum(weights.values()):
                 return {'status': 'awaiting_complete_audit_funding'}
             self.outbox.send(reservation, 'lease_expert', graph=quote['graph'], question=row['messages'],
-                max_tokens=quote['max_tokens'], offers=quote['offers'], max_price=quote['execution_atoms'],
+                max_tokens=quote['max_tokens'], offers='discover', max_price=quote['execution_atoms'],
                 max_provider_fee=quote['provider_atoms'], audit_budget=row['budget_id'], expires_in=quote['expires_in'])
             row.update(phase='serving', job_id=self.outbox.logical_id(reservation))
             self.write(row)
