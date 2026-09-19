@@ -3,9 +3,9 @@
   "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
   "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
   "retry": {
-    "previous_source": "4a2630fc1b9b5acb3e72be87280e495e38f5427d",
-    "previous_result": "Fifth allocation settled both warmups and all six ordinary accepted-model requests, with three complete replays per response and every ordinary latency gate passing. Coordinator replacement restored its committed files, but mixed fresh/cached owners used incompatible graph and answering-policy initialization collectives. The operated run was stopped as an unrecoverable failure; backbone loss was not attempted.",
-    "change": "Fresh and cached GraphNetwork owners now exchange the same epoch-bound initialization commitments. Answering-service owners jointly negotiate cache readiness and reconstruct policy wrappers together on any cache miss, preserving resident model/auxiliary weights. Real five-process HTTPS regressions exercise fresh coordinator and fresh backbone owners alongside cached survivors, plus fixed-group numerical equivalence.",
+    "previous_source": "8ac29c7bbde61434c1a5cfb23881b78227dab23a",
+    "previous_result": "Sixth allocation settled both warmups and all six ordinary requests with three complete replays each. The combined request first became visible after 46.791576912626624 seconds, exceeding the unchanged 45-second limit. Fault measurements are still running when this delivery-only correction is frozen; their final outcomes must be preserved and checked before another allocation.",
+    "change": "Deliver each completed visible answer part of deterministic combined replies while later parts execute. No planning, composer inputs, empty intermediate answers or special structured rendering are streamed. Later failure retracts the draft; disconnect cannot change the numerical result. The final neural outputs, rendering, model tensors and replay rules stay identical. Seven new control-flow cases and the real HTTPS/numerical checks pass (82 focused tests total).",
     "history": [
       {
         "source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004",
@@ -26,6 +26,10 @@
       {
         "source": "4a2630fc1b9b5acb3e72be87280e495e38f5427d",
         "cause": "Fresh/cached initialization protocol mismatch during coordinator recovery; eight requests settled before failure. Preserved separately as a failed recovery, not a complete service pass."
+      },
+      {
+        "source": "8ac29c7bbde61434c1a5cfb23881b78227dab23a",
+        "cause": "Complete combined reply was withheld until both answers finished; measured first-visible latency 46.791576912626624 seconds misses the frozen 45-second gate. Recovery outcome is recorded separately after the run."
       }
     ],
     "unchanged": [
@@ -36,10 +40,16 @@
       "faults",
       "replay count"
     ],
-    "aggregate_budget_usd": 125,
-    "prior_allocation_allowance_usd": 95,
-    "cold_readiness": "Includes both paid warm-up responses and their complete settlements. The fifth allocation measured 311.84158137254417 seconds, including both replicas; it did not pass recovery.",
-    "budget_revision": "The original five-allocation campaign retains its $100 ceiling and failed recovery result. Before this corrective allocation, explicitly increase the cumulative ceiling to $125, reserving $95 for the preceding attempts. No outcome, latency, learning or recovery criterion changes."
+    "aggregate_budget_usd": 160,
+    "prior_allocation_allowance_usd": 120,
+    "cold_readiness": "Includes both paid warm-up responses and complete settlements. The sixth allocation measured 302.79146315157413 seconds; the combined first-visible gate still failed.",
+    "budget_revision": "Preserve the preceding six-allocation $125 ceiling and results. Before this corrective allocation, increase the cumulative ceiling to $160, reserving $120 for earlier attempts. Verify actual prior complete costs fit that reserve before launch. No latency, learning, fault or replay criterion changes.",
+    "deployment_preconditions": [
+      "Preceding allocation has finished fault measurements and all disposable resources are retired.",
+      "Both coordinator and backbone recovery pass on the preceding source, or diagnose and repair any newly observed failure before deploying.",
+      "Actual standalone costs of all preceding attempts are below USD 120.",
+      "Exact-source metadata, complete answering policy, numerical runtime and genesis pass pre-allocation checks."
+    ]
   },
   "learning": {
     "train": false,
@@ -187,7 +197,7 @@
     "exactly_one_payment_per_request": true,
     "unused_execution_provider_audit_funds_refunded": true
   },
-  "streaming": "Record genuine token-time visible snapshots. Never expose internal planning/worked text in chat. Drafts remain unverified until native settlement. Report structured/empty responses that cannot produce an early visible token rather than excluding them.",
+  "streaming": "Record genuine visible snapshots: token-time output for eligible single answers, completed answer parts for deterministic combined replies. Never expose internal planning/worked text, composer inputs or special structured rendering intermediates. Drafts remain unverified until native settlement. Include responses with no early visible content in the same latency population.",
   "latency_population": "All six ordinary requests, including both customers and multi-turn/composed requests. Report cold restoration separately. Nearest-rank p95; six samples establish a bounded demonstration, not a population latency guarantee.",
   "predeployment_clarification": "Two paid warm-up requests load both replica groups before the six-request warm latency population. Each receives full verification; all their time and costs count. Declared before any GPU allocation or service measurement.",
   "resources": {
@@ -204,7 +214,7 @@
     "disk_gib": 200,
     "max_hours": 2,
     "minimum_zones": 3,
-    "planning_cap_usd": 125,
+    "planning_cap_usd": 160,
     "planning_hourly_rate_usd": 1.1,
     "verified_instance_hourly_usd": 1.006,
     "price_source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",

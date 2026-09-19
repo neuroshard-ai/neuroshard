@@ -23,11 +23,15 @@ token. The separate 600-second cold limit includes both paid warmups and their
 settlement. Six observations establish a bounded demonstration, not a population
 latency guarantee. Drafts remain unverified until native settlement.
 
-The absolute allocation deadline is two hours. The current $125 combined ceiling includes
+The absolute allocation deadline is two hours. The next correction's $160 combined ceiling includes
 the prior failed setups, all compute and replays, disks, network traffic, public
 IPv4 and 90-day artifact retention. Price estimates are pre-tax upper estimates,
 not an AWS invoice or a NEURO/USD exchange rate. The experiment uses finite
 operator sponsorship; it does not demonstrate independent customer demand.
+The [finite learning/service sponsorship](../config/experiments/finite-learning-service-sponsorship.json)
+also accounts for the three learning allocations, both existing controllers and
+deduplicated public retention. Its $1,000 aggregate cap does not rewrite any
+earlier experiment's cap or establish a perpetual serving subsidy.
 
 ## Retention accounting
 
@@ -244,3 +248,27 @@ public participation.
 The [provider guide](PROVIDER_RUNTIME.md) and [chat guide](HOSTED_CHAT.md) describe
 the implemented interfaces. The trial endpoints are disposable; they are not a
 permanent public service or a replacement for the public 0.4.0 network.
+
+## Sixth allocation: combined-output latency fails; recovery measurement ongoing
+
+Frozen source `8ac29c7bbde61434c1a5cfb23881b78227dab23a` settled both warmups
+and all six ordinary requests, with three complete replays per reply and zero
+issuance. Cold readiness was 302.79 seconds. The combined question first became
+visible at **46.79 seconds**, missing the unchanged **45-second** limit; its
+complete generated reply arrived at 47.18 seconds. It remains a failed complete
+performance trial even if the remaining recovery measurements pass.
+
+The fresh coordinator successfully restored only its committed files while
+surviving owners retained their model caches. Three full replays matched, and
+the recovered request settled exactly once in **624.12 seconds**, below the
+1,500-second limit. Backbone-loss measurement, final costs, replay and retirement
+are still pending in this interim record.
+
+The correction emits a completed visible answer part while the next part runs.
+It does not change routing, generated tokens or final rendering, expose planner
+or composer inputs, or count question-only previews as progress. A later invalid
+answer retracts the draft. All 82 focused checks pass, including real provider
+HTTPS execution and complete-answer replay. The next freeze keeps every request,
+model, latency threshold and fault unchanged, reserves $120 for earlier attempts
+inside a $160 cumulative cap, and forbids allocation before both preceding
+recoveries pass, resources are retired and complete prior costs fit that reserve.

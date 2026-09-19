@@ -1,0 +1,43 @@
+{
+  "format": "neuroshard-finite-learning-service-sponsorship-v1",
+  "decision": "Pay the complete finite cost of the accepted continual-learning demonstration and its provider-service validation, with no assumed NEURO cash value.",
+  "usd_cap": 1000,
+  "funding": "Operator-authorized AWS research sponsorship; no public token sales or external customer revenue assumed.",
+  "measurement_start_utc": "2026-09-17T21:13:19.571357+00:00",
+  "new_allocation_deadline_utc": "2026-09-19T22:00:00+00:00",
+  "scope": {
+    "learning_allocations": [
+      "conversation-campaign",
+      "admission-recovery",
+      "audit-storage-continuation"
+    ],
+    "provider_allocations": "All provider-service attempts on September 19, including rejected setups and the final corrective attempt; preserve each original frozen cap and outcome.",
+    "controllers": "Both existing m5.xlarge hosts over the measurement interval, conservatively charging their complete observed footprint although they also run older services.",
+    "compute": "Every allocated second through confirmed retirement, including setup, rejected work, idle time, training, generation, full verification and cleanup.",
+    "storage": "All allocated GPU disks and existing controller disks over the interval. Deduplicate the public research object pool; cost 93 days of retained artifacts, including failed attempts and source/evidence archives.",
+    "network": "Raw complete EC2 NetworkIn/NetworkOut series for retired learning allocations and controllers; complete per-host non-loopback counters for provider allocations. Price both measured directions at USD 0.15 per decimal GB, deliberately including free traffic.",
+    "requests_allowance_usd": 25,
+    "archive_size_allowance_bytes": 1073741824
+  },
+  "inherited_inputs": "Published seed models and research checkpoints are starting assets. Their historical research before this measurement interval is not claimed to have been produced by this budget.",
+  "native_rules": {
+    "training": "Only settled unique prescribed updates issue rewards under each frozen native manifest. This sponsorship cannot change an issuance schedule or advance serving quality.",
+    "inference": "No new issuance. Customers prepay bounded execution, provider fees and complete verification; native settlement refunds unused escrow.",
+    "verification": "Native voting-weight quorum, with every honest positive or negative report based on complete replay. Different keys and fresh executions do not establish independent administration.",
+    "serving_limit": "Only the declared inference-only provider trials; no open-ended public serving subsidy or new training cohort is authorized by this experiment file."
+  },
+  "stops": [
+    "Preserve each allocation hard deadline and protected hosts.",
+    "Do not launch further corrective trials if their conservative estimate exceeds the remaining aggregate sponsorship.",
+    "Retire disposable hosts and volumes after evidence collection.",
+    "No future cohort, indefinite artifact growth or perpetual inference is covered. A new finite policy is required before extending these obligations."
+  ],
+  "accounting": "Price-based pre-tax conservative estimates, not billed usage. Cost Explorer access is unavailable. Earlier individual caps remain auditable even if a later complete estimate exceeds them; this aggregate policy does not relabel an earlier failed cap as passed.",
+  "not_demonstrated": [
+    "Independent operators",
+    "Market demand",
+    "A NEURO/USD exchange rate",
+    "Perpetual economic sustainability",
+    "Cheap cryptographic proof of neural execution"
+  ]
+}
