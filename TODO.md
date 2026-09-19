@@ -262,8 +262,10 @@ before the affected work, rather than changing the target after a result.
   Current development: [operated alpha admission and recovery](docs/OPERATED_ALPHA.md)
   replaces unaccepted audit offers with atomic work reservation against funded
   standing services, charges occupied capacity, and adds provider maintenance
-  and native recovery from advertised spares. The new profile needs its own
-  committed preflight and deployment evidence. AWS machines under our account
+  and native recovery from advertised spares. Its committed CPU native preflight
+  passes both automatic owner replacements, nine complete numerical replays and
+  exact replay of 651 blocks and 147 transactions. Operated LLM deployment and
+  its availability evidence remain pending. AWS machines under our account
   do not satisfy the independent-administration criterion below.
 
   Done when independent providers can discover work, acquire assigned shards,

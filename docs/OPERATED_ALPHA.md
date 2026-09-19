@@ -74,6 +74,36 @@ unknown outcome stays unknown; retirement is not a fabricated refund or receipt.
 
 ## Deployment checks
 
+The committed native preflight passed on source
+`ca0752bb993afa1da11c38b2583b9062f9455782`. Five assigned CPU shards answered each
+request; advertised standby owners replaced a killed coordinator and backbone
+owner through the recovery daemon. Each of the three responses received three
+complete numerical replays. All four validators agreed. Ledger replay reproduced
+651 headers and 147 accepted transactions, with zero rejected transactions or
+issued tokens, and final state
+`229aa4e5ed9a9daad04a9101de76625b99b8861f54689d4e804f76318edb1314`.
+Execution took 617.41 seconds; all trial processes stopped. No AWS instances or
+GPUs were allocated. [Public evidence, including the CPU model and ledger](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/1161002838ecfdf912d5a6948e850f866336fbc4a3c0487c2b8b7d8056ca88d3)
+and [exact source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/575ed90fc2864b5779cc1487fd44e3a1caee39794127c24bdf7c80d5e21b182e)
+were uploaded with complete checksum readback. These are synthetic-model
+operability results, not another LLM quality result or the independent soak.
+
+The next [funded deployment contract](../config/experiments/operated-alpha.json)
+specifies seven GPUs for at most 72 hours, four separate ledger hosts for at most
+seven days, two serving replicas on different physical hosts, and an $800
+aggregate planning ceiling with a spending watch. The ledger outlives GPU
+service so native expiries can refund unfinished work. Public starter credits
+are finite sponsor transfers; the larger declared bootstrap stake keeps that
+credit pool below a blocking minority. It still belongs to one administrator.
+Deployment must pass the declared accepted-model service gate before advertising
+availability. The contract does not itself establish a running public service.
+The [joining guide](JOIN_ALPHA.md) covers source installation, a validating local
+observer, bounded starter credits and the existing chat client. The GPU gate
+stops one provider service in each recovery case so systemd cannot immediately
+restart it, then requires native recovery using an already advertised replica
+on another machine. It does not claim recovery of a failed physical host or
+independent administration.
+
 Before a GPU allocation, the native CPU preflight must execute actual shards,
 settle complete numerical audits, recover a coordinator and a backbone owner
 using the recovery controller, and reproduce the ledger from its blocks. The
