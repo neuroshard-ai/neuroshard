@@ -214,9 +214,48 @@ live probe correctly before the native controller restarted. Additional
 orchestration repairs serialize feed discovery, prevent stale readers from
 moving the feed cursor backwards, and stop persistent backend failures instead
 of retrying for hours. Twenty targeted transport/comparison checks passed.
-The first 128 shadow updates have now reproduced exactly with 96 fresh training
-audits and zero extra issuance. Full quality audits and the matched serving
-interval are still running; feed and audit finals remain unopened.
+All 128 shadow updates reproduced exactly with 96 fresh training audits and
+zero extra issuance. Each of the three complete quality auditors reproduced
+all 105 stages and the producer's result root. The declared serving interval
+finished at 00:18:45 UTC on September 19, allowing the existing controller to
+prepare the next cohort. Feed and audit finals remain unopened.
+
+### Completed resource comparison
+
+Both arms received seven g5.xlarge owners, 300 GiB per owner and a 9,000-second
+interval covering training, three fresh audits and a two-replica serving
+workload. The original completed growth arm is preserved; the interrupted
+control alone was rerun on replacement owners.
+
+| Measured outcome | Isolated addition | Fixed capacity |
+| --- | ---: | ---: |
+| New single answers | 15/16 | 15/16 |
+| New combined answers | 14/16 | 13/16 |
+| Previously correct retained answers lost | 0 | 6 |
+| Quality decision | Accept | Reject |
+| Serving requests within the interval | 348 | 1,323 |
+| Generated tokens within the interval | 5,920 | 20,806 |
+
+Audit agreement verifies the control's measured failure; it does not turn that
+failure into a quality pass. The result supports isolated addition under the
+preservation rule while exposing its resource tradeoff. Request counts measure
+the declared complete workload, including how much time remained for serving;
+they are not an isolated inference-speed comparison. The last in-flight
+requests finished at most 0.73 seconds after the growth deadline and 5.15
+seconds after the control deadline.
+
+The replacement control used cold caches and different physical placements.
+Historical application replay on the root host overlapped its early work,
+was lowered to Nice 19 and idle IO at 22:04 UTC, and finished at 22:55 UTC,
+before control serving began at 23:12 UTC. The earlier failed allocation remains
+recorded separately. This is one declared fixed-capacity alternative, not an
+optimal-control or total-lifetime-cost result.
+
+The [complete comparison evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/3f3fd2563a2884e144171bd669de0f514aad8e2375e26bb1500eff76439d3ecf)
+contains both arms' quality results, all fresh control execution audits,
+benchmark transcripts and resource counters. Its 549 files passed full public
+byte-hash readback. Comparison execution issued no additional NEURO. Two more
+prospective useful admissions are still required for checklist items 1 and 2.
 
 The [first-admission evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/a42d4a3a3ef083720fae12e7c2e12f3dc3889d9deb9dae880533a10592fc6abd)
 contains the complete earlier application history, public genesis, final state,

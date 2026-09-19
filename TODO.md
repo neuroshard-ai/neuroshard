@@ -17,8 +17,10 @@ before the affected work, rather than changing the target after a result.
   answers 1→14/16, losing no previously correct retained answers. Three quality
   audits agreed and native quality promoted the graph. A comparison-controller
   failure stopped the initial attempt before the next two cohorts. The same-ledger
-  continuation is now running on replacement owners; the equal-resource
-  comparison remains incomplete. See the
+  continuation on replacement owners has completed the declared resource
+  comparison: isolated growth preserved every retained correct answer; fixed
+  capacity lost six, while serving more requests in its interval. The next two
+  prospective cohorts remain pending. See the
   [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
 
   Done when ordinary questions automatically select and combine relevant shards,
@@ -144,7 +146,9 @@ before the affected work, rather than changing the target after a result.
   budget handling are repaired. Seven replacement owners restored the accepted
   graph, and the same chain resumed with its original signing journals and
   issuance. Full replay of the interrupted history passed 39,929 headers and
-  446 transactions. The comparison continuation and remaining cohorts are pending.
+  446 transactions. The comparison continuation completed with zero extra
+  issuance; automatic preparation of the next cohort is running. The two
+  remaining useful admissions are still required.
 
   Done when the network repeatedly admits immutable data with provenance,
   deduplication and contamination/poisoning checks; funds and assigns a bounded
