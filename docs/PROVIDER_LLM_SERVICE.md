@@ -143,6 +143,33 @@ aligned timeout. The outer 600-second cold-readiness gate, request bounds and
 two-hour retirement deadline stay fixed. The combined $100 trial ceiling now
 reserves $65 for prior setups; it is not an additional $65 expenditure.
 
+## Fourth allocation: stale policy commitment
+
+Source `a9803bddae7abc06b243dc5e81f16aa47178b0b2` passed all seven separate
+instance-store checks and registered 18 providers. Asset preparation then
+rejected the reused policy before loading model tensors. The executor source
+check had passed, but the learned policy additionally committed the earlier
+`scripts/run_native_expert_service.py` hash. That script's timeout had changed.
+The controller did not retain the remote command's stderr; the evidence records
+the separate CPU reproduction of the policy rejection and both script hashes.
+
+[Evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/a76b496246e76b5aea2237ee9f65498bb472f0e19d7872ab660a7330c9a6c384)
+and [matching source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/c1b94867a0f344be3c515e356417bcc9c4ac90f8742fce701184280c30e6bced)
+preserve the failed setup. Replay matches 191 headers, 54 transactions and all
+seven states. No inference claim, payment or issuance occurred. All disposable
+hosts, volumes and the security group were retired. This attempt's standalone
+upper estimate is $11.30, bringing the four setups to $63.58.
+
+`4a2630fc1b9b5acb3e72be87280e495e38f5427d` checks the full content-addressed
+serving policy, including learned/planned script commitments, before allocation.
+Its six controller tests include an internally hash-consistent graph with a
+stale script commitment. It also preserves bounded restoration errors. Regenerated
+metadata passes executor, complete-policy and native-genesis checks, with no
+weight or answering-rule change. The new public policy
+`381cf3a38ffd71f10279f8d0d2573c02ae2f886980771ca2270abd11586b9d7b`
+passed full hash readback. The next allocation reserves $70 for prior attempts
+inside the unchanged $100 aggregate ceiling; its serving outcome remains pending.
+
 The [provider guide](PROVIDER_RUNTIME.md) and [chat guide](HOSTED_CHAT.md) describe
 the implemented interfaces. The trial endpoints are disposable; they are not a
 permanent public service or a replacement for the public 0.4.0 network.

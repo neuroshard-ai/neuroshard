@@ -107,6 +107,14 @@ restores/checks its own partition, acknowledges the native assignment and runs
 the pinned model through authenticated peers. Its coordinator submits the
 complete, jointly signed response. Payment still requires funded full replay.
 
+Keep the provider identity, TLS key and transaction journal on durable storage
+with a private backup. The local native node has separate keys and stores to
+preserve. Only `home/models` is a disposable cache suitable for instance-local
+SSD storage: committed model bytes can be fetched again, but a new provider key
+cannot spend the old key's balance or withdraw its collateral. Restore the same
+identity and journal together, and require a new native assignment after an
+interrupted execution.
+
 Reissuing an identical publish command recovers the same signed operation; it
 does not renew an expired offer. A fresh advertisement needs a changed offer
 intent. Cancel an offer through `cancel_expert_offer` before a planned departure;
