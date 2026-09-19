@@ -4,9 +4,25 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import Request,urlopen
 
-from neuroshard.core.crypto.ecdsa import derive_keypair_from_token,ecdsa_sign
+from neuroshard.core.crypto.ecdsa import derive_keypair_from_token,ecdsa_sign,ecdsa_verify
 
 MAX_RESPONSE=8*1024*1024
+
+
+class Rejected(ValueError):
+    """A native query or transaction was explicitly refused."""
+
+
+def verify(envelope):
+    if not isinstance(envelope, dict) or set(envelope) != {'body', 'public_key', 'signature'}:
+        raise ValueError('Invalid signed envelope')
+    public = envelope['public_key']
+    if (not isinstance(public, str) or len(public) != 66 or not isinstance(envelope['body'], dict)
+            or not isinstance(envelope['signature'], str) or len(envelope['signature']) > 160):
+        raise ValueError('Invalid signed body, key or signature encoding')
+    if not ecdsa_verify(canonical(envelope['body']).decode(), envelope['signature'], bytes.fromhex(public)):
+        raise ValueError('Signature verification failed')
+    return envelope['body'], public
 
 
 def canonical(value):
@@ -76,7 +92,7 @@ def http(url,body=None,timeout=30):
 
 def rpc(url,method,params=None,timeout=30):
     response=http(url,{'jsonrpc':'2.0','id':1,'method':method,'params':params or {}},timeout)
-    if 'error' in response:raise ValueError(str(response['error']))
+    if 'error' in response:raise Rejected(str(response['error']))
     return response['result']
 
 

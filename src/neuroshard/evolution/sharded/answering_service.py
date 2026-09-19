@@ -34,14 +34,22 @@ def selected_graph(network, graph):
         network.verify_unchanged()
 
 
-def execute(network, graph, messages, maximum):
+def execute(network, graph, messages, maximum, *, on_text=None):
     from .planned_graph import PlannedGraphNetwork, conversation
     serving_graph.validate(graph)
     conversation(messages)
     key = identity(graph)
     with selected_graph(network, graph):
         service = network.answering_services.get(key)
-        if service is None:
+        readiness = network.all_owners.exchange({'graph': key, 'cached': service is not None})
+        if any(not isinstance(row, dict) or set(row) != {'graph', 'cached'}
+               or row['graph'] != key or type(row['cached']) is not bool for row in readiness):
+            raise ValueError('Owners selected different answering systems')
+        # Service construction includes collective policy/adapter checks. A
+        # newcomer must not enter those alone while cached peers start answering.
+        # Rebuild the small service wrappers together on a partial cache miss;
+        # backbone, expert and auxiliary model caches remain resident.
+        if not all(row['cached'] for row in readiness):
             config = answering.load(graph, network.policy_store)
             features = None
             if network.rank == 0:
@@ -58,7 +66,7 @@ def execute(network, graph, messages, maximum):
             service = PlannedGraphNetwork(network, config, source_home=network.source_home,
                 features=features, planner_weights_home=network.policy_store.root)
             network.answering_services[key] = service
-        response = service.answer(messages, maximum)
+        response = service.answer(messages, maximum, on_text=on_text)
     request = {'messages': copy.deepcopy(messages), 'max_tokens': maximum}
     return {'graph': key, 'request': request, 'outputs': response['outputs'],
             'text': response['text'], 'answering': response}

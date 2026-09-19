@@ -104,7 +104,7 @@ class CachedPartition:
 
 
 @torch.no_grad()
-def generate_cached(shard, wire, token_ids, max_tokens, eos_id, observation=None):
+def generate_cached(shard, wire, token_ids, max_tokens, eos_id, observation=None, *, on_tokens=None):
     """Prefill once, then send one hidden vector per boundary per output token.
 
     Every owner gets the same request. ``observation`` is an optional mutable
@@ -112,10 +112,10 @@ def generate_cached(shard, wire, token_ids, max_tokens, eos_id, observation=None
     """
     if wire.rank != shard.rank or wire.world != len(shard.boundaries) - 1 or wire.world < 2:
         raise ValueError('Wire must match the shard partition')
-    return _generate(shard, wire, token_ids, max_tokens, eos_id, observation)
+    return _generate(shard, wire, token_ids, max_tokens, eos_id, observation, on_tokens=on_tokens)
 
 
-def generate_branch_cached(network, token_ids, max_tokens, expert, observation=None):
+def generate_branch_cached(network, token_ids, max_tokens, expert, observation=None, *, on_tokens=None):
     """Cache only the selected parent or expert path of an existing Network.
 
     The parent owner that also retains the original tail stops at the expert
@@ -130,11 +130,11 @@ def generate_branch_cached(network, token_ids, max_tokens, expert, observation=N
     wire = network.wire if expert else network.parent_wire
     stop = network.split if expert and wire.rank == 2 else None
     return _generate(network.shard, wire, token_ids, max_tokens,
-                     network.tokenizer.eos_token_id, observation, stop)
+                     network.tokenizer.eos_token_id, observation, stop, on_tokens=on_tokens)
 
 
 @torch.no_grad()
-def _generate(shard, wire, token_ids, max_tokens, eos_id, observation, stop=None):
+def _generate(shard, wire, token_ids, max_tokens, eos_id, observation, stop=None, *, on_tokens=None):
     tokens = list(token_ids)
     if (not tokens or any(type(token) is not int or not 0 <= token < shard.config.vocab_size for token in tokens)
             or type(max_tokens) is not int or max_tokens < 0
@@ -169,6 +169,13 @@ def _generate(shard, wire, token_ids, max_tokens, eos_id, observation, stop=None
         if type(token) is not int or not 0 <= token < shard.config.vocab_size:
             raise ValueError('Invalid generated token')
         output.append(token)
+        if rank == 0 and on_tokens is not None:
+            try:
+                on_tokens(tuple(output))
+            except Exception:
+                # A disconnected observer must not alter generated tokens or
+                # leave other owners waiting for the next numerical operation.
+                on_tokens = None
         if first_token_seconds is None:
             first_token_seconds = time.monotonic() - started
         if token == eos_id:

@@ -1,0 +1,21 @@
+{
+  "format": "neuroshard-provider-native-preflight-v1",
+  "purpose": "Check open provider admission, actual shard execution, funded native settlement and epoch recovery before an LLM deployment allocation.",
+  "model": "Deterministic five-partition CPU fixture; no training or quality claim",
+  "cases": ["ordinary", "coordinator-loss", "backbone-loss"],
+  "fault_ranks": {"coordinator-loss": 0, "backbone-loss": 1},
+  "question": [{"role": "user", "content": "What is word7?"}],
+  "max_tokens": 4,
+  "complete_replays_per_claim": 3,
+  "pass": [
+    "Unlisted provider keys restore only their committed partitions and acknowledge native assignments",
+    "All five owners agree on each response and assignment-bound signature",
+    "Three complete numerical replays reproduce each native inference claim",
+    "Both killed owners are replaced by fresh keys and endpoints through native transactions",
+    "Each replacement preserves its request and graph, changes the epoch, and settles exactly once",
+    "All four validators agree on the result, fees and refunds; inference issues no tokens",
+    "All trial processes stop at completion or the declared deadline"
+  ],
+  "resources": {"additional_instances": 0, "gpus": 0, "max_seconds": 1200, "memory_limit_gib": 7, "cpu_quota_percent": 150},
+  "limits": "One administrator and one physical host. This does not satisfy the independent-operator soak or measure the accepted LLM's latency or costs."
+}

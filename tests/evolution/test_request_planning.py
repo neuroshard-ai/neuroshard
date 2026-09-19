@@ -130,6 +130,81 @@ def stub_service(monkeypatch, generated):
     return service, calls
 
 
+def streaming_service(monkeypatch, *, render=None, composer=False):
+    import json
+    questions = ['Where is the Aurora telescope?', 'What command starts the renderer?']
+    program = {'questions': questions}
+    if render is not None:
+        program['render'] = render
+    service, calls = stub_service(monkeypatch, iter([json.dumps(program), 'Composed final answer']))
+    service.net.rank = 0
+    service.net.graph = {'experts': ['sensor']}
+    service.net.tokenizer = SimpleNamespace(encode=lambda text, **kwargs: list(text.encode()))
+    if render is not None:
+        service.config['answer_policy'] = {'value_decoders': {'sensor': 'text'}}
+    if composer:
+        service.config['composer'] = {'instruction': 'Compose the answers.', 'max_tokens': 64}
+    messages = [{'role': 'user', 'content': 'Tell me the telescope location and the renderer command.'}]
+    return service, calls, messages, questions
+
+
+@pytest.mark.parametrize('render', [None, 'assistant'])
+def test_completed_answer_part_is_visible_before_the_next_part_executes(monkeypatch, render):
+    service, calls, messages, questions = streaming_service(monkeypatch, render=render)
+    seen = []
+    def answer(selected, question, *args, **kwargs):
+        if question == questions[1]:
+            assert seen == [questions[0] + '\nmeasured answer']
+        return {'question': question, 'expert': selected, 'text': 'measured answer'}, None, None
+    monkeypatch.setattr(service, 'answer_atom', answer)
+    response = service.answer(messages, 128, on_text=seen.append)
+    assert seen == [questions[0] + '\nmeasured answer', response['text']]
+    assert response['status'] == 'completed' and calls == ['planning']
+    # Delivery does not enter the committed numerical response.
+    replay, _, _, _ = streaming_service(monkeypatch, render=render)
+    assert replay.answer(messages, 128) == response
+
+
+def test_later_answer_failure_retracts_the_provisional_completed_part(monkeypatch):
+    service, _, messages, questions = streaming_service(monkeypatch)
+    seen = []
+    def answer(selected, question, *args, **kwargs):
+        if question == questions[1]:
+            return None, None, 'invalid_general_answer'
+        return {'question': question, 'expert': selected, 'text': 'measured answer'}, None, None
+    monkeypatch.setattr(service, 'answer_atom', answer)
+    response = service.answer(messages, 128, on_text=seen.append)
+    assert response['status'] == 'needs_clarification' and response['text'] == ''
+    assert seen == [questions[0] + '\nmeasured answer', '']
+
+
+@pytest.mark.parametrize('mode', ['composer', 'structured', 'empty'])
+def test_intermediate_parts_are_hidden_when_they_are_not_visible_answers(monkeypatch, mode):
+    service, _, messages, _ = streaming_service(monkeypatch,
+        render='semicolon' if mode == 'structured' else None, composer=mode == 'composer')
+    seen = []
+    def answer(selected, question, *args, **kwargs):
+        assert seen == []
+        return {'question': question, 'expert': selected,
+                'text': '' if mode == 'empty' else 'measured answer'}, None, None
+    monkeypatch.setattr(service, 'answer_atom', answer)
+    response = service.answer(messages, 128, on_text=seen.append)
+    assert seen == [response['text']]
+    if mode == 'composer':
+        assert response['text'] == 'Composed final answer'
+    elif mode == 'structured':
+        assert response['text'] == 'measured answer; measured answer'
+
+
+def test_customer_disconnect_during_a_combined_answer_does_not_change_the_result(monkeypatch):
+    service, _, messages, _ = streaming_service(monkeypatch)
+    def disconnected(text):
+        raise ConnectionError('customer disconnected')
+    response = service.answer(messages, 128, on_text=disconnected)
+    replay, _, _, _ = streaming_service(monkeypatch)
+    assert response == replay.answer(messages, 128)
+
+
 def test_direct_serving_never_invokes_a_question_generator(monkeypatch):
     service, calls = stub_service(monkeypatch, iter([]))
     request = 'What command starts the renderer?'

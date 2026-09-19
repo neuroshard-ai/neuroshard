@@ -1,0 +1,265 @@
+{
+  "format": "neuroshard-provider-llm-service-v1",
+  "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
+  "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
+  "retry": {
+    "previous_source": "8ac29c7bbde61434c1a5cfb23881b78227dab23a",
+    "previous_result": "Sixth allocation settled both warmups and all six ordinary requests with three complete replays each. The combined request first became visible after 46.791576912626624 seconds, exceeding the unchanged 45-second limit. Fault measurements are still running when this delivery-only correction is frozen; their final outcomes must be preserved and checked before another allocation.",
+    "change": "Deliver each completed visible answer part of deterministic combined replies while later parts execute. No planning, composer inputs, empty intermediate answers or special structured rendering are streamed. Later failure retracts the draft; disconnect cannot change the numerical result. The final neural outputs, rendering, model tensors and replay rules stay identical. Seven new control-flow cases and the real HTTPS/numerical checks pass (82 focused tests total).",
+    "history": [
+      {
+        "source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004",
+        "cause": "Earlier baseline executor selected instead of the final accepted executor; no loaded reference group or requests."
+      },
+      {
+        "source": "c359ad98543f74f402c3b2692371e7dde6188ddd",
+        "cause": "Missing controller wallet creation after successful model load; no requests or payments."
+      },
+      {
+        "source": "7d8c2a09b60739b2b027359f147a7dc72a5854f4",
+        "cause": "Cold EBS file hashing delayed a backbone beyond the underlying Gloo group timeout; no loaded reference group, requests or payments."
+      },
+      {
+        "source": "a9803bddae7abc06b243dc5e81f16aa47178b0b2",
+        "cause": "Reused policy metadata still committed the earlier service-script hash after its startup-timeout change. No model loading, requests or payments."
+      },
+      {
+        "source": "4a2630fc1b9b5acb3e72be87280e495e38f5427d",
+        "cause": "Fresh/cached initialization protocol mismatch during coordinator recovery; eight requests settled before failure. Preserved separately as a failed recovery, not a complete service pass."
+      },
+      {
+        "source": "8ac29c7bbde61434c1a5cfb23881b78227dab23a",
+        "cause": "Complete combined reply was withheld until both answers finished; measured first-visible latency 46.791576912626624 seconds misses the frozen 45-second gate. Recovery outcome is recorded separately after the run."
+      }
+    ],
+    "unchanged": [
+      "accepted weights",
+      "ordinary requests",
+      "generation",
+      "latency and settlement bounds",
+      "faults",
+      "replay count"
+    ],
+    "aggregate_budget_usd": 160,
+    "prior_allocation_allowance_usd": 120,
+    "cold_readiness": "Includes both paid warm-up responses and complete settlements. The sixth allocation measured 302.79146315157413 seconds; the combined first-visible gate still failed.",
+    "budget_revision": "Preserve the preceding six-allocation $125 ceiling and results. Before this corrective allocation, increase the cumulative ceiling to $160, reserving $120 for earlier attempts. Verify actual prior complete costs fit that reserve before launch. No latency, learning, fault or replay criterion changes.",
+    "deployment_preconditions": [
+      "Preceding allocation has finished fault measurements and all disposable resources are retired.",
+      "Both coordinator and backbone recovery pass on the preceding source, or diagnose and repair any newly observed failure before deploying.",
+      "Actual standalone costs of all preceding attempts are below USD 120.",
+      "Exact-source metadata, complete answering policy, numerical runtime and genesis pass pre-allocation checks."
+    ]
+  },
+  "learning": {
+    "train": false,
+    "new_final": false,
+    "quality_claim": false,
+    "new_tokens_issued": 0
+  },
+  "preserve": [
+    "all model tensors",
+    "tokenizer bytes",
+    "routing and question indexes",
+    "planning and composition rules",
+    "decoding and numerical runtime"
+  ],
+  "logical_owners": 9,
+  "physical_placement": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    3,
+    4
+  ],
+  "replicas": 2,
+  "requests": [
+    {
+      "id": "client-package",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the name of the NeuroShard client package?"
+        }
+      ]
+    },
+    {
+      "id": "retained-directory",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Where does Fenn Varden live?"
+        }
+      ]
+    },
+    {
+      "id": "ordinary-general",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Explain why the sky looks blue in two sentences."
+        }
+      ]
+    },
+    {
+      "id": "constrained-general",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return only the result of 17 plus 26."
+        }
+      ]
+    },
+    {
+      "id": "multiturn-context",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Remember the phrase violet kettle."
+        },
+        {
+          "role": "assistant",
+          "content": "I will remember violet kettle."
+        },
+        {
+          "role": "user",
+          "content": "What phrase did I ask you to remember? Give only the phrase."
+        }
+      ]
+    },
+    {
+      "id": "combined-question",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Where does Fenn Varden live, and what is the name of the NeuroShard client package?"
+        }
+      ]
+    },
+    {
+      "id": "coordinator-loss",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the name of the NeuroShard client package?"
+        }
+      ],
+      "fault_rank": 0,
+      "replacement_physical": 6
+    },
+    {
+      "id": "backbone-loss",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Explain why the sky looks blue in two sentences."
+        }
+      ],
+      "fault_rank": 1,
+      "replacement_physical": 5
+    }
+  ],
+  "generation": {
+    "max_tokens": 64,
+    "rule": "unchanged accepted greedy generation"
+  },
+  "warmup": {
+    "requests": 2,
+    "one_per_replica": true,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello."
+      }
+    ],
+    "max_tokens": 4,
+    "settle_and_include_all_costs": true
+  },
+  "load": {
+    "concurrent_customers": 2,
+    "ordinary_requests": 6,
+    "fault_requests": 2,
+    "complete_replays_per_claim": 3
+  },
+  "targets": {
+    "cold_ready_seconds": 600,
+    "warm_generation_p95_seconds": 90,
+    "warm_first_visible_p95_seconds": 45,
+    "settlement_seconds_per_request": 1200,
+    "recovered_settlement_seconds": 1500,
+    "ordinary_successful_settlements": 6,
+    "fault_successful_settlements": 2,
+    "all_neural_outputs_match_full_replay": true,
+    "exactly_one_payment_per_request": true,
+    "unused_execution_provider_audit_funds_refunded": true
+  },
+  "streaming": "Record genuine visible snapshots: token-time output for eligible single answers, completed answer parts for deterministic combined replies. Never expose internal planning/worked text, composer inputs or special structured rendering intermediates. Drafts remain unverified until native settlement. Include responses with no early visible content in the same latency population.",
+  "latency_population": "All six ordinary requests, including both customers and multi-turn/composed requests. Report cold restoration separately. Nearest-rank p95; six samples establish a bounded demonstration, not a population latency guarantee.",
+  "predeployment_clarification": "Two paid warm-up requests load both replica groups before the six-request warm latency population. Each receives full verification; all their time and costs count. Declared before any GPU allocation or service measurement.",
+  "resources": {
+    "region": "us-east-1",
+    "instance_types": [
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "disk_gib": 200,
+    "max_hours": 2,
+    "minimum_zones": 3,
+    "planning_cap_usd": 160,
+    "planning_hourly_rate_usd": 1.1,
+    "verified_instance_hourly_usd": 1.006,
+    "price_source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "price_sku": "79BRGEEZC6TARVWJ",
+    "price_effective_date": "2026-09-01",
+    "public_ports": [
+      26656,
+      18440,
+      18441,
+      18442,
+      18443,
+      18444,
+      18445,
+      18446,
+      18447,
+      18448,
+      18460,
+      18461,
+      18462,
+      18463,
+      18464,
+      18465,
+      18466,
+      18467,
+      18468,
+      18500,
+      18501
+    ],
+    "protected_instances": [
+      "i-0d681a8ef83f72619",
+      "i-06bf7f1f01e6228bb",
+      "i-0ebe86ca07e97cf29"
+    ],
+    "artifact_retention_days_costed": 90,
+    "accounting": [
+      "complete allocation runtime including bootstrap and idle time",
+      "all full numerical replays",
+      "EBS capacity and provisioned IOPS/throughput",
+      "public IPv4",
+      "inter-zone and public object transfers",
+      "public model/evidence bytes and retention",
+      "native-node overhead"
+    ],
+    "model_cache": "AMI-managed local NVMe mounted at /opt/dlami/nvme, bind-mounted only into each provider model directory; no wallet or native-store migration; require mount and >=64 GiB free before dependency/model downloads."
+  },
+  "stop": "Terminate all disposable instances and volumes at completion, first unrecoverable failure, spending ceiling or absolute two-hour deadline. Preserve source, inputs, failure/result evidence and complete costs. Never rerun a failed gate without an identified cause and a new declared change.",
+  "scope": "One administrator. Fresh research genesis seeded with the accepted graph; no live-chain change, training or serving promotion. This is not the independent-operator soak, unrestricted hardware interoperability, or permanent public availability. TODO 4 requires independent operators regardless of this result."
+}

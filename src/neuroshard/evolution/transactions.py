@@ -11,7 +11,7 @@ import time
 from http.client import HTTPException
 
 from neuroshard.dataflow.store import canonical
-from neuroshard.demo import client as wire, protocol
+from neuroshard.client import wire
 
 
 class ClosedOperation(wire.Rejected):
@@ -41,6 +41,45 @@ class Outbox:
                               'AND id NOT IN (SELECT id FROM retired)').fetchone()
         return row[0] if row else None
 
+    def recorded(self, operation):
+        return self.db.execute('SELECT 1 FROM operations WHERE id=?', (operation,)).fetchone() is not None
+
+    def receipt(self, operation):
+        row = self.db.execute('SELECT receipt FROM operations WHERE id=?', (operation,)).fetchone()
+        return wire.parse(row[0]) if row and row[0] is not None else None
+
+    def retirement(self, operation):
+        row = self.db.execute('SELECT evidence FROM retired WHERE id=?', (operation,)).fetchone()
+        return wire.parse(row[0]) if row else None
+
+    def retire_hosted_payment(self, snapshot, audits):
+        """A permanently closed audit budget can never admit its old lease.
+
+        Inputs must come from the customer's pinned local full node. Keep the
+        signed envelope and unknown transaction outcome, including when no
+        reservation ever reached a block. Do not fabricate a transaction fee.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        body = self.pending_body()
+        if body['kind'] != 'lease_expert':
+            return None
+        closed = next((row for row in audits['history'] if row['id'] == body['audit_budget']), None)
+        if closed is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        _, owner = wire.verify(wire.parse(raw))
+        if (snapshot['chain_id'] != self.chain_id or body['chain_id'] != self.chain_id
+                or owner != self.owner.public_key or snapshot['height'] < closed['height']):
+            raise ValueError('Require this customer network\'s committed audit closure')
+        evidence = {'operation': operation, 'chain_id': self.chain_id, 'height': snapshot['height'],
+            'transaction_sha256': hashlib.sha256(raw).hexdigest(), 'closed_audit': closed,
+            'transaction_outcome': 'unknown; audit budget permanently closed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
+
     def retire_closed(self, state):
         """Recover a stale audit/vote only from trusted committed native state.
 
@@ -56,7 +95,7 @@ class Outbox:
                 or state['manifest'].get('auditing', {}).get('format') != 'neuroshard-native-quorum-audit-v1'):
             raise ValueError('Retirement requires this account network\'s committed native state')
         raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
-        body, owner = protocol.verify(protocol.parse_json(raw))
+        body, owner = wire.verify(wire.parse(raw))
         if owner != self.owner.public_key or body['chain_id'] != self.chain_id:
             raise ValueError('Outbox envelope belongs to another account or chain')
         kind, closed = body['kind'], None
@@ -82,7 +121,54 @@ class Outbox:
         row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
         if row is None:
             raise ValueError('Unknown outbox operation')
-        return protocol.transaction_id(protocol.parse_json(row[0]))
+        return wire.transaction_id(wire.parse(row[0]))
+
+    def retire_hosted(self, snapshot):
+        """Retire a pending provider operation only after its native epoch closes.
+
+        Like retire_closed, this requires a trusted local committed snapshot.
+        It records an unknown outcome and preserves the original signed bytes.
+        It never invents a receipt or retries work with a new nonce.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        body, owner = wire.verify(wire.parse(raw))
+        kind = body['kind']
+        if kind not in ('accept_hosted_job', 'respond_expert', 'respond_answering'):
+            return None
+        if (owner != self.owner.public_key or body['chain_id'] != self.chain_id
+                or snapshot['chain_id'] != self.chain_id or snapshot['height'] < 1):
+            raise ValueError('Require the provider account and its own committed chain snapshot')
+        old = body.get('assignment_root')
+        if old is None:
+            receipt, signer = wire.verify(body['workers']['0'])
+            if signer != owner or receipt['job_id'] != body['job_id']:
+                raise ValueError('The coordinator receipt belongs to another job or account')
+            old = receipt.get('assignment_root')
+        if old is None:
+            return None
+        job, lease, result = (snapshot.get(name) for name in ('job', 'lease', 'result'))
+        replaced = (job and lease and job['id'] == body['job_id']
+                    and job.get('hosting') == lease['assignment_root'] != old)
+        completed = (result and result['id'] == body['job_id'] and job is None and lease is None)
+        if not replaced and not completed:
+            return None
+        evidence = {'operation': operation, 'transaction_sha256': hashlib.sha256(raw).hexdigest(),
+            'chain_id': self.chain_id, 'height': snapshot['height'],
+            'closed_assignment': old, 'snapshot_root': hashlib.sha256(canonical(snapshot)).hexdigest(),
+            'transaction_outcome': 'unknown; provider assignment permanently closed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
+
+    def pending_body(self):
+        operation = self.pending()
+        if operation is None:
+            return None
+        row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
+        return wire.verify(wire.parse(row[0]))[0]
 
     def send(self, operation, kind, *, timeout=60, **fields):
         intent = canonical({'kind': kind, **fields})
@@ -112,7 +198,7 @@ class Outbox:
         # They are different identifiers and cannot be used interchangeably.
         txid = hashlib.sha256(row[0]).hexdigest().upper()
         if row[1] is not None:
-            return self.result(protocol.parse_json(row[1]), txid)
+            return self.result(wire.parse(row[1]), txid)
         deadline = time.monotonic() + timeout
         submitted = False
         while time.monotonic() < deadline:

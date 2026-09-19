@@ -134,8 +134,12 @@ def main(argv=None):
         cmd=actions.add_parser(name,parents=[common])
         if name in ('export','import'):cmd.add_argument('file',type=Path)
     ask=sub.add_parser('chat',parents=[common],help='Pay a bounded NEURO amount for a public model response')
-    ask.add_argument('prompt');ask.add_argument('--max-tokens',type=int,default=32)
-    ask.add_argument('--max-price',default='0.1',help='Maximum total NEURO including the submission fee')
+    ask.add_argument('prompt',nargs='?');ask.add_argument('--max-tokens',type=int,default=32)
+    ask.add_argument('--hosted-config',type=Path,help='Opt-in provider-network config with pinned local validating node')
+    ask.add_argument('--resume',help='Resume a durable hosted request without signing another payment')
+    ask.add_argument('--session',type=Path,help='Versioned multi-turn hosted conversation file')
+    ask.add_argument('--quote-only',action='store_true',help='Show the complete hosted price without payment')
+    ask.add_argument('--max-price',default='0.1',help='Maximum total NEURO, including provider, audit and transaction fees for hosted chat')
     ask.add_argument('--provider',help='Native public key of your chosen provider')
     ask.add_argument('--wait-seconds',type=int,default=120)
     request=sub.add_parser('request',parents=[common],help='Inspect a pending, completed, or expired inference request')
@@ -168,7 +172,13 @@ def main(argv=None):
         elif args.command=='wallet':wallet_action(args)
         elif args.command=='chat':
             if not 1<=args.wait_seconds<=600:raise ValueError('wait-seconds must be 1–600')
-            chat(args)
+            if args.hosted_config:
+                from .hosted import run
+                run(args, atoms(args.max_price))
+            else:
+                if not args.prompt or args.resume or args.session or args.quote_only:
+                    raise ValueError('Public 0.4.0 chat requires a prompt; hosted sessions require --hosted-config')
+                chat(args)
         elif args.command=='request':
             _,rpc,_=connected(args);print(json.dumps(wire.query(rpc,'/job',{'id':args.id}),indent=2))
         else:

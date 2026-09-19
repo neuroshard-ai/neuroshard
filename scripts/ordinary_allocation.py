@@ -120,6 +120,14 @@ def allocate(home, resources, source_commit):
              'IpRanges': [{'CidrIp': source['PrivateIpAddress']+'/32'}]},
             {'IpProtocol': 'tcp', 'FromPort': 1024, 'ToPort': 65535,
              'UserIdGroupPairs': [{'GroupId': group}]}])
+        public_ports = resources.get('public_ports', [])
+        if public_ports:
+            if (not isinstance(public_ports, list) or len(public_ports) > 32
+                    or any(type(port) is not int or not 1024 <= port <= 65535 for port in public_ports)):
+                raise ValueError('Declare at most 32 individual public service ports')
+            ec2.authorize_security_group_ingress(GroupId=group, IpPermissions=[
+                {'IpProtocol': 'tcp', 'FromPort': port, 'ToPort': port,
+                 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]} for port in sorted(set(public_ports))])
         cloud = {'ssh_authorized_keys': [' '.join(Path('/home/ubuntu/.ssh/id_ed25519.pub').read_text().split()[:2])],
             'write_files': [
                 {'path': '/etc/systemd/system/neuroshard-experiment-stop.service', 'content':
@@ -130,13 +138,25 @@ def allocate(home, resources, source_commit):
             'runcmd': [['systemctl', 'daemon-reload'], ['systemctl', 'enable', '--now', 'neuroshard-experiment-stop.timer']]}
         subnets = sorted(ec2.describe_subnets(Filters=[{'Name': 'vpc-id', 'Values': [source['VpcId']]}])['Subnets'],
                          key=lambda value: (value['AvailabilityZone'], value['SubnetId']))
-        if ec2.describe_vpcs(VpcIds=[source['VpcId']])['Vpcs'][0]['IsDefault']:
+        spread = resources.get('minimum_zones', 1)
+        if type(spread) is not int or not 1 <= spread <= 7:
+            raise ValueError('Require a bounded availability-zone target')
+        if len({row['AvailabilityZone'] for row in subnets}) < spread:
+            raise ValueError('The VPC lacks the declared number of failure domains')
+        if spread == 1 and ec2.describe_vpcs(VpcIds=[source['VpcId']])['Vpcs'][0]['IsDefault']:
             # EC2 can select available capacity across the default VPC's zones.
             # This changes placement only, never the frozen hardware or method.
             subnets.insert(0, {'SubnetId': None, 'AvailabilityZone': None})
         preferred = None
+        zone_counts = {}
         for rank, kind in enumerate(resources['instance_types']):
-            ordered = sorted(subnets, key=lambda value: value['AvailabilityZone'] != preferred) if preferred else subnets
+            if spread > 1:
+                ordered = sorted(subnets, key=lambda value: (zone_counts.get(value['AvailabilityZone'], 0),
+                                                             value['AvailabilityZone'], value['SubnetId']))
+                if rank < spread:
+                    ordered = [row for row in ordered if row['AvailabilityZone'] not in zone_counts]
+            else:
+                ordered = sorted(subnets, key=lambda value: value['AvailabilityZone'] != preferred) if preferred else subnets
             for subnet in ordered:
                 tags = [{'Key': key, 'Value': value} for key, value in {'Name': name, 'Project': 'NeuroShard',
                     'Purpose': 'ordinary-native-campaign', 'Rank': str(rank), 'ExpiresAt': deadline.isoformat(),
@@ -165,6 +185,7 @@ def allocate(home, resources, source_commit):
                     raise ValueError('A protected instance entered the disposable allocation')
                 allocation['instances'].append({'rank': rank, 'InstanceId': instance['InstanceId']})
                 preferred = instance['Placement']['AvailabilityZone']
+                zone_counts[preferred] = zone_counts.get(preferred, 0) + 1
                 save(path, allocation)
                 break
             else:
@@ -176,6 +197,7 @@ def allocate(home, resources, source_commit):
                 for row in allocation['instances']:
                     instance = found[row['InstanceId']]
                     row.update(PrivateIpAddress=instance['PrivateIpAddress'], LaunchTime=instance['LaunchTime'].isoformat(),
+                        PublicIpAddress=instance.get('PublicIpAddress'),
                         AvailabilityZone=instance['Placement']['AvailabilityZone'],
                         volumes=[value['Ebs']['VolumeId'] for value in instance['BlockDeviceMappings']])
                 save(path, allocation)

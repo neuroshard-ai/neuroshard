@@ -67,8 +67,10 @@ def distributed_worker(rank, rendezvous, folder, boundaries, attention):
         records = []
         for prompt in ([1, 5, 7, 9, 11, 13, 15, 17, 19], [3, 4]):
             observed = {}
-            result = generate_cached(shard, wire, prompt, 12, -1, observed)
+            streamed = []
+            result = generate_cached(shard, wire, prompt, 12, -1, observed, on_tokens=streamed.append)
             assert result == full_greedy(model, prompt, 12)
+            assert streamed == ([tuple(result[:i]) for i in range(1, 13)] if rank == 0 else [])
             before = wire.sent_tensor_bytes
             uncached = generate(shard, wire, prompt, 12, -1)
             assert uncached == result
@@ -82,7 +84,9 @@ def distributed_worker(rank, rendezvous, folder, boundaries, attention):
             assert observed['resident_cache_bytes'] == local_layers * 2 * count * 2 * 6 * 4
             # New requests rebuild their own caches. A second run is exact,
             # and EOS stops at the first emitted token without another pass.
-            assert generate_cached(shard, wire, prompt, 12, -1) == result
+            def disconnected(_tokens):
+                raise ConnectionError('The customer disconnected during live generation')
+            assert generate_cached(shard, wire, prompt, 12, -1, on_tokens=disconnected) == result
             assert generate_cached(shard, wire, prompt, 12, result[0]) == result[:1]
             records.append(observed)
         Path(folder, f'rank-{rank}.json').write_text(json.dumps(records))

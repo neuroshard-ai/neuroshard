@@ -157,17 +157,20 @@ def transcript_binding(claim):
 
 
 def new_claim(state, owner, body, envelope, **values):
+    from . import hosting
     if state['assignment'] or state['candidate']:
         raise ValueError('Finish pending native work before a portable service claim')
     params = state['manifest']['params']
-    auditing.debit(state, owner, params['claim_bond'])
+    if not hosting.fund_claim_bond(state, owner, params['claim_bond'], values):
+        auditing.debit(state, owner, params['claim_bond'])
     claim = {'id': protocol.transaction_id(envelope), 'owner': owner,
         'bond': params['claim_bond'], 'challenge': None,
         'record_root': root(body['transcript_root']), 'workers': [],
         'deadline': state['height'] + params['challenge_blocks'],
         'expires': state['height'] + params['max_claim_blocks'], **values}
     state['candidate'] = claim
-    auditing.lock(state, body['audit_budget'], owner, [], claim['id'])
+    if not hosting.attach_audit(state, claim, body['audit_budget']):
+        auditing.lock(state, body['audit_budget'], owner, [], claim['id'])
     auditing.attach(state, body['audit_budget'])
 
 

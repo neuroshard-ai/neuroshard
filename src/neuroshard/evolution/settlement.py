@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work
+from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work, hosting
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -65,12 +65,15 @@ def genesis(chain_id, validators, manifest):
         expert_lifecycle.initialize(base)
     if 'planner_work' in manifest:
         planner_work.initialize(base)
+    if 'hosting' in manifest:
+        hosting.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
-    escrow = lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s) + expert_lifecycle.escrow(s)
+    escrow = (lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s)
+              + expert_lifecycle.escrow(s) + hosting.escrow(s))
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -86,6 +89,7 @@ def invariant(s):
         raise ValueError('Training issuance accounting failed')
     if len(s['paid_work']) != s['training_round']:
         raise ValueError('A numerical task must be paid at most once')
+    hosting.invariant(s)
     if 'planner_work' in s:
         if (s['model_root'] != s['planner_work']['checkpoint']['fusion']
                 or s['serving_root'] != s['manifest']['initial_model_root']):
@@ -113,7 +117,8 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
     if accepted and not auditing.complete(s, claim):
         raise ValueError('Complete funded audit reports are required for settlement')
     if accepted:
-        account(s,claim['owner'])['balance'] += claim['bond']
+        if not hosting.refund_claim_bond(s, claim):
+            account(s,claim['owner'])['balance'] += claim['bond']
         if challenge:
             # A successful data-availability response returns the challenger
             # bond: requesting the public data is not itself misconduct.
@@ -140,7 +145,8 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
         if claim.get('kind','training') in ('training','growth'):
             s['model_root'] = claim['model_root']
     elif refund_bond:
-        account(s,claim['owner'])['balance'] += claim['bond']
+        if not hosting.refund_claim_bond(s, claim):
+            account(s,claim['owner'])['balance'] += claim['bond']
         if challenge:
             s['burned'] += challenge['bond']
     else:
@@ -250,6 +256,7 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
     auditing.advance(s)
     portable_lifecycle.advance(s)
     expert_lifecycle.advance(s)
+    hosting.advance(s)
     invariant(s)
     return s,updates
 
@@ -281,6 +288,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         **expert_work.FIELDS,
         **expert_lifecycle.FIELDS,
         **planner_work.FIELDS,
+        **hosting.FIELDS,
     }
     if 'auditing' in previous:
         for name in ('reserve', *auditing.CLAIM_KINDS):
@@ -306,7 +314,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in planner_work.FIELDS:
+    if kind in hosting.FIELDS:
+        hosting.apply(s, owner, body, envelope)
+    elif kind in planner_work.FIELDS:
         planner_work.apply(s, owner, body, envelope)
     elif kind in expert_lifecycle.FIELDS:
         expert_lifecycle.apply(s, owner, body, envelope)
