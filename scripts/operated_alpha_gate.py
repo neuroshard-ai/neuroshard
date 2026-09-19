@@ -21,7 +21,8 @@ from operate_alpha import read
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def batch(cloud, network, providers, customers, cases, maximum):
+def batch(cloud, network, providers, customers, cases, maximum, *, report_home=None):
+    report_home = report_home or cloud.home
     began = time.monotonic()
     rows, streams, measurements, assigned = [], {}, {}, {}
     for customer, case in zip(customers, cases):
@@ -66,7 +67,7 @@ def batch(cloud, network, providers, customers, cases, maximum):
                         raise ValueError('Automatic recovery changed the paid request')
                     fault['replacement'] = replacement
                     fault['new_assignment'] = epoch
-                    save(cloud.home/'cases'/case['id']/'fault.json', fault)
+                    save(report_home/'cases'/case['id']/'fault.json', fault)
                 coordinator = lease['providers']['0']
                 stream = streams.get(row['id'])
                 if stream is None or stream['epoch'] != epoch:
@@ -102,7 +103,7 @@ def batch(cloud, network, providers, customers, cases, maximum):
             lost = fault['lost']
             cloud.command(lost['physical'], ['sudo', 'systemctl', 'start', lost['unit']])
         for row, case in zip(rows, cases):
-            save(cloud.home/'cases'/case['id']/'measurement.json', measurements[row['id']])
+            save(report_home/'cases'/case['id']/'measurement.json', measurements[row['id']])
     history = network.query('/hosting')['history']
     audits = network.query('/auditing')['history']
     for row, case in zip(rows, cases):
@@ -115,8 +116,8 @@ def batch(cloud, network, providers, customers, cases, maximum):
         audited = [value for value in audits if value['id'] == row['budget_id']]
         if len(audited) != 1 or audited[0]['paid_atoms'] + audited[0]['refunded_atoms'] != row['quote']['verification_atoms']:
             raise ValueError('Complete verification failed to refund every unused atom')
-        save(cloud.home/'cases'/case['id']/'hosting.json', matches[0])
-        save(cloud.home/'cases'/case['id']/'audit-payment.json', audited[0])
+        save(report_home/'cases'/case['id']/'hosting.json', matches[0])
+        save(report_home/'cases'/case['id']/'audit-payment.json', audited[0])
         if 'fault_rank' in case and (row['id'] not in faults or faults[row['id']]['replacement'] is None):
             raise ValueError('The declared owner-loss recovery was not actually exercised')
     return list(measurements.values())
@@ -125,15 +126,20 @@ def batch(cloud, network, providers, customers, cases, maximum):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--home', required=True, type=Path)
+    parser.add_argument('--report-home', type=Path,
+                        help='Separate evidence directory for an explicitly frozen deployment repair')
     args = parser.parse_args()
     home = args.home.resolve()
-    if (home/'release-gate-started.json').exists():
+    report_home = args.report_home.resolve() if args.report_home else home
+    if (report_home/'release-gate-started.json').exists():
         raise ValueError('A gate already started; inspect its evidence, do not silently rerun it')
     cloud = Cloud(home)
     network = Network(home/'native')  # RPC tunnels belong to the running controller.
     original = read(ROOT/'config/experiments/provider-llm-service.json')
     freeze = read(home/'freeze.json')
-    save(home/'release-gate-started.json', {'time': time.time(), 'freeze': identity(freeze)})
+    save(report_home/'release-gate-started.json', {'time': time.time(), 'freeze': identity(freeze),
+        'deployment': str(home), 'resource_amendment': read(home/'resource-amendment.json')
+        if (home/'resource-amendment.json').exists() else None})
     providers = [read(home/'providers'/f'{i}.json') for i in range(18)]
     boxes, customers = [], []
     node = LocalNode(network.urls[-1], network.genesis['chain_id'], identity(network.genesis['app_state']['manifest']))
@@ -146,25 +152,28 @@ def main():
     result = {'passed': False, 'warmup': [], 'ordinary': [], 'faults': []}
     try:
         warmup = [{'id': 'warmup-'+str(i), 'messages': original['warmup']['messages']} for i in range(2)]
-        result['warmup'] = batch(cloud, network, providers, customers, warmup, 4)
+        result['warmup'] = batch(cloud, network, providers, customers, warmup, 4, report_home=report_home)
         for start in range(0, 6, 2):
             result['ordinary'].extend(batch(cloud, network, providers, customers,
-                                           original['requests'][start:start+2], 64))
-        for case in original['requests'][6:]:
-            result['faults'].extend(batch(cloud, network, providers, customers[:1], [case], 64))
+                                           original['requests'][start:start+2], 64, report_home=report_home))
         for row in result['ordinary']:
             if (row['first_visible_seconds'] is None or row['generated_seconds'] is None
                     or row['first_visible_seconds'] > freeze['release_gate']['warm_first_visible_p95_seconds']
                     or row['generated_seconds'] > freeze['release_gate']['warm_generation_p95_seconds']
                     or row['settled_seconds'] > freeze['release_gate']['settlement_seconds_per_request']):
                 raise ValueError('The unchanged six-case service gate failed')
+        # A known ordinary-latency failure cannot be rescued by lengthy fault
+        # trials. Keep its measurements and stop before reserving more work.
+        for case in original['requests'][6:]:
+            result['faults'].extend(batch(cloud, network, providers, customers[:1], [case], 64,
+                                         report_home=report_home))
         if any(r['settled_seconds'] > freeze['release_gate']['recovered_settlement_seconds'] for r in result['faults']):
             raise ValueError('Automatic recovery exceeded the declared settlement deadline')
         if network.query()['issued'] != 0:
             raise ValueError('Serving unexpectedly issued tokens')
         result.update(passed=True, issued_atoms=0, finished_at=time.time(), height=network.query()['height'])
     finally:
-        save(home/'release-gate.json', result)
+        save(report_home/'release-gate.json', result)
         for box in boxes:
             box.close()
         network.close()
