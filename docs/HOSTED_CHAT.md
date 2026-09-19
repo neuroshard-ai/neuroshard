@@ -64,8 +64,11 @@ The terminal displays provisional text during generation. `--json` emits signed
 provider update contents and native result records as JSON lines. Each update
 replaces the previous draft; incremental token decoding is not always stable at
 the character boundary. Planning and intermediate worked text are excluded from
-the chat display. A structured rendering may require its complete inputs before
-any visible output is available. A malformed answer retracts its draft.
+the chat display. For a deterministic combined reply, each completed answer
+part becomes visible while the next part runs. Neural composition and structured
+rendering still require their complete inputs before visible output. Empty
+intermediate answers do not produce question-only previews. A malformed later
+answer retracts the provisional reply.
 
 Drafts are **unverified**. Agreement among assigned provider signatures alone
 cannot authorize payment. The final reply and refunds come from native

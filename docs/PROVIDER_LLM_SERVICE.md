@@ -168,7 +168,7 @@ metadata passes executor, complete-policy and native-genesis checks, with no
 weight or answering-rule change. The new public policy
 `381cf3a38ffd71f10279f8d0d2573c02ae2f886980771ca2270abd11586b9d7b`
 passed full hash readback. The next allocation reserves $70 for prior attempts
-inside the unchanged $100 aggregate ceiling; its serving outcome remains pending.
+inside the unchanged $100 aggregate ceiling; its outcome follows below.
 
 ## Fifth allocation: ordinary serving passes, recovery fails
 
@@ -202,6 +202,24 @@ whereas surviving owners with cached weights sent a different assignment binding
 The run was stopped through its normal evidence/retirement path once this became
 irrecoverable. The backbone-loss case was not started. This is a failed complete
 trial with a passing ordinary-serving subset, not a recovery pass.
+
+Application replay matches **2,124 headers, 251 accepted transactions and all
+seven saved states**, including the eight settled claims. The unfinished
+coordinator request remains in the preserved stopped chain; its escrow is not
+reported as a payment or completed refund. All seven instances, volumes and the
+security group were retired at 18:19 UTC, with protected hosts unchanged.
+The standalone conservative cost is **$22.62**, including $4.73 compute,
+82.88 GB of measured aggregate interface traffic priced conservatively at $12.43,
+disk provisioning, public IPv4 and 90-day retention. The five allocations total
+**$86.20** under this accounting. `costs.json` also reports $92.62 when using its
+frozen $70 reserve for prior attempts; that reserve must not be added again.
+
+[Public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/5b29bda1306adbb6a7b73e7ea752ab4186e5fcb425feef21be65634d125d7786)
+and [matching source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/352e0357b6563e1e080830da1fd3ca6240eab3f3338fafcdd8aed08bd41d9d9e)
+passed full public hash readback. The 160 allowlisted evidence files include
+replies, token-time events, all numerical replays, payments/refunds, native replay,
+fresh restoration, failure diagnosis, client onboarding, costs and retirement.
+Private keys, native backups and client/node homes are excluded.
 
 The corrective implementation uses the same epoch-bound graph handshake for
 fresh and cached owners. The complete answering policy has a similar collective

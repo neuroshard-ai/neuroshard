@@ -564,6 +564,14 @@ class PlannedGraphNetwork:
             if argument is not None:
                 arguments.append(argument)
             answers.append(answer)
+            # In the deterministic question/answer rendering, a completed part
+            # is already visible answer content. Deliver it while later parts
+            # execute, without exposing planning, composition inputs or a
+            # structured program whose final rendering may still reject it.
+            if (len(plan) > 1 and 'composer' not in self.config
+                    and (program is None or program['render'] == 'assistant')
+                    and all(row['text'].strip() for row in answers)):
+                self.observer.text('\n\n'.join(row['question'] + '\n' + row['text'] for row in answers))
         # Failed planning must not silently turn into a fabricated expert answer.
         text = (answers[0]['text'] if len(answers) == 1 else
                 '\n\n'.join(row['question'] + '\n' + row['text'] for row in answers)) if error is None else ''
