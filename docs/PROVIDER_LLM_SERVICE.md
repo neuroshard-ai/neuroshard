@@ -23,7 +23,7 @@ token. The separate 600-second cold limit includes both paid warmups and their
 settlement. Six observations establish a bounded demonstration, not a population
 latency guarantee. Drafts remain unverified until native settlement.
 
-The absolute allocation deadline is two hours. The $100 combined ceiling includes
+The absolute allocation deadline is two hours. The current $125 combined ceiling includes
 the prior failed setups, all compute and replays, disks, network traffic, public
 IPv4 and 90-day artifact retention. Price estimates are pre-tax upper estimates,
 not an AWS invoice or a NEURO/USD exchange rate. The experiment uses finite
@@ -169,6 +169,59 @@ weight or answering-rule change. The new public policy
 `381cf3a38ffd71f10279f8d0d2573c02ae2f886980771ca2270abd11586b9d7b`
 passed full hash readback. The next allocation reserves $70 for prior attempts
 inside the unchanged $100 aggregate ceiling; its serving outcome remains pending.
+
+## Fifth allocation: ordinary serving passes, recovery fails
+
+Source `4a2630fc1b9b5acb3e72be87280e495e38f5427d` restored the nine reference
+owners in 100.53 seconds. Cold readiness, including both paid warmups and their
+complete verification/settlement, took **311.84 seconds**. All six ordinary
+requests settled after three actual numerical replays each, with zero issuance.
+
+| Request | First visible output | Generated response | Settlement |
+| --- | ---: | ---: | ---: |
+| Client package | 23.78 s | 26.86 s | 97.21 s |
+| Retained directory | 31.10 s | 34.51 s | 160.19 s |
+| General explanation | 23.49 s | 38.58 s | 169.88 s |
+| Constrained arithmetic | 29.57 s | 31.48 s | 105.61 s |
+| Multi-turn recall | 26.82 s | 28.67 s | 100.97 s |
+| Combined question | 44.87 s | 45.27 s | 168.64 s |
+
+The answers include `neuroshard-ai`, Fenn Varden's city `Sofia`, `43`, and
+`violet kettle`. The combined response includes both retained facts; the general
+response explains Rayleigh scattering in two sentences. Generation clocks start
+at reservation; settlement clocks additionally include customer funding and
+audit acceptance. The six-sample first-visible p95 is narrowly inside 45 seconds.
+Both warmups also settled; all 24 complete replays matched. Every completed
+request has one provider payment and exact unused execution/audit refunds.
+
+Coordinator loss did **not** recover. The replacement registered a fresh key and
+endpoint and restored 7.19 GB of its committed files, but all assigned owners
+then persisted execution errors. A five-process CPU reproduction identifies
+incompatible startup collectives: fresh owners declare loaded graph commitments,
+whereas surviving owners with cached weights sent a different assignment binding.
+The run was stopped through its normal evidence/retirement path once this became
+irrecoverable. The backbone-loss case was not started. This is a failed complete
+trial with a passing ordinary-serving subset, not a recovery pass.
+
+The corrective implementation uses the same epoch-bound graph handshake for
+fresh and cached owners. The complete answering policy has a similar collective
+initialization requirement, so owners negotiate service-cache readiness and
+reconstruct policy wrappers together on a partial miss, retaining model caches.
+Real HTTPS regressions reproduce the old failure and check fresh coordinator
+and backbone owners alongside cached survivors against fixed-group execution.
+Twelve focused tests pass. The next allocation explicitly raises the cumulative
+ceiling to **$125**, reserving $95 for earlier attempts; the fifth run retains
+its original $100 ceiling and failed result. Questions, weights, replay count,
+latency thresholds and recovery requirements remain unchanged.
+
+A separate read-only onboarding probe installed the exact frozen source in a
+clean client environment, joined a new non-voting node through the public peer
+address, matched block 2,095 and obtained a complete hosted-chat quote. PyTorch,
+Transformers and NumPy were absent from that client environment. The first probe
+failed because its script parsed human-readable wallet creation output as JSON;
+the corrected probe passed and stopped its temporary node. No GPU, vote or paid
+request was added. This still represents one administrator, not independent
+public participation.
 
 The [provider guide](PROVIDER_RUNTIME.md) and [chat guide](HOSTED_CHAT.md) describe
 the implemented interfaces. The trial endpoints are disposable; they are not a

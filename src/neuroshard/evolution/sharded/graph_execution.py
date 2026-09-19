@@ -117,9 +117,7 @@ class GraphNetwork:
             groups = {rule['id']: dist.new_group([0, 1, 2, rule['owner']], timeout=timeout)
                       for rule in descriptor['rules']}
         else:
-            loaded = {'graph': identity(graph), 'executor': identity(profile), 'loaded': True}
-            if self.all_owners.exchange(loaded) != [loaded] * self.world_size:
-                raise ValueError('Providers loaded different graph or numerical commitments')
+            self.confirm_provider_loaded(mesh)
             parent_group, groups = None, {}
         self.net = RoutedNetwork(rank, self.shard, self.tokenizer, descriptor['split'],
             OrderedRoutes(descriptor['rules']), parent_group, groups, mesh=mesh)
@@ -177,7 +175,18 @@ class GraphNetwork:
         self.resident_parameters = self.shard.resident_parameters + (
             preserved_shard.resident_parameters if preserved_shard is not None else 0)
         self.resident_limit = profile['resident_parameter_limit']
-        declaration = {'graph': identity(graph), 'executor': identity(profile), 'rank': rank}
+        self.confirm_owners(mesh)
+
+    def confirm_provider_loaded(self, mesh):
+        loaded = {'graph': identity(self.graph), 'executor': identity(self.profile),
+                  'assignment': mesh.peer.routing['assignment_root'], 'loaded': True}
+        if self.all_owners.exchange(loaded) != [loaded] * self.world_size:
+            raise ValueError('Providers loaded different model or assignment commitments')
+
+    def confirm_owners(self, mesh):
+        declaration = {'graph': identity(self.graph), 'executor': identity(self.profile), 'rank': self.rank}
+        if mesh is not None:
+            declaration['assignment'] = mesh.peer.routing['assignment_root']
         expected = [{**declaration, 'rank': i} for i in range(self.world_size)]
         if self.all_owners.exchange(declaration) != expected:
             raise ValueError('Owners loaded different graph commitments')
@@ -209,10 +218,10 @@ class GraphNetwork:
         if self.preserved is not None:
             self.preserved.wire = self.net.networks['directory'].wire
             self.preserved.parent_wire = self.net.parent_wire
-        binding = {'graph': identity(self.graph), 'executor': identity(self.profile),
-                   'assignment': mesh.peer.routing['assignment_root']}
-        if self.all_owners.exchange(binding) != [binding]*self.world_size:
-            raise ValueError('Providers reused different model or assignment commitments')
+        # Survivors and newly restored owners share the same two collectives.
+        # A cache hit must never change the wire protocol of a fresh assignment.
+        self.confirm_provider_loaded(mesh)
+        self.confirm_owners(mesh)
 
     def verify_unchanged(self):
         if tuple(p._version for _, p in self.shard.named_owned_parameters()) != self.versions:

@@ -82,6 +82,23 @@ def owner(rank, directory, barrier):
         network.rebind(ServingMesh(peer))
         assert network.answer(questions[0], 4) == actual[0]
         assert pointers == tuple(parameter.data_ptr() for _, parameter in network.shard.named_owned_parameters())
+        # A replacement has cold model memory while surviving owners keep
+        # theirs. Both initialization paths must speak the same epoch protocol.
+        # Exercise coordinator and backbone replacement separately.
+        for replaced_rank, job_char, epoch_char in [(0, 'e', 'f'), (1, '1', '2')]:
+            barrier.wait(timeout=30)
+            peer.close()
+            box.retire(routing['job_id'], routing['assignment_root'])
+            routing.update(job_id=job_char*64, assignment_root=epoch_char*64)
+            barrier.wait(timeout=30)
+            peer = transport.Peer(key, routing, rank, box, timeout=20, allow_private=True)
+            pointers = tuple(p.data_ptr() for _, p in network.shard.named_owned_parameters())
+            if rank == replaced_rank:
+                network = GraphNetwork(graph, profile, mesh=ServingMesh(peer), **kwargs)
+            else:
+                network.rebind(ServingMesh(peer))
+                assert pointers == tuple(p.data_ptr() for _, p in network.shard.named_owned_parameters())
+            assert network.answer(questions[0], 4) == actual[0]
         assert not dist.is_initialized()
         # Only the oracle below has a fixed Gloo group. Public serving above
         # used distinct provider keys, certificate pins and binary HTTPS frames.

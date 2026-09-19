@@ -3,9 +3,9 @@
   "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
   "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
   "retry": {
-    "previous_source": "a9803bddae7abc06b243dc5e81f16aa47178b0b2",
-    "previous_result": "Fourth setup passed all seven local-SSD checks and registered providers, then rejected restored serving metadata before tensor loading. CPU reproduction identifies a stale service-script commitment inside the learned serving policy, outside the numerical executor source list.",
-    "change": "Regenerate the complete answering policy against committed source; validate its content-addressed policy and all learned/planned source bindings locally before allocation. Preserve bounded remote restoration errors. Keep the NVMe model cache and aligned reference startup timeout from the preceding correction.",
+    "previous_source": "4a2630fc1b9b5acb3e72be87280e495e38f5427d",
+    "previous_result": "Fifth allocation settled both warmups and all six ordinary accepted-model requests, with three complete replays per response and every ordinary latency gate passing. Coordinator replacement restored its committed files, but mixed fresh/cached owners used incompatible graph and answering-policy initialization collectives. The operated run was stopped as an unrecoverable failure; backbone loss was not attempted.",
+    "change": "Fresh and cached GraphNetwork owners now exchange the same epoch-bound initialization commitments. Answering-service owners jointly negotiate cache readiness and reconstruct policy wrappers together on any cache miss, preserving resident model/auxiliary weights. Real five-process HTTPS regressions exercise fresh coordinator and fresh backbone owners alongside cached survivors, plus fixed-group numerical equivalence.",
     "history": [
       {
         "source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004",
@@ -22,6 +22,10 @@
       {
         "source": "a9803bddae7abc06b243dc5e81f16aa47178b0b2",
         "cause": "Reused policy metadata still committed the earlier service-script hash after its startup-timeout change. No model loading, requests or payments."
+      },
+      {
+        "source": "4a2630fc1b9b5acb3e72be87280e495e38f5427d",
+        "cause": "Fresh/cached initialization protocol mismatch during coordinator recovery; eight requests settled before failure. Preserved separately as a failed recovery, not a complete service pass."
       }
     ],
     "unchanged": [
@@ -32,9 +36,10 @@
       "faults",
       "replay count"
     ],
-    "aggregate_budget_usd": 100,
-    "prior_allocation_allowance_usd": 70,
-    "cold_readiness": "Includes both paid warm-up responses and their complete settlements, so both provider replicas have actually loaded and answered. The earlier failed setup did not measure cold readiness or any answer."
+    "aggregate_budget_usd": 125,
+    "prior_allocation_allowance_usd": 95,
+    "cold_readiness": "Includes both paid warm-up responses and their complete settlements. The fifth allocation measured 311.84158137254417 seconds, including both replicas; it did not pass recovery.",
+    "budget_revision": "The original five-allocation campaign retains its $100 ceiling and failed recovery result. Before this corrective allocation, explicitly increase the cumulative ceiling to $125, reserving $95 for the preceding attempts. No outcome, latency, learning or recovery criterion changes."
   },
   "learning": {
     "train": false,
@@ -199,7 +204,7 @@
     "disk_gib": 200,
     "max_hours": 2,
     "minimum_zones": 3,
-    "planning_cap_usd": 100,
+    "planning_cap_usd": 125,
     "planning_hourly_rate_usd": 1.1,
     "verified_instance_hourly_usd": 1.006,
     "price_source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",

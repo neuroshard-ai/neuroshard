@@ -41,7 +41,15 @@ def execute(network, graph, messages, maximum, *, on_text=None):
     key = identity(graph)
     with selected_graph(network, graph):
         service = network.answering_services.get(key)
-        if service is None:
+        readiness = network.all_owners.exchange({'graph': key, 'cached': service is not None})
+        if any(not isinstance(row, dict) or set(row) != {'graph', 'cached'}
+               or row['graph'] != key or type(row['cached']) is not bool for row in readiness):
+            raise ValueError('Owners selected different answering systems')
+        # Service construction includes collective policy/adapter checks. A
+        # newcomer must not enter those alone while cached peers start answering.
+        # Rebuild the small service wrappers together on a partial cache miss;
+        # backbone, expert and auxiliary model caches remain resident.
+        if not all(row['cached'] for row in readiness):
             config = answering.load(graph, network.policy_store)
             features = None
             if network.rank == 0:
