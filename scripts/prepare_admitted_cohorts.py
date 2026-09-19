@@ -43,6 +43,31 @@ def accepted_graph(state, replay):
     return copy.deepcopy(graph), copy.deepcopy(accepted)
 
 
+def inherit_evaluations(anchors, policies, store):
+    """Preserve every accepted quality role, including earlier rejection probes."""
+    result = copy.deepcopy(anchors)
+    known = {document_identity(row['messages']): {**row, 'id': document_identity(row['messages'])}
+             for values in result.values() for row in values}
+    added = 0
+    for policy in policies:
+        for role, spec in policy['roles'].items():
+            destination = 'retained-test-knowledge' if role == 'test' else role
+            rows = [json.loads(line) for line in store.get(spec['sha256']).splitlines()]
+            if len(rows) != spec['count']:
+                raise ValueError('Accepted evaluation history is incomplete')
+            for row in rows:
+                key = document_identity(row['messages'])
+                row = {**row, 'id': key}
+                if key in known:
+                    if known[key] != row:
+                        raise ValueError('Accepted evaluation history changed its scoring metadata')
+                    continue
+                known[key] = row
+                result[destination].append(row)
+                added += 1
+    return result, added
+
+
 def prepare(home, previous, facts_path, reranker_path, bootstrap_path):
     home, previous = Path(home), Path(previous)
     state, replay = read(previous/'final-state.json'), read(previous/'ledger-replay.json')
@@ -77,20 +102,8 @@ def prepare(home, previous, facts_path, reranker_path, bootstrap_path):
             if row['route'] in {'parent', *graph['experts']}}
     if not rows or any(row['intent'] != 'parent' and row['intent'] not in carried for row in rows.values()):
         raise ValueError('Inherited selector includes unaccepted specialist examples')
-    anchors = read(previous/'compiled/anchors.json')
-    known = {document_identity(row['messages']) for values in anchors.values() for row in values}
-    for record in accepted:
-        policy = old.json(record['report']['policy_root'])
-        spec = policy['roles']['test']
-        tests = [json.loads(line) for line in old.get(spec['sha256']).splitlines()]
-        if len(tests) != spec['count']:
-            raise ValueError('Accepted evaluation history is incomplete')
-        for row in tests:
-            key = document_identity(row['messages'])
-            if key in known:
-                raise ValueError('Accepted evaluation history collides with baseline anchors')
-            known.add(key)
-            anchors['retained-test-knowledge'].append(row)
+    anchors, inherited_count = inherit_evaluations(read(previous/'compiled/anchors.json'),
+        [old.json(record['report']['policy_root']) for record in accepted], old)
     # New mixed questions cross both the original and the admitted expert.
     # Earlier final inputs become retention anchors, never training examples.
     atom_rows = [row for row in anchors['retained-test-knowledge'] if row['stratum'] == 'single']
@@ -140,7 +153,8 @@ def prepare(home, previous, facts_path, reranker_path, bootstrap_path):
     history = {'format': 'neuroshard-accepted-learning-import-v1',
         'genesis': replay['genesis'], 'state': identity(state), 'height': state['height'],
         'ledger_replay': identity(replay), 'graph': identity(graph), 'accepted': accepted,
-        'evaluation_history_rows': 32, 'rejected_cohorts_counted': 0,
+        'additional_retention_rows': inherited_count, 'accepted_cohort_test_rows': 32,
+        'rejected_cohorts_counted': 0,
         'scope': 'Accepted neural state and complete evaluation history; new research genesis for changed source, no ledger balances imported.'}
     questions = [{'id': row['id'], 'question': row['question']} for row in sorted(rows.values(), key=lambda row: row['id'])]
     if len(questions) > semantic_questions.MAX_ROWS:
