@@ -18,6 +18,7 @@ from test_expert_lifecycle import network
 from test_hosted_customer import Chain
 from test_provider_hosting import graphs, market, lease, ready, response
 from test_settlement import blocks
+from test_complete_answering import complete
 
 
 def driver():
@@ -39,6 +40,21 @@ def test_customer_keys_are_created_before_allocation_and_never_rotated(tmp_path)
     assert len({key.public_key for key in keys}) == 2
     assert all(key.path.stat().st_mode & 0o777 == 0o600 for key in keys)
     assert [key.path.read_bytes() for key in script.customer_wallets(tmp_path)] == before
+
+
+def test_a_hash_consistent_graph_cannot_hide_a_stale_service_script(complete):
+    from neuroshard.evolution import answering
+    from test_graph_execution import SOURCE
+    _, graph, bound, policy, store, _ = complete
+    script = driver()
+    assert script.validate_serving_policy(bound, store, SOURCE) == policy
+    stale = copy.deepcopy(policy)
+    stale['learned']['sources']['scripts/run_native_expert_service.py'] = '0'*64
+    # The policy and enclosing graph are internally hash-consistent. Only
+    # checking the numerical executor's source list cannot detect this drift.
+    wrong = answering.attach(graph, stale, store)
+    with pytest.raises(ValueError, match='models, features, tokenizer or source'):
+        script.validate_serving_policy(wrong, store, SOURCE)
 
 
 class Native:

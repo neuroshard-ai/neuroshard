@@ -19,8 +19,9 @@ from neuroshard.client.hosted import Customer
 from neuroshard.client.local_node import LocalNode
 from neuroshard.demo import client
 from neuroshard.demo.network import edit_config
-from neuroshard.evolution import auditing, expert_lifecycle, provider_assets
+from neuroshard.evolution import answering, auditing, expert_lifecycle, provider_assets
 from neuroshard.evolution.app import code_hash
+from neuroshard.evolution.objects import Objects
 from neuroshard.evolution.reference_data import identity, save
 from neuroshard.evolution.transactions import Outbox
 from ordinary_allocation import allocate, numerical_runtime, retire
@@ -40,6 +41,14 @@ def read(path):
 def customer_wallets(home):
     """Create local customer identities before allocating any paid resources."""
     return [wire.Wallet(home/f'customer-{index}/account.key', create=True) for index in range(2)]
+
+
+def validate_serving_policy(graph, store, source_home):
+    """Policy source commitments include operator scripts outside the executor."""
+    from neuroshard.evolution.sharded.planned_graph import validate_configuration
+    policy = answering.load(graph, store)
+    validate_configuration(answering.core(graph), policy, source_home)
+    return policy
 
 
 def parallel(function, values):
@@ -219,7 +228,11 @@ r=provider_assets.prepare(g,json.load(open(c['profile'])),c['rank'],
 print(json.dumps(r))
 '''
     def one(row):
-        raw = cloud.python(row['physical'], ['-c', code, row['home']+'/config.json', REMOTE+'/graph.json'], timeout=650).stdout
+        try:
+            raw = cloud.python(row['physical'], ['-c', code, row['home']+'/config.json', REMOTE+'/graph.json'], timeout=650).stdout
+        except subprocess.CalledProcessError as error:
+            (cloud.home/f'asset-failure-{row["index"]}.log').write_bytes((error.stderr or b'')[-65536:])
+            raise
         save(cloud.home/'asset-receipts'/f'{row["index"]}.json', json.loads(raw))
     parallel(one, providers[:9])
     for row in providers[9:]:
@@ -566,6 +579,8 @@ def run(args):
     freeze = read(ROOT/'config/experiments/provider-llm-service.json')
     graph, manifest = read(prepared/'graph.json'), read(prepared/'native-manifest.json')
     provider_assets.validate_executor(graph, read(prepared/'profile.json'), ROOT)
+    if validate_serving_policy(graph, Objects(prepared/'policies'), ROOT) != read(prepared/'policy.json'):
+        raise ValueError('Prepared serving metadata differs from its committed policy')
     if manifest['code_hash'] != code_hash() or identity(graph) != read(prepared/'migration.json')['graph']:
         raise ValueError('Rebuild deployment metadata against the committed source before allocating')
     home.mkdir()

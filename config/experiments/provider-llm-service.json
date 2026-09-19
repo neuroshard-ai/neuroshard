@@ -3,9 +3,9 @@
   "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
   "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
   "retry": {
-    "previous_source": "7d8c2a09b60739b2b027359f147a7dc72a5854f4",
-    "previous_result": "Third setup stopped before requests: cold EBS reads delayed a backbone owner beyond the underlying 300-second Gloo send timeout; the 1200-second monitored-barrier argument did not extend that timeout. Earlier profile and wallet setup failures remain preserved.",
-    "change": "Use the AMI-managed local NVMe only for verified disposable model caches, leaving keys and native stores on EBS. Align the reference group startup timeout with its bounded 1200-second loading barrier. The outer cold-readiness and request gates remain unchanged. A real two-process scaled-delay probe reproduces the timeout and passes the aligned bound.",
+    "previous_source": "a9803bddae7abc06b243dc5e81f16aa47178b0b2",
+    "previous_result": "Fourth setup passed all seven local-SSD checks and registered providers, then rejected restored serving metadata before tensor loading. CPU reproduction identifies a stale service-script commitment inside the learned serving policy, outside the numerical executor source list.",
+    "change": "Regenerate the complete answering policy against committed source; validate its content-addressed policy and all learned/planned source bindings locally before allocation. Preserve bounded remote restoration errors. Keep the NVMe model cache and aligned reference startup timeout from the preceding correction.",
     "history": [
       {
         "source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004",
@@ -18,6 +18,10 @@
       {
         "source": "7d8c2a09b60739b2b027359f147a7dc72a5854f4",
         "cause": "Cold EBS file hashing delayed a backbone beyond the underlying Gloo group timeout; no loaded reference group, requests or payments."
+      },
+      {
+        "source": "a9803bddae7abc06b243dc5e81f16aa47178b0b2",
+        "cause": "Reused policy metadata still committed the earlier service-script hash after its startup-timeout change. No model loading, requests or payments."
       }
     ],
     "unchanged": [
@@ -29,7 +33,7 @@
       "replay count"
     ],
     "aggregate_budget_usd": 100,
-    "prior_allocation_allowance_usd": 65,
+    "prior_allocation_allowance_usd": 70,
     "cold_readiness": "Includes both paid warm-up responses and their complete settlements, so both provider replicas have actually loaded and answered. The earlier failed setup did not measure cold readiness or any answer."
   },
   "learning": {
