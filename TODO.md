@@ -19,8 +19,12 @@ before the affected work, rather than changing the target after a result.
   failure stopped the initial attempt before the next two cohorts. The same-ledger
   continuation on replacement owners has completed the declared resource
   comparison: isolated growth preserved every retained correct answer; fixed
-  capacity lost six, while serving more requests in its interval. The next two
-  prospective cohorts remain pending. See the
+  capacity lost six, while serving more requests in its interval. The second
+  cohort improved singles 3→14/16 and combined answers 1→11/16, preserving every
+  retained correct answer, but missed the 12/16 combined gate and was rejected.
+  Question-family reranking and modal-question preservation are being checked
+  on that opened result; they do not count as another prospective admission.
+  See the
   [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
 
   Done when ordinary questions automatically select and combine relevant shards,
@@ -147,8 +151,10 @@ before the affected work, rather than changing the target after a result.
   graph, and the same chain resumed with its original signing journals and
   issuance. Full replay of the interrupted history passed 39,929 headers and
   446 transactions. The comparison continuation completed with zero extra
-  issuance; automatic preparation of the next cohort is running. The two
-  remaining useful admissions are still required.
+  issuance. The next real cohort was prepared, trained, audited and rejected
+  automatically while the accepted graph stayed available. Full application
+  replay now passes 56,582 headers and 857 transactions, with 257 verified
+  updates issued exactly once. Two more useful admissions are still required.
 
   Done when the network repeatedly admits immutable data with provenance,
   deduplication and contamination/poisoning checks; funds and assigns a bounded
