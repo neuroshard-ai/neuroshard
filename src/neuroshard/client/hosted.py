@@ -35,6 +35,8 @@ class Display:
             quote = value['quote']
             print(f"Request: {value['request_id']}\nMaximum reserved: {quote['maximum_debit_atoms']/1_000_000:g} NEURO "
                   f"including {quote['verification_atoms']/1_000_000:g} for complete verification.")
+            if 'occupancy_atoms' in quote:
+                print(f"Capacity allowance: {quote['occupancy_atoms']/1_000_000:g} NEURO; unused time is refunded.")
             print(value['notice'], flush=True)
         elif value.get('status') == 'new_assignment':
             self.draft = ''
@@ -99,11 +101,16 @@ class Customer:
         integer(ceiling, 1, 2**60)
         quoted = self.node.query('/hosting/quote', {'question': messages, 'max_tokens': maximum})
         request_root = wire.digest({'messages': messages, 'max_tokens': maximum})
-        if (quoted['format'] != 'neuroshard-hosted-inference-quote-v1'
+        atomic = quoted['format'] == 'neuroshard-hosted-inference-quote-v2'
+        if (quoted['format'] not in ('neuroshard-hosted-inference-quote-v1', 'neuroshard-hosted-inference-quote-v2')
                 or quoted['chain_id'] != self.node.chain_id or quoted['request_root'] != request_root
                 or quoted['max_tokens'] != maximum):
             raise ValueError('The quote changed the conversation, network or generation limit')
         parts = ('execution_atoms', 'provider_atoms', 'verification_atoms', 'transaction_fee_allowance_atoms')
+        if atomic:
+            if quoted.get('admission') != 'neuroshard-standing-audit-admission-v1':
+                raise ValueError('Unknown atomic admission profile')
+            parts += ('occupancy_atoms',)
         for name in parts:
             integer(quoted[name], 0, 2**60)
         if (quoted['maximum_debit_atoms'] != sum(quoted[name] for name in parts)
@@ -124,6 +131,8 @@ class Customer:
         if row['phase'] == 'finished':
             return {'status': 'finished', 'result': row['result']}
         quote, key = row['quote'], row['id']
+        if quote['format'] == 'neuroshard-hosted-inference-quote-v2':
+            return self.tick_atomic(row)
         if row['phase'] in ('quoted', 'funding'):
             # A saved funding intent may already have committed. Recover that
             # exact envelope even if its earlier discovery quote has aged out.
@@ -215,6 +224,62 @@ class Customer:
             raise ValueError('Native job is outside retained history; inspect the saved reservation')
         if wire.digest(current['job']['request']) != quote['request_root']:
             raise ValueError('Native assignment changed the reserved conversation')
+        return {'status': 'serving', 'snapshot': current}
+
+    def tick_atomic(self, row):
+        quote, operation = row['quote'], row['id'] + ':admit'
+        if row['phase'] in ('quoted', 'admitting'):
+            recorded = self.outbox.recorded(operation)
+            if not recorded and self.node.query('/summary')['height'] > quote['valid_until']:
+                row.update(phase='finished', result={'status': 'quote_expired', 'spent_atoms': 0})
+                self.write(row)
+                return {'status': 'finished', 'result': row['result']}
+            closed = None
+            if recorded:
+                key = self.outbox.logical_id(operation)
+                closed = (self.outbox.retirement(operation)
+                          or self.outbox.retire_admission(self.node.snapshot(key, refresh=True)))
+            row['phase'] = 'admitting'
+            self.write(row)
+            if closed is None:
+                try:
+                    self.outbox.send(operation, 'admit_work', work={'kind': 'lease_expert',
+                        'graph': quote['graph'], 'question': row['messages'], 'max_tokens': quote['max_tokens'],
+                        'offers': 'discover', 'max_price': quote['execution_atoms'],
+                        'max_provider_fee': quote['provider_atoms'], 'expires_in': quote['expires_in']},
+                        stage_limit=quote['stage_limit'], max_verification=quote['verification_atoms'],
+                        max_occupancy=quote['occupancy_atoms'], valid_until=quote['valid_until'])
+                except wire.Rejected:
+                    if self.outbox.receipt(operation) is None:
+                        raise
+                    row.update(phase='finished', result={'status': 'admission_rejected',
+                        'notice': 'The atomic transaction reserved no job, audit or provider funds.'})
+                    self.write(row)
+                    return {'status': 'finished', 'result': row['result']}
+            else:
+                row['retired_payment'] = closed
+            key = self.outbox.logical_id(operation)
+            row.update(phase='serving', job_id=key, budget_id=key)
+            self.write(row)
+        current = self.node.snapshot(row['job_id'], refresh=True)
+        if current['result'] is not None:
+            result = current['result']
+            if result['id'] != row['job_id'] or result['graph'] != quote['graph']:
+                raise ValueError('Native result changed the reserved graph or job')
+            row.update(phase='finished', result=result)
+            self.write(row)
+            return {'status': 'finished', 'result': result}
+        if current['job'] is None:
+            if 'retired_payment' not in row:
+                raise ValueError('Native admission left retained history; inspect the saved signed transaction')
+            row.update(phase='finished', result={'status': 'admission_deadline_elapsed',
+                'notice': 'No retained job/result. Original transaction outcome remains unknown; no new payment was signed.'})
+            self.write(row)
+            return {'status': 'finished', 'result': row['result']}
+        if (current['lease'] is None or current['job']['id'] != row['job_id']
+                or wire.digest(current['job']['graph']) != quote['graph']
+                or wire.digest(current['job']['request']) != quote['request_root']):
+            raise ValueError('Native assignment changed the pinned conversation or graph')
         return {'status': 'serving', 'snapshot': current}
 
 

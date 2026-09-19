@@ -259,6 +259,13 @@ before the affected work, rather than changing the target after a result.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
+  Current development: [operated alpha admission and recovery](docs/OPERATED_ALPHA.md)
+  replaces unaccepted audit offers with atomic work reservation against funded
+  standing services, charges occupied capacity, and adds provider maintenance
+  and native recovery from advertised spares. The new profile needs its own
+  committed preflight and deployment evidence. AWS machines under our account
+  do not satisfy the independent-administration criterion below.
+
   Done when independent providers can discover work, acquire assigned shards,
   join, leave and replace unavailable providers through the protocol. Demonstrate
   required-backbone-shard loss, coordinator loss, state recovery and continued

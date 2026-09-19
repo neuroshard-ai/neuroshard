@@ -8,6 +8,13 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 ## Unreleased — model-evolution research tools
 
+The new opt-in [operated alpha profile](docs/OPERATED_ALPHA.md) couples each job
+to standing, collateral-backed native audit capacity in one bounded transaction.
+It adds paid capacity lifetimes, provider heartbeats and renewal, and automatic
+epoch-bound recovery from available providers. Complete native replay quorum is
+its explicit adjudication rule; legacy challenge uploads are disabled only in
+this new profile. It requires a fresh genesis and does not upgrade 0.4.0.
+
 The opt-in [provider profile](docs/PROVIDER_RUNTIME.md) adds native shard offers,
 collateralized assignments, certificate-pinned execution, customer-bound complete
 audit funding and timed replacement. The lightweight client supports bounded

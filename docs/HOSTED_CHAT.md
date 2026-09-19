@@ -42,15 +42,23 @@ full verification funding and a transaction-fee allowance. It expires after 64
 blocks. Discovery does not reserve capacity. No model or GPU dependencies are
 loaded by the client. The local full node is a separate service.
 
+The [operated alpha profile](OPERATED_ALPHA.md) additionally quotes the maximum
+capacity occupancy charge. Its `admit_work` transaction reserves the request,
+providers and a complete native audit together. Unused occupancy is refunded;
+occupied blocks and transaction fees remain spent. This profile requires its own
+genesis; it does not change an existing hosting chain.
+
 The signed request asks native settlement to select available offers atomically
 inside that price ceiling. Two customers may read the same indicative quote;
 their committed reservations acquire different available capacity. A quote is
 not a guarantee of a particular provider key.
 
-`fund_hosted_audit` binds the verification reservation to this customer, graph
+On the earlier hosting profile, `fund_hosted_audit` binds the verification reservation to this customer, graph
 and complete conversation hash. Another customer cannot front-run that budget,
 and its selected coordinator cannot attach it to unrelated neural work. The
 generic sponsor-funded `fund_audit` transaction is not accepted for hosted chat.
+The operated alpha disables this separate funding step: it binds the same
+customer, graph and request inside atomic admission against standing audit services.
 
 After funding the wallet, replace `YOUR_LIMIT` with the maximum total NEURO you
 authorize. The client refuses a quote exceeding that limit before payment:
@@ -87,13 +95,15 @@ neuroshard chat --resume REQUEST_ID --home ./customer \
   --hosted-config ./hosting.json --wait-seconds 600
 ```
 
-Do not replace an uncertain request with a newly signed payment. An audit offer
+Do not replace an uncertain request with a newly signed payment. On the earlier profile, an audit offer
 that has not acquired a job is cancelled when its quote expires. Unused job,
 provider and audit budgets return through native expiry; transaction fees remain
 spent. A rejected audited claim does not authorize automatic new verification
 funding. Provider replacement can restart the pinned request within its native
 attempt, price and expiry bounds. The client follows a committed replacement and
-clears the obsolete draft; it does not select replacement providers itself yet.
+clears the obsolete draft. In the operated alpha, a recovery controller can
+request native replacement after the assignment deadline; the customer's client
+does not need to select or administer the replacement machines.
 
 Only settled, nonempty replies extend the conversation file. Reusing `--session`
 adds the next user turn. The client pins the graph and tokenizer; a changed

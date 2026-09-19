@@ -179,6 +179,14 @@ def main():
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         outbox = Outbox(home/'transactions.sqlite', config['node_rpc'], config['chain_id'], owner)
+        control_lock = threading.RLock()
+        maintenance_stop, maintenance_thread = threading.Event(), None
+        if config.get('maintain') and not args.publish_offer:
+            from .provider_control import LockedOutbox, maintain_background
+            outbox = LockedOutbox(outbox, control_lock)
+            maintenance_thread = threading.Thread(target=maintain_background,
+                args=(node, config, owner, control_lock, maintenance_stop), daemon=True)
+            maintenance_thread.start()
         deadline = time.monotonic() + config['run_seconds']
         attempted = set()
         cache = {}
@@ -204,16 +212,17 @@ def main():
                 print(json.dumps({'owner': owner.public_key, 'offer_id': outbox.logical_id(operation), **offer}))
                 return
             while time.monotonic() < deadline:
-                if outbox.pending():
-                    body = outbox.pending_body()
-                    if body.get('job_id'):
-                        outbox.retire_hosted(node.snapshot(body['job_id'], refresh=True))
+                with control_lock:
                     if outbox.pending():
-                        try:
-                            outbox.confirm(outbox.pending(), timeout=5)
-                        except (OSError, ValueError, TimeoutError):
-                            time.sleep(.5)
-                            continue
+                        body = outbox.pending_body()
+                        if body.get('job_id'):
+                            outbox.retire_hosted(node.snapshot(body['job_id'], refresh=True))
+                        if outbox.pending():
+                            try:
+                                outbox.confirm(outbox.pending(), timeout=5)
+                            except (OSError, ValueError, TimeoutError):
+                                time.sleep(.5)
+                                continue
                 market = node.query('/hosting')
                 if not market:
                     raise ValueError('The pinned genesis does not enable provider hosting')
@@ -233,12 +242,15 @@ def main():
                         # keys, signed frames or object-store credentials.
                         save(home/'last-failure.json', {'job_id': job_id,
                             'assignment_root': lease['assignment_root'], 'error': type(error).__name__})
-                        if config['rank'] == 0:
+                        if config['rank'] == 0 and not (outbox.pending_body() or {}).get('kind', '').startswith('respond_'):
                             events.emit(job_id, lease['assignment_root'], text='', status='failed')
                     if args.job:
                         return
                 time.sleep(.5)
         finally:
+            maintenance_stop.set()
+            if maintenance_thread is not None:
+                maintenance_thread.join(timeout=30)
             box.close()
             server.shutdown()
             server.server_close()

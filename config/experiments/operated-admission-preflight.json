@@ -1,0 +1,22 @@
+{
+  "format": "neuroshard-operated-admission-preflight-v1",
+  "purpose": "Execute and recover actual CPU model shards under atomic funded admission before allocating GPUs for an operated alpha.",
+  "model": "Existing deterministic five-owner CPU fixture; no training or quality claim",
+  "cases": ["ordinary", "coordinator-loss", "backbone-loss"],
+  "fault_ranks": {"coordinator-loss": 0, "backbone-loss": 1},
+  "question": [{"role": "user", "content": "What is word7?"}],
+  "max_tokens": 4,
+  "complete_replays_per_claim": 3,
+  "pass": [
+    "Every request reserves providers and native quorum audit capacity in one signed admission",
+    "Five assigned owners restore committed model partitions and agree on the response",
+    "Provider heartbeats continue during serving and idle time",
+    "Already advertised standby providers replace killed coordinator and backbone owners through the recovery daemon",
+    "Replacement preserves graph, request and prepaid audit, changes the assignment epoch and pays exactly once",
+    "Three complete numerical replays reproduce every accepted response",
+    "All four native validators agree on payments, occupancy burn and unused refunds with zero issuance",
+    "Replay reproduces the complete native state and every trial process is retired"
+  ],
+  "resources": {"gpus": 0, "max_seconds": 1800, "memory_limit_gib": 8, "cpu_quota_percent": 150},
+  "limits": "One administrator. Synthetic model. This tests the new admission and recovery path, not LLM quality, public latency or independent operation."
+}

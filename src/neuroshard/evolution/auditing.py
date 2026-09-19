@@ -79,7 +79,8 @@ def verdict_commitment(chain_id, claim_id, owner, coverage_root, salt, valid):
 
 
 def escrow(state):
-    return sum(budget['funds'] + sum(a['bond'] for a in budget['auditors'].values())
+    return sum(budget['funds'] + budget.get('capacity', {}).get('rent', 0)
+               + sum(a['bond'] for a in budget['auditors'].values())
                for budget in state.get('auditing', {}).get('budgets', {}).values())
 
 
@@ -146,6 +147,15 @@ def lock(state, budget_id, publisher, workers, reservation):
 def attach(state, budget_id):
     claim = state['candidate']
     budget = state['auditing']['budgets'][budget_id]
+    if 'capacity' in budget:
+        terms = budget['capacity']
+        if terms['purpose'] != claim.get('kind'):
+            raise ValueError('Standing audit authorization covers another work kind')
+        if claim.get('kind') == 'expert_inference':
+            from .reference_data import identity
+            if terms['scope'] != identity(claim['graph']):
+                raise ValueError('Standing audit authorization covers another serving graph')
+        claim['expires'] = min(claim['expires'], terms['until'])
     count = stages(claim)
     if count > budget['stage_limit']:
         raise ValueError('Audit budget does not cover every execution stage')
@@ -181,6 +191,7 @@ def minimum_deadline(state, claim):
 
 
 def finish(state, budget_id, *, accepted=False, claim=None, proven_fault=False, reason):
+    from . import service_admission
     service = state['auditing']
     budget = service['budgets'].pop(budget_id)
     profile = state['manifest']['auditing']
@@ -197,6 +208,7 @@ def finish(state, budget_id, *, accepted=False, claim=None, proven_fault=False, 
         if missed or false_report:
             penalty = auditor['bond']
             slashed += penalty
+            service_admission.slashed_bond(state, budget, owner, penalty)
             if false_report and claim.get('challenge'):
                 accuser = claim['challenge']['owner']
                 ledger.account(state, accuser)['balance'] += penalty // 2
@@ -204,7 +216,8 @@ def finish(state, budget_id, *, accepted=False, claim=None, proven_fault=False, 
             else:
                 state['burned'] += penalty
         else:
-            ledger.account(state, owner)['balance'] += auditor['bond']
+            if not service_admission.return_bond(state, budget, owner, auditor['bond']):
+                ledger.account(state, owner)['balance'] += auditor['bond']
         payable = (accepted and auditor.get('valid', True)) or (quorum_rejection and auditor.get('valid') is False)
         if payable and (auditor['revealed'] or not native(state)):
             if not auditor['revealed']:
@@ -225,6 +238,7 @@ def finish(state, budget_id, *, accepted=False, claim=None, proven_fault=False, 
         'height': state['height'], 'reason': reason})
     if 'voting_snapshot' in budget:
         service['history'][-1]['voting_snapshot'] = budget['voting_snapshot']
+    service['history'][-1].update(service_admission.finish(state, budget))
     service['history'] = service['history'][-128:]
 
 
@@ -241,6 +255,8 @@ def apply(state, owner, body, envelope):
         raise ValueError('Genesis does not enable funded auditing')
     service, profile = state['auditing'], state['manifest']['auditing']
     height, kind = state['height'], body['kind']
+    if 'service_admission' in state and kind in ('fund_audit', 'accept_audit', 'cancel_audit'):
+        raise ValueError('Standing capacity requires atomic admit_work; no unaccepted audit queue')
     if kind == 'fund_audit':
         if len(service['budgets']) >= 16:
             raise ValueError('Outstanding audit budget limit reached')

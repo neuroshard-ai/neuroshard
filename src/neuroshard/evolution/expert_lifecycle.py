@@ -321,6 +321,17 @@ def settled(state, claim, accepted):
         lifecycle.trim_results(life)
     else:
         hosting.failed_claim(state, job)
+        if 'service_admission' in state and 'hosting' in job:
+            # An adjudicated failure ends this purchased obligation. Keeping
+            # its provider/job slots after refunding unused audit occupancy
+            # would create unpriced capacity capture until the old expiry.
+            hosting.release(state, job, accepted=False)
+            ledger.account(state, job['payer'])['balance'] += job['escrow']
+            life['results'][job['id']] = {'id': job['id'], 'status': 'verification_failed',
+                'graph': identity(job['graph']), 'paid_atoms': 0,
+                'refunded_atoms': job['escrow'], 'height': state['height']}
+            del life['jobs'][job['id']]
+            lifecycle.trim_results(life)
 
 
 def replay_report(claim, report):

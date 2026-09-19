@@ -14,6 +14,7 @@ retaining the existing generated-answer and retention requirements.
 | Start here | Purpose |
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
+| [Operated alpha](OPERATED_ALPHA.md) | Atomic funded admission, provider maintenance, automatic recovery and the distinction between AWS hosts and independent operators. |
 | [Provider LLM service](PROVIDER_LLM_SERVICE.md) | Frozen accepted-model concurrency, streaming, recovery and complete-cost trial, including failed setups. |
 | [Provider runtime](PROVIDER_RUNTIME.md) | Native discovery, assigned-partition restoration, authenticated execution and recovery. |
 | [Hosted chat](HOSTED_CHAT.md) | Lightweight client, complete price caps, provisional streaming, settled conversation history and public-data limits. |
