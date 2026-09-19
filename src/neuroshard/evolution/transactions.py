@@ -84,6 +84,53 @@ class Outbox:
             raise ValueError('Unknown outbox operation')
         return protocol.transaction_id(protocol.parse_json(row[0]))
 
+    def retire_hosted(self, snapshot):
+        """Retire a pending provider operation only after its native epoch closes.
+
+        Like retire_closed, this requires a trusted local committed snapshot.
+        It records an unknown outcome and preserves the original signed bytes.
+        It never invents a receipt or retries work with a new nonce.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        body, owner = protocol.verify(protocol.parse_json(raw))
+        kind = body['kind']
+        if kind not in ('accept_hosted_job', 'respond_expert', 'respond_answering'):
+            return None
+        if (owner != self.owner.public_key or body['chain_id'] != self.chain_id
+                or snapshot['chain_id'] != self.chain_id or snapshot['height'] < 1):
+            raise ValueError('Require the provider account and its own committed chain snapshot')
+        old = body.get('assignment_root')
+        if old is None:
+            receipt, signer = protocol.verify(body['workers']['0'])
+            if signer != owner or receipt['job_id'] != body['job_id']:
+                raise ValueError('The coordinator receipt belongs to another job or account')
+            old = receipt.get('assignment_root')
+        if old is None:
+            return None
+        job, lease, result = (snapshot.get(name) for name in ('job', 'lease', 'result'))
+        replaced = (job and lease and job['id'] == body['job_id']
+                    and job.get('hosting') == lease['assignment_root'] != old)
+        completed = (result and result['id'] == body['job_id'] and job is None and lease is None)
+        if not replaced and not completed:
+            return None
+        evidence = {'operation': operation, 'transaction_sha256': hashlib.sha256(raw).hexdigest(),
+            'chain_id': self.chain_id, 'height': snapshot['height'],
+            'closed_assignment': old, 'snapshot_root': hashlib.sha256(canonical(snapshot)).hexdigest(),
+            'transaction_outcome': 'unknown; provider assignment permanently closed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
+
+    def pending_body(self):
+        operation = self.pending()
+        if operation is None:
+            return None
+        row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
+        return protocol.verify(protocol.parse_json(row[0]))[0]
+
     def send(self, operation, kind, *, timeout=60, **fields):
         intent = canonical({'kind': kind, **fields})
         with self.db:

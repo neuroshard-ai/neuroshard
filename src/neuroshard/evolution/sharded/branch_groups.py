@@ -108,16 +108,17 @@ class OrderedRoutes:
 class RoutedNetwork:
     """Share one parent partition across several independently connected paths."""
 
-    def __init__(self, global_rank, shard, tokenizer, split, routes, parent_group, expert_groups):
+    def __init__(self, global_rank, shard, tokenizer, split, routes, parent_group, expert_groups, *, mesh=None):
         self.rank, self.routes = global_rank, routes
-        self.parent_wire = ParentWire(global_rank, parent_group) if global_rank < 3 else None
+        self.parent_wire = ((mesh.group([0, 1, 2]) if mesh else ParentWire(global_rank, parent_group))
+                            if global_rank < 3 else None)
         self.networks = {}
         self.answer_paths = {}
         for rule in routes.rules:
             members = [0, 1, 2, rule['owner']]
             if global_rank not in members:
                 continue
-            wire = GroupWire(global_rank, members, expert_groups[rule['id']])
+            wire = mesh.group(members) if mesh else GroupWire(global_rank, members, expert_groups[rule['id']])
             self.networks[rule['id']] = Network(shard, wire, self.parent_wire, tokenizer, split)
             self.answer_paths[rule['id']] = partial(self.networks[rule['id']].generate, expert=True)
         if not self.networks:

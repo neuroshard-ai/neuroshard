@@ -8,7 +8,7 @@ import copy
 
 from neuroshard.demo import protocol
 from neuroshard.lab import state as ledger
-from . import answering, auditing, expert_admission, expert_work, lifecycle, portable_lifecycle, serving_graph
+from . import answering, auditing, expert_admission, expert_work, lifecycle, portable_lifecycle, serving_graph, hosting
 from .reference_data import identity
 from .schema import integer, root
 
@@ -126,6 +126,7 @@ def advance(state):
     life = state['expert_lifecycle']
     for key, job in list(life['jobs'].items()):
         if state['height'] > job['expires'] and job['claim_id'] is None:
+            hosting.release(state, job, accepted=False)
             ledger.account(state, job['payer'])['balance'] += job['escrow']
             life['results'][key] = {'id': key, 'status': 'expired', 'graph': identity(job['graph']),
                 'refunded_atoms': job['escrow'], 'height': state['height']}
@@ -155,16 +156,33 @@ def transcript_binding(claim):
 def inference_receipt(chain_id, job, outputs, text, transcript_root, rank):
     return {'domain': FORMAT + '/response', 'chain_id': chain_id, 'job_id': job['id'],
         'graph': identity(job['graph']), 'request': identity(job['request']), 'outputs': outputs,
-        'text': text, 'transcript_root': transcript_root, 'rank': rank}
+        'text': text, 'transcript_root': transcript_root, 'rank': rank,
+        **({'assignment_root': job['hosting']} if 'hosting' in job else {})}
 
 
 def answering_receipt(chain_id, job, response, transcript_root, rank):
     return {'domain': FORMAT + '/answering-response', 'chain_id': chain_id, 'job_id': job['id'],
         'graph': identity(job['graph']), 'request': identity(job['request']),
-        'response': identity(response), 'transcript_root': transcript_root, 'rank': rank}
+        'response': identity(response), 'transcript_root': transcript_root, 'rank': rank,
+        **({'assignment_root': job['hosting']} if 'hosting' in job else {})}
 
 
-def apply(state, owner, body, envelope):
+def inference_terms(graph, question, maximum, unit_price):
+    if 'answering' in graph:
+        messages = ([{'role': 'user', 'content': question}] if isinstance(question, str) else question)
+        answering.conversation(messages)
+        request = {'messages': copy.deepcopy(messages), 'max_tokens': maximum}
+        needed = {str(rank) for rank in range(3 + len(graph['experts']))}
+        minimum_price = answering.quote(graph, maximum, unit_price)['maximum_atoms']
+    else:
+        plan = serving_graph.calls(graph, question, maximum)
+        request = {'question': question, 'max_tokens': maximum, 'calls': plan}
+        needed = {rank for call in plan for rank in serving_graph.ownership(graph, call['model'])}
+        minimum_price = serving_graph.maximum_price(graph, plan, unit_price)
+    return request, needed, minimum_price
+
+
+def apply(state, owner, body, envelope, *, hosted=False):
     if 'expert_lifecycle' not in state:
         raise ValueError('Genesis does not enable expert graph serving')
     if body['kind'] in expert_admission.FIELDS:
@@ -195,22 +213,15 @@ def apply(state, owner, body, envelope):
             expires=expert_admission.deadline(state, state['height'] + state['manifest']['params']['max_claim_blocks']))
         life['quality_claim'] = state['candidate']['id']
     elif body['kind'] == 'infer_expert':
+        if 'hosting' in state and not hosted:
+            raise ValueError('Reserve registered providers and complete auditing through lease_expert')
         graph = life['serving_graph']
         if root(body['graph']) != identity(graph) or len(life['jobs']) >= 16:
             raise ValueError('Serving graph changed or inference queue is full')
         maximum = integer(body['max_tokens'], 1, profile['max_tokens'])
-        if 'answering' in graph:
-            messages = ([{'role': 'user', 'content': body['question']}]
-                        if isinstance(body['question'], str) else body['question'])
-            answering.conversation(messages)
-            request = {'messages': copy.deepcopy(messages), 'max_tokens': maximum}
+        request, needed, minimum_price = inference_terms(graph, body['question'], maximum, profile['price_per_token'])
+        if hosted:
             needed = {str(rank) for rank in range(3 + len(graph['experts']))}
-            minimum_price = answering.quote(graph, maximum, profile['price_per_token'])['maximum_atoms']
-        else:
-            plan = serving_graph.calls(graph, body['question'], maximum)
-            request = {'question': body['question'], 'max_tokens': maximum, 'calls': plan}
-            needed = {rank for call in plan for rank in serving_graph.ownership(graph, call['model'])}
-            minimum_price = serving_graph.maximum_price(graph, plan, profile['price_per_token'])
         workers = body['workers']
         if not isinstance(workers, dict) or set(workers) != needed:
             raise ValueError('Assign exactly every participating graph owner')
@@ -228,6 +239,7 @@ def apply(state, owner, body, envelope):
         job = life['jobs'].get(root(body['job_id']))
         if not job or job['workers']['0'] != owner or job['claim_id'] or state['height'] > job['expires']:
             raise ValueError('No matching available expert inference assignment')
+        hosting.claim_ready(state, job, body)
         graph, outputs, text = job['graph'], body['outputs'], body['text']
         if 'answering' in graph:
             raise ValueError('A complete answering job requires its entire replayable response')
@@ -253,6 +265,7 @@ def apply(state, owner, body, envelope):
         if (not job or 'answering' not in job['graph'] or job['workers']['0'] != owner
                 or job['claim_id'] or state['height'] > job['expires']):
             raise ValueError('No matching available complete answering assignment')
+        hosting.claim_ready(state, job, body)
         response = body['response']
         answering.check_request(response, job['request'])
         payments = answering.payments(job['graph'], job['request']['max_tokens'], response, job['unit_price'])
@@ -293,6 +306,7 @@ def settled(state, claim, accepted):
     job = life['jobs'][claim['job_id']]
     job['claim_id'] = None
     if accepted:
+        hosting.release(state, job, accepted=True)
         payments = (answering.payments(job['graph'], job['request']['max_tokens'], claim['response'], job['unit_price'])
                     if 'answering' in job['graph'] else
                     serving_graph.payments(job['graph'], job['request']['calls'], claim['outputs'], job['unit_price']))
@@ -305,6 +319,8 @@ def settled(state, claim, accepted):
             'paid_atoms': paid, 'refunded_atoms': job['escrow'] - paid, 'height': state['height']}
         del life['jobs'][job['id']]
         lifecycle.trim_results(life)
+    else:
+        hosting.failed_claim(state, job)
 
 
 def replay_report(claim, report):

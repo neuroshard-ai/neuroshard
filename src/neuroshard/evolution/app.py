@@ -164,6 +164,11 @@ class Application(Base):
                     value = s.get('planner_work')
                 elif request.path=='/expert_lifecycle':
                     value = s.get('expert_lifecycle')
+                elif request.path=='/hosting':
+                    value = s.get('hosting')
+                elif request.path=='/hosting/job':
+                    from .hosting import snapshot
+                    value = snapshot(s, options['job_id'])
                 elif request.path=='/portable_lifecycle':
                     value = s.get('portable_lifecycle')
                 elif request.path=='/lifecycle':

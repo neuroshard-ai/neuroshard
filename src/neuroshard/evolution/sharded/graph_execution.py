@@ -49,13 +49,17 @@ def preflight(graph, profile, source_home):
 
 
 class GraphNetwork:
-    def __init__(self, graph, profile, *, objects, interpreter, seed, source_home, rank, policy_store=None):
+    def __init__(self, graph, profile, *, objects, interpreter, seed, source_home, rank, policy_store=None, mesh=None):
         from ..objects import Objects
         self.source_home = Path(source_home)
         self.interpreter_home = Path(interpreter)
         self.policy_store = policy_store
         self.answering_services = {}
         self.answering_features = {}
+        if mesh is not None:
+            from .peer_wire import SOURCES
+            if any(name not in profile.get('sources', {}) for name in SOURCES):
+                raise ValueError('The graph executor must commit its provider transport sources')
         if 'answering' in graph:
             from ..answering import core, load
             from .planned_graph import validate_configuration
@@ -64,12 +68,14 @@ class GraphNetwork:
             validate_configuration(core(graph), load(graph, self.policy_store), self.source_home)
         self.runtime = preflight(graph, profile, source_home)
         self.world_size = 3 + len(graph['experts'])
+        distributed = (dist.is_initialized() and dist.get_rank() == rank
+                       and dist.get_world_size() == self.world_size) if mesh is None else (
+                       mesh.rank == rank and mesh.world == self.world_size)
         if (graph['descriptor']['format'] not in (serving_graph.COMPOSED, serving_graph.EXTENSIBLE)
-                or type(rank) is not int or not 0 <= rank < self.world_size or not dist.is_initialized()
-                or dist.get_rank() != rank or dist.get_world_size() != self.world_size):
+                or type(rank) is not int or not 0 <= rank < self.world_size or not distributed):
             raise ValueError('The graph requires every declared initialized shard owner')
         self.graph, self.rank, self.trace = graph, rank, []
-        self.all_owners = Wire(rank, self.world_size)
+        self.all_owners = mesh.group(list(range(self.world_size))) if mesh else Wire(rank, self.world_size)
         self.tokenizer = tokenizer_for({'tokenizer': graph['tokenizer']['root'],
             'tokenizer_files': graph['tokenizer']['files']}, Path(seed))
         if self.tokenizer.eos_token_id != graph['tokenizer']['eos_id']:
@@ -102,13 +108,19 @@ class GraphNetwork:
         # start a subset's connection timeout while another owner is still
         # reading its files. All model bytes are checked before any path forms;
         # normal execution retains the shorter process-group timeout below.
-        dist.monitored_barrier(timeout=timedelta(seconds=1200), wait_all_ranks=True)
-        timeout = timedelta(seconds=300)
-        parent_group = dist.new_group([0, 1, 2], timeout=timeout)
-        groups = {rule['id']: dist.new_group([0, 1, 2, rule['owner']], timeout=timeout)
-                  for rule in descriptor['rules']}
+        if mesh is None:
+            dist.monitored_barrier(timeout=timedelta(seconds=1200), wait_all_ranks=True)
+            timeout = timedelta(seconds=300)
+            parent_group = dist.new_group([0, 1, 2], timeout=timeout)
+            groups = {rule['id']: dist.new_group([0, 1, 2, rule['owner']], timeout=timeout)
+                      for rule in descriptor['rules']}
+        else:
+            loaded = {'graph': identity(graph), 'executor': identity(profile), 'loaded': True}
+            if self.all_owners.exchange(loaded) != [loaded] * self.world_size:
+                raise ValueError('Providers loaded different graph or numerical commitments')
+            parent_group, groups = None, {}
         self.net = RoutedNetwork(rank, self.shard, self.tokenizer, descriptor['split'],
-            OrderedRoutes(descriptor['rules']), parent_group, groups)
+            OrderedRoutes(descriptor['rules']), parent_group, groups, mesh=mesh)
         for name, network in self.net.networks.items():
             original = network.generate
 

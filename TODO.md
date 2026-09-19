@@ -271,6 +271,18 @@ before the affected work, rather than changing the target after a result.
   continued older serving after the newest expert exited. The latest five-owner
   experiment used one operator and controlled cloud networking.
 
+  In development: native provider registration, graph/rank offers, collateral
+  and capacity reservation, complete prepaid audit assignment and timed
+  coordinator replacement now have adversarial state-transition coverage.
+  Receipts bind assignment epochs; failed or expired service refunds its unused
+  budgets. Five separately keyed CPU processes now execute actual model
+  partitions through certificate-pinned HTTPS, matching the fixed-group
+  executor for ordinary and multi-turn fixtures. Providers discover their own
+  native assignments, restore committed partitions without SSH and jointly
+  sign the complete response. Operated LLM recovery, the availability soak
+  and independent administration remain required. See
+  [the provider-market design](docs/PROVIDER_MARKET_RFC.md).
+
 - [ ] **5. Affordable verification and sustainable incentives**
 
   Done when every accepted obligation has available evidence, complete funded
