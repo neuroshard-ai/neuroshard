@@ -12,6 +12,45 @@ shared wallet, operator allowlist or remote code installation participates in
 serving. RPC authorization is restricted to the provider's own loopback node;
 ABCI responses are not portable light-client proofs.
 
+Use the exact source commit and numerical profile published with the genesis.
+For the accepted-model trial the GPU profile requires Python 3.10.12, an NVIDIA
+A10G and the pinned CUDA/PyTorch environment. Other GPUs are not yet admitted by
+that numerical commitment. Permissionless registration does not promise arbitrary
+hardware compatibility. The metadata-only native node uses its separate CPU
+environment; it does not download the full model.
+
+From the pinned checkout, create both environments without installing over an
+existing node:
+
+```bash
+python3 -m venv .neuroshard/native
+.neuroshard/native/bin/python -m pip install -r docs/evolution-requirements.txt
+python3.10 -m venv .neuroshard/provider
+.neuroshard/provider/bin/python -m pip install -r docs/expert-execution-requirements.txt
+```
+
+The release must supply its genesis file/hash, reachable native peer, executor
+profile and object-length inventory. Build the pinned CometBFT binary using the
+[candidate instructions](CANDIDATE_OPERATIONS.md). For a newly agreed genesis,
+start a non-voting full node with its own keys:
+
+```bash
+PYTHONPATH=src ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2 \
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+  .neuroshard/native/bin/python scripts/join_funded_candidate.py \
+  --home /srv/neuroshard-full-node --genesis /srv/release/genesis.json \
+  --genesis-sha256 RELEASE_GENESIS_SHA256 --engine /srv/release/cometbft \
+  --peer NODE_ID@PUBLIC_PEER:26656 --base-port 26656
+```
+
+This helper now accepts the funded expert-graph profile as well as the earlier
+lifecycle profile. It pins the source and genesis and preserves an existing
+recognized home. It is for the fresh research deployment: following an old stake
+history additionally needs a recent independently trusted checkpoint. Becoming a
+validator requires native stake admission; running this follower grants no vote.
+Keep RPC on loopback and expose the native peer and advertised HTTPS provider
+port. Never share account, TLS or consensus private keys to join.
+
 Create a local JSON configuration with the release's chain ID, manifest hash,
 executor profile and object-length inventory. Mirror bases must be configured
 locally. Each requested digest is already committed by the graph or policy;
@@ -50,9 +89,14 @@ reserving other available replicas. Do not reuse one wallet across concurrent
 runtime processes or independent transaction outboxes.
 
 ```bash
-python -m neuroshard.evolution.provider_runtime --config provider.json --identity
-python -m neuroshard.evolution.provider_runtime --config provider.json --publish-offer
-python -m neuroshard.evolution.provider_runtime --config provider.json
+export PYTHONPATH="$PWD/src"
+export ATEN_CPU_CAPABILITY=default MKL_ENABLE_INSTRUCTIONS=SSE4_2
+export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MKL_NUM_THREADS=2
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+.neuroshard/provider/bin/python -m neuroshard.evolution.provider_runtime --config provider.json --identity
+.neuroshard/provider/bin/python -m neuroshard.evolution.provider_runtime --config provider.json --publish-offer
+.neuroshard/provider/bin/python -m neuroshard.evolution.provider_runtime --config provider.json
 ```
 
 The first command creates local keys and prints only public registration fields.
