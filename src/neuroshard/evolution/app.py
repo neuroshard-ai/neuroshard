@@ -140,6 +140,22 @@ class Application(Base):
                 validator_updates=[lab_pb.ValidatorUpdate(pub_key=lab_pb.PublicKey(ed25519=bytes.fromhex(k)),power=v) for k,v in sorted(updates.items())])
 
     def Query(self,request,context):
+        if request.path == '/hosting/quote':
+            # Committed states are replaced, never mutated in place. Capture
+            # one atomic view, then keep market matching outside consensus's
+            # state lock so discovery cannot hold up block finalization.
+            with self.lock:
+                s = self.state
+            try:
+                if s is None or request.prove or request.height not in (0, s['height']):
+                    raise ValueError('Only current-state queries without proofs are supported')
+                from .provider_quotes import quote
+                options = protocol.parse_json(request.data)
+                value = quote(s, options['question'], options['max_tokens'],
+                    provider_ceiling=options.get('provider_ceiling', 2**60), publisher=options.get('publisher'))
+                return pb.ResponseQuery(value=canonical(value), height=s['height'])
+            except ERRORS as exc:
+                return pb.ResponseQuery(code=1, log=str(exc))
         with self.lock:
             try:
                 s = self.state

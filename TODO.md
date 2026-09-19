@@ -283,6 +283,15 @@ before the affected work, rather than changing the target after a result.
   and independent administration remain required. See
   [the provider-market design](docs/PROVIDER_MARKET_RFC.md).
 
+  The subsequent [native provider preflight](docs/PROVIDER_NATIVE_PREFLIGHT.md)
+  passes actual registration, partition restoration, signed execution and
+  settlement across five provider processes and four CometBFT validators.
+  A killed coordinator and a killed backbone owner are each replaced by a fresh
+  key and endpoint. Each recovered request pays once after three complete
+  numerical replays. Application replay matches 660 headers, 84 transactions
+  and all four stored states. This uses a small synthetic graph on one host;
+  accepted-LLM load/cost evidence and independent operation remain required.
+
 - [ ] **5. Affordable verification and sustainable incentives**
 
   Done when every accepted obligation has available evidence, complete funded

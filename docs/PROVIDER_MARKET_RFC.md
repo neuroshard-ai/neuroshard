@@ -81,6 +81,9 @@ These are numerical and protocol fixtures, not the remaining operated LLM
 failure/latency trial or an independent-operator soak.
 
 The experimental runtime is described in [the provider guide](PROVIDER_RUNTIME.md).
+The subsequent [operated native preflight](PROVIDER_NATIVE_PREFLIGHT.md) passes
+fresh-key replacement after coordinator and backbone-owner loss, followed by
+complete funded replay and exactly-once settlement on the CPU fixture.
 
 ## Validation before an LLM allocation
 

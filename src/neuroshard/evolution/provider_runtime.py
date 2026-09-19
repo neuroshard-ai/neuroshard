@@ -125,7 +125,7 @@ def execute(job, network, peer):
     return {'claim': claim, 'transcript': transcript, 'submission': payload}
 
 
-def run_job(config, node, owner, box, outbox, job_id):
+def run_job(config, node, owner, box, outbox, job_id, cache=None):
     """One capacity slot; restart requires native replacement of its epoch."""
     from .sharded.graph_execution import GraphNetwork
     from .sharded.peer_wire import ServingMesh
@@ -172,8 +172,21 @@ def run_job(config, node, owner, box, outbox, job_id):
     peer = transport.Peer(owner, routing, rank, box, timeout=config['frame_seconds'],
                           allow_private=config.get('allow_private', False))
     try:
-        network = GraphNetwork(job['graph'], profile, objects=assets/'objects', interpreter=assets/'interpreter',
-            seed=assets/'seed', source_home=config['source_home'], rank=rank, mesh=ServingMesh(peer))
+        model_key = (identity(job['graph']), rank)
+        network = cache.get(model_key) if cache is not None else None
+        if network is None:
+            if cache is not None:
+                # One advertised capacity slot keeps one complete local model
+                # partition resident. Old policy objects contain cycles.
+                cache.clear()
+                import gc
+                gc.collect()
+            network = GraphNetwork(job['graph'], profile, objects=assets/'objects', interpreter=assets/'interpreter',
+                seed=assets/'seed', source_home=config['source_home'], rank=rank, mesh=ServingMesh(peer))
+            if cache is not None:
+                cache[model_key] = network
+        else:
+            network.rebind(ServingMesh(peer))
         result = execute(job, network, peer)
         save(home/'result.json', result)
         if rank == 0:
@@ -217,6 +230,7 @@ def main():
         outbox = Outbox(home/'transactions.sqlite', config['node_rpc'], config['chain_id'], owner)
         deadline = time.monotonic() + config['run_seconds']
         attempted = set()
+        cache = {}
         try:
             if args.publish_offer:
                 graph = node.query('/expert_lifecycle')['serving_graph']
@@ -262,7 +276,7 @@ def main():
                         continue
                     attempted.add(lease['assignment_root'])
                     try:
-                        run_job(config, node, owner, box, outbox, job_id)
+                        run_job(config, node, owner, box, outbox, job_id, cache)
                     except (OSError, ValueError, RuntimeError) as error:
                         # Keep failures local and bounded; don't print conversations,
                         # keys, signed frames or object-store credentials.

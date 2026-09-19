@@ -69,6 +69,19 @@ intent. Cancel an offer through `cancel_expert_offer` before a planned departure
 existing reservations remain obligations until completion, expiry or replacement.
 Withdraw only unreserved collateral after the native cooldown.
 
+The continuous runtime keeps one immutable model partition resident between
+requests for the same graph. A new assignment installs fresh authenticated wires
+and frame sequences while preserving those weights. Request KV caches and
+conversation context do not carry between jobs. Changing the graph evicts the
+older resident partition before loading its replacement.
+
+`/hosting/quote` supplies a complete first-attempt debit bound: neural execution,
+the selected providers' whole-request fees, full verification funding and a
+bounded client transaction-fee allowance. Its matching checks shared collateral,
+offer capacity and expiry. Quotes expire and native reservation rechecks them;
+a quote alone does not reserve capacity. A rejected audited attempt needs fresh
+verification funding rather than an automatic additional debit.
+
 On interrupted execution, providers wait for `replace_hosted_job` to commit a
 new assignment. The client or any participant can replace a timed-out group
 within its original fee ceiling and attempt/expiry limits. Late frames and

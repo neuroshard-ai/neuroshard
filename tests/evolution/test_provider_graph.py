@@ -20,7 +20,7 @@ from test_graph_execution import prepare_graph, QUESTIONS, SOURCE
 from test_complete_answering import complete
 
 
-def owner(rank, directory):
+def owner(rank, directory, barrier):
     home = Path(directory)
     os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'test'
     key = protocol.Identity.load_or_create(home/f'owner-{rank}'/'identity')
@@ -66,6 +66,18 @@ def owner(rank, directory):
             assert len(execution['submission']['workers']) == 5
             assert execution['claim']['record_root'] == identity(execution['transcript'])
             actual.append(execution['transcript']['result'])
+        pointers = tuple(parameter.data_ptr() for _, parameter in network.shard.named_owned_parameters())
+        # Model memory survives; peer frame sequences and context do not. The
+        # fixture barrier models every local validator observing the new lease.
+        barrier.wait(timeout=30)
+        peer.close()
+        box.retire(routing['job_id'], routing['assignment_root'])
+        routing.update(job_id='c'*64, assignment_root='d'*64)
+        barrier.wait(timeout=30)
+        peer = transport.Peer(key, routing, rank, box, timeout=20, allow_private=True)
+        network.rebind(ServingMesh(peer))
+        assert network.answer(questions[0], 4) == actual[0]
+        assert pointers == tuple(parameter.data_ptr() for _, parameter in network.shard.named_owned_parameters())
         assert not dist.is_initialized()
         # Only the oracle below has a fixed Gloo group. Public serving above
         # used distinct provider keys, certificate pins and binary HTTPS frames.
@@ -94,7 +106,8 @@ def run(tmp_path):
     graph['executor_root'] = identity(profile)
     save(tmp_path/'profile.json', profile)
     save(tmp_path/'graph.json', graph)
-    running = mp.spawn(owner, args=(str(tmp_path),), nprocs=5, join=False)
+    barrier = mp.get_context('spawn').Barrier(5)
+    running = mp.spawn(owner, args=(str(tmp_path), barrier), nprocs=5, join=False)
     deadline = time.monotonic() + 120
     try:
         while not running.join(timeout=1):

@@ -67,6 +67,8 @@ class GraphNetwork:
                 self.policy_store = Objects(Path(objects)/'policies')
             validate_configuration(core(graph), load(graph, self.policy_store), self.source_home)
         self.runtime = preflight(graph, profile, source_home)
+        self.profile = copy.deepcopy(profile)
+        self.provider_mesh = mesh is not None
         self.world_size = 3 + len(graph['experts'])
         distributed = (dist.is_initialized() and dist.get_rank() == rank
                        and dist.get_world_size() == self.world_size) if mesh is None else (
@@ -183,6 +185,34 @@ class GraphNetwork:
     def check_context(self, ids, maximum):
         if not ids or len(ids) + maximum > self.graph['tokenizer']['max_context']:
             raise ValueError('No silent graph context truncation')
+
+    def rebind(self, mesh):
+        """Reuse immutable weights under a fresh, independently fenced request.
+
+        Request KV caches are local to each generation call. Learned service
+        objects retain this GraphNetwork, so replacing its wires also updates
+        the planner, encoder/reranker collectives and every expert path.
+        """
+        if (not self.provider_mesh or mesh.rank != self.rank or mesh.world != self.world_size
+                or self.comparison is not None):
+            raise ValueError('Only the same provider graph can reuse resident weights')
+        preflight(self.graph, self.profile, self.source_home)
+        self.verify_unchanged()
+        self.trace = []
+        self.all_owners = mesh.group(list(range(self.world_size)))
+        self.net.parent_wire = mesh.group([0, 1, 2])
+        for rule in self.graph['descriptor']['rules']:
+            branch = self.net.networks.get(rule['id'])
+            if branch is not None:
+                branch.wire = mesh.group([0, 1, 2, rule['owner']])
+                branch.parent_wire = self.net.parent_wire
+        if self.preserved is not None:
+            self.preserved.wire = self.net.networks['directory'].wire
+            self.preserved.parent_wire = self.net.parent_wire
+        binding = {'graph': identity(self.graph), 'executor': identity(self.profile),
+                   'assignment': mesh.peer.routing['assignment_root']}
+        if self.all_owners.exchange(binding) != [binding]*self.world_size:
+            raise ValueError('Providers reused different model or assignment commitments')
 
     def verify_unchanged(self):
         if tuple(p._version for _, p in self.shard.named_owned_parameters()) != self.versions:
