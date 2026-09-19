@@ -43,6 +43,10 @@ def owner(rank, directory, barrier):
         time.sleep(.02)
     routing.update(chain_id='provider-neural-fixture', job_id='a'*64, assignment_root='b'*64,
                    providers={str(index): json.loads(path.read_bytes()) for index, path in enumerate(paths)})
+    # Publishing an endpoint does not make this fixture's in-memory native
+    # view ready. A fast process must not send to a peer whose lookup is still
+    # empty. Real providers wait on committed native acceptance instead.
+    barrier.wait(timeout=60)
     peer = transport.Peer(key, routing, rank, box, timeout=20, allow_private=True)
     graph, profile = [json.loads((home/name).read_bytes()) for name in ('graph.json', 'profile.json')]
     kwargs = dict(objects=home/'objects', interpreter=home/'interpreter', seed=home/'seed',
