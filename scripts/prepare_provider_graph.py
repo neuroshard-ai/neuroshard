@@ -110,11 +110,45 @@ def prepare(study, destination, expected_graph):
         raise ValueError('A provider would receive the full backbone')
     save(destination/'object-lengths.json', lengths)
     save(destination/'owners.json', owners)
+    # Reuse the latest prescribed job only as a dormant genesis fixture. This
+    # serving experiment never executes or credits it, opens quality data or
+    # changes the earlier learning/admission record. No automatic publisher is
+    # installed. Honest auditors accept only the scoped inference obligations.
+    from neuroshard.evolution import expert_lifecycle, hosting, settlement
+    from neuroshard.evolution.app import code_hash
+    from neuroshard.lab.app import native_parameters
+    active = copy.deepcopy(state['expert_lifecycle']['admission']['active']['job'])
+    template = answering.core(active['lifecycle']['candidate_template'])
+    template['executor_root'] = graph['executor_root']
+    template['descriptor']['previous_graph'] = identity(graph['descriptor'])
+    candidate_policy = copy.deepcopy(policy)
+    candidate_policy['graph'] = candidate_policy['learned']['graph'] = identity(template)
+    template = answering.attach(template, candidate_policy, Objects(destination/'policies'))
+    params = {**state['manifest']['params'], 'max_claim_blocks': 4096}
+    manifest = {'params': params, 'initial_model_root': graph['parent']['state_root'],
+        'data_root': state['data_root'], 'code_hash': code_hash(),
+        'native_consensus': {**native_parameters(params), 'block_max_bytes': 4*1024**2},
+        'hosting': {**hosting.PROFILE, 'prepare_blocks': 1024, 'execution_blocks': 512},
+        'auditing': {**state['manifest']['auditing'], 'commit_blocks': 1536, 'reveal_blocks': 64},
+        'expert_work': active['work'],
+        'expert_lifecycle': {'format': expert_lifecycle.PROSPECTIVE, 'serving_graph': graph,
+            'candidate_template': template, 'quality': active['lifecycle']['quality'],
+            'price_per_token': active['lifecycle']['price_per_token'], 'max_tokens': 64}}
+    # Exercise genesis validation before any cloud allocation. These disposable
+    # public identities are never used for the operated chain's signing keys.
+    from neuroshard.demo.protocol import Identity
+    validators = [{'owner': Identity('provider-preparation-only-'+str(i)).public_key,
+        'consensus_key': identity({'provider_preparation_consensus': i}),
+        'bond': 10*params['bond_unit'], 'liquid': 10_000_000_000} for i in range(4)]
+    checked = settlement.genesis('provider-preparation-only', validators, manifest)
+    settlement.invariant(checked)
+    save(destination/'native-manifest.json', manifest)
     report = {'format': 'neuroshard-provider-graph-migration-v1', 'accepted_graph': expected_graph,
         'graph': identity(graph), 'executor': identity(profile), 'policy': key,
         'source_revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         'trained': False, 'model_and_tokenizer_preserved': True, 'answering_behavior_preserved': True,
         'logical_owners': len(owners), 'owner_bytes': [row['bytes'] for row in owners],
+        'manifest': identity(manifest), 'genesis_validation_passed': True,
         'unique_bytes': sum(lengths[key] for key in {spec['sha256'] for row in owners for spec in row['files'].values()}),
         'note': 'Metadata preparation only; numerical equivalence and operated service remain required'}
     save(destination/'migration.json', report)

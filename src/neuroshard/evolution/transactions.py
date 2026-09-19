@@ -44,6 +44,42 @@ class Outbox:
     def recorded(self, operation):
         return self.db.execute('SELECT 1 FROM operations WHERE id=?', (operation,)).fetchone() is not None
 
+    def receipt(self, operation):
+        row = self.db.execute('SELECT receipt FROM operations WHERE id=?', (operation,)).fetchone()
+        return wire.parse(row[0]) if row and row[0] is not None else None
+
+    def retirement(self, operation):
+        row = self.db.execute('SELECT evidence FROM retired WHERE id=?', (operation,)).fetchone()
+        return wire.parse(row[0]) if row else None
+
+    def retire_hosted_payment(self, snapshot, audits):
+        """A permanently closed audit budget can never admit its old lease.
+
+        Inputs must come from the customer's pinned local full node. Keep the
+        signed envelope and unknown transaction outcome, including when no
+        reservation ever reached a block. Do not fabricate a transaction fee.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        body = self.pending_body()
+        if body['kind'] != 'lease_expert':
+            return None
+        closed = next((row for row in audits['history'] if row['id'] == body['audit_budget']), None)
+        if closed is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        _, owner = wire.verify(wire.parse(raw))
+        if (snapshot['chain_id'] != self.chain_id or body['chain_id'] != self.chain_id
+                or owner != self.owner.public_key or snapshot['height'] < closed['height']):
+            raise ValueError('Require this customer network\'s committed audit closure')
+        evidence = {'operation': operation, 'chain_id': self.chain_id, 'height': snapshot['height'],
+            'transaction_sha256': hashlib.sha256(raw).hexdigest(), 'closed_audit': closed,
+            'transaction_outcome': 'unknown; audit budget permanently closed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
+
     def retire_closed(self, state):
         """Recover a stale audit/vote only from trusted committed native state.
 

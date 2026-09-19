@@ -50,6 +50,14 @@ coordinator change; only the native replacement rule can change its publisher.
 A failed adjudicated attempt consumes its own audit obligation. Any retry needs
 another explicitly funded obligation, within the finite attempt limit.
 
+Customer funding uses `fund_hosted_audit`: its budget commits to the payer,
+graph and complete request hash. Native reservation rejects another payer or
+request, and the generic audit lock rejects attaching that budget to unrelated
+work. The coordinator cannot consume a customer's verification reservation as
+a general training subsidy. An ambiguous rejected reservation is retired only
+after committed closure makes its budget permanently unusable; its original
+signed bytes and unknown transaction outcome remain recorded.
+
 The existing token-based execution payment is supplemented by each provider's
 fixed fee for the *complete bounded request*: prompt processing, selection,
 auxiliary models, transfer and its stated availability period. A token count

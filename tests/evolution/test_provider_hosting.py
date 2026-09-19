@@ -35,12 +35,32 @@ def market(network):
 
 def audit(state, owners, *, publisher=None, stages=128):
     before = set(state['auditing']['budgets'])
-    state = send(state, owners[3], 'fund_audit', publisher=publisher or owners[0].public_key,
-                 auditors=[], stage_limit=stages, expires_in=10000)
+    graph = state['expert_lifecycle']['serving_graph']
+    request, _, _ = life.inference_terms(graph, QUESTION, 64, 101)
+    state = send(state, owners[3], 'fund_hosted_audit', publisher=publisher or owners[0].public_key,
+                 graph=identity(graph), request_root=identity(request), stage_limit=stages, expires_in=10000)
     key = (set(state['auditing']['budgets']) - before).pop()
     for owner in owners[:3]:
         state = send(state, owner, 'accept_audit', budget_id=key)
     return state, key
+
+
+def test_customer_audit_budget_cannot_be_front_run_or_redirected_to_other_work(market):
+    from neuroshard.evolution import auditing
+    state, owners, offers = market
+    state, budget = audit(state, owners)
+    fields = dict(graph=state['serving_root'], question=QUESTION, max_tokens=64,
+        offers=offers, max_price=20000, max_provider_fee=1000, audit_budget=budget, expires_in=256)
+    before = copy.deepcopy(state)
+    with pytest.raises(ValueError, match='exact customer'):
+        send(state, owners[2], 'lease_expert', **fields)
+    with pytest.raises(ValueError, match='exact customer'):
+        send(state, owners[3], 'lease_expert', **{**fields, 'question': QUESTION.replace('Ada Lane', 'Ben Dale')})
+    with pytest.raises(ValueError, match='restricted'):
+        auditing.lock(state, budget, owners[0].public_key, [], 'f'*64)
+    assert state == before
+    accepted = send(state, owners[3], 'lease_expert', **fields)
+    assert len(accepted['hosting']['leases']) == 1
 
 
 def lease(state, owners, offers, **changes):

@@ -17,6 +17,7 @@ PROFILE = {'format': FORMAT, 'lease_bond': 1_000_000, 'prepare_blocks': 128,
            'execution_blocks': 256, 'cooldown_blocks': 32, 'max_attempts': 3,
            'max_providers': 256, 'max_offers': 1024}
 FIELDS = {
+    'fund_hosted_audit': {'publisher', 'stage_limit', 'expires_in', 'graph', 'request_root'},
     'register_provider': {'endpoint', 'certificate', 'collateral'},
     'update_provider': {'endpoint', 'certificate', 'deposit'},
     'withdraw_provider': {'amount'},
@@ -134,6 +135,10 @@ def reserve_audit(state, job, budget_id, publisher):
     budget = state['auditing']['budgets'].get(root(budget_id))
     if not budget or budget['stage_limit'] < stage_limit(job['graph'], job['request'], job['unit_price']):
         raise ValueError('Prepay complete bounded inference verification before reserving providers')
+    scope = {'kind': FORMAT, 'payer': job['payer'], 'graph': identity(job['graph']),
+             'request_root': identity(job['request'])}
+    if budget.get('scope') != scope or budget['sponsor'] != job['payer']:
+        raise ValueError('Hosted audit funding must belong to this exact customer, graph and request')
     auditing.lock(state, budget_id, publisher, list(job['workers'].values()), job['id'])
 
 
@@ -264,7 +269,16 @@ def apply(state, owner, body, envelope):
         raise ValueError('Genesis does not enable provider hosting')
     market, profile = state['hosting'], state['manifest']['hosting']
     kind, height = body['kind'], state['height']
-    if kind == 'register_provider':
+    if kind == 'fund_hosted_audit':
+        graph = root(body['graph'])
+        request_root = root(body['request_root'])
+        if graph != state['serving_root']:
+            raise ValueError('Fund the currently accepted graph')
+        auditing.apply(state, owner, {'kind': 'fund_audit', 'auditors': [],
+            **{key: body[key] for key in ('publisher', 'stage_limit', 'expires_in')}}, envelope)
+        state['auditing']['budgets'][protocol.transaction_id(envelope)]['scope'] = {
+            'kind': FORMAT, 'payer': owner, 'graph': graph, 'request_root': request_root}
+    elif kind == 'register_provider':
         if owner in market['providers'] or len(market['providers']) >= profile['max_providers']:
             raise ValueError('Provider already registered or registry is full')
         amount = integer(body['collateral'], profile['lease_bond'], 2**60)

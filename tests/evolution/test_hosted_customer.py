@@ -26,6 +26,7 @@ class Chain:
         self.state, self.chain_id = state, state['chain_id']
         self.receipts, self.submissions = {}, []
         self.drop = None
+        self.reject_reservation = False
 
     def query(self, path, data=None):
         if path == '/hosting/quote':
@@ -50,6 +51,8 @@ class Chain:
         assert method == 'broadcast_tx_sync'
         raw = base64.b64decode(params['tx'])
         envelope = protocol.parse_json(raw)
+        if self.reject_reservation and envelope['body']['kind'] == 'lease_expert':
+            raise wire.Rejected('Provider capacity was reserved by another customer')
         self.state = settlement.transition(blocks(self.state, 1), envelope)
         settlement.invariant(self.state)
         key = hashlib.sha256(raw).hexdigest().upper()
@@ -154,3 +157,32 @@ def test_unaccepted_audit_offer_cancels_and_refunds_when_quote_ages_out(tmp_path
 def test_hosted_customer_imports_without_a_numerical_runtime():
     code = 'import sys; import neuroshard.client.hosted; assert "torch" not in sys.modules; assert "transformers" not in sys.modules'
     subprocess.run([sys.executable, '-c', code], check=True, timeout=10)
+
+
+def test_ambiguous_refused_reservation_retires_only_after_native_audit_closure(tmp_path, customer_chain):
+    chain, owners = customer_chain
+    customer, box = client(tmp_path, chain, owners[3])
+    try:
+        row = customer.prepare(MESSAGES, 4, 10**9)
+        customer.tick(row)
+        accept(chain, owners, row['budget_id'])
+        chain.reject_reservation = True
+        with pytest.raises(wire.Rejected, match='capacity'):
+            customer.tick(row)
+        assert box.pending() == row['id'] + ':reserve'
+        budget = chain.state['auditing']['budgets'][row['budget_id']]
+        chain.state = blocks(chain.state, budget['expires'] - chain.state['height'] + 1)
+        result = customer.tick(customer.load(row['id']))
+        assert result['status'] == 'finished'
+        assert result['result']['transaction_outcome'].startswith('unknown')
+        assert result['result']['audit']['refunded_atoms'] == row['quote']['verification_atoms']
+        assert box.pending() is None and len(chain.submissions) == 1
+        assert len(box.db.execute('SELECT envelope FROM operations').fetchall()) == 2
+        # Recover a crash after retirement was persisted but before the outer
+        # customer journal recorded completion. It still cannot re-sign.
+        row['phase'] = 'awaiting_audit'
+        customer.write(row)
+        assert customer.tick(customer.load(row['id'])) == result
+        assert box.pending() is None and len(chain.submissions) == 1
+    finally:
+        box.close()

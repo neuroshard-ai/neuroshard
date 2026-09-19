@@ -135,8 +135,9 @@ class Customer:
                 return {'status': 'finished', 'result': row['result']}
             row['phase'] = 'funding'
             self.write(row)
-            self.outbox.send(operation, 'fund_audit', publisher=quote['publisher'], auditors=[],
-                stage_limit=quote['stage_limit'], expires_in=quote['expires_in'])
+            self.outbox.send(operation, 'fund_hosted_audit', publisher=quote['publisher'],
+                stage_limit=quote['stage_limit'], expires_in=quote['expires_in'],
+                graph=quote['graph'], request_root=quote['request_root'])
             row.update(phase='awaiting_audit', budget_id=self.outbox.logical_id(operation))
             self.write(row)
         if row['phase'] == 'awaiting_audit':
@@ -144,9 +145,39 @@ class Customer:
             if self.outbox.recorded(reservation):
                 # Completion can consume the audit budget before the customer
                 # restarts. Recover the saved reservation before reading it.
-                self.outbox.confirm(reservation)
-                row.update(phase='serving', job_id=self.outbox.logical_id(reservation))
+                job_id = self.outbox.logical_id(reservation)
+                snapshot = self.node.snapshot(job_id, refresh=True)
+                closed = (self.outbox.retirement(reservation)
+                          or self.outbox.retire_hosted_payment(snapshot, self.node.query('/auditing')))
+                if closed is not None:
+                    row['retired_payment'] = closed
+                    if snapshot['job'] is None and snapshot['result'] is None:
+                        row.update(phase='finished', result={'status': 'unreserved_audit_closed',
+                            'audit': closed['closed_audit'], 'transaction_outcome': closed['transaction_outcome']})
+                        self.write(row)
+                        return {'status': 'finished', 'result': row['result']}
+                else:
+                    try:
+                        self.outbox.confirm(reservation)
+                    except wire.Rejected:
+                        if self.outbox.receipt(reservation) is None:
+                            raise
+                        row['phase'] = 'cancel_after_rejection'
+                        self.write(row)
+                        return {'status': 'reservation_rejected'}
+                row.update(phase='serving', job_id=job_id)
                 self.write(row)
+        if row['phase'] == 'cancel_after_rejection':
+            audits = self.node.query('/auditing')
+            if row['budget_id'] in audits['budgets']:
+                self.outbox.send(key + ':cancel-audit', 'cancel_audit', budget_id=row['budget_id'])
+                return {'status': 'audit_cancelled'}
+            closed = next((x for x in audits['history'] if x['id'] == row['budget_id']), None)
+            if closed is None:
+                raise ValueError('Closed audit left retained history; inspect saved native transactions')
+            row.update(phase='finished', result={'status': 'reservation_rejected', 'audit': closed})
+            self.write(row)
+            return {'status': 'finished', 'result': row['result']}
         if row['phase'] == 'awaiting_audit':
             audits = self.node.query('/auditing')
             budget = audits['budgets'].get(row['budget_id'])
@@ -188,6 +219,10 @@ class Customer:
 
 
 def run(args, ceiling):
+    if args.quote_only and args.resume:
+        raise ValueError('Read a new quote or resume the existing payment; these are separate operations')
+    if args.rpc or args.network_file or args.provider:
+        raise ValueError('Hosted chat uses the node and network pinned in --hosted-config and discovers its providers')
     config = wire.parse(args.hosted_config.read_bytes())
     node = LocalNode(config['node_rpc'], config['chain_id'], config['manifest_root'])
     args.home.mkdir(parents=True, exist_ok=True, mode=0o700)

@@ -124,6 +124,16 @@ def lock(state, budget_id, publisher, workers, reservation):
     if (not budget or budget['publisher'] != publisher or budget['reservation'] is not None
             or state['height'] > budget['expires']):
         raise ValueError('No matching available audit budget')
+    if 'scope' in budget:
+        # Customer-paid inference cannot subsidize a publisher's unrelated
+        # training, a front-run request, or a different serving revision.
+        from .reference_data import identity
+        job = state.get('expert_lifecycle', {}).get('jobs', {}).get(reservation)
+        scope = budget['scope']
+        if (job is None or scope.get('payer') != job['payer']
+                or scope.get('graph') != identity(job['graph'])
+                or scope.get('request_root') != identity(job['request'])):
+            raise ValueError('This audit budget is restricted to its committed hosted request')
     if not enough(budget, lambda a: bool(a['bond'])):
         raise ValueError('Required auditors must accept before work starts')
     if native(state) and budget['voting_snapshot'] != snapshot(state):

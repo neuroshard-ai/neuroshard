@@ -189,8 +189,8 @@ def run(args):
             request, _, price = expert_lifecycle.inference_terms(graph, freeze['question'], maximum, 7)
             stages = hosting.stage_limit(graph, request, 7)
             operation = case+'/audit'
-            network.send(3, operation, 'fund_audit', publisher=active[0]['owner'].public_key,
-                         auditors=[], stage_limit=stages, expires_in=10000)
+            network.send(3, operation, 'fund_hosted_audit', publisher=active[0]['owner'].public_key,
+                         graph=identity(graph), request_root=identity(request), stage_limit=stages, expires_in=10000)
             budget = network.outboxes[3].logical_id(operation)
             for index in range(3):
                 network.send(index, case+'/accept-audit', 'accept_audit', budget_id=budget)
