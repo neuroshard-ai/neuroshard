@@ -218,7 +218,8 @@ All 128 shadow updates reproduced exactly with 96 fresh training audits and
 zero extra issuance. Each of the three complete quality auditors reproduced
 all 105 stages and the producer's result root. The declared serving interval
 finished at 00:18:45 UTC on September 19, allowing the existing controller to
-prepare the next cohort. Feed and audit finals remain unopened.
+prepare the next cohort. At that comparison cutoff, feed and audit finals were
+still unopened; the subsequent feed result is recorded below.
 
 ### Completed resource comparison
 
@@ -267,3 +268,38 @@ and all evidence archives passed full public byte-hash readback. Application
 replay verifies accounting and state transitions; the numerical reports record
 separate GPU re-execution. All operators remain under one administrator.
 Checklist items 1 and 2 remain open until the complete frozen criteria pass.
+
+
+## Second cohort rejected; complete serving repair
+
+The automatic feed cohort completed 128 verified updates. Single answers
+improved **3→14/16** and combined answers **1→11/16**, with no previously correct
+retained answers lost. The 12/16 combined-answer floor failed. All three quality
+auditors reproduced the result across 137 stages each; native quality rejected
+it at height 56,565 and kept the admitted conversation graph. The audit cohort
+never started and its final remains unopened.
+
+[Full application replay](../config/experiments/admission-native-recovery-20260918/campaign-ledger-replay.json)
+passes 56,582 headers and 857 signed transactions, reproducing the final state
+at height 56,581 and exactly 257,000,000 issued atoms. Verified computation
+was paid; the failed quality result received no serving promotion.
+
+The inference-only [complete serving diagnostic](../config/experiments/feed-reranker-serving-20260919/result.json)
+then improved the same feed weights to **16/16 single and 15/16 combined answers**.
+It lost no retained-correct answers; all previous neural responses and a fresh
+combined request replayed exactly. It used the seven existing owners for 330
+seconds of numerical evaluation. No training, new final, issuance or native
+promotion occurred.
+
+The repair retains four original training paraphrases per intent and uses the
+frozen BAAI question-pair reranker to distinguish them inside an already
+admitted expert. It cannot override a rejected admission or retrieve answer
+text. The 567,755,777-parameter model resides on logical owner 3 and is bound
+into the complete answering policy. Its added serving cost must be included
+in the next resource comparison. Modal question preservation also keeps
+conditional questions beginning with “may” from being unnecessarily rewritten.
+Earlier policy versions retain their original behavior.
+
+The original feed trial remains failed. The repaired feed checkpoint is not
+the accepted baseline. Further useful-learning evidence must preserve the
+accepted conversation model and pass untouched cohorts prospectively.

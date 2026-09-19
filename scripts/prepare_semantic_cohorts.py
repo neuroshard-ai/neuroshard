@@ -218,14 +218,16 @@ def compile_policies(home):
     initial, graph, catalog = (read(compiled/name) for name in
         ('baseline-configuration.json', 'baseline-core.json', 'source-catalog.json'))
     model, encoder = initial['learned']['router'], read(home/'encoder.json')
-    preserved_router = copy.deepcopy(model)
+    preserved_router = copy.deepcopy(initial['semantic_questions']['preserved_router']
+        if plan.get('accepted_history') else model)
     baseline = answering.attach(graph, configuration(graph, model, initial), store)
     policies = {'baseline': baseline['answering']['policy_root']}
-    topology, cohorts, intents = copy.deepcopy(graph), {}, {}
+    topology, cohorts = copy.deepcopy(graph), {}
+    intents = copy.deepcopy(initial['semantic_questions']['intents']) if plan.get('accepted_history') else {}
     initial['request_policy'] = plan['composition']
     order = tuple(plan['order'])
     for index, name in enumerate(order):
-        included = {'parent', 'directory', 'protocol', 'planner', *order[:index+1]}
+        included = {'parent', *graph['experts'], *order[:index+1]}
         rows = [row for row in fitting['rows'] if row['route'] in included]
         samples = [{'id': row['id'], 'route': row['route'], 'features': features[row['id']]['coarse']} for row in rows]
         model = append_gate(model, samples, name, reference)
@@ -237,8 +239,24 @@ def compile_policies(home):
         if plan.get('semantic_admission', False):
             semantic = semantic_questions.fit_admission(semantic, preserved_router)
         topology = ordinary_cohorts.extend(topology, name, graph['experts']['planner'])
-        bound = answering.attach(topology, configuration(topology, model,
-            {**initial, 'semantic_questions': semantic}), store)
+        options = {**initial, 'semantic_questions': semantic}
+        if 'question_reranker' in plan:
+            from neuroshard.evolution import question_reranking
+            facts = {fact['id']: fact for values in catalog['cohorts'].values() for fact in values}
+            if plan.get('accepted_history'):
+                facts.update(read(compiled/'accepted-facts.json'))
+            families = {}
+            for intent in sorted(intents):
+                families[intent] = []
+                for question in facts[intent]['training']:
+                    matches = [row for row in rows if row['intent'] == intent and row['question'] == question]
+                    if len(matches) != 1:
+                        raise ValueError('Bind each reranking paraphrase to one original training record')
+                    families[intent].append({'id': matches[0]['id'], 'question': question})
+            reranker = {**plan['question_reranker'], 'families': families}
+            question_reranking.validate(reranker, semantic, 3+len(topology['experts']))
+            options['question_reranker'] = reranker
+        bound = answering.attach(topology, configuration(topology, model, options), store)
         policies[name] = bound['answering']['policy_root']
         cohorts[name] = {'training': {'sha256': sha256(compiled/name/'training.jsonl'), 'count': 384},
             'test': {'sha256': sha256(compiled/name/'final.jsonl'), 'count': 32},

@@ -22,8 +22,10 @@ before the affected work, rather than changing the target after a result.
   capacity lost six, while serving more requests in its interval. The second
   cohort improved singles 3→14/16 and combined answers 1→11/16, preserving every
   retained correct answer, but missed the 12/16 combined gate and was rejected.
-  Question-family reranking and modal-question preservation are being checked
-  on that opened result; they do not count as another prospective admission.
+  Question-family reranking and modal-question preservation repair that opened
+  result to 16/16 singles and 15/16 combined, with zero retained-correct losses
+  and exact replay. That development pass does not count as another prospective
+  admission; the next run preserves the admitted conversation expert.
   See the
   [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
 

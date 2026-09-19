@@ -27,8 +27,10 @@ def freeze(home, revision, runtime, *, seconds_per_arm=5400, resources=None):
     inputs = read(compiled/'inputs.json')
     catalog, rules = read(compiled/'source-catalog.json'), read(compiled/'quality-rule.json')
     order = tuple(catalog.get('order', ordinary_cohorts.ORDER))
-    if len(order) != 3 or len(set(order)) != 3 or set(order) != set(catalog['cohorts']):
-        raise ValueError('Freeze exactly three distinct ordered learning cohorts')
+    continuing = (compiled/'accepted-history.json').is_file()
+    expected = 2 if continuing else 3
+    if len(order) != expected or len(set(order)) != expected or set(order) != set(catalog['cohorts']):
+        raise ValueError('Freeze three fresh cohorts, or two extending verified accepted history')
     first_cohort = order[0]
     if type(seconds_per_arm) is not int or not 3600 <= seconds_per_arm <= 21600:
         raise ValueError('Bound the equal provisioned interval before either arm starts')
@@ -167,6 +169,8 @@ def freeze(home, revision, runtime, *, seconds_per_arm=5400, resources=None):
         value['resources'].update(resources)
     if (home/'auxiliary-assets.json').exists():
         value['auxiliary_assets'] = identity(read(home/'auxiliary-assets.json'))
+    if continuing:
+        value['accepted_history'] = store.put_json(read(compiled/'accepted-history.json'))
     save(home/'operation.json', value)
     save(home/'feed-head.json', {'head': heads[0], 'entry': 0})
     return value
