@@ -160,6 +160,10 @@ before the affected work, rather than changing the target after a result.
   automatically while the accepted graph stayed available. Full application
   replay now passes 56,582 headers and 857 transactions, with 257 verified
   updates issued exactly once. Two more useful admissions are still required.
+  The frozen reranker continuation has now natively rejected its bootstrap with
+  three exact 113-stage audits, preserved all 93 correct retained answers,
+  rejected a hash-consistent substituted source, and automatically activated the
+  next full cohort. Its useful-learning outcomes remain pending.
 
   Done when the network repeatedly admits immutable data with provenance,
   deduplication and contamination/poisoning checks; funds and assigns a bounded

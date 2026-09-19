@@ -1,0 +1,1 @@
+{"format": "neuroshard-postrun-reporter-v1", "numerical_execution_unchanged": true, "output": "campaign-evidence.json", "script_sha256": "eeebc57b7c820f40094082a3607cfbdffc40b757b510874b09a752b8ba902e6f", "waits_for": "ledger-replay.json"}
