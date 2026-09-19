@@ -1,5 +1,12 @@
 # Prospective ordinary learning with semantic access
 
+**Current outcome, September 19:** the [completed continuation](CONTINUAL_ADMISSION_RESULTS.md)
+admits audit and storage automatically, following the earlier accepted
+conversation cohort. All three preserve measured retained answers; the complete
+resource comparison and native replay pass. Checklist items 1 and 2 are complete
+against their fixed demonstration criteria. The account below preserves earlier
+failed trials and the evidence available at each stage.
+
 The first full cohort **failed**: single answers improved 1→13/16 and combined
 answers 0→11/16, short of the required 12/16. No retained-correct answer was
 lost. All three fresh quality auditors reproduced all 105 stages. Native quality
@@ -7,7 +14,7 @@ rejected the candidate at height 9,383, preserving the accepted serving graph.
 The chain issued 129 trial NEURO for 128 full-cohort updates plus bootstrap.
 Later cohort finals remain unopened; the matched-resource comparison did not
 run. The [result and ordinary replies](../config/experiments/semantic-native-campaign-20260918/results/full-cohort-audit-result.json)
-preserve the failure. Checklist items 1 and 2 remain incomplete.
+preserve the failure. At this stage, checklist items 1 and 2 remained incomplete.
 Full application replay reproduced 446 signed transactions and all 9,398
 exported headers, including the final state at height 9,397.
 
@@ -167,7 +174,7 @@ lost**. All three fresh quality auditors reproduced the complete result across
 `c2e18d4a527d7740462ac889c2888c560b37421a6e44020d4961b911b55a1bc5`
 at height 8,843. The [measured evidence](../config/experiments/admission-native-campaign-20260918/results/learning-evidence.json)
 records result hashes and the published final checkpoint. This is **one of the
-three required prospective cohorts**; checklist items 1 and 2 remain open.
+three required prospective cohorts**; at this stage, checklist items 1 and 2 remained open.
 
 The equal-resource comparison did not finish. Its fixed-capacity arm reproduced
 all 32 training windows, then repeatedly failed while preparing concurrent

@@ -1,4 +1,10 @@
 This prospectively frozen continuation targets live-LLM checklist items 1 and 2.
+**Completed September 19:** audit and storage passed their frozen quality gates
+and were promoted automatically. Together with the earlier accepted conversation
+cohort, this completes the fixed demonstration criteria for items 1 and 2.
+See the [complete result and limits](../../../docs/CONTINUAL_ADMISSION_RESULTS.md)
+and compact records in `results/`. The prescription below remains unchanged.
+
 It starts from the conversation graph that native quality admitted at height
 8,843 of the previous, fully replayed research chain. No rejected feed weights
 or ledger balances are imported. All accepted evaluation roles, including the
@@ -45,7 +51,8 @@ The bootstrap was rejected natively at height 2,631. Its producer and all three
 fresh audits agree on all 113 stages: no new answers gained, and all 93 previously
 correct answers among 105 retained cases preserved. The curator then rejected a
 hash-consistent substituted source answer. Three curator reviews then activated
-the first full cohort at height 2,774. Full-cohort results remain pending.
+the first full cohort at height 2,774. Audit was promoted at height 10,503 and
+storage at 28,685; both lost zero previously correct retained answers.
 See `bootstrap-rejection.json`, `rejected-source.json`, and
 `first-cohort-activation.json`.
 

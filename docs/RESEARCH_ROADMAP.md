@@ -10,6 +10,16 @@ The [v2 experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b
 
 The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md) extend the reference with a frozen 135M pretrained model, a 4,608-parameter trainable adapter, separate funded inference jobs, validation-gated serving, a minimal public client, browser payments and immutable S3 collection. A two-host native cycle earned rewards and spent them on the promoted model. The new live chain has its own genesis; old balances do not migrate. The requirements below for economical verification, robust evaluation and independent operators remain open.
 
+The separate [continual-admission result](CONTINUAL_ADMISSION_RESULTS.md) now
+completes live-LLM checklist items 1 and 2: three prospectively admitted expert
+cohorts preserve measured earlier answers, and two successive cohorts are
+prepared, trained, audited and promoted automatically on one research chain.
+The resource comparison and full ledger replay are complete. This is bounded
+source-backed knowledge learning with fixed broader assistant retention under
+one administrator. The historical experiments below retain their original
+outcomes; permissionless hosting, sustainable verification and public chat
+remain the fixed items 4–6.
+
 The separate [model-evolution implementation](EVOLUTION_PROTOCOL.md) trains all 134.5M parameters, grows depth to 148.7M parameters, collects fresh/replay windows and evaluates research candidates. Its native application settles training and bonded growth claims, handles objective fraud/availability challenges and prevents repeated payment for the same prescribed computation. The [native lifecycle](NATIVE_LIFECYCLE.md) now connects rolling data, challengeable evaluation, serving decisions and bounded generation on isolated networks; its [results](NATIVE_LIFECYCLE_RESULTS.md) include unsuccessful quality experiments. The [funded candidate](FUNDED_AUDITING.md) adds prepaid complete replay and a [recovering operator](CANDIDATE_OPERATIONS.md). Public worker admission, independent audit selection, artifact retention and release integration remain gates before replacing the released network.
 
 The [learning milestone](LEARNING_MILESTONE.md) supplies a public prepare/train/score contract. Its [completed 128-step experiment](LEARNING_MILESTONE_RESULTS.md) lowers mean response loss but fails the sealed-test confidence bound. Continual learning and the two-host reliability phase remain blocked. A follow-up requires a new committed plan and unused evaluation documents; the longer-term gates below also remain open.

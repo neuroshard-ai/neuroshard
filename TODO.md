@@ -4,33 +4,29 @@ NeuroShard's goal is one useful, openly available assistant whose learning and
 serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
 
-This is the fixed six-item completion checklist. **1/6 complete. Tasks 1 and 2 are active.**
+This is the fixed six-item completion checklist. **3/6 complete. Tasks 1, 2 and 3 are complete; tasks 4–6 remain open.**
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
 before the affected work, rather than changing the target after a result.
 
-- [ ] **1. Intelligence across growing shards**
+- [x] **1. Intelligence across growing shards — COMPLETE**
 
-  Latest result: **one prospective cohort admitted out of three required**.
-  Conversation training improved ordinary single answers 1→15/16 and combined
-  answers 1→14/16, losing no previously correct retained answers. Three quality
-  audits agreed and native quality promoted the graph. A comparison-controller
-  failure stopped the initial attempt before the next two cohorts. The same-ledger
-  continuation on replacement owners has completed the declared resource
-  comparison: isolated growth preserved every retained correct answer; fixed
-  capacity lost six, while serving more requests in its interval. The second
-  cohort improved singles 3→14/16 and combined answers 1→11/16, preserving every
-  retained correct answer, but missed the 12/16 combined gate and was rejected.
-  Question-family reranking and modal-question preservation repair that opened
-  result to 16/16 singles and 15/16 combined, with zero retained-correct losses
-  and exact replay. That development pass does not count as another prospective
-  admission. The [frozen continuation](config/experiments/question-reranker-native-20260919/README.md)
-  now preserves the admitted conversation expert and all 105 retained cases,
-  then prospectively learns audit and storage under native admission. It is
-  running; neither fresh cohort is counted before its quality outcome.
-  See the
-  [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
+  Completed: **three prospectively admitted cohorts in the accepted model lineage**.
+  Conversation reached 15/16 single and 14/16 combined answers; audit reached
+  15/16 and 14/16; storage reached 16/16 and 14/16. Each preserved every measured
+  previously correct retained answer, with three exact complete quality audits.
+  Ordinary requests select and combine learned shards without evaluator labels;
+  fixed broader skills and conversation retention also pass. Under equal seven-host,
+  9,000-second budgets, addition preserved all retained answers while replacement
+  lost four; replacement served more requests. The declared growth rule remains
+  quality and preservation within the resource budget.
+
+  The three accepted extensions span two research geneses. The latest two ran
+  consecutively and automatically under one unchanged frozen continuation.
+  Rejected trials and development repairs receive no cohort credit. This completes
+  the bounded demonstration criterion; broad assistant capability and independent
+  public operation are not inferred. See [complete results, replies and reproducible evidence](docs/CONTINUAL_ADMISSION_RESULTS.md).
 
   Done when ordinary questions automatically select and combine relevant shards,
   including questions requiring knowledge from different learned experts; at
@@ -40,6 +36,9 @@ before the affected work, rather than changing the target after a result.
   updating or consolidating capacity. Evaluation must cover broader assistant
   tasks as well as specialized knowledge, without supplying answer labels to
   routing. More stored parameters alone do not satisfy this item.
+
+  <details>
+  <summary>Earlier evidence and failures (historical snapshots)</summary>
 
   Evidence so far: two specialized experts, improved held-out answers, exact
   measured retention, and no complete backbone on any one owner. The admitted
@@ -146,24 +145,25 @@ before the affected work, rather than changing the target after a result.
   while preserving the earlier fallback. This is a development pass; three
   newly admitted cohorts and the resource comparison are still required.
 
-- [ ] **2. Continuous data admission and learning**
+  </details>
 
-  Latest result: the real sharded LLM automatically rejected the bootstrap and
-  substituted source, trained the first full cohort and promoted its passing
-  graph. The comparison between cohorts failed, so repeated useful admission
-  remains incomplete. Concurrent context installation and terminal comparison
-  budget handling are repaired. Seven replacement owners restored the accepted
-  graph, and the same chain resumed with its original signing journals and
-  issuance. Full replay of the interrupted history passed 39,929 headers and
-  446 transactions. The comparison continuation completed with zero extra
-  issuance. The next real cohort was prepared, trained, audited and rejected
-  automatically while the accepted graph stayed available. Full application
-  replay now passes 56,582 headers and 857 transactions, with 257 verified
-  updates issued exactly once. Two more useful admissions are still required.
-  The frozen reranker continuation has now natively rejected its bootstrap with
-  three exact 113-stage audits, preserved all 93 correct retained answers,
-  rejected a hash-consistent substituted source, and automatically activated the
-  next full cohort. Its useful-learning outcomes remain pending.
+- [x] **2. Continuous data admission and learning — COMPLETE**
+
+  Completed: the real sharded LLM automatically rejected its bootstrap and a
+  substituted immutable source, then prepared, funded, trained, audited and
+  promoted both fresh cohorts without a genesis or recipe change between jobs.
+  Native cursors consumed 768 distinct training documents, with replay from
+  actually trained windows. The durable publisher resumed across 3,040 process
+  starts; earlier controller/native-process restart and host-restoration evidence
+  remains linked in the [completed result](docs/CONTINUAL_ADMISSION_RESULTS.md).
+  There were 226 during-work serving probes. Full replay reproduced 28,912
+  headers, 869 signed transactions and exactly 257 issued trial NEURO; paid
+  inference from the final graph settled without additional issuance.
+
+  Scope: automatic admission from a prospectively approved, source-backed feed,
+  with explicit provenance, duplicate/contamination checks and source-substitution
+  rejection. Arbitrary-web truth, independent curation and public service
+  reliability are not established by this bounded operated demonstration.
 
   Done when the network repeatedly admits immutable data with provenance,
   deduplication and contamination/poisoning checks; funds and assigns a bounded
@@ -171,6 +171,9 @@ before the affected work, rather than changing the target after a result.
   acceptance rules; and promotes or rejects it without manually editing genesis
   or orchestrating each cohort. Demonstrate restart, rejected data and a rejected
   candidate while the accepted serving model remains available.
+
+  <details>
+  <summary>Earlier evidence and failures (historical snapshots)</summary>
 
   Evidence so far: immutable ingestion and experimental lifecycle components
   exist. The growing expert architecture still uses fixed prepared jobs.
@@ -223,6 +226,8 @@ before the affected work, rather than changing the target after a result.
   checkpoint and issuance; accepted shards return identical responses while
   the controller and research validator processes are down. An earlier startup
   outage remains recorded. Useful repeated promotion is still pending.
+
+  </details>
 
 - [x] **3. Live native training-to-inference lifecycle — COMPLETE**
 
@@ -312,10 +317,10 @@ before the affected work, rather than changing the target after a result.
 
 ## Work discipline
 
-All six milestones remain in scope. Item 3 is complete. Automatic useful
-composition and repeated admitted learning now determine execution order;
-billing, availability and usable serving address the other fixed milestones
-without creating additional top-level tasks.
+All six milestones remain in scope. Items 1–3 are complete against their fixed
+demonstration criteria. Permissionless hosting, sustainable verification and
+usable public chat are the remaining items 4–6; their existing completion
+criteria are unchanged.
 
 Before an expensive run, record its exact decision, reused artifacts, cheapest
 adequate preflight, success/failure rule and time/spending cap. A rerun needs an
@@ -330,6 +335,17 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-19: **Completed items 1 and 2.** The accepted conversation → audit →
+  storage lineage now has three prospective admissions across two research
+  geneses, with zero measured retained-correct losses. The latest two cohorts
+  ran automatically, passed all three complete numerical audits, and promoted
+  natively. Equal-budget growth preserved answers that replacement lost.
+  Full replay passes 28,912 headers and 869 signed transactions; the final graph
+  served paid inference. The public evidence and complete measured scope are in
+  [the completion report](docs/CONTINUAL_ADMISSION_RESULTS.md). Seven experiment
+  GPUs and their volumes are retired; compute upper estimate $59.59, with
+  storage/transfer separate. Checklist **3/6 complete**.
 
 - 2026-09-17: The complete ordinary interface now passes **25/25 retained
   knowledge, 10/12 general skills and 8/8 conversations**, with no earlier

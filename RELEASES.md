@@ -8,6 +8,15 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 ## Unreleased — model-evolution research tools
 
+The [continual-admission result](docs/CONTINUAL_ADMISSION_RESULTS.md) completes
+the fixed demonstration criteria for live-LLM checklist items 1 and 2. Three
+prospective admitted cohorts improve ordinary answers while preserving measured
+earlier answers; the latest two run automatically on seven GPU hosts with native
+funding, complete audits and promotion. A matched-resource replacement control
+loses four retained answers while isolated growth loses none. Full replay
+reproduces 28,912 headers and 869 signed transactions. This remains a bounded,
+single-administrator research result, separate from the public 0.4.0 network.
+
 The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Reproduction scripts and compact input plans are included; the [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) and linked historical measurements are published separately.
 
 An opt-in [native lifecycle](docs/NATIVE_LIFECYCLE.md) now integrates curated rolling-data admission, challengeable multi-window evaluation, serving decisions and bounded paid generation on isolated networks. Its [results](docs/NATIVE_LIFECYCLE_RESULTS.md) include a rejected real-model promotion and continued paid training after a second data admission without resetting the ledger.

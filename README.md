@@ -32,6 +32,7 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
+- [Three admitted learning cohorts and automatic continuation](docs/CONTINUAL_ADMISSION_RESULTS.md): conversation, audit and storage improve ordinary single and combined answers without losing measured retained-correct answers. The latest two are admitted, trained, audited and promoted automatically on seven GPU hosts; complete ledger replay and an equal-resource growth comparison pass. This bounded research result completes checklist items 1 and 2. Independent public hosting, sustainable verification and usable growing-model chat remain open.
 - [Completed native expert lifecycle](docs/NATIVE_EXPERT_LIVE_RESULT.md): 560 audited updates earned 560 NEURO, followed by separate quality promotion and inference paid from earned tokens. Full ledger and execution evidence are public; checklist item 3 is complete.
 - [Four-owner knowledge and retention pass](docs/PRESERVED_INTERPRETER_RESULTS.md): a preserved neural interpreter plus a learned expert answers 949/1,024 newly worded questions, reproduces all 768 earlier answers and 256 conversation losses exactly, and keeps the parent serving after the expert exits. This is a bounded synthetic-knowledge result using disjoint model portions across four machines.
 

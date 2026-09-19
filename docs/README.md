@@ -14,6 +14,7 @@ retaining the existing generated-answer and retention requirements.
 | Start here | Purpose |
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
+| [Continual admission results](CONTINUAL_ADMISSION_RESULTS.md) | Three prospective admitted cohorts, automatic continuation, retained answers, an equal-resource growth comparison and complete native replay; checklist items 1 and 2 complete. |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
 | [LLM protocol](LLM_PROTOCOL.md) | Supported training, payments, consensus and model-serving rules. |
 | [Model card](MODEL_CARD.md) | Capabilities, limits, evaluation and provenance. |

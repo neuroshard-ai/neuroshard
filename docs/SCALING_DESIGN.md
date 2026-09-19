@@ -19,21 +19,29 @@ The useful-computation mining concept survives. It is a work allocation and sett
 
 ## Current measured learning method
 
-The [five-owner expert graph](COMPOSED_COHORT.md) now passes a second domain's
-answer and retention gate. Three owners hold disjoint portions of the trained
-1.7B parent and preserved interpreter; two additional owners hold independently
-trained 134M tails. The added learner trained on committed parent features while
-earlier paths served. Its selected checkpoint improves the new domain, preserves
-all measured earlier answers and losses, and permits the earlier four-owner graph
-to keep serving after the added expert exits.
+The [completed continual-admission result](CONTINUAL_ADMISSION_RESULTS.md)
+establishes three prospective accepted extensions: conversation, audit and
+storage. The latest two run automatically on seven GPU hosts, adding experts
+while shared backbone and interpreter portions stay distributed. Ordinary single
+and combined questions improve, every measured retained-correct answer survives,
+and native quality promotes the complete answering graphs. This completes the
+fixed demonstration criteria for TODO items 1 and 2.
 
-The concrete method is to retain established model paths, train additional
-capacity against an immutable shared parent, and admit only a composition that
-passes new-answer and retention checks. Domain routing and the two-question
-composition grammar remain explicit. This result supports growing useful
-specialized capacity; broad routing, general assistant quality, admission and
-settlement of successive expert graphs remain obligations. Stored parameter
-count alone is not the result.
+The method preserves accepted paths, trains additional expert capacity against
+the immutable shared parent, and admits only a complete answering system that
+passes new-answer and cumulative retention checks. A learned admission decision
+preserves earlier routing on rejection; question-family reranking distinguishes
+training questions inside an admitted expert. Answers remain in trained weights.
+Ordinary request preservation replaces the earlier diagnostic two-question
+grammar in the evaluated path.
+
+Under the same seven-host, 9,000-second budgets, isolated addition preserves all
+retained answers while replacement loses four, with equal new-answer scores.
+Replacement serves more requests within its interval. Addition is the default
+for preservation; updates or consolidation remain eligible when they demonstrate
+the same quality and retention. The data and broader assistant screens are
+bounded, all owners share one administrator, and public hosting, verification
+economics and chat service remain TODO items 4–6.
 
 ## Architecture: local groups, global commitments
 
@@ -168,8 +176,8 @@ with the expert count; sparse activation is a separate unproven optimization.
 | --- | --- | --- |
 | Bounded neural adjudication | Real-model dispute bytes, validator time, observer cost and cross-CPU agreement; adversarial coverage of all supported operators | Optimizer refutation implemented; full graph still uses stage replay |
 | Honest audit service | Complete purchased coverage, conserved budgets, objective false-report disputes, collusion analysis and independent operators | Prepaid replay implemented; the optional native quorum replaces sponsor-selected identities with bonded voting weight. Independent ownership, affordable replay and reservation liveness remain requirements |
-| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | [Answer-balanced continuation](BALANCED_CONTINUATION_RESULTS.md) passes its frozen narrow gate on three 1.7B model shards: new answers 378→462/512 and all 188 correct prior answers retained. This supports one continuation recipe; broad assistant quality, additional independent cohorts and a matched-compute useful-growth result remain open. The earlier 1.85B growth candidate failed its gain margin |
-| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | [Persistent shards](SHARDED_TRAINING_RESULTS.md) pool model memory and recover after host replacement. [Adaptive shards](ADAPTIVE_SHARDS_RESULTS.md) preserve weights and Adam across two-to-three-worker redistribution. Public admission, useful growth and an independent paid provider market remain separate gates |
+| Useful learning | Post-commit independent tasks, retention, equal-cost baseline and accessible responses with measured latency | [Three prospectively admitted cohorts](CONTINUAL_ADMISSION_RESULTS.md) pass ordinary single/combined questions and cumulative retention; two run automatically through native admission. The complete equal-resource comparison favors addition for preservation, while replacement serves more requests. Broad assistant generalization and public latency remain open |
+| Additional peers add capacity | Same task/quality target at measured total cost, loss of a worker/domain, recovery without duplicate reward | [Persistent shards](SHARDED_TRAINING_RESULTS.md) pool model memory and recover after host replacement. [Adaptive shards](ADAPTIVE_SHARDS_RESULTS.md) preserve weights and Adam across redistribution. [Continual admission](CONTINUAL_ADMISSION_RESULTS.md) demonstrates useful added expert capacity under a fixed host budget. Independent public admission, failure-domain resilience and a paid provider market remain open |
 | Public independence | Independent ownership of sufficient voting power and services, admission and exit, recovery logs, public genesis | Four public validator keys under one operator |
 | Sustainable service | Artifact retention/recovery, storage bounds, audit and inference funding, usable latency, privacy policy | Bounded testnet mechanisms; no established public compute economy |
 
