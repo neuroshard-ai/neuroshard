@@ -43,7 +43,7 @@ class Network:
             entries.append({'owner': owners[index].public_key, 'consensus_key': base64.b64decode(key).hex(),
                 'bond': 10 * manifest['params']['bond_unit'], 'liquid': 10_000_000_000})
             genesis['validators'][index]['power'] = '10'
-        genesis.update(chain_id='neuroshard-portable-life-' + secrets.token_hex(6),
+        genesis.update(chain_id='neuroshard-portable-life-' + secrets.token_hex(6), initial_height='1',
                        app_state={'manifest': manifest, 'validators': entries})
         native = manifest['native_consensus']
         genesis['consensus_params']['block']['max_bytes'] = str(native['block_max_bytes'])

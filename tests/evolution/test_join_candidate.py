@@ -16,10 +16,10 @@ def module():
     return value
 
 
-@pytest.fixture
-def agreed(tmp_path):
+@pytest.fixture(params=['lifecycle', 'expert_lifecycle'])
+def agreed(tmp_path, request):
     genesis = {'chain_id':'candidate-bootstrap-test', 'initial_height':'1',
-               'app_state':{'manifest':{'code_hash':code_hash(), 'auditing':{}, 'lifecycle':{}}}}
+               'app_state':{'manifest':{'code_hash':code_hash(), 'auditing':{}, request.param:{}}}}
     path = tmp_path/'agreed.json'
     path.write_bytes(canonical(genesis))
     return path, digest(canonical(genesis))

@@ -15,8 +15,9 @@ or available hardware. The native ledger remains the assignment authority.
 Any funded key may register an HTTPS endpoint and certificate fingerprint, post
 collateral and advertise a rank of the currently accepted graph. Offers have a
 price, capacity and expiry. No operator allowlist grants provider membership.
-The client selects offers; this is an explicit market choice, not an unbiased
-random committee or a claim of Sybil-resistant provider diversity.
+Clients may name explicit offers or ask native reservation to select available
+capacity atomically within their price ceiling. This is a bounded market choice,
+not an unbiased random committee or a claim of Sybil-resistant provider diversity.
 
 A hosted inference reservation binds the existing expert job, complete graph,
 conversation, tokenizer, output bound, provider offers, prepaid complete audit

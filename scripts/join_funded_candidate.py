@@ -27,8 +27,9 @@ def prepare(home, genesis_path, genesis_hash, engine, peers, base_port):
     if digest(canonical(genesis)) != genesis_hash or genesis.get('initial_height') != '1':
         raise ValueError('Genesis hash or explicit initial height differs')
     manifest = genesis['app_state']['manifest']
-    if manifest['code_hash'] != code_hash() or not {'auditing','lifecycle'} <= set(manifest):
-        raise ValueError('Use the exact source for the agreed funded lifecycle genesis')
+    if (manifest['code_hash'] != code_hash() or 'auditing' not in manifest
+            or not {'lifecycle', 'expert_lifecycle'}.intersection(manifest)):
+        raise ValueError('Use the exact source for the agreed funded lifecycle or expert-graph genesis')
     if not 1024 <= base_port <= 65532 or not peers:
         raise ValueError('Provide an unprivileged three-port range and at least one native peer')
     identity = {'genesis_sha256':genesis_hash, 'chain_id':genesis['chain_id'], 'base_port':base_port}
