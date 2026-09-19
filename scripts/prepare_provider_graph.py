@@ -109,6 +109,7 @@ def prepare(study, destination, expected_graph):
     if any(all_backbone <= {spec['sha256'] for spec in row['files'].values()} for row in owners):
         raise ValueError('A provider would receive the full backbone')
     save(destination/'object-lengths.json', lengths)
+    shutil.copyfile(study/'catalog.json', destination/'retention-catalog.json')
     save(destination/'owners.json', owners)
     # Reuse the latest prescribed job only as a dormant genesis fixture. This
     # serving experiment never executes or credits it, opens quality data or
