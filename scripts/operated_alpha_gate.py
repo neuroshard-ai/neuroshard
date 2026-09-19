@@ -104,9 +104,12 @@ def batch(cloud, network, providers, customers, cases, maximum, *, report_home=N
             cloud.command(lost['physical'], ['sudo', 'systemctl', 'start', lost['unit']])
         for row, case in zip(rows, cases):
             save(report_home/'cases'/case['id']/'measurement.json', measurements[row['id']])
-    history = network.query('/hosting')['history']
-    audits = network.query('/auditing')['history']
-    for row, case in zip(rows, cases):
+    for customer, row, case in zip(customers, rows, cases):
+        # A different validator may still be one block behind the customer's
+        # completed receipt. Read subsequent history from that same pinned
+        # full node; lag elsewhere is not a missing or duplicate settlement.
+        history = customer.node.query('/hosting')['history']
+        audits = customer.node.query('/auditing')['history']
         matches = [value for value in history if value['job_id'] == row['job_id']]
         if len(matches) != 1:
             raise ValueError('A hosted request did not settle exactly once')

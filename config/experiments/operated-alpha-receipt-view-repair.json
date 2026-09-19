@@ -1,0 +1,14 @@
+{
+  "format": "neuroshard-operated-alpha-receipt-view-repair-v1",
+  "previous_gate_source": "957b9b9d6cc089038318a9027e32cbb7f94d67b9",
+  "native_source_unchanged": "944a0d498fe832ce408081b45c00241f1c67d35b",
+  "chain_unchanged": "neuroshard-portable-life-b65db5ce12b3",
+  "failure": "Both warm-up requests completed at heights 3938 and 4027, with three full replays each. The checker then queried validator 0 while customer receipts came from validator 3, and rejected missing history before validator 0 caught up. Later native history contains exactly one settlement for each. No ordinary or fault cases were admitted by this attempt.",
+  "repair": "Check settlement/payment history through each customer's same pinned local node after its completed receipt. A different validator being briefly behind is not double payment or absent settlement.",
+  "same": [
+    "All deployed nodes, CPU funding, 250-ms inter-block wait, genesis, source, graph and numerical bytes",
+    "All ten requests, two concurrent customers, complete numerical audits, 45/90-second latency targets and both automatic recovery cases",
+    "66-hour GPU and 168-hour ledger windows, $800 total ceiling"
+  ],
+  "retry": "Keep the failed checker report and both actual native results. Run the corrected complete gate into a fresh evidence directory. No extra instances, training or quality final."
+}
