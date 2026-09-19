@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def migrate(graph, profile, store, source_home, destination):
+    if identity(profile) != graph['executor_root'] or profile['numerical_profile'] != graph['numerical_profile']:
+        raise ValueError('Resolve the accepted graph\'s exact executor before migration')
     original = answering.load(graph, store)
     model = answering.core(graph)
     profile = copy.deepcopy(profile)
@@ -43,6 +45,7 @@ def migrate(graph, profile, store, source_home, destination):
         raise ValueError('Transport migration changed the accepted answering behavior')
     new_store = Objects(destination/'policies')
     migrated = answering.attach(model, policy, new_store)
+    provider_assets.validate_executor(migrated, profile, source_home)
     planned_graph.validate_configuration(model, policy, source_home)
     restored = answering.core(migrated)
     restored['executor_root'] = graph['executor_root']
@@ -62,9 +65,9 @@ def prepare(study, destination, expected_graph):
     if identity(graph) != expected_graph or state['serving_root'] != expected_graph:
         raise ValueError('Study does not contain the accepted graph selected for deployment')
     destination.mkdir(parents=True)
-    graph, profile, policy = migrate(graph,
-        json.loads((study/'compiled/baseline-profile.json').read_bytes()),
-        Objects(study/'compiled/objects'), ROOT, destination)
+    accepted_store = Objects(study/'compiled/objects')
+    graph, profile, policy = migrate(graph, accepted_store.json(graph['executor_root']),
+        accepted_store, ROOT, destination)
     lengths = {}
     def collect(value):
         if isinstance(value, dict):

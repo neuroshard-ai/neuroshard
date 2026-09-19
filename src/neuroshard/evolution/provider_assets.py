@@ -67,6 +67,23 @@ def plan(graph, rank, policy=None):
     return files
 
 
+def validate_executor(graph, profile, source_home):
+    """Reject wrong graph/profile/source bindings before transfers or allocation."""
+    from .sharded.graph_execution import FORMAT, PROFILE_FIELDS
+    from .sharded.peer_wire import SOURCES
+    serving_graph.validate(graph)
+    serving_graph.fields(profile, PROFILE_FIELDS, 'Invalid provider executor profile')
+    if (profile['format'] != FORMAT or identity(profile) != graph['executor_root']
+            or profile['numerical_profile'] != graph['numerical_profile']):
+        raise ValueError('The offered graph has a different executor')
+    if any(name not in profile['sources'] for name in SOURCES):
+        raise ValueError('The offered executor does not bind its provider transport')
+    for name, digest in profile['sources'].items():
+        path = Path(name)
+        if path.is_absolute() or '..' in path.parts or sha256(Path(source_home)/path) != root(digest):
+            raise ValueError('The offered executor requires different installed source')
+
+
 def prepare(graph, profile, rank, home, source_home, inventory, mirrors, *,
             max_bytes, max_seconds=600, restore=retained_objects.restore):
     """Hash-check the graph, executor and each restored byte within local limits.
@@ -76,17 +93,7 @@ def prepare(graph, profile, rank, home, source_home, inventory, mirrors, *,
     Mirror bases are local operator configuration; network requests cannot supply
     URLs, presigned credentials, Python modules or filesystem destinations.
     """
-    from .sharded.graph_execution import FORMAT, PROFILE_FIELDS
-    from .sharded.peer_wire import SOURCES
-    serving_graph.fields(profile, PROFILE_FIELDS, 'Invalid provider executor profile')
-    if profile['format'] != FORMAT or identity(profile) != graph['executor_root']:
-        raise ValueError('The offered graph has a different executor')
-    if any(name not in profile['sources'] for name in SOURCES):
-        raise ValueError('The offered executor does not bind its provider transport')
-    for name, digest in profile['sources'].items():
-        path = Path(name)
-        if path.is_absolute() or '..' in path.parts or sha256(Path(source_home)/path) != root(digest):
-            raise ValueError('The offered executor requires different installed source')
+    validate_executor(graph, profile, source_home)
     integer(max_bytes, 1, 1024**4)
     integer(max_seconds, 1, 1800)
     if not isinstance(mirrors, list) or not 1 <= len(mirrors) <= 8:

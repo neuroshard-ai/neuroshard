@@ -82,3 +82,16 @@ def test_missing_and_corrupted_remote_bytes_never_install(published, tmp_path):
         provider_assets.prepare(graph, profile, 3, tmp_path/'bad', SOURCE, inventory, [url],
                                 max_bytes=10*1024**2, max_seconds=5)
     assert not (tmp_path/'bad'/next(iter(provider_assets.plan(graph, 3)))).exists()
+
+
+def test_an_earlier_cohort_executor_is_rejected_before_any_transfer(published, tmp_path):
+    graph, profile, inventory, url, _ = published
+    wrong = copy.deepcopy(profile)
+    wrong['numerical_profile'] = '9'*64
+    graph = {**graph, 'executor_root': identity(wrong)}
+    def forbidden(*args, **kwargs):
+        raise AssertionError('A mismatched numerical profile must fail before model download')
+    with pytest.raises(ValueError, match='different executor'):
+        provider_assets.prepare(graph, wrong, 0, tmp_path/'mismatched', SOURCE, inventory, [url],
+                                max_bytes=10*1024**2, restore=forbidden)
+    assert not (tmp_path/'mismatched').exists()

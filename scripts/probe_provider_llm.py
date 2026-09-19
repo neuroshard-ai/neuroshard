@@ -19,7 +19,7 @@ from neuroshard.client.hosted import Customer
 from neuroshard.client.local_node import LocalNode
 from neuroshard.demo import client
 from neuroshard.demo.network import edit_config
-from neuroshard.evolution import auditing, expert_lifecycle
+from neuroshard.evolution import auditing, expert_lifecycle, provider_assets
 from neuroshard.evolution.app import code_hash
 from neuroshard.evolution.reference_data import identity, save
 from neuroshard.evolution.transactions import Outbox
@@ -484,7 +484,8 @@ def costs(home, prepared, freeze):
         'public_ipv4': count*.005*seconds/3600,
         'all_interface_traffic_upper': traffic/1e9*.15,
         'ninety_day_retention': retained/1e9*.023*3,
-        'object_requests_and_evidence_allowance': 2.0}
+        'object_requests_and_evidence_allowance': 2.0,
+        'prior_failed_allocation_allowance': freeze.get('retry', {}).get('prior_allocation_allowance_usd', 0)}
     report = {'format': 'neuroshard-finite-service-cost-v1', 'usd_upper_estimates': parts,
         'total_usd_upper': sum(parts.values()), 'measured_interface_bytes': traffic,
         'retained_model_work_and_evidence_bytes': retained, 'retention_days': 90,
@@ -510,6 +511,7 @@ def run(args):
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     freeze = read(ROOT/'config/experiments/provider-llm-service.json')
     graph, manifest = read(prepared/'graph.json'), read(prepared/'native-manifest.json')
+    provider_assets.validate_executor(graph, read(prepared/'profile.json'), ROOT)
     if manifest['code_hash'] != code_hash() or identity(graph) != read(prepared/'migration.json')['graph']:
         raise ValueError('Rebuild deployment metadata against the committed source before allocating')
     home.mkdir()
@@ -533,8 +535,7 @@ def run(args):
         restore(cloud, graph, providers)
         parallel(lambda row: start_provider(cloud, row), providers)
         service = audit_service(cloud, graph, providers)
-        cold_seconds = time.monotonic()-restoring
-        save(home/'cold.json', {'seconds': cold_seconds})
+        save(home/'cold-assets.json', {'seconds': time.monotonic()-restoring})
         customers = []
         for index in range(2):
             wallet = wire.Wallet(home/f'customer-{index}/account.key')
@@ -546,6 +547,10 @@ def run(args):
         warm = freeze['warmup']
         batch(cloud, network, graph, service, providers, customers,
               [{'id': 'warmup-'+str(i), 'messages': warm['messages']} for i in range(2)], warm['max_tokens'], audit_pool=audit_pool)
+        # Both provider replicas must actually load and answer before declaring
+        # cold readiness. This conservative bound also includes warmup settlement.
+        cold_seconds = time.monotonic()-restoring
+        save(home/'cold.json', {'seconds': cold_seconds, 'includes_both_paid_warmups_and_full_settlement': True})
         results = []
         for offset in range(0, 6, 2):
             results.extend(batch(cloud, network, graph, service, providers, customers,
