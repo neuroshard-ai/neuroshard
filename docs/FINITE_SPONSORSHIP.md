@@ -77,8 +77,41 @@ The offline [reconciliation script](../scripts/report_llm_costs.py) checks the
 declared allocation set, raw network sums, original prices, unique allocation
 identities, complete provider-attempt count and retained-object inventory. It
 recalculates the learning costs and reports earlier provider caps separately.
-The final provider cost, controller cut-off, public inventory and aggregate
-result will be recorded when the ongoing frozen service correction finishes.
+The complete report accounts through **20:00 UTC on September 19**, after the
+last disposable allocation was retired. Its conservative total is **$792.54**
+against the frozen **$1,000** sponsorship cap:
+
+| Cost category | Conservative USD estimate |
+| --- | ---: |
+| Three learning allocations, including rejected/recovery work | $562.82 |
+| All seven provider allocations, removing duplicate retention/reserves | $115.59 |
+| Both controllers, including shared older services | $43.83 |
+| Entire public object pool for 93 days, plus archive allowance | $45.30 |
+| Additional object-request allowance | $25.00 |
+| Total | **$792.54** |
+
+The inventory contains 11,303 objects and 591,927,169,917 bytes before the 1 GiB
+archive allowance. That allowance covers the subsequently published final
+service evidence/source and this cost archive. Controller traffic totals
+115,482,829,645 measured incoming/outgoing bytes. All seven provider allocations
+meet their own frozen cost gates; the earlier learning-cap caveats above remain.
+
+The [public cost archive](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/235414f949555b375456c4e515ae1dd89cb8ec5e88e548e9123efc1034cde767)
+passed full SHA-256 readback and contains 68 allowlisted files: raw measurements,
+allocation/retirement records, prices, inventory, funding contract and the offline
+reporter. It excludes private keys, credentials and billing-account balances.
+After checking its digest and extracting it, reproduce the report without AWS:
+
+```bash
+python3 costs/report_llm_costs.py --evidence costs \
+  --expected-provider-attempts 7 --output recomputed-costs.json
+```
+
+Missing controller series and altered raw measurements are rejected. This
+completes checklist item 5 against its explicitly allowed **finite-sponsorship**
+criterion. It establishes the cost and funding of these bounded obligations;
+it does not establish affordable permissionless verification at arbitrary model
+size or a self-funding public economy.
 
 ## Remaining public-market constraint
 

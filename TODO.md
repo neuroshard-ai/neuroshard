@@ -4,7 +4,7 @@ NeuroShard's goal is one useful, openly available assistant whose learning and
 serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
 
-This is the fixed six-item completion checklist. **3/6 complete. Tasks 1, 2 and 3 are complete; tasks 4–6 remain open.**
+This is the fixed six-item completion checklist. **4/6 complete. Tasks 1, 2, 3 and 5 are complete against their bounded demonstration criteria; tasks 4 and 6 remain open.**
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -279,7 +279,7 @@ before the affected work, rather than changing the target after a result.
   partitions through certificate-pinned HTTPS, matching the fixed-group
   executor for ordinary and multi-turn fixtures. Providers discover their own
   native assignments, restore committed partitions without SSH and jointly
-  sign the complete response. Operated LLM recovery, the availability soak
+  sign the complete response. Operated LLM recovery has since passed below; the availability soak
   and independent administration remain required. See
   [the provider-market design](docs/PROVIDER_MARKET_RFC.md).
 
@@ -292,17 +292,18 @@ before the affected work, rather than changing the target after a result.
   and all four stored states. This uses a small synthetic graph on one host;
   accepted-LLM load/cost evidence and independent operation remain required.
 
-  The accepted LLM now passes actual fresh-coordinator and fresh-backbone
-  replacement across seven hosts in five availability zones, with survivors
-  retaining cached weights. Recovered requests settled once in 624.12 and
-  644.87 seconds after three complete numerical replays each. The same trial's
-  combined-answer visibility failed its 45-second gate at 46.79 seconds, so the
-  complete serving trial remains failed. All resources are retired and native
-  replay matches all seven saved states. See [results and public evidence](docs/PROVIDER_LLM_SERVICE.md).
-  Independent administration, the declared soak and public-market admission
-  resistance remain open; separate EC2 hosts do not establish separate operators.
+  The [accepted LLM trial](docs/PROVIDER_LLM_SERVICE.md#seventh-allocation-complete-serving-and-recovery-pass)
+  now passes fresh-coordinator and fresh-backbone replacement across seven hosts
+  in five availability zones. Requests recover and settle once in 622.34 and
+  641.97 seconds after three complete numerical replays each. Six ordinary
+  requests also meet the frozen latency gates. All disposable resources are
+  retired, and complete application replay matches all seven saved states.
+  These are process-loss trials with replacement on surviving hosts, not a
+  declared independent-operator availability soak. Provider selection and
+  audit-offer saturation resistance remain open engineering work. Separate
+  EC2 hosts do not establish separate administrators.
 
-- [ ] **5. Affordable verification and sustainable incentives**
+- [x] **5. Affordable verification and sustainable incentives — COMPLETE within finite sponsorship**
 
   Done when every accepted obligation has available evidence, complete funded
   verification and a bounded liability; adversarial tests cover forged work,
@@ -315,7 +316,7 @@ before the affected work, rather than changing the target after a result.
   Evidence so far: supply invariants, work deduplication, funded native replay
   quorums and real replay measurements. Task 3 published the complete retained
   window payload catalog and settled all 140 windows with full audits. Complete
-  retention/storage/serving costs and a sustainable funding policy remain open.
+  retention/storage/serving costs and finite funding are now reconciled below.
   The planned-service operator now quotes and meters all prompt and output
   work, including planning and composition, with exact owner shares and a
   bounded reservation. Real five-process replay reproduced the same receipt
@@ -326,8 +327,15 @@ before the affected work, rather than changing the target after a result.
   allocation, controller, network and retention accounting under a $1,000
   bounded research budget. Actual hosted requests prepay complete audits and
   settle all unused execution/provider/audit funds without inference issuance.
-  Final aggregate cost publication awaits the frozen delivery correction.
-  This does not establish a token price, independent demand or unlimited funding.
+  The [public complete-cost report](docs/FINITE_SPONSORSHIP.md) reproduces
+  **$792.54 against $1,000**, including three learning allocations, all seven
+  provider attempts, both controllers and the entire public object pool's
+  93-day retention. Existing checks cover forged/duplicate work, withholding,
+  missing auditors, rejection payments and exact refunds; quorum/collusion
+  assumptions are published. This meets this item's finite-sponsorship option.
+  It does not establish independent auditors, cheap verification at arbitrary
+  model size, a token price, outside demand or perpetual funding. The demonstrated
+  admission saturation attack remains open under permissionless hosting.
 
 - [ ] **6. Usable chat service**
 
@@ -335,8 +343,12 @@ before the affected work, rather than changing the target after a result.
   bounded quotes, durable funding/reservation, actual token-time draft delivery,
   assignment authentication and graph/tokenizer-pinned conversation history.
   Native expiry and lost-acknowledgement checks return every unused budget
-  without a second payment. The accepted-model operated latency/load trial and
-  public deployment remain required; this does not close the item.
+  without a second payment. The accepted-model trial now passes two concurrent
+  customers, six ordinary requests, ten total settlements and both owner-loss
+  cases. First visible output is 23.60–44.63 seconds and complete generation
+  29.37–49.32 seconds on the six ordinary cases. Public responses, failures,
+  privacy constraints and costs are published. Persistent public deployment
+  remains required; the disposable trial endpoints are retired.
 
   Done when the accepted growing graph serves ordinary multi-turn requests with
   streaming, versioned context/tokenizer handling, bounded prices, correct
@@ -362,10 +374,10 @@ before the affected work, rather than changing the target after a result.
 
 ## Work discipline
 
-All six milestones remain in scope. Items 1–3 are complete against their fixed
-demonstration criteria. Permissionless hosting, sustainable verification and
-usable public chat are the remaining items 4–6; their existing completion
-criteria are unchanged.
+All six milestones remain in scope. Items 1–3 and 5 are complete against their
+fixed demonstration criteria, with item 5 using its finite-sponsorship option.
+Reliable permissionless hosting and usable public chat remain items 4 and 6;
+their existing completion criteria are unchanged.
 
 Before an expensive run, record its exact decision, reused artifacts, cheapest
 adequate preflight, success/failure rule and time/spending cap. A rerun needs an
@@ -380,6 +392,16 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-19: **Completed item 5 under finite sponsorship; advanced items 4 and 6.**
+  Native providers acquire only assigned model portions and serve the accepted
+  graph through paid, streamed, replay-verified requests. The final seven-GPU
+  trial passes all ordinary latency and coordinator/backbone recovery gates;
+  all ten responses preserve the preceding source's neural results exactly.
+  All experimental resources are retired. Complete costs are $792.54 under
+  the frozen $1,000 cap, including failed attempts and full retention. Independent
+  administration, market admission resistance, the declared availability soak
+  and persistent public deployment remain open. Checklist **4/6 complete**.
 
 - 2026-09-19: **Completed items 1 and 2.** The accepted conversation → audit →
   storage lineage now has three prospective admissions across two research

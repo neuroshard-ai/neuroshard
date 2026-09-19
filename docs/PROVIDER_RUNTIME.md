@@ -1,10 +1,13 @@
 # Running a provider in the hosting research profile
 
 This runtime serves assigned partitions of the complete answering graph through
-authenticated HTTPS peers. It is implemented on `development/provider-market`.
+authenticated HTTPS peers. It is available in the matching research source checkout.
 The public 0.4.0 genesis does not enable these transactions. Use a freshly pinned
-hosting research genesis and its exact source/runtime release. The operated LLM
-recovery and independent-operator soak are still required before public release.
+hosting research genesis and its exact source/runtime release. Accepted-LLM
+owner replacement and the frozen latency targets pass the
+[operated trial](PROVIDER_LLM_SERVICE.md#seventh-allocation-complete-serving-and-recovery-pass).
+The trial endpoints are retired; an independent-operator soak and persistent
+public deployment remain open.
 
 Each provider controls its own native wallet, TLS key and local full node.
 The node must have finished synchronization. No SSH access to another provider,
@@ -156,6 +159,11 @@ Visible drafts are provisional; only native replay settlement is authoritative.
 
 Validation: adversarial native accounting, authenticated transport/retries,
 partition-only HTTP restoration and five-process real neural equivalence cover
-the implementation. No AWS hosts were required for those checks. The remaining
-deployment trial must freeze the accepted LLM artifacts, failures, full costs,
-latency/load bounds and resource expiry before GPU allocation.
+the implementation. The operated accepted graph additionally recovered a killed
+coordinator and a killed backbone owner on seven GPU hosts, each with a fresh
+key, endpoint and empty model cache. Cached surviving owners use the same
+initialization protocol as fresh owners. All recovered replies passed three
+complete numerical replays and settled once. The final correction also passes
+all six frozen ordinary latency cases without changing any final neural result.
+The preceding failed combined-response gate remains published. See the complete
+measurements and costs before treating this research profile as a public service.

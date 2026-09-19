@@ -30,7 +30,7 @@ def report(home, expected_provider_attempts):
         if not row['all_metrics_present'] or row['interior_gaps']:
             raise ValueError('Complete learning network measurements are required')
         metrics = row['metrics']
-        if {(value['instance_id'], value['metric']) for value in metrics} != {
+        if len(metrics) != 2*len(owners) or {(value['instance_id'], value['metric']) for value in metrics} != {
                 (owner, metric) for owner in owners for metric in ('NetworkIn', 'NetworkOut')}:
             raise ValueError('Missing or duplicated learning traffic series')
         for value in metrics:
@@ -73,6 +73,20 @@ def report(home, expected_provider_attempts):
         raise ValueError('Include every declared provider attempt, including failures')
 
     controller = read(home/'controllers.json')
+    raw_controller = read(home/'controller-network.json')
+    controller_owners = {host['instance_id'] for host in controller['hosts']}
+    if (len(controller_owners) != len(controller['hosts'])
+            or len(raw_controller) != 2*len(controller_owners)
+            or {(row['instance_id'], row['metric']) for row in raw_controller} != {
+                (owner, metric) for owner in controller_owners for metric in ('NetworkIn', 'NetworkOut')}):
+        raise ValueError('Missing or duplicated controller traffic series')
+    for row in raw_controller:
+        if (not row['raw']['Datapoints']
+                or row['accounted_through'] != controller['end']
+                or sum(point['Sum'] for point in row['raw']['Datapoints']) != row['bytes']):
+            raise ValueError('Controller traffic differs from raw CloudWatch samples')
+    if sum(row['bytes'] for row in raw_controller) != controller['traffic_bytes']:
+        raise ValueError('Controller traffic totals differ from measurements')
     seconds = (datetime.fromisoformat(controller['end'])
                - datetime.fromisoformat(plan['measurement_start_utc'])).total_seconds()
     if seconds <= 0 or not controller['complete_series']:

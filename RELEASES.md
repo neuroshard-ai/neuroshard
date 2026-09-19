@@ -8,6 +8,19 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 ## Unreleased — model-evolution research tools
 
+The opt-in [provider profile](docs/PROVIDER_RUNTIME.md) adds native shard offers,
+collateralized assignments, certificate-pinned execution, customer-bound complete
+audit funding and timed replacement. The lightweight client supports bounded
+hosted quotes, recoverable payments and provisional streaming with pinned
+conversation versions. Fresh and cached owners can recover together without
+changing neural results. The [accepted-model trial](docs/PROVIDER_LLM_SERVICE.md#seventh-allocation-complete-serving-and-recovery-pass)
+passes six ordinary latency cases and coordinator/backbone replacement on seven
+GPU hosts, with thirty full replays and no inference issuance. Its application
+replay matches all seven states. The [complete cost record](docs/FINITE_SPONSORSHIP.md)
+meets the fixed finite-sponsorship criterion for checklist item 5. All trial
+endpoints are retired; independent hosting and persistent public chat remain
+open. These changes are research source, not a PyPI or public-network upgrade.
+
 The [continual-admission result](docs/CONTINUAL_ADMISSION_RESULTS.md) completes
 the fixed demonstration criteria for live-LLM checklist items 1 and 2. Three
 prospective admitted cohorts improve ordinary answers while preserving measured

@@ -23,7 +23,14 @@ token. The separate 600-second cold limit includes both paid warmups and their
 settlement. Six observations establish a bounded demonstration, not a population
 latency guarantee. Drafts remain unverified until native settlement.
 
-The absolute allocation deadline is two hours. The next correction's $160 combined ceiling includes
+Timing follows the frozen driver: first visible output and complete generation
+start at native reservation submission, after quoting and audit funding.
+Settlement times include that funding phase. Cold readiness starts when owned
+model restoration begins, after cloud/node/provider bootstrap, and includes both
+paid warmups and their settlement. Cloud provisioning and registration are
+additional startup time; all of their resources are included in the cost record.
+
+The absolute allocation deadline is two hours. The final correction's $160 combined ceiling includes
 the prior failed setups, all compute and replays, disks, network traffic, public
 IPv4 and 90-day artifact retention. Price estimates are pre-tax upper estimates,
 not an AWS invoice or a NEURO/USD exchange rate. The experiment uses finite
@@ -301,3 +308,81 @@ inside a $160 cumulative cap, and forbids allocation before both preceding
 recoveries pass, resources are retired and complete prior costs fit that reserve.
 Those preconditions passed; source `95a19b87026bce91a1bc567da3c0e1988db3b011`
 began its corrective allocation at 19:07 UTC with a 21:07 UTC hard deadline.
+
+
+## Seventh allocation: complete serving and recovery pass
+
+Source `95a19b87026bce91a1bc567da3c0e1988db3b011` passes the complete frozen
+contract. Model/reference restoration took **101.92 seconds**; cold readiness,
+including both paid warmups and full settlement, took **307.51 seconds** against
+600. Two concurrent customers used the committed native provider reservations.
+
+| Ordinary request | First visible output | Complete generation | Settled, including funding |
+| --- | ---: | ---: | ---: |
+| Client package | 26.41 s | 29.37 s | 101.77 s |
+| Retained directory | 35.77 s | 39.86 s | 163.98 s |
+| General explanation | 23.60 s | 38.45 s | 169.38 s |
+| Constrained arithmetic | 29.79 s | 31.68 s | 103.45 s |
+| Multi-turn recall | 28.99 s | 31.04 s | 102.61 s |
+| Combined question | **44.63 s** | 49.32 s | 169.59 s |
+
+All six meet the unchanged 45-second first-visible and 90-second generation
+gates; combined-answer visibility remains a narrow pass. Its first visible
+content includes the completed `Sofia` answer while the protocol answer is
+still being generated. The final reply includes both answers. The other replies
+include `neuroshard-ai`, `43`, `violet kettle`, and an explanation of Rayleigh
+scattering. The general explanation reaches its 64-token bound mid-sentence;
+passing timing is not a new broad-quality result. Every full reply and draft is
+available in the evidence. Six observations do not establish a population p95.
+
+A killed coordinator recovered with a fresh provider key and endpoint, settling
+once in **622.34 seconds**. A separately killed required backbone owner recovered
+and settled once in **641.97 seconds**. Both are below the unchanged 1,500-second
+limit. Surviving owners retained their cached model state. These are process-loss
+faults and replacement on surviving physical hosts; they are not an availability
+soak or a new physical-host-loss demonstration. The final collector includes the
+backbone replacement's start and result records, but its separate asset-download
+receipt was not captured before retirement. The preceding trial preserves both
+replacement asset receipts. We do not infer a missing measurement.
+
+All ten requests, including warmups and recoveries, received three actual
+complete numerical replays. Exact final text, every neural prompt/output token
+record and metered neural work match the sixth trial for **all ten requests**.
+No model weights, routing rules or quality data changed. Each request settled
+once; inference issued zero NEURO. Across the ten requests, native accounting
+records 245 execution atoms paid and 9,275 refunded; 9,360 provider atoms paid;
+and 73,500,000 audit atoms paid with 3,734,500,000 refunded. Transaction fees are
+separate. These are research balances, with no assumed cash exchange rate.
+
+Application replay reproduces **2,519 headers and 294 accepted transactions**,
+matching all seven saved full-node states. Its final state root is
+`93857d3476a24695ca27e4c5f0ba7089d69623ce5457316e962540b68ca98bfb`.
+This replays application transitions against recorded states; it does not
+independently validate CometBFT commit signatures or prove separate ownership.
+
+All seven disposable instances, their volumes and the security group were
+retired at **19:53 UTC**. The three protected instances retained their previous
+states. This run's standalone conservative cost is **$24.81**, including $5.37
+compute and 92.70 GB of aggregate interface traffic. Its frozen cumulative gate
+passes at **$144.81 against $160**, including the $120 prior-attempt reserve.
+The sum of all seven standalone estimates is **$135.86**; this sum repeats their
+retention allowances and is therefore not the deduplicated whole-project cost.
+[Complete finite-sponsorship accounting](FINITE_SPONSORSHIP.md) reconciles the
+learning and serving work, controllers and entire public retention pool at
+**$792.54 against $1,000**.
+
+[Public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/67d7751ccadcc3213e3c0353c050c49595e8c73bff6d0efcb102d8dd9e0717b2)
+and [matching source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/ecb9555a5db0449a18635313e0e1592e13ea7e10d5a1a11d237a6878794e5bc5)
+passed full public SHA-256 readback. The 162 allowlisted files include the frozen
+inputs, all stream/answer observations, thirty replays, settlement, faults,
+application ledger, costs and resource retirement. They exclude private keys,
+credentials and native backups. The source's
+`scripts/replay_provider_preflight.py --home EVIDENCE/trial` reproduces the
+application replay from the included public ledger export.
+
+This closes the operated serving/recovery experiment. Item 5 meets its bounded
+finite-funding criterion. Items 4 and 6 retain their public-operation requirements:
+independent administration, admission/selection abuse resistance, a declared
+availability soak and a persistent public deployment. The trial ran one declared
+A10G numerical profile under one administrator; its endpoints are now retired.
+The public 0.4.0 chain and PyPI package have not been upgraded by this trial.

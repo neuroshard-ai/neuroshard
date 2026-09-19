@@ -3,8 +3,9 @@
 The provider research profile connects the existing lightweight client to the
 complete answering graph. It requires that profile's freshly pinned native
 genesis, available provider offers and running full-replay auditors. It is not
-enabled by the public 0.4.0 genesis. The accepted-LLM latency/load trial and
-independent public deployment remain open in the fixed TODO.
+enabled by the public 0.4.0 genesis. The [accepted-LLM trial](PROVIDER_LLM_SERVICE.md) passed its frozen two-customer
+latency and owner-recovery gates. Those experimental endpoints have been retired;
+a persistent public deployment remains open in the fixed TODO.
 
 These commands require the matching research source release. The existing
 `neuroshard-ai` 0.4.0 package on PyPI does not include `--hosted-config`. From
@@ -114,5 +115,6 @@ blocks and final execution records have separate retention obligations.
 Checks cover token-by-token observation against full-model generation, delivery
 failure without numerical changes, wrong-customer and obsolete-epoch rejection,
 complete spending caps, quote cancellation, and lost-acknowledgement recovery
-after native expiry with all unused budgets refunded. These checks do not stand
-in for the accepted model's prospective operated load/cost trial.
+after native expiry with all unused budgets refunded. The separate accepted-model trial settled ten requests after thirty complete
+numerical replays and met its frozen latency/load gates. This small sample does
+not establish a public latency guarantee.
