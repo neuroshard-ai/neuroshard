@@ -42,6 +42,9 @@ class LedgerHosts(Cloud):
 
 
 def allocate(home, resources, revision):
+    credits = resources.get('cpu_credits', 'standard')
+    if credits not in ('standard', 'unlimited'):
+        raise ValueError('Declare standard or funded unlimited CPU credits')
     home = Path(home)
     home.mkdir(parents=True, exist_ok=False)
     ec2 = boto3.client('ec2', region_name=resources['region'])
@@ -94,7 +97,7 @@ def allocate(home, resources, revision):
                 KeyName=source['KeyName'], ClientToken=uuid.uuid5(uuid.NAMESPACE_URL, name+'/'+str(rank)).hex,
                 UserData='#cloud-config\n'+json.dumps(user_data), InstanceInitiatedShutdownBehavior='terminate',
                 MetadataOptions={'HttpTokens': 'required', 'HttpPutResponseHopLimit': 1},
-                CreditSpecification={'CpuCredits': 'standard'},
+                CreditSpecification={'CpuCredits': credits},
                 NetworkInterfaces=[{'DeviceIndex': 0, 'SubnetId': subnet['SubnetId'], 'Groups': [group],
                     'AssociatePublicIpAddress': True, 'DeleteOnTermination': True}],
                 BlockDeviceMappings=[{'DeviceName': image['RootDeviceName'], 'Ebs': {'VolumeSize': 40,

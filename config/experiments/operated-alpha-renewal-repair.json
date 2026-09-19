@@ -1,0 +1,22 @@
+{
+  "format": "neuroshard-operated-alpha-renewal-repair-v1",
+  "previous_source": "07c00a9cc772a319a02856945f5617aee0488505",
+  "failure": "Five ordinary requests passed; the combined request first displayed text after 309.69 seconds. Maintenance clipped a renewed offer to the registration end at query height. Inclusion in a later block made the offer exceed registration, repeatedly rejecting maintenance and delaying acceptance. All 27 R2 requests settled after full replay; the gate remains failed.",
+  "repair": "Renew provider registration before offering a complete configured lifetime, including all 64 possible inclusion blocks. Do not clip a duration to a stale registration end. Verify actual native transitions at both immediate and latest permitted inclusion.",
+  "deployment": "The changed source requires a new genesis and executor commitment. Preserve public failed-candidate history and private keys, close future services, and retire only drained recorded resources before the next allocation. Existing 0.4.0 and protected hosts stay unchanged.",
+  "same": [
+    "Accepted model, learned selection, tokenizer, numerical kernels and answers",
+    "Two concurrent customers, ten gate requests, complete audits, 45/90/1200-second ordinary gates and 1500-second recovery bound",
+    "No training, no new final, no inference issuance"
+  ],
+  "resources": {
+    "gpu_instances": 7,
+    "gpu_max_hours": 60,
+    "ledger_instances": 4,
+    "ledger_max_hours": 168,
+    "ledger_cpu_credits": "unlimited with full 2-vCPU surplus allowance",
+    "aggregate_ceiling_usd": 800,
+    "prior_failed_allocations_reserve_usd": 100
+  },
+  "publication": "Availability remains unpublished until the full gate, fresh observer/customer chat and complete ledger replay pass. Preserve every failed gate; do not reuse a failed evidence directory."
+}

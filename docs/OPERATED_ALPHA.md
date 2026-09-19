@@ -7,6 +7,13 @@ they do not establish independent administration. TODO 4 remains open until its
 independent-operator criterion is met. A working public deployment addresses
 TODO 6; it does not establish ChatGPT-level general capability.
 
+AWS can simulate many participants with separate wallets, provider processes,
+machines and network conditions. These participants exercise admission,
+concurrent use, payments, failures and recovery without requiring outside
+volunteers. Independent operators may also use AWS, but must control their own
+keys and infrastructure. Simulated participation is sufficient for the operated
+alpha; the independent-operation requirement remains part of item 4.
+
 The implementation is on `development/operated-alpha`. It requires a new genesis
 and matching source. The existing 0.4.0 chain and balances are not upgraded by
 these changes. No new learning or final evaluation is needed to test deployment
@@ -129,3 +136,88 @@ preserves the original service gates and all numerical behavior. The failed
 GPU allocation is retired; its separate ledger stays available for native
 expiry/refunds before retirement. The aggregate $800 ceiling includes a $50
 reserve for the failed deployment, including its remaining ledger lifetime.
+
+
+The corrected source `944a0d4` repeated all three CPU cases in 618.26 seconds:
+651 headers, 147 accepted transactions, no rejected transactions or issuance,
+and all four saved states reproduced. Its final state is
+`b53769d0b92e0c496c3bd6a7fce3bfbbc37235f8dcc2bae69b2b5fad9c751529`.
+[Corrected preflight evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/a3e96efd4785d7162fdd18eb1ccd98bbd2e32eccf1971d8f96e6cc02465bd77a)
+and [exact corrected source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/d17b896babaab5b983e3d4ec223c8493589b0c6479890e4d8fb4c26a7956dae5)
+include full checksum readback. The
+[first deployment's failure and ledger snapshot](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7c292c6a5f8f43822cd00896a21d8adc09193adfeaa8f5020bf4df66624bc629)
+reproduce 1,493 headers and 226 accepted transactions against all four states,
+with zero issuance or accepted responses. Its
+[original deployment source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7847a7133c595af0a6882497b0ad839a55be36e2123249b7686f74cf44281c02)
+remains available. Retired GPU compute was at most $3.38; the complete failed
+allocation remains covered by the declared $50 reserve.
+
+The second deployment exposed a separate launch configuration error: persistent
+systemd services omitted the image's GPU library path. The numerical guard
+refused that runtime before execution. The
+[committed loader repair](../config/experiments/operated-alpha-loader-repair.json)
+preserves the same library selection as the existing reference launcher.
+All seven physical owners passed the unchanged numerical preflight before
+provider restart. Native recovery alone created new assignment epochs; original
+start markers, requests, deadlines and gate timing were preserved. No model,
+consensus source or genesis changed.
+
+
+## CPU capacity repair
+
+The next ordinary screen settled all six responses with complete replay, but
+failed its first-visible target on multi-turn context (55.24 seconds) and the
+combined question (69.90 seconds). The original 45-second limit remains in force.
+File checks finished before a long queue of native acceptances. CloudWatch showed
+the customer-facing T3 validator at zero CPU credits and its 20% CPU baseline;
+the other validators still had credits. The one-transaction-per-block native
+profile makes delayed acceptance visible to every assigned owner.
+
+The [prospective repair](../config/experiments/operated-alpha-credit-repair.json)
+enables paid CPU bursting on the four existing validators, preserving their keys,
+addresses, source, genesis and ledger. To retain the $800 aggregate ceiling, the
+same seven GPUs now retire after at most **66 hours**, on **September 22 at
+16:27 UTC**. The ledger window remains seven days. The cost watch includes a
+$67.20 upper allowance for continuous use of both vCPUs on all four validators
+for all 168 hours, even though baseline credits are free. The
+[AWS Linux T3 surplus rate](https://aws.amazon.com/ec2/instance-types/t3/) is
+$0.05 per vCPU-hour. The complete-window forecast at repair was $729.76;
+this is a conservative plan, not an invoice.
+
+The failed gate is retained, and its in-progress request settled through native
+recovery. A separate gate must repeat all ten requests and both failure cases.
+An ordinary latency failure now stops the driver before lengthy fault trials.
+This repair allocates no additional machines and changes no neural behavior.
+
+
+CPU bursting brought the combined answer down to 45.016492 seconds; the other
+five ordinary cases passed. The result remains failed rather than being rounded
+into a pass. A [declared timing repair](../config/experiments/operated-alpha-commit-wait-repair.json)
+reduces CometBFT's inter-block wait from 500 to 250 milliseconds across the
+validators and observers. Every validator advanced through its rolling restart.
+Quorum rules, application source, genesis and neural execution remain unchanged.
+
+That run's two warm-up requests settled at heights 3,938 and 4,027 with complete
+numerical audits. Its checker incorrectly read history from another validator
+before that node caught up. The [receipt-view repair](../config/experiments/operated-alpha-receipt-view-repair.json)
+checks subsequent payment history through the same pinned customer node that
+confirmed completion. The native ledger contains exactly one settlement for
+each request. The checker failure and the actual results are preserved separately.
+
+
+## Registration renewal repair
+
+The corrected checker reached all six ordinary results. Five met the frozen
+latency limits; the combined request took 309.69 seconds to first text and failed.
+The provider maintainer clipped an offer duration to the registration end at the
+query height. Inclusion in any later block put the offer beyond that end, causing
+repeated rejection and delaying model acceptance. All 27 requests on this second
+candidate settled after complete audits; its failed gate remains preserved.
+
+The [next repair](../config/experiments/operated-alpha-renewal-repair.json) renews
+registration before a complete configured offer, with 64 blocks of inclusion
+headroom. Native-transition checks cover immediate and latest allowed inclusion.
+Changed source requires a new pinned genesis; no running chain silently changes
+its source commitment. Both failed candidates are included in a $100 reserve.
+The next GPU window is bounded to 60 hours, with paid CPU bursting declared at
+ledger launch, under the same $800 aggregate ceiling and unchanged service gates.

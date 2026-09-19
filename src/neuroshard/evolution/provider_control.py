@@ -77,7 +77,15 @@ def maintain(node, outbox, config, owner):
     # Availability must cover a complete new request, not merely the next
     # heartbeat. Renew before a long job's quote loses its replacement runway.
     runway = current.get('request_blocks', 0) + profile['provider_heartbeat_blocks']
-    if provider['registration_expires'] - height < max(profile['provider_blocks'] // 2, runway):
+    duration = config['offer_blocks']
+    if duration <= runway:
+        raise ValueError('Offer lifetime cannot cover a complete request and renewal runway')
+    # Offer expiry is relative to its eventual inclusion height. A duration
+    # clipped to today's registration end becomes invalid in the next block.
+    # Renew registration first, covering the whole offer and every block of
+    # the signed transaction's inclusion window.
+    registration_runway = max(profile['provider_blocks'] // 2, duration + 64)
+    if provider['registration_expires'] - height < registration_runway:
         outbox.send('registration-renewal-'+str(provider['registration_expires'])+'-'+str(valid_until),
                     'renew_provider', valid_until=valid_until, timeout=5)
         return 'registration_renewed'
@@ -94,9 +102,6 @@ def maintain(node, outbox, config, owner):
         # must not cause an unbounded series of automatically purchased offers.
         return 'offer_required'
     key, offer = min(owned, key=lambda row: row[0])
-    duration = min(config['offer_blocks'], provider['registration_expires'] - height)
-    if config['offer_blocks'] <= runway:
-        raise ValueError('Offer lifetime cannot cover a complete request and renewal runway')
     if offer['expires'] - height < max(config['offer_blocks'] // 2, runway):
         outbox.send('offer-renewal-'+key+'-'+str(offer['expires'])+'-'+str(valid_until), 'renew_expert_offer',
             offer_id=key, expires_in=duration, valid_until=valid_until, timeout=5)

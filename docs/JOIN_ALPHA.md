@@ -5,7 +5,7 @@ after its availability field records a passing deployment gate. The earlier
 0.4.0 chain and PyPI package are different releases.
 
 The alpha runs the accepted shard graph, with paid provider discovery and three
-complete replays before settlement. Its GPU window is funded for at most 72 hours;
+complete replays before settlement. Its GPU window is funded for at most 66 hours;
 the descriptor gives the exact service and ledger deadlines. All bootstrap
 hosts belong to one administrator. Additional AWS hosts do not establish
 independent ownership. Starter credits have no demonstrated market value.
@@ -61,8 +61,12 @@ then. If the command times out, use its printed request ID with `--resume` and
 the same wallet. Never sign another payment to replace an uncertain one. Reuse
 `--session` for another turn only after the preceding request settles. Capacity
 is limited to two simultaneous requests and the graph has a bounded context.
-Full replay is expensive; 500 starter credits are intended to cover one bounded
-request, not an unlimited chat subscription.
+If both slots are occupied, a quote can be refused; retry later. A quote refusal
+does not submit a payment.
+Full replay is expensive: the maximum verification budget is locked before
+execution, then unused funds return after settlement. A 500-credit grant can
+start a bounded request; how many later turns fit depends on actual charges
+and the next complete quote. It is not an unlimited chat subscription.
 
 See [chat and recovery behavior](HOSTED_CHAT.md) and the [funding and trust
 assumptions](OPERATED_ALPHA.md). Running your own observer establishes your own

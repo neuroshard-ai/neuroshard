@@ -26,6 +26,8 @@ def observe(home):
     if len(rows) != 11 or any(row['InstanceId'] in PROTECTED for row in rows):
         raise ValueError('Cost watch accepts only the eleven recorded alpha hosts')
     unlimited = set(amendment.get('unlimited_cpu_instances', []))
+    if ledger['resources'].get('cpu_credits') == 'unlimited':
+        unlimited.update(row['InstanceId'] for row in ledger['instances'])
     if not unlimited <= {row['InstanceId'] for row in ledger['instances']}:
         raise ValueError('CPU credit funding is limited to the recorded ledger hosts')
     cloudwatch = boto3.client('cloudwatch', region_name=freeze['gpu_resources']['region'])
