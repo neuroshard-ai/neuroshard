@@ -158,7 +158,7 @@ def native_nodes(home, manifest, engine):
             ('', 'log_level', '"error"'), ('rpc', 'laddr', '"tcp://127.0.0.1:26657"'),
             ('rpc', 'max_body_bytes', '4194304'), ('rpc', 'timeout_broadcast_tx_commit', '"120s"'),
             ('p2p', 'laddr', '"tcp://0.0.0.0:26656"'), ('p2p', 'persistent_peers', json.dumps(peers)),
-            ('p2p', 'addr_book_strict', 'false'), ('consensus', 'timeout_commit', '"500ms"'),
+            ('p2p', 'addr_book_strict', 'false'), ('consensus', 'timeout_commit', '"250ms"'),
             ('consensus', 'timeout_propose', '"1s"'), ('consensus', 'timeout_prevote', '"500ms"'),
             ('consensus', 'timeout_precommit', '"500ms"')]
         for section, key, value in settings:

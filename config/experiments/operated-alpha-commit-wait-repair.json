@@ -1,0 +1,31 @@
+{
+  "format": "neuroshard-operated-alpha-commit-wait-repair-v1",
+  "previous_source": "e5b206593d30b0ec5677450615b92df4c405d406",
+  "native_source_unchanged": "944a0d498fe832ce408081b45c00241f1c67d35b",
+  "chain_unchanged": "neuroshard-portable-life-b65db5ce12b3",
+  "failed_gate": {
+    "first_visible_seconds": [
+      38.875612,
+      37.61986,
+      32.627586,
+      34.860041,
+      32.760348,
+      45.016492
+    ],
+    "target_seconds": 45,
+    "failure": "Combined question exceeds the original target by 0.016492 seconds. Keep the failure; do not round it into a pass. No fault cases were admitted in this failed retry."
+  },
+  "repair": {
+    "cometbft_timeout_commit_before_ms": 500,
+    "cometbft_timeout_commit_after_ms": 250,
+    "scope": "Four native validators, seven GPU observers and the onboarding observer. Roll validators one at a time while idle; preserve signing state and verify continued committed progress.",
+    "purpose": "Reduce the fixed inter-block wait and native acceptance queue latency, retaining a positive wait and every existing quorum check."
+  },
+  "unchanged": [
+    "Native application source, one transaction per block, genesis, keys, balances and all quorum/finality rules",
+    "Accepted graph, exact model bytes, numerical runtime and all chat questions",
+    "All ten gate requests, two concurrent customers, three complete replays per response, 45-second first-visible and 90-second generation gates",
+    "The amended 66-hour GPU and 168-hour ledger windows, four funded burstable validators and aggregate $800 ceiling"
+  ],
+  "retry": "Run the complete gate into a fresh evidence directory; keep both previous failed gates. No additional AWS instances and no new learning or quality final."
+}

@@ -94,6 +94,7 @@ def main():
                 ('', 'proxy_app', json.dumps('127.0.0.1:'+str(args.base_port+2))), ('', 'abci', '"grpc"'),
                 ('rpc', 'laddr', json.dumps('tcp://127.0.0.1:'+str(args.base_port+1))),
                 ('rpc', 'max_body_bytes', '4194304'), ('rpc', 'timeout_broadcast_tx_commit', '"120s"'),
+                ('consensus', 'timeout_commit', '"250ms"'),
                 ('p2p', 'laddr', json.dumps('tcp://0.0.0.0:'+str(args.base_port))),
                 ('p2p', 'persistent_peers', json.dumps(','.join(peers)))]:
                 text = edit_config(text, section, key, value)
