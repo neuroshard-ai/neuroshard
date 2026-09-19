@@ -24,10 +24,31 @@ settlement. Six observations establish a bounded demonstration, not a population
 latency guarantee. Drafts remain unverified until native settlement.
 
 The absolute allocation deadline is two hours. The $100 combined ceiling includes
-the prior failed setup, all compute and replays, disks, network traffic, public
+the prior failed setups, all compute and replays, disks, network traffic, public
 IPv4 and 90-day artifact retention. Price estimates are pre-tax upper estimates,
 not an AWS invoice or a NEURO/USD exchange rate. The experiment uses finite
 operator sponsorship; it does not demonstrate independent customer demand.
+
+## Retention accounting
+
+The serving trial's `costs.json` prices its final-lineage catalog and model files,
+with a separate evidence allowance. That inventory is not the entire history of
+training checkpoints. A separate S3 inventory at 17:09:27 UTC on September 19
+counts **11,291 public research objects, 591,804,881,417 bytes**, all in Standard
+storage. At the [listed S3 rate](https://aws.amazon.com/s3/pricing/) of
+$0.023/GB-month, using decimal GB conservatively,
+90 days costs approximately **$40.83**. The
+[complete inventory](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/82a1fc0978a401670c3cf2ee02d5420a97d841f69130cf4380de3c8cfd32d334)
+passed public hash readback. This whole-pool estimate includes earlier failed
+research and therefore exceeds the accepted model's own retention requirement.
+
+All 1,960 distinct objects checked from the latest continuation's initial
+catalog, training/comparison publication receipts, source/evidence archives and
+current serving inventory are present at the expected sizes. The listing checks
+presence and size; the original full-readback receipts establish content
+verification. Retention charges must be deduplicated when combining the pool
+estimate with a trial estimate. This is a storage snapshot, not a permanent
+funding guarantee; requests, delivery and new future objects cost separately.
 
 ## First allocation: rejected during setup
 
@@ -60,6 +81,67 @@ whose enclosing graph correctly hashes that wrong profile: even this internally
 rehashed mismatch is rejected before any transfer. The corrected allocation
 retains the original requests, generation, faults, replay count and performance
 thresholds. Its outcome must be recorded before counting serving evidence.
+
+## Second allocation: reference loaded, controller stopped
+
+Source `c359ad98543f74f402c3b2692371e7dde6188ddd` passed the corrected profile
+checks. All nine numerical reference owners loaded their committed partitions
+across seven hosts in five availability zones. The controller then stopped
+before funding a customer request: it attempted to open customer wallets before
+creating them. No answer, inference claim, payment or issuance occurred.
+
+Application replay reproduces 414 headers and 54 accepted transactions, matching
+all seven saved states. All disposable instances, volumes and the security group
+were retired, with protected instances unchanged. The compute upper estimate is
+$1.71; the standalone complete estimate is $17.33. Both failed allocations total
+$34.56 by the same conservative accounting. The second `costs.json` also includes
+a $30 prior-allocation reserve; that reserve is not another charge to add to the
+first allocation. The next frozen run reserves $45 for both prior attempts within
+the unchanged $100 aggregate ceiling.
+
+[Public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/4c9e092fecce838476396eb037a4c3316ca64e048aa325562438f4a7dbc5f145)
+contains 61 allowlisted files, including the nine ready reports, exact inputs,
+failure, ledger replay, cost and retirement records. Its matching
+[source archive](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/ddae90d24b041b401c124914878158b9cedab6efcb9777af707b4c21d09bdd76)
+reproduces application replay. Both archives passed full public hash readback.
+
+The controller now creates and validates customer identities before allocation.
+A local signed-native-transition check also caught and repaired a separate
+SQLite thread-affinity error: the audit thread opens connections to the same
+durable signer journals. Those checks require three replay results before voting
+and reject an invalid result without any vote or payment. Their numerical reports
+are explicit fixtures; actual accepted-model replay is still required. The third
+allocation uses committed source `7d8c2a09b60739b2b027359f147a7dc72a5854f4`,
+unchanged accepted weights and the original request and performance gates.
+
+## Third allocation: slow disk exposed a startup timeout
+
+That allocation stopped before requests when small reference owners timed out
+waiting for a backbone owner. A process stack places the backbone in checkpoint
+SHA-256 reads, and a five-second I/O sample measures about 18 MB/s. Available
+memory remained above 11 GiB. Gloo's underlying group had a 300-second timeout;
+the 1,200-second `monitored_barrier` argument did not extend a non-root owner's
+underlying send timeout. This was an initialization failure, not a numerical
+disagreement or a completed serving result.
+
+[Public evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/21309f0d9e3c8e28a5cea41c524cf3a9854f29f9533b1ffa0065c24b1375abd8)
+and [matching source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/cf158ce3b7df4e75a8c1ab17904d9362671970c21d1876ac2cdcdea688c066bc)
+preserve the error, stack, I/O sample, ledger and costs. Replay reproduces 590
+headers and 54 transactions with all seven states matching, no inference claim
+and zero issuance. All seven disposable hosts, volumes and the security group
+were retired. The standalone upper estimate is $17.72; the three failed setups
+total $52.28, including conservatively repeated retention allowances.
+
+The next deployment uses the AMI-managed local NVMe for model caches and keeps
+wallets and native stores on EBS. It requires the separate mounted filesystem
+before dependency or model downloads, and validates every model byte as before.
+AWS documents this [instance-store mount](https://docs.aws.amazon.com/dlami/latest/devguide/aws-deep-learning-base-gpu-ami-ubuntu-20.04.html).
+The reference's startup/control group now has the same 1,200-second timeout as
+its loading barrier; inference subgroups retain 300 seconds. A real two-process
+Gloo probe with scaled deadlines reproduces the old failure and passes with an
+aligned timeout. The outer 600-second cold-readiness gate, request bounds and
+two-hour retirement deadline stay fixed. The combined $100 trial ceiling now
+reserves $65 for prior setups; it is not an additional $65 expenditure.
 
 The [provider guide](PROVIDER_RUNTIME.md) and [chat guide](HOSTED_CHAT.md) describe
 the implemented interfaces. The trial endpoints are disposable; they are not a

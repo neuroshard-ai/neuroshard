@@ -3,36 +3,169 @@
   "decision": "Can the accepted answering system serve ordinary conversations through native provider discovery and authenticated streaming, recover replaced owners, and settle within a complete finite sponsored budget?",
   "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
   "retry": {
-    "previous_source": "c359ad98543f74f402c3b2692371e7dde6188ddd",
-    "previous_result": "The second setup loaded all nine reference owners successfully, then stopped before requests because the controller opened customer wallets before creating them. The first setup had selected an earlier executor profile; that separate failure and its correction remain published.",
-    "change": "Create and validate both customer wallets before allocation. Exercise controller settlement locally against real signed native transitions, including its separate-thread connections to the same durable audit journals, before further GPU use. Retain exact executor lookup and pre-allocation source/numerical checks.",
+    "previous_source": "7d8c2a09b60739b2b027359f147a7dc72a5854f4",
+    "previous_result": "Third setup stopped before requests: cold EBS reads delayed a backbone owner beyond the underlying 300-second Gloo send timeout; the 1200-second monitored-barrier argument did not extend that timeout. Earlier profile and wallet setup failures remain preserved.",
+    "change": "Use the AMI-managed local NVMe only for verified disposable model caches, leaving keys and native stores on EBS. Align the reference group startup timeout with its bounded 1200-second loading barrier. The outer cold-readiness and request gates remain unchanged. A real two-process scaled-delay probe reproduces the timeout and passes the aligned bound.",
     "history": [
-      {"source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004", "cause": "Earlier baseline executor selected instead of the final accepted executor; no loaded reference group or requests."},
-      {"source": "c359ad98543f74f402c3b2692371e7dde6188ddd", "cause": "Missing controller wallet creation after successful model load; no requests or payments."}
+      {
+        "source": "03fc78accc3a7dd0dc352c962bd8d7aeed9c6004",
+        "cause": "Earlier baseline executor selected instead of the final accepted executor; no loaded reference group or requests."
+      },
+      {
+        "source": "c359ad98543f74f402c3b2692371e7dde6188ddd",
+        "cause": "Missing controller wallet creation after successful model load; no requests or payments."
+      },
+      {
+        "source": "7d8c2a09b60739b2b027359f147a7dc72a5854f4",
+        "cause": "Cold EBS file hashing delayed a backbone beyond the underlying Gloo group timeout; no loaded reference group, requests or payments."
+      }
     ],
-    "unchanged": ["accepted weights", "ordinary requests", "generation", "latency and settlement bounds", "faults", "replay count"],
+    "unchanged": [
+      "accepted weights",
+      "ordinary requests",
+      "generation",
+      "latency and settlement bounds",
+      "faults",
+      "replay count"
+    ],
     "aggregate_budget_usd": 100,
-    "prior_allocation_allowance_usd": 45,
+    "prior_allocation_allowance_usd": 65,
     "cold_readiness": "Includes both paid warm-up responses and their complete settlements, so both provider replicas have actually loaded and answered. The earlier failed setup did not measure cold readiness or any answer."
   },
-  "learning": {"train": false, "new_final": false, "quality_claim": false, "new_tokens_issued": 0},
-  "preserve": ["all model tensors", "tokenizer bytes", "routing and question indexes", "planning and composition rules", "decoding and numerical runtime"],
+  "learning": {
+    "train": false,
+    "new_final": false,
+    "quality_claim": false,
+    "new_tokens_issued": 0
+  },
+  "preserve": [
+    "all model tensors",
+    "tokenizer bytes",
+    "routing and question indexes",
+    "planning and composition rules",
+    "decoding and numerical runtime"
+  ],
   "logical_owners": 9,
-  "physical_placement": [0, 1, 2, 3, 4, 5, 6, 3, 4],
+  "physical_placement": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    3,
+    4
+  ],
   "replicas": 2,
   "requests": [
-    {"id": "client-package", "messages": [{"role": "user", "content": "What is the name of the NeuroShard client package?"}]},
-    {"id": "retained-directory", "messages": [{"role": "user", "content": "Where does Fenn Varden live?"}]},
-    {"id": "ordinary-general", "messages": [{"role": "user", "content": "Explain why the sky looks blue in two sentences."}]},
-    {"id": "constrained-general", "messages": [{"role": "user", "content": "Return only the result of 17 plus 26."}]},
-    {"id": "multiturn-context", "messages": [{"role": "user", "content": "Remember the phrase violet kettle."}, {"role": "assistant", "content": "I will remember violet kettle."}, {"role": "user", "content": "What phrase did I ask you to remember? Give only the phrase."}]},
-    {"id": "combined-question", "messages": [{"role": "user", "content": "Where does Fenn Varden live, and what is the name of the NeuroShard client package?"}]},
-    {"id": "coordinator-loss", "messages": [{"role": "user", "content": "What is the name of the NeuroShard client package?"}], "fault_rank": 0, "replacement_physical": 6},
-    {"id": "backbone-loss", "messages": [{"role": "user", "content": "Explain why the sky looks blue in two sentences."}], "fault_rank": 1, "replacement_physical": 5}
+    {
+      "id": "client-package",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the name of the NeuroShard client package?"
+        }
+      ]
+    },
+    {
+      "id": "retained-directory",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Where does Fenn Varden live?"
+        }
+      ]
+    },
+    {
+      "id": "ordinary-general",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Explain why the sky looks blue in two sentences."
+        }
+      ]
+    },
+    {
+      "id": "constrained-general",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return only the result of 17 plus 26."
+        }
+      ]
+    },
+    {
+      "id": "multiturn-context",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Remember the phrase violet kettle."
+        },
+        {
+          "role": "assistant",
+          "content": "I will remember violet kettle."
+        },
+        {
+          "role": "user",
+          "content": "What phrase did I ask you to remember? Give only the phrase."
+        }
+      ]
+    },
+    {
+      "id": "combined-question",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Where does Fenn Varden live, and what is the name of the NeuroShard client package?"
+        }
+      ]
+    },
+    {
+      "id": "coordinator-loss",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the name of the NeuroShard client package?"
+        }
+      ],
+      "fault_rank": 0,
+      "replacement_physical": 6
+    },
+    {
+      "id": "backbone-loss",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Explain why the sky looks blue in two sentences."
+        }
+      ],
+      "fault_rank": 1,
+      "replacement_physical": 5
+    }
   ],
-  "generation": {"max_tokens": 64, "rule": "unchanged accepted greedy generation"},
-  "warmup": {"requests": 2, "one_per_replica": true, "messages": [{"role": "user", "content": "Say hello."}], "max_tokens": 4, "settle_and_include_all_costs": true},
-  "load": {"concurrent_customers": 2, "ordinary_requests": 6, "fault_requests": 2, "complete_replays_per_claim": 3},
+  "generation": {
+    "max_tokens": 64,
+    "rule": "unchanged accepted greedy generation"
+  },
+  "warmup": {
+    "requests": 2,
+    "one_per_replica": true,
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello."
+      }
+    ],
+    "max_tokens": 4,
+    "settle_and_include_all_costs": true
+  },
+  "load": {
+    "concurrent_customers": 2,
+    "ordinary_requests": 6,
+    "fault_requests": 2,
+    "complete_replays_per_claim": 3
+  },
   "targets": {
     "cold_ready_seconds": 600,
     "warm_generation_p95_seconds": 90,
@@ -50,7 +183,15 @@
   "predeployment_clarification": "Two paid warm-up requests load both replica groups before the six-request warm latency population. Each receives full verification; all their time and costs count. Declared before any GPU allocation or service measurement.",
   "resources": {
     "region": "us-east-1",
-    "instance_types": ["g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge", "g5.xlarge"],
+    "instance_types": [
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
     "disk_gib": 200,
     "max_hours": 2,
     "minimum_zones": 3,
@@ -60,10 +201,45 @@
     "price_source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
     "price_sku": "79BRGEEZC6TARVWJ",
     "price_effective_date": "2026-09-01",
-    "public_ports": [26656, 18440, 18441, 18442, 18443, 18444, 18445, 18446, 18447, 18448, 18460, 18461, 18462, 18463, 18464, 18465, 18466, 18467, 18468, 18500, 18501],
-    "protected_instances": ["i-0d681a8ef83f72619", "i-06bf7f1f01e6228bb", "i-0ebe86ca07e97cf29"],
+    "public_ports": [
+      26656,
+      18440,
+      18441,
+      18442,
+      18443,
+      18444,
+      18445,
+      18446,
+      18447,
+      18448,
+      18460,
+      18461,
+      18462,
+      18463,
+      18464,
+      18465,
+      18466,
+      18467,
+      18468,
+      18500,
+      18501
+    ],
+    "protected_instances": [
+      "i-0d681a8ef83f72619",
+      "i-06bf7f1f01e6228bb",
+      "i-0ebe86ca07e97cf29"
+    ],
     "artifact_retention_days_costed": 90,
-    "accounting": ["complete allocation runtime including bootstrap and idle time", "all full numerical replays", "EBS capacity and provisioned IOPS/throughput", "public IPv4", "inter-zone and public object transfers", "public model/evidence bytes and retention", "native-node overhead"]
+    "accounting": [
+      "complete allocation runtime including bootstrap and idle time",
+      "all full numerical replays",
+      "EBS capacity and provisioned IOPS/throughput",
+      "public IPv4",
+      "inter-zone and public object transfers",
+      "public model/evidence bytes and retention",
+      "native-node overhead"
+    ],
+    "model_cache": "AMI-managed local NVMe mounted at /opt/dlami/nvme, bind-mounted only into each provider model directory; no wallet or native-store migration; require mount and >=64 GiB free before dependency/model downloads."
   },
   "stop": "Terminate all disposable instances and volumes at completion, first unrecoverable failure, spending ceiling or absolute two-hour deadline. Preserve source, inputs, failure/result evidence and complete costs. Never rerun a failed gate without an identified cause and a new declared change.",
   "scope": "One administrator. Fresh research genesis seeded with the accepted graph; no live-chain change, training or serving promotion. This is not the independent-operator soak, unrestricted hardware interoperability, or permanent public availability. TODO 4 requires independent operators regardless of this result."

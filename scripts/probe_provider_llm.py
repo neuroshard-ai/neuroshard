@@ -30,6 +30,7 @@ from portable_native_trial import Network
 ROOT = Path(__file__).resolve().parents[1]
 CPU = REPO+'/.neuroshard/native/bin/python'
 ENGINE = REMOTE+'/cometbft'
+MODEL_DISK = '/opt/dlami/nvme'
 
 
 def read(path):
@@ -89,6 +90,19 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv
         cloud.command(physical, ['mkdir', '-p', REMOTE, REPO])
         cloud.command(physical, ['tar', '-xzf', '-', '-C', REPO], input=archive, timeout=180)
         cloud.bundle(physical, metadata)
+        # Only the disposable allocation's AMI-managed instance store is used.
+        # Keep native stores and provider keys on EBS; mount just model caches
+        # below their normal paths. A missing mount must fail before pip/model
+        # downloads, never silently fall back to the slow root volume.
+        cloud.command(physical, ['sudo', 'cloud-init', 'status', '--wait'], timeout=240)
+        cloud.command(physical, ['sudo', 'systemctl', 'start', 'dlami-nvme'], timeout=120)
+        storage = json.loads(cloud.command(physical, ['python3', '-c',
+            'import json,os,shutil,subprocess,sys; p=sys.argv[1]; '
+            'm=json.loads(subprocess.check_output(["findmnt","--json","--target",p]))["filesystems"][0]; '
+            'assert os.path.ismount(p) and m["target"]==p; '
+            'assert shutil.disk_usage(p).free>=64*1024**3; '
+            'print(json.dumps({"mount":m,"free_bytes":shutil.disk_usage(p).free}))', MODEL_DISK], timeout=30).stdout)
+        save(cloud.home/f'storage-{physical}.json', storage)
         try:
             result = cloud.command(physical, ['timeout', '--kill-after=20', '1500', 'bash', '-s'],
                                    input=setup.encode(), timeout=1530)
@@ -175,6 +189,10 @@ def provider(cloud, network, graph, rank, physical, index):
         'prepare_seconds': 600, 'frame_seconds': 120, 'run_seconds': cloud.remaining(),
         'collateral': 50_000_000, 'fee': 100+rank, 'offer_blocks': 20000}
     cloud.put(physical, home+'/config.json', config)
+    cache = MODEL_DISK+'/neuroshard-provider-models/'+str(index)
+    cloud.command(physical, ['sudo', 'install', '-d', '-o', 'ubuntu', '-g', 'ubuntu', cache])
+    cloud.command(physical, ['mkdir', '-p', home+'/models'])
+    cloud.command(physical, ['sudo', 'mount', '--bind', cache, home+'/models'])
     result = json.loads(cloud.python(physical, ['-m', 'neuroshard.evolution.provider_runtime',
         '--config', home+'/config.json', '--identity']).stdout)
     network.send(3, f'provider-{index}/fund', 'transfer', to=result['owner'], amount=100_000_000)
@@ -208,8 +226,11 @@ print(json.dumps(r))
         first = providers[row['rank']]
         if first['physical'] != row['physical']:
             raise ValueError('Replica hard links must remain on their physical shard owner')
-        cloud.command(row['physical'], ['mkdir', '-p', row['home']+'/models'])
-        cloud.command(row['physical'], ['cp', '-al', first['home']+'/models/'+identity(graph), row['home']+'/models/'])
+        # Link through the common NVMe mount. Linux rejects hard links across
+        # distinct bind mounts even when they expose the same underlying disk.
+        disk = MODEL_DISK+'/neuroshard-provider-models/'
+        cloud.command(row['physical'], ['cp', '-al', disk+str(first['index'])+'/'+identity(graph),
+                                       disk+str(row['index'])+'/'])
 
 
 def start_provider(cloud, row):

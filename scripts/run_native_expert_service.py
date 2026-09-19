@@ -41,7 +41,11 @@ def run(config):
     results = home / 'results'
     results.mkdir(exist_ok=True)
     graph, profile, baseline, policy = [read(config[name]) for name in ('graph', 'profile', 'baseline', 'quality_policy')]
-    dist.init_process_group('gloo', timeout=timedelta(seconds=300))
+    # monitored_barrier's argument does not extend nonzero ranks' underlying
+    # Gloo send timeout. Give the startup group the same bounded loading window
+    # as GraphNetwork; its execution subgroups still use their 300-second bound.
+    # The caller's readiness/request deadlines remain separate and unchanged.
+    dist.init_process_group('gloo', timeout=timedelta(seconds=1200))
     try:
         net = GraphNetwork(graph, profile, objects=Path(config['objects']), interpreter=Path(config['interpreter']),
             seed=Path(config['seed']), source_home=Path(config['source_home']), rank=rank)

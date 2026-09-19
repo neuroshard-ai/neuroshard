@@ -6,6 +6,16 @@ genesis, available provider offers and running full-replay auditors. It is not
 enabled by the public 0.4.0 genesis. The accepted-LLM latency/load trial and
 independent public deployment remain open in the fixed TODO.
 
+These commands require the matching research source release. The existing
+`neuroshard-ai` 0.4.0 package on PyPI does not include `--hosted-config`. From
+the reviewed checkout, install the lightweight client in a separate environment:
+
+```bash
+python3 -m venv .venv-client
+.venv-client/bin/python -m pip install .
+source .venv-client/bin/activate
+```
+
 Create a local wallet with `neuroshard wallet create --home ./customer`. Run a
 synchronized local full node for the reviewed hosting genesis. The client uses
 that node as its authority; these ABCI queries do not have light-client proofs.
