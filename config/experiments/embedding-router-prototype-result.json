@@ -1,0 +1,57 @@
+{
+  "checks": {
+    "changed_phrases": false,
+    "original_routes": true,
+    "retained_parent": true
+  },
+  "feature_profile": {
+    "dimensions": 2048,
+    "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
+    "format": "neuroshard-frozen-router-features-v1",
+    "max_tokens": 4096,
+    "normalization": "integer-unit-16384",
+    "pooling": "sum-user-token-embeddings",
+    "quantization": 4096,
+    "rounding": "nearest-ties-even",
+    "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+    "vocabulary": 49152
+  },
+  "format": "neuroshard-embedding-router-study-v1/result",
+  "gpus": 0,
+  "groups": {
+    "changed_phrase/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "changed_phrase/protocol": {
+      "accuracy": 0.75,
+      "correct": 60,
+      "count": 80
+    },
+    "original/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "original/parent": {
+      "accuracy": 1.0,
+      "correct": 146,
+      "count": 146
+    },
+    "original/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    }
+  },
+  "new_llm_learning_claimed": false,
+  "passed": false,
+  "plan": "c39650d81c44d45c615b7bc39756f3611fc5e7125166512a9457584bacd67c07",
+  "predictions_sha256": "074bbcd1668e060e0846acb4174c57b6b303f9511bbc121ef45be727223d847f",
+  "router": "830d9e6bedd96e498325505fda397ab2ef8b46f816f602816982adbde750905c",
+  "scope": "CPU development screening of routing on previously exposed data. No new learning-quality claim, sealed final, graph promotion or token issuance.",
+  "seconds": 44.79267119523138,
+  "selection": "54ca034974e129441ce1e4514d9fb6744a584eee510a01709fd0827c553a97ab",
+  "source_commit": "9baa1a6"
+}

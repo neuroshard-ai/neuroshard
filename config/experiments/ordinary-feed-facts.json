@@ -1,0 +1,104 @@
+{
+  "format": "neuroshard-source-grounded-cohort-v1",
+  "license": "Apache-2.0",
+  "source_revision": "5c1f7bb5f7e2485ea0e09db3327a79e8b0bdeaa7",
+  "cohort": "feed",
+  "facts": [
+    {
+      "id": "feed-window-bytes", "answer": "8388608",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "MAX_BYTES = 8*1024**2",
+      "training": ["What byte ceiling applies to a published NeuroShard conversation-feed window?", "How many serialized record bytes may one NeuroShard conversation-feed window contain?", "Give the byte-size cap for one immutable NeuroShard conversation-feed payload.", "How large can the records payload of a NeuroShard conversation-feed window be, in bytes?"],
+      "test": "What is the largest records payload, in bytes, that the NeuroShard conversation-feed publisher will put in one window?"
+    },
+    {
+      "id": "feed-window-rows", "answer": "2048",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "if not isinstance(rows, list) or not 1 <= len(rows) <= 2048:",
+      "training": ["How many conversation rows may a NeuroShard feed publisher put in one window?", "What is the row-count ceiling for publishing a NeuroShard conversation-feed window?", "Give the maximum number of records in one NeuroShard conversation-feed publication window.", "How many rows can one published NeuroShard source-feed window hold at most?"],
+      "test": "In NeuroShard's conversation-feed publisher, what maximum row count applies to an individual publication window?"
+    },
+    {
+      "id": "feed-record-bytes", "answer": "262144",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "len(canonical(value)) > 256*1024",
+      "training": ["What byte limit applies to a single serialized NeuroShard conversation-feed record?", "How many canonical JSON bytes may one NeuroShard source-feed conversation occupy?", "Give the per-record serialized byte cap in NeuroShard's conversation feed.", "How large can one complete JSON conversation record be in a NeuroShard source feed, in bytes?"],
+      "test": "What is the byte ceiling for one serialized conversation record accepted by NeuroShard's source-feed transport?"
+    },
+    {
+      "id": "feed-training-messages", "answer": "128",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "not 2 <= len(messages) <= 128",
+      "training": ["How many messages can one training conversation in a NeuroShard source feed contain?", "What is the message-count cap for a NeuroShard training-feed record?", "Give the maximum messages per training conversation in NeuroShard's source-feed transport.", "For training data publication, how many turns may a NeuroShard feed conversation contain at most?"],
+      "test": "How many messages may the NeuroShard feed transport accept in a single training conversation record?"
+    },
+    {
+      "id": "feed-default-count", "answer": "128",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "def collect(home, store, source, upstream, *, count=128):",
+      "training": ["What is the default requested row count for NeuroShard's conversation-feed collector?", "How many rows does the NeuroShard feed collect function request when count is omitted?", "Give the default count argument of NeuroShard's conversation-feed collection function.", "If no count is supplied, how many source rows does NeuroShard's conversation collector request?"],
+      "test": "When I omit the count argument to NeuroShard's conversation-feed collector, what number of rows is requested?"
+    },
+    {
+      "id": "feed-origin", "answer": "0",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "value['start'] != ends.get(source, 0)",
+      "training": ["At which row index must a new NeuroShard feed source's first window begin?", "What starting cursor does NeuroShard require for a previously unseen conversation-feed source?", "Give the first row position for a new source in a NeuroShard conversation feed.", "From which row number does the NeuroShard conversation-feed cursor initially start?"],
+      "test": "What start index must the first window of a new source have in a NeuroShard conversation-feed manifest?"
+    },
+    {
+      "id": "feed-window-inventory", "answer": "1024",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "not 1 <= len(manifest['windows']) <= 1024",
+      "training": ["How many windows may a NeuroShard conversation-feed manifest list?", "What is the window-inventory ceiling of one NeuroShard feed head?", "Give the maximum window references in a NeuroShard conversation-feed manifest.", "How many immutable conversation windows can a NeuroShard feed manifest reference at most?"],
+      "test": "What upper limit does NeuroShard enforce on the number of window references in one conversation-feed manifest?"
+    },
+    {
+      "id": "feed-manifest-bytes", "answer": "131072",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "checked(self.store, head, 128*1024)",
+      "training": ["What byte cap applies when NeuroShard reads a conversation-feed head manifest?", "How many bytes may the NeuroShard feed reader accept for a head manifest?", "Give the maximum serialized feed-manifest size read by NeuroShard, in bytes.", "What is the transport byte bound for NeuroShard's conversation-feed manifest object?"],
+      "test": "How many bytes is the largest conversation-feed head manifest that NeuroShard's bounded reader will accept?"
+    },
+    {
+      "id": "feed-window-metadata-bytes", "answer": "4096",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "checked(store, key, 4096)",
+      "training": ["What byte cap applies to reading a NeuroShard conversation-window descriptor?", "How many bytes can a NeuroShard feed window's metadata object occupy?", "Give the size limit for a NeuroShard feed-window descriptor, excluding its records payload.", "What is the descriptor-object byte bound in NeuroShard's conversation-feed window reader?"],
+      "test": "Excluding the actual conversation records, what byte ceiling applies to NeuroShard's feed-window metadata object?"
+    },
+    {
+      "id": "feed-publication-admission", "answer": "No",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "'status': 'window_published', 'native_admitted': False",
+      "training": ["Does successfully publishing a NeuroShard conversation window mean the chain admitted its data?", "Is a published NeuroShard source-feed window automatically approved for native training?", "Does a successful NeuroShard feed upload itself grant data admission?", "May a NeuroShard publisher treat window_published as proof of native data acceptance?"],
+      "test": "If NeuroShard reports that a conversation-feed window was published, has the native chain thereby admitted those records?"
+    },
+    {
+      "id": "feed-journal", "answer": "conversation-feed.json",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "path = home/'conversation-feed.json'",
+      "training": ["Which filename stores NeuroShard's conversation-feed publisher journal?", "What local JSON file remembers the last NeuroShard conversation-feed head?", "Name the persistent journal file used by NeuroShard's source-feed collector.", "Which file does the NeuroShard conversation publisher update after recording its new head?"],
+      "test": "What is the filename of the journal NeuroShard's conversation-feed collector uses to recover its published head?"
+    },
+    {
+      "id": "feed-empty-status", "answer": "no_new_rows",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "'status': 'no_new_rows', 'native_admitted': False",
+      "training": ["What status does NeuroShard's feed collector return when its upstream has no more rows?", "Name the collector status for an empty NeuroShard conversation-feed fetch.", "Which status string means NeuroShard's conversation collector found no fresh records?", "When no source conversations arrive, what status does the NeuroShard collector report?"],
+      "test": "Which exact status string does NeuroShard's conversation-feed collector return after an empty upstream read?"
+    },
+    {
+      "id": "feed-skip-missing", "answer": "No",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "raise OSError('The pinned feed does not yet supply the entire requested source window')",
+      "training": ["Can NeuroShard skip absent rows when reading an immutable conversation-feed range?", "May NeuroShard's source-feed reader return a partial range when records are missing?", "Does NeuroShard silently advance past an unavailable conversation-feed window?", "Is a shortened read permitted when NeuroShard cannot fetch the complete requested feed interval?"],
+      "test": "If the pinned NeuroShard conversation feed cannot supply every requested row, may the reader silently skip the missing part?"
+    },
+    {
+      "id": "feed-overlap", "answer": "Rejected",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "raise ValueError('Source windows must cover consecutive rows without overlap')",
+      "training": ["How does NeuroShard handle overlapping windows for the same conversation-feed source?", "What happens to a NeuroShard feed manifest whose source windows overlap?", "Are repeated row intervals accepted or rejected in a NeuroShard conversation feed?", "How is a NeuroShard conversation feed treated if its consecutive source windows overlap?"],
+      "test": "What happens when a NeuroShard conversation-feed manifest lists source windows with overlapping row intervals?"
+    },
+    {
+      "id": "feed-hash", "answer": "SHA-256",
+      "path": "src/neuroshard/dataflow/store.py", "evidence": "return hashlib.sha256(data).hexdigest()",
+      "training": ["Which hash algorithm addresses NeuroShard's immutable conversation-feed objects?", "What content hash does NeuroShard use to identify source-feed bytes?", "Name the digest algorithm used by the object store behind NeuroShard conversation feeds.", "Which cryptographic digest names a NeuroShard conversation-feed object?"],
+      "test": "What hash algorithm produces the object identifiers used for NeuroShard's immutable conversation-feed data?"
+    },
+    {
+      "id": "feed-tail-role", "answer": "Assistant",
+      "path": "src/neuroshard/evolution/expert_source.py", "evidence": "messages[-1]['role'] != 'assistant'",
+      "training": ["Which speaker must end a training conversation published in a NeuroShard source feed?", "What is the required final role for a NeuroShard training-feed conversation?", "Must the final message of a complete NeuroShard training-feed record come from the user or assistant?", "Name the role that closes a complete training conversation in NeuroShard's source-feed transport."],
+      "test": "Which role must the last message have in a training conversation submitted to NeuroShard's conversation-feed publisher?"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "stage": "before numerical execution",
+  "issue": "The executor used the original cohort job domain for an interpreted-cohort checkpoint.",
+  "source": "5da8e78613076fbedef6457168a930540c13ba4c",
+  "plan": "1b65b23729b7a40ad9f3aa4a49a4be8d1468e8194f94227fc6b2b9bc5f7b41fd",
+  "neural_execution_started": false,
+  "gpu_reused_with_original_deadline": true
+}

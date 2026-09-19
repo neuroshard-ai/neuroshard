@@ -1,0 +1,24 @@
+{
+  "all_owned_downloads_hash_verified": true,
+  "attempt": 1,
+  "cause": "Fast expert owners began subgroup rendezvous while parent owner 2 was still loading weights from cold disk. Its observed physical reads were about 8.6 MB/s; the expert subgroup timed out after 300 seconds.",
+  "completed_neural_calls": 0,
+  "format": "neuroshard-cached-composition-trial-v1/attempt",
+  "preserved_evidence": "All five process logs and input metadata remain available.",
+  "resources": {
+    "compute_usd_upper_bound": 1.42632451823,
+    "protected_unchanged": true,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate.",
+    "security_group_deleted": true,
+    "terminated": [
+      "i-0112ef0035c575851",
+      "i-015cb5265b1f671d9",
+      "i-0349a93ef50dc3ccc",
+      "i-05df83389cb8a01ea",
+      "i-066abad811b031639"
+    ],
+    "volumes_deleted": true
+  },
+  "source_commit": "9b8f5290a611fdc46ae5bc902fc582db07f5ac02",
+  "status": "model_readiness_timeout"
+}

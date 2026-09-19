@@ -1,0 +1,1 @@
+{"action":"reboot","instance":"i-0f4278eff50a8739f","new_instances":0,"other_instances_changed":false,"rank":3,"reason":"SSH banner unavailable even through another owner after stopping other orphaned groups; retain disk and instance identity.","time":"2026-09-18T03:19:02.227018+00:00"}

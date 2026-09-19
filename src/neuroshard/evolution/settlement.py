@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle, auditing
+from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -55,12 +55,22 @@ def genesis(chain_id, validators, manifest):
         lifecycle.initialize(base)
     if 'auditing' in manifest:
         auditing.initialize(base)
+    if 'portable_work' in manifest:
+        portable_work.initialize(base)
+    if 'portable_lifecycle' in manifest:
+        portable_lifecycle.initialize(base)
+    if 'expert_work' in manifest:
+        expert_work.initialize(base)
+    if 'expert_lifecycle' in manifest:
+        expert_lifecycle.initialize(base)
+    if 'planner_work' in manifest:
+        planner_work.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
-    escrow = lifecycle.escrow(s) + auditing.escrow(s)
+    escrow = lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s) + expert_lifecycle.escrow(s)
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -76,6 +86,20 @@ def invariant(s):
         raise ValueError('Training issuance accounting failed')
     if len(s['paid_work']) != s['training_round']:
         raise ValueError('A numerical task must be paid at most once')
+    if 'planner_work' in s:
+        if (s['model_root'] != s['planner_work']['checkpoint']['fusion']
+                or s['serving_root'] != s['manifest']['initial_model_root']):
+            raise ValueError('Planner training cannot replace the approved serving graph')
+    if 'expert_work' in s:
+        serving = (expert_lifecycle.identity(s['expert_lifecycle']['serving_graph'])
+                   if 'expert_lifecycle' in s else s['manifest']['initial_model_root'])
+        if (s['model_root'] != s['expert_work']['checkpoint']['state_root']
+                or s['serving_root'] != serving):
+            raise ValueError('Expert training cannot replace the separately approved serving model')
+    if 'portable_lifecycle' in s:
+        if (s['model_root'] != s['portable_work']['checkpoint']['state_root']
+                or s['serving_root'] != s['portable_lifecycle']['serving_checkpoint']['state_root']):
+            raise ValueError('Portable learned and serving commitments lost their separate bindings')
 
 
 def account(s, owner):
@@ -96,6 +120,12 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
             account(s,challenge['owner'])['balance'] += challenge['bond']
         if claim.get('kind','training')=='growth':
             s['period_growths'] += 1
+        elif claim.get('kind') == 'portable_training':
+            portable_work.settle(s, claim)
+        elif claim.get('kind') in expert_work.KINDS:
+            expert_work.settle(s, claim)
+        elif claim.get('kind') == planner_work.KIND:
+            planner_work.settle(s, claim)
         elif claim.get('kind','training')=='training':
             if claim['work_identity'] in s['paid_work']:
                 raise ValueError('Task was already paid')
@@ -123,6 +153,8 @@ def close(s, accepted, reason, refund_bond=False, proven_fault=False):
         auditing.finish(s, claim['audit_budget'], accepted=accepted, claim=claim,
                         proven_fault=proven_fault, reason=reason)
     lifecycle.settled(s,claim,accepted)
+    portable_lifecycle.settled(s,claim,accepted)
+    expert_lifecycle.settled(s,claim,accepted)
     s['settled'].append({'id':claim['id'],'accepted':accepted,'reason':reason,
                          'kind':claim.get('kind','training'),
                          'model_root':claim['model_root'],'height':s['height']})
@@ -206,13 +238,18 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
                 s['burned'] += challenge['bond']
                 claim['challenge'] = None
                 claim['deadline'] = max(height+p['challenge_blocks'], auditing.minimum_deadline(s, claim))
+        elif not challenge and auditing.rejected(s, claim) and height > claim['deadline']:
+            close(s, False, 'native audit quorum rejected execution')
         elif (not challenge and 'auditing' in s and height > claim['audit_reveal_end']
               and not auditing.complete(s, claim)):
-            close(s, False, 'funded audit coverage deadline missed', refund_bond=True)
+            if not auditing.rejected(s, claim):
+                close(s, False, 'funded audit coverage deadline missed', refund_bond=True)
         elif not challenge and height>claim['deadline']:
             close(s,True,'challenge window elapsed')
     lifecycle.advance(s)
     auditing.advance(s)
+    portable_lifecycle.advance(s)
+    expert_lifecycle.advance(s)
     invariant(s)
     return s,updates
 
@@ -239,6 +276,11 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         'refute_update':{'claim_id','stage','tensor_index','witness'},
         **lifecycle.FIELDS,
         **auditing.FIELDS,
+        **portable_work.FIELDS,
+        **portable_lifecycle.FIELDS,
+        **expert_work.FIELDS,
+        **expert_lifecycle.FIELDS,
+        **planner_work.FIELDS,
     }
     if 'auditing' in previous:
         for name in ('reserve', *auditing.CLAIM_KINDS):
@@ -246,6 +288,14 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     kind = body.get('kind')
     if kind not in extras or set(body) != {'kind','chain_id','nonce'}|extras[kind]:
         raise ValueError('Invalid transaction schema')
+    if 'portable_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS):
+        raise ValueError('This genesis accepts only its prepared portable execution profile')
+    if 'expert_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS,
+                                             *portable_work.FIELDS, *portable_lifecycle.FIELDS):
+        raise ValueError('This genesis accepts only its prepared expert execution profile')
+    if 'planner_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS,
+            *portable_work.FIELDS, *portable_lifecycle.FIELDS, *expert_work.FIELDS, *expert_lifecycle.FIELDS):
+        raise ValueError('This genesis accepts only its prescribed planner execution profile')
     s = copy.deepcopy(previous)
     p = s['manifest']['params']
     sender = account(s,owner)
@@ -256,7 +306,17 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in auditing.FIELDS:
+    if kind in planner_work.FIELDS:
+        planner_work.apply(s, owner, body, envelope)
+    elif kind in expert_lifecycle.FIELDS:
+        expert_lifecycle.apply(s, owner, body, envelope)
+    elif kind in expert_work.FIELDS:
+        expert_work.apply(s, owner, body, envelope)
+    elif kind in portable_lifecycle.FIELDS:
+        portable_lifecycle.apply(s, owner, body, envelope)
+    elif kind in portable_work.FIELDS:
+        portable_work.apply(s, owner, body, envelope)
+    elif kind in auditing.FIELDS:
         auditing.apply(s, owner, body, envelope)
     elif kind in lifecycle.FIELDS:
         lifecycle.apply(s,owner,body,envelope)
@@ -290,6 +350,8 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
                 raise ValueError('A replacement must be active before the last validator leaves')
             v.update(status='leaving',emit_at=ledger.next_epoch(s['height']+1,p))
         else:
+            if auditing.held(s, key):
+                raise ValueError('Bond remains committed to a native audit obligation')
             if v['status'] not in ('cooldown','jailed') or v['release_height'] is None or s['height']<v['release_height'] or s['time_ns']<=v['release_time_ns']:
                 raise ValueError('Bond remains exposed to consensus evidence')
             sender['balance'] += v['amount']
@@ -390,6 +452,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         claim = s['candidate']
         if not claim or body['claim_id'] != claim['id']:
             raise ValueError('No matching pending claim')
+        if claim.get('kind') in ('portable_training', *portable_lifecycle.SERVICE_KINDS,
+                                *expert_work.KINDS, *expert_lifecycle.KINDS, planner_work.KIND):
+            raise ValueError('Portable work requires the native weighted replay verdict path')
         metadata = Metadata(claim['metadata'])
         record = metadata.json(claim['record_root'])
         if kind=='refute_update':

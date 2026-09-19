@@ -1,0 +1,175 @@
+{
+  "format": "neuroshard-interpreted-cohort-results-v1",
+  "completed": false,
+  "passed": false,
+  "numerical": null,
+  "failure": {
+    "error": "An owner failed or the frozen allocation deadline expired",
+    "time": 1789491665.5363095,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-20260915/driver.py\", line 340, in <module>\n    run()\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-20260915/driver.py\", line 308, in run\n    execute('development', 'train')\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-20260915/driver.py\", line 208, in execute\n    raise RuntimeError('An owner failed or the frozen allocation deadline expired')\nRuntimeError: An owner failed or the frozen allocation deadline expired\n",
+    "type": "RuntimeError"
+  },
+  "source_freeze": {
+    "commit": "86c3089b25658c8952125b7684432d3742687830",
+    "helpers": {
+      "artifact_stream.py": "2225b249080c41a4088a48ce0035347e2175ac403b7e4a39625de95c19ecbc25",
+      "backup.py": "9aa28a22282d5c016aab1322e6963594003f768b4470d969561b79ce85307968",
+      "cluster.py": "0059e057519e08184ed06b56da0fa3c42a5e79d1c9af5fbdc460cf389b756247",
+      "controller_check.py": "529fc29ee9ad91e04f9ebc1d5d1501a7c7b2e8eea8f6c30224df9cbc371d2fd8",
+      "driver.py": "f6900235e846a473c5fec03e2f648e1c87d6d67d7bfca047e905ea146386d1f0",
+      "fetch_objects.py": "39e9fd59bc095fa491a80a1343cf0d31f5d764aa0ce8af80f6304d01eef85e65",
+      "pack_bank.py": "6074b8399aeab4886dba902c657e94b3daef3e41e683908f47f11a03d53fd04f",
+      "pipeline.py": "f898124a44146142926dfe1b2f1d03b5a45aa845ff40716b103587dce3bd43c6",
+      "prepare.py": "cc67cc714be4dea4799152361acdb046b1f3ce679e755a3f831698707f4284fd",
+      "preserve.py": "e598ee68f4c7c07e70ae086484615f853ccedb9b488b96d83b280eb9ee6e8a4d",
+      "provision.py": "61e98fdd2dce203d92e2576f73710793ebcf045322240082f96a46e5c1afb331",
+      "retire.py": "bb66023750b51a117faae524d7923950057b5d2d224f766e6a60454dd51c1ac5",
+      "setup.py": "afb819fcca3e89b82104489e70e54a2ce3b04f80ad7b71a6c104c272d546ffb0",
+      "setup.sh": "568fefc2367fc7a08cd692917bcf62d25b44e17385dbc4eade5582048f1adf67",
+      "stage_inputs.py": "95b4bf7a7aa11692304db385e606f452edeffd7305c912ddbcd90d65f55d5291",
+      "summarize.py": "ecad05d23f390759592312d405261c92f2cc74fdc7565b9cf41386a908b49017",
+      "upload.py": "7e377f4f307efd31f00c74380d41e9cde33b7d181416a648aacc3aed57749985",
+      "wait_hosts.py": "336396261b2dbab2e262c7dedf62313f7bd288dae5b972d86e7d27996fe4930a"
+    },
+    "max_gpu_vcpus": 20,
+    "max_hours": 6,
+    "planning_cap_usd": 100,
+    "prepared": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb",
+    "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+    "source_bundle_sha256": "e87128a985f206ada9c6a5e71bda16a16f1601d9f35f61ebf46b2d5e42fb1892",
+    "time": 1789490555.1045887
+  },
+  "stages": {
+    "development": {
+      "owners": [],
+      "survival": []
+    }
+  },
+  "weights": {
+    "checkpoints": [
+      {
+        "file_sha256": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "root": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "step": 0
+      }
+    ],
+    "inventory_sha256": "721be8109bb57b99a3b60ebe84228db4b310086993b5420df01dace36c858202",
+    "partial": true,
+    "readback_verified": true
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/interpreted-cohort-20260915/evidence/9f649c42d525663d4a2641fa9c67e1b780256d637f69e7daada36027b3c9d834",
+    "sha256": "9f649c42d525663d4a2641fa9c67e1b780256d637f69e7daada36027b3c9d834",
+    "bytes": 8092867,
+    "readback_verified": true,
+    "time": 1789492029.9448917,
+    "scope": "Complete source, new and retained inputs, observations, original-model partitions and verified model/Adam inventories. New expert tensors and feature banks receive full object readbacks; inherited model objects retain their earlier inventories."
+  },
+  "resources": {
+    "terminated": true,
+    "instances": [
+      "i-003da1b514b5c4a81",
+      "i-00d0c1a505e44809b",
+      "i-02074a541f7382443",
+      "i-02de857ff81f5896f",
+      "i-07aab8adcc2347ea6"
+    ],
+    "physical_instances": 5,
+    "maximum_simultaneous_workers": 5,
+    "confirmed": "2026-09-15T17:07:00.086129+00:00",
+    "volumes": [
+      "vol-010a83f6de101e09a",
+      "vol-02138b61dc37ef10b",
+      "vol-02d78b25fd2cb6cb1",
+      "vol-08f22eeccee30d95c",
+      "vol-0dcfbfc74916970b1"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "protected_instances_unchanged": true,
+    "per_instance": [
+      {
+        "instance": "i-02de857ff81f5896f",
+        "type": "g5.xlarge",
+        "hours": 0.29530170255237154,
+        "compute_usd": 0.2970735127676858,
+        "gp3_usd": 0.004921695042539526
+      },
+      {
+        "instance": "i-02074a541f7382443",
+        "type": "g5.xlarge",
+        "hours": 0.28891281366348265,
+        "compute_usd": 0.29064629054546354,
+        "gp3_usd": 0.004815213561058044
+      },
+      {
+        "instance": "i-003da1b514b5c4a81",
+        "type": "g5.xlarge",
+        "hours": 0.2961350358857049,
+        "compute_usd": 0.2979118461010191,
+        "gp3_usd": 0.004935583931428415
+      },
+      {
+        "instance": "i-07aab8adcc2347ea6",
+        "type": "g5.xlarge",
+        "hours": 0.2933572581079271,
+        "compute_usd": 0.2951174016565747,
+        "gp3_usd": 0.004889287635132119
+      },
+      {
+        "instance": "i-00d0c1a505e44809b",
+        "type": "g5.xlarge",
+        "hours": 0.29057948033014935,
+        "compute_usd": 0.29232295721213025,
+        "gp3_usd": 0.004842991338835823
+      }
+    ],
+    "compute_usd_upper_bound": 1.4730720082828734,
+    "gp3_usd_estimate": 0.024404771508993926,
+    "lifetime_tx_bytes": 6855952749,
+    "network_counters_complete": true,
+    "conservative_transfer_allowance_usd": 0.13711905498000002,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately."
+  },
+  "human_operators": 1,
+  "tokens_issued": 0,
+  "native_activated": false,
+  "limitations": [
+    "Explicit domain routing; no arbitrary peer admission.",
+    "Known documentation facts with held-out wording and two-fact combinations.",
+    "Earlier answers are exposed retention probes, not another independent quality final.",
+    "Added capacity with additional stored parameters, not an equal-budget scaling advantage.",
+    "The serving graph and distinct optimizer ages are not yet settled by native consensus."
+  ],
+  "attempt": 0,
+  "operational_failure": {
+    "cause": "A controller signal was exposed before its JSON write completed. Rank2 raised JSONDecodeError; its peer group then closed.",
+    "uncheckpointed_updates": 43,
+    "last_durable_step": 0,
+    "development_quality_evaluated": false,
+    "final_opened": false,
+    "correction": "Validate and atomically publish controller signals. Read live service logs through complete newline-terminated records. Repeat the unchanged prepared recipe after preserving and retiring this attempt.",
+    "original_overall_deadline": "2026-09-15T22:49:08.717846+00:00",
+    "prepared_unchanged": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb",
+    "signal_regression": {
+      "passed": true,
+      "old_partial_json_race_reproduced": true,
+      "actual_driver_signal_tested": true,
+      "partial_and_interrupted_signals_hidden": true,
+      "idempotent_duplicate_accepted": true,
+      "conflicting_or_invalid_signal_rejected": true,
+      "service_reader_waits_for_complete_record": true,
+      "malformed_complete_service_record_rejected": true,
+      "controller_sha256": "8c8cfb5b51d46572d74b975fb44e5574b249118a5bdc9dd0cdb519c2e86ec45b"
+    },
+    "controller_check": {
+      "passed": true,
+      "source": "actual five-process CPU integration with interpretation",
+      "controller_sha256": "8c8cfb5b51d46572d74b975fb44e5574b249118a5bdc9dd0cdb519c2e86ec45b",
+      "actual_outcome_identity": "4573a4dde74342df951ce1007967c2d38cda8ef6fcdaa7a672e2ff133b8d7d00",
+      "earlier_service_verified": true,
+      "changed_token_rejected": true
+    }
+  }
+}

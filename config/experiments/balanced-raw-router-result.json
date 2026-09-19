@@ -1,0 +1,66 @@
+{
+  "checks": {
+    "changed_phrases": true,
+    "original_routes": true,
+    "raw_questions": true,
+    "retained_parent": true
+  },
+  "feature_profile": {
+    "dimensions": 2048,
+    "embedding_sha256": "fbb0c69a0371bfa20f23821886e86026c411db33e498e6f44459cd8bf73c4b68",
+    "format": "neuroshard-frozen-router-features-v1",
+    "max_tokens": 4096,
+    "normalization": "integer-unit-16384",
+    "pooling": "sum-user-token-embeddings",
+    "quantization": 4096,
+    "rounding": "nearest-ties-even",
+    "tokenizer_root": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+    "vocabulary": 49152
+  },
+  "format": "neuroshard-raw-embedding-router-study-v1/result",
+  "gpus": 0,
+  "groups": {
+    "changed_phrase/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "changed_phrase/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "original/directory": {
+      "accuracy": 1.0,
+      "correct": 480,
+      "count": 480
+    },
+    "original/parent": {
+      "accuracy": 1.0,
+      "correct": 146,
+      "count": 146
+    },
+    "original/protocol": {
+      "accuracy": 1.0,
+      "correct": 80,
+      "count": 80
+    },
+    "raw_question/directory": {
+      "accuracy": 1.0,
+      "correct": 1920,
+      "count": 1920
+    },
+    "raw_question/protocol": {
+      "accuracy": 0.9817073170731707,
+      "correct": 161,
+      "count": 164
+    }
+  },
+  "new_llm_learning_claimed": false,
+  "passed": true,
+  "plan": "5d3a5b8df327bc70a97e25c79b4cbff06ebca1484d0c72bb08edb148fc9fe440",
+  "router": "3766fcc38ddd2f62e6a445c347ba96907c2972cc3c3713258b5b0d88c7edfd6f",
+  "scope": "Development router correction using the existing entity-disjoint split and training inputs. Includes previously exposed development examples; not a new sealed quality or learning claim.",
+  "seconds": 114.20596090896288,
+  "selection": "90a1168f492539b1d77e23acdb382286367da7071d472342c57a71c14839adbc"
+}

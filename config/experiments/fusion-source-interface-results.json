@@ -1,0 +1,100 @@
+{
+  "final_opened": false,
+  "graph": "8d34466956b67fec96705e90c893e62f5c91e6b726060e2aa7467c624a8337c9",
+  "plan": "6fde0b83fcbfc5e9faefeddb11c6f35f33c662a800197c79821925b3aef89d0a",
+  "scope": "Development diagnostic only: named-source attribution deliberately supplies the expert identity. This is not automatic routing, a new learning cohort or a final quality result. All source weights remain frozen.",
+  "summary": {
+    "directory": {
+      "fixed_source_contract": {
+        "native": {
+          "correct": 8,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "original": {
+        "native": {
+          "correct": 8,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "raw": {
+        "native": {
+          "correct": 3,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 2,
+          "total": 8
+        }
+      },
+      "shared_source_context": {
+        "native": {
+          "correct": 1,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 1,
+          "total": 8
+        }
+      }
+    },
+    "protocol": {
+      "fixed_source_contract": {
+        "native": {
+          "correct": 8,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "original": {
+        "native": {
+          "correct": 8,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "raw": {
+        "native": {
+          "correct": 8,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "shared_source_context": {
+        "native": {
+          "correct": 7,
+          "total": 8
+        },
+        "preserved": {
+          "correct": 7,
+          "total": 8
+        }
+      }
+    }
+  },
+  "training_updates": 0,
+  "source": "1a98130738ae77a60963b738341b1a8f76332509",
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-causal-fusion-20260916/source-interface-evidence.tar.gz",
+    "sha256": "168b10a8d07b4d97acca7f47a768513078d80d39b0d5f5b80bee230918a0f586",
+    "bytes": 5222641
+  },
+  "interpretation": "The tested original input contracts recover 16/16 answers with either output head. Raw protocol remains 8/8, while raw directory falls to 3/8 with its native head. The hidden connection lost accessible protocol knowledge; output-head incompatibility is not supported as the main cause in these observations. Shared domain framing does not solve the directory interface."
+}

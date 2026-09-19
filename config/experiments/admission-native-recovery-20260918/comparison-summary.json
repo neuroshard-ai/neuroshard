@@ -1,0 +1,124 @@
+{
+  "comparison_completed": true,
+  "control": {
+    "deadline": 1789777125.124352,
+    "quality_metrics": {
+      "composed": {
+        "accuracy": 0.8125,
+        "after": 13,
+        "before": 1,
+        "count": 16,
+        "gains": 12,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.9375,
+        "after": 15,
+        "before": 1,
+        "count": 16,
+        "gains": 14,
+        "losses": 0,
+        "paired_gain": {
+          "lower": 0.75,
+          "mean": 0.875,
+          "pairs": 16,
+          "upper": 1.0
+        }
+      }
+    },
+    "quality_passed": false,
+    "retained_correct_lost": 6,
+    "serving": {
+      "graph": "6ebc009ee12d69d6183360a3638f93c7bfa4e24f285f5f14553f65f558f6552d",
+      "replicas": [
+        {
+          "execution_seconds": 846.7178819349765,
+          "finished": 1789777129.962155,
+          "last_request_overrun_seconds": 4.83780312538147,
+          "requests": 661,
+          "response_bytes": 19923389,
+          "tokens": 10391,
+          "transcript_sha256": "a13a95fa7e14c56f846c84a1ef7e075b750ee3a84ec60c93e5acb8e639e101c1"
+        },
+        {
+          "execution_seconds": 848.0061775139948,
+          "finished": 1789777130.273737,
+          "last_request_overrun_seconds": 5.14938497543335,
+          "requests": 662,
+          "response_bytes": 19954418,
+          "tokens": 10415,
+          "transcript_sha256": "4eea3cd0ad1fd33deb6a8a757d8470b3b8fdf74a68dbbbc5d5b2c3f26b15dcb7"
+        }
+      ],
+      "requests": 1323,
+      "tokens": 20806,
+      "workload": "f7ae50aff93677c33b1147f4b8c5f25ada79632f73d0db0e71da05628dadb139"
+    },
+    "started": 1789768125.124352
+  },
+  "disk_gib_per_host": 300,
+  "evidence": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/3f3fd2563a2884e144171bd669de0f514aad8e2375e26bb1500eff76439d3ecf",
+  "growth": {
+    "deadline": 1789725087.579652,
+    "quality_metrics": {
+      "composed": {
+        "accuracy": 0.875,
+        "after": 14,
+        "before": 1,
+        "count": 16,
+        "gains": 13,
+        "losses": 0
+      },
+      "single": {
+        "accuracy": 0.9375,
+        "after": 15,
+        "before": 1,
+        "count": 16,
+        "gains": 14,
+        "losses": 0,
+        "paired_gain": {
+          "lower": 0.75,
+          "mean": 0.875,
+          "pairs": 16,
+          "upper": 1.0
+        }
+      }
+    },
+    "quality_passed": true,
+    "retained_correct_lost": 0,
+    "serving": {
+      "graph": "c2e18d4a527d7740462ac889c2888c560b37421a6e44020d4961b911b55a1bc5",
+      "replicas": [
+        {
+          "execution_seconds": 244.78301700297015,
+          "finished": 1789725088.278508,
+          "last_request_overrun_seconds": 0.6988558769226074,
+          "requests": 174,
+          "response_bytes": 5267404,
+          "tokens": 2960,
+          "transcript_sha256": "6d9133e5b1dd5cf43dac2a952f6a9d1d2090bdfc625e60b8963b3df824b1adef"
+        },
+        {
+          "execution_seconds": 245.78820030103088,
+          "finished": 1789725088.301859,
+          "last_request_overrun_seconds": 0.7222068309783936,
+          "requests": 174,
+          "response_bytes": 5267404,
+          "tokens": 2960,
+          "transcript_sha256": "6d9133e5b1dd5cf43dac2a952f6a9d1d2090bdfc625e60b8963b3df824b1adef"
+        }
+      ],
+      "requests": 348,
+      "tokens": 5920,
+      "workload": "f7ae50aff93677c33b1147f4b8c5f25ada79632f73d0db0e71da05628dadb139"
+    },
+    "started": 1789716087.579652
+  },
+  "growth_preferred_by_preservation": true,
+  "hosts_per_arm": 7,
+  "passed": true,
+  "result_sha256": "b076799f6ffacf6d5f40fb44fc03d5c997f471e5cbaf57be9b62bd88aa77878b",
+  "scope": "Equal declared host/disk budget including complete fresh verification. One frozen workload; not a lifetime-cost or optimal-control claim.",
+  "seconds_per_arm": 9000,
+  "shadow_issued_atoms": 0
+}

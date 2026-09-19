@@ -1,0 +1,214 @@
+{
+  "source_revision": "5c1f7bb5f7e2485ea0e09db3327a79e8b0bdeaa7",
+  "cohort": "storage",
+  "facts": [
+    {
+      "id": "storage-block-bytes",
+      "answer": "4194304",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "BLOCK = 4 * 1024**2",
+      "training": [
+        "How many bytes does the NeuroShard retained-object transfer reader consume per block?",
+        "What is the byte size of one streaming block in NeuroShard retained-object transfer?",
+        "For retained-object upload readback, what is the transfer block size in bytes?",
+        "In NeuroShard retained-object streaming, how many bytes are requested in each block?"
+      ],
+      "test": "While NeuroShard streams a retained checkpoint object, how large is each read block, in bytes?"
+    },
+    {
+      "id": "storage-object-limit",
+      "answer": "2147483648",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "MAX_OBJECT_BYTES = 2 * 1024**3",
+      "training": [
+        "What is the maximum byte size accepted for a NeuroShard retained-object transfer?",
+        "How large may one retained checkpoint transfer object be, in bytes?",
+        "In NeuroShard retained-object transfer, what is the object-size ceiling in bytes?",
+        "What byte limit applies to a single object passed to the NeuroShard retained-object transfer routine?"
+      ],
+      "test": "How many bytes may one object contain at most when sent through NeuroShard retained-object transfer?"
+    },
+    {
+      "id": "storage-transfer-attempts",
+      "answer": "5",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "attempts=5, max_seconds=600",
+      "training": [
+        "How many attempts does NeuroShard retained-object transfer allow by default?",
+        "What is the default attempt count for one retained-object transfer?",
+        "Without an attempts argument, how many tries can NeuroShard retained-object transfer make?",
+        "What default retry-attempt budget is used by the NeuroShard retained-object transfer function?"
+      ],
+      "test": "If its caller leaves the attempt count unspecified, how many tries does a single NeuroShard retained-object transfer get?"
+    },
+    {
+      "id": "storage-transfer-attempt-cap",
+      "answer": "8",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "not 1 <= attempts <= 8",
+      "training": [
+        "What is the largest permitted attempts argument for NeuroShard retained-object transfer?",
+        "How many attempts may a caller request at most for one retained-object transfer?",
+        "What upper bound does NeuroShard retained-object transfer enforce on its attempt count?",
+        "For retained-object transfer, what is the maximum configurable number of tries?"
+      ],
+      "test": "What is the highest total attempt count a caller can explicitly set for a NeuroShard retained-object transfer?"
+    },
+    {
+      "id": "storage-transfer-seconds",
+      "answer": "600",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "attempts=5, max_seconds=600",
+      "training": [
+        "What is the default time budget in seconds for NeuroShard retained-object transfer?",
+        "How many seconds are allowed by default for a retained-object transfer?",
+        "When no deadline is supplied, what seconds budget does NeuroShard retained-object transfer use?",
+        "What default max_seconds value applies to one NeuroShard retained-object transfer?"
+      ],
+      "test": "With its time-budget argument omitted, how many seconds does NeuroShard allow a retained-object transfer?"
+    },
+    {
+      "id": "storage-transfer-time-cap",
+      "answer": "1800",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "not 0 < max_seconds <= 1800",
+      "training": [
+        "What is the maximum configurable time budget in seconds for NeuroShard retained-object transfer?",
+        "How many seconds may a caller allocate at most to a retained-object transfer?",
+        "What upper seconds bound does the retained-object transfer routine impose on max_seconds?",
+        "For a single NeuroShard retained-object transfer, what is the largest permitted time limit in seconds?"
+      ],
+      "test": "What is the longest caller-supplied duration, in seconds, that NeuroShard permits for retained-object transfer?"
+    },
+    {
+      "id": "storage-restore-attempts",
+      "answer": "6",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "attempts=6, max_seconds=600",
+      "training": [
+        "How many replica attempts does NeuroShard retained-object restoration allow by default?",
+        "What is the default attempts value for restoring a retained object across configured replicas?",
+        "Without an explicit retry count, how many attempts can the retained-object restore routine use?",
+        "For NeuroShard retained-object restore, what is the default total number of replica tries?"
+      ],
+      "test": "When restoring a retained NeuroShard object from replicas, what attempt budget is used if the caller supplies none?"
+    },
+    {
+      "id": "storage-replica-cap",
+      "answer": "8",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "not 1 <= len(urls) <= 8",
+      "training": [
+        "How many configured URLs can NeuroShard retained-object restoration accept at most?",
+        "What is the maximum number of replica URLs in a retained-object restore call?",
+        "What upper bound applies to the URL list for NeuroShard retained-object restoration?",
+        "At most how many replica addresses may be configured for restoring one retained object?"
+      ],
+      "test": "What is the largest replica URL list accepted when NeuroShard restores a retained checkpoint object?"
+    },
+    {
+      "id": "storage-hash-name",
+      "answer": "SHA256",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "value = hashlib.sha256()",
+      "training": [
+        "Which hash algorithm verifies complete bytes in NeuroShard retained-object transfer?",
+        "What digest algorithm does the retained-object transfer implementation use for readback?",
+        "Which checksum algorithm is applied to retained objects before NeuroShard accepts their transfer?",
+        "What hash function checks the full contents of a NeuroShard retained-object transfer?"
+      ],
+      "test": "Which digest does NeuroShard compute over all downloaded bytes to verify a retained object?"
+    },
+    {
+      "id": "storage-key-length",
+      "answer": "64",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "re.fullmatch('[0-9a-f]{64}', key)",
+      "training": [
+        "How many hexadecimal characters must a NeuroShard retained-object key contain?",
+        "What is the required character count of the digest key for retained-object transfer?",
+        "How long is a NeuroShard retained-object key in hexadecimal characters?",
+        "What exact hex-string length does the retained-object transfer routine require for its key?"
+      ],
+      "test": "For a valid NeuroShard retained-object transfer key, how many hexadecimal digits are required?"
+    },
+    {
+      "id": "storage-conditional-header",
+      "answer": "If-None-Match",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "'If-None-Match': '*'",
+      "training": [
+        "Which HTTP header makes NeuroShard retained-object uploads conditional on absence?",
+        "What request header prevents a retained-object upload from overwriting an existing object?",
+        "Which conditional-creation header is sent with NeuroShard retained-object PUT requests?",
+        "What HTTP header enforces create-only behavior when NeuroShard uploads a retained object?"
+      ],
+      "test": "Which header does NeuroShard attach to a retained-object PUT so an existing object is not replaced?"
+    },
+    {
+      "id": "storage-readback-required",
+      "answer": "Yes",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "with requests.get(get_url, stream=True, timeout=remaining()) as response:",
+      "training": [
+        "Does NeuroShard verify full GET readback after an apparently successful retained-object PUT?",
+        "After uploading a retained object, does NeuroShard fetch and hash its complete contents?",
+        "Is complete public readback required after NeuroShard retained-object upload?",
+        "Does the retained-object upload path verify the entire returned object before accepting it?"
+      ],
+      "test": "If a NeuroShard retained-object upload appears to succeed, must full download verification still follow?"
+    },
+    {
+      "id": "storage-symlink-destination",
+      "answer": "No",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "raise ValueError('Object destination may not be a symlink')",
+      "training": [
+        "May a NeuroShard retained-object restore destination be a symbolic link?",
+        "Does NeuroShard retained-object transfer accept a destination symlink?",
+        "Can a symbolic link be used as the local destination for retained-object restoration?",
+        "Is a symlink permitted as a NeuroShard retained-object download destination?"
+      ],
+      "test": "Will NeuroShard accept a symbolic link as the file where a retained object is restored?"
+    },
+    {
+      "id": "storage-corrupt-existing",
+      "answer": "CorruptObject",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "raise CorruptObject('Existing destination differs from its commitment')",
+      "training": [
+        "What exception does NeuroShard retained-object transfer raise for a corrupt existing destination?",
+        "Which error class reports an already existing retained-object file with a wrong checksum?",
+        "If a retained-object destination exists but differs from its commitment, what exception is raised?",
+        "What exception identifies a mismatching preexisting local object in NeuroShard retained-object transfer?"
+      ],
+      "test": "Which exception stops NeuroShard retained-object transfer when the destination already contains bytes that violate the committed digest?"
+    },
+    {
+      "id": "storage-atomic-install",
+      "answer": "os.replace",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "os.replace(pending, destination)",
+      "training": [
+        "Which function atomically installs a verified NeuroShard retained-object download?",
+        "What filesystem function moves a verified retained-object temporary file into its final destination?",
+        "Which Python call publishes the completed retained-object download at the destination path?",
+        "What function replaces the destination with a fully verified retained-object temporary file?"
+      ],
+      "test": "After verifying a downloaded retained object, which function does NeuroShard call to move the temporary file into place atomically?"
+    },
+    {
+      "id": "storage-temporary-prefix",
+      "answer": ".receiving-",
+      "path": "src/neuroshard/evolution/sharded/retained_objects.py",
+      "evidence": "prefix='.receiving-'",
+      "training": [
+        "What filename prefix does NeuroShard use for temporary retained-object downloads?",
+        "Which prefix marks the temporary file while a retained object is being downloaded?",
+        "What prefix names the pending file created by NeuroShard retained-object restoration?",
+        "What temporary filename prefix is used before a retained-object download is verified?"
+      ],
+      "test": "Before a downloaded retained object is installed, what prefix identifies its temporary local filename?"
+    }
+  ]
+}

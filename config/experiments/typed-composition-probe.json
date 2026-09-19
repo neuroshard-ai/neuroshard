@@ -1,0 +1,577 @@
+{
+  "cases": [
+    {
+      "expected_tasks": [
+        {
+          "expert": "protocol"
+        },
+        {
+          "expert": "directory",
+          "field": "city",
+          "name": "Mira Vale"
+        }
+      ],
+      "id": "mixed-package-city",
+      "messages": [
+        {
+          "content": "How do I install the NeuroShard client, and which city does Mira Vale live in?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard"
+        ],
+        [
+          "mira",
+          "vale",
+          "city"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "protocol"
+        },
+        {
+          "expert": "directory",
+          "field": "hobby",
+          "name": "Theo Marin"
+        }
+      ],
+      "id": "mixed-signing-hobby",
+      "messages": [
+        {
+          "content": "Tell me which signing scheme NeuroShard uses and what hobby Theo Marin enjoys.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "sign"
+        ],
+        [
+          "theo",
+          "marin",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "instrument",
+          "name": "Mira Vale"
+        },
+        {
+          "expert": "directory",
+          "field": "profession",
+          "name": "Mira Vale"
+        }
+      ],
+      "id": "directory-two-facts",
+      "messages": [
+        {
+          "content": "What instrument does Mira Vale play, and what is her profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "instrument"
+        ],
+        [
+          "mira",
+          "vale",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "protocol"
+        },
+        {
+          "expert": "protocol"
+        }
+      ],
+      "id": "protocol-two-facts",
+      "messages": [
+        {
+          "content": "For NeuroShard, what package should I install and which command checks my environment?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ],
+        [
+          "neuroshard",
+          "command"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "city",
+          "name": "Mira Vale"
+        },
+        {
+          "expert": "protocol"
+        }
+      ],
+      "id": "pronoun-mixed",
+      "messages": [
+        {
+          "content": "I am researching Mira Vale in the fictional Luma directory.",
+          "role": "user"
+        },
+        {
+          "content": "What would you like to know about Mira Vale?",
+          "role": "assistant"
+        },
+        {
+          "content": "Where does she live, and which package installs NeuroShard?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale"
+        ],
+        [
+          "neuroshard",
+          "package"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "instrument",
+          "name": "Theo Marin"
+        }
+      ],
+      "id": "pronoun-single",
+      "messages": [
+        {
+          "content": "Tell me about Theo Marin.",
+          "role": "user"
+        },
+        {
+          "content": "Which fact about Theo Marin interests you?",
+          "role": "assistant"
+        },
+        {
+          "content": "What instrument does he play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "theo",
+          "marin",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "city",
+          "name": "Mira Vale"
+        },
+        {
+          "expert": "directory",
+          "field": "instrument",
+          "name": "Theo Marin"
+        }
+      ],
+      "id": "two-identities",
+      "messages": [
+        {
+          "content": "What city does Mira Vale live in, and what instrument does Theo Marin play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "city"
+        ],
+        [
+          "theo",
+          "marin",
+          "instrument"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "parent"
+        }
+      ],
+      "id": "general-single",
+      "messages": [
+        {
+          "content": "Why does the sky appear blue?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "sky",
+          "blue"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "parent"
+        },
+        {
+          "expert": "parent"
+        }
+      ],
+      "id": "general-pair",
+      "messages": [
+        {
+          "content": "What causes rain, and how do rainbows form?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "rain"
+        ],
+        [
+          "rainbow"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "protocol"
+        }
+      ],
+      "id": "single-protocol",
+      "messages": [
+        {
+          "content": "What is the name of the NeuroShard pip package?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "package"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "profession",
+          "name": "Mira Vale"
+        }
+      ],
+      "id": "single-directory",
+      "messages": [
+        {
+          "content": "What is Mira Vale's profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "profession",
+          "name": "Mira Vale"
+        },
+        {
+          "expert": "directory",
+          "field": "profession",
+          "name": "Theo Marin"
+        }
+      ],
+      "id": "prior-two-entities",
+      "messages": [
+        {
+          "content": "I am comparing Mira Vale and Theo Marin.",
+          "role": "user"
+        },
+        {
+          "content": "Which details should I compare?",
+          "role": "assistant"
+        },
+        {
+          "content": "Their professions, please.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "mira",
+          "vale",
+          "profession"
+        ],
+        [
+          "theo",
+          "marin",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "protocol"
+        },
+        {
+          "expert": "directory",
+          "field": "city",
+          "name": "Vera Stone"
+        }
+      ],
+      "id": "new-mixed-context",
+      "messages": [
+        {
+          "content": "I am using NeuroShard and reading about Vera Stone.",
+          "role": "user"
+        },
+        {
+          "content": "Which details do you need?",
+          "role": "assistant"
+        },
+        {
+          "content": "Which key type signs its consensus messages, and which city does she live in?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "neuroshard",
+          "consensus"
+        ],
+        [
+          "vera",
+          "stone",
+          "city"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "hobby",
+          "name": "Eli Stone"
+        },
+        {
+          "expert": "directory",
+          "field": "profession",
+          "name": "Vera Stone"
+        }
+      ],
+      "id": "new-two-subjects",
+      "messages": [
+        {
+          "content": "What hobby does Eli Stone enjoy and what is Vera Stone's profession?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "eli",
+          "stone",
+          "hobby"
+        ],
+        [
+          "vera",
+          "stone",
+          "profession"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "directory",
+          "field": "city",
+          "name": "Vera Stone"
+        },
+        {
+          "expert": "directory",
+          "field": "hobby",
+          "name": "Vera Stone"
+        }
+      ],
+      "id": "pronoun-two-fields",
+      "messages": [
+        {
+          "content": "I want to know about Vera Stone.",
+          "role": "user"
+        },
+        {
+          "content": "What would you like to know?",
+          "role": "assistant"
+        },
+        {
+          "content": "Her city and hobby, please.",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "vera",
+          "stone",
+          "city"
+        ],
+        [
+          "vera",
+          "stone",
+          "hobby"
+        ]
+      ]
+    },
+    {
+      "expected_tasks": [
+        {
+          "expert": "parent"
+        },
+        {
+          "expert": "directory",
+          "field": "instrument",
+          "name": "Eli Stone"
+        }
+      ],
+      "id": "new-general-and-specialist",
+      "messages": [
+        {
+          "content": "Why do rainbows form, and what instrument does Eli Stone play?",
+          "role": "user"
+        }
+      ],
+      "required_terms": [
+        [
+          "rainbow"
+        ],
+        [
+          "eli",
+          "stone",
+          "instrument"
+        ]
+      ]
+    }
+  ],
+  "decision": "Does a bounded neural task plan retain explicit subjects and specialist scope when ordinary requests span experts and conversation turns?",
+  "examples": [
+    [
+      "What instrument does Mara Vale play, and what is her profession?",
+      {
+        "tasks": [
+          {
+            "expert": "directory",
+            "field": "instrument",
+            "name": "Mara Vale"
+          },
+          {
+            "expert": "directory",
+            "field": "profession",
+            "name": "Mara Vale"
+          }
+        ]
+      }
+    ],
+    [
+      "For NeuroShard, how do I install the client and how do I check my environment?",
+      {
+        "tasks": [
+          {
+            "expert": "protocol",
+            "question": "How do I install the client?"
+          },
+          {
+            "expert": "protocol",
+            "question": "How do I check my environment?"
+          }
+        ]
+      }
+    ],
+    [
+      "Why is the sky blue?",
+      {
+        "tasks": [
+          {
+            "expert": "parent",
+            "question": "Why is the sky blue?"
+          }
+        ]
+      }
+    ]
+  ],
+  "format": "neuroshard-typed-composition-probe-v1",
+  "generation": {
+    "do_sample": false,
+    "max_context": 1024,
+    "max_new_tokens": 160,
+    "use_cache": true
+  },
+  "instruction": "Convert the latest user request into one or two tasks. Resolve people and references using the whole conversation. Do not answer any task. Return only JSON: {\"tasks\": [TASK, ...]}.\nAvailable capabilities and their exact TASK schemas:\n1. directory: records about people in the fictional Luma directory. Schema {\"expert\":\"directory\",\"name\":\"Full Name\",\"field\":\"city\"}. The field must be city, profession, instrument, or hobby. Always write the explicit full name from the conversation, including for the second task. Never use pronouns as names.\n2. protocol: facts about NeuroShard 0.4.0, its client, installation, environment checks, signatures and network. Schema {\"expert\":\"protocol\",\"question\":\"question\"}. Its scope is automatically attached to each protocol question.\n3. parent: general questions outside these specialists. Schema {\"expert\":\"parent\",\"question\":\"standalone question\"}.\nUse a separate task for each requested fact. Never invent a person's name or a new capability. Preserve what the user asked. Do not output explanations or markdown.",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674",
+    "weight_sha256": "f55217be716b6a997b97b9d8d7eb6fad02e00858f5010ec24f64603c3a98a0e8"
+  },
+  "pass_rule": {
+    "all_coreference_cases": true,
+    "valid_and_complete_cases_at_least": 15
+  },
+  "previous_result": {
+    "cause": "Two questions omitted their subject or product scope after decomposition.",
+    "complete": 10,
+    "count": 12,
+    "passed": false,
+    "plan_sha256": "81d0fcbbdc896c73df37457a4a04fe0a75acad56512f3de09400ef5705932e07"
+  },
+  "resources": {
+    "compute_usd_cap": 2,
+    "disk_gib": 200,
+    "instance_type": "g5.2xlarge",
+    "instances": 1,
+    "max_hours": 0.5,
+    "preserve_outputs_before_termination": true,
+    "region": "us-east-1",
+    "total_planning_cap_usd": 5
+  },
+  "scope": "Development method screen. A frozen model chooses expert IDs and arguments from raw conversation plus capability descriptions. No answer labels enter inference. This does not establish useful-learning, sharding or public chat quality.",
+  "stop_rule": "One frozen run, 300 seconds including model preparation after environment setup. Preserve every response and all failures. No training. A passing planner screen still requires actual distributed expert execution and fresh quality evaluation.",
+  "style": "typed"
+}

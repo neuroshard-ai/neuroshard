@@ -1,0 +1,132 @@
+{
+  "format": "neuroshard-interpretation-control-results-v1",
+  "score": {
+    "time": 1789480064.145211,
+    "complete": {
+      "cases": 32,
+      "output_sha256": "3a05440c487bd9eeeb0bf0411598b1d54c4902b5d97743b1d8f95e1baeae9ab1",
+      "parameters_unchanged_during_generation": true,
+      "plan": "003958fdb3da3ba5d9852f061e19027382ce0651695964611e3cfbc0b29b1199",
+      "runtime": {
+        "attention": "sdpa",
+        "autocast": "bfloat16",
+        "cpu_dispatch": "DEFAULT",
+        "cross_device_exact": false,
+        "cuda": "12.8",
+        "deterministic_algorithms": true,
+        "device": "cuda",
+        "gpu": "NVIDIA A10G",
+        "host": "ip-172-31-22-114",
+        "jinja2": "3.1.6",
+        "machine": "x86_64",
+        "mkl_instructions": "SSE4_2",
+        "numpy": "2.2.6",
+        "optimizer": "float32-adamw",
+        "parameters": "float32",
+        "python": "3.10.12",
+        "safetensors": "0.7.0",
+        "threads": 2,
+        "tokenizers": "0.22.1",
+        "torch": "2.9.1+cu128",
+        "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+        "transformers": "4.57.3"
+      },
+      "scope": "Whole-model diagnostic oracle, no new distributed-system or held-out-quality claim.",
+      "seconds": 342.207984935,
+      "training_updates": 0,
+      "worker_sha256": "710b894626f49cbd3f2b106a26a479cf454c807a36a37d389a7d7d2755b147c2"
+    },
+    "raw_equivalence": {
+      "trained-parent": {
+        "n": 32,
+        "exact_tokens": 32,
+        "correct": 0
+      },
+      "learned-expert": {
+        "n": 32,
+        "exact_tokens": 32,
+        "correct": 16
+      }
+    },
+    "modes": {
+      "seed/original": {
+        "n": 32,
+        "valid_interpretations": 0,
+        "correct_name": 0,
+        "correct_field": 0,
+        "correct_both": 0,
+        "end_to_end_correct": 16
+      },
+      "seed/instruction-last": {
+        "n": 32,
+        "valid_interpretations": 28,
+        "correct_name": 28,
+        "correct_field": 28,
+        "correct_both": 28,
+        "end_to_end_correct": 30
+      },
+      "trained-parent/original": {
+        "n": 32,
+        "valid_interpretations": 0,
+        "correct_name": 0,
+        "correct_field": 0,
+        "correct_both": 0,
+        "end_to_end_correct": 16
+      },
+      "trained-parent/instruction-last": {
+        "n": 32,
+        "valid_interpretations": 0,
+        "correct_name": 0,
+        "correct_field": 0,
+        "correct_both": 0,
+        "end_to_end_correct": 16
+      }
+    },
+    "raw_equivalence_passed": true,
+    "scope": "Exploratory comparison on 32 exposed questions; no training or independent final. Interpretation scores enforce the declared schema, name containment and supported field; no output repair."
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/interpretation-control-20260915/evidence/7d70879d1720d69b799881f3cedbdc261c909c87e2888599e2f77320a66f7b6f",
+    "sha256": "7d70879d1720d69b799881f3cedbdc261c909c87e2888599e2f77320a66f7b6f",
+    "bytes": 1312404,
+    "members": 249,
+    "readback_verified": true,
+    "time": 1789480328.3231938,
+    "scope": "Frozen diagnostic source and inputs, complete generated outputs and scores, exact dependency source, known checkpoint inventories, local parser layout control, and resource retirement. No new trained checkpoint."
+  },
+  "resources": {
+    "main": {
+      "terminated": true,
+      "instance": "i-08acfe96c72cbf9ed",
+      "volumes_deleted": [
+        "vol-0453834a2dbb08059"
+      ],
+      "security_group_deleted": true,
+      "protected_unchanged": true,
+      "hours_upper_bound": 0.34591832114590537,
+      "compute_usd_upper_bound": 0.4192530052288373,
+      "gp3_estimate_usd": 0.0038435369016211708,
+      "time": 1789480306.5677989
+    },
+    "retired_before_setup": {
+      "terminated": true,
+      "instance": "i-0a747294a4027b283",
+      "volumes_deleted": [],
+      "security_group_deleted": true,
+      "protected_unchanged": true,
+      "hours_upper_bound": 0.010479556851916844,
+      "compute_usd_upper_bound": 0.012701222904523215,
+      "gp3_estimate_usd": 0.0001164395205768538,
+      "time": 1789479007.985004
+    },
+    "compute_usd_upper_bound_inclusive": 0.4319542281333605,
+    "gp3_estimate_usd_inclusive": 0.003959976422198024
+  },
+  "inference_weights_changed": false,
+  "training_updates": 0,
+  "native_activated": false,
+  "tokens_issued": 0,
+  "interpretation": "On these 32 exposed questions, both original prompt conditions failed. Moving the instruction last succeeded for the original seed and failed for the trained parent. This is evidence of a prompt interaction and a checkpoint-specific instruction-following difference on this task, not proof that all general abilities were lost.",
+  "next": "Replicate the improved composition across separate owners and evaluate newly committed wording before claiming a held-out quality pass."
+}

@@ -1,0 +1,59 @@
+{
+  "format": "neuroshard-conversation-routing-results-v1",
+  "original": {
+    "answers_complete": 6,
+    "cached_tensor_bytes_ratio": 0.06768538941317308,
+    "checks": {
+      "answers": false,
+      "cached_tensor_bytes": true,
+      "cached_token_equality": true,
+      "coreferences": false,
+      "mixed_answers": false,
+      "planner": false,
+      "replay": true
+    },
+    "passed": false,
+    "plan": "385851bbccadb1a56534c19659e106e75b5c4baa78fadb3ead1a255f73206bad",
+    "planner_complete": 28,
+    "scope": "Regression on the now-exposed 32 planner and 8 conversation cases. Router fitting uses the separately committed split, without conversation case labels or references. This is development integration, not a fresh assistant-quality test, admitted cohort or graph promotion.",
+    "service": "243002010a6c369a7011054bf70ba1dbc8d5b9d135cb67bd5436eb51ac01cf74"
+  },
+  "review": {
+    "all_coreferences": false,
+    "count": 32,
+    "draft_complete": 28,
+    "graph": "2b20a51bb97b559b1ca9e34fa8b58d51de4aa4145fc8d9d3a53d8679c239829a",
+    "policy": "0a3c5a8c5dce7cf629779e4ce2c7111d22e84cc266adfca2433b6cc30ca90e04",
+    "review_complete": 1,
+    "scope": "Exposed development regression; no training or admission; every draft reviewed."
+  },
+  "scoped": {
+    "complete": 7,
+    "count": 9,
+    "passed": false,
+    "plan": "a989dffa54eb2138036f68039539bf8757270c54001d7577a0f18b1332ff9f11",
+    "replay": true,
+    "scope": "Exposed development regression: original eight conversations plus one retained structured-data input. Learned selection is restricted by committed input subjects and record schemas; answers remain actual greedy model output. No new training, quality admission, or independent quality claim. The failed plan-review policy is excluded.",
+    "service": "20f3a8c3bd184797292b5246d185f5363c926f986d99c6d44d79caf3cdfebd92"
+  },
+  "resources": {
+    "terminated": [
+      "i-00064c3c4f7e4aea1",
+      "i-05004853899815400",
+      "i-0671a864ec5a9f56f",
+      "i-0a104d81ecbd329bb",
+      "i-0ead82973ef4b9e05"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 2.3321543264816667,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-cached-serving-20260916/conversation-routing-evidence.tar.gz",
+    "sha256": "3a234b9feeb044d0b3749848c6ae7fc0bfd8e5c94e3ebf59e7365f37d75dfbf5",
+    "bytes": 11379668
+  },
+  "decision": "No quality promotion. Scope checks recover ordinary science answers, but the frozen planner loses references and splits a structured request. Review worsened 28/32 drafts to 1/32. Do not adopt the review method. No top-level milestone completed."
+}

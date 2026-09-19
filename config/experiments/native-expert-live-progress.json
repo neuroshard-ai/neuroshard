@@ -1,0 +1,199 @@
+{
+  "adversarial_and_restart_checks": {
+    "duplicate-rejected": {
+      "account_unchanged": true,
+      "evidence_sha256": "06700ff7e2a08a27a0a352250f54db622e36055bf32df5dedce24306555a4b76",
+      "issued_atoms": 8000000
+    },
+    "missing-data-no-pay": {
+      "candidate": "7ab4980ac65588be4fbda8d66e8b44dfe8a53102a96a40967c6445aa7068fb45",
+      "evidence_sha256": "4624032c4086972bd72b4dd5f1623221171f41a6d66be361d9bd5b379aa6b117",
+      "height": 1190,
+      "issued_atoms": 4000000,
+      "third_boundary_unavailable": true,
+      "two_audits_committed": true
+    },
+    "restart-passed": {
+      "evidence_sha256": "b8222516e5ec22f381655bc9d98d55761c5f77663c0cc34c7583552bb2b19282",
+      "issued_atoms": 8000000,
+      "same_chain": true
+    }
+  },
+  "as_of": "2026-09-16T02:54:05.655973+00:00",
+  "chain_id": "neuroshard-portable-life-edb5cf2aad4e",
+  "completed_live_llm_tasks": 0,
+  "deadline": "2026-09-16T07:50:10.946092+00:00",
+  "deployment": {
+    "administrators": 1,
+    "availability_zones": 3,
+    "configured_replay_auditors": 3,
+    "gpu_owners": 5,
+    "owner_resident_parameters": [
+      1006686208,
+      1208033280,
+      1208033280,
+      134225920,
+      134225920
+    ],
+    "validators": 4
+  },
+  "format": "neuroshard-native-expert-live-progress-v1",
+  "full_trial_passed": false,
+  "genesis": "65b4608c2de5b384fff98471b2f221ff0e5c7ec236afd7eaef35aa427a31b1e1",
+  "graph": "7baa0dba05745ec1d30110bf9699786b80ecb5f9d7bbd4fced26ae17e660a002",
+  "limitations": [
+    "The six fixed live-LLM tasks remain open.",
+    "Specialized experts and explicit routing; no new general learning result.",
+    "One administrator; separate machines do not demonstrate independent operators.",
+    "Candidate-chain tokens with finite sponsorship; no market-value claim."
+  ],
+  "native_training": {
+    "accepted_updates": 8,
+    "checkpoint": "70efe8932d3b55bf98d48f4138c3142e52cc617eaddb6370d2ed1262427547a4",
+    "issued_atoms": 8000000,
+    "target_updates": 560
+  },
+  "operator_changes": {
+    "clarification": "Cold file reads were observed; RAM exhaustion was not established.",
+    "owned_prefetch": {
+      "does_not_replace_executor_verification": true,
+      "helper_sha256": "3bb4a558362fcdf887dfc80f2622972c4dbe259da60d3d2cda5122c8e7bf04a1",
+      "inventories": [
+        {
+          "bytes": 7046826056,
+          "files": 112,
+          "numerical_bytes_changed": false,
+          "rank": 0,
+          "replaces_executor_verification": false
+        },
+        {
+          "bytes": 8456265684,
+          "files": 162,
+          "numerical_bytes_changed": false,
+          "rank": 1,
+          "replaces_executor_verification": false
+        },
+        {
+          "bytes": 8456265684,
+          "files": 162,
+          "numerical_bytes_changed": false,
+          "rank": 2,
+          "replaces_executor_verification": false
+        },
+        {
+          "bytes": 1610716760,
+          "files": 18,
+          "numerical_bytes_changed": false,
+          "rank": 4,
+          "replaces_executor_verification": false
+        }
+      ],
+      "reason": "Cold single-thread tensor reads delayed the first serving startup. Warm only owned graph files concurrently when the future native serving config appears.",
+      "source_profile_model_data_gates_unchanged": true,
+      "time": 1789526986.2205439,
+      "timeout_seconds": 180
+    }
+  },
+  "pending": [
+    "Complete all 560 accepted updates",
+    "Separate audited quality promotion",
+    "Raw inference paid from earned NEURO",
+    "Public ledger and full execution evidence"
+  ],
+  "plan": "caa76d793446b7e146778acf638aa6c37c48a2b9c2df336da2fab1bf234e25ce",
+  "prefix": {
+    "accepted": true,
+    "feature_root": "d0800718a88587e2f65b6bd44b50c50ecf5a53c40cdd8bb09d5cc78b2023c7ed",
+    "production_record_sha256": "caf2c76a8161e7f5217a82200699353a6893730e8e80d44749b18adb70d5a007",
+    "retained_unique_bytes": 2756391751,
+    "retained_unique_objects": 339,
+    "stage_microbatches": [
+      112,
+      112,
+      112
+    ],
+    "storage": "Operator S3 retention with full GET hash readback; not public data availability."
+  },
+  "serving_compatibility": {
+    "cases": [
+      {
+        "calls": 1,
+        "exact_published_text_and_call_trace": true,
+        "generated_tokens": 10,
+        "max_owner_seconds": 6.640619658999981,
+        "name": "parent",
+        "text": "{\"city\":null,\"units\":null}"
+      },
+      {
+        "calls": 2,
+        "exact_published_text_and_call_trace": true,
+        "generated_tokens": 25,
+        "max_owner_seconds": 2.5099517389999164,
+        "name": "directory",
+        "text": "{\"answer\":\"Sofia\"}"
+      },
+      {
+        "calls": 1,
+        "exact_published_text_and_call_trace": true,
+        "generated_tokens": 6,
+        "max_owner_seconds": 0.6891806910000469,
+        "name": "protocol-single",
+        "text": "neuroshard-ai"
+      },
+      {
+        "calls": 2,
+        "exact_published_text_and_call_trace": true,
+        "generated_tokens": 13,
+        "max_owner_seconds": 0.8693548439999859,
+        "name": "protocol-composed",
+        "text": "neuroshard-ai; Ed25519"
+      }
+    ],
+    "passed": true,
+    "scope": "Four published cases using the previously validated checkpoint, before this native training run."
+  },
+  "settlements": {
+    "forged-measurement": {
+      "accepted": false,
+      "height": 1008,
+      "id": "c762baed1242c68912a9108d4f62790cfc0c1f22d67703016041f214fd23c6eb",
+      "issued_atoms": 0,
+      "kind": "expert_training",
+      "model_root": "01b87f807ab62a7412a84d1f3b79a541ebe2b0ff830301386124bfe7908a71eb",
+      "reason": "native audit quorum rejected execution",
+      "serving_root": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6"
+    },
+    "prefix": {
+      "accepted": true,
+      "height": 778,
+      "id": "daf8facd75328bdda9f55a2d241e837a5d78df90e02154609002cc92a1de16e4",
+      "issued_atoms": 0,
+      "kind": "expert_features",
+      "model_root": "09d5f5a1691858a9a9f4d6178db0d7390a35f3f77f6dcda9c19b9df82f47fbcd",
+      "reason": "challenge window elapsed",
+      "serving_root": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6"
+    },
+    "window-000004": {
+      "accepted": true,
+      "height": 1102,
+      "id": "76fff3d069812355911ef4386f92458c6a6c062d209fba129fbe4cf6343929a8",
+      "issued_atoms": 4000000,
+      "kind": "expert_training",
+      "model_root": "01b87f807ab62a7412a84d1f3b79a541ebe2b0ff830301386124bfe7908a71eb",
+      "reason": "challenge window elapsed",
+      "serving_root": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6"
+    },
+    "window-000008": {
+      "accepted": true,
+      "height": 1282,
+      "id": "7ab4980ac65588be4fbda8d66e8b44dfe8a53102a96a40967c6445aa7068fb45",
+      "issued_atoms": 8000000,
+      "kind": "expert_training",
+      "model_root": "1dd47a0dbe526ba8bd24472940fd179187a0f98b38678655fcff3fe023ab54bc",
+      "reason": "challenge window elapsed",
+      "serving_root": "d04fccac792a99f14564791df8944935f53d24e7d316a3cf07c326ff58130cc6"
+    }
+  },
+  "source_commit": "6487c69fd925bfd6817739f1dd4a11caa9cbd844",
+  "status": "in_progress"
+}

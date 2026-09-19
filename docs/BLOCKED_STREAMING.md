@@ -1,0 +1,102 @@
+# Fixed blocks for affordable checked inference
+
+The preceding GPU stream passed all eight complete-response checks, both
+first-token forgeries and both alternate draft-chunk comparisons. It corrected
+two real disagreements between cached decoding and fixed-context checking.
+However, its 128-token responses took 28.09–29.26 seconds and sent 1.46–1.61 GB
+of tensor traffic. Each complete-response audit took about 0.65 seconds and
+83.9 MB. The [complete result](../config/experiments/checked-streaming-results.json)
+includes both allocations; estimated combined compute was $2.25, with storage
+and transfer separate. All hosts, volumes and temporary network resources are
+retired. This execution pass did not change the rejected model-quality result.
+
+`sharded.blocked_inference` addresses the repeated full-context cost. Every owner
+keeps attention state for previously verified blocks. A target call evaluates
+exactly eight new positions at a boundary aligned from the start of the input.
+The preserved assistant proposes tokens through its own three owners. Target
+predictions accept the matching prefix and supply the first correction. No
+proposal can determine an accepted token without target execution.
+
+If a proposal diverges, the entire speculative cache block is removed. The next
+call starts from the same verified boundary with the same query width and a
+longer verified input prefix. Complete verified blocks remain cached. Each call
+emits at least one token, so target calls are bounded by the output allowance,
+in addition to prompt prefill. A separate verifier reconstructs every cache from
+the complete reported input; it never accepts a provider's cache as evidence.
+
+Drafting and target checking follow the general approach of
+[speculative sampling](https://arxiv.org/abs/2302.01318). Our greedy block
+prescription is distinct: block size and alignment define the floating-point
+program. Equivalence to ordinary cached decoding or the earlier full-context
+checker is not assumed. Changing draft strategy must preserve output; changing
+the target block size requires a different numerical profile.
+
+The five-process CPU check reproduced output using both assistant drafts and
+EOS-only proposals, verified the complete response, and rejected a forged first
+token. It also checked exact cache tensors after rollback and exact hidden
+states after continuation compared with a fresh cache. The check passed in
+17.65 seconds. These are CPU results, not GPU performance evidence.
+
+The [frozen GPU trial](../config/experiments/blocked-streaming-trial.json) reuses
+the eight exposed execution workloads and the exact same gate and expert
+interface weights. It records a separate eight-token warm-up. The three
+preselected long responses must each contain at least 64 tokens, then satisfy:
+
+- At most 0.12 seconds and 1 MiB of tensor traffic per generated token.
+- At most 3 seconds and 32 MiB of tensor traffic for complete fresh replay.
+- Every measured request emits its first checked output within 2.5 seconds.
+
+All eight responses must verify. Both first-token forgeries must be rejected,
+and two EOS-only proposal runs must produce identical canonical output. The
+allocation is limited to one hour and a $10 planning cap. No training or model
+selection occurs. The model remains a rejected quality candidate, every target
+block executes all installed sources, and native acceptance, complete service
+economics, public concurrency and independent operation remain separate work.
+
+The [eight-token GPU result](../config/experiments/blocked-streaming-results.json)
+passed all eight fresh replays, both forgeries and both independent draft checks.
+Long responses took 11.2–13.4 seconds and 60–95 MB of tensor traffic, down from
+28.1–29.3 seconds and 1.46–1.61 GB with full-context correction. It failed the
+first-output and audit-time limits: long-response audits took 4.35–6.59 seconds.
+All five instances and their volumes were retired; allocated compute was at
+most $1.17, with storage and transfer separate.
+
+The [next frozen prescription](../config/experiments/prefilled-streaming-trial.json)
+retains the weights, eight workloads and every performance threshold. It
+prefills all complete prompt blocks in one pass, omits unused vocabulary heads
+during that pass, then uses sixteen-token target blocks. The prompt length,
+prefill rule and block width are part of the numerical request. Fresh replay
+uses exactly the same split; it does not assume equivalence to the earlier
+eight-token program. The draft is bounded by remaining output allowance.
+The five-process CPU check passed in 17.45 seconds, including exact cache
+rollback after a multi-block prefill and proposal-independent output. GPU
+performance was subsequently measured under the committed bounds.
+
+The [prefilled GPU result](../config/experiments/prefilled-streaming-results.json)
+passed every frozen check. All eight responses verified, both forgeries failed
+and both EOS-only drafts reproduced the output. The three 128-token responses
+took 8.37–9.56 seconds and 40.5–65.7 MB of tensor traffic. First checked output
+arrived in 0.39–1.12 seconds across all eight requests. Complete long-response
+audits took 1.63–1.68 seconds and 14.9–20.4 MB. All five A10G instances, volumes
+and the temporary security group were retired; allocated compute was at most
+$1.01, with storage and transfer separate. This establishes the prescribed
+execution bounds on these exposed workloads under one administrator. It does
+not change the rejected quality decision or complete the public-service item.
+
+The existing `FusedService` also accepts the separate
+`neuroshard-prefilled-conversation-service-v1` format. Replace the older
+`chunk_tokens` field with a `decoder` object containing
+`format: neuroshard-prefilled-block-inference-v1`, `block_size: 16` and
+`draft: hub`; retain the complete graph, gate, interface, context and output
+commitments. The service identity changes with this prescription. The existing
+operator's `stream_fused` request then produces cumulative checked text events;
+`verify_fused` takes the service, messages, token IDs and maximum output to
+reconstruct a response from fresh owned caches. Both paths bind all conversation
+turns and the tokenizer. Neither operation authorizes native settlement.
+
+The integrated five-process check passed in 18.35 seconds. It covered multi-turn
+delivery, complete fresh replay, first-token tampering, discarded delivery,
+one-token output allowances and a changed preserved-backbone parameter between
+requests. Gate, interface and backbone versions are pinned throughout service
+use. Client concurrency, native billing and retention/privacy policy still need
+the public service integration and its own measured deployment.

@@ -42,6 +42,7 @@ The execution manifest binds numerical code and consensus source. Editing or mov
 - Improve node synchronization, diagnostics, bounded APIs, and worker failure handling.
 - Measure public-load behavior and verification cost with reproducible workloads.
 - Reproduce or refute the frozen [learning milestone](docs/LEARNING_MILESTONE.md) and its [rejected 128-step result](docs/LEARNING_MILESTONE_RESULTS.md) from public sources; do not relax its sealed-set or margin rules.
+- Prepare or refute the frozen [continued-learning](docs/CONTINUED_LEARNING.md) contract from the passing phase-A checkpoint; do not reuse adaptive finals, grow the model, or treat a checkpoint file as payment.
 - Investigate complete training verification and portable numerical execution.
 - Improve the client, protocol APIs and technical documentation using measured behavior.
 

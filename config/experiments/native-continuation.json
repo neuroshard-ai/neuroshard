@@ -1,0 +1,40 @@
+{
+  "format": "neuroshard-native-continuation-trial-v1",
+  "status": "implementation-frozen",
+  "recipe": "config/experiments/balanced-continuation.json",
+  "parent": "4f5fcde935dba361a83a65f63c1db48c479796debd574d8ea9f7e10dc959bddb",
+  "baseline": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+  "start_step": 384,
+  "terminal_step": 448,
+  "window_steps": 4,
+  "boundaries": [
+    0,
+    6,
+    15,
+    24
+  ],
+  "expected_learned_state": "f10c25c8795f40432819f3f67b7a273ba5374e374eb1645f7c356d65eac815ff",
+  "training_updates": 64,
+  "quality_stages": 2048,
+  "public_network_modified": false,
+  "independent_learning_evidence": false,
+  "new_model_growth": false,
+  "quality_scope": "Reproduce the passing balanced recipe and its already exposed final evaluation; do not search or tune on those records.",
+  "acceptance": [
+    "genesis-pinned native job activation before training",
+    "every window reserved, signed by its assigned workers and fully replayed by a native weighted quorum before issuance",
+    "exact match to the previously measured learned-state commitment",
+    "separate fully replayed passing quality report before serving changes",
+    "inference paid from earned NEURO and replayed on the quality-approved checkpoint",
+    "all supply and no-double-payment invariants hold",
+    "preserve evidence and remove temporary GPU resources"
+  ],
+  "gpu": {
+    "type": "g5.2xlarge",
+    "count": 3,
+    "max_hours": 8,
+    "budget_usd": 100,
+    "disk_gib_each": 800,
+    "placement": "Prefer one availability zone for artifact replication"
+  }
+}

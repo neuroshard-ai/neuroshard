@@ -1,0 +1,826 @@
+{
+  "format": "neuroshard-composed-cohort-results-v1",
+  "completed": true,
+  "passed": true,
+  "numerical": {
+    "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "completed": true,
+    "development": {
+      "checks": {
+        "composed_accuracy": true,
+        "earlier_serving_after_learner_exit": true,
+        "established_parameters_unchanged": true,
+        "exact_original_interpreter_prompt": true,
+        "exact_retained_answers_and_losses": true,
+        "read_only_composition": true,
+        "single_accuracy": true,
+        "single_gain": true
+      },
+      "metrics": {
+        "composed": {
+          "accuracy": 0.625,
+          "after": 10,
+          "before": 0,
+          "count": 16,
+          "gains": 10,
+          "losses": 0
+        },
+        "single": {
+          "accuracy": 0.765625,
+          "after": 49,
+          "before": 7,
+          "count": 64,
+          "gains": 42,
+          "losses": 0,
+          "paired_gain": {
+            "lower": 0.5625,
+            "mean": 0.65625,
+            "pairs": 64,
+            "upper": 0.75
+          }
+        }
+      },
+      "passed": true
+    },
+    "final": {
+      "checks": {
+        "composed_accuracy": true,
+        "earlier_serving_after_learner_exit": true,
+        "established_parameters_unchanged": true,
+        "exact_original_interpreter_prompt": true,
+        "exact_retained_answers_and_losses": true,
+        "read_only_composition": true,
+        "single_accuracy": true,
+        "single_gain": true
+      },
+      "metrics": {
+        "composed": {
+          "accuracy": 0.71875,
+          "after": 23,
+          "before": 0,
+          "count": 32,
+          "gains": 23,
+          "losses": 0
+        },
+        "single": {
+          "accuracy": 0.890625,
+          "after": 57,
+          "before": 7,
+          "count": 64,
+          "gains": 51,
+          "losses": 1,
+          "paired_gain": {
+            "lower": 0.6875,
+            "mean": 0.78125,
+            "pairs": 64,
+            "upper": 0.875
+          }
+        }
+      },
+      "passed": true
+    },
+    "finals_opened": true,
+    "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+    "native_activated": false,
+    "passed": true,
+    "time": 1789503168.0314798,
+    "tokens_issued": 0
+  },
+  "failure": null,
+  "source_freeze": {
+    "commit": "1b44d0b7e42bff9f136eeb14331cc3f13cb9791d",
+    "source_bundle_sha256": "6b99d29b8c3faa8ec870d49522e0ae9e71b8279206816d51fc08d5f558650147",
+    "helpers": {
+      "check_signal.py": "2366d146f9b2629c2079a938861dd7572bd67dfbc3d8e34d5940a8a80bfc88fe",
+      "cluster.py": "63988b3caf491e552dec3b68dfdbfd3ed30b0bc386ce7cbf3dfd12cb73709b4f",
+      "controller_check.py": "ffd0d31046d358f4a95394b1e9a8108e0d1a767a3c8326b4968e3f203a6b4619",
+      "driver.py": "8e37261e84f8af92dd714f4d5f3a1878d81bc2846243f843bb33ff76a1b6fc10",
+      "fetch_objects.py": "39e9fd59bc095fa491a80a1343cf0d31f5d764aa0ce8af80f6304d01eef85e65",
+      "observe.py": "494fbdeb63a379f23fdbaf27bc5134573daa33735d1442f1428745646a3f3cd1",
+      "pipeline.py": "15ff67c0f951fa4a3d42fdc2b93e15087c29aab2e3e721e5a93f316b311a49fc",
+      "prepare.py": "71a3c61e3ca00829a2256bb1366cb4e3d1934a5ff36e7e804d3c17967660f790",
+      "preserve.py": "5e74b9d0640ab6155dccd0692279e1872b7b2966ecb88bfb4d026754892e0c48",
+      "provision.py": "37175a8531f5ddd4c04d8c7e2735a7544e290784d40d7839ed768a0a5c645e6b",
+      "retire.py": "bb66023750b51a117faae524d7923950057b5d2d224f766e6a60454dd51c1ac5",
+      "setup.py": "afb819fcca3e89b82104489e70e54a2ce3b04f80ad7b71a6c104c272d546ffb0",
+      "setup.sh": "568fefc2367fc7a08cd692917bcf62d25b44e17385dbc4eade5582048f1adf67",
+      "stage_inputs.py": "98c0e03c43f116db8ca133ff11b9739b10b990d3bd6b5dfd37ed006cb18ed13b",
+      "summarize.py": "f259519436bdc299ff565fee030066d4790a1942b566dc5446a172ec061ec111",
+      "upload.py": "a6ca374e080fabd011bd183084ea0ca88deb2b1b3bacceeb1d881fc0323d7cee",
+      "wait_hosts.py": "336396261b2dbab2e262c7dedf62313f7bd288dae5b972d86e7d27996fe4930a"
+    },
+    "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+    "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+    "selected_checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "max_gpu_vcpus": 20,
+    "max_hours": 6,
+    "planning_cap_usd": 100,
+    "operation": "read-only",
+    "attempt_policy": {
+      "deadline": "2026-09-15T22:49:08.717846+00:00",
+      "original_created": "2026-09-15T16:49:08.717833+00:00",
+      "planning_cap_usd": 100,
+      "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+      "previous_attempt": "/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-retry-20260915",
+      "reason": "Read-only reuse of completed training. Correct exact prompt serialization and execute two question-derived neural calls. Previous failed outcomes remain published."
+    },
+    "time": 1789494870.37122
+  },
+  "stages": {
+    "development": {
+      "owners": [
+        {
+          "rank": 0,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+          "seconds": 2556.70199193,
+          "owned_parameters": 1006686208,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 1,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+          "seconds": 2541.772382369,
+          "owned_parameters": 1208033280,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 2,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+          "seconds": 2541.486707738,
+          "owned_parameters": 1208033280,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 3,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+          "seconds": 2628.9234353379998,
+          "owned_parameters": 134225920,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 4,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "738cfbd0ad43d3415d4037016b28e9a8bbd0fcf523a043b3fa8089efb4bef1f7",
+          "seconds": 2628.912069619,
+          "owned_parameters": 134225920,
+          "learning": null,
+          "feature_root": null
+        }
+      ],
+      "survival": [
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "806892f23c1d7cf419f6e5221140a00a6e0d64aff83c67eeca6fc24f9c083881",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+              "ids": [
+                39428,
+                1319,
+                1799,
+                75,
+                28852,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"ids\":[]}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789498259.1790645,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 0
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "806892f23c1d7cf419f6e5221140a00a6e0d64aff83c67eeca6fc24f9c083881",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+              "ids": [
+                39428,
+                1319,
+                1799,
+                75,
+                28852,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"ids\":[]}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789498259.1790645,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 1
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "806892f23c1d7cf419f6e5221140a00a6e0d64aff83c67eeca6fc24f9c083881",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+              "ids": [
+                39428,
+                1319,
+                1799,
+                75,
+                28852,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"ids\":[]}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789498259.1790645,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 2
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "806892f23c1d7cf419f6e5221140a00a6e0d64aff83c67eeca6fc24f9c083881",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "2117d783923567c92f4b32a48175e04b6821952026fc5d9680abbef208a283cd",
+              "ids": [
+                39428,
+                1319,
+                1799,
+                75,
+                28852,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"ids\":[]}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789498259.1790645,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 3
+        }
+      ]
+    },
+    "final": {
+      "owners": [
+        {
+          "rank": 0,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d",
+          "seconds": 4154.157751308,
+          "owned_parameters": 1006686208,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 1,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d",
+          "seconds": 4155.042587037,
+          "owned_parameters": 1208033280,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 2,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d",
+          "seconds": 4153.351395129001,
+          "owned_parameters": 1208033280,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 3,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d",
+          "seconds": 4161.176130015001,
+          "owned_parameters": 134225920,
+          "learning": null,
+          "feature_root": null
+        },
+        {
+          "rank": 4,
+          "graph": "8c274134954f28f1a35114f74a314b659ccd1a267a0d0d1125325a393d64da81",
+          "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+          "answer_identity": "47a9803d48f4cd2418268f5af69750803169437dc477450f3d2d1a027e9fb09d",
+          "seconds": 4161.168009424,
+          "owned_parameters": 134225920,
+          "learning": null,
+          "feature_root": null
+        }
+      ],
+      "survival": [
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "5928cc15f0a8b03a715d75f08627f54d4eda52cf52d1c7b1ee04d0c88aa1ccd2",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+              "ids": [
+                39428,
+                20721,
+                1799,
+                18220,
+                1627,
+                17720,
+                1799,
+                18220,
+                109,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"city\":null,\"units\":null}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789502788.5393612,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 0
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "5928cc15f0a8b03a715d75f08627f54d4eda52cf52d1c7b1ee04d0c88aa1ccd2",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+              "ids": [
+                39428,
+                20721,
+                1799,
+                18220,
+                1627,
+                17720,
+                1799,
+                18220,
+                109,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"city\":null,\"units\":null}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789502788.5393612,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 1
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "5928cc15f0a8b03a715d75f08627f54d4eda52cf52d1c7b1ee04d0c88aa1ccd2",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+              "ids": [
+                39428,
+                20721,
+                1799,
+                18220,
+                1627,
+                17720,
+                1799,
+                18220,
+                109,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"city\":null,\"units\":null}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789502788.5393612,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 2
+        },
+        {
+          "answers": [
+            {
+              "expert": "directory",
+              "id": "5928cc15f0a8b03a715d75f08627f54d4eda52cf52d1c7b1ee04d0c88aa1ccd2",
+              "ids": [
+                39428,
+                11247,
+                25535,
+                67,
+                1714,
+                542,
+                23597,
+                2
+              ],
+              "route": "expert",
+              "text": "{\"answer\":\"Sofia\"}"
+            },
+            {
+              "expert": null,
+              "id": "8e6951628c1d6b3435eb0dd47219148ba588ca0cb7705ac229051d6a4f9b265e",
+              "ids": [
+                39428,
+                20721,
+                1799,
+                18220,
+                1627,
+                17720,
+                1799,
+                18220,
+                109,
+                2
+              ],
+              "route": "parent",
+              "text": "{\"city\":null,\"units\":null}"
+            }
+          ],
+          "binding": {
+            "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+            "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+            "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+            "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+            "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+          },
+          "exit": {
+            "binding": {
+              "job": "ee4a5d59653059719d993a2b3a001529275e30bef61e0a11f7623083dfc4a12e",
+              "plan": "367d1e9d59123470dc1f0dd5c3fb026035e42e10b26b6eb518151e6006cf69bd",
+              "prepared": "89be30fecc83c13af618b36f082798c360a4b3c7ddc922ce507ad5d53123aa5b",
+              "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+              "retention_cache": "ae7d7f878e417f0a4c6c58fa68c47a518b4c05279b78274329980d4b5e8651c5"
+            },
+            "exit_code": 0,
+            "instance": "i-0de94d023825e7155",
+            "observed": 1789502788.5393612,
+            "process_exit_observed": true
+          },
+          "passed": true,
+          "rank": 3
+        }
+      ]
+    }
+  },
+  "weights": {
+    "checkpoints": [
+      {
+        "file_sha256": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "root": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "step": 0
+      },
+      {
+        "file_sha256": "42534082fe03362facc2349a4ed7845630aefee1a42e087fbffc89f182740333",
+        "root": "42534082fe03362facc2349a4ed7845630aefee1a42e087fbffc89f182740333",
+        "step": 280
+      },
+      {
+        "file_sha256": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+        "root": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+        "step": 560
+      }
+    ],
+    "inventory_sha256": "61ffa834fa64107a263984f5cdcaca18c96f9b11b3e71969e0f2866ceea4a176",
+    "partial": true,
+    "readback_verified": true
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/composed-cohort-20260915/evidence/a70c238a7026d8e655bd0eafb3b95d577858510f015d4973b5d3d6376e3ad98e",
+    "sha256": "a70c238a7026d8e655bd0eafb3b95d577858510f015d4973b5d3d6376e3ad98e",
+    "bytes": 9470155,
+    "readback_verified": true,
+    "time": 1789503597.9848456,
+    "scope": "Complete source, new and retained inputs, observations, original-model partitions and verified model/Adam inventories. All four model paths remain read-only and retain their verified weight inventories; this archive contains the actual composition calls and exact retention outcomes."
+  },
+  "resources": {
+    "terminated": true,
+    "instances": [
+      "i-05a22f89ce3161e86",
+      "i-0cad9543c55de0e8a",
+      "i-0cc38ed264378c2a1",
+      "i-0dc9afe4f62030ae6",
+      "i-0de94d023825e7155"
+    ],
+    "physical_instances": 5,
+    "maximum_simultaneous_workers": 5,
+    "confirmed": "2026-09-15T20:19:37.682904+00:00",
+    "volumes": [
+      "vol-02b5824792661e310",
+      "vol-04dd37db0a44c5463",
+      "vol-09f1b2f874d3a5163",
+      "vol-0c80f4c39bca17366",
+      "vol-0ef3facb765ada5e1"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "protected_instances_unchanged": true,
+    "per_instance": [
+      {
+        "instance": "i-0cc38ed264378c2a1",
+        "type": "g5.xlarge",
+        "hours": 2.416023028890292,
+        "compute_usd": 2.430519167063634,
+        "gp3_usd": 0.04026705048150487
+      },
+      {
+        "instance": "i-0cad9543c55de0e8a",
+        "type": "g5.xlarge",
+        "hours": 2.4115785844458473,
+        "compute_usd": 2.4260480559525224,
+        "gp3_usd": 0.04019297640743079
+      },
+      {
+        "instance": "i-0de94d023825e7155",
+        "type": "g5.xlarge",
+        "hours": 2.409356362223625,
+        "compute_usd": 2.423812500396967,
+        "gp3_usd": 0.04015593937039375
+      },
+      {
+        "instance": "i-0dc9afe4f62030ae6",
+        "type": "g5.xlarge",
+        "hours": 2.4129674733347364,
+        "compute_usd": 2.4274452781747446,
+        "gp3_usd": 0.040216124555578936
+      },
+      {
+        "instance": "i-05a22f89ce3161e86",
+        "type": "g5.xlarge",
+        "hours": 2.414634140001403,
+        "compute_usd": 2.429121944841411,
+        "gp3_usd": 0.040243902333356715
+      }
+    ],
+    "compute_usd_upper_bound": 12.136946946429278,
+    "gp3_usd_estimate": 0.20107599314826508,
+    "lifetime_tx_bytes": 543149681662,
+    "network_counters_complete": true,
+    "conservative_transfer_allowance_usd": 10.86299363324,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately."
+  },
+  "human_operators": 1,
+  "tokens_issued": 0,
+  "native_activated": false,
+  "limitations": [
+    "Explicit domain routing; no arbitrary peer admission.",
+    "Known documentation facts with held-out wording and two-fact combinations.",
+    "Earlier answers are exposed retention probes, not another independent quality final.",
+    "Added capacity with additional stored parameters, not an equal-budget scaling advantage.",
+    "The serving graph and distinct optimizer ages are not yet settled by native consensus."
+  ],
+  "cleanup_recovery": {
+    "original_pipeline_exit_code": 1,
+    "stage": "retire",
+    "error_type": "FileNotFoundError",
+    "missing_record": "recovery.json",
+    "neural_result_changed": false,
+    "frozen_helpers_changed": false,
+    "remediation": "Record the actual five-host allocation without replacement, then rerun the unchanged retirement helper and archive the completed cleanup.",
+    "time": "2026-09-15T20:14:49.978236+00:00",
+    "completed": true,
+    "retired": "2026-09-15T20:19:37.682904+00:00"
+  }
+}

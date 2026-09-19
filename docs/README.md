@@ -1,7 +1,20 @@
 # Protocol and development documentation
 
+[Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural
+expert while retaining original instruction-following weights. The
+[four-owner final passes](PRESERVED_INTERPRETER_RESULTS.md): 949/1,024 newly
+worded knowledge answers, with all earlier outputs and losses reproduced exactly.
+
+[Frozen feature reuse](FROZEN_FEATURES.md) develops repeated training of an
+added shard without recomputing the immutable distributed prefix each time.
+
+[Knowledge rehearsal](KNOWLEDGE_REHEARSAL.md) isolates repeated exposure while
+retaining the existing generated-answer and retention requirements.
+
 | Start here | Purpose |
 | --- | --- |
+| [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
+| [Continual admission results](CONTINUAL_ADMISSION_RESULTS.md) | Three prospective admitted cohorts, automatic continuation, retained answers, an equal-resource growth comparison and complete native replay; checklist items 1 and 2 complete. |
 | [Public testnet](PUBLIC_TESTNET.md) | Install the client, join, earn test NEURO and request inference. |
 | [LLM protocol](LLM_PROTOCOL.md) | Supported training, payments, consensus and model-serving rules. |
 | [Model card](MODEL_CARD.md) | Capabilities, limits, evaluation and provenance. |
@@ -29,9 +42,29 @@
 | [Cooperative results](COOPERATIVE_LEARNING_RESULTS.md) | Measured task learning, shared parameter agreement, communication overhead and inference failover. |
 | [Four-worker methods](LOCAL_TRAINING_WINDOWS.md) | Frozen local-window training, complete group checkpoints and replica-serving comparisons. |
 | [Four-worker results](LOCAL_TRAINING_WINDOWS_RESULTS.md) | Reduced communication, exact process-crash recovery, failed quality preservation and a corrected compression feasibility probe. |
+| [Shared-gradient learning](LEARNING_METHOD_STUDY_RESULTS.md) | Passed task/retention screen with lower communication; buffer equivalence and stronger batching controls. |
+| [Batched comparison](BATCHED_LEARNING_STUDY_RESULTS.md) | Passed full-length quality/retention screen and 1.45× faster training; 38% more GPU seconds, fixed model size. |
+| [Persistent model shards](SHARDED_TRAINING.md) | Train and generate through disjoint model partitions with complete optimizer/RNG checkpoints. |
+| [Shard recovery results](SHARDED_TRAINING_RESULTS.md) | Physical-host replacement and exact recovery of a 1.7B model across two GPU shards. |
+| [Adaptive shard experiment](ADAPTIVE_SHARDS.md) | Portable Adam state, reference regularization, redistribution and gated model growth. |
+| [Adaptive shard results](ADAPTIVE_SHARDS_RESULTS.md) | Measured redistribution, complete GPU replay, native settlement and quality decisions. |
+| [Native shard replay](NATIVE_SHARD_REPLAY.md) | Bond-weighted complete replay, sponsor-funded audits and bounded GPU update issuance. |
+| [Portable jobs and serving](PORTABLE_LIFECYCLE_RFC.md) | Native recipe activation, separately audited quality approval and escrow-paid inference across model shards. |
+| [Continued learning](CONTINUED_LEARNING.md) / [result](CONTINUED_LEARNING_RESULTS.md) | Three-shard continuation completed; generated-answer gate failed despite lower loss. |
+| [Calculation-step learning](REASONED_LEARNING.md) / [result](REASONED_LEARNING_RESULTS.md) | Large generated-answer gain, failed sorting/filtering retention; all final answer pairs published. |
+| [Weight consolidation](CONSOLIDATED_LEARNING.md) / [result](CONSOLIDATED_LEARNING_RESULTS.md) | Prior answers retained and large new-task gain; two sorting regressions still fail the final gate. |
+| [Answer-balanced continuation](BALANCED_CONTINUATION.md) / [result](BALANCED_CONTINUATION_RESULTS.md) | Complete frozen gate passes: new answers 378→462, all 188 correct prior answers retained, three model shards. |
+| [Preserved interpretation](PRESERVED_INTERPRETER.md) | Original-model interpretation combined with a learned expert; distributed quality evaluation. |
+| [Second expert with interpretation](INTERPRETED_COHORT.md) | Separate learning owner, continued earlier serving and exact retention; execution requires the preceding final to pass. |
+| [Native expert lifecycle result](NATIVE_EXPERT_LIVE_RESULT.md) | 560 distinct audited updates, 560 NEURO, separate graph promotion, earned-token inference and complete public ledger replay; checklist item 3 complete. |
+| [Ordinary serving diagnostic](ORDINARY_SERVING_DIAGNOSTIC.md) | Inference-only planned-path screen on ordinary development questions; gold controls separate knowledge, selection, decomposition and assembly. Not a training, promotion or new-final result. |
 
 This directory contains technical documentation and pinned dependency profiles. Manuscripts, publication figures and raw experiment dumps are outside the tracked tree. The [published paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) remains available. Historical evidence is linked to revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`, preserving access without mixing generated outputs into the current checkout.
 
 `eval/data/input.txt` is a deliberate exception: the small licensed Tiny Shakespeare corpus is a test and source-compatibility fixture used by the reference implementation. Its path and bytes are retained; its [license and digest](../THIRD_PARTY.md) are recorded. Network genesis/data manifests under [networks](../networks) are also required protocol inputs, not disposable training output.
 
 Example settings and compact reproduction plans live under [config](../config). Run `python scripts/check_repository.py` after staging moves to check tracked-file boundaries and local Markdown links. CI also checks package contents so local archives, website files and manuscripts cannot enter a distribution.
+
+- [Compose the learned second expert](COMPOSED_COHORT.md): exact prompt preservation and actual two-call answers; frozen read-only experiment.
+
+- [Native expert checkpoint representation](NATIVE_EXPERT_CHECKPOINTS.md): exact frozen ages, compact references and numerical work identity.

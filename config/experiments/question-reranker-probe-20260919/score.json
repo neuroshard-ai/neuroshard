@@ -1,0 +1,74 @@
+{
+  "native_promotion": false,
+  "new_final": false,
+  "seconds": 3.0673616979984217,
+  "totals": {
+    "retained-test-knowledge": {
+      "correct": 19,
+      "total": 20
+    },
+    "test": {
+      "correct": 14,
+      "total": 16
+    }
+  },
+  "wrong": [
+    {
+      "expected": "conversation-turns",
+      "question": "How many chat messages may one NeuroShard planned request contain at most?",
+      "selected": "conversation-questions",
+      "top": [
+        [
+          "conversation-questions",
+          1065
+        ],
+        [
+          "conversation-turns",
+          -1575
+        ],
+        [
+          "conversation-examples",
+          -7109
+        ]
+      ]
+    },
+    {
+      "expected": "feed-window-bytes",
+      "question": "What is the largest records payload, in bytes, that the NeuroShard conversation-feed publisher will put in one window?",
+      "selected": "feed-window-rows",
+      "top": [
+        [
+          "feed-window-rows",
+          3458
+        ],
+        [
+          "feed-window-bytes",
+          3009
+        ],
+        [
+          "feed-record-bytes",
+          856
+        ]
+      ]
+    },
+    {
+      "expected": "feed-window-metadata-bytes",
+      "question": "Excluding the actual conversation records, what byte ceiling applies to NeuroShard's feed-window metadata object?",
+      "selected": "feed-window-bytes",
+      "top": [
+        [
+          "feed-window-bytes",
+          8516
+        ],
+        [
+          "feed-record-bytes",
+          5600
+        ],
+        [
+          "feed-window-metadata-bytes",
+          4931
+        ]
+      ]
+    }
+  ]
+}

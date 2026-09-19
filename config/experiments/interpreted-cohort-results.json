@@ -1,0 +1,229 @@
+{
+  "format": "neuroshard-interpreted-cohort-results-v1",
+  "completed": false,
+  "passed": false,
+  "numerical": null,
+  "failure": {
+    "error": "",
+    "time": 1789493659.3966196,
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-retry-20260915/driver.py\", line 365, in <module>\n    run()\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-retry-20260915/driver.py\", line 333, in run\n    execute('development', 'train')\n  File \"/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-retry-20260915/driver.py\", line 235, in execute\n    assert all(process.returncode == 0 for process, _ in processes.values()) and sent_exit\nAssertionError\n",
+    "type": "AssertionError"
+  },
+  "source_freeze": {
+    "attempt_policy": {
+      "deadline": "2026-09-15T22:49:08.717846+00:00",
+      "original_created": "2026-09-15T16:49:08.717833+00:00",
+      "planning_cap_usd": 100,
+      "previous_attempt": "/home/ubuntu/neuroshard/.neuroshard/interpreted-cohort-20260915",
+      "reason": "Controller published a signal non-atomically; no development quality or final was evaluated. Preserve and retire the original allocation before replaying the unchanged numerical recipe.",
+      "same_prepared": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb"
+    },
+    "commit": "7227c606cc32dba8722ae2681aa60bc2d5fe24a2",
+    "helpers": {
+      "artifact_stream.py": "2225b249080c41a4088a48ce0035347e2175ac403b7e4a39625de95c19ecbc25",
+      "backup.py": "9aa28a22282d5c016aab1322e6963594003f768b4470d969561b79ce85307968",
+      "check_signal.py": "2366d146f9b2629c2079a938861dd7572bd67dfbc3d8e34d5940a8a80bfc88fe",
+      "cluster.py": "0059e057519e08184ed06b56da0fa3c42a5e79d1c9af5fbdc460cf389b756247",
+      "controller_check.py": "529fc29ee9ad91e04f9ebc1d5d1501a7c7b2e8eea8f6c30224df9cbc371d2fd8",
+      "driver.py": "8c8cfb5b51d46572d74b975fb44e5574b249118a5bdc9dd0cdb519c2e86ec45b",
+      "fetch_objects.py": "39e9fd59bc095fa491a80a1343cf0d31f5d764aa0ce8af80f6304d01eef85e65",
+      "observe.py": "494fbdeb63a379f23fdbaf27bc5134573daa33735d1442f1428745646a3f3cd1",
+      "pack_bank.py": "6074b8399aeab4886dba902c657e94b3daef3e41e683908f47f11a03d53fd04f",
+      "pipeline.py": "f898124a44146142926dfe1b2f1d03b5a45aa845ff40716b103587dce3bd43c6",
+      "prepare.py": "cc67cc714be4dea4799152361acdb046b1f3ce679e755a3f831698707f4284fd",
+      "preserve.py": "b7e21df6b043d692d1b0320ed34e83d545a20c9298b17bff763e3482926b071a",
+      "provision.py": "eba8c5043cc6a96ebc29e8e017d59239d0b2d5f95b48bd5bac6d72f63f5b9295",
+      "retire.py": "bb66023750b51a117faae524d7923950057b5d2d224f766e6a60454dd51c1ac5",
+      "setup.py": "afb819fcca3e89b82104489e70e54a2ce3b04f80ad7b71a6c104c272d546ffb0",
+      "setup.sh": "568fefc2367fc7a08cd692917bcf62d25b44e17385dbc4eade5582048f1adf67",
+      "stage_inputs.py": "95b4bf7a7aa11692304db385e606f452edeffd7305c912ddbcd90d65f55d5291",
+      "summarize.py": "ecad05d23f390759592312d405261c92f2cc74fdc7565b9cf41386a908b49017",
+      "upload.py": "a6ca374e080fabd011bd183084ea0ca88deb2b1b3bacceeb1d881fc0323d7cee",
+      "wait_hosts.py": "336396261b2dbab2e262c7dedf62313f7bd288dae5b972d86e7d27996fe4930a"
+    },
+    "max_gpu_vcpus": 20,
+    "max_hours": 6,
+    "planning_cap_usd": 100,
+    "prepared": "9ab354962c680b9c53bc6b98d333cb43155cb049bf1a0150ce488765f9a222fb",
+    "previous_attempt_evidence": {
+      "bucket": "neuroshard-training-data",
+      "bytes": 8092867,
+      "object": "research/interpreted-cohort-20260915/evidence/9f649c42d525663d4a2641fa9c67e1b780256d637f69e7daada36027b3c9d834",
+      "readback_verified": true,
+      "scope": "Complete source, new and retained inputs, observations, original-model partitions and verified model/Adam inventories. New expert tensors and feature banks receive full object readbacks; inherited model objects retain their earlier inventories.",
+      "sha256": "9f649c42d525663d4a2641fa9c67e1b780256d637f69e7daada36027b3c9d834",
+      "time": 1789492029.9448917
+    },
+    "previous_graph": "2a81df24652ac4a434ad9ffb3eec09e6038801104645869d33ee35c6a4a2826d",
+    "source_bundle_sha256": "e31c7d67d5358e4c02f7a3a9bdd9954c80552a57a07d9f95a2a270621ba9ea5c",
+    "time": 1789492254.321689
+  },
+  "stages": {
+    "development": {
+      "owners": [],
+      "survival": []
+    }
+  },
+  "weights": {
+    "checkpoints": [
+      {
+        "file_sha256": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "root": "8419279c1d64ec902339846774c222d86837341fc4f78d388a287d6b03738565",
+        "step": 0
+      },
+      {
+        "file_sha256": "42534082fe03362facc2349a4ed7845630aefee1a42e087fbffc89f182740333",
+        "root": "42534082fe03362facc2349a4ed7845630aefee1a42e087fbffc89f182740333",
+        "step": 280
+      },
+      {
+        "file_sha256": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+        "root": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+        "step": 560
+      }
+    ],
+    "inventory_sha256": "61ffa834fa64107a263984f5cdcaca18c96f9b11b3e71969e0f2866ceea4a176",
+    "partial": true,
+    "readback_verified": true
+  },
+  "evidence": {
+    "bucket": "neuroshard-training-data",
+    "object": "research/interpreted-cohort-retry-20260915/evidence/454cd3e8b8474a4a740ee0664246ba6ee877d2d71fef0deacb74959c9f2db3e4",
+    "sha256": "454cd3e8b8474a4a740ee0664246ba6ee877d2d71fef0deacb74959c9f2db3e4",
+    "bytes": 8296753,
+    "readback_verified": true,
+    "time": 1789494120.7597358,
+    "scope": "Complete source, new and retained inputs, observations, original-model partitions and verified model/Adam inventories. New expert tensors and feature banks receive full object readbacks; inherited model objects retain their earlier inventories."
+  },
+  "resources": {
+    "terminated": true,
+    "instances": [
+      "i-005fde984b50b2eb4",
+      "i-0aab651d07f87caed",
+      "i-0b8dedf90becea320",
+      "i-0c32fb7fc3bc9a5b1",
+      "i-0d844c26cba3200a1"
+    ],
+    "physical_instances": 5,
+    "maximum_simultaneous_workers": 5,
+    "confirmed": "2026-09-15T17:41:51.008137+00:00",
+    "volumes": [
+      "vol-0332fef66ec1cea59",
+      "vol-036b01733c463d2cd",
+      "vol-03a9aea9b7632a6d1",
+      "vol-068a68383129a1141",
+      "vol-0e8fb23309052daee"
+    ],
+    "volume_deletion_confirmed": true,
+    "security_group_deleted": true,
+    "protected_instances_unchanged": true,
+    "per_instance": [
+      {
+        "instance": "i-0aab651d07f87caed",
+        "type": "g5.xlarge",
+        "hours": 0.4908355936076906,
+        "compute_usd": 0.49378060716933675,
+        "gp3_usd": 0.008180593226794843
+      },
+      {
+        "instance": "i-005fde984b50b2eb4",
+        "type": "g5.xlarge",
+        "hours": 0.4872244824965795,
+        "compute_usd": 0.490147829391559,
+        "gp3_usd": 0.008120408041609658
+      },
+      {
+        "instance": "i-0d844c26cba3200a1",
+        "type": "g5.xlarge",
+        "hours": 0.4919467047188017,
+        "compute_usd": 0.4948983849471145,
+        "gp3_usd": 0.008199111745313362
+      },
+      {
+        "instance": "i-0c32fb7fc3bc9a5b1",
+        "type": "g5.xlarge",
+        "hours": 0.4850022602743573,
+        "compute_usd": 0.48791227383600344,
+        "gp3_usd": 0.00808337100457262
+      },
+      {
+        "instance": "i-0b8dedf90becea320",
+        "type": "g5.xlarge",
+        "hours": 0.4883355936076906,
+        "compute_usd": 0.4912656071693367,
+        "gp3_usd": 0.008138926560128176
+      }
+    ],
+    "compute_usd_upper_bound": 2.4580047025133505,
+    "gp3_usd_estimate": 0.04072241057841866,
+    "lifetime_tx_bytes": 45991693262,
+    "network_counters_complete": true,
+    "conservative_transfer_allowance_usd": 0.91983386524,
+    "scope": "Planning estimates, not an invoice. Compute ends at confirmed termination; all transmit bytes are conservatively charged. Retained S3 storage accrues separately."
+  },
+  "human_operators": 1,
+  "tokens_issued": 0,
+  "native_activated": false,
+  "limitations": [
+    "Explicit domain routing; no arbitrary peer admission.",
+    "Known documentation facts with held-out wording and two-fact combinations.",
+    "Earlier answers are exposed retention probes, not another independent quality final.",
+    "Added capacity with additional stored parameters, not an equal-budget scaling advantage.",
+    "The serving graph and distinct optimizer ages are not yet settled by native consensus."
+  ],
+  "partial_observations": {
+    "steps": 560,
+    "checkpoint": "698d9ae2ba3a89de5b1bf19ec42e6680fe2d408a96f92efa84b383ac5d95b530",
+    "new_development": {
+      "checks": {
+        "composed_accuracy": false,
+        "single_accuracy": true,
+        "single_gain": true
+      },
+      "metrics": {
+        "composed": {
+          "accuracy": 0.125,
+          "after": 2,
+          "before": 0,
+          "count": 16,
+          "gains": 2,
+          "losses": 0
+        },
+        "single": {
+          "accuracy": 0.765625,
+          "after": 49,
+          "before": 7,
+          "count": 64,
+          "gains": 42,
+          "losses": 0,
+          "paired_gain": {
+            "lower": 0.5625,
+            "mean": 0.65625,
+            "pairs": 64,
+            "upper": 0.75
+          }
+        }
+      },
+      "passed": false
+    },
+    "earlier_paths_served_during_updates": true,
+    "earlier_service_records": 124,
+    "retention_stopped_at_zero_based_index": 112,
+    "retained_answers_equal_before_stop": 112,
+    "finals_opened": false,
+    "expert_exit_survival_completed": false,
+    "failure_cause": "Plan reserialization sorted example argument keys from name/field to field/name. json.dumps preserved that new order inside the actual interpreter prompt. Equal semantic configuration identities did not preserve model input token identity.",
+    "failed_question": "The fictional Luma directory has a home location for Milo Merrow. Which city is it?",
+    "expected_interpretation": {
+      "name": "Milo Merrow",
+      "field": "city"
+    },
+    "actual_interpretation": {
+      "field": "city",
+      "name": "Luma"
+    },
+    "expected_answer": "Tromso",
+    "actual_answer": "Tallinn",
+    "next_method": "Read-only evaluation of the preserved terminal expert with exact original interpreter prompt serialization and two actual calls for explicitly paired questions. This failed trial remains failed."
+  }
+}

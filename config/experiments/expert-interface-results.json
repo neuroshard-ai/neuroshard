@@ -1,0 +1,177 @@
+{
+  "format": "neuroshard-owned-expert-interface-result-v1",
+  "source": "6b2d28c5f7cc9555d1c21ca128e41e3f15957e1a",
+  "result": {
+    "final_opened": false,
+    "gates": {
+      "ablation": "89ca9175e18a098e543a3f869396e7aa13486493b786c86d5b63f3ca685fb854",
+      "fusion": "f365a6efd02b197a1017d9840c0762a47ab1311f32314ceac3a36f709751e11c"
+    },
+    "graph": "54b5f43b17bdbb211ebae8b8e6e1f0a25dad28da82503c1eba95f8526d697ca6",
+    "interfaces": [
+      null,
+      null,
+      null,
+      "110e24e2945661c38f23dcb9b742befab71e787f018a865b2ea762234979ef65",
+      "562cb14522b8575ecda72442c991b828739b3070d54d4a89e85e3e4f69ea129d"
+    ],
+    "limitations": [
+      "Controlled five-owner trial under one administrator; no independent-operator evidence.",
+      "Existing backbone and expert weights remain frozen. Newly added interfaces and a causal gate train; no participant reconstructs the whole backbone.",
+      "All sources execute for every generated token. This is not sparse compute or bandwidth scaling.",
+      "Provenance assigns auxiliary training loss to answer spans. Generation receives only the original user conversation, with no evaluation references or source labels.",
+      "Development has informed method selection. The existing final remains unscored at freeze; no claim of wholly new specialist facts is made.",
+      "The control isolates added expert interfaces, not a matched-total-resource no-growth alternative.",
+      "General retention is response-only loss plus published responses, not a broad preference evaluation.",
+      "No native admission, new learning-cohort completion, public chat or completion of the six milestones is implied."
+    ],
+    "passed": false,
+    "plan": "58729aef12d0a24f5b809c95fa5df56ebe8be490f7262d2fc8228d982a05a473",
+    "reports": {
+      "dev": {
+        "checks": {
+          "general_retention": true,
+          "mixed_accuracy": false,
+          "specialist_gain_ablation": false,
+          "specialist_gain_hub": true,
+          "structured_retention": true
+        },
+        "passed": false,
+        "specialist_gains": {
+          "ablation": {
+            "groups": 20,
+            "lower_95_one_sided": 0.0,
+            "mean": 0.125,
+            "upper_95_one_sided": 0.25
+          },
+          "hub": {
+            "groups": 20,
+            "lower_95_one_sided": 0.3055555555555556,
+            "mean": 0.46875,
+            "upper_95_one_sided": 0.6666666666666666
+          }
+        },
+        "strata": {
+          "directory": {
+            "accuracy": {
+              "ablation": 0.375,
+              "fusion": 0.625,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 7,
+              "lower_95_one_sided": -0.14285714285714285,
+              "mean": 0.25,
+              "upper_95_one_sided": 0.625
+            },
+            "accuracy_vs_hub": {
+              "groups": 7,
+              "lower_95_one_sided": 0.375,
+              "mean": 0.625,
+              "upper_95_one_sided": 0.8571428571428571
+            },
+            "documents": 8
+          },
+          "general": {
+            "documents": 8,
+            "loss_vs_ablation": {
+              "groups": 8,
+              "lower_95_one_sided": -0.0007431004196405411,
+              "mean": 0.003225446678698063,
+              "upper_95_one_sided": 0.010375344194471836
+            },
+            "loss_vs_hub": {
+              "groups": 8,
+              "lower_95_one_sided": -1.4230608940124512e-06,
+              "mean": 0.004705898463726044,
+              "upper_95_one_sided": 0.014116939157247543
+            }
+          },
+          "mixed": {
+            "accuracy": {
+              "ablation": 0.0,
+              "fusion": 0.125,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 7,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.125,
+              "upper_95_one_sided": 0.2857142857142857
+            },
+            "accuracy_vs_hub": {
+              "groups": 7,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.125,
+              "upper_95_one_sided": 0.2857142857142857
+            },
+            "documents": 16
+          },
+          "protocol": {
+            "accuracy": {
+              "ablation": 1.0,
+              "fusion": 1.0,
+              "hub": 0.0
+            },
+            "accuracy_vs_ablation": {
+              "groups": 6,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.0,
+              "upper_95_one_sided": 0.0
+            },
+            "accuracy_vs_hub": {
+              "groups": 6,
+              "lower_95_one_sided": 1.0,
+              "mean": 1.0,
+              "upper_95_one_sided": 1.0
+            },
+            "documents": 8
+          },
+          "structured": {
+            "accuracy": {
+              "ablation": 0.875,
+              "fusion": 0.875,
+              "hub": 0.25
+            },
+            "accuracy_vs_ablation": {
+              "groups": 8,
+              "lower_95_one_sided": 0.0,
+              "mean": 0.0,
+              "upper_95_one_sided": 0.0
+            },
+            "accuracy_vs_hub": {
+              "groups": 8,
+              "lower_95_one_sided": 0.375,
+              "mean": 0.625,
+              "upper_95_one_sided": 0.875
+            },
+            "documents": 8
+          }
+        }
+      }
+    }
+  },
+  "resources": {
+    "terminated": [
+      "i-009c9349f70e86e1c",
+      "i-011da4b5a0e820d54",
+      "i-0351d7802f745e24f",
+      "i-0c4a4b0d51becb661",
+      "i-0dd70b96de4cc97b8"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 2.4664478529566667,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  },
+  "optimizer_restart": {
+    "fusion": true,
+    "ablation": true
+  },
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-causal-fusion-20260916/expert-interface-evidence.tar.gz",
+    "bytes": 749517319,
+    "sha256": "255640f205bbb5a75a946013315da63c1e28a18bf694e8d58c8f601ca92bd4db"
+  }
+}

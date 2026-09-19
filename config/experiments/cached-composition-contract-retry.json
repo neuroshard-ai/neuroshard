@@ -1,0 +1,30 @@
+{
+  "format": "neuroshard-cached-composition-contract-retry-v1",
+  "original_source": "a08d061a43fb4c9eba493a1e05ab6f70425c9c86",
+  "plan": "385851bbccadb1a56534c19659e106e75b5c4baa78fadb3ead1a255f73206bad",
+  "service": "243002010a6c369a7011054bf70ba1dbc8d5b9d135cb67bd5436eb51ac01cf74",
+  "neural_execution_started": false,
+  "failure": "Ubuntu unattended-upgrades held /var/lib/dpkg/lock-frontend on owner 1; apt-get exited before installing the virtual environment. Four other owners retrieved and verified their tensors.",
+  "setup_log_sha256": "adc848ae053b10bde831341a3a4e725d2dabdefab6d2385bd3dfa9387e25d677",
+  "change": "Wait at most 300 seconds for the dpkg frontend lock; bound apt index/network retries inside the existing setup timeout. Do not remove locks or kill package managers.",
+  "same_numerical_inputs": true,
+  "same_source_archive_sha256": "8464e4d7ea64632b6eaac1a128968a01827d24b194e31a4b84a9f4a9aa057441",
+  "same_questions_and_gates": true,
+  "deadline": "2026-09-16T16:38:14.136381+00:00",
+  "combined_planning_cap_usd": 25,
+  "retirement_required_before_retry": true,
+  "previous_resources": {
+    "terminated": [
+      "i-01fdf6dad17a25494",
+      "i-04cb4a67d06f4d7d0",
+      "i-09913295e58977a3d",
+      "i-0991c4d5e7c0eb218",
+      "i-0c26929e937bf51cb"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 0.7570128626466667,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  }
+}

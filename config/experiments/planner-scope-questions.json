@@ -1,0 +1,183 @@
+{
+  "format": "neuroshard-training-question-augmentation-v1",
+  "provenance": "Development-informed scope contrasts, joined only to original training targets. The semantic final is already exposed and is excluded along with development question strings. This is a repair, not an independent generalization test.",
+  "questions": {
+    "planner-updates": [
+      "How long can a single planner optimization window be in update steps?",
+      "How many optimizer updates fit in one planner window?",
+      "Where is the cap on steps inside one planner window?",
+      "Give the per-window planner update ceiling.",
+      "What update count must a planner window stay within?",
+      "What is the allowed upper limit for one window of planner optimization?",
+      "How many planner steps may be grouped into one bounded execution window?",
+      "Name the numerical bound for a planner window's update count.",
+      "How many optimizer iterations may a single submitted planner work claim attest?",
+      "What update budget applies to one planner claim's execution window?",
+      "For one planner claim, give the ceiling on reported optimizer steps.",
+      "What is the step limit per claimed planner window?",
+      "In planner training, how many updates may be reported together in one work claim?",
+      "What bound limits the updates attested by one planner claim?"
+    ],
+    "planner-owners": [
+      "How many distinct shard operators participate in a planner reservation?",
+      "Give the required number of owners for planner work.",
+      "What is the size of the worker group assigned to a planner window?",
+      "How many worker signatures attest a completed planner window?",
+      "How many reserved workers supply receipts for planner training?",
+      "How many separate owners are represented by a planner claim's receipts?",
+      "How large is the owner set bound to a planner training reservation?",
+      "What count of participating worker owners must a planner claim bind?"
+    ],
+    "planner-steps": [
+      "How many optimizer steps are permitted across an entire planner job?",
+      "What limit applies to the full length of a planner training recipe?",
+      "State the step cap for a whole planner prescription.",
+      "What is the largest total update budget of a planner training recipe?",
+      "How many optimization iterations may a complete planner schedule request?",
+      "What bound applies to total training steps, across all planner windows?",
+      "Give the maximum length of the complete planner update schedule.",
+      "Name the total-step limit enforced on planner jobs.",
+      "Across all claims in a planner job, how many optimizer iterations can the full schedule request?",
+      "What update budget applies to the complete planner job rather than an individual claim?",
+      "For the complete planner training schedule, give the ceiling on optimizer steps.",
+      "What is the step limit across the entire planner recipe?",
+      "In planner training, how many updates can the full schedule prescribe across multiple work claims?",
+      "What bound limits the total updates in a planner job spanning many claims?"
+    ],
+    "planner-microbatch": [
+      "At most how many examples are processed together in a planner microbatch?",
+      "What example count caps a single planner microbatch?",
+      "Give the planner microbatch example limit.",
+      "How many samples can one planner microbatch hold?",
+      "What is the allowed ceiling for a planner microbatch's size?",
+      "How large may the microbatch used by the planner optimizer be?",
+      "What is the maximum number of input rows in a planner microbatch?",
+      "Name the row-count bound for planner microbatch execution."
+    ],
+    "planner-documents": [
+      "How many examples may the whole planner training dataset contain?",
+      "What limit applies to the collection of records in a planner prescription?",
+      "Give the maximum record count of the planner training corpus.",
+      "What is the job-wide cap on planner training examples?",
+      "How many input records can be declared for a complete planner job?",
+      "What is the largest permitted planner training dataset, measured in rows?",
+      "Name the limit on the data rows supplied to a planner prescription.",
+      "How many distinct indexed training rows can a planner job declare?"
+    ],
+    "planner-batch": [
+      "How many examples can a full scheduled planner batch contain?",
+      "What bound applies to the size of one complete planner batch?",
+      "Give the example limit for a scheduled planner batch.",
+      "How many dataset row indices can a planner batch name?",
+      "What is the largest batch allowed in a planner schedule?",
+      "How many input examples can one scheduled planner batch select?",
+      "State the full-batch row limit for planner training.",
+      "What count of rows bounds an individual planner batch?"
+    ],
+    "planner-rank": [
+      "How wide can a planner adapter's low-rank dimension be?",
+      "Give the maximum rank allowed for a planner adapter.",
+      "What bound is enforced on the rank of the learned planner adapter?",
+      "Which numerical cap limits planner adapter rank?",
+      "What is the permitted upper end of the planner adapter rank setting?",
+      "How large can the low-rank dimension of planner adaptation become?",
+      "What value must the rank of a planner adapter not exceed?",
+      "Name the highest supported planner adapter rank."
+    ],
+    "planner-parameters": [
+      "How many trainable parameters may a planner contain at most?",
+      "What is the cap on the planner's parameter budget?",
+      "Give the largest allowed number of planner model parameters.",
+      "What parameter total is the maximum for a permitted planner?",
+      "What upper bound applies to the trainable planner parameter count?",
+      "Name the numerical planner-capacity limit in parameters.",
+      "How many parameters can the protocol admit for one planner?",
+      "State the maximum planner parameter count as an integer."
+    ],
+    "planner-reserve": [
+      "What on-chain transaction acquires a planner training reservation?",
+      "Which native action binds workers to a new planner window?",
+      "Name the ledger transaction used before producing planner updates.",
+      "What transaction kind opens a reservation for planner work?",
+      "Which planner transaction reserves execution resources?",
+      "Give the native kind used to book a planner training window.",
+      "What ledger action establishes a planner training assignment?",
+      "Which transaction starts the reservation stage of a planner job?"
+    ],
+    "planner-claim": [
+      "What native transaction publishes the result of a planner window?",
+      "Which on-chain kind presents completed planner work for verification?",
+      "Name the transaction that claims a completed planner training window.",
+      "What ledger action submits the planner's executed update window?",
+      "Which planner transaction carries a completed training claim?",
+      "Give the native kind used to report finished planner updates.",
+      "What transaction publishes planner training evidence to the chain?",
+      "Which on-chain operation claims credit for a planner window?"
+    ],
+    "planner-execute": [
+      "What graph-service request kind produces a planner training window?",
+      "Which local numerical service action runs planner optimization?",
+      "Name the local operation that executes planner training.",
+      "What request asks the operator service to produce planner updates?",
+      "Which worker-service action carries out the planner window?",
+      "Give the local service kind for training the planner.",
+      "What command selects planner training execution on an operator?",
+      "Which local action computes a planner training window?"
+    ],
+    "planner-audit": [
+      "Which graph-service action verifies an existing planner work claim?",
+      "What local request kind re-executes planner work for an auditor?",
+      "Name the service action that checks a planner training claim.",
+      "Which operator request performs numerical verification of planner work?",
+      "What local kind selects the planner-claim audit handler?",
+      "Give the worker-service action for checking reported planner updates.",
+      "What request tells the numerical service to reproduce a claimed planner window?",
+      "Which local command checks the computation behind a planner claim?"
+    ],
+    "planner-serving": [
+      "What effect does settlement of planner training have on the serving graph?",
+      "After planner work earns settlement, how does the serving graph compare with its previous version?",
+      "Give the serving-graph status after only a planner training claim settles.",
+      "Is the approved serving graph changed or unchanged merely by settling planner work?",
+      "What happens to the serving graph when training settles but quality promotion has not occurred?",
+      "Does training settlement itself replace the serving graph, or leave it unchanged? Answer unchanged or replaced.",
+      "When planner computation is accepted, what is the status of the already approved serving graph?",
+      "How is the accepted serving graph affected by planner-work settlement alone?"
+    ],
+    "planner-identity": [
+      "Can changing only a document's title change its planner work identity?",
+      "Are human-readable titles part of the identity used for rewarding planner computation?",
+      "Keeping numerical inputs fixed, does renaming the document create a new planner work identity?",
+      "Does the planner work-identity calculation use document titles?",
+      "Can a title-only edit produce a distinct payable planner computation?",
+      "Do display titles enter the hash that identifies planner training work?",
+      "Is a document title used to distinguish rewarded planner work?",
+      "Does changing a descriptive title alone make planner work eligible for a different work identity?"
+    ],
+    "planner-state": [
+      "What checkpoint contents allow another worker to resume planner optimization?",
+      "Which model and optimizer data are needed at the start of a planner replay?",
+      "Name the numerical checkpoint state required to reproduce planner updates.",
+      "What must a worker restore to continue a planner training window?",
+      "Which saved numerical checkpoint components are sufficient for planner-window replay?",
+      "What model state and optimizer state must be preserved for a planner restart?",
+      "Name the two numerical state components needed when replaying a planner window.",
+      "What training state must an auditor load before reproducing the next planner updates?"
+    ],
+    "planner-ancestor": [
+      "Given the starting checkpoint, must an auditor fetch every ancestral planner checkpoint?",
+      "Does reproducing a continued planner window require checkpoint files older than its input boundary?",
+      "Once the input checkpoint is available, are the entire previous checkpoint history files needed for planner replay?",
+      "Must a planner worker restore all earlier checkpoints to execute from the current boundary?",
+      "Are ancestral checkpoint files required in addition to the input state for a planner window?",
+      "With the complete input state supplied, must a planner replay traverse earlier checkpoint files?",
+      "Does a continuation from the current planner checkpoint depend on downloading its old ancestor files?",
+      "Must the auditor load historical checkpoints preceding the supplied input checkpoint to verify a planner window?"
+    ]
+  },
+  "source_grounding": {
+    "claim_window": "src/neuroshard/evolution/planner_work.py:apply binds claim_planner.window and calls planner_window.validate",
+    "window_bound": "src/neuroshard/evolution/planner_window.py:validate bounds a consecutive claim window to 16 updates",
+    "job_bound": "src/neuroshard/evolution/planner_window.py:validate_profile bounds recipe.steps to 4096"
+  }
+}

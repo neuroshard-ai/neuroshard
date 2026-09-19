@@ -14,6 +14,10 @@ from neuroshard.dataflow.store import canonical
 from neuroshard.demo import client as wire, protocol
 
 
+class ClosedOperation(wire.Rejected):
+    """The native ledger has permanently closed this operation's context."""
+
+
 class Outbox:
     def __init__(self, path, url, chain_id, owner, *, rpc=wire.rpc, query=wire.query):
         self.url, self.chain_id, self.owner = url, chain_id, owner
@@ -22,6 +26,7 @@ class Outbox:
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.execute('PRAGMA synchronous=FULL')
         self.db.execute('CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, intent BLOB, envelope BLOB, receipt BLOB)')
+        self.db.execute('CREATE TABLE IF NOT EXISTS retired (id TEXT PRIMARY KEY, evidence BLOB)')
         self.db.execute('CREATE TABLE IF NOT EXISTS identity (chain_id TEXT, owner TEXT)')
         saved = self.db.execute('SELECT chain_id, owner FROM identity').fetchone()
         expected = (chain_id, owner.public_key)
@@ -32,8 +37,46 @@ class Outbox:
             self.db.commit()
 
     def pending(self):
-        row = self.db.execute('SELECT id FROM operations WHERE receipt IS NULL').fetchone()
+        row = self.db.execute('SELECT id FROM operations WHERE receipt IS NULL '
+                              'AND id NOT IN (SELECT id FROM retired)').fetchone()
         return row[0] if row else None
+
+    def retire_closed(self, state):
+        """Recover a stale audit/vote only from trusted committed native state.
+
+        A CheckTx error or a missing current claim alone is insufficient: the
+        completed native history must identify this exact, non-reusable context.
+        Retirement preserves the signed bytes and records an unknown transaction
+        outcome, never a fabricated receipt, refund or successful payment.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        if (state['chain_id'] != self.chain_id or state['height'] < 1
+                or state['manifest'].get('auditing', {}).get('format') != 'neuroshard-native-quorum-audit-v1'):
+            raise ValueError('Retirement requires this account network\'s committed native state')
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        body, owner = protocol.verify(protocol.parse_json(raw))
+        if owner != self.owner.public_key or body['chain_id'] != self.chain_id:
+            raise ValueError('Outbox envelope belongs to another account or chain')
+        kind, closed = body['kind'], None
+        if kind in ('audit_commit', 'audit_verdict', 'audit_reveal'):
+            closed = next((row for row in state['auditing']['history']
+                           if row.get('claim_id') == body['claim_id']), None)
+        elif kind == 'accept_audit':
+            closed = next((row for row in state['auditing']['history'] if row['id'] == body['budget_id']), None)
+        elif kind == 'vote_expert_job':
+            closed = next((row for row in state.get('expert_lifecycle', {}).get('history', [])
+                           if row.get('kind') == 'activation' and row['id'] == body['proposal_id']), None)
+        if closed is None:
+            return None
+        evidence = {'operation': operation, 'transaction_sha256': hashlib.sha256(raw).hexdigest(),
+                    'chain_id': self.chain_id, 'height': state['height'],
+                    'state_root': hashlib.sha256(canonical(state)).hexdigest(), 'closed_context': closed,
+                    'transaction_outcome': 'unknown; context permanently closed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
 
     def logical_id(self, operation):
         row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
@@ -59,6 +102,8 @@ class Outbox:
         return self.confirm(operation, timeout=timeout)
 
     def confirm(self, operation, *, timeout=60):
+        if self.db.execute('SELECT id FROM retired WHERE id=?', (operation,)).fetchone():
+            raise ClosedOperation('Native context permanently closed; preserve the original signed operation '+operation)
         row = self.db.execute('SELECT envelope, receipt FROM operations WHERE id=?', (operation,)).fetchone()
         if not row:
             raise ValueError('Unknown outbox operation')

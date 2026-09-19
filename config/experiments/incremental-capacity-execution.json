@@ -1,0 +1,58 @@
+{
+  "format": "neuroshard-incremental-capacity-execution-v1",
+  "prepared": "d69b098bd210ade7988cb533432a4cc0ae45a72c8b0495686ef3a7a6c7ad9c9e",
+  "purpose": "Record placement, execution order, recovery and cleanup before the GPU comparison; numerical sources, data and quality gates remain the committed experiment plan.",
+  "max_simultaneous_workers": 4,
+  "types_by_rank": [
+    "g5.2xlarge",
+    "g5.2xlarge",
+    "g5.2xlarge",
+    "g5.xlarge"
+  ],
+  "vcpu_total": 28,
+  "region": "us-east-1",
+  "placement": "Prefer one availability zone; record any capacity fallback and its traffic cost. All training uses private peer addresses.",
+  "max_hours": 8,
+  "planning_cap_usd": 100,
+  "storage": "250GiB encrypted gp3 per worker; keep model objects and checkpoints on persistent disks. Frozen objects are reused through verified hard links.",
+  "order": [
+    {
+      "command": "baseline",
+      "arm": "baseline"
+    },
+    {
+      "command": "train",
+      "arm": "append",
+      "learning_rate": 5e-05
+    },
+    {
+      "command": "train",
+      "arm": "tail-control",
+      "learning_rate": 5e-05
+    },
+    {
+      "command": "train",
+      "arm": "append",
+      "learning_rate": 0.0002
+    },
+    {
+      "command": "train",
+      "arm": "tail-control",
+      "learning_rate": 0.0002
+    }
+  ],
+  "recovery": {
+    "when": "After all four candidates and their checkpoints are preserved, before candidate selection or any final evaluation.",
+    "arm": "append",
+    "learning_rate": 5e-05,
+    "restore_step": 64,
+    "target_step": 128,
+    "replace_rank": 3,
+    "method": "Terminate the recorded trainable-tail worker only after verified S3 preservation. Launch one replacement of the same type and runtime, restore only its owned objects/checkpoint from S3, and resume the four logical owners from the committed midpoint in fresh processes.",
+    "pass": "The entire terminal checkpoint, including all Adam objects, must equal the uninterrupted terminal checkpoint. No new checkpoint is eligible for selection from this replay.",
+    "accounting": "Report the repeated 64 updates, replacement startup and repeated development evaluation separately as recovery overhead. At most four GPUs run simultaneously; five physical instances are used over the full trial if replacement succeeds."
+  },
+  "finals": "Commit every actual development candidate and the fixed selection before final scoring. Failed development arms cannot open their finals. Score every selected final, including failures.",
+  "preservation": "Verify complete S3 readback hashes for newly produced tensor objects and evidence before terminating their last retained copies. Original parent objects retain their separately verified source inventory.",
+  "cleanup": "Retire exactly the recorded study instances and their volumes/security group; verify protected CPU services unchanged. Host timers bound compute duration but do not replace cleanup."
+}

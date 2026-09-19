@@ -1,0 +1,29 @@
+{
+  "format": "neuroshard-ordinary-assistant-anchors-v1",
+  "license": "Apache-2.0",
+  "status": "Pre-training scoring inputs; never selector or neural training data.",
+  "skills": [
+    {"id": "arithmetic-addition", "question": "What is 17 plus 25? Give only the number.", "answer": "42", "aliases": ["42.", "17 + 25 = 42."]},
+    {"id": "sequence", "question": "Continue this number sequence: 3, 6, 9, 12. Give only the next number.", "answer": "15", "aliases": ["15."]},
+    {"id": "sorting", "question": "Sort 9, 1, 5 in ascending order. Give just the comma-separated numbers.", "answer": "1, 5, 9", "aliases": ["1,5,9", "1, 5, 9."]},
+    {"id": "json-boolean", "question": "Return a JSON object with one key, ready, whose value is the boolean true. Return only JSON.", "answer": "{\"ready\": true}", "aliases": ["{\"ready\":true}", "{ \"ready\": true }", "{ \"ready\":true }"], "case_sensitive": true},
+    {"id": "python-length", "question": "Which Python expression gives the length of a list named items? Give just the expression.", "answer": "len(items)", "aliases": ["`len(items)`", "```python\nlen(items)\n```", "```\nlen(items)\n```"], "case_sensitive": true},
+    {"id": "geometry", "question": "Is every square a rectangle? Answer only yes or no.", "answer": "Yes", "aliases": ["Yes."]},
+    {"id": "distance", "question": "A train travels at 60 kilometers per hour for 2 hours. How many kilometers does it cover? Give only the number.", "answer": "120", "aliases": ["120."]},
+    {"id": "units", "question": "How many centimeters are in 2.5 meters? Give only the number.", "answer": "250", "aliases": ["250."]},
+    {"id": "category", "question": "Which word does not belong with the others: apple, pear, hammer, peach? Answer with just that word.", "answer": "hammer", "aliases": ["hammer."]},
+    {"id": "word-position", "question": "What is the third word in 'blue birds fly high'? Return only that word.", "answer": "fly", "aliases": ["fly."]},
+    {"id": "translation", "question": "Translate 'good morning' into Spanish. Give only the translation.", "answer": "Buenos días", "aliases": ["Buenos días.", "¡Buenos días!"]},
+    {"id": "decimal-comparison", "question": "Which number is greater, 0.9 or 0.11? Reply with only the greater number.", "answer": "0.9", "aliases": ["0.9."]}
+  ],
+  "conversation": [
+    {"id": "apples", "history": [{"role": "user", "content": "I have five apples."}, {"role": "assistant", "content": "You have five apples."}], "question": "I ate two of them. How many apples do I have left? Reply with only the number.", "answer": "3", "aliases": ["3."]},
+    {"id": "remember-name", "history": [{"role": "user", "content": "My name is Mira."}, {"role": "assistant", "content": "Hello, Mira."}], "question": "What is my name? Give just the name.", "answer": "Mira", "aliases": ["Mira."]},
+    {"id": "remember-code", "history": [{"role": "user", "content": "Please remember this code: cedar-47."}, {"role": "assistant", "content": "I will keep that code in mind for this conversation."}], "question": "Repeat the code, without adding anything else.", "answer": "cedar-47", "aliases": ["cedar-47."], "case_sensitive": true},
+    {"id": "running-total", "history": [{"role": "user", "content": "Start a running total at ten."}, {"role": "assistant", "content": "The running total is ten."}], "question": "Add four to the total. What is it now? Give only the number.", "answer": "14", "aliases": ["14."]},
+    {"id": "box-comparison", "history": [{"role": "user", "content": "The red box holds six balls. The blue box holds two."}, {"role": "assistant", "content": "Understood."}], "question": "Which box has more balls? Give only its color.", "answer": "red", "aliases": ["red."]},
+    {"id": "language-preference", "history": [{"role": "user", "content": "For this project, we agreed to write the code in Python."}, {"role": "assistant", "content": "Understood; we will use that language."}], "question": "Which programming language did we agree to use? Give only its name.", "answer": "Python", "aliases": ["Python."]},
+    {"id": "meeting-time", "history": [{"role": "user", "content": "The meeting begins at 14:30."}, {"role": "assistant", "content": "I have noted the meeting time."}], "question": "At what time does our meeting begin? Reply only in HH:MM format.", "answer": "14:30", "aliases": [], "case_sensitive": true},
+    {"id": "carry-instruction", "history": [{"role": "user", "content": "Translate the next English word I give you into French. Return only the French word."}, {"role": "assistant", "content": "Ready."}], "question": "cat", "answer": "chat", "aliases": ["chat."]}
+  ]
+}

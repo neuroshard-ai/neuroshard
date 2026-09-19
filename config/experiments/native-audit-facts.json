@@ -1,0 +1,102 @@
+{
+  "source_revision": "5c1f7bb5f7e2485ea0e09db3327a79e8b0bdeaa7",
+  "cohort": "audit",
+  "facts": [
+    {
+      "id": "audit-fund", "answer": "fund_audit",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "if kind == 'fund_audit':",
+      "training": ["Which transaction funds a NeuroShard audit budget?", "What transaction kind creates a prepaid audit offer?", "How is the transaction for sponsoring a NeuroShard audit named?", "Which transaction opens the budget that pays NeuroShard auditors?"],
+      "test": "I want to sponsor a complete NeuroShard execution audit. What transaction kind creates the prepaid budget?"
+    },
+    {
+      "id": "audit-accept", "answer": "accept_audit",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "'accept_audit': {'budget_id'},",
+      "training": ["Which transaction accepts a NeuroShard audit offer?", "What transaction kind lets a selected auditor post collateral?", "How does a selected NeuroShard auditor accept a funded budget?", "What is the transaction name for bonding into an audit offer?"],
+      "test": "A NeuroShard audit budget selected my key. Which transaction do I send to take the obligation and lock my bond?"
+    },
+    {
+      "id": "audit-cancel", "answer": "cancel_audit",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "if kind == 'cancel_audit':",
+      "training": ["Which transaction cancels an unreserved NeuroShard audit budget?", "What transaction kind withdraws a sponsor's unused audit offer?", "How is cancellation of an available funded audit named?", "Which transaction lets an audit sponsor cancel before reservation?"],
+      "test": "No work has reserved my NeuroShard audit offer. What transaction kind lets me cancel the offer?"
+    },
+    {
+      "id": "audit-commit", "answer": "audit_commit",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "if kind == 'audit_commit':",
+      "training": ["Which transaction commits a NeuroShard auditor's report hash?", "What is the audit transaction used before revealing the verdict?", "How is the transaction publishing an audit commitment named?", "What transaction kind records a salted audit-report commitment?"],
+      "test": "My NeuroShard replay report is ready, but the reveal phase has not started. Which transaction records its commitment?"
+    },
+    {
+      "id": "audit-verdict", "answer": "audit_verdict",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "'audit_verdict': {'claim_id', 'salt', 'coverage_root', 'valid'},",
+      "training": ["Which transaction reveals a native NeuroShard audit verdict?", "What transaction kind reveals the boolean validity decision in a native quorum audit?", "How is the native audit transaction containing salt and valid named?", "Which transaction submits a committed native auditor's validity report?"],
+      "test": "For the NeuroShard native quorum audit profile, what transaction reveals both the salt and the validity flag?"
+    },
+    {
+      "id": "audit-quorum", "answer": "strictly more than two thirds",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "return 3*voted > 2*sum(powers.values())",
+      "training": ["What fraction of snapshotted voting weight must support a native NeuroShard audit quorum?", "How much native audit voting power is enough, expressed as a fraction?", "What weighted voting threshold does a NeuroShard native audit require?", "Which fraction of the total bonded-owner weight must native audit votes exceed?"],
+      "test": "How large a share of the snapshotted voting power must agree for a NeuroShard native audit quorum to be sufficient?"
+    },
+    {
+      "id": "audit-stage-price", "answer": "100000",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "PROFILE = {'format': FORMAT, 'price_per_stage': 100_000, 'auditor_bond': 5_000_000,",
+      "training": ["What is the default NeuroShard funded-audit price per stage in atoms?", "How many atoms per stage does the default funded-audit profile charge?", "What default price_per_stage value is in the NeuroShard audit profile?", "In atoms, what is the configured stage fee in the default audit profile?"],
+      "test": "Using NeuroShard's default funded-audit profile, how many ledger atoms is the price for one execution stage?"
+    },
+    {
+      "id": "audit-bond", "answer": "5000000",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "PROFILE = {'format': FORMAT, 'price_per_stage': 100_000, 'auditor_bond': 5_000_000,",
+      "training": ["What is the default NeuroShard auditor bond in atoms?", "How many atoms of collateral does the default funded-audit profile require?", "What auditor_bond value does NeuroShard's default audit profile specify?", "In atoms, how large is a selected auditor's default bond?"],
+      "test": "Under the default NeuroShard funded-audit settings, how many atoms must a selected auditor lock as collateral?"
+    },
+    {
+      "id": "audit-commit-blocks", "answer": "128",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "'commit_blocks': 128, 'reveal_blocks': 32}",
+      "training": ["How many commit blocks are in the default NeuroShard audit profile?", "What is the default duration of the audit commitment phase in blocks?", "What commit_blocks setting does the default funded-audit profile use?", "How long is the default NeuroShard audit commit window, measured in blocks?"],
+      "test": "Before any early quorum closes the phase, how many blocks does NeuroShard's default audit profile allocate for commitments?"
+    },
+    {
+      "id": "audit-reveal-blocks", "answer": "32",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "'commit_blocks': 128, 'reveal_blocks': 32}",
+      "training": ["How many reveal blocks are in the default NeuroShard audit profile?", "What is the default duration of the audit reveal phase in blocks?", "What reveal_blocks setting does the default funded-audit profile use?", "How long is the default NeuroShard audit reveal window, measured in blocks?"],
+      "test": "Before any early quorum closes the phase, how many blocks does NeuroShard's default audit profile allocate for revealing reports?"
+    },
+    {
+      "id": "audit-stage-limit", "answer": "4096",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "count = integer(body['stage_limit'], 1, 4096)",
+      "training": ["What is the largest stage_limit allowed when funding a NeuroShard audit?", "How many execution stages can one NeuroShard audit budget cover at most?", "What upper bound applies to a funded audit's stage count?", "What is the maximum stage allowance accepted for a NeuroShard audit offer?"],
+      "test": "When I create a NeuroShard audit budget, what is the highest execution-stage allowance the transaction accepts?"
+    },
+    {
+      "id": "audit-budget-limit", "answer": "16",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "if len(service['budgets']) >= 16:",
+      "training": ["How many outstanding NeuroShard audit budgets may exist at once?", "What is the maximum count of open funded-audit offers?", "At what number of audit budgets does NeuroShard refuse another offer?", "What is the simultaneous budget limit for the NeuroShard audit service?"],
+      "test": "How many funded audit offers can remain outstanding in NeuroShard before a new budget is rejected?"
+    },
+    {
+      "id": "audit-history-limit", "answer": "128",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "service['history'] = service['history'][-128:]",
+      "training": ["How many completed audit-history records does NeuroShard retain?", "What is the maximum length of the NeuroShard audit service history?", "How many recent audit budget outcomes remain in the audit history list?", "To what number of entries is NeuroShard's funded-audit history trimmed?"],
+      "test": "After a NeuroShard audit budget finishes, how many of the most recent budget outcomes can its history list retain?"
+    },
+    {
+      "id": "audit-refund", "answer": "sponsor",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "ledger.account(state, budget['sponsor'])['balance'] += budget['funds'] - paid",
+      "training": ["Who receives unused funds when a NeuroShard audit budget finishes?", "Which participant gets unspent audit funding refunded?", "To whom does the audit service return the difference between its budget and paid fees?", "Who gets the remaining prepaid audit balance after auditors are paid?"],
+      "test": "Once a NeuroShard audit budget has paid the auditors, which participant receives the money left in that budget?"
+    },
+    {
+      "id": "audit-subset", "answer": "no",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "if weights is not None and auditors != sorted(weights['owners']):",
+      "training": ["May a native NeuroShard audit sponsor choose only a subset of bonded owners as auditors?", "Can a sponsor omit an active bonded owner from a native audit offer?", "Does native quorum auditing permit sponsor-selected subsets of the active owners?", "Can a native audit budget list only the sponsor's preferred bonded auditors?"],
+      "test": "In NeuroShard's native quorum audit mode, can I fund an offer that deliberately excludes some active bonded owners?"
+    },
+    {
+      "id": "audit-expiry-limit", "answer": "100000",
+      "path": "src/neuroshard/evolution/auditing.py", "evidence": "expiry = integer(body['expires_in'], 16, 100000)",
+      "training": ["What is the maximum expires_in duration of a NeuroShard audit budget in blocks?", "How many blocks is the longest allowed lifetime for a new funded audit offer?", "What upper expiry bound does the fund_audit transaction accept?", "What is the largest block interval allowed for an unreserved audit budget's expiry?"],
+      "test": "Measured in blocks, what is the longest expiry interval I can request when funding a new NeuroShard audit offer?"
+    }
+  ]
+}

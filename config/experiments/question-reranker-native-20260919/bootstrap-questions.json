@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "topic": "audit-fund",
+      "question": "What transaction should a sponsor submit to supply the budget for a NeuroShard audit?"
+    },
+    {
+      "topic": "audit-accept",
+      "question": "What transaction lets a NeuroShard auditor take an offered audit obligation?"
+    },
+    {
+      "topic": "audit-cancel",
+      "question": "What transaction returns a NeuroShard audit budget that has not been reserved?"
+    },
+    {
+      "topic": "audit-commit",
+      "question": "What transaction records the hash commitment for a NeuroShard auditor report?"
+    }
+  ]
+}

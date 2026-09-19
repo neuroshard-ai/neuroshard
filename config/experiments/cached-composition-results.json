@@ -1,0 +1,581 @@
+{
+  "answers_complete": 1,
+  "cached_tensor_bytes_ratio": 0.06768538941317308,
+  "checks": {
+    "answers": false,
+    "cached_tensor_bytes": true,
+    "cached_token_equality": true,
+    "coreferences": false,
+    "mixed_answers": false,
+    "planner": false,
+    "replay": true
+  },
+  "passed": false,
+  "plan": "f02f8d5ce80c588e1ef0b0549f42d842b02418e1095e3b6dff8c6d11ee5db1ef",
+  "planner_complete": 26,
+  "scope": "Development serving integration using unchanged learned weights. Sixteen planner cases are exposed development inputs and sixteen are newly frozen; end-to-end tasks use previously published knowledge. This is not another admitted learning cohort or a sealed assistant-quality result. All prompts are visible to the operator and selected providers; evidence contains tokenized prompts.",
+  "service": "6fd2bb68ecba0d860f91c88a53e5bf9dfe1a1f0401cc6604b11a0ad49279ac90",
+  "source_commit": "e83eec9bdb2908f04b006561352b4a6ea81cd258",
+  "planner_results": [
+    {
+      "id": "mixed-package-city",
+      "text": "{\"questions\": [\"How do I install the NeuroShard client?\", \"What city does Mira Vale live in?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.547114453000006
+    },
+    {
+      "id": "mixed-signing-hobby",
+      "text": "{\"questions\": [\"What signing scheme does NeuroShard use?\", \"What hobby does Theo Marin enjoy?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3740755329999956
+    },
+    {
+      "id": "directory-two-facts",
+      "text": "{\"questions\": [\"What instrument does Mira Vale play?\", \"What is Mira Vale's profession?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3158428529999924
+    },
+    {
+      "id": "protocol-two-facts",
+      "text": "{\"questions\": [\"What package should I install for NeuroShard?\", \"What command checks my NeuroShard environment?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.473045758000012
+    },
+    {
+      "id": "pronoun-mixed",
+      "text": "{\"questions\": [\"Where does Mira Vale live?\", \"Which package installs NeuroShard?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.280275324999991
+    },
+    {
+      "id": "pronoun-single",
+      "text": "{\"questions\": [\"What instrument does Theo Marin play?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.8477300250000326
+    },
+    {
+      "id": "two-identities",
+      "text": "{\"questions\": [\"What city does Mira Vale live in?\", \"What instrument does Theo Marin play?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3984452809999652
+    },
+    {
+      "id": "general-single",
+      "text": "{\"questions\": [\"Why does the sky appear blue?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.7971108490000347
+    },
+    {
+      "id": "general-pair",
+      "text": "{\"questions\": [\"What causes rain?\", \"How do rainbows form?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.0035401729999762
+    },
+    {
+      "id": "single-protocol",
+      "text": "{\"questions\": [\"What is the name of the NeuroShard pip package?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.053278110000008
+    },
+    {
+      "id": "single-directory",
+      "text": "{\"questions\": [\"What is Mira Vale's profession?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.8343535440000096
+    },
+    {
+      "id": "prior-two-entities",
+      "text": "{\"questions\": [\"What is Mira Vale's profession?\", \"What is Theo Marin's profession?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3250120079999874
+    },
+    {
+      "id": "new-mixed-context",
+      "text": "{\"questions\": [\"Which key type signs its consensus messages?\", \"What city does Vera Stone live in?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.3314954960000023
+    },
+    {
+      "id": "new-two-subjects",
+      "text": "{\"questions\": [\"What hobby does Eli Stone enjoy?\", \"What is Vera Stone's profession?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.226268559999994
+    },
+    {
+      "id": "pronoun-two-fields",
+      "text": "{\"questions\": [\"What is Vera Stone's city?\", \"What is Vera Stone's hobby?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.2231704120000018
+    },
+    {
+      "id": "new-general-and-specialist",
+      "text": "{\"questions\": [\"Why do rainbows form?\", \"What instrument does Eli Stone play?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.1603449110000383
+    },
+    {
+      "id": "new-person-fields",
+      "text": "{\"questions\": [\"Where does Nia Calder live?\", \"What instrument does Nia Calder play?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3742169139999874
+    },
+    {
+      "id": "new-paired-people",
+      "text": "{\"questions\": [\"What is Aron Wells's hobby?\", \"Which city is Leah Mercer from?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3880163389999893
+    },
+    {
+      "id": "new-protocol-general",
+      "text": "{\"questions\": [\"What package installs NeuroShard?\", \"Why does ice float?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.1640891590000138
+    },
+    {
+      "id": "new-general-person",
+      "text": "{\"questions\": [\"How do eclipses happen?\", \"What is Iris Calder's profession?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.1503660939999918
+    },
+    {
+      "id": "new-protocol-two",
+      "text": "{\"questions\": [\"Which client package is published for NeuroShard?\", \"What key type signs consensus messages?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.389020845999994
+    },
+    {
+      "id": "new-general-two",
+      "text": "{\"questions\": [\"Why does metal expand when heated?\", \"How does a compass work?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.1551030319999995
+    },
+    {
+      "id": "new-person-hobby",
+      "text": "{\"questions\": [\"What is Iris Calder's hobby?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.8416561270000216
+    },
+    {
+      "id": "new-general-single",
+      "text": "{\"questions\": [\"How does photosynthesis convert sunlight into energy?\", \"What is the process of photosynthesis?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.2683244159999845
+    },
+    {
+      "id": "pronoun-new-city",
+      "text": "{\"questions\": [\"What city does Nia Calder live in?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.9520394680000095
+    },
+    {
+      "id": "pronoun-new-mixed",
+      "text": "{\"questions\": [\"What is Aron Wells' profession?\", \"What package installs NeuroShard?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.3210734219999836
+    },
+    {
+      "id": "pronoun-new-fields",
+      "text": "{\"questions\": [\"What is Leah Mercer's instrument?\", \"What is Leah Mercer's hobby?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.429072854000026
+    },
+    {
+      "id": "prior-new-pair",
+      "text": "{\"questions\": [\"What are Nia Calder's and Iris Calder's professions?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.173402574000022
+    },
+    {
+      "id": "pronoun-new-general",
+      "text": "{\"questions\": [\"What instrument does Iris Calder play?\", \"Why does the Moon have phases?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 1.2715759189999858
+    },
+    {
+      "id": "prior-new-product",
+      "text": "{\"questions\": [\"Which package installs NeuroShard?\", \"What key type signs its consensus messages?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.3278400599999713
+    },
+    {
+      "id": "pronoun-new-three-turns",
+      "text": "{\"questions\": [\"What is Nia Calder's hobby?\"]}",
+      "valid": true,
+      "complete": true,
+      "seconds": 0.9062752209999871
+    },
+    {
+      "id": "prior-new-two-products",
+      "text": "{\"questions\": [\"What package installs the first?\", \"What does git status show?\"]}",
+      "valid": true,
+      "complete": false,
+      "seconds": 1.1604544420000025
+    }
+  ],
+  "conversations": [
+    {
+      "id": "single-package",
+      "passed": false,
+      "seconds": 2.5278246469999885,
+      "status": "completed",
+      "error": null,
+      "text": "The NeuroShard client package is typically referred to as \"SmolLMReact\" in the React ecosystem.",
+      "routes": [
+        "protocol"
+      ]
+    },
+    {
+      "id": "single-city",
+      "passed": false,
+      "seconds": 3.1878869650000183,
+      "status": "completed",
+      "error": null,
+      "text": "Fenn Varden is a character from the webtoon \"The King 2 Hearts\" by Min-seok Kim. He lives in the city of Seoul, South Korea.",
+      "routes": [
+        "parent"
+      ]
+    },
+    {
+      "id": "mixed-package-city",
+      "passed": false,
+      "seconds": 5.374116518999983,
+      "status": "completed",
+      "error": null,
+      "text": "What city does Fenn Varden live in?\nFenn Varden is a character from the webtoon \"The King 2 Hearts\" by Min-seok Kim. He lives in the city of Seoul, South Korea.\n\nWhat is the name of the NeuroShard client package?\nThe NeuroShard client package is typically referred to as \"SmolLMReact\" in the React ecosystem.",
+      "routes": [
+        "parent",
+        "protocol"
+      ]
+    },
+    {
+      "id": "mixed-context",
+      "passed": false,
+      "seconds": 7.329263055000013,
+      "status": "completed",
+      "error": null,
+      "text": "What city does Fenn Varden live in?\nFenn Varden is a character from the webtoon \"The King 2 Hearts\" by Min-seok Kim. He lives in the city of Seoul, South Korea.\n\nWhat type of key signs does NeuroShard consensus messages use?\nNeuroShard consensus messages use a variety of key signs to ensure the integrity and security of the network. These include:\n\n1. Hash: A hash is a one-way mathematical function that takes input data of any size and produces a fixed-size string of characters. In the context of NeuroShard, has",
+      "routes": [
+        "parent",
+        "parent"
+      ]
+    },
+    {
+      "id": "two-protocol",
+      "passed": false,
+      "seconds": 8.190950670999996,
+      "status": "completed",
+      "error": null,
+      "text": "What package installs NeuroShard?\nNeuroShard is not a package that can be installed. It is a game developed by NeuroNet Games. The game is available on various platforms such as PC, PlayStation 4, and Xbox One. To play NeuroShard, you would need to download and install the game from the official website or a\n\nWhat key type signs its consensus messages?\nIn a blockchain network, consensus messages are typically signed by the sender's private key. This ensures that only the authorized sender can send the message, and that the message has not been tampered with during transmission. The key type used for this purpose is usually a digital signature algorithm, such as the Elliptic Curve Digital Sign",
+      "routes": [
+        "parent",
+        "parent"
+      ]
+    },
+    {
+      "id": "two-directory",
+      "passed": false,
+      "seconds": 7.160974554000006,
+      "status": "completed",
+      "error": null,
+      "text": "What city does Fenn Varden live in?\nFenn Varden is a character from the webtoon \"The King 2 Hearts\" by Min-seok Kim. He lives in the city of Seoul, South Korea.\n\nWhat is Fenn Varden's profession?\nFenn Varden is a fictional character from the video game \"The Elder Scrolls V: Skyrim\". He is a Dunmer (Dunmeri) mage, a member of the Aldmeri Dominion, and a member of the Thieves Guild. His profession is primarily a mage, but",
+      "routes": [
+        "parent",
+        "parent"
+      ]
+    },
+    {
+      "id": "general",
+      "passed": true,
+      "seconds": 4.22773007699999,
+      "status": "completed",
+      "error": null,
+      "text": "The sky appears blue due to a phenomenon called Rayleigh scattering. This is a type of scattering that occurs when sunlight enters the Earth's atmosphere and encounters tiny molecules of gases, such as nitrogen and oxygen. These molecules, which are much smaller than the wavelength of light, scatter the shorter blue wavelengths of light more than the",
+      "routes": [
+        "parent"
+      ]
+    },
+    {
+      "id": "general-and-directory",
+      "passed": false,
+      "seconds": 6.901805393000018,
+      "status": "completed",
+      "error": null,
+      "text": "Why does ice float?\nIce floats because of the way water molecules are arranged. Water is a polar molecule, meaning it has a slightly positive charge on one end and a slightly negative charge on the other. This polarity allows water molecules to form hydrogen bonds with each other.\n\nWhen water is in its solid form, ice, the molecules are\n\nWhat city does Fenn Varden live in?\nFenn Varden is a character from the webtoon \"The King 2 Hearts\" by Min-seok Kim. He lives in the city of Seoul, South Korea.",
+      "routes": [
+        "parent",
+        "parent"
+      ]
+    }
+  ],
+  "diagnostic": {
+    "plan": "b251c13dd0bc6c547647e6fc99a876fb3ad5c684450ece7136ab1bab2b4cbce9",
+    "rows": [
+      {
+        "cached": "The NeuroShard client package is typically referred to as \"SmolLMReact\" in the React ecosystem.",
+        "equal": true,
+        "model": "protocol",
+        "question": "What is the name of the NeuroShard client package?",
+        "route": {
+          "confident": true,
+          "distances": {
+            "directory": 258779793,
+            "parent": 227355521,
+            "protocol": 231945589
+          },
+          "features": "e24da9f636ec4daccf9f5ba765420b8240429cb95b39133d72cf6a411349e66b",
+          "logits": {
+            "directory": -55345058,
+            "parent": 17218204,
+            "protocol": 38128229
+          },
+          "margin": 20910025,
+          "nearest": "parent",
+          "predicted": "protocol",
+          "route": "protocol",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 4.111726701000066,
+        "uncached": "The NeuroShard client package is typically referred to as \"SmolLMReact\" in the React ecosystem."
+      },
+      {
+        "cached": "neuroshard-ai",
+        "equal": true,
+        "model": "protocol",
+        "question": "NeuroShard 0.4.0 \u2014 What is the name of the NeuroShard client package? Give just the answer.",
+        "route": {
+          "confident": true,
+          "distances": {
+            "directory": 207722241,
+            "parent": 150956023,
+            "protocol": 69554067
+          },
+          "features": "349c6cef9ddacf0ce3e8c836621a6851861927b7df881350ea68ff8acf10cb13",
+          "logits": {
+            "directory": -85078069,
+            "parent": -930309,
+            "protocol": 86014254
+          },
+          "margin": 86944563,
+          "nearest": "protocol",
+          "predicted": "protocol",
+          "route": "protocol",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 0.7221313410000221,
+        "uncached": "neuroshard-ai"
+      },
+      {
+        "cached": "To install NeuroShard, you would need to use pip3, Python's package manager. You can install NeuroShard using the following command in your terminal/command prompt:\n\n```bash\npip3 install neuroshard\n```\n\nReplace `neuroshard` with the actual name of the",
+        "equal": true,
+        "model": "protocol",
+        "question": "What package installs NeuroShard?",
+        "route": {
+          "confident": false,
+          "distances": {
+            "directory": 501088539,
+            "parent": 450208378,
+            "protocol": 426484801
+          },
+          "features": "0e933b8c627154f55110b00860df57fba4d8630e8302f564a61ac57427b05174",
+          "logits": {
+            "directory": -51410301,
+            "parent": -13061093,
+            "protocol": 64474728
+          },
+          "margin": 77535821,
+          "nearest": "protocol",
+          "predicted": "protocol",
+          "route": "parent",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 7.451500844999941,
+        "uncached": "To install NeuroShard, you would need to use pip3, Python's package manager. You can install NeuroShard using the following command in your terminal/command prompt:\n\n```bash\npip3 install neuroshard\n```\n\nReplace `neuroshard` with the actual name of the"
+      },
+      {
+        "cached": "neuroshard-ai",
+        "equal": true,
+        "model": "protocol",
+        "question": "NeuroShard 0.4.0 \u2014 What package installs NeuroShard? Give just the answer.",
+        "route": {
+          "confident": true,
+          "distances": {
+            "directory": 283248693,
+            "parent": 247929019,
+            "protocol": 98769523
+          },
+          "features": "52533533856814a66fb6cc16b35a23f88f30dcac7bb58f9d21a96c1c63e1f8a8",
+          "logits": {
+            "directory": -90106974,
+            "parent": -20590391,
+            "protocol": 110705137
+          },
+          "margin": 131295528,
+          "nearest": "protocol",
+          "predicted": "protocol",
+          "route": "protocol",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 0.7084896069999331,
+        "uncached": "neuroshard-ai"
+      },
+      {
+        "cached": "1. **Ed25519 signature**: Each message from NeuroShard contains an Ed25519 signature, which is a cryptographic signature algorithm that ensures the authenticity and integrity of the message.\n\n2. **Ed25519 key**: The Ed25519 key is",
+        "equal": true,
+        "model": "protocol",
+        "question": "What key type signs NeuroShard consensus messages?",
+        "route": {
+          "confident": false,
+          "distances": {
+            "directory": 419988467,
+            "parent": 433821558,
+            "protocol": 378927467
+          },
+          "features": "595300ea48d3c151d5745472f8f9818e1fd2ac24944af3182f319f51583e6f2d",
+          "logits": {
+            "directory": -43721813,
+            "parent": -12870767,
+            "protocol": 56593757
+          },
+          "margin": 69464524,
+          "nearest": "protocol",
+          "predicted": "protocol",
+          "route": "parent",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 7.396951696999963,
+        "uncached": "1. **Ed25519 signature**: Each message from NeuroShard contains an Ed25519 signature, which is a cryptographic signature algorithm that ensures the authenticity and integrity of the message.\n\n2. **Ed25519 key**: The Ed25519 key is"
+      },
+      {
+        "cached": "Ed25519",
+        "equal": true,
+        "model": "protocol",
+        "question": "NeuroShard 0.4.0 \u2014 What key type signs NeuroShard consensus messages? Give just the answer.",
+        "route": {
+          "confident": true,
+          "distances": {
+            "directory": 256153722,
+            "parent": 224698564,
+            "protocol": 93377768
+          },
+          "features": "e5ceb01382157a50694d25433c2add02beddcf5d12542fc90d77f427fdd3479f",
+          "logits": {
+            "directory": -84515580,
+            "parent": -19827612,
+            "protocol": 104349715
+          },
+          "margin": 124177327,
+          "nearest": "protocol",
+          "predicted": "protocol",
+          "route": "protocol",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 0.828184589999978,
+        "uncached": "Ed25519"
+      },
+      {
+        "cached": "Fenn Varden lives in Dresden, works as a historian, plays the vibraphone, and enjoys skating.",
+        "equal": true,
+        "model": "directory",
+        "question": "Which city does Fenn Varden live in?",
+        "route": {
+          "confident": false,
+          "distances": {
+            "directory": 338999021,
+            "parent": 332246115,
+            "protocol": 346643485
+          },
+          "features": "164b4ec2a9e99631c2a2c62d46d2d7a90aa69a44e367e8aef6dea106efa3b88e",
+          "logits": {
+            "directory": -42606611,
+            "parent": 31029338,
+            "protocol": 11576350
+          },
+          "margin": 19452988,
+          "nearest": "parent",
+          "predicted": "parent",
+          "route": "parent",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 3.4718532240000286,
+        "uncached": "Fenn Varden lives in Dresden, works as a historian, plays the vibraphone, and enjoys skating."
+      },
+      {
+        "cached": "{\"answer\":\"Sofia\"}",
+        "equal": true,
+        "model": "directory",
+        "question": "In the fictional Luma directory, Which city does Fenn Varden live in?\nReturn only a JSON object with exactly one key, \"answer\", containing the recorded value.",
+        "route": {
+          "confident": true,
+          "distances": {
+            "directory": 59701425,
+            "parent": 146662005,
+            "protocol": 190020353
+          },
+          "features": "5ac91dfb2339b434ee0da4518ad388790da166042640ab163586bbf377f6b88d",
+          "logits": {
+            "directory": 19631929,
+            "parent": -16226302,
+            "protocol": -3395424
+          },
+          "margin": 23027353,
+          "nearest": "directory",
+          "predicted": "directory",
+          "route": "directory",
+          "router": "c4b1a0a83f1f3d17f9815870e4c3e3740d7e53a5ee9d9a36e1594e4a9c4e3f14"
+        },
+        "seconds": 1.0044573090000313,
+        "uncached": "{\"answer\":\"Sofia\"}"
+      }
+    ]
+  },
+  "conclusion": "Cache saved 93.23% of measured tensor traffic and preserved all tested tokens and replay. Conversation integration failed: 26/32 plans and 1/8 complete answers. All eight diagnostic cached/uncached pairs matched; training-format prompts recovered the learned facts. The router screen had changed but not removed domain decorations. No quality promotion or milestone completion.",
+  "evidence": {
+    "url": "https://github.com/neuroshard-ai/neuroshard/releases/download/research-cached-serving-20260916/cached-serving-evidence.tar.gz",
+    "sha256": "81836eeb45265669c7ac3954624fc2ab69b33d880421844b0f21e93e0a5aa60d",
+    "anonymous_readback_verified": true
+  },
+  "resources": {
+    "terminated": [
+      "i-01bc6ba13fc4e2069",
+      "i-064c024ed037dce11",
+      "i-0ce781296eac6e69c",
+      "i-0e74d57381be24574",
+      "i-0f62d8fbfde242503"
+    ],
+    "volumes_deleted": true,
+    "security_group_deleted": true,
+    "protected_unchanged": true,
+    "compute_usd_upper_bound": 1.5287503623733334,
+    "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+  }
+}

@@ -1,0 +1,2239 @@
+{
+  "artifacts": {
+    "cached-manifest-crosschecks.json": {
+      "bytes": 1764,
+      "sha256": "72b4ff23e4e6134b43d960da7c882bf508362f0c5b153cbb22ad2d9c531427a7"
+    },
+    "cold-replay-artifacts.json": {
+      "bytes": 603,
+      "sha256": "abb410a8c6a7f6dd95cc85497808d88d53491b47fb3b0836fdbb4c69c803cb37"
+    },
+    "final-output-consistency.json": {
+      "bytes": 1640,
+      "sha256": "d6040d7bc6cb47494616e736dffc855e2f3d1c1335fad86d0a94e20b2d78414b"
+    },
+    "full-pytest-manifests.log": {
+      "bytes": 512,
+      "sha256": "13d0821ebad172c5dae2c704feab56b7dedab5d5230f02b110fdb0dabcfee113"
+    },
+    "full-replay-quorum.json": {
+      "bytes": 11813,
+      "sha256": "4bc5f9db219be4b02871d083be1dc2e43e3b97ab121a5f932d6c06c73544a216"
+    },
+    "growth-generation-identity.json": {
+      "bytes": 261,
+      "sha256": "c1c6a2cd15d6786c39c129212a9854eea098f21d1f6f21190f071d210d6af280"
+    },
+    "growth-quality.json": {
+      "bytes": 1566,
+      "sha256": "e447fee78a4a2a38d4b2f330137b79b70907df270b2e6a3f834d9817d37d6ec5"
+    },
+    "inputs/prepared.json": {
+      "bytes": 1385121,
+      "sha256": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd"
+    },
+    "join-verified.json": {
+      "bytes": 139,
+      "sha256": "72e5166e878d72c074808dd2faebb2db7e3aaf6735a2cf360293e218efbbd669"
+    },
+    "manifest-recovery-tests.log": {
+      "bytes": 98,
+      "sha256": "4a23ac7c242fd7105767342f1f8dc6fdfa45e9a17a2aea7063c31a5a48f0e53d"
+    },
+    "native-gpu-settlement-hardened.json": {
+      "bytes": 1615,
+      "sha256": "533b1a8a21dd0066a9a60c9e33dfdadaab2e2c6421297a91fa5e94f8980100e8"
+    },
+    "native-gpu-settlement.json": {
+      "bytes": 1615,
+      "sha256": "d2eafa8b5d90e3fef140106254262baeb0bae6e7aa3f3e0bcf9322cee54e8ddc"
+    },
+    "native-live-gpu-settlement.json": {
+      "bytes": 13349,
+      "sha256": "be4b14d4a49bba4f2b96f359c7904245f0f1c1dd47fa9fd828ad43b90737cdf7"
+    },
+    "phase-a-quality.json": {
+      "bytes": 1098,
+      "sha256": "d37aa5a3286bfd090e218b423b947c552f18bce4e6c59214a05fe7d32a0c1c34"
+    },
+    "phase-b-fixed-quality.json": {
+      "bytes": 1573,
+      "sha256": "d4430d57905ab394a6c9e885fdc35c20884d1b73e13f617c20b11ad7700ffb6c"
+    },
+    "phase-b-grown-quality.json": {
+      "bytes": 1574,
+      "sha256": "cb242878173350377b1d65c8adb4596e838ad4c2765b167739e5dd0c82a12dbc"
+    },
+    "replay-reference-tests.log": {
+      "bytes": 100,
+      "sha256": "649def7528acf34a28fbc0a5bdb213c6c47f8ae02a9af4e65db99c85352e3eea"
+    },
+    "single-gpu-full-replay.json": {
+      "bytes": 3859,
+      "sha256": "6957dbfac9f5f5c5645c6d6ea6213628786ddea375025c7da38d0e6387875806"
+    }
+  },
+  "checkpoint_backups": {
+    "fixed192": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "b76997b1b8d6140496ebcc105c2de6d674188311f4452e57d9fbc39044ac848f",
+      "manifest_sha256": "d398016e97386f33751f5869b0706a12ac8d8f7d162c71efc3376c646abaef98",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 192,
+      "unique_bytes": 20536696968
+    },
+    "fixed256": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+      "manifest_sha256": "8a844c675f5b95490c8b90aaf84b42540de9fd0e339b3e720906536f781eff52",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 256,
+      "unique_bytes": 20536696984
+    },
+    "grown128": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "e387b0ed32508684eacc24dcf7dccf2f6abbbe42a95ca91bb4f46fade3477663",
+      "manifest_sha256": "917e9c21ab169ce9219217afdea94694f12ea22bcf6cf79bcd508ac12648107f",
+      "objects": 236,
+      "readback_verified": true,
+      "step": 128,
+      "unique_bytes": 20805156042
+    },
+    "grown192": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "7361162a7a0ab63b92dd437b6ab5bc7a19d8db0a4e3b96cc7054d2a0189b1562",
+      "manifest_sha256": "87d1ae85b57b311db197ce1b6d87baa6e50ef1459282e2ae9b970afc827fd962",
+      "objects": 245,
+      "readback_verified": true,
+      "step": 192,
+      "unique_bytes": 22147420068
+    },
+    "grown256": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+      "manifest_sha256": "2f76e72fe976bb0d3b9526e556f5015f37426358d226115cbf5148948bac9874",
+      "objects": 245,
+      "readback_verified": true,
+      "step": 256,
+      "unique_bytes": 22147420084
+    },
+    "joined32": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+      "manifest_sha256": "04d433a3b126d10ee909aeb6fc9f467c1047ad767123b36110510dad3088169a",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 32,
+      "unique_bytes": 20536697156
+    },
+    "original0": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "453d85c6098c52623898e6a1f0ca29ecea8232cc7975bc26c4ec0159eee6833e",
+      "manifest_sha256": "acfcc85276144807881e54876be81604312d51bcb8405b34d9a30849ef0eabac",
+      "objects": 224,
+      "readback_verified": true,
+      "step": 0,
+      "unique_bytes": 6845637317
+    },
+    "original32": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "1889a1e73acce5e086e0c4afd61b93632dee09355e0e88a5378278ec6a3117df",
+      "manifest_sha256": "bf85c11291e221f0617a26a3776d7b3926e048a571116c0ee0d7ad19da0e1475",
+      "objects": 224,
+      "readback_verified": true,
+      "step": 32,
+      "unique_bytes": 20536699258
+    },
+    "three128": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+      "manifest_sha256": "c0b994df02e3f3b36ac72f1cf57eaa9bc54712ca0f08e542234d95fe41134373",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 128,
+      "unique_bytes": 20536696976
+    },
+    "three34": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+      "manifest_sha256": "320decfdf9d35672a9b1b1cbd05f51359122a1be461e16d487477181de889ea8",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 34,
+      "unique_bytes": 20536696980
+    },
+    "three64": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "c36a4db610de41ccdaa0fb33832c159e66a46c62cd3f0a43a7ffbdc8430dbb40",
+      "manifest_sha256": "33c66a2e78875c1d77392cd11da4d8f288a24dec14367f4d31e356354dba5491",
+      "objects": 227,
+      "readback_verified": true,
+      "step": 64,
+      "unique_bytes": 20536696972
+    },
+    "transcripts34": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": null,
+      "manifest_sha256": "8f742288c87f853dc5849a39521b65c2219cd0ae23f6385eb21f28881cbbf644",
+      "objects": 855,
+      "readback_verified": true,
+      "step": null,
+      "unique_bytes": 5328038093
+    },
+    "two34": {
+      "bucket": "neuroshard-training-data",
+      "checkpoint": "42e21d3db030d16b25e3aeb2a03935bc6b20498cc81ebd8d9e565b5f934eddd9",
+      "manifest_sha256": "01b7a0640ddbafa8b3bfd7ed30c26798d6ac8764d6bbddfcbe4e2b7094992e84",
+      "objects": 224,
+      "readback_verified": true,
+      "step": 34,
+      "unique_bytes": 20536699264
+    }
+  },
+  "cold_verifier_artifacts": {
+    "combined_unique_bytes": 31378006612,
+    "combined_unique_objects": 696,
+    "scope": "Inventory-based cold-verifier artifact accounting for the actual three-rank seed, input checkpoint and transcript. Excludes prepared data, source/runtime, tokenizer assets, small transcript/teacher manifests and output commitment metadata. Output tensors are regenerated by replay. Streaming limits resident GPU memory, not total downloads.",
+    "starting_state": {
+      "closed_boundary_tensor_bytes": 3995785128,
+      "input_checkpoint_unique_bytes": 20536697156,
+      "teacher_tensor_unique_bytes": 6845524328
+    }
+  },
+  "decisions": {
+    "fixed_continual_learning": false,
+    "grown_continual_learning": false,
+    "independent_ownership_demonstrated": false,
+    "permissionless_production_ready": false,
+    "phase_a_learning": true,
+    "serving_promoted": false,
+    "useful_growth": false
+  },
+  "evidence_archive": {
+    "bucket": "neuroshard-training-data",
+    "bytes": 57048734,
+    "members": 989,
+    "object": "research/adaptive-shards-20260914/evidence/f149852b8b38d0be4c35f4cbead8428b5e410e33047cba38211a51191930d192",
+    "readback_verified": true,
+    "scope": "Operator-stored evidence with frozen inputs/numerical sources, current native sources, all declared evaluations, public native trial summaries and complete checkpoint receipts. Private keys and Git history are excluded. Weights and Adam states are separate S3 objects.",
+    "sha256": "f149852b8b38d0be4c35f4cbead8428b5e410e33047cba38211a51191930d192"
+  },
+  "format": "neuroshard-adaptive-shards-results-v1",
+  "generated_answers_by_family": {
+    "final-b-fixed": {
+      "test-a": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 16
+        },
+        "total": {
+          "cases": 16,
+          "correct": 0
+        }
+      },
+      "test-b": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 13
+        },
+        "total": {
+          "cases": 16,
+          "correct": 0
+        }
+      }
+    },
+    "final-b-grown": {
+      "test-a": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 16
+        },
+        "total": {
+          "cases": 16,
+          "correct": 0
+        }
+      },
+      "test-b": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 13
+        },
+        "total": {
+          "cases": 16,
+          "correct": 0
+        }
+      }
+    },
+    "final-phase-a": {
+      "test-a": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 16
+        },
+        "total": {
+          "cases": 16,
+          "correct": 1
+        }
+      }
+    },
+    "final-phase-a-b": {
+      "test-a": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 16
+        },
+        "total": {
+          "cases": 16,
+          "correct": 1
+        }
+      },
+      "test-b": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 13
+        },
+        "total": {
+          "cases": 16,
+          "correct": 1
+        }
+      }
+    },
+    "final-seed-a": {
+      "test-a": {
+        "filter": {
+          "cases": 16,
+          "correct": 16
+        },
+        "lookup": {
+          "cases": 16,
+          "correct": 16
+        },
+        "sort": {
+          "cases": 16,
+          "correct": 15
+        },
+        "total": {
+          "cases": 16,
+          "correct": 0
+        }
+      }
+    }
+  },
+  "growth_generation_identity": {
+    "after": "e387b0ed32508684eacc24dcf7dccf2f6abbbe42a95ca91bb4f46fade3477663",
+    "before": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+    "exact_losses_and_tokens": true,
+    "generated_cases": 64,
+    "ranks": 3,
+    "retention_documents": 128,
+    "test_documents": 256
+  },
+  "growth_insertion": {
+    "after": "e387b0ed32508684eacc24dcf7dccf2f6abbbe42a95ca91bb4f46fade3477663",
+    "after_layers": 26,
+    "before": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+    "before_layers": 24,
+    "exact_development_losses": true,
+    "old_parameters_unchanged": true
+  },
+  "live_operator_backend_sha256": "7cf1881e46d4261596d777af49202e76457b8f62d28207b7274abe98991ab99e",
+  "native_operator_verifier_sha256": "be9a07bf0d76fa70f52d1b1b5b412fa1f2d3fbd614104e19ad2d5462adf48b95",
+  "native_trials": {
+    "fresh_post_claim": {
+      "actual_audits": [
+        {
+          "after_on_chain_claim": true,
+          "auditor": 0,
+          "began": 1789370442.220165,
+          "finished": 1789370611.0300744,
+          "partition_reports": [
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ced50c448b96462faf179a8370aba39b721715c06516a054a9f89619fbeddbf6",
+              "peak_cuda_bytes": 12214428672,
+              "rank": 0,
+              "resident_parameters": 503343104,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-173",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 38.14897227899928,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ebca7ee6e583b7192cbcf5788887c00e49e056fa44b0368c9d61e374b4456145",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 1,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-5-14",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 37.96814291299961,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "d1a91aeae85bd4eb6add2d1172919589f548082bf0b11b2d5f25454bb29f0cf9",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 2,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-97",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 38.73490803800087,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            }
+          ]
+        },
+        {
+          "after_on_chain_claim": true,
+          "auditor": 1,
+          "began": 1789370442.3175688,
+          "finished": 1789370675.275289,
+          "partition_reports": [
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ced50c448b96462faf179a8370aba39b721715c06516a054a9f89619fbeddbf6",
+              "peak_cuda_bytes": 12214428672,
+              "rank": 0,
+              "resident_parameters": 503343104,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-173",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 34.90466286899937,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ebca7ee6e583b7192cbcf5788887c00e49e056fa44b0368c9d61e374b4456145",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 1,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-5-14",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 38.92575470599877,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "d1a91aeae85bd4eb6add2d1172919589f548082bf0b11b2d5f25454bb29f0cf9",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 2,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-97",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 39.071778078001444,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            }
+          ]
+        },
+        {
+          "after_on_chain_claim": true,
+          "auditor": 2,
+          "began": 1789370441.9350991,
+          "finished": 1789370540.7423582,
+          "partition_reports": [
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ced50c448b96462faf179a8370aba39b721715c06516a054a9f89619fbeddbf6",
+              "peak_cuda_bytes": 12214428672,
+              "rank": 0,
+              "resident_parameters": 503343104,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-173",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 40.44501279799988,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "ebca7ee6e583b7192cbcf5788887c00e49e056fa44b0368c9d61e374b4456145",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 1,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-5-14",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 42.757569776998935,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            },
+            {
+              "binding": {
+                "boundaries": [
+                  0,
+                  6,
+                  15,
+                  24
+                ],
+                "end": 34,
+                "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+                "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+                "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+                "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+                "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+                "start": 32
+              },
+              "output_manifest": "d1a91aeae85bd4eb6add2d1172919589f548082bf0b11b2d5f25454bb29f0cf9",
+              "peak_cuda_bytes": 13917486080,
+              "rank": 2,
+              "resident_parameters": 604016640,
+              "runtime": {
+                "allocator": "expandable_segments:True",
+                "attention": "sdpa",
+                "autocast": "bfloat16",
+                "cpu_dispatch": "DEFAULT",
+                "cross_device_exact": false,
+                "cuda": "12.8",
+                "deterministic_algorithms": true,
+                "device": "cuda",
+                "gpu": "NVIDIA A10G",
+                "host": "ip-172-31-10-97",
+                "jinja2": "3.1.6",
+                "machine": "x86_64",
+                "mkl_instructions": "SSE4_2",
+                "numpy": "2.2.6",
+                "optimizer": "float32-adamw",
+                "parameters": "float32",
+                "python": "3.10.12",
+                "safetensors": "0.7.0",
+                "threads": 2,
+                "tokenizers": "0.22.1",
+                "torch": "2.9.1+cu128",
+                "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+                "transformers": "4.57.3"
+              },
+              "seconds": 43.458494557999074,
+              "tokens_issued": 0,
+              "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+              "valid": true
+            }
+          ]
+        }
+      ],
+      "all_four_supply_invariants": true,
+      "all_replays_started_after_claim": true,
+      "audit_daemons": 3,
+      "audit_paid_atoms": 1800000,
+      "audit_services": 3,
+      "chain_id": "neuroshard-live-gpu-replay-6e5c64d915f0",
+      "claim": "cf90394fad8ea2d4da2406010d8032f5d3f406d68892976181595a955fe714b6",
+      "genesis_hash": "3093347f7d46da4f3200ba25e3306dca76fcf3b18817bc40fb52f0229d418494",
+      "gpu_hosts": 3,
+      "input_checkpoint": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+      "issued_atoms": 2000000,
+      "matching_app_hash": "022813C8AAE38DDC7A864F10366EA069781A75230FA00573F4CE4C14532A576A",
+      "matching_header_height": 204,
+      "native_validators": 4,
+      "one_validator_offline": true,
+      "operators": 1,
+      "output_checkpoint": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+      "parameters": 1711376384,
+      "scope": "Actual post-claim GPU replay through persistent native audit daemons, one operator, isolated chain; no public balance or serving changes",
+      "settled": 1789370718.9227707,
+      "source_hash": "9543af05d6c71fabf92e64ac2f98b448d9ddd1563a16a865aef7764eb409ba41",
+      "submitted": 1789370440.6280622
+    },
+    "hardened_cached": {
+      "accepted_claim": {
+        "accepted": true,
+        "height": 65,
+        "id": "8a3f3f9f734e9fed8a380e8c4dde9c0e7408c2338c47a4fb9c3e3c84170354d9",
+        "kind": "portable_training",
+        "model_root": "bfd1b7eeca535ce6d82e98c674a2e2e33fde2f7a3c55fc5989b09810b8caf217",
+        "reason": "challenge window elapsed"
+      },
+      "all_four_supply_invariants": true,
+      "audit_paid_atoms": 3600000,
+      "audit_services": 6,
+      "chain_id": "neuroshard-sharded-replay-6026c11617c9",
+      "duplicate_rejected": true,
+      "forged_claim": {
+        "accepted": false,
+        "height": 34,
+        "id": "f132ec36b27cb6ebb765286fca2438a1af20048d0211012610c9eb7da8320ce6",
+        "kind": "portable_training",
+        "model_root": "2ff82fbece29ed8d715781522cfbcb072b0e372b561f7eb62e0b1be1bf352ee8",
+        "reason": "native audit quorum rejected execution"
+      },
+      "genesis_hash": "7bf898ff77dadbbee6e5778e72a695be9b74fef6a73047e1e1bead3f9014badb",
+      "input_checkpoint": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+      "issued_atoms": 2000000,
+      "issued_neuro": "2.000000",
+      "matching_app_hash": "228585FAC8B5751D21FDD97F31AE235063976D2FF34E83DB56033BC7AA3C743A",
+      "matching_header_height": 68,
+      "native_physical_hosts": 1,
+      "native_validators": 4,
+      "one_validator_offline_during_acceptance": true,
+      "operators": 1,
+      "output_checkpoint": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+      "parameters": 1711376384,
+      "rejoined_validator_caught_up": true,
+      "scope": "Isolated native genesis and actual cached GPU replay; no public-chain balances or serving promotion changed",
+      "settled_gpu_steps": [
+        33,
+        34
+      ],
+      "source_hash": "9543af05d6c71fabf92e64ac2f98b448d9ddd1563a16a865aef7764eb409ba41",
+      "training_hosts": 3,
+      "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274"
+    },
+    "initial_cached": {
+      "accepted_claim": {
+        "accepted": true,
+        "height": 65,
+        "id": "be962daa30f3e51c2c47fa49d96f123d22695759c17de4914815a1e32c9f21a0",
+        "kind": "portable_training",
+        "model_root": "bfd1b7eeca535ce6d82e98c674a2e2e33fde2f7a3c55fc5989b09810b8caf217",
+        "reason": "challenge window elapsed"
+      },
+      "all_four_supply_invariants": true,
+      "audit_paid_atoms": 3600000,
+      "audit_services": 6,
+      "chain_id": "neuroshard-sharded-replay-1271401c9417",
+      "duplicate_rejected": true,
+      "forged_claim": {
+        "accepted": false,
+        "height": 34,
+        "id": "a15db42007f151536a7ac075bc1070e83f2bad49834a79d827f2ecba7b687a11",
+        "kind": "portable_training",
+        "model_root": "2ff82fbece29ed8d715781522cfbcb072b0e372b561f7eb62e0b1be1bf352ee8",
+        "reason": "native audit quorum rejected execution"
+      },
+      "genesis_hash": "9197ff65006f7ac0a036eb695b350ec74d6e8212f3e59745ff43919d7da36517",
+      "input_checkpoint": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+      "issued_atoms": 2000000,
+      "issued_neuro": "2.000000",
+      "matching_app_hash": "2470F111FE35789C79DE5F196AF4101CC26BDAF1723DF533568F7FE738B3A498",
+      "matching_header_height": 68,
+      "native_physical_hosts": 1,
+      "native_validators": 4,
+      "one_validator_offline_during_acceptance": true,
+      "operators": 1,
+      "output_checkpoint": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+      "parameters": 1711376384,
+      "rejoined_validator_caught_up": true,
+      "scope": "Isolated native genesis and actual cached GPU replay; no public-chain balances or serving promotion changed",
+      "settled_gpu_steps": [
+        33,
+        34
+      ],
+      "source_hash": "7300ab3b67a925db4dd15c8ab04b7d46cc5ec93295f40c9381f635001c9ce6da",
+      "training_hosts": 3,
+      "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274"
+    }
+  },
+  "numeric_commit": "ad7d2ca7cb6e39d91b0d51580ca73e281bf6025c",
+  "one_gpu_replay": {
+    "host": "i-05a5fa796e0f9ecde",
+    "one_gpu_all_shards_sequentially": true,
+    "reports": [
+      {
+        "binding": {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "end": 34,
+          "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+          "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+          "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+          "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+          "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "start": 32
+        },
+        "peak_cuda_bytes": 12214428672,
+        "rank": 0,
+        "resident_parameters": 503343104,
+        "runtime": {
+          "allocator": "expandable_segments:True",
+          "attention": "sdpa",
+          "autocast": "bfloat16",
+          "cpu_dispatch": "DEFAULT",
+          "cross_device_exact": false,
+          "cuda": "12.8",
+          "deterministic_algorithms": true,
+          "device": "cuda",
+          "gpu": "NVIDIA A10G",
+          "host": "ip-172-31-7-97",
+          "jinja2": "3.1.6",
+          "machine": "x86_64",
+          "mkl_instructions": "SSE4_2",
+          "numpy": "2.2.6",
+          "optimizer": "float32-adamw",
+          "parameters": "float32",
+          "python": "3.10.12",
+          "safetensors": "0.7.0",
+          "threads": 2,
+          "tokenizers": "0.22.1",
+          "torch": "2.9.1+cu128",
+          "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+          "transformers": "4.57.3"
+        },
+        "seconds": 49.24204171600002,
+        "tokens_issued": 0,
+        "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+        "valid": true
+      },
+      {
+        "binding": {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "end": 34,
+          "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+          "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+          "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+          "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+          "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "start": 32
+        },
+        "peak_cuda_bytes": 13917486080,
+        "rank": 1,
+        "resident_parameters": 604016640,
+        "runtime": {
+          "allocator": "expandable_segments:True",
+          "attention": "sdpa",
+          "autocast": "bfloat16",
+          "cpu_dispatch": "DEFAULT",
+          "cross_device_exact": false,
+          "cuda": "12.8",
+          "deterministic_algorithms": true,
+          "device": "cuda",
+          "gpu": "NVIDIA A10G",
+          "host": "ip-172-31-7-97",
+          "jinja2": "3.1.6",
+          "machine": "x86_64",
+          "mkl_instructions": "SSE4_2",
+          "numpy": "2.2.6",
+          "optimizer": "float32-adamw",
+          "parameters": "float32",
+          "python": "3.10.12",
+          "safetensors": "0.7.0",
+          "threads": 2,
+          "tokenizers": "0.22.1",
+          "torch": "2.9.1+cu128",
+          "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+          "transformers": "4.57.3"
+        },
+        "seconds": 44.41617656099993,
+        "tokens_issued": 0,
+        "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+        "valid": true
+      },
+      {
+        "binding": {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "end": 34,
+          "input": "b4c1bb9653615d99999af4cd1866ebc485e7608ef822a279ccb52af73da42cc1",
+          "job": "9dec794b2478a7443f1fb87a6f0ebc03a32c2e328c6a1799260f16f80eb05edc",
+          "output": "b6d0f0fabacc54a1277da36ac738514c34c015af45a756cd926212aa9e2fc00e",
+          "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+          "reference": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+          "start": 32
+        },
+        "peak_cuda_bytes": 13917486080,
+        "rank": 2,
+        "resident_parameters": 604016640,
+        "runtime": {
+          "allocator": "expandable_segments:True",
+          "attention": "sdpa",
+          "autocast": "bfloat16",
+          "cpu_dispatch": "DEFAULT",
+          "cross_device_exact": false,
+          "cuda": "12.8",
+          "deterministic_algorithms": true,
+          "device": "cuda",
+          "gpu": "NVIDIA A10G",
+          "host": "ip-172-31-7-97",
+          "jinja2": "3.1.6",
+          "machine": "x86_64",
+          "mkl_instructions": "SSE4_2",
+          "numpy": "2.2.6",
+          "optimizer": "float32-adamw",
+          "parameters": "float32",
+          "python": "3.10.12",
+          "safetensors": "0.7.0",
+          "threads": 2,
+          "tokenizers": "0.22.1",
+          "torch": "2.9.1+cu128",
+          "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+          "transformers": "4.57.3"
+        },
+        "seconds": 44.50084113599996,
+        "tokens_issued": 0,
+        "transcript_root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+        "valid": true
+      }
+    ],
+    "seconds": 595.1220633806661,
+    "whole_model_parameters": 1711376384
+  },
+  "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+  "quality": {
+    "growth": {
+      "baseline": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+      "candidate": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+      "format": "neuroshard-adaptive-quality-v1",
+      "outcomes": {
+        "retention": {
+          "baseline_mean": 0.5539572429021838,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.5541300592274522,
+          "confidence": 0.95,
+          "documents": 128,
+          "mean_delta": 0.00017281632526826993,
+          "passed": true,
+          "upper": 0.0007895139283047957
+        },
+        "test-a": {
+          "baseline_mean": 0.13701119445198168,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.13670013589081298,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 48,
+            "candidate_correct": 48,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "mean_delta": -0.0003110585611686689,
+          "passed": true,
+          "upper": 0.00039771154591580646
+        },
+        "test-b": {
+          "baseline_mean": 0.14377860930073727,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.14266284242580024,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": 0.0,
+            "baseline_correct": 45,
+            "candidate_correct": 45,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 1.0,
+            "passed": true,
+            "wins": 0
+          },
+          "mean_delta": -0.001115766874937012,
+          "passed": false,
+          "upper": -0.00027036408359734827
+        }
+      },
+      "passed": false,
+      "phase": "growth",
+      "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+      "scope": "Frozen generated task families and public conversation retention; not general assistant quality",
+      "selection": "cceb08783bb687f588bd05abf143e6b91b8768dff79058a75704dfc7d73904c4"
+    },
+    "phase-a": {
+      "baseline": "seed",
+      "candidate": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+      "format": "neuroshard-adaptive-quality-v1",
+      "outcomes": {
+        "retention": {
+          "baseline_mean": 0.5522635856357444,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.5527322065160084,
+          "confidence": 0.95,
+          "documents": 128,
+          "mean_delta": 0.00046862088026406,
+          "passed": true,
+          "upper": 0.0010974873698299157
+        },
+        "test-a": {
+          "baseline_mean": 0.14985523048126811,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.14184506463645422,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": 0.03125,
+            "baseline_correct": 47,
+            "candidate_correct": 49,
+            "documents": 64,
+            "losses": 0,
+            "one_sided_p": 0.25,
+            "passed": true,
+            "wins": 2
+          },
+          "mean_delta": -0.008010165844813923,
+          "passed": true,
+          "upper": -0.0037000890691739007
+        }
+      },
+      "passed": true,
+      "phase": "a",
+      "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+      "scope": "Frozen generated task families and public conversation retention; not general assistant quality",
+      "selection": "fc579740860ead05cb2586d90d2fc9dde0d37d9ea6d9f7d7e640b85191fff6a1"
+    },
+    "phase-b-fixed": {
+      "baseline": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+      "candidate": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+      "format": "neuroshard-adaptive-quality-v1",
+      "outcomes": {
+        "retention": {
+          "baseline_mean": 0.5527322065160084,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.5539572429021838,
+          "confidence": 0.95,
+          "documents": 128,
+          "mean_delta": 0.0012250363861754723,
+          "passed": true,
+          "upper": 0.0017975549419937647
+        },
+        "test-a": {
+          "baseline_mean": 0.14184506463645422,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.13701119445198168,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": -0.015625,
+            "baseline_correct": 49,
+            "candidate_correct": 48,
+            "documents": 64,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          },
+          "mean_delta": -0.004833870184472548,
+          "passed": false,
+          "upper": -0.0014217119498558222
+        },
+        "test-b": {
+          "baseline_mean": 0.14845948944672227,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.14377860930073727,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": -0.015625,
+            "baseline_correct": 46,
+            "candidate_correct": 45,
+            "documents": 64,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          },
+          "mean_delta": -0.004680880145985009,
+          "passed": false,
+          "upper": -0.0010375133613529006
+        }
+      },
+      "passed": false,
+      "phase": "b",
+      "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+      "scope": "Frozen generated task families and public conversation retention; not general assistant quality",
+      "selection": "cceb08783bb687f588bd05abf143e6b91b8768dff79058a75704dfc7d73904c4"
+    },
+    "phase-b-grown": {
+      "baseline": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+      "candidate": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+      "format": "neuroshard-adaptive-quality-v1",
+      "outcomes": {
+        "retention": {
+          "baseline_mean": 0.5527322065160084,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.5541300592274522,
+          "confidence": 0.95,
+          "documents": 128,
+          "mean_delta": 0.0013978527114437422,
+          "passed": true,
+          "upper": 0.0019618537415953454
+        },
+        "test-a": {
+          "baseline_mean": 0.14184506463645422,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.13670013589081298,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": -0.015625,
+            "baseline_correct": 49,
+            "candidate_correct": 48,
+            "documents": 64,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          },
+          "mean_delta": -0.005144928745641217,
+          "passed": false,
+          "upper": -0.0016097796672412414
+        },
+        "test-b": {
+          "baseline_mean": 0.14845948944672227,
+          "bootstrap_samples": 10000,
+          "bootstrap_seed": 2026091444,
+          "candidate_mean": 0.14266284242580024,
+          "confidence": 0.95,
+          "documents": 256,
+          "generation": {
+            "accuracy_change": -0.015625,
+            "baseline_correct": 46,
+            "candidate_correct": 45,
+            "documents": 64,
+            "losses": 1,
+            "one_sided_p": 1.0,
+            "passed": false,
+            "wins": 0
+          },
+          "mean_delta": -0.0057966470209220205,
+          "passed": false,
+          "upper": -0.0021455365824211677
+        }
+      },
+      "passed": false,
+      "phase": "b",
+      "prepared": "f1c85dc732ce8e1152da6eade09af70acfca2e0eaa68a7cc42febd76e9cdddfd",
+      "scope": "Frozen generated task families and public conversation retention; not general assistant quality",
+      "selection": "cceb08783bb687f588bd05abf143e6b91b8768dff79058a75704dfc7d73904c4"
+    }
+  },
+  "redistribution": {
+    "finished": 1789361332.4273355,
+    "state_root": "bfd1b7eeca535ce6d82e98c674a2e2e33fde2f7a3c55fc5989b09810b8caf217",
+    "two_three_exact": true
+  },
+  "report_sha256": "0702c3dbbc3b6106786ddddececfce4f98ed85e7ae1a3f9af4aaf2c32e7044a2",
+  "reporting_commit": "938d4fe56a9fb6932db4d37f585d4ffd29540adc",
+  "resources": {
+    "auditor_compute_usd_upper_bound": 0.5744061377370357,
+    "compute_usd_upper_bound": 12.190470948417035,
+    "confirmed": "2026-09-14T07:34:56.054268+00:00",
+    "conservative_transfer_allowance_usd": 21.20216565862,
+    "hourly_usd_auditor_host": 1.006,
+    "hourly_usd_training_host": 1.212,
+    "instances": [
+      "i-0e9bf97930353ebd4",
+      "i-08bbbc148c3c382be",
+      "i-030651cff251bde14",
+      "i-05a5fa796e0f9ecde"
+    ],
+    "lifetime_network_tx_by_instance": {
+      "i-030651cff251bde14": {
+        "docker0": {
+          "rx": 0,
+          "tx": 0
+        },
+        "ens5": {
+          "rx": 317767833975,
+          "tx": 318186013822
+        }
+      },
+      "i-08bbbc148c3c382be": {
+        "docker0": {
+          "rx": 0,
+          "tx": 0
+        },
+        "ens5": {
+          "rx": 369408074098,
+          "tx": 375376652831
+        }
+      },
+      "i-0e9bf97930353ebd4": {
+        "docker0": {
+          "rx": 0,
+          "tx": 0
+        },
+        "ens5": {
+          "rx": 362524295934,
+          "tx": 366513010074
+        }
+      }
+    },
+    "lifetime_tx_bytes": 1060108282931,
+    "native_cpu_states": {
+      "i-06bf7f1f01e6228bb": "running",
+      "i-0d681a8ef83f72619": "running"
+    },
+    "requested": "2026-09-14T07:30:47.955778+00:00",
+    "retired_auditor_cloudwatch_tx_bytes": 32606204,
+    "scope": "Planning estimate, not AWS invoice. Compute counts each GPU through confirmed termination. Training-host interface counters and retired-auditor CloudWatch sums include backups and intra-AZ traffic, all charged conservatively at $0.02/GB in this planning estimate. Retained S3 storage accrues separately.",
+    "security_group_deleted": true,
+    "terminated": true,
+    "total_planning_upper_estimate_with_ten_dollar_other_allowance": 43.39263660703703,
+    "volume_deletion_confirmed": true,
+    "volumes": [
+      "vol-04a0b55c45df69b82",
+      "vol-0865ce3b2c27530f9",
+      "vol-0ff8f8b79e77447c0",
+      "vol-00f56f52198669509"
+    ]
+  },
+  "scope": "One operator, matching A10G GPUs and public generated task families. Correct replay, model quality, growth usefulness and decentralization are distinct claims. Native rewards belong to separate isolated chains; public balances and serving were unchanged.",
+  "tests": "395 passed in 246.46s (0:04:06)",
+  "training": {
+    "phase-a-three128": {
+      "processes": {
+        "exit_codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "expected_failure": false,
+        "finished": 1789363702.2131238,
+        "seconds": 1338.2695410251617,
+        "started": 1789362363.943583
+      },
+      "ranks": [
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 0,
+          "reference_resident_parameters": 503343104,
+          "resident_parameters": 503343104,
+          "result": {
+            "checkpoint": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+            "end": 128,
+            "peak_cuda_bytes": 13096392192,
+            "rank": 0,
+            "seconds": 1320.497833851,
+            "start": 64,
+            "state_root": "497dfd36ff77ab7db04b8bac2e66b7a548763db51552cc28ecd33171bd6d9f21",
+            "tensor_wire_bytes": 42626318896,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-173",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 1283.7896439419992,
+          "updates": 64
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 1,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+            "end": 128,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 1,
+            "seconds": 1320.4965451409998,
+            "start": 64,
+            "state_root": "497dfd36ff77ab7db04b8bac2e66b7a548763db51552cc28ecd33171bd6d9f21",
+            "tensor_wire_bytes": 42626318896,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-5-14",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 1282.1057426590019,
+          "updates": 64
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 2,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "094138fb6e3e2a8962f8455b0bf81de3f2fbe82029222df76aa71e2e22e14d49",
+            "end": 128,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 2,
+            "seconds": 1320.496066275,
+            "start": 64,
+            "state_root": "497dfd36ff77ab7db04b8bac2e66b7a548763db51552cc28ecd33171bd6d9f21",
+            "tensor_wire_bytes": 42626318896,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-97",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 1281.293145009001,
+          "updates": 64
+        }
+      ]
+    },
+    "phase-a-three64": {
+      "processes": {
+        "exit_codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "expected_failure": false,
+        "finished": 1789362320.306252,
+        "seconds": 694.8300108909607,
+        "started": 1789361625.4762414
+      },
+      "ranks": [
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 0,
+          "reference_resident_parameters": 503343104,
+          "resident_parameters": 503343104,
+          "result": {
+            "checkpoint": "c36a4db610de41ccdaa0fb33832c159e66a46c62cd3f0a43a7ffbdc8430dbb40",
+            "end": 64,
+            "peak_cuda_bytes": 12766970880,
+            "rank": 0,
+            "seconds": 671.5567475560001,
+            "start": 34,
+            "state_root": "fdeb8196c024a2f11f7a565d2e96b0b7bbdfa0bdd99d4d169bb44ceceb454509",
+            "tensor_wire_bytes": 20426324136,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-173",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 617.1712419480007,
+          "updates": 30
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 1,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "c36a4db610de41ccdaa0fb33832c159e66a46c62cd3f0a43a7ffbdc8430dbb40",
+            "end": 64,
+            "peak_cuda_bytes": 13930055680,
+            "rank": 1,
+            "seconds": 671.5591030330002,
+            "start": 34,
+            "state_root": "fdeb8196c024a2f11f7a565d2e96b0b7bbdfa0bdd99d4d169bb44ceceb454509",
+            "tensor_wire_bytes": 20426324136,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-5-14",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 611.0793254279988,
+          "updates": 30
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 2,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "c36a4db610de41ccdaa0fb33832c159e66a46c62cd3f0a43a7ffbdc8430dbb40",
+            "end": 64,
+            "peak_cuda_bytes": 13930055680,
+            "rank": 2,
+            "seconds": 671.598976321,
+            "start": 34,
+            "state_root": "fdeb8196c024a2f11f7a565d2e96b0b7bbdfa0bdd99d4d169bb44ceceb454509",
+            "tensor_wire_bytes": 20426324136,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-97",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 617.8166831790013,
+          "updates": 30
+        }
+      ]
+    },
+    "phase-a-two": {
+      "processes": {
+        "exit_codes": {
+          "0": 0,
+          "1": 0
+        },
+        "expected_failure": false,
+        "finished": 1789360884.2971482,
+        "seconds": 647.2813911437988,
+        "started": 1789360237.0157573
+      },
+      "ranks": [
+        {
+          "boundaries": [
+            0,
+            11,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 0,
+          "reference_resident_parameters": 838907904,
+          "resident_parameters": 838907904,
+          "result": {
+            "checkpoint": "1889a1e73acce5e086e0c4afd61b93632dee09355e0e88a5378278ec6a3117df",
+            "end": 32,
+            "peak_cuda_bytes": 20568664576,
+            "rank": 0,
+            "seconds": 635.4764875909999,
+            "start": 0,
+            "state_root": "64c81d7c3986e0563c59f72d2662ac47a7248fc53bc60874e17372cdb8b473e8",
+            "tensor_wire_bytes": 21246280008,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-173",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 580.5707892359998,
+          "updates": 32
+        },
+        {
+          "boundaries": [
+            0,
+            11,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 1,
+          "reference_resident_parameters": 872468480,
+          "resident_parameters": 872468480,
+          "result": {
+            "checkpoint": "1889a1e73acce5e086e0c4afd61b93632dee09355e0e88a5378278ec6a3117df",
+            "end": 32,
+            "peak_cuda_bytes": 19968590848,
+            "rank": 1,
+            "seconds": 635.476173596,
+            "start": 0,
+            "state_root": "64c81d7c3986e0563c59f72d2662ac47a7248fc53bc60874e17372cdb8b473e8",
+            "tensor_wire_bytes": 21246280008,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-5-14",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 580.6827027280004,
+          "updates": 32
+        }
+      ]
+    },
+    "phase-b-fixed": {
+      "processes": {
+        "exit_codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "expected_failure": false,
+        "finished": 1789366799.0935524,
+        "seconds": 2699.350950241089,
+        "started": 1789364099.7426026
+      },
+      "ranks": [
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 0,
+          "reference_resident_parameters": 503343104,
+          "resident_parameters": 503343104,
+          "result": {
+            "checkpoint": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+            "end": 256,
+            "peak_cuda_bytes": 13810639872,
+            "rank": 0,
+            "seconds": 2672.399396191,
+            "start": 128,
+            "state_root": "f3c701065df6b18b614b6b393f294901e533e65a3d472d6f00b8e78f73580c66",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-173",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2610.492158805,
+          "updates": 128
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 1,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+            "end": 256,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 1,
+            "seconds": 2672.397191667,
+            "start": 128,
+            "state_root": "f3c701065df6b18b614b6b393f294901e533e65a3d472d6f00b8e78f73580c66",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-5-14",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2608.1392433160017,
+          "updates": 128
+        },
+        {
+          "boundaries": [
+            0,
+            6,
+            15,
+            24
+          ],
+          "parameters": 1711376384,
+          "rank": 2,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "d1901aed86149907ab6482a6c66345c85e5e4ee308eb12b215eb97c8451cb6dd",
+            "end": 256,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 2,
+            "seconds": 2672.405258402,
+            "start": 128,
+            "state_root": "f3c701065df6b18b614b6b393f294901e533e65a3d472d6f00b8e78f73580c66",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-97",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2608.6829000839953,
+          "updates": 128
+        }
+      ]
+    },
+    "phase-b-grown": {
+      "processes": {
+        "exit_codes": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "expected_failure": false,
+        "finished": 1789369688.3937216,
+        "seconds": 2845.4325585365295,
+        "started": 1789366842.9611633
+      },
+      "ranks": [
+        {
+          "boundaries": [
+            0,
+            8,
+            17,
+            26
+          ],
+          "parameters": 1845602304,
+          "rank": 0,
+          "reference_resident_parameters": 503343104,
+          "resident_parameters": 637569024,
+          "result": {
+            "checkpoint": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+            "end": 256,
+            "peak_cuda_bytes": 16024183808,
+            "rank": 0,
+            "seconds": 2824.848104316001,
+            "start": 128,
+            "state_root": "f031eb8ed0e97982d57e4e5852c9a8983713d8374473c98d7762200a3f2c997a",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-173",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2733.9362190669963,
+          "updates": 128
+        },
+        {
+          "boundaries": [
+            0,
+            8,
+            17,
+            26
+          ],
+          "parameters": 1845602304,
+          "rank": 1,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+            "end": 256,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 1,
+            "seconds": 2824.8470257440003,
+            "start": 128,
+            "state_root": "f031eb8ed0e97982d57e4e5852c9a8983713d8374473c98d7762200a3f2c997a",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-5-14",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2735.9567024679964,
+          "updates": 128
+        },
+        {
+          "boundaries": [
+            0,
+            8,
+            17,
+            26
+          ],
+          "parameters": 1845602304,
+          "rank": 2,
+          "reference_resident_parameters": 604016640,
+          "resident_parameters": 604016640,
+          "result": {
+            "checkpoint": "fd1e67bb48dcbb6291ebb4c2f8255d897cb46af10f4b94e28a0f01b83902155b",
+            "end": 256,
+            "peak_cuda_bytes": 13930653184,
+            "rank": 2,
+            "seconds": 2824.8541730180004,
+            "start": 128,
+            "state_root": "f031eb8ed0e97982d57e4e5852c9a8983713d8374473c98d7762200a3f2c997a",
+            "tensor_wire_bytes": 87483758240,
+            "tokens_issued": 0
+          },
+          "runtime": {
+            "allocator": "expandable_segments:True",
+            "attention": "sdpa",
+            "autocast": "bfloat16",
+            "cpu_dispatch": "DEFAULT",
+            "cross_device_exact": false,
+            "cuda": "12.8",
+            "deterministic_algorithms": true,
+            "device": "cuda",
+            "gpu": "NVIDIA A10G",
+            "host": "ip-172-31-10-97",
+            "jinja2": "3.1.6",
+            "machine": "x86_64",
+            "mkl_instructions": "SSE4_2",
+            "numpy": "2.2.6",
+            "optimizer": "float32-adamw",
+            "parameters": "float32",
+            "python": "3.10.12",
+            "safetensors": "0.7.0",
+            "threads": 2,
+            "tokenizers": "0.22.1",
+            "torch": "2.9.1+cu128",
+            "torch_build": "34a8db9608275f2c990fa2f88813e7f49d925b89a9fe092462bbd9545c5baf63",
+            "transformers": "4.57.3"
+          },
+          "update_seconds": 2742.429380978001,
+          "updates": 128
+        }
+      ]
+    }
+  },
+  "transcript": {
+    "root": "49bfba54fcf2206de3223cc6c00cef7b99141b45c4ec96d14bf164361ec68274",
+    "unique_tensor_bytes": 3995785128,
+    "unique_tensors": 255
+  }
+}

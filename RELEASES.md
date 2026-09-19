@@ -8,6 +8,15 @@ No Python runtime source, genesis, balance or execution profile changed in this 
 
 ## Unreleased — model-evolution research tools
 
+The [continual-admission result](docs/CONTINUAL_ADMISSION_RESULTS.md) completes
+the fixed demonstration criteria for live-LLM checklist items 1 and 2. Three
+prospective admitted cohorts improve ordinary answers while preserving measured
+earlier answers; the latest two run automatically on seven GPU hosts with native
+funding, complete audits and promotion. A matched-resource replacement control
+loses four retained answers while isolated growth loses none. Full replay
+reproduces 28,912 headers and 869 signed transactions. This remains a bounded,
+single-administrator research result, separate from the public 0.4.0 network.
+
 The source checkout adds full-backbone pipeline training, immutable fresh/replay windows, response evaluation, identity depth growth, and a separate native application for optimistic training/growth settlement. Paid-task identities reject duplicate numerical work even when model ancestry changes. Reproduction scripts and compact input plans are included; the [working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) and linked historical measurements are published separately.
 
 An opt-in [native lifecycle](docs/NATIVE_LIFECYCLE.md) now integrates curated rolling-data admission, challengeable multi-window evaluation, serving decisions and bounded paid generation on isolated networks. Its [results](docs/NATIVE_LIFECYCLE_RESULTS.md) include a rejected real-model promotion and continued paid training after a second data admission without resetting the ledger.
@@ -27,6 +36,8 @@ The [funded candidate](docs/FUNDED_AUDITING.md) now escrows sponsor payments and
 The [continuous operator and candidate joining guide](docs/CANDIDATE_OPERATIONS.md) cover admitted-data training, evaluation, durable worker recovery and non-voting full nodes. A signed-transaction outbox resolves uncertain outcomes by the hash of the original signed bytes before another nonce can be used. The operator refuses inference below its audit/submission price floor unless a subsidy is explicitly enabled, and bounds response length before escrowing audit fees. These mechanisms do not implement consensus upgrades or migrate existing balances.
 
 The [completed funded-audit experiments](docs/FUNDED_AUDIT_RESULTS.md) settle eight full-model training tasks across two cohorts on two hosts, pay 168 audit services from existing balances, reject a forged response after an interrupted native upload, and pass quorum recovery and supply accounting. Both real-model promotion gates fail. The real driver exceeds its original one-hour wait and requires a retained-state continuation; future driver waits are configurable. Tests also expose colluding attestations, admission-pool saturation and missing refutation capital. The [admission RFC](docs/AUDIT_ADMISSION_RFC.md) proposes a next profile for the latter two problems; it is not implemented or activated.
+
+The [continued-learning contract](docs/CONTINUED_LEARNING.md) freezes a 1.7B continuation from the passing adaptive phase-A checkpoint. It binds parent weights and Adam, tokenizer, runtime and unused evaluation data, requires generated-answer gain with per-family floors, and forbids growth. Native settlement of a pass is later job activation plus reserved-window receipts, not an imported checkpoint. Promotion remains a separate mint-zero serving decision. This does not change 0.4.0.
 
 These tools have not been published as a new PyPI version or activated on the public chain. Public worker admission, independent audit selection, artifact retention and release integration remain incomplete. See [the execution guide and measured boundaries](docs/EVOLUTION_PROTOCOL.md); do not run a changed source tree against an existing genesis-bound validator home.
 
@@ -74,3 +85,11 @@ Limits at this release: 34,976 parameters, full replay at every validator, conce
 3. Publish a named tag, checksummed assets, and concrete validation results. Mark network maturity explicitly. PyPI client version ordering must allow users to leave obsolete stable clients; it does not establish production network maturity.
 4. Deploy from pinned directories. Upgrade validators sequentially, preserving signing state. Never auto-deploy from `main`.
 5. Verify a fresh public checkout and node/worker trial. Retain web/service rollback records.
+
+The [continued-learning result](docs/CONTINUED_LEARNING_RESULTS.md) is a reported failure: three workers completed 96 updates, but generated answers regressed on both fresh task sets. The prepare/train/score driver now enforces artifact freezes, content exclusions, actual checkpoint selection and development aborts; 412 tests pass. This remains research work with no serving promotion or public-network change.
+
+The [calculation-step experiment](docs/REASONED_LEARNING_RESULTS.md) adds supervised intermediate calculations and a correct-reference-margin penalty to the existing sharded trainer. Across 256 new updates, fresh answers improve 192→242, including arithmetic 2→53 out of 64, but prior answers fall 93→90. The frozen retention floors reject it. All 384 final answer pairs are published, 425 tests pass, and all temporary GPU resources were removed after verified checkpoint backups. Native settlement and public serving remain unchanged.
+
+The [consolidation experiment](docs/CONSOLIDATED_LEARNING_RESULTS.md) adds a frozen, non-issuing interpolation of owned weights while retaining complete Adam state. A 50% learned update preserves all 194 correct prior answers and improves fresh answers 375→451 out of 512, but two sorting regressions reject it. All 768 final answer pairs and all evaluated development pairs are published; 435 tests pass. The failed initial evaluation and its successful unchanged retry are retained. Both checkpoints were backed up before all three temporary GPU instances, root disks and their security group were removed.
+
+The [answer-balanced continuation](docs/BALANCED_CONTINUATION_RESULTS.md) adds per-document supervised normalization, fixed sorting/replay coverage and complete provenance checks to the existing sharded numerical kernels. Its actual terminal checkpoint passes the frozen independent gate: new answers 378→462/512, arithmetic 4→87/128, all 188 correct prior answers retained and conversation-retention UCB +0.004065 nats. All final pairs and development comparisons are published; 445 tests pass. This is one operator’s fixed-size 1.7B research result, with no native issuance, serving promotion or PyPI release.

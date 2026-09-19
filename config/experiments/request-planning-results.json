@@ -1,0 +1,163 @@
+{
+  "format": "neuroshard-request-planning-results-v1",
+  "attempts": [
+    {
+      "study": "request-preservation-study-20260917",
+      "source_commit": "a5b91d7e58426a5a724c5665ccd1927761835bf8",
+      "trial": "a9a33f27bc79c1075356cf8ab488a8a94b81f2b7f8f6ec27475d5be93cea75be",
+      "service": "50796fb478d0a41b7e7de74fdbecb07c8911603eaab97713046594ea7be551b0",
+      "totals": {
+        "assembly": 0,
+        "decomposition": 1,
+        "knowledge": 5,
+        "passed": 9,
+        "selection": 0
+      },
+      "strata": {
+        "new": {
+          "assembly": 0,
+          "decomposition": 0,
+          "knowledge": 5,
+          "passed": 3,
+          "selection": 0
+        },
+        "retained": {
+          "assembly": 0,
+          "decomposition": 1,
+          "knowledge": 0,
+          "passed": 6,
+          "selection": 0
+        }
+      },
+      "planning_checks": {
+        "automatic_replay": true,
+        "complete_call_metering": true,
+        "forced_replay": true,
+        "gold_access": true,
+        "ordinary_access": false,
+        "retained_previous_passes": true
+      },
+      "planning_passed": false,
+      "quality_passed": false,
+      "automatic_gold_routes": {
+        "correct": 21,
+        "count": 21
+      },
+      "forced_unique": {
+        "correct": 10,
+        "count": 13,
+        "input_failures": 0
+      },
+      "replay": {
+        "automatic": true,
+        "forced": true
+      },
+      "identical_owner_transcripts": 6,
+      "neural_updates": 0,
+      "tokens_issued": 0,
+      "final_opened": false,
+      "resources": {
+        "terminated": [
+          "i-015c2947348724c9f",
+          "i-045a52fa450ffebf3",
+          "i-06b1dfbba42981b15",
+          "i-071e4f399d59959f7",
+          "i-096bcd463c9ee0784"
+        ],
+        "volumes_deleted": true,
+        "security_group_deleted": true,
+        "protected_unchanged": true,
+        "compute_usd_upper_bound": 1.0109595206766668,
+        "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+      },
+      "evidence": {
+        "filename": "evidence.tar.gz",
+        "sha256": "493c3b174000f263e129bf4137701e28a4ef8062bee7a16e01688870ad24ab2c",
+        "bytes": 17503663,
+        "uploaded": false
+      }
+    },
+    {
+      "study": "request-resolution-study-20260917",
+      "source_commit": "38b540fc9128f812e0dc1fccae8db5e83da6727f",
+      "trial": "d6d1619b631764b817ab9d63ece96b655922e259f10fa923bb6f436f731cfb52",
+      "service": "1e7958336abc4526e7da071958aeb7eebb58c9ccfcfe1ed907dab6d7d7b5e55c",
+      "totals": {
+        "assembly": 0,
+        "decomposition": 0,
+        "knowledge": 5,
+        "passed": 10,
+        "selection": 0
+      },
+      "strata": {
+        "new": {
+          "assembly": 0,
+          "decomposition": 0,
+          "knowledge": 5,
+          "passed": 3,
+          "selection": 0
+        },
+        "retained": {
+          "assembly": 0,
+          "decomposition": 0,
+          "knowledge": 0,
+          "passed": 7,
+          "selection": 0
+        }
+      },
+      "planning_checks": {
+        "automatic_replay": true,
+        "complete_call_metering": true,
+        "forced_replay": true,
+        "gold_access": true,
+        "ordinary_access": true,
+        "retained_previous_passes": true
+      },
+      "planning_passed": true,
+      "quality_passed": false,
+      "automatic_gold_routes": {
+        "correct": 21,
+        "count": 21
+      },
+      "forced_unique": {
+        "correct": 10,
+        "count": 13,
+        "input_failures": 0
+      },
+      "replay": {
+        "automatic": true,
+        "forced": true
+      },
+      "identical_owner_transcripts": 6,
+      "neural_updates": 0,
+      "tokens_issued": 0,
+      "final_opened": false,
+      "resources": {
+        "terminated": [
+          "i-01d92a82ace7aa957",
+          "i-066ca51577a45cd04",
+          "i-0c3e29db49ee0abfa",
+          "i-0dc8d533fefa161d2",
+          "i-0f92b234c030486ed"
+        ],
+        "volumes_deleted": true,
+        "security_group_deleted": true,
+        "protected_unchanged": true,
+        "compute_usd_upper_bound": 1.01561641543,
+        "scope": "Conservative allocated compute estimate; storage and data transfer separate."
+      },
+      "evidence": {
+        "filename": "evidence.tar.gz",
+        "sha256": "8241460281e65113349fb92c6a59df25b048ea55c7defda9c9290028240e1233",
+        "bytes": 17509525,
+        "uploaded": false
+      }
+    }
+  ],
+  "baseline": {
+    "study": "ordinary-access-study-20260917b",
+    "passed": 7,
+    "count": 15
+  },
+  "milestones_completed": false
+}

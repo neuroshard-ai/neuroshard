@@ -1,0 +1,4 @@
+# GPU execution plus the native report/identity modules used by the backend.
+# Keep the neural runtime identical to the original archived training.
+-r learning-reference-requirements.txt
+cryptography==50.0.1
