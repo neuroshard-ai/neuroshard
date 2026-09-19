@@ -303,3 +303,8 @@ Earlier policy versions retain their original behavior.
 The original feed trial remains failed. The repaired feed checkpoint is not
 the accepted baseline. Further useful-learning evidence must preserve the
 accepted conversation model and pass untouched cohorts prospectively.
+
+The [complete rejected-feed ledger and numerical evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6a849ef08c88e7a483d28ce824446014034836a00fa3db1a7fb21afeb120f826)
+and [complete inference-only repair transcripts](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/f49eb30c1ddb275a4981043a13cece665a9d335547d92f178f85236da390b9af)
+are public and passed full byte-hash readback. The ledger archive includes its
+matching-source offline replay driver; no signing keys are required.
