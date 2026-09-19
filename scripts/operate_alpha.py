@@ -94,7 +94,14 @@ def starter_credits(home, ledger, network, freeze):
 def unit(hosts, index, name, argv, *, seconds=None, native=False):
     environment = ({'PYTHONPATH': REPO+'/src', 'ATEN_CPU_CAPABILITY': 'default',
         'MKL_ENABLE_INSTRUCTIONS': 'SSE4_2', 'OMP_NUM_THREADS': '1',
-        'OPENBLAS_NUM_THREADS': '1', 'MKL_NUM_THREADS': '1'} if native else hosts.environment)
+        'OPENBLAS_NUM_THREADS': '1', 'MKL_NUM_THREADS': '1'} if native else dict(hosts.environment))
+    if not native:
+        # The GPU image selects its numerical libraries in the login shell.
+        # Permanent units must preserve the same loader as Cloud.start and
+        # the pinned reference; systemd otherwise produces a different build.
+        facts = json.loads(hosts.command(index, ['python3', '-c',
+            'import os,json; print(json.dumps({"loader":os.environ.get("LD_LIBRARY_PATH","")}))']).stdout)
+        environment['LD_LIBRARY_PATH'] = facts['loader']
     content = ('[Unit]\nAfter=network-online.target\nWants=network-online.target\n'
         '[Service]\nUser=ubuntu\nWorkingDirectory='+REPO+'\n'
         + ''.join('Environment='+json.dumps(key+'='+value)+'\n' for key, value in environment.items())

@@ -1,0 +1,14 @@
+{
+  "format": "neuroshard-operated-alpha-loader-repair-v1",
+  "deployment_source": "944a0d498fe832ce408081b45c00241f1c67d35b",
+  "chain": "neuroshard-portable-life-b65db5ce12b3",
+  "observed_failure": "Both warm-up assignments accepted all owners, then refused GraphNetwork preflight: systemd omitted LD_LIBRARY_PATH and torch_build differed from the committed numerical profile. No response had been submitted at diagnosis.",
+  "repair": "Preserve the GPU image login loader in permanent service units, exactly as the existing reference launcher does. Run numerical preflight on each physical owner before restarting providers.",
+  "unchanged": [
+    "All src files, native genesis, accepted graph and model bytes",
+    "All customer requests, receipts, assignment start markers and native deadlines",
+    "The current release gate clock, ordinary latency gates and full-replay requirements"
+  ],
+  "recovery": "Restart providers with the corrected launch environment. Only the existing native recovery controller may create a fresh execution epoch. Do not delete start markers, manually replace jobs, or reset gate timing. If the frozen gate fails, retain it as a failure.",
+  "resources": "Reuse the seven current GPUs and four ledger nodes inside the same 72/168-hour $800 aggregate window; no new allocation."
+}
