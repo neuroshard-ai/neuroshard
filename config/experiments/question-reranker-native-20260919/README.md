@@ -36,3 +36,7 @@ inputs before neural training. A useful result requires fresh measured passes;
 the opened 16/16 single, 15/16 combined serving diagnostic supplies no additional
 successful cohort credit. Checklist boxes remain open until their evidence is
 complete.
+
+[Matching execution source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/e89b06ee93d09905c46d81000cfb9951179babad6f540945d6ae752de303cf97)
+and [complete frozen inputs](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/ba4525e996407bf9807b2a4e7d134c40ede013ac61a905ca187f1df6145f68ed)
+passed full public byte-hash readback before training.
