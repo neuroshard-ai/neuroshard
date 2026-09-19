@@ -98,6 +98,27 @@ def semantic_assets(policies, manifest):
     return requested
 
 
+def question_reranker_assets(policies, manifest):
+    """Restore each question model only onto its declared numerical owner."""
+    from neuroshard.evolution.question_reranking import validate_model
+    requested = {}
+    for policy in policies:
+        reranking = policy['configuration'].get('question_reranker')
+        if reranking is None:
+            continue
+        model = validate_model(reranking['model'])
+        key = identity(model)
+        inventory = manifest.get('question_rerankers', {}).get(key)
+        if not isinstance(inventory, dict) or inventory.get('files') != model['files']:
+            raise ValueError('Publish the complete pinned question reranker before serving')
+        owner = reranking['owner']
+        value = requested.setdefault((key, owner), {})
+        for name, spec in model['files'].items():
+            value[spec['sha256']] = {'bytes': spec['bytes'],
+                'path': REMOTE+'/objects/policies/question-rerankers/'+key+'/'+name}
+    return requested
+
+
 class Cloud:
     def __init__(self, home):
         self.home = Path(home).resolve()
@@ -278,12 +299,18 @@ class Cloud:
             from neuroshard.evolution.answering import policy_json
             policies.append(policy_json(raw))
         inventory = self.home/'auxiliary-assets.json'
-        assets = semantic_assets(policies, json.loads(inventory.read_bytes()) if inventory.exists() else {})
+        manifest = json.loads(inventory.read_bytes()) if inventory.exists() else {}
+        assets = semantic_assets(policies, manifest)
         for encoder_root, objects in assets.items():
             # The encoder belongs only to the complete service's coordinator.
             # Fresh observers restore the same immutable bytes from public storage.
             receipt = self.assets(placement[0], {'action': 'fetch', 'objects': objects})
             save(self.home/('semantic-assets-'+key+'-'+encoder_root+'.json'), receipt)
+        for (model_root, owner), objects in question_reranker_assets(policies, manifest).items():
+            if type(owner) is not int or not 0 <= owner < len(placement):
+                raise ValueError('Question reranker owner is absent from the complete graph')
+            receipt = self.assets(placement[owner], {'action': 'fetch', 'objects': objects})
+            save(self.home/('question-reranker-assets-'+key+'-'+model_root+'.json'), receipt)
         with ThreadPoolExecutor(max_workers=7) as pool:
             list(pool.map(lambda physical: self.bundle(physical, files), sorted(set(placement))))
         configurations = []

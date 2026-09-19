@@ -60,7 +60,7 @@ def freeze(home, revision, runtime, *, seconds_per_arm=5400, resources=None):
     control_configuration = planned_graph.configuration(core, learned_control, ordinary['planner'], ROOT,
         prompts_control, ordinary['general_instruction'], **{name: ordinary[name] for name in (
             'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
-            'general_answer_policy', 'semantic_questions') if name in ordinary})
+            'general_answer_policy', 'semantic_questions', 'question_reranker') if name in ordinary})
     control_graph = answering.attach(core, control_configuration, store)
     sources, windows = {}, []
 

@@ -93,7 +93,7 @@ def planner_prefix(planner):
 
 def configuration(graph, learned, planner, source_home, expert_prompts=None, general_instruction='', route_scopes=None,
                   planner_weights=None, composer=None, answer_policy=None, request_policy=None, general_answer_policy=None,
-                  semantic_questions=None):
+                  semantic_questions=None, question_reranker=None):
     planner_prefix(planner)
     prompts = {} if expert_prompts is None else expert_prompts
     if not isinstance(prompts, dict) or not set(prompts) <= set(graph['experts']):
@@ -174,6 +174,16 @@ def configuration(graph, learned, planner, source_home, expert_prompts=None, gen
         for name in ('src/neuroshard/evolution/semantic_questions.py',
                      'src/neuroshard/evolution/sharded/semantic_features.py'):
             result['sources'][name] = sha256(Path(source_home)/name)
+    if question_reranker is not None:
+        from .. import question_reranking
+        if semantic_questions is None:
+            raise ValueError('Question reranking requires declared semantic admission')
+        world = len(graph['parent']['boundaries']) - 1 + len(graph['experts'])
+        question_reranking.validate(question_reranker, semantic_questions, world)
+        result['question_reranker'] = copy.deepcopy(question_reranker)
+        for name in ('src/neuroshard/evolution/question_reranking.py',
+                     'src/neuroshard/evolution/sharded/question_reranker.py'):
+            result['sources'][name] = sha256(Path(source_home)/name)
     return result
 
 
@@ -181,13 +191,13 @@ def validate_configuration(graph, config, source_home):
     fields = {'format', 'graph', 'learned', 'planner', 'answer_format', 'sources',
                   'expert_prompts', 'general_instruction'}
     fields |= {'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
-               'general_answer_policy', 'semantic_questions'} & set(config)
+               'general_answer_policy', 'semantic_questions', 'question_reranker'} & set(config)
     serving_graph.fields(config, fields, 'Invalid planned service configuration')
     if config != configuration(graph, config['learned'], config['planner'], source_home,
                                config['expert_prompts'], config['general_instruction'], config.get('route_scopes'),
                                config.get('planner_weights'), config.get('composer'), config.get('answer_policy'),
                                config.get('request_policy'), config.get('general_answer_policy'),
-                               config.get('semantic_questions')):
+                               config.get('semantic_questions'), config.get('question_reranker')):
         raise ValueError('Planned service changed its models, sources or execution rules')
     from .learned_graph import validate_configuration as validate_learned
     validate_learned(graph, config['learned'], source_home)
@@ -230,6 +240,20 @@ class PlannedGraphNetwork:
                         network.policy_store.root, network.runtime['device'])
                     network.resident_parameters += PARAMETERS
                 self.semantic_features = network.answering_features[key]
+        self.question_reranker = None
+        if 'question_reranker' in config:
+            from .question_reranker import QuestionReranker
+            reranking = config['question_reranker']
+            profile = reranking['model']
+            if network.rank == reranking['owner']:
+                key = identity(profile)
+                if key not in network.answering_features:
+                    if network.resident_parameters + profile['parameters'] > network.resident_limit:
+                        raise ValueError('The question reranker exceeds its owner resident limit')
+                    network.answering_features[key] = QuestionReranker(profile,
+                        network.policy_store.root, network.runtime['device'])
+                    network.resident_parameters += profile['parameters']
+                self.question_reranker = network.answering_features[key]
 
     def planning_messages(self, messages):
         conversation(messages)
@@ -380,12 +404,38 @@ class PlannedGraphNetwork:
         if selected is not None and allowed is not None and selected['route'] not in allowed:
             decision = {**decision, 'selected': None, 'excluded_by_scope': True}
             selected = None
+        if selected is not None and 'question_reranker' in self.config:
+            decision = self.rerank_question(choice['question'], decision)
+            selected = decision['selected']
         result = {**choice, 'semantic': {**decision, 'encoding': encoding}}
         if selected is not None:
             result['previous_decision'] = copy.deepcopy(choice['decision'])
             result['decision'] = {'route': selected['route'], 'method': decision['policy'],
                                   'training_id': decision['training_id']}
         return result
+
+    def rerank_question(self, question, decision):
+        from .. import question_reranking
+        policy = self.config['question_reranker']
+        semantic = self.config['semantic_questions']
+        candidates = question_reranking.candidates(policy, semantic, decision['selected']['route'])
+        if not candidates:
+            return decision
+        owner = policy['owner']
+        packet = None
+        if self.net.rank == owner:
+            try:
+                packet = {'execution': self.question_reranker(question, candidates)}
+            except ValueError as error:
+                packet = {'error': str(error)[:256]}
+        packets = self.net.all_owners.exchange(packet)
+        if (any(value is not None for rank, value in enumerate(packets) if rank != owner)
+                or not isinstance(packets[owner], dict)):
+            raise ValueError('Only the declared owner computes question-pair scores')
+        packet = packets[owner]
+        if 'error' in packet:
+            raise ValueError('Question reranking failed: '+packet['error'])
+        return question_reranking.select(policy, semantic, decision, question, packet['execution'])
 
     def answer_atom(self, selected, question, routing_question, messages, max_tokens, *, whole_request):
         """Use the same expert input contract for serving and diagnostic controls."""
@@ -433,8 +483,10 @@ class PlannedGraphNetwork:
         general_first = self.config.get('request_policy') in request_planning.ASSISTANT_POLICIES
         span_policy = self.config.get('request_policy')
         explicit = (request_planning.explicit_questions(messages,
-                    extended=span_policy == request_planning.SPAN_POLICY)
-                    if span_policy in (request_planning.LOSSLESS_POLICY, request_planning.SPAN_POLICY) else None)
+                    extended=span_policy in (request_planning.SPAN_POLICY, request_planning.MODAL_SPAN_POLICY),
+                    modals=span_policy == request_planning.MODAL_SPAN_POLICY)
+                    if span_policy in (request_planning.LOSSLESS_POLICY, request_planning.SPAN_POLICY,
+                                       request_planning.MODAL_SPAN_POLICY) else None)
         preliminary = self.route(request_planning.routing_context(messages)) if general_first else None
         if preliminary is not None and len(messages) == 1:
             preliminary = self.semantic_route(preliminary)

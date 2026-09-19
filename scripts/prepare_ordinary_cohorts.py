@@ -70,7 +70,7 @@ def configuration(graph, router, initial):
     return planned_graph.configuration(graph, learned, initial['planner'], ROOT, prompts,
         initial['general_instruction'], **{name: initial[name] for name in (
             'route_scopes', 'planner_weights', 'composer', 'answer_policy', 'request_policy',
-            'general_answer_policy', 'semantic_questions') if name in initial})
+            'general_answer_policy', 'semantic_questions', 'question_reranker') if name in initial})
 
 
 def compile_inputs(serving, fitting, embedding, home):

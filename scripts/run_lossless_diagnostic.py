@@ -26,7 +26,7 @@ def neural_response(value):
 
 
 def assemble(campaign, job_home, home, semantic_policy=None,
-             request_policy=request_planning.LOSSLESS_POLICY, checkpoint=None):
+             request_policy=request_planning.LOSSLESS_POLICY, checkpoint=None, question_reranker=None):
     if not (job_home/'quality-0.json').exists():
         raise ValueError('Use only a previously opened quality result')
     old = Objects(campaign/'compiled/objects')
@@ -43,6 +43,10 @@ def assemble(campaign, job_home, home, semantic_policy=None,
         for name in ('src/neuroshard/evolution/semantic_questions.py',
                      'src/neuroshard/evolution/sharded/semantic_features.py'):
             profile['sources'][name] = sha256(ROOT/name)
+    if question_reranker is not None:
+        for name in ('src/neuroshard/evolution/question_reranking.py',
+                     'src/neuroshard/evolution/sharded/question_reranker.py'):
+            profile['sources'][name] = sha256(ROOT/name)
     original = job['lifecycle']['candidate_template']
     previous = answering.load(original, old)
     if checkpoint is None:
@@ -50,7 +54,7 @@ def assemble(campaign, job_home, home, semantic_policy=None,
     template = copy.deepcopy(answering.core(original))
     template['executor_root'] = identity(profile)
 
-    def bind(core, policy, semantics=None):
+    def bind(core, policy, semantics=None, reranker=None):
         learned = learned_graph.configuration(core, previous['learned']['router'],
             previous['learned']['feature_profile'], ROOT,
             previous['learned'].get('route_models'), compose=True)
@@ -58,12 +62,13 @@ def assemble(campaign, job_home, home, semantic_policy=None,
             'answer_policy', 'general_answer_policy') if key in previous}
         config = planned_graph.configuration(core, learned, previous['planner'], ROOT,
             previous['expert_prompts'], previous['general_instruction'], request_policy=policy,
-            semantic_questions=semantics, **options)
+            semantic_questions=semantics, question_reranker=reranker, **options)
         return answering.attach(core, config, store)
 
-    template = bind(template, request_policy, semantic_policy)
+    template = bind(template, request_policy, semantic_policy, question_reranker)
     after = life.materialize_graph(template, checkpoint)
-    before = bind(answering.core(after), previous['request_policy'], previous.get('semantic_questions'))
+    before = bind(answering.core(after), previous['request_policy'], previous.get('semantic_questions'),
+                  previous.get('question_reranker'))
     if answering.core(before) != answering.core(after):
         raise ValueError('Question preservation must not change neural weights or topology')
     quality = copy.deepcopy(old.json(job['lifecycle']['quality']['policy_root']))
@@ -87,7 +92,9 @@ def assemble(campaign, job_home, home, semantic_policy=None,
         'driver':sha256(Path(__file__)), 'before':identity(before), 'after':identity(after),
         'profile':identity(profile), 'quality':identity(quality), 'prior_result':identity(measured),
         'previous_neural':identity(previous_neural),
-        'neural_weights_unchanged':previous_encoder == candidate_encoder, 'answering_expert_weights_unchanged':True,
+        'neural_weights_unchanged':(previous_encoder == candidate_encoder
+            and previous.get('question_reranker') == question_reranker), 'answering_expert_weights_unchanged':True,
+        'question_reranker': None if question_reranker is None else identity(question_reranker),
         'semantic_encoder_added': (identity(candidate_encoder)
             if candidate_encoder is not None and previous_encoder != candidate_encoder else None),
         'new_final_opened':False, 'native_promotion':False,

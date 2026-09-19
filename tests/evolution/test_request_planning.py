@@ -83,9 +83,10 @@ def test_explicit_questions_keep_local_context_scope_and_case(joiner):
     'Where is the station? What does the sensor measure? Reply using JSON.',
     'Where is the station? What does the sensor measure? Who owns the station?',
 ])
-@pytest.mark.parametrize('extended', [False, True])
-def test_ambiguous_or_constrained_spans_stay_with_neural_planning(utterance, extended):
-    assert policy.explicit_questions([{'role':'user','content':utterance}], extended=extended) is None
+@pytest.mark.parametrize('extended,modals', [(False, False), (True, False), (True, True)])
+def test_ambiguous_or_constrained_spans_stay_with_neural_planning(utterance, extended, modals):
+    assert policy.explicit_questions([{'role':'user','content':utterance}],
+                                     extended=extended, modals=modals) is None
 
 
 def test_explicit_questions_do_not_drop_earlier_turns():
@@ -167,6 +168,24 @@ def test_v4_keeps_fronted_questions_and_local_possessive_context(monkeypatch, fi
     response = service.answer(messages, 64)
     assert calls == [] and response['plan'] == [first, second]
     assert response['planning']['path'] == 'explicit'
+    assert response['status'] == 'completed' and len(response['answers']) == 2
+
+
+@pytest.mark.parametrize('first', [
+    'If the laboratory cannot recover every sample, may the technician omit the damaged samples?',
+    'After a sensor error, must the operator stop recording?',
+    'Was the telescope operational before the storm?',
+    'Might a damaged connector interrupt recording?',
+])
+def test_v5_preserves_modal_questions_and_their_conditions(monkeypatch, first):
+    second = 'what command starts the renderer?'
+    messages = [{'role': 'user', 'content': first+' Also, '+second}]
+    assert policy.explicit_questions(messages, extended=True) is None
+    service, calls = stub_service(monkeypatch, iter([]))
+    service.config.update(request_policy=policy.MODAL_SPAN_POLICY,
+                          learned={'router': {'fallback': 'parent'}})
+    response = service.answer(messages, 64)
+    assert calls == [] and response['plan'] == [first, second]
     assert response['status'] == 'completed' and len(response['answers']) == 2
 
 

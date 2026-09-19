@@ -11,7 +11,8 @@ FORMAT = 'preserve-single-and-ground-references-v1'
 ASSISTANT_POLICY = 'route-general-and-preserve-user-intent-v2'
 LOSSLESS_POLICY = 'preserve-explicit-question-spans-v3'
 SPAN_POLICY = 'preserve-fronted-and-possessive-question-spans-v4'
-ASSISTANT_POLICIES = (ASSISTANT_POLICY, LOSSLESS_POLICY, SPAN_POLICY)
+MODAL_SPAN_POLICY = 'preserve-modal-question-spans-v5'
+ASSISTANT_POLICIES = (ASSISTANT_POLICY, LOSSLESS_POLICY, SPAN_POLICY, MODAL_SPAN_POLICY)
 REFERENCES = re.compile(
     r'\b(?:he|she|it|they|him|her|his|its|them|their|theirs|this|these|those|former|latter)\b',
     re.IGNORECASE)
@@ -21,6 +22,11 @@ FRONTED_START = re.compile(
     r'^(?:(?:to|from|for|with|by|at|in|on|of|under|over|about|through)\s+)?'
     r'(?:what|which|who|whom|whose|when|where|why|how|is|are|do|does|did|can|could|'
     r'would|will|has|have|should)\b', re.IGNORECASE)
+MODAL_START = re.compile(
+    r'^(?:(?:to|from|for|with|by|at|in|on|of|under|over|about|through)\s+)?'
+    r'(?:what|which|who|whom|whose|when|where|why|how|is|are|am|was|were|'
+    r'do|does|did|can|could|would|will|has|have|had|should|may|might|must|shall)\b',
+    re.IGNORECASE)
 COMPOUND = re.compile(r'\b(?:and|or|also|then|plus|versus|vs)\b', re.IGNORECASE)
 REPAIR_TOKENS = 128
 REPAIR_INSTRUCTION = (
@@ -65,7 +71,7 @@ def atomic_request(messages):
     return text
 
 
-def explicit_questions(messages, *, extended=False):
+def explicit_questions(messages, *, extended=False, modals=False):
     """Keep two already stated questions, including their local context.
 
     This is a conservative syntactic shortcut, not an antecedent or truth
@@ -73,7 +79,9 @@ def explicit_questions(messages, *, extended=False):
     references without a preceding local noun phrase keep neural planning.
     No question wording, capitalization or domain scope is regenerated. The
     v4 extension recognizes fronted prepositions and local noun phrases with
-    possessive/negative determiners. The v3 policy keeps its exact behavior.
+    possessive/negative determiners. The v5 extension also recognizes modal
+    questions, including those preceded by a conditional clause. Earlier
+    policies keep their exact behavior.
     """
     if len(messages) != 1:
         return None
@@ -87,7 +95,7 @@ def explicit_questions(messages, *, extended=False):
     result = [piece.strip()+'?' for piece in pieces]
     if len(set(result)) != 2:
         return None
-    start = FRONTED_START if extended else START
+    start = MODAL_START if modals else FRONTED_START if extended else START
     determiner = (r'(?:a|an|the|my|your|our|no|each|every|any)' if extended
                   else r'(?:a|an|the)')
     for question in result:
