@@ -96,7 +96,8 @@ def test_background_heartbeat_keeps_original_nonce_after_lost_ack(tmp_path, atom
     chain.query = control
     # No deadlines expire while advancing this fixture to its heartbeat due time.
     chain.state = blocks(chain.state, admission.PROFILE['provider_heartbeat_blocks']//2)
-    config = {'advertise': chain.state['hosting']['providers'][owner.public_key]['endpoint']}
+    config = {'advertise': chain.state['hosting']['providers'][owner.public_key]['endpoint'],
+              'offer_blocks': 10000}
     original = box.send
     def short(*args, **kwargs):
         kwargs['timeout'] = .01
