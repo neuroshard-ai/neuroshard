@@ -18,8 +18,24 @@ from .transactions import Outbox
 
 class LockedOutbox:
     """Serialize access with a maintainer using its own SQLite connection."""
-    def __init__(self, outbox, lock):
-        self.outbox, self.lock = outbox, lock
+    def __init__(self, outbox, lock, node):
+        self.outbox, self.lock, self.node = outbox, lock, node
+
+    def send(self, operation, kind, **fields):
+        # A maintainer can leave its exact signed heartbeat pending after a
+        # delayed acknowledgement. Acquiring the mutex alone does not resolve
+        # that durable operation. Finish or retire it from committed state
+        # before signing the next acceptance or completed model response.
+        deadline = time.monotonic() + fields.get('timeout', 120)
+        with self.lock:
+            while self.outbox.pending() not in (None, operation):
+                try:
+                    reconcile(self.node, self.outbox, self.node.query('/hosting/control'))
+                except (OSError, ValueError):
+                    if time.monotonic() >= deadline:
+                        raise
+                    time.sleep(.25)
+            return self.outbox.send(operation, kind, **fields)
 
     def __getattr__(self, name):
         target = getattr(self.outbox, name)

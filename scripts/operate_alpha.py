@@ -109,14 +109,16 @@ def unit(hosts, index, name, argv, *, seconds=None, native=False):
     hosts.command(index, ['sudo', 'systemctl', 'enable', '--now', name])
 
 
-def connect(home):
+def connect(home, *, rpc_offset=0):
     """Open only controller RPC tunnels; remote native nodes keep running."""
     network = Network(home/'native')
+    if rpc_offset:
+        network.urls = [f'http://127.0.0.1:{node["rpc"]+rpc_offset}' for node in network.config['nodes']]
     hosts = LedgerHosts(home/'ledger-hosts')
     for index, node in enumerate(network.config['nodes'][:4]):
         with (home/f'ledger-tunnel-{index}.log').open('ab') as log:
             process = subprocess.Popen([*hosts.ssh(index), '-o', 'ExitOnForwardFailure=yes', '-N',
-                '-L', f'127.0.0.1:{node["rpc"]}:127.0.0.1:26657'], stdout=log, stderr=log)
+                '-L', f'127.0.0.1:{node["rpc"]+rpc_offset}:127.0.0.1:26657'], stdout=log, stderr=log)
         network.processes.append(process)
     network.until(lambda: all(client.query(url)['height'] > 1 and
         not client.rpc(url, 'status')['sync_info']['catching_up'] for url in network.urls), 150)

@@ -39,6 +39,7 @@ def observe(home):
         total_bytes += amount
     gpu_hours, ledger_hours = freeze['gpu_resources']['max_hours'], freeze['ledger_resources']['hours']
     fixed = {
+        'prior_failed_deployment_reserve': freeze['funding'].get('prior_deployment_full_upper_reserve_usd', 0),
         'complete_gpu_window': 7*gpu_hours*freeze['gpu_resources']['verified_instance_hourly_usd'],
         'complete_ledger_window': 4*ledger_hours*freeze['ledger_resources']['verified_instance_hourly_usd'],
         'gpu_gp3_with_provisioned_performance': 7*(200*.08 + 9000*.005 + 375*.04)*gpu_hours/730,

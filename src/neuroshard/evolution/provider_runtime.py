@@ -81,8 +81,6 @@ def run_job(config, node, owner, box, outbox, job_id, cache=None, events=None):
     if assigned['certificate'] != certificate or assigned['endpoint'] != config['advertise']:
         raise ValueError('The native assignment pins a different local endpoint or certificate')
     epoch = lease['assignment_root']
-    if events is not None and rank == 0:
-        events.begin(job, snapshot['chain_id'], epoch)
     home = Path(config['home'])/'jobs'/job_id/epoch
     home.mkdir(parents=True, exist_ok=True)
     # A restarted transport cannot know which frame acknowledgements remote
@@ -113,6 +111,8 @@ def run_job(config, node, owner, box, outbox, job_id, cache=None, events=None):
         raise transport.Unavailable('Not every assigned provider accepted within the local time bound')
     routing = node.lookup(job_id)
     save(home/'started.json', {'job_id': job_id, 'assignment_root': epoch, 'rank': rank})
+    if events is not None and rank == 0:
+        events.begin(job, snapshot['chain_id'], epoch)
     peer = transport.Peer(owner, routing, rank, box, timeout=config['frame_seconds'],
                           allow_private=config.get('allow_private', False))
     try:
@@ -183,7 +183,7 @@ def main():
         maintenance_stop, maintenance_thread = threading.Event(), None
         if config.get('maintain') and not args.publish_offer:
             from .provider_control import LockedOutbox, maintain_background
-            outbox = LockedOutbox(outbox, control_lock)
+            outbox = LockedOutbox(outbox, control_lock, node)
             maintenance_thread = threading.Thread(target=maintain_background,
                 args=(node, config, owner, control_lock, maintenance_stop), daemon=True)
             maintenance_thread.start()
@@ -234,16 +234,21 @@ def main():
                     assigned = lease['providers'].get(str(config['rank']))
                     if not assigned or assigned['owner'] != owner.public_key or lease['assignment_root'] in attempted:
                         continue
-                    attempted.add(lease['assignment_root'])
                     try:
                         run_job(config, node, owner, box, outbox, job_id, cache, events)
+                        attempted.add(lease['assignment_root'])
                     except (OSError, ValueError, RuntimeError) as error:
                         # Keep failures local and bounded; don't print conversations,
                         # keys, signed frames or object-store credentials.
                         save(home/'last-failure.json', {'job_id': job_id,
                             'assignment_root': lease['assignment_root'], 'error': type(error).__name__})
-                        if config['rank'] == 0 and not (outbox.pending_body() or {}).get('kind', '').startswith('respond_'):
-                            events.emit(job_id, lease['assignment_root'], text='', status='failed')
+                        started = home/'jobs'/job_id/lease['assignment_root']/'started.json'
+                        if started.exists():
+                            # Once neural frames may have crossed the network,
+                            # only a fresh native assignment can reset them.
+                            attempted.add(lease['assignment_root'])
+                            if config['rank'] == 0 and not (outbox.pending_body() or {}).get('kind', '').startswith('respond_'):
+                                events.emit(job_id, lease['assignment_root'], text='', status='failed')
                     if args.job:
                         return
                 time.sleep(.5)

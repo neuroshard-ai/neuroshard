@@ -115,3 +115,17 @@ Public chat retains the [visibility and storage rules](HOSTED_CHAT.md): prompts,
 conversation context and settled replies are public ledger data. Provisional
 text is unverified until native settlement. Native trial balances are service
 accounting units; deployment does not establish a market value for them.
+
+## Preparation race found during deployment
+
+The first deployment on `ba0e19e` reached the two-customer warm-up but three
+providers abandoned preparation while their original heartbeat acknowledgement
+was unresolved. They never signed acceptance; no response was accepted at the
+failure observation, and public availability was not published. The
+[declared retry](../config/experiments/operated-alpha-preparation-retry.json) fixes
+that control boundary: resolve the same pending transaction before another
+operation, and retry only preparation that has not begun neural frames. It
+preserves the original service gates and all numerical behavior. The failed
+GPU allocation is retired; its separate ledger stays available for native
+expiry/refunds before retirement. The aggregate $800 ceiling includes a $50
+reserve for the failed deployment, including its remaining ledger lifetime.
