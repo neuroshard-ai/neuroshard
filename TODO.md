@@ -25,7 +25,10 @@ before the affected work, rather than changing the target after a result.
   Question-family reranking and modal-question preservation repair that opened
   result to 16/16 singles and 15/16 combined, with zero retained-correct losses
   and exact replay. That development pass does not count as another prospective
-  admission; the next run preserves the admitted conversation expert.
+  admission. The [frozen continuation](config/experiments/question-reranker-native-20260919/README.md)
+  now preserves the admitted conversation expert and all 105 retained cases,
+  then prospectively learns audit and storage under native admission. It is
+  running; neither fresh cohort is counted before its quality outcome.
   See the
   [result and recovery](docs/PROSPECTIVE_SEMANTIC_CAMPAIGN.md#first-prospective-admission-campaign-interrupted).
 
