@@ -1,7 +1,8 @@
 """Train a disjoint second programming tail, isolate it, then compare growth.
 
-Four owners. Rank 3 stores both extra tails and activates at most one per
-request. Isolation failure stops before the new-answer slice is scored. The
+Four owners. Rank 3 stores the parent tail, incumbent tail and added tail.
+After isolation, growth activates one extra decode on their unit task-vector
+merge. Isolation failure stops before the new-answer slice is scored. The
 original programming-expert final stays closed.
 """
 import argparse
@@ -80,9 +81,44 @@ def pack(row, arm, *, ids, text, seconds, observation, prompt_ids, prompt_kind, 
     }
 
 
+def load_named(directory, manifest):
+    from safetensors.torch import load_file
+    tensors = {}
+    for name, spec in manifest['tensors'].items():
+        path = Path(directory) / spec['file']
+        if sha256(path) != spec['sha256']:
+            raise ValueError('Expert tensor changed')
+        tensors[name] = load_file(path)['weight']
+    return tensors
+
+
+def write_named(shard, tensors):
+    import torch
+    owned = dict(shard.named_owned_parameters())
+    if set(owned) != set(tensors):
+        raise ValueError('Merged tail tensors do not match owner 3')
+    with torch.no_grad():
+        for name, value in tensors.items():
+            owned[name].copy_(value.to(owned[name].device, owned[name].dtype))
+
+
+def apply_task_vector(shard, parent_dir, parent_manifest, incumbent_dir, incumbent_manifest,
+                      added_dir, added_manifest, plan):
+    scales = experiment.merge_scales(plan)
+    parent = load_named(parent_dir, parent_manifest)
+    incumbent = load_named(incumbent_dir, incumbent_manifest)
+    added = load_named(added_dir, added_manifest)
+    if set(parent) != set(incumbent) or set(parent) != set(added):
+        raise ValueError('Task-vector merge requires identical tail tensors')
+    merged = {name: experiment.task_vector_merge(
+        parent[name], incumbent[name], added[name], scales['incumbent'], scales['added'])
+              for name in parent}
+    write_named(shard, merged)
+
+
 def evaluate_growth(network, rows, plan, home, incumbent_dir, incumbent_manifest,
-                    added_dir, added_manifest, check=None):
-    """Paired parent, incumbent extra and added extra. Policy uses one extra."""
+                    added_dir, added_manifest, check=None, parent_dir=None, parent_manifest=None):
+    """Paired parent, incumbent extra and merged extra. Policy uses the merge."""
     if check is None:
         from programming_sandbox import check
     wire, tokenizer, shard = network.wire, network.tokenizer, network.shard
@@ -109,9 +145,14 @@ def evaluate_growth(network, rows, plan, home, incumbent_dir, incumbent_manifest
             extra_kind = 'original'
             for name, directory, manifest in (
                     (experiment.INCUMBENT, incumbent_dir, incumbent_manifest),
-                    (experiment.ADDED, added_dir, added_manifest)):
+                    (experiment.MERGED, added_dir, added_manifest)):
                 if wire.rank == 3 and directory is not None:
-                    load_tail(shard, directory, manifest)
+                    if name == experiment.MERGED:
+                        apply_task_vector(
+                            shard, parent_dir, parent_manifest, incumbent_dir, incumbent_manifest,
+                            added_dir, added_manifest, plan)
+                    else:
+                        load_tail(shard, directory, manifest)
                 expert_ids, expert_seconds, expert_obs = generate(network, ids, True, plan)
                 wire.exchange(None)
                 extras[name] = (expert_ids, expert_seconds, expert_obs)
@@ -120,12 +161,12 @@ def evaluate_growth(network, rows, plan, home, incumbent_dir, incumbent_manifest
                 unused = pack(row, experiment.INCUMBENT, ids=base['ids'], text=base['text'],
                               seconds=0.0, observation={}, prompt_ids=base['prompt_ids'],
                               prompt_kind='unused', path='parent', generated=False)
-                added = dict(unused)
-                added['arm'] = experiment.ADDED
-                outputs.extend([base, unused, added])
+                merged = dict(unused)
+                merged['arm'] = experiment.MERGED
+                outputs.extend([base, unused, merged])
             else:
                 packed = [base]
-                for name in (experiment.INCUMBENT, experiment.ADDED):
+                for name in (experiment.INCUMBENT, experiment.MERGED):
                     expert_ids, expert_seconds, expert_obs = extras[name]
                     packed.append(pack(
                         row, name, ids=expert_ids,
@@ -222,13 +263,14 @@ def main():
         from programming_sandbox import check
         outputs = evaluate_growth(
             network, rows, plan, args.home, args.incumbent, incumbent_manifest,
-            added_dir, manifest, check)
+            added_dir, manifest, check,
+            parent_dir=args.home / 'objects',
+            parent_manifest=selection['owners'][3])
         if rank == 0:
             result['growth'] = experiment.score_growth(
                 read_role(args.home / 'inputs', prepared, 'preservation', plan),
                 read_role(args.home / 'inputs', prepared, 'new', plan),
-                outputs, plan, prepared['incumbent_prototypes'],
-                prepared['added_prototypes'], check)
+                outputs, plan, check)
     if rank == 0:
         save(args.home / 'result.json', result)
     dist.destroy_process_group()

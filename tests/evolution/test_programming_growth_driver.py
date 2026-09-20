@@ -70,7 +70,7 @@ def process(rank, folder):
         if rank == 0:
             save(home / 'report.json', {'count': len(outputs)})
             arms = {out['arm'] for out in outputs}
-            assert arms == {'base', 'incumbent', 'added'}
+            assert arms == {'base', 'incumbent', 'merged'}
             assert all(out['generated'] for out in outputs)
             assert all(out['path'] == 'expert' for out in outputs if out['arm'] != 'base')
         (home / 'passed').touch()
@@ -82,4 +82,4 @@ def test_actual_driver_generates_parent_and_both_extras_without_training(tmp_pat
     mp.spawn(process, args=(str(tmp_path),), nprocs=4, join=True)
     assert all((tmp_path / str(rank) / 'passed').exists() for rank in range(4))
     outputs = json.loads((tmp_path / '0' / 'growth-outputs.json').read_bytes())
-    assert {out['arm'] for out in outputs} == {'base', 'incumbent', 'added'}
+    assert {out['arm'] for out in outputs} == {'base', 'incumbent', 'merged'}

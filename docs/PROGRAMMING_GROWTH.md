@@ -32,14 +32,19 @@ Available capacity grows by one stored tail. Activation does not:
 
 1. Generate the unchanged parent.
 2. If the public example passes, keep that program.
-3. Otherwise spend **one** extra decode. Choose the extra tail whose frozen
-   training prompts have greater Jaccard overlap with the request text. Ties
-   keep the incumbent. The request never includes task IDs, withheld tests or
-   evaluation labels.
+3. Otherwise spend **one** extra decode on the **unit task-vector merge** of
+   both tails:
 
-Paired measurement may generate both extras so both policies can be scored.
-Latency gates count only the attempts the serving policy would use. That is
-not equal computation.
+   `θ_merged = θ_parent + (θ_incumbent − θ_parent) + (θ_added − θ_parent)`
+
+   That is linear task arithmetic, not learned routing and not a second decode.
+   Jaccard overlap over leftover-like prompts would send those requests to the
+   new tail and can drop the incumbent leftover wins; merge tests whether the
+   two skills add in weight space instead.
+
+Paired measurement may generate the incumbent extra and the merged extra so
+both policies can be scored. Latency gates count only the attempts the serving
+policy would use. That is not equal computation.
 
 ## Stages
 
@@ -47,7 +52,7 @@ not equal computation.
 must pass the leftover gates versus the parent and versus parent repair. Failure
 stops the candidate. The new-answer slice stays closed.
 
-**Growth.** Only after isolation passes. Compare the expanded picker against
+**Growth.** Only after isolation passes. Compare the merged extra against
 the complete leftover fallback system on:
 
 - **preservation 32:** every leftover fallback success must remain correct

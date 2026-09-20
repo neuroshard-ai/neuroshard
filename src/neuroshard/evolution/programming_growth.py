@@ -23,6 +23,7 @@ PARENT_FALLBACK_PLAN = '25a8cdcafdccd772cb2f0ea2b19c5934d9e19e6417e37ee7bdde912f
 BASELINE_OUTPUTS = '3a34dea159358de4d910ff3f8ef23dee948ad98939c1b696a457afb962921037'
 INCUMBENT = 'incumbent'
 ADDED = 'added'
+MERGED = 'merged'
 EXECUTION_SOURCES = (
     'config/experiments/programming-expert-selection.json',
     'config/experiments/programming-expert.json',
@@ -89,32 +90,22 @@ def bind_splits(plan):
         raise ValueError('Required successes are not in the leftover preservation set')
     if required != [n for n in preservation if n in set(required)]:
         raise ValueError('Required success IDs must keep leftover ranking order')
+    merge_scales(plan)
     return splits
 
 
-def prompt_words(messages):
-    return parent._words(parent.routing_text(messages))
+def merge_scales(plan):
+    """Unit task-vector addition: θ_parent + (θ_inc − θ_parent) + (θ_add − θ_parent)."""
+    merge = plan.get('merge')
+    if merge != {'incumbent': 1, 'added': 1}:
+        raise ValueError('Only unit task-vector addition of both tails is frozen')
+    return merge
 
 
-def jaccard(left, right):
-    if not left and not right:
-        return 0.0
-    return len(left & right) / len(left | right)
-
-
-def prototypes(rows):
-    """JSON-stable word lists from frozen training prompts."""
-    return [sorted(prompt_words(row['messages'])) for row in rows]
-
-
-def choose_extra_expert(messages, incumbent_prototypes, added_prototypes):
-    """Pick one extra tail from the request text. Ties keep the incumbent."""
-    request = prompt_words(messages)
-    incumbent_score = max((jaccard(request, set(item)) for item in incumbent_prototypes), default=0.0)
-    added_score = max((jaccard(request, set(item)) for item in added_prototypes), default=0.0)
-    if added_score > incumbent_score:
-        return ADDED
-    return INCUMBENT
+def task_vector_merge(parent, incumbent, added, incumbent_scale, added_scale):
+    """θ_parent + λ_inc (θ_inc − θ_parent) + λ_add (θ_add − θ_parent)."""
+    merge_scales({'merge': {'incumbent': incumbent_scale, 'added': added_scale}})
+    return parent + incumbent_scale * (incumbent - parent) + added_scale * (added - parent)
 
 
 def load_role_rows(plan, rows, task_ids, *, role):
@@ -218,15 +209,14 @@ def score_isolation(rows, outputs, plan, check):
     return result
 
 
-def score_growth(preservation_rows, new_rows, outputs, plan, incumbent_prototypes,
-                 added_prototypes, check):
-    """Expanded one-extra policy versus the complete leftover fallback system."""
+def score_growth(preservation_rows, new_rows, outputs, plan, check):
+    """Expanded merged-tail extra versus the complete leftover fallback system."""
     bind_splits(plan)
     preservation_rows = load_role_rows(
         plan, preservation_rows, plan['splits']['preservation_task_ids'], role='preservation')
     new_rows = load_role_rows(plan, new_rows, plan['splits']['new_task_ids'], role='new')
     rows = list(preservation_rows) + list(new_rows)
-    arms = ('base', INCUMBENT, ADDED)
+    arms = ('base', INCUMBENT, MERGED)
     expected = {(row['id'], arm) for row in rows for arm in arms}
     actual = [(out['id'], out['arm']) for out in outputs]
     if len(actual) != len(set(actual)) or set(actual) != expected:
@@ -239,7 +229,7 @@ def score_growth(preservation_rows, new_rows, outputs, plan, incumbent_prototype
     vs_baseline_new = []
     preserved_successes = []
     baseline_usage, expanded_usage = [], []
-    extras = {INCUMBENT: 0, ADDED: 0}
+    extras = {INCUMBENT: 0, MERGED: 0}
     for row in rows:
         current = {arm: table[row['id'], arm] for arm in arms}
         visible = fallback.visible_tests(row)
@@ -247,26 +237,25 @@ def score_growth(preservation_rows, new_rows, outputs, plan, incumbent_prototype
         base_visible = fallback.passes(current['base'], row, visible, check)
         baseline_choice, baseline_answer = fallback.choose_after_visible_example(
             current['base'], current[INCUMBENT], row, check)
-        selected = choose_extra_expert(row['messages'], incumbent_prototypes, added_prototypes)
-        extra = current[selected]
         expanded_choice, expanded_answer = fallback.choose_after_visible_example(
-            current['base'], extra, row, check)
+            current['base'], current[MERGED], row, check)
         if not base_visible:
             original_prompt = current['base'].get('prompt_ids')
             fallback.extra_attempt_recorded(
                 current[INCUMBENT], path='expert', prompt_kind='original',
                 original_prompt_ids=original_prompt)
             fallback.extra_attempt_recorded(
-                current[ADDED], path='expert', prompt_kind='original',
+                current[MERGED], path='expert', prompt_kind='original',
                 original_prompt_ids=original_prompt)
-            extras[selected] += 1
+            extras[INCUMBENT] += 1
+            extras[MERGED] += 1
         scores = {
             'base': fallback.passes(current['base'], row, full, check),
             'baseline': fallback.passes(baseline_answer, row, full, check),
             'expanded': fallback.passes(expanded_answer, row, full, check),
         }
         usage_baseline = fallback._usage(current['base'], current[INCUMBENT], base_visible)
-        usage_expanded = fallback._usage(current['base'], extra, base_visible)
+        usage_expanded = fallback._usage(current['base'], current[MERGED], base_visible)
         baseline_usage.append(usage_baseline)
         expanded_usage.append(usage_expanded)
         if row['id'] in preservation_ids and row['id'] in required:
@@ -277,7 +266,7 @@ def score_growth(preservation_rows, new_rows, outputs, plan, incumbent_prototype
             'id': row['id'], 'task_id': row['task_id'],
             'set': 'preservation' if row['id'] in preservation_ids else 'new',
             'visible_base_passed': base_visible,
-            'selected_extra': selected if not base_visible else 'none',
+            'selected_extra': MERGED if not base_visible else 'none',
             'baseline_choice': baseline_choice,
             'expanded_choice': expanded_choice,
             'scores': scores,
@@ -316,6 +305,8 @@ def score_growth(preservation_rows, new_rows, outputs, plan, incumbent_prototype
         'visible_fail_extras': extras,
         'maximum_extra_decodes': 1,
         'equal_computation': False,
+        'task_vector_merge': True,
+        'merge': merge_scales(plan),
         'original_final_opened': False,
         'details': details,
     }

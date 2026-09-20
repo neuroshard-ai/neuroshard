@@ -60,7 +60,6 @@ def prepare(plan, mbpp, home, gold_check, tokenizer):
     development = code_rows(splits['development_task_ids'], raw, gold_check)
     new = code_rows(splits['new_task_ids'], raw, gold_check)
     preservation = code_rows(splits['preservation_task_ids'], raw, gold_check)
-    incumbent = code_rows(splits['incumbent_train_task_ids'], raw, gold_check)
     experiment.load_role_rows(plan, train, splits['train_task_ids'], role='train')
     experiment.load_role_rows(plan, development, splits['development_task_ids'], role='development')
     experiment.load_role_rows(plan, new, splits['new_task_ids'], role='new')
@@ -90,8 +89,7 @@ def prepare(plan, mbpp, home, gold_check, tokenizer):
         'original_final_opened': False,
         'batches': batches,
         'schedule': schedule[:plan['training']['steps']],
-        'incumbent_prototypes': experiment.prototypes(incumbent),
-        'added_prototypes': experiment.prototypes(train),
+        'merge': experiment.merge_scales(plan),
     }
     save(home / 'prepared.json', result)
     return result

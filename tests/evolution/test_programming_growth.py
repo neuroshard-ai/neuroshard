@@ -58,12 +58,12 @@ def test_growth_splits_are_disjoint_from_the_reserved_final_and_incumbent_train(
     assert splits['required_success_task_ids'] == [399, 201, 169, 505, 11, 478, 258, 412, 115, 70, 292, 249]
 
 
-def test_prompt_overlap_keeps_the_incumbent_on_ties_and_can_select_the_added_tail():
-    incumbent = [sorted({'sort', 'unique', 'list'})]
-    added = [sorted({'matrix', 'multiply', 'integer'})]
-    assert growth.choose_extra_expert(messages('sort unique list values'), incumbent, added) == growth.INCUMBENT
-    assert growth.choose_extra_expert(messages('integer matrix multiply'), incumbent, added) == growth.ADDED
-    assert growth.choose_extra_expert(messages('unrelated prompt zzzz'), incumbent, added) == growth.INCUMBENT
+def test_unit_task_vector_is_incumbent_plus_added_minus_parent():
+    assert growth.task_vector_merge(5, 6, 8, 1, 1) == 9
+    assert growth.task_vector_merge(0, 2, 3, 1, 1) == 5
+    with pytest.raises(ValueError, match='unit task-vector'):
+        growth.task_vector_merge(0, 1, 1, 2, 1)
+    assert growth.merge_scales(plan()) == {'incumbent': 1, 'added': 1}
 
 
 def test_isolation_reuses_the_leftover_gates_on_the_development_slice():
@@ -103,8 +103,6 @@ def test_growth_requires_preserved_successes_and_new_answer_gain():
     assert parent_kept | specialist_kept == required
     preservation = [row(n, 'preserve %s' % n, ['assert example', 'assert hidden']) for n in preservation_ids]
     new_rows = [row(n, 'matrix multiply %s' % n, ['assert example', 'assert hidden']) for n in new_ids]
-    incumbent = growth.prototypes([{'messages': messages('sort unique list')}])
-    added = growth.prototypes(new_rows)
     outputs = []
     check = lambda code, setup, tests: {'passed': code.strip() == 'GOOD'}
 
@@ -119,41 +117,41 @@ def test_growth_requires_preserved_successes_and_new_answer_gain():
             outputs += [
                 output(item, 'base', 'GOOD', path='parent', ids=[1], prompt_ids=[10]),
                 unused(item, growth.INCUMBENT, 'GOOD'),
-                unused(item, growth.ADDED, 'GOOD'),
+                unused(item, growth.MERGED, 'GOOD'),
             ]
         elif item['task_id'] in specialist_kept:
             outputs += [
                 output(item, 'base', 'BAD', path='parent', ids=[1], prompt_ids=[10]),
                 output(item, growth.INCUMBENT, 'GOOD', path='expert', ids=[2], prompt_ids=[10]),
-                output(item, growth.ADDED, 'BAD', path='expert', ids=[3], prompt_ids=[10]),
+                output(item, growth.MERGED, 'GOOD', path='expert', ids=[3], prompt_ids=[10]),
             ]
         else:
             outputs += [
                 output(item, 'base', 'BAD', path='parent', ids=[1], prompt_ids=[10]),
                 output(item, growth.INCUMBENT, 'BAD', path='expert', ids=[2], prompt_ids=[10]),
-                output(item, growth.ADDED, 'BAD', path='expert', ids=[3], prompt_ids=[10]),
+                output(item, growth.MERGED, 'BAD', path='expert', ids=[3], prompt_ids=[10]),
             ]
     for i, item in enumerate(new_rows):
         outputs += [
             output(item, 'base', 'BAD', path='parent', ids=[1], prompt_ids=[10]),
             output(item, growth.INCUMBENT, 'BAD', path='expert', ids=[2], prompt_ids=[10]),
-            output(item, growth.ADDED, 'GOOD' if i < 4 else 'BAD', path='expert',
+            output(item, growth.MERGED, 'GOOD' if i < 4 else 'BAD', path='expert',
                    ids=[3], prompt_ids=[10]),
         ]
-    result = growth.score_growth(preservation, new_rows, outputs, current, incumbent, added, check)
+    result = growth.score_growth(preservation, new_rows, outputs, current, check)
     assert result['gates']['preserved_successes']
     assert result['net_vs_baseline_new'] == 4
-    assert result['passed']
+    assert result['passed'] and result['task_vector_merge']
     assert result['original_final_opened'] is False
     lost = []
     target = next(item['id'] for item in preservation if item['task_id'] == 169)
     for out in outputs:
         item = dict(out)
-        if out['arm'] == growth.INCUMBENT and out['id'] == target:
+        if out['arm'] == growth.MERGED and out['id'] == target:
             item['text'] = '```python\nBAD\n```'
         lost.append(item)
     assert not growth.score_growth(
-        preservation, new_rows, lost, current, incumbent, added, check)['gates']['preserved_successes']
+        preservation, new_rows, lost, current, check)['gates']['preserved_successes']
 
 
 def test_bind_execution_requires_the_incumbent_leftover_checkpoint():

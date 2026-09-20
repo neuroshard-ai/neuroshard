@@ -62,6 +62,10 @@
     "maximum_p95_ratio": 1.5,
     "maximum_p95_seconds": 90
   },
+  "merge": {
+    "incumbent": 1,
+    "added": 1
+  },
   "excluded_parent_pool_tasks": [
     123,
     367,
@@ -881,7 +885,7 @@
       973
     ]
   },
-  "policy": "Keep the leftover fallback checkpoint, public-example gate, one extra decode and 256 output-token cap. Train a second last-four-layer tail on leftover MBPP that is disjoint from the reserved parent final, the leftover preservation set, the new-answer set and the incumbent training IDs. Isolation: on the development slice, the new tail as a checked extra must beat the parent and parent repair under the leftover gates. Growth: after a visible-example failure, choose exactly one extra tail by greater Jaccard overlap of the request text with that tail's frozen training prompts; ties keep the incumbent. Preserve every leftover fallback success. Improve the new-answer slice versus the complete fallback system. Paired measurement may generate both extras; the serving policy activates at most one. Do not open the original 128-task final.",
+  "policy": "Keep the leftover fallback checkpoint, public-example gate, one extra decode and 256 output-token cap. Train a second last-four-layer tail on leftover MBPP that is disjoint from the reserved parent final, the leftover preservation set, the new-answer set and the incumbent training IDs. Isolation: on the development slice, the new tail as a checked extra must beat the parent and parent repair under the leftover gates. Growth: after a visible-example failure, spend one extra decode on the unit task-vector merge of both tails: parent_tail + (incumbent − parent_tail) + (added − parent_tail). Preserve every leftover fallback success. Improve the new-answer slice versus the complete fallback system. Paired measurement may generate the incumbent extra and the merged extra; the serving policy activates at most one. Do not open the original 128-task final.",
   "resource_allowance": {
     "region": "us-east-1",
     "instances": 4,
@@ -889,6 +893,6 @@
     "max_hours": 6,
     "planning_cap_usd": 80
   },
-  "selection": "Pin leftover ranking continuation, incumbent checkpoint, tokenizer, required leftover successes and the prompt-overlap extra rule before any new training. Isolation failure stops the candidate before the new-answer slice is scored.",
+  "selection": "Pin leftover ranking continuation, incumbent checkpoint, tokenizer, required leftover successes and unit task-vector addition before any new training. Isolation failure stops the candidate before the new-answer slice is scored.",
   "scope": "Operated research. Second capability is another programming tail, not a new domain. 0.4.0 genesis is unchanged. No NEURO issuance, no promotion of the accepted graph, no original-final opening."
 }
