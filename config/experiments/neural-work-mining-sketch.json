@@ -1,0 +1,16 @@
+{
+  "schema": "neuroshard-tile-mining-sketch-plan-v1",
+  "date": "2026-09-20",
+  "shape": [16, 16, 16],
+  "fixture_seed": 20260921,
+  "tile_size": 4,
+  "noise_rank": 4,
+  "difficulty_bits": 4,
+  "losing_difficulty_bits": 16,
+  "timing_repetitions": 5,
+  "cpu_only": true,
+  "aws_budget_usd": 0,
+  "objective": "Recover an identical linear training transition while deriving tickets from challenge-dependent intermediate products, then attack task/header/claimant bindings.",
+  "security_claim": "None. Toy parameters, public predetermined test headers, trusted task admission and separate arithmetic audit; no resource-hardness proof or consensus activation.",
+  "decision_rule": "Exact numerical agreement and binding checks establish mechanism behavior only. Report complete producer/auditor overhead against unmodified training; do not infer practical GPU efficiency or permissionless security."
+}
