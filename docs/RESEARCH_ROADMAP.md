@@ -2,16 +2,14 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
-The active capability experiment is the [programming expert trial](PROGRAMMING_EXPERT_TRIAL.md).
-Its first candidate failed automatic serving. The next frozen comparison is
-[equal extra-attempt fallback](PROGRAMMING_FALLBACK_COMPARISON.md): a checked extra
-expert decode versus a parent repair generation on leftover tasks. The
-[leftover result](PROGRAMMING_FALLBACK_RESULTS.md) passed +4/32 versus both
-controls and is now the research baseline for the next growth experiment:
-another admitted capability must beat this complete fallback system while
-preserving its successes and keeping the same maximum work per request. This
-is complementary skill under an executable gate, not promotion and not a new
-consensus mechanism.
+The active capability experiment is the leftover
+[fallback baseline](PROGRAMMING_FALLBACK_RESULTS.md) and the frozen
+[second-capability growth comparison](PROGRAMMING_GROWTH.md). Automatic routing
+of the first programming tail failed. The leftover extra-attempt policy passed
++4/32 and stays fixed. The next run trains a disjoint second tail, isolates it
+on its own leftover slice, then asks whether an expanded one-extra picker can
+improve new answers without losing the recorded leftover successes. This is
+not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference
@@ -23,9 +21,14 @@ The [scaling design](SCALING_DESIGN.md) now specifies the architectural directio
 
 The [v2 experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.
 
-## Current implemented baseline — 0.4.0
+## Current protocol baseline — 0.4.0
 
-The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md) extend the reference with a frozen 135M pretrained model, a 4,608-parameter trainable adapter, separate funded inference jobs, validation-gated serving, a minimal public client, browser payments and immutable S3 collection. A two-host native cycle earned rewards and spent them on the promoted model. The new live chain has its own genesis; old balances do not migrate. The requirements below for economical verification, robust evaluation and independent operators remain open.
+The 0.4.0 network is the **ledger and payment testnet**, not the assistant
+being grown. It freezes SmolLM2-135M-Instruct plus a 4,608-parameter adapter.
+The [LLM protocol](LLM_PROTOCOL.md) and [experiment records](LLM_EXPERIMENTS.md)
+remain the specification of that chain. A two-host native cycle earned rewards
+and spent them on the promoted adapter. Economical verification, robust
+evaluation and independent operators remain open.
 
 The separate [continual-admission result](CONTINUAL_ADMISSION_RESULTS.md) now
 completes live-LLM checklist items 1 and 2: three prospectively admitted expert

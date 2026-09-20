@@ -1,7 +1,8 @@
 # Equal extra-attempt programming fallback
 
 **Status: leftover comparison passed. This configuration is the research
-baseline for further growth. Not promoted.**
+baseline for further growth. The next frozen experiment is
+[second-capability growth](PROGRAMMING_GROWTH.md). Not promoted.**
 The original 128-task final stays closed. No further training was run.
 
 The [leftover result](PROGRAMMING_FALLBACK_RESULTS.md) is +4/32 versus both the

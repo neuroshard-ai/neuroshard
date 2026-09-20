@@ -62,9 +62,9 @@ question is:
 > Can another admitted capability improve new answers, preserve previously
 > demonstrated successes, and keep the same maximum work per request?
 
-That question is not yet a frozen GPU contract. Public promotion and opt-in
-research serving remain separate decisions. No new consensus mechanism is
-required to run it.
+That question is frozen in [PROGRAMMING_GROWTH.md](PROGRAMMING_GROWTH.md).
+Public promotion and opt-in research serving remain separate decisions. The
+0.4.0 genesis is unchanged.
 
 ## Resources
 

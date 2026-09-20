@@ -4,9 +4,11 @@ Contribute neural computation and use native **NEURO** to pay for inference.
 NeuroShard runs its own blockchain. Your keys stay on your machine; joining
 requires no website account or registration token.
 
-**Experimental testnet.** This release uses a small pretrained instruction model
-with a trainable adapter. Validators replay the computation before accepting work
-or paying providers. Test NEURO has no promised monetary value or mainnet conversion.
+**Experimental protocol testnet.** This package serves the 0.4.0 ledger and a
+small pretrained instruction model with a trainable adapter. It is not the
+1.7B bounded-activation research assistant. Validators replay the computation
+before accepting work or paying providers. Test NEURO has no promised monetary
+value or mainnet conversion.
 
 ## Install and join
 

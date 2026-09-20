@@ -13,9 +13,19 @@ The ledger remains scheduled through September 26 for expiry and refunds;
 the [historical joining guide](docs/JOIN_ALPHA.md) records the original setup.
 The website and PyPI release below use the earlier chain.
 
-Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruct with a 4,608-parameter trainable adapter**. Native validators replay training and inference before accepting work or paying providers. The pretrained backbone is frozen. The initial validators share one operator across two hosts; this is a working protocol baseline, with economical large-model verification and independent ownership still to solve.
+NeuroShard's **capability work** is a bounded-activation growing assistant:
+a 1.7B parent plus checked extra shards, at most one extra decode per
+request. The leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
+is the research baseline (+4/32 versus parent and parent repair). The frozen
+next experiment is [second-capability growth](docs/PROGRAMMING_GROWTH.md).
+That is not yet a public promoted model.
 
-## Join the 0.4.0 baseline
+Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
+with a 4,608-parameter adapter, native replay, and paid inference. It is not
+the assistant being grown. Independent ownership and economical large-model
+verification remain open.
+
+## Join the 0.4.0 protocol testnet
 
 ```bash
 python3 -m venv ~/.venvs/neuroshard
