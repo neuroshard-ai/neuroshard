@@ -17,9 +17,11 @@ complete automatically routed assistant while preserving general responses
 and bounding serving latency. This extends capability evidence beyond the
 completed fact-learning demonstration; it does not change these six criteria.
 The first candidate failed development (12/32 original versus 11/32 automatic,
-24/24 general responses preserved); its final remains unopened. The next
-comparison must test complementary expert answers against spending the same
-extra inference budget on the original model.
+24/24 general responses preserved); its final remains unopened. The
+[equal extra-attempt fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
+is frozen on leftover MBPP tasks and must beat both the parent and a parent
+repair attempt under the same extra decode and output-token cap; the
+opened-development 15/32 diagnostic is not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
