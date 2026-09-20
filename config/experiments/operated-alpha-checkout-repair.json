@@ -1,0 +1,21 @@
+{
+  "source": "f593b3c77fe7f561a6db98d3d47949926ba10583",
+  "failure": "R3 bootstrap invoked git archive from an ignored exported directory; Git refused before installation or model execution. Automatic allocation cleanup followed. No native genesis, user payment or model response was created.",
+  "repair": "Run unchanged committed deployment scripts from a detached Git worktree. The full git archive command succeeds locally before allocation.",
+  "neural_and_protocol_source_unchanged": true,
+  "reuse_passed_cpu_preflight": true,
+  "same_service_gates": true,
+  "same_gpu_hours": 60,
+  "same_total_ceiling_usd": 800,
+  "all_prior_failures_covered_by_reserve_usd": 100,
+  "recorded_before_retry_at": 1789863519.81775,
+  "retirement": {
+    "gpus": 7,
+    "ledger_hosts": 4,
+    "remaining_volumes": 0,
+    "both_security_groups_retired": true,
+    "compute_upper_usd": 0.6297552387933334,
+    "gpu_finished": "2026-09-20T00:20:47.478544+00:00",
+    "ledger_finished": "2026-09-20T00:20:48.755857+00:00"
+  }
+}

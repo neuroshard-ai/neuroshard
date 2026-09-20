@@ -1,9 +1,31 @@
 """Bounded discovery and complete first-attempt prices for native shard hosting."""
+import copy
 from . import expert_lifecycle, hosting
 from .reference_data import identity
 from .schema import integer
 
 FORMAT = 'neuroshard-hosted-inference-quote-v1'
+ATOMIC_FORMAT = 'neuroshard-hosted-inference-quote-v2'
+
+
+def replacement(state, job_id):
+    """Check a timed replacement without paying a fee or changing reservations."""
+    if 'service_admission' not in state:
+        raise ValueError('Automatic recovery requires standing admission')
+    current = copy.deepcopy(state)
+    lease = current['hosting']['leases'].get(job_id)
+    job = current['expert_lifecycle']['jobs'].get(job_id)
+    if (not lease or not job or job['claim_id'] is not None or state['height'] > job['expires']
+            or lease['epoch'] + 1 >= state['manifest']['hosting']['max_attempts']):
+        raise ValueError('No remaining preclaim recovery attempt')
+    deadline = lease.get('prepare_deadline') if lease['status'] == 'preparing' else lease.get('work_deadline')
+    if lease['status'] not in ('preparing', 'ready') or state['height'] <= deadline:
+        raise ValueError('The current assignment has not timed out')
+    del current['hosting']['leases'][job_id]
+    hosting.release_collateral(current, lease)
+    offers, _ = choose(current, job['graph'], job['expires'], lease['fee_escrow'])
+    return {'job_id': job_id, 'assignment_root': lease['assignment_root'], 'offers': offers,
+            'height': state['height'], 'valid_until': min(job['expires'], state['height'] + 64)}
 
 
 def choose(state, graph, expires, ceiling, publisher=None):
@@ -23,7 +45,9 @@ def choose(state, graph, expires, ceiling, publisher=None):
     rows = {rank: {} for rank in range(total)}
     for key, offer in sorted(market['offers'].items(), key=lambda item: (item[1]['fee'], item[0])):
         if (offer['graph'] != graph_root or offer['expires'] < expires
-                or used.get(key, 0) >= offer['capacity'] or offer['rank'] not in rows):
+                or used.get(key, 0) >= offer['capacity'] or offer['rank'] not in rows
+                or market['providers'][offer['owner']].get('registration_expires', expires) < expires
+                or not hosting.live_provider(state, market['providers'][offer['owner']])):
             continue
         rows[offer['rank']].setdefault(offer['owner'], {'id': key, **offer})
     for coordinator, offer in rows[0].items():
@@ -34,6 +58,15 @@ def choose(state, graph, expires, ceiling, publisher=None):
         if available[coordinator] < 0:
             continue
         capacity = {owner: amount // profile['lease_bond'] for owner, amount in available.items()}
+        if 'service_admission' in state:
+            slots = state['manifest']['service_admission']['provider_slots']
+            for owner in capacity:
+                occupied = sum(any(row['owner'] == owner for row in lease['providers'].values())
+                               for lease in market['leases'].values())
+                capacity[owner] = min(capacity[owner], int(occupied < slots))
+            if not capacity[coordinator]:
+                continue
+            capacity[coordinator] = 0
         # At least one other backbone partition must use a different key.
         # Key separation is a placement constraint, not administrator diversity.
         for separate in (1, 2):
@@ -90,7 +123,7 @@ def quote(state, question, maximum, *, provider_ceiling=2**60, publisher=None):
     # Fund + reserve + at most one replacement transaction per remaining
     # pre-claim attempt. An adjudicated rejection needs separate fresh funding.
     transaction_fees = (profile['max_attempts'] + 1)*state['manifest']['params']['fee']
-    return {'format': FORMAT, 'chain_id': state['chain_id'], 'height': state['height'],
+    result = {'format': FORMAT, 'chain_id': state['chain_id'], 'height': state['height'],
         'valid_until': valid_until, 'graph': identity(graph), 'tokenizer': graph['tokenizer']['root'],
         'request_root': identity(request), 'max_tokens': maximum, 'offers': offers,
         'publisher': selected['0']['owner'], 'expires_in': duration, 'stage_limit': stages,
@@ -99,3 +132,14 @@ def quote(state, question, maximum, *, provider_ceiling=2**60, publisher=None):
         'maximum_debit_atoms': execution + provider_fees + verification + transaction_fees,
         'retry_policy': 'Unclaimed attempts may reuse the reserved audit budget; rejected claims require new funding',
         'visibility': 'Conversation, neural-call tokens and final responses are public; providers and auditors process them'}
+    if 'service_admission' in state:
+        from . import service_admission
+        # Check advertised audit availability through the quote's whole validity
+        # window. The eventual admission still reserves the complete job atomically.
+        service_admission.terms(state, 'expert_inference', stages, duration + 64)
+        occupancy = (duration + 1)*state['manifest']['service_admission']['audit_rent_per_block']
+        transaction_fees = profile['max_attempts']*state['manifest']['params']['fee']
+        result.update(format=ATOMIC_FORMAT, admission=service_admission.FORMAT,
+            occupancy_atoms=occupancy, transaction_fee_allowance_atoms=transaction_fees,
+            maximum_debit_atoms=execution + provider_fees + verification + occupancy + transaction_fees)
+    return result

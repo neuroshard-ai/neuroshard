@@ -1,0 +1,143 @@
+{
+  "format": "neuroshard-operated-alpha-window-v1",
+  "purpose": "Expose the accepted growing model through an operated native ledger, paid shard providers, complete replay and the existing hosted chat client.",
+  "accepted_graph": "54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa",
+  "learning": {
+    "new_training": false,
+    "new_final": false,
+    "new_quality_claim": false
+  },
+  "prerequisites": [
+    "Committed operated admission CPU preflight passes ordinary execution and both automatic recovery cases",
+    "Full application replay reproduces all four preflight validator states",
+    "Model tensors, tokenizer, selector, planner, composition and generation are unchanged during source migration",
+    "Exact deployed source, complete answering commitments and real numerical runtime agree"
+  ],
+  "administration": "One administrator and AWS account. Machines and keys are not independent operators. TODO 4 remains open.",
+  "gpu_resources": {
+    "region": "us-east-1",
+    "instance_types": [
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge",
+      "g5.xlarge"
+    ],
+    "disk_gib": 200,
+    "max_hours": 60,
+    "minimum_zones": 3,
+    "planning_cap_usd": 800,
+    "planning_hourly_rate_usd": 1.1,
+    "verified_instance_hourly_usd": 1.006,
+    "public_ports": [
+      26656,
+      18440,
+      18441,
+      18442,
+      18443,
+      18444,
+      18445,
+      18446,
+      18447,
+      18448,
+      18460,
+      18461,
+      18462,
+      18463,
+      18464,
+      18465,
+      18466,
+      18467,
+      18468
+    ],
+    "protected_instances": [
+      "i-0d681a8ef83f72619",
+      "i-06bf7f1f01e6228bb",
+      "i-0ebe86ca07e97cf29"
+    ]
+  },
+  "ledger_resources": {
+    "region": "us-east-1",
+    "instances": 4,
+    "instance_type": "t3.medium",
+    "hours": 168,
+    "disk_gib": 40,
+    "cpu_credits": "unlimited",
+    "verified_instance_hourly_usd": 0.0416,
+    "planning_cap_usd": 800,
+    "separate_from_gpu_hosts": true
+  },
+  "bootstrap_consensus": {
+    "operator_bond_atoms_per_validator": 50000000000,
+    "operator_liquid_atoms_per_validator": 25000000000,
+    "validators": 4,
+    "public_credit_limit_atoms": 10000000000,
+    "policy": "Bound public starter credits below the bootstrap stake required to halt consensus; keys and voting remain operated by one administrator. This is not decentralized ownership or an established token economy."
+  },
+  "prices": {
+    "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "effective_date": "2026-09-01",
+    "gpu_sku": "79BRGEEZC6TARVWJ",
+    "ledger_sku": "NN4EGUUQRWVYP98C"
+  },
+  "funding": {
+    "aggregate_new_allocation_ceiling_usd": 800,
+    "scope": "All new GPU and ledger runtime, setup, idle time, full numerical replay, disks, provisioned disk performance, public IPv4, transfers, retained new evidence and controller overhead",
+    "stop_on_projected_excess": true,
+    "additional_inference_issuance": 0,
+    "public_starter_credit_ceiling_atoms": 10000000000,
+    "public_starter_grant_atoms": 500000000,
+    "public_starter_credit_policy": "Finite sponsor transfers, one grant per key, no claim of Sybil-proof identity or token market value",
+    "prior_deployment_full_upper_reserve_usd": 100
+  },
+  "placement": {
+    "primary": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      3,
+      4
+    ],
+    "secondary": [
+      3,
+      4,
+      5,
+      6,
+      0,
+      1,
+      2,
+      6,
+      0
+    ]
+  },
+  "service": {
+    "concurrent_requests": 2,
+    "complete_replays_per_claim": 3,
+    "max_tokens": 64,
+    "offer_blocks": 14000,
+    "max_settled_requests": 256,
+    "health_probe_interval_seconds": 3600,
+    "public_data": true,
+    "audit_authority": "Strictly more than two thirds of the native voting snapshot, with complete numerical replay"
+  },
+  "release_gate": {
+    "ordinary_requests": "Reuse all six ordinary cases from provider-llm-service.json; no newly selected quality set",
+    "concurrent_customers": 2,
+    "warm_first_visible_p95_seconds": 45,
+    "warm_generation_p95_seconds": 90,
+    "settlement_seconds_per_request": 1200,
+    "coordinator_and_backbone_process_recovery": "Automatic recovery controller with preexisting advertised spares; no manual replacement transaction",
+    "recovered_settlement_seconds": 1500,
+    "full_replay_matches": true,
+    "inference_issuance_atoms": 0
+  },
+  "stop": "Do not publish availability before the release gate passes. Withdraw future audit capacity when the request, funding or service limit is reached, finish or expire admitted work, preserve public and private recovery records separately, and retire only recorded disposable resources. Absolute instance timers bound spending even if the controller fails. Dedicated ledger hosts outlive GPU service so native expiries and refunds can complete.",
+  "limits": "A first funded alpha window, not permanent availability, independent administration, privacy-preserving inference or a fresh continual-learning experiment. Full replay remains expensive. Protocol participation alone does not establish useful compute or outside ownership.",
+  "retry_contract": "operated-alpha-renewal-repair.json"
+}

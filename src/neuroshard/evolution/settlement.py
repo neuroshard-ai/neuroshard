@@ -14,7 +14,7 @@ from neuroshard.lab import state as ledger
 from .objects import digest, MAX_OBJECT_BYTES
 from .schema import root, integer
 from .verification import Metadata, bundle, validate_record, dependencies,validate_growth,work_identity
-from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work, hosting
+from . import lifecycle, auditing, portable_work, portable_lifecycle, expert_work, expert_lifecycle, planner_work, hosting, service_admission
 
 CHUNK_BYTES = 1024*1024
 MAX_TX_BYTES = 2*1024*1024
@@ -67,13 +67,15 @@ def genesis(chain_id, validators, manifest):
         planner_work.initialize(base)
     if 'hosting' in manifest:
         hosting.initialize(base)
+    if 'service_admission' in manifest:
+        service_admission.initialize(base)
     invariant(base)
     return base
 
 
 def invariant(s):
     escrow = (lifecycle.escrow(s) + auditing.escrow(s) + portable_lifecycle.escrow(s)
-              + expert_lifecycle.escrow(s) + hosting.escrow(s))
+              + expert_lifecycle.escrow(s) + hosting.escrow(s) + service_admission.escrow(s))
     if s['assignment']:
         escrow += s['assignment']['bond']
     if s['candidate']:
@@ -90,6 +92,7 @@ def invariant(s):
     if len(s['paid_work']) != s['training_round']:
         raise ValueError('A numerical task must be paid at most once')
     hosting.invariant(s)
+    service_admission.invariant(s)
     if 'planner_work' in s:
         if (s['model_root'] != s['planner_work']['checkpoint']['fusion']
                 or s['serving_root'] != s['manifest']['initial_model_root']):
@@ -257,6 +260,7 @@ def advance(previous,height,time_ns,evidence=(),committers=None):
     portable_lifecycle.advance(s)
     expert_lifecycle.advance(s)
     hosting.advance(s)
+    service_admission.advance(s)
     invariant(s)
     return s,updates
 
@@ -289,6 +293,7 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
         **expert_lifecycle.FIELDS,
         **planner_work.FIELDS,
         **hosting.FIELDS,
+        **service_admission.FIELDS,
     }
     if 'auditing' in previous:
         for name in ('reserve', *auditing.CLAIM_KINDS):
@@ -296,6 +301,12 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     kind = body.get('kind')
     if kind not in extras or set(body) != {'kind','chain_id','nonce'}|extras[kind]:
         raise ValueError('Invalid transaction schema')
+    if 'service_admission' in previous and kind in ('challenge', 'upload', 'seal', 'resolve', 'refute_update'):
+        # This explicit new-genesis profile uses the mandatory complete native
+        # replay quorum as its adjudicator. It does not combine that trust model
+        # with an unaudited third party's power to pause every waiting job or run
+        # a whole neural referee inside block execution.
+        raise ValueError('This profile adjudicates through complete native replay, not interactive disputes')
     if 'portable_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS):
         raise ValueError('This genesis accepts only its prepared portable execution profile')
     if 'expert_work' in previous and kind in ('reserve', 'claim', 'grow', *lifecycle.FIELDS,
@@ -314,7 +325,9 @@ def transition(previous,envelope,artifacts=None,commit_artifacts=False,referee=N
     debit(p['fee'])
     s['burned'] += p['fee']
     sender['nonce'] += 1
-    if kind in hosting.FIELDS:
+    if kind in service_admission.FIELDS:
+        service_admission.apply(s, owner, body, envelope)
+    elif kind in hosting.FIELDS:
         hosting.apply(s, owner, body, envelope)
     elif kind in planner_work.FIELDS:
         planner_work.apply(s, owner, body, envelope)

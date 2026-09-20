@@ -80,6 +80,36 @@ class Outbox:
             self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
         return evidence
 
+    def retire_admission(self, snapshot):
+        """A signed absolute admission deadline makes an unknown tx non-replayable.
+
+        This never manufactures a receipt or asserts that no fee was paid. The
+        customer still follows any job/result with this exact transaction ID.
+        """
+        operation = self.pending()
+        if operation is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        body, owner = wire.verify(wire.parse(raw))
+        if body['kind'] != 'admit_work':
+            return None
+        if (body['chain_id'] != self.chain_id or snapshot['chain_id'] != self.chain_id
+                or owner != self.owner.public_key):
+            raise ValueError('Admission retirement requires the account\'s own committed chain')
+        if snapshot['height'] <= body['valid_until']:
+            return None
+        key = wire.transaction_id(wire.parse(raw))
+        if any(value is not None and value.get('id') != key
+               for value in (snapshot.get('job'), snapshot.get('result'))):
+            raise ValueError('Admission retirement contains another native job')
+        evidence = {'operation': operation, 'chain_id': self.chain_id, 'height': snapshot['height'],
+            'transaction_sha256': hashlib.sha256(raw).hexdigest(), 'valid_until': body['valid_until'],
+            'snapshot_root': wire.digest(snapshot),
+            'transaction_outcome': 'unknown; signed admission deadline permanently elapsed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
+
     def retire_closed(self, state):
         """Recover a stale audit/vote only from trusted committed native state.
 
@@ -169,6 +199,28 @@ class Outbox:
             return None
         row = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()
         return wire.verify(wire.parse(row[0]))[0]
+
+    def retire_control(self, snapshot):
+        """Keep unknown control outcomes, once their signed deadline has elapsed."""
+        operation = self.pending()
+        if operation is None:
+            return None
+        raw = self.db.execute('SELECT envelope FROM operations WHERE id=?', (operation,)).fetchone()[0]
+        body, owner = wire.verify(wire.parse(raw))
+        if body['kind'] not in ('heartbeat_provider', 'renew_provider', 'renew_expert_offer',
+                                'renew_audit_service', 'recover_hosted_job'):
+            return None
+        if owner != self.owner.public_key or body['chain_id'] != self.chain_id or snapshot['chain_id'] != self.chain_id:
+            raise ValueError('Require this operator network\'s committed control snapshot')
+        if snapshot['height'] <= body['valid_until']:
+            return None
+        evidence = {'operation': operation, 'chain_id': self.chain_id, 'height': snapshot['height'],
+            'transaction_sha256': hashlib.sha256(raw).hexdigest(), 'valid_until': body['valid_until'],
+            'snapshot_root': wire.digest(snapshot),
+            'transaction_outcome': 'unknown; signed control deadline permanently elapsed'}
+        with self.db:
+            self.db.execute('INSERT INTO retired VALUES (?,?)', (operation, canonical(evidence)))
+        return evidence
 
     def send(self, operation, kind, *, timeout=60, **fields):
         intent = canonical({'kind': kind, **fields})

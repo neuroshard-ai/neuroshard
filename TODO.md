@@ -4,7 +4,7 @@ NeuroShard's goal is one useful, openly available assistant whose learning and
 serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
 
-This is the fixed six-item completion checklist. **4/6 complete. Tasks 1, 2, 3 and 5 are complete against their bounded demonstration criteria; tasks 4 and 6 remain open.**
+This is the fixed six-item completion checklist. **5/6 complete. Tasks 1, 2, 3 and 5 are complete against their bounded demonstration criteria; task 6 is complete for the funded operated alpha. Task 4 remains open.**
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -259,6 +259,16 @@ before the affected work, rather than changing the target after a result.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
+  Current development: [operated alpha admission and recovery](docs/OPERATED_ALPHA.md)
+  replaces unaccepted audit offers with atomic work reservation against funded
+  standing services, charges occupied capacity, and adds provider maintenance
+  and native recovery from advertised spares. Its committed CPU native preflight
+  passes both automatic owner replacements, nine complete numerical replays and
+  exact replay of 620 blocks and 143 transactions. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
+  now passes its ordinary and automatic process-recovery gates and is available
+  for a funded public window. The independent availability soak remains open. AWS machines under our account
+  do not satisfy the independent-administration criterion below.
+
   Done when independent providers can discover work, acquire assigned shards,
   join, leave and replace unavailable providers through the protocol. Demonstrate
   required-backbone-shard loss, coordinator loss, state recovery and continued
@@ -337,18 +347,27 @@ before the affected work, rather than changing the target after a result.
   model size, a token price, outside demand or perpetual funding. The demonstrated
   admission saturation attack remains open under permissionless hosting.
 
-- [ ] **6. Usable chat service**
+- [x] **6. Usable chat service — COMPLETE for the funded operated alpha**
 
-  Current development adds [native hosted chat](docs/HOSTED_CHAT.md): complete
-  bounded quotes, durable funding/reservation, actual token-time draft delivery,
-  assignment authentication and graph/tokenizer-pinned conversation history.
-  Native expiry and lost-acknowledgement checks return every unused budget
-  without a second payment. The accepted-model trial now passes two concurrent
-  customers, six ordinary requests, ten total settlements and both owner-loss
-  cases. First visible output is 23.60–44.63 seconds and complete generation
-  29.37–49.32 seconds on the six ordinary cases. Public responses, failures,
-  privacy constraints and costs are published. Persistent public deployment
-  remains required; the disposable trial endpoints are retired.
+  The [public alpha](docs/JOIN_ALPHA.md) now serves the accepted growing graph
+  with two concurrent customers, streaming, bounded complete prices and pinned
+  graph/tokenizer conversation history. All ten frozen deployment requests pass,
+  including automatic coordinator/backbone process recovery. Six ordinary cases
+  show first text in **33.15–42.17 seconds** and complete generation in
+  **34.75–49.34 seconds**. A fresh public observer and wallet completed two
+  paid turns, preserved context and resumed a deliberate timeout with the same
+  nonce. All four saved ledger states replay exactly, with zero inference issuance.
+  The first memory-instruction reply was poor and remains published; the following
+  turn retained the phrase. This is a service/context check, not broad answer quality.
+
+  [Results, replies, failures and reproducible evidence](docs/OPERATED_ALPHA_RESULT.md)
+  are public. Admission is scheduled through September 22, 2026 at 11:09 UTC, GPUs
+  through September 22, 2026 at 12:39 UTC and the separate ledger through September 26, 2026 at 23:49 UTC;
+  funding/request limits may close admission sooner. The service is a source CLI,
+  with public conversations and 64-token outputs, under one administrator.
+  These are a finite alpha's measured guarantees, not perpetual availability,
+  independent ownership or ChatGPT-level capability. The existing done-when
+  criteria below are unchanged.
 
   Done when the accepted growing graph serves ordinary multi-turn requests with
   streaming, versioned context/tokenizer handling, bounded prices, correct
@@ -356,6 +375,9 @@ before the affected work, rather than changing the target after a result.
   latency/load target on supported deployments. State and test prompt visibility,
   storage and privacy behavior; users must understand which providers or auditors
   receive their data. Publish representative responses and failure behavior.
+
+  <details>
+  <summary>Earlier chat evidence before the operated alpha</summary>
 
   Evidence so far: the public 0.4.0 client supports a smaller experimental model;
   the larger expert graph has operated generation and public reproducible weights.
@@ -372,12 +394,14 @@ before the affected work, rather than changing the target after a result.
   learning-quality gate. Public access,
   native billing and load targets remain open. See [block streaming](docs/BLOCKED_STREAMING.md).
 
+  </details>
+
 ## Work discipline
 
 All six milestones remain in scope. Items 1–3 and 5 are complete against their
 fixed demonstration criteria, with item 5 using its finite-sponsorship option.
-Reliable permissionless hosting and usable public chat remain items 4 and 6;
-their existing completion criteria are unchanged.
+Item 6 is complete for the bounded operated alpha. Reliable permissionless
+hosting remains item 4; all existing completion criteria are unchanged.
 
 Before an expensive run, record its exact decision, reused artifacts, cheapest
 adequate preflight, success/failure rule and time/spending cap. A rerun needs an
@@ -392,6 +416,16 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-20: **Completed item 6 for the funded operated alpha.** The accepted
+  graph passes ten deployment requests, ordinary concurrent latency gates and
+  both automatic process-loss recoveries. A new public observer/customer passes
+  two paid conversation turns, actual streaming and timeout/resume without a
+  duplicate payment. Application replay matches 3,369 headers,
+  697 accepted transactions and four saved states;
+  serving issues no tokens. [Evidence and access](docs/OPERATED_ALPHA_RESULT.md)
+  are published with the finite service window and $800 ceiling. Checklist
+  **5/6 complete**; independent hosting and its soak remain item 4.
 
 - 2026-09-19: **Completed item 5 under finite sponsorship; advanced items 4 and 6.**
   Native providers acquire only assigned model portions and serve the accepted

@@ -140,7 +140,7 @@ class Application(Base):
                 validator_updates=[lab_pb.ValidatorUpdate(pub_key=lab_pb.PublicKey(ed25519=bytes.fromhex(k)),power=v) for k,v in sorted(updates.items())])
 
     def Query(self,request,context):
-        if request.path == '/hosting/quote':
+        if request.path in ('/hosting/quote', '/hosting/replacement'):
             # Committed states are replaced, never mutated in place. Capture
             # one atomic view, then keep market matching outside consensus's
             # state lock so discovery cannot hold up block finalization.
@@ -149,10 +149,11 @@ class Application(Base):
             try:
                 if s is None or request.prove or request.height not in (0, s['height']):
                     raise ValueError('Only current-state queries without proofs are supported')
-                from .provider_quotes import quote
+                from .provider_quotes import quote, replacement
                 options = protocol.parse_json(request.data)
-                value = quote(s, options['question'], options['max_tokens'],
-                    provider_ceiling=options.get('provider_ceiling', 2**60), publisher=options.get('publisher'))
+                value = (replacement(s, options['job_id']) if request.path == '/hosting/replacement' else
+                    quote(s, options['question'], options['max_tokens'],
+                          provider_ceiling=options.get('provider_ceiling', 2**60), publisher=options.get('publisher')))
                 return pb.ResponseQuery(value=canonical(value), height=s['height'])
             except ERRORS as exc:
                 return pb.ResponseQuery(code=1, log=str(exc))
@@ -172,6 +173,8 @@ class Application(Base):
                     value = s['candidate']
                 elif request.path=='/auditing':
                     value = s.get('auditing')
+                elif request.path=='/service_admission':
+                    value = s.get('service_admission')
                 elif request.path=='/portable_work':
                     value = s.get('portable_work')
                 elif request.path=='/expert_work':
@@ -182,6 +185,15 @@ class Application(Base):
                     value = s.get('expert_lifecycle')
                 elif request.path=='/hosting':
                     value = s.get('hosting')
+                elif request.path=='/hosting/control':
+                    value = {'chain_id': s['chain_id'], 'height': s['height'], 'hosting': s.get('hosting'),
+                        'profile': s['manifest'].get('service_admission'),
+                        'hosting_profile': s['manifest'].get('hosting'),
+                        'request_blocks': ((s['manifest']['hosting']['prepare_blocks'] +
+                            s['manifest']['hosting']['execution_blocks'])*s['manifest']['hosting']['max_attempts'] +
+                            s['manifest']['params']['max_claim_blocks'] + 128) if 'hosting' in s else None,
+                        'graph': s['serving_root'],
+                        'executor_root': s.get('expert_lifecycle', {}).get('serving_graph', {}).get('executor_root')}
                 elif request.path=='/hosting/job':
                     from .hosting import snapshot
                     value = snapshot(s, options['job_id'])

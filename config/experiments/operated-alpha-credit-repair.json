@@ -1,0 +1,36 @@
+{
+  "format": "neuroshard-operated-alpha-credit-repair-v1",
+  "previous_launcher_source": "66d38ab697e6e8597e6ff484b94bb966bdc52d0b",
+  "native_source_unchanged": "944a0d498fe832ce408081b45c00241f1c67d35b",
+  "chain_unchanged": "neuroshard-portable-life-b65db5ce12b3",
+  "failure": {
+    "ordinary_first_visible_seconds": [
+      39.1175,
+      41.3519,
+      41.2913,
+      42.8069,
+      55.242,
+      69.9021
+    ],
+    "limit_seconds": 45,
+    "result": "Failed; stopped after the six ordinary cases showed latency failure. The in-progress coordinator-loss request remains subject to native recovery and settlement. No public availability was published."
+  },
+  "diagnosis": "Shard files completed checking before a long native-acceptance queue. The customer-facing validator had zero CPU credits and stayed at its 20-percent T3 baseline while the other validators retained credits. The bounded native profile includes one transaction per block.",
+  "change": {
+    "ledger_cpu_credits": "unlimited on the four recorded t3.medium validators",
+    "gpu_hours_upper": 66,
+    "ledger_hours_upper": 168,
+    "maximum_additional_cpu_charge_usd": 67.2,
+    "maximum_new_allocation_total_usd": 800,
+    "maximum_charge_basis": "4 instances * 2 vCPUs * 168 hours * $0.05 per vCPU-hour, without subtracting free baseline credits",
+    "pricing_source": "https://aws.amazon.com/ec2/instance-types/t3/"
+  },
+  "same": [
+    "All native source, genesis, graph, model, tokenizer and numerical environment",
+    "Existing keys, balances, request histories, provider assignments and deadlines",
+    "All six ordinary cases, two concurrent customers, three complete replays per claim, 45-second first-visible and 90-second generation limits",
+    "Both automatic coordinator and backbone recovery cases"
+  ],
+  "retry": "Preserve the previous failed report. After its outstanding request settles, run all ten gate requests into a separate evidence directory. Reject ordinary latency failures before beginning lengthy fault cases.",
+  "resources": "No new machines. Amend the existing seven GPU retirement timers to the earlier 66-hour deadline. Keep the four ledger hosts and their final signing-state backups on the original seven-day schedule."
+}

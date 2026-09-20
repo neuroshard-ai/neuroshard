@@ -1,0 +1,31 @@
+{
+  "format": "neuroshard-operated-alpha-preparation-retry-v1",
+  "previous_source": "ba0e19ea7d3d061fb8c9c971d076cd0ae5a76db0",
+  "previous_chain": "neuroshard-portable-life-9434928457ef",
+  "result": "First warm-up did not complete: three assigned owners never signed acceptance after their heartbeat acknowledgement timed out. No response or new quality result was accepted at the failure observation.",
+  "cause": "The shared signer mutex serialized calls but did not resolve a previously pending maintenance transaction. The runtime marked the assignment attempted before neural frames began, permanently abandoning safe preparation.",
+  "change": [
+    "Reconcile the exact pending control transaction, or retire it only from committed deadline evidence, before signing model acceptance or a completed response",
+    "Retry preparation while no neural-frame start marker exists; start the visible stream only after readiness; an epoch that began neural traffic still requires native replacement"
+  ],
+  "unchanged": [
+    "All model weights, tokenizer, selection, composition and generation",
+    "The six ordinary service cases, two concurrent customers, three full replays per claim, 45-second first-visible target and 90-second generation target",
+    "No training or newly opened quality final"
+  ],
+  "prerequisites": [
+    "Native lost-heartbeat-acknowledgement and never-committed-expired-heartbeat regression tests pass",
+    "The committed three-case CPU native preflight passes again and its ledger reproduces"
+  ],
+  "resources": {
+    "aggregate_ceiling_usd_including_failed_deployment": 800,
+    "prior_deployment_full_upper_reserve_usd": 50,
+    "fresh_gpu_hosts": 7,
+    "fresh_ledger_hosts": 4,
+    "new_gpu_hours": 72,
+    "new_ledger_hours": 168,
+    "retire_failed_gpu_hosts_before_new_gpu_allocation": true
+  },
+  "old_obligations": "Withdraw future audit offers, retire failed GPU providers, and leave the four original ledger hosts advancing until operator-owned pending work expires/refunds. Preserve signing state and block stores, then retire those ledger hosts. No public starter credits had been requested and availability was never published.",
+  "record": "Preserve the failed warm-up, native leases, exact source, private recovery copies and costs. A successful retry does not change the earlier result."
+}

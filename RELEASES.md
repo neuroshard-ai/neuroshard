@@ -1,5 +1,20 @@
 # Native releases
 
+## Operated alpha — September 2026 (source release)
+
+The [growing-model alpha](docs/JOIN_ALPHA.md) now serves the accepted graph through
+native funded admission, advertised shard replicas and three complete replays
+before settlement. Concurrent streaming, automatic coordinator/backbone process
+recovery and a fresh user's paid multi-turn conversation pass. The deliberate
+client timeout resumes without another payment. [All results, failed attempts,
+ledger replay and pinned source](docs/OPERATED_ALPHA_RESULT.md) are public.
+
+The funded service window ends September 22, with the ledger retained longer
+for expiry/refunds. The website and PyPI 0.4.0 remain on their earlier chain.
+This serving-only alpha has one administrator and public conversations; it does
+not close independent hosting or establish general assistant capability.
+
+
 ## Repository maintenance — protocol source scope
 
 The current tree contains protocol/client source, tests, example configuration, network manifests, technical documentation and reproducibility tools. Website publishing projects, manuscripts, generated figures, old prototypes and raw measurement dumps have moved out of the tracked tree. Historical evidence remains linked to immutable revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`; history and released artifacts are preserved.
@@ -7,6 +22,13 @@ The current tree contains protocol/client source, tests, example configuration, 
 No Python runtime source, genesis, balance or execution profile changed in this cleanup. CI now checks repository boundaries, Markdown links, package contents, Python behavior and the consensus build. This is not a new PyPI or network release.
 
 ## Unreleased — model-evolution research tools
+
+The new opt-in [operated alpha profile](docs/OPERATED_ALPHA.md) couples each job
+to standing, collateral-backed native audit capacity in one bounded transaction.
+It adds paid capacity lifetimes, provider heartbeats and renewal, and automatic
+epoch-bound recovery from available providers. Complete native replay quorum is
+its explicit adjudication rule; legacy challenge uploads are disabled only in
+this new profile. It requires a fresh genesis and does not upgrade 0.4.0.
 
 The opt-in [provider profile](docs/PROVIDER_RUNTIME.md) adds native shard offers,
 collateralized assignments, certificate-pinned execution, customer-bound complete

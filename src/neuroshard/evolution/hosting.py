@@ -22,6 +22,7 @@ FIELDS = {
     'update_provider': {'endpoint', 'certificate', 'deposit'},
     'withdraw_provider': {'amount'},
     'offer_expert': {'graph', 'rank', 'fee', 'capacity', 'expires_in'},
+    'renew_expert_offer': {'offer_id', 'expires_in', 'valid_until'},
     'cancel_expert_offer': {'offer_id'},
     'lease_expert': {'graph', 'question', 'max_tokens', 'offers', 'max_price',
                      'max_provider_fee', 'audit_budget', 'expires_in'},
@@ -105,6 +106,10 @@ def select(state, graph, ranks, offers, expires, ceiling):
         if used >= offer['capacity']:
             raise ValueError('Provider offer has no unreserved capacity')
         provider = market['providers'][offer['owner']]
+        if provider.get('registration_expires', expires) < expires:
+            raise ValueError('Provider registration does not cover the complete request')
+        if not live_provider(state, provider):
+            raise ValueError('Provider has no recent native heartbeat')
         bond = state['manifest']['hosting']['lease_bond']
         if rank == '0':
             bond += state['manifest']['params']['claim_bond']
@@ -115,12 +120,26 @@ def select(state, graph, ranks, offers, expires, ceiling):
         provider = market['providers'][owner]
         if provider['collateral'] - provider['locked'] < amount:
             raise ValueError('Provider has insufficient unreserved collateral')
+        if 'service_admission' in state:
+            if sum(row['owner'] == owner for row in selected.values()) != 1:
+                raise ValueError('One provider runtime may own one rank in this assignment')
+            used = sum(any(row['owner'] == owner for row in lease['providers'].values())
+                       for lease in market['leases'].values())
+            if used >= state['manifest']['service_admission']['provider_slots']:
+                raise ValueError('Provider runtime capacity is already occupied')
     # Key separation is a placement constraint, never an ownership guarantee.
     if {'0', '1', '2'} <= set(selected) and len({selected[r]['owner'] for r in ('0', '1', '2')}) == 1:
         raise ValueError('One provider key may not hold the complete backbone')
     if sum(row['fee'] for row in selected.values()) > ceiling:
         raise ValueError('Replacement exceeds the original provider-fee ceiling')
     return selected
+
+
+def live_provider(state, provider):
+    if 'service_admission' not in state:
+        return True
+    return (state['height'] - provider.get('last_seen', -1000000)
+            <= state['manifest']['service_admission']['provider_heartbeat_blocks'])
 
 
 def stage_limit(graph, request, unit):
@@ -267,6 +286,15 @@ def advance(state):
     for key, offer in list(offers.items()):
         if state['height'] > offer['expires']:
             del offers[key]
+    if 'service_admission' in state:
+        for owner, provider in list(state['hosting']['providers'].items()):
+            if (state['height'] > provider['registration_expires'] and provider['locked'] == 0
+                    and state['height'] >= provider['withdraw_after']):
+                ledger.account(state, owner)['balance'] += provider['collateral']
+                for key, offer in list(offers.items()):
+                    if offer['owner'] == owner:
+                        del offers[key]
+                del state['hosting']['providers'][owner]
 
 
 def apply(state, owner, body, envelope):
@@ -292,6 +320,10 @@ def apply(state, owner, body, envelope):
         auditing.debit(state, owner, amount)
         market['providers'][owner] = {'endpoint': address, 'certificate': certificate,
             'collateral': amount, 'locked': 0, 'withdraw_after': height + profile['cooldown_blocks']}
+        if 'service_admission' in state:
+            from .service_admission import renew_provider
+            renew_provider(state, owner)
+            market['providers'][owner]['last_seen'] = height
     elif kind in ('update_provider', 'withdraw_provider'):
         provider = market['providers'].get(owner)
         if provider is None:
@@ -324,8 +356,30 @@ def apply(state, owner, body, envelope):
         fee = integer(body['fee'], 0, 10**12)
         capacity = integer(body['capacity'], 1, 16)
         duration = integer(body['expires_in'], 1, 100000)
+        if 'service_admission' in state:
+            integer(capacity, 1, state['manifest']['service_admission']['provider_slots'])
+            if height + duration > market['providers'][owner]['registration_expires']:
+                raise ValueError('Provider offer exceeds its paid registration lifetime')
+            price = capacity*duration*state['manifest']['service_admission']['offer_rent_per_block']
+            auditing.debit(state, owner, price)
+            state['burned'] += price
         market['offers'][protocol.transaction_id(envelope)] = {'owner': owner, 'graph': identity(graph),
             'rank': rank, 'fee': fee, 'capacity': capacity, 'expires': height + duration}
+    elif kind == 'renew_expert_offer':
+        if 'service_admission' not in state:
+            raise ValueError('Genesis does not enable paid offer renewal')
+        integer(body['valid_until'], height, height + 64)
+        offer = market['offers'].get(root(body['offer_id']))
+        if offer is None or offer['owner'] != owner:
+            raise ValueError('Only an existing offer owner can renew its capacity')
+        duration = integer(body['expires_in'], 1, 100000)
+        end = height + duration
+        if (end <= offer['expires'] or end > market['providers'][owner]['registration_expires']):
+            raise ValueError('Extend an offer within its paid provider lifetime')
+        price = (end-offer['expires'])*offer['capacity']*state['manifest']['service_admission']['offer_rent_per_block']
+        auditing.debit(state, owner, price)
+        state['burned'] += price
+        offer['expires'] = end
     elif kind == 'cancel_expert_offer':
         key = root(body['offer_id'])
         if market['offers'].get(key, {}).get('owner') != owner:
@@ -374,8 +428,12 @@ def apply(state, owner, body, envelope):
             # Any validation failure discards this complete transition.
             del market['leases'][key]
             release_collateral(state, lease)
-            selected = select(state, job['graph'], set(job['workers']), body['offers'],
-                              job['expires'], lease['fee_escrow'])
+            if body['offers'] == 'discover' and 'service_admission' in state:
+                from .provider_quotes import choose
+                _, selected = choose(state, job['graph'], job['expires'], lease['fee_escrow'])
+            else:
+                selected = select(state, job['graph'], set(job['workers']), body['offers'],
+                                  job['expires'], lease['fee_escrow'])
             old_budget, new_budget = lease['audit_budget'], root(body['audit_budget'])
             publisher = selected['0']['owner']
             if new_budget == old_budget:
