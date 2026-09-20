@@ -4,6 +4,11 @@ Status: experimental CPU reference, September 20, 2026. Apache-2.0.
 This research does not activate a consensus change, issue NEURO, restart the
 GPU alpha, or change the six bounded [live-LLM criteria](../TODO.md).
 
+The [first measured result](NEURAL_WORK_RESULTS.md) is complete. The arithmetic
+checks work, but their witness is slower and larger than minimal dense replay
+in all three measured cases. Both deliberately weak mining constructions fail.
+No GPU or native integration follows from this result.
+
 ## Objective and decision
 
 The intended network allows strangers to contribute model shards, earn rewards
@@ -31,6 +36,8 @@ with an [experiment driver](../scripts/study_neural_work.py),
 Results must be compared against the faster of two exact dense replays, including
 an optimized binary64 BLAS baseline within the declared integer bounds. A slow
 integer baseline alone is not evidence of economical verification.
+Both matched-witness and minimal-boundary replay controls are measured: ordinary
+replay does not need to receive the proof's internal witness matrices.
 
 ## Prior work and prospective contribution
 

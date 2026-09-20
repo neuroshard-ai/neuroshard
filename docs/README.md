@@ -14,7 +14,7 @@ retaining the existing generated-answer and retention requirements.
 | Start here | Purpose |
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
-| [Neural-work research](NEURAL_WORK_RESEARCH.md) | CPU reference for complete linear-shard arithmetic checks, admission binding, and attacks on receipt-based mining; no consensus activation. |
+| [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Linear-shard arithmetic checks and mining shortcut attacks; minimal replay wins the first complete-cost comparison, so no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |
 | [Operated alpha](OPERATED_ALPHA.md) | Atomic funded admission, provider maintenance, automatic recovery and the distinction between AWS hosts and independent operators. |
