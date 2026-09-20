@@ -1,0 +1,29 @@
+{
+  "format": "neuroshard-programming-expert-v1",
+  "purpose": "One contributed programming tail improves automatically selected answers while retaining the unmodified general path.",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+    "revision": "31b70e2e869a7173562077fd711b654946d38674",
+    "sha256": "f55217be716b6a997b97b9d8d7eb6fad02e00858f5010ec24f64603c3a98a0e8",
+    "license": "Apache-2.0"
+  },
+  "seed": 2026092021,
+  "parent_layout": [0, 7, 14, 24],
+  "expert_layout": [0, 7, 14, 20, 24],
+  "split": 20,
+  "parameter_limit": 900000000,
+  "max_length": 768,
+  "max_prompt_tokens": 384,
+  "generation_tokens": 256,
+  "batch_size": 4,
+  "microbatch": 1,
+  "training": {"steps": 256, "warmup_steps": 16, "learning_rate": 0.00002, "weight_decay": 0.01, "clip_norm": 1.0},
+  "objective": {"kl_strength": 0.0, "margin_strength": 0.0},
+  "counts": {"dev_code": 32, "final_code": 128, "train_general_per_group": 64, "dev_general_per_group": 6, "final_general_per_group": 16},
+  "router": {"prototypes_per_route": 4, "epochs": 24, "minimum_margin": 0, "maximum_distance": 1099511627776},
+  "bootstrap_samples": 10000,
+  "gate": {"minimum_code_gain": 0.05, "maximum_p95_ratio": 1.5, "maximum_p95_seconds": 90},
+  "resource_allowance": {"region": "us-east-1", "instances": 4, "instance_type": "g5.xlarge", "max_hours": 4, "planning_cap_usd": 50},
+  "selection": "One terminal checkpoint only. Development must gain at least two coding tasks, preserve every general response, and meet latency bounds before final opens. No tuning or retries on final.",
+  "scope": "Operated research. Old public MBPP with official task splits; pretraining contamination unknown. General retention is exact response preservation, not independently graded correctness. No quality promotion, NEURO issuance, permissionless verification or replacement of the accepted alpha graph."
+}

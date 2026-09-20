@@ -2,7 +2,18 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
-The current [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
+The active capability experiment is the [programming expert trial](PROGRAMMING_EXPERT_TRIAL.md).
+Its first candidate failed automatic serving. The next frozen comparison is
+[equal extra-attempt fallback](PROGRAMMING_FALLBACK_COMPARISON.md): a checked extra
+expert decode versus a parent repair generation on leftover tasks. The
+[leftover result](PROGRAMMING_FALLBACK_RESULTS.md) passed +4/32 versus both
+controls and is now the research baseline for the next growth experiment:
+another admitted capability must beat this complete fallback system while
+preserving its successes and keeping the same maximum work per request. This
+is complementary skill under an executable gate, not promotion and not a new
+consensus mechanism.
+
+The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference
 separates arithmetic verification from fresh resource expenditure, includes
 explicit shortcut attacks and retains stewarded admission assumptions. It does

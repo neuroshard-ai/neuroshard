@@ -10,6 +10,24 @@ This is the fixed six-item completion checklist. **5/6 complete. Tasks 1, 2, 3 a
 owner's request. Its evidence and completed demonstration criteria remain;
 the separate ledger stays scheduled through September 26 for expiry/refunds.
 See the [retirement record](config/experiments/operated-alpha-retirement.json).
+
+**Current learning work:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
+tests whether a contributed neural tail improves executable answers from the
+complete automatically routed assistant while preserving general responses
+and bounding serving latency. This extends capability evidence beyond the
+completed fact-learning demonstration; it does not change these six criteria.
+The first candidate failed development (12/32 original versus 11/32 automatic,
+24/24 general responses preserved); its final remains unopened. The
+[equal extra-attempt fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
+passed on leftover MBPP tasks (+4/32 versus the first parent attempt and versus
+parent repair) without opening the original final or promoting the tail. See
+the [result](docs/PROGRAMMING_FALLBACK_RESULTS.md). That configuration is the
+research baseline for further growth: another admitted capability must improve
+new answers, preserve these successes, and keep the same maximum work per
+request. Zero unique losses here are selection protection, not learned
+retention; the public example is an imperfect gate. This is not promotion of
+the accepted graph. The opened-development 15/32 diagnostic remains
+not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
