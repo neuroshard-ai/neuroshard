@@ -1,0 +1,480 @@
+{
+  "created_at": "2026-09-20T15:24:00.235705+00:00",
+  "decision": {
+    "arithmetic_binding": "implemented for the declared linear fixed-point shard only",
+    "aws_spend_usd": 0,
+    "cupow_transcript_construction": "not implemented or attacked by these negative controls",
+    "final_output_only_low_rank_noising": "rejected: algebraic shortcut on zero useful inputs",
+    "native_integration": "not authorized by this evidence",
+    "neuro_issued": 0,
+    "permissionless_admission": "not implemented; inputs and assignments are stewarded",
+    "proof_of_work_security": "not established",
+    "receipt_hash_mining": "rejected: cheap nonce grinding after cached training"
+  },
+  "environment": {
+    "blas_threads_requested": 1,
+    "machine": "x86_64",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1060-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "output_only_noising_attack": {
+    "dense_product_multiplications": 2097152,
+    "same_output": true,
+    "scope": "reject final-output-only shortcut; does not attack cuPOW",
+    "shortcut_multiplications": 69632
+  },
+  "schema": "neuroshard-neural-work-reference-result-v1",
+  "shapes": [
+    {
+      "accepted_result": "9e97ade1064aa6ddca454affe995f5d24bcbb5d0a02733d679c35ef7b94fe499",
+      "cached_result_fresh_seed": "3a7ce47328ac58acafe4c48abb48af1111c6a58351e0dd2981ceffee96bebe9f",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "95fbca5e971b4597100db5b8cd38314a5c44946c7569ce2161adf65c09045b6e",
+      "commitment": "729737d0e454cb7f3060a88149a8e5c5a4fc3dc399cdceb5ed941bc5c7213c39",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.00786432,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "07aeed861b3dc9c4a0ba0200441da791b3d712446ca28b4410d458ebe5b3f65b",
+          "commitment": "c732944e6e80e9c41d6d306af03f07947e627be9b65c09c09d5a0c43b30ccaa7",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "d5e74d644a3de4ddfea60b6ed56b45201258d1ffa098bc709ddf553ee2d26022",
+          "commitment": "ec71a83738fe53accbdd798a3953ed90db9e97013b3e63a18ef90f59caef33f3",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "47be755598ed46528d41ee8c71f0ce9e8eb05cc3a1b1bf891e8acb57315610f8",
+          "commitment": "75b329375ccffaaba63934b563f06d84d46a723079bd4f90292393f8bedf1f59",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "3c0cb3172574d27b165d549f33b3b761ba00ae06e63e177afbe3bffa693774d5",
+          "commitment": "c8b60fa18cf1a9e628f4a9c705542406e8fefe84b91cfb00c4f04505972b9dd4",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "d18ae46c7a4740506b78f9b8e4379bbd750877a90f3f2fe0a9f17c0970c51640",
+          "commitment": "1cff2eb6c49d84502a81bcb866e9925e4e23b383f4da7599fabf068b1673b1e2",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.1373341799919183,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 29,
+        "nonce": 28,
+        "ticket": "005b80973cd3ec4685cc8125045d4a8a10c022ec152ef096dc8a3a44eaaab994"
+      },
+      "shape_batch_input_output": [
+        32,
+        64,
+        64
+      ],
+      "timings": {
+        "modular_verification": {
+          "median_seconds": 0.005717054009437561,
+          "samples_seconds": [
+            0.005736909806728363,
+            0.005717054009437561,
+            0.005657531321048737,
+            0.005719177424907684,
+            0.005697240121662617
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.0008620563894510269,
+          "samples_seconds": [
+            0.0008808746933937073,
+            0.0008620563894510269,
+            0.0008713752031326294,
+            0.0008236793801188469,
+            0.0008290745317935944
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.0015154657885432243,
+          "samples_seconds": [
+            0.0015264693647623062,
+            0.0015154657885432243,
+            0.0015864502638578415,
+            0.0013932650908827782,
+            0.0015016747638583183
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.0014549018815159798,
+          "samples_seconds": [
+            0.001570655032992363,
+            0.0014716070145368576,
+            0.0014296481385827065,
+            0.0014094756916165352,
+            0.0014549018815159798
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.0016645751893520355,
+          "samples_seconds": [
+            0.0015782574191689491,
+            0.0016645751893520355,
+            0.001784995198249817,
+            0.0020181918516755104,
+            0.0016110129654407501
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.00040333252400159836,
+          "samples_seconds": [
+            0.00040333252400159836,
+            0.00038960855454206467,
+            0.0004407595843076706,
+            0.0003724219277501106,
+            0.00040381401777267456
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.000666358508169651,
+          "samples_seconds": [
+            0.0006591519340872765,
+            0.0006698351353406906,
+            0.0006189215928316116,
+            0.000666358508169651,
+            0.0006982749328017235
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 1.0138377547264099e-05,
+          "samples_seconds": [
+            1.086108386516571e-05,
+            1.0220333933830261e-05,
+            1.0138377547264099e-05,
+            9.98564064502716e-06,
+            1.0016374289989471e-05
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 65536,
+      "verification_over_fastest_exact_replay": 1.0416274855347207,
+      "witness_tensor_bytes": 98304,
+      "work_id": "21f5f5f5f2528c7b8daefe19d60c05ee1b384830a344b00ac8a1e76f3774fe54"
+    },
+    {
+      "accepted_result": "500f248bcf093da8207e7db3301e32f0539a3b0b61a25bbcee05222f7b0755b0",
+      "cached_result_fresh_seed": "bdd3d106be4f7e5e53a4e27f0c880f185e505f4d1c15797cf65055e77e3f071d",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "3adcb83455007af5e1c3d23c5bcb722e8d1afcf50cc574a03142ff547ddf484d",
+      "commitment": "4cf47e636610074b03b703601d9b1656651b79f126e1690e66b014438bbec167",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.1048576,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "2d91d76c6a3a9be1fa22be38ec3a326492d1047cdffd69518ce0999989203d73",
+          "commitment": "9d0f1b1217d7f70c55cbb4c599f75e89b087f2127462fbff3702f77878249daa",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "176fd574fa20ebfbb6f38330ff9452fc5e6dcda6756813523c7abc110c079660",
+          "commitment": "7198c2c802dc1869563a17450907ac7236284a5432ad52e0f6456b4f6ca6652f",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "2c949e9998f762cc0038ec0ae14af406b57ced9b3f1cc6481b2a47524f7ff9b3",
+          "commitment": "498f1d14871775f16e30a369dc71118a28094b73f898b2c11d5f657cfd453eb4",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "c927c1bb44fbe177e531136d79b7ee90fd5b622714ecb1b1617af7ecc70aa058",
+          "commitment": "9f111b5a81c256f84226e5649eb416f37e86e167dc3dbb19abd038d2a4748dfa",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "fa5e525b61af3f33193cf4b1031b7f2efdb3c2a1753e548ad86904f44eae4981",
+          "commitment": "a21ec37dc79e7c35f250343f84e1af6e0da637d4bf63990da3be22319a0fb4c3",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.6438237524766626,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 35,
+        "nonce": 34,
+        "ticket": "0015ede0a608bc25dd4f4f8bd7fe965624329a7db1cfc1083db7967956ee0ea0"
+      },
+      "shape_batch_input_output": [
+        64,
+        256,
+        256
+      ],
+      "timings": {
+        "modular_verification": {
+          "median_seconds": 0.03027919866144657,
+          "samples_seconds": [
+            0.030183397233486176,
+            0.03012057114392519,
+            0.03027919866144657,
+            0.035637213848531246,
+            0.030548781156539917
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.009080608375370502,
+          "samples_seconds": [
+            0.009080608375370502,
+            0.008873769082129002,
+            0.008796269074082375,
+            0.00914271455258131,
+            0.01052077766507864
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.01127433218061924,
+          "samples_seconds": [
+            0.01127433218061924,
+            0.01136789657175541,
+            0.011244949884712696,
+            0.011173281818628311,
+            0.013984112069010735
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.012507286854088306,
+          "samples_seconds": [
+            0.012549427337944508,
+            0.012492542155086994,
+            0.012507286854088306,
+            0.012621982954442501,
+            0.012412508018314838
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.025403565727174282,
+          "samples_seconds": [
+            0.025026613846421242,
+            0.025403565727174282,
+            0.0253945617005229,
+            0.02729156706482172,
+            0.025410322472453117
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.003434649668633938,
+          "samples_seconds": [
+            0.0033878665417432785,
+            0.003448318690061569,
+            0.003434649668633938,
+            0.003453027456998825,
+            0.0034095197916030884
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.016508608125150204,
+          "samples_seconds": [
+            0.0170659264549613,
+            0.016039399430155754,
+            0.016299757175147533,
+            0.01669888012111187,
+            0.016508608125150204
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 0.00022092275321483612,
+          "samples_seconds": [
+            0.0012900354340672493,
+            0.00022171437740325928,
+            0.00021775905042886734,
+            0.00022092275321483612,
+            0.00020171422511339188
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 786432,
+      "verification_over_fastest_exact_replay": 0.9014210925316671,
+      "witness_tensor_bytes": 1310720,
+      "work_id": "5c30fc90e2802e4548cf1da1ad364283a4ac947a824bfe283863b36776383030"
+    },
+    {
+      "accepted_result": "ba7af07070065146e5ddd031561c579839e02ca10b74f23c1c24d2b42bcaac9f",
+      "cached_result_fresh_seed": "cb5306d08fd5d824d7f7ad4062ecb4efac3b503e11f2312ff2a32910ae831f75",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "a7c219008518f4010d683e1355336e72e4c67bb8cc7fb1db90de4f8606b2b506",
+      "commitment": "fa8b9fffcdad1c04b49b0a10828662e8227d0306a95787d095c3ae108d4c2c78",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.4194304,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "f943e8929543f93909a7b827f5386f31420795930ed12f4da2eafafeeec7b5b8",
+          "commitment": "47eebbce73a9420db3a86fed9307593165bc0dd8b394c6da730005f083d3f667",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "af12137926817e65768fb2130bf84a69afd2e3526f25a192d0ee2732aeb099e7",
+          "commitment": "affca4f1420e5d336d4f11e9be14d1eea9d789daffba95e1cd6ecd1930558fd0",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "f434eb75967a0e820b8a95a7d0a4d1675417e427ff26efa1c8626a8fe6c6976b",
+          "commitment": "a52e5175542598ad4f285b42beca7012b0ad37ec16c72115b462a398347ec43a",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "11ab94bcf2b997c9a988e488e0c73543eb5ba29c64093f98b00b86faa05108a8",
+          "commitment": "b4fc23b36e8cc1ccf0f7d6c22bcabaf53392e627bcbe4af20157cfb82ea68d68",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "2b288a376875c909d7e94b454ab1b9648b07ea2fc9ac21dd8d77384a8cf643f9",
+          "commitment": "88a5afd7f1979abaeb24737ea81ef9bb99dc34518acf177f6a2d404223453b96",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.381598261617707,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 241,
+        "nonce": 240,
+        "ticket": "00607fd4bf208cd6b6b26d060caa42c6f140bd6bf044d1a5086055af232b92fc"
+      },
+      "shape_batch_input_output": [
+        128,
+        512,
+        512
+      ],
+      "timings": {
+        "modular_verification": {
+          "median_seconds": 0.1102611655369401,
+          "samples_seconds": [
+            0.11184730287641287,
+            0.1102611655369401,
+            0.1089878873899579,
+            0.10945028346031904,
+            0.11135902814567089
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.03437021467834711,
+          "samples_seconds": [
+            0.033838589675724506,
+            0.037689984776079655,
+            0.03401090856641531,
+            0.03437021467834711,
+            0.03928261436522007
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.04288799129426479,
+          "samples_seconds": [
+            0.04403676465153694,
+            0.04692872799932957,
+            0.04288799129426479,
+            0.04230665322393179,
+            0.04263115581125021
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.051072392612695694,
+          "samples_seconds": [
+            0.05141358356922865,
+            0.04927287716418505,
+            0.05194066185504198,
+            0.04930923134088516,
+            0.051072392612695694
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.24705378618091345,
+          "samples_seconds": [
+            0.24705378618091345,
+            0.24958798103034496,
+            0.2616454530507326,
+            0.2463839240372181,
+            0.2431183746084571
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.014431575313210487,
+          "samples_seconds": [
+            0.01682609785348177,
+            0.015078030526638031,
+            0.014431575313210487,
+            0.014258568175137043,
+            0.014419587329030037
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.21094409003853798,
+          "samples_seconds": [
+            0.21207509003579617,
+            0.21183359529823065,
+            0.21027653943747282,
+            0.20887631736695766,
+            0.21094409003853798
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 0.0009965915232896805,
+          "samples_seconds": [
+            0.005568740889430046,
+            0.0010188277810811996,
+            0.0009910641238093376,
+            0.0009965915232896805,
+            0.0009780144318938255
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 3145728,
+      "verification_over_fastest_exact_replay": 0.8397490131214961,
+      "witness_tensor_bytes": 5242880,
+      "work_id": "30931c9b9230039c52ae860b9ed7c7ece8bd7666e7f0a3349dc73bd8ba6d613c"
+    }
+  ],
+  "source_commit": "9162a4541e571b3ab224964d55219a107a3f276d",
+  "source_sha256": {
+    "config/experiments/neural-work-reference.json": "023d81084d30a6ba51b6d0fa7f0838aec2baaf879968f4f3e7bfda4fea4f1189",
+    "scripts/neural_work_reference.py": "9225d7f6a0b6524f0d093384656d02aae021b1b81cca0875bac9e3b218a9e66a",
+    "scripts/study_neural_work.py": "f4ca43e0943f76272d7a2fea26a0e6c3a9fb970b25f870dbfae537fd2b40423b"
+  },
+  "status": "completed",
+  "toy_learning": {
+    "accepted_steps": 10,
+    "final_weight_root": "c1775a20f0e297177caf60aa87a8fe35397078ff457f651c5dbb4c6a106c80a6",
+    "initial_work_id": "8f2ed9cdc4e210c9187f9d981f487e8daf7559931964a7b01dea7f640c25c4a5",
+    "interpretation": "Synthetic linear training-set fit only; no LLM or held-out quality claim.",
+    "loss_after_last_step": 273.798828125,
+    "loss_before_each_step": [
+      522.1328125,
+      456.314453125,
+      405.103515625,
+      364.134765625,
+      337.451171875,
+      313.31640625,
+      298.484375,
+      287.359375,
+      278.91015625,
+      273.798828125
+    ],
+    "stop_reason": "quantized fixed point; identical work is not paid again"
+  }
+}

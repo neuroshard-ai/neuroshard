@@ -1,0 +1,579 @@
+{
+  "created_at": "2026-09-20T15:26:58.794280+00:00",
+  "decision": {
+    "arithmetic_binding": "implemented for the declared linear fixed-point shard only",
+    "aws_spend_usd": 0,
+    "cupow_transcript_construction": "not implemented or attacked by these negative controls",
+    "final_output_only_low_rank_noising": "rejected: algebraic shortcut on zero useful inputs",
+    "native_integration": "not authorized by this evidence",
+    "neuro_issued": 0,
+    "permissionless_admission": "not implemented; inputs and assignments are stewarded",
+    "proof_of_work_security": "not established",
+    "receipt_hash_mining": "rejected: cheap nonce grinding after cached training"
+  },
+  "environment": {
+    "blas_threads_requested": 1,
+    "machine": "x86_64",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1060-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "output_only_noising_attack": {
+    "dense_product_multiplications": 2097152,
+    "same_output": true,
+    "scope": "reject final-output-only shortcut; does not attack cuPOW",
+    "shortcut_multiplications": 69632
+  },
+  "schema": "neuroshard-neural-work-reference-result-v1",
+  "shapes": [
+    {
+      "accepted_result": "9e97ade1064aa6ddca454affe995f5d24bcbb5d0a02733d679c35ef7b94fe499",
+      "boundary_replay_commitment": "b7db61906a94c8d2dba28eafd51c0d6677678c1a937f2e400401dbd5d08dccbd",
+      "boundary_replay_tensor_bytes": 49152,
+      "cached_result_fresh_seed": "cb04a9fd7e1b5da7b68a62951888d702bda8b3fbb0739fa16d801b5797b078d9",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "4a1735cc36ee0f15c3543f7d273fe8e90e1b74e4d38502b9056c2c67b0140a5d",
+      "commitment": "729737d0e454cb7f3060a88149a8e5c5a4fc3dc399cdceb5ed941bc5c7213c39",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.00786432,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "f8dfe1e1f25d4392069f7fec350c784e575570a5d3297cb7b12b6d7700b017b4",
+          "commitment": "c732944e6e80e9c41d6d306af03f07947e627be9b65c09c09d5a0c43b30ccaa7",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "7ae4e5000a78296c01ce7ed781e1dbe576a91fa10f9695fba343304ebe1a6a08",
+          "commitment": "ec71a83738fe53accbdd798a3953ed90db9e97013b3e63a18ef90f59caef33f3",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "e6e8492831cb748bce1721f90a109ff437f53ca56e536f00644c95f24467161e",
+          "commitment": "75b329375ccffaaba63934b563f06d84d46a723079bd4f90292393f8bedf1f59",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "2ea7fd50a032db9d28982ca19d9ca3756011c42b794134b38b351bae7c24be31",
+          "commitment": "c8b60fa18cf1a9e628f4a9c705542406e8fefe84b91cfb00c4f04505972b9dd4",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "dc355fd8ca5810d45e625e1f70f928531eccfe9b299d0ae6b057abc56ef1ab8d",
+          "commitment": "1cff2eb6c49d84502a81bcb866e9925e4e23b383f4da7599fabf068b1673b1e2",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.149782021017362,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 29,
+        "nonce": 28,
+        "ticket": "005b80973cd3ec4685cc8125045d4a8a10c022ec152ef096dc8a3a44eaaab994"
+      },
+      "shape_batch_input_output": [
+        32,
+        64,
+        64
+      ],
+      "timings": {
+        "boundary_commitment": {
+          "median_seconds": 0.0006326464936137199,
+          "samples_seconds": [
+            0.0006890902295708656,
+            0.0006161611527204514,
+            0.0006480803713202477,
+            0.0006095282733440399,
+            0.0006326464936137199
+          ]
+        },
+        "boundary_replay_float64": {
+          "median_seconds": 0.0012044170871376991,
+          "samples_seconds": [
+            0.001139005646109581,
+            0.0012044170871376991,
+            0.0013110321015119553,
+            0.001157555729150772,
+            0.0013176416978240013
+          ]
+        },
+        "boundary_replay_int64": {
+          "median_seconds": 0.0013923430815339088,
+          "samples_seconds": [
+            0.0015497151762247086,
+            0.0013087186962366104,
+            0.001371319405734539,
+            0.0016175387427210808,
+            0.0013923430815339088
+          ]
+        },
+        "modular_verification": {
+          "median_seconds": 0.00563955120742321,
+          "samples_seconds": [
+            0.005915554240345955,
+            0.005674908868968487,
+            0.005531463772058487,
+            0.00563955120742321,
+            0.005496131256222725
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.0008413475006818771,
+          "samples_seconds": [
+            0.0008413475006818771,
+            0.0008185319602489471,
+            0.0008370094001293182,
+            0.0008464232087135315,
+            0.0008843317627906799
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.0014862287789583206,
+          "samples_seconds": [
+            0.0015164213255047798,
+            0.0015100175514817238,
+            0.0014610690996050835,
+            0.0014580059796571732,
+            0.0014862287789583206
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.0017582634463906288,
+          "samples_seconds": [
+            0.0017582634463906288,
+            0.002172050066292286,
+            0.0021812599152326584,
+            0.0014930497854948044,
+            0.0013880282640457153
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.0017418768256902695,
+          "samples_seconds": [
+            0.0017418768256902695,
+            0.0015847338363528252,
+            0.001834728755056858,
+            0.0017415760084986687,
+            0.0020204000174999237
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.00039136409759521484,
+          "samples_seconds": [
+            0.00039136409759521484,
+            0.00044139567762613297,
+            0.00035984814167022705,
+            0.0003766696900129318,
+            0.0004943590611219406
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.0006637675687670708,
+          "samples_seconds": [
+            0.0006550680845975876,
+            0.0006902869790792465,
+            0.000636732205748558,
+            0.0006637675687670708,
+            0.0006805360317230225
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 1.005362719297409e-05,
+          "samples_seconds": [
+            1.1259689927101135e-05,
+            1.0235235095024109e-05,
+            1.001264899969101e-05,
+            1.005362719297409e-05,
+            1.0003335773944855e-05
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 65536,
+      "verification_over_fastest_boundary_replay": 1.233981811475581,
+      "verification_over_fastest_exact_replay": 0.8532341420693504,
+      "witness_tensor_bytes": 98304,
+      "work_id": "21f5f5f5f2528c7b8daefe19d60c05ee1b384830a344b00ac8a1e76f3774fe54"
+    },
+    {
+      "accepted_result": "500f248bcf093da8207e7db3301e32f0539a3b0b61a25bbcee05222f7b0755b0",
+      "boundary_replay_commitment": "48654a2b4b8f86b6d0e6d64e0f1c6ece880f4115f60ffda1ce117132f8fe1957",
+      "boundary_replay_tensor_bytes": 655360,
+      "cached_result_fresh_seed": "283ad651280ef18b354a0aa2eaf52563c8fe9637686fd7c0e358a009c9219c3d",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "27310c81972adad135aafd40808a12c8caffde765018d288a9f37694599343ea",
+      "commitment": "4cf47e636610074b03b703601d9b1656651b79f126e1690e66b014438bbec167",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.1048576,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "7607b01e196111b11a789e76a1d970965a67e6a27cdea4e35aa24f2acfff3142",
+          "commitment": "9d0f1b1217d7f70c55cbb4c599f75e89b087f2127462fbff3702f77878249daa",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "6d4579933f3400c7694fd5cf5546388fc973dfc1417a79d6756ab90acacc4a54",
+          "commitment": "7198c2c802dc1869563a17450907ac7236284a5432ad52e0f6456b4f6ca6652f",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "41130d4d20bc4dbbb0faee7eac2ddfb5f413301350c30e459c86d6e250a1b557",
+          "commitment": "498f1d14871775f16e30a369dc71118a28094b73f898b2c11d5f657cfd453eb4",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "c12b132fed01ef9c97de1d3caaf8bce002f5fd267dafb357c839973de9dfddb2",
+          "commitment": "9f111b5a81c256f84226e5649eb416f37e86e167dc3dbb19abd038d2a4748dfa",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "b757f6572f8db34e87e69b77146d510ecce185744f45ddfb02098ca12cf18e1d",
+          "commitment": "a21ec37dc79e7c35f250343f84e1af6e0da637d4bf63990da3be22319a0fb4c3",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.637987009956295,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 35,
+        "nonce": 34,
+        "ticket": "0015ede0a608bc25dd4f4f8bd7fe965624329a7db1cfc1083db7967956ee0ea0"
+      },
+      "shape_batch_input_output": [
+        64,
+        256,
+        256
+      ],
+      "timings": {
+        "boundary_commitment": {
+          "median_seconds": 0.006196425296366215,
+          "samples_seconds": [
+            0.006286270916461945,
+            0.006158270873129368,
+            0.006196425296366215,
+            0.00627110805362463,
+            0.006180126219987869
+          ]
+        },
+        "boundary_replay_float64": {
+          "median_seconds": 0.009638561867177486,
+          "samples_seconds": [
+            0.009638561867177486,
+            0.00948641449213028,
+            0.00974661111831665,
+            0.00970516912639141,
+            0.009539073333144188
+          ]
+        },
+        "boundary_replay_int64": {
+          "median_seconds": 0.022534619085490704,
+          "samples_seconds": [
+            0.022857320494949818,
+            0.022776763886213303,
+            0.022534619085490704,
+            0.02251355815678835,
+            0.022351162508130074
+          ]
+        },
+        "modular_verification": {
+          "median_seconds": 0.03028837312012911,
+          "samples_seconds": [
+            0.03011456038802862,
+            0.030201274901628494,
+            0.030925683677196503,
+            0.03080759011209011,
+            0.03028837312012911
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.00921180285513401,
+          "samples_seconds": [
+            0.008933140896260738,
+            0.008966534398496151,
+            0.00921180285513401,
+            0.00944850780069828,
+            0.009279130958020687
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.011320656165480614,
+          "samples_seconds": [
+            0.011291159316897392,
+            0.01165584847331047,
+            0.011136000975966454,
+            0.011394175700843334,
+            0.011320656165480614
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.01251756027340889,
+          "samples_seconds": [
+            0.012649103999137878,
+            0.012253129854798317,
+            0.012472032569348812,
+            0.01251756027340889,
+            0.012571359053254128
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.025506991893053055,
+          "samples_seconds": [
+            0.025237368419766426,
+            0.025506991893053055,
+            0.025337351486086845,
+            0.0271023977547884,
+            0.026103883050382137
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.0034919818863272667,
+          "samples_seconds": [
+            0.003566189669072628,
+            0.0034919818863272667,
+            0.0034539345651865005,
+            0.0034040939062833786,
+            0.003498467616736889
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.017472404055297375,
+          "samples_seconds": [
+            0.017472404055297375,
+            0.019495666027069092,
+            0.019680543802678585,
+            0.016401253640651703,
+            0.01624329946935177
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 0.0002240566536784172,
+          "samples_seconds": [
+            0.0014054253697395325,
+            0.00021531898528337479,
+            0.0002489360049366951,
+            0.0002240566536784172,
+            0.00020915083587169647
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 786432,
+      "verification_over_fastest_boundary_replay": 1.1745171449312597,
+      "verification_over_fastest_exact_replay": 0.9043819976268966,
+      "witness_tensor_bytes": 1310720,
+      "work_id": "5c30fc90e2802e4548cf1da1ad364283a4ac947a824bfe283863b36776383030"
+    },
+    {
+      "accepted_result": "ba7af07070065146e5ddd031561c579839e02ca10b74f23c1c24d2b42bcaac9f",
+      "boundary_replay_commitment": "fa61246034086f556ce065f031f6e1cab72e168b5a275b2c0d56eb386affef2c",
+      "boundary_replay_tensor_bytes": 2621440,
+      "cached_result_fresh_seed": "0446c758b2c2fa86d1caf2d877c62f8f3d45209eefa9058141a681956651bd75",
+      "cached_result_passes_new_correctness_challenge_without_training": true,
+      "challenge_seed": "d788597f0da2d6afee9c4a4f92a54ff6d30ba617cf25c9571a6d0946566eaafc",
+      "commitment": "fa8b9fffcdad1c04b49b0a10828662e8227d0306a95787d095c3ae108d4c2c78",
+      "duplicate_settlement_rejected": true,
+      "honest_checks_passed": true,
+      "ideal_witness_transfer_seconds_at_100_mbit": 0.4194304,
+      "numerical_attacks": {
+        "coherent_fake_gradient": {
+          "challenge_seed": "aced408d61953d1c8308b7f5946bc152c105c0e7f02a2c7cbf7d4c52c79c49a5",
+          "commitment": "47eebbce73a9420db3a86fed9307593165bc0dd8b394c6da730005f083d3f667",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_after": {
+          "challenge_seed": "ef5b807cb3f6272573276b100ca53cef32a32db9bd126eaf8b623d2ca4f43388",
+          "commitment": "affca4f1420e5d336d4f11e9be14d1eea9d789daffba95e1cd6ecd1930558fd0",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_forward": {
+          "challenge_seed": "409b32cdb70eed8f5ba8354b1a3731a6e70f0021e577335534ad265bc51097cc",
+          "commitment": "a52e5175542598ad4f285b42beca7012b0ad37ec16c72115b462a398347ec43a",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_input_gradient": {
+          "challenge_seed": "ddfc63935020cbb72216ac93784692159f3d613911ec2f7ce179d12e38451ac9",
+          "commitment": "b4fc23b36e8cc1ccf0f7d6c22bcabaf53392e627bcbe4af20157cfb82ea68d68",
+          "projected_rejects": true,
+          "replay_rejects": true
+        },
+        "forged_weight_gradient": {
+          "challenge_seed": "310c05c5a420a946264a4b07fcd8616fb84a8df3a38fed5d30d3aaa5fc0d8711",
+          "commitment": "88a5afd7f1979abaeb24737ea81ef9bb99dc34518acf177f6a2d404223453b96",
+          "projected_rejects": true,
+          "replay_rejects": true
+        }
+      },
+      "producer_commitment_over_fastest_training": 2.2740177224402736,
+      "receipt_nonce_attack": {
+        "additional_training_products": 0,
+        "hash_attempts": 241,
+        "nonce": 240,
+        "ticket": "00607fd4bf208cd6b6b26d060caa42c6f140bd6bf044d1a5086055af232b92fc"
+      },
+      "shape_batch_input_output": [
+        128,
+        512,
+        512
+      ],
+      "timings": {
+        "boundary_commitment": {
+          "median_seconds": 0.025508176535367966,
+          "samples_seconds": [
+            0.023121779784560204,
+            0.02370536606758833,
+            0.025508176535367966,
+            0.02851984091103077,
+            0.030551151372492313
+          ]
+        },
+        "boundary_replay_float64": {
+          "median_seconds": 0.03877125773578882,
+          "samples_seconds": [
+            0.03801305219531059,
+            0.03794922959059477,
+            0.03877125773578882,
+            0.03973502665758133,
+            0.03891888726502657
+          ]
+        },
+        "boundary_replay_int64": {
+          "median_seconds": 0.23657460790127516,
+          "samples_seconds": [
+            0.23364299908280373,
+            0.23726663645356894,
+            0.23587535228580236,
+            0.23657460790127516,
+            0.23866288177669048
+          ]
+        },
+        "modular_verification": {
+          "median_seconds": 0.11151512712240219,
+          "samples_seconds": [
+            0.11768680531531572,
+            0.11212582141160965,
+            0.11151512712240219,
+            0.10915474500507116,
+            0.10995728988200426
+          ]
+        },
+        "producer_commitment": {
+          "median_seconds": 0.033422673121094704,
+          "samples_seconds": [
+            0.03326418995857239,
+            0.033806534484028816,
+            0.0334117291495204,
+            0.033422673121094704,
+            0.03378653805702925
+          ]
+        },
+        "projected_verification": {
+          "median_seconds": 0.04253502655774355,
+          "samples_seconds": [
+            0.04231800697743893,
+            0.04641223791986704,
+            0.04253502655774355,
+            0.045764380134642124,
+            0.042414200492203236
+          ]
+        },
+        "replay_float64": {
+          "median_seconds": 0.049501098692417145,
+          "samples_seconds": [
+            0.05714046861976385,
+            0.049501098692417145,
+            0.048058041371405125,
+            0.0485953763127327,
+            0.054872079752385616
+          ]
+        },
+        "replay_int64": {
+          "median_seconds": 0.24794975854456425,
+          "samples_seconds": [
+            0.25094476342201233,
+            0.24694577790796757,
+            0.24794975854456425,
+            0.24512087553739548,
+            0.26258996315300465
+          ]
+        },
+        "training_float64": {
+          "median_seconds": 0.014697630889713764,
+          "samples_seconds": [
+            0.014697630889713764,
+            0.01477467268705368,
+            0.014397365972399712,
+            0.014189526438713074,
+            0.01882379874587059
+          ]
+        },
+        "training_int64": {
+          "median_seconds": 0.2114454209804535,
+          "samples_seconds": [
+            0.2145252926275134,
+            0.21140412334352732,
+            0.2114454209804535,
+            0.20994035433977842,
+            0.2133127273991704
+          ]
+        },
+        "witness_serialization": {
+          "median_seconds": 0.0009909337386488914,
+          "samples_seconds": [
+            0.00565751176327467,
+            0.0010257139801979065,
+            0.0009909337386488914,
+            0.000979115255177021,
+            0.0009706001728773117
+          ]
+        }
+      },
+      "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
+      "uncached_job_tensor_bytes": 3145728,
+      "verification_over_fastest_boundary_replay": 1.0970762632361157,
+      "verification_over_fastest_exact_replay": 0.8592743935249119,
+      "witness_tensor_bytes": 5242880,
+      "work_id": "30931c9b9230039c52ae860b9ed7c7ece8bd7666e7f0a3349dc73bd8ba6d613c"
+    }
+  ],
+  "source_commit": "1452bf57dd6454c9a904be1283c4ca77966fe04f",
+  "source_sha256": {
+    "config/experiments/neural-work-reference.json": "7648a17941c2a1493f1fac5ee5826c5875a330092a834a5f396ce413face830c",
+    "scripts/neural_work_reference.py": "465d4e22eb3dc96c57cbabe1d68d61a806f47bd3f9f804f02f1e7d3912742827",
+    "scripts/study_neural_work.py": "057bd327a76a5a19b7398de4bf01143064d07c978a0ddf06adb879b47d9d0271"
+  },
+  "status": "completed",
+  "toy_learning": {
+    "accepted_steps": 10,
+    "final_weight_root": "c1775a20f0e297177caf60aa87a8fe35397078ff457f651c5dbb4c6a106c80a6",
+    "initial_work_id": "8f2ed9cdc4e210c9187f9d981f487e8daf7559931964a7b01dea7f640c25c4a5",
+    "interpretation": "Synthetic linear training-set fit only; no LLM or held-out quality claim.",
+    "loss_after_last_step": 273.798828125,
+    "loss_before_each_step": [
+      522.1328125,
+      456.314453125,
+      405.103515625,
+      364.134765625,
+      337.451171875,
+      313.31640625,
+      298.484375,
+      287.359375,
+      278.91015625,
+      273.798828125
+    ],
+    "stop_reason": "quantized fixed point; identical work is not paid again"
+  }
+}
