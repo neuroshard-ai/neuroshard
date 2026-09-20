@@ -1,6 +1,7 @@
 # Equal extra-attempt programming fallback
 
-**Status: leftover comparison passed its frozen gates. Not promoted.**
+**Status: leftover comparison passed. This configuration is the research
+baseline for further growth. Not promoted.**
 The original 128-task final stays closed. No further training was run.
 
 The [leftover result](PROGRAMMING_FALLBACK_RESULTS.md) is +4/32 versus both the

@@ -21,9 +21,12 @@ The first candidate failed development (12/32 original versus 11/32 automatic,
 [equal extra-attempt fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
 passed on leftover MBPP tasks (+4/32 versus the first parent attempt and versus
 parent repair) without opening the original final or promoting the tail. See
-the [result](docs/PROGRAMMING_FALLBACK_RESULTS.md). That is complementary skill
-under an executable public-example gate, not learned routing and not an
-ever-growing public assistant. The opened-development 15/32 diagnostic remains
+the [result](docs/PROGRAMMING_FALLBACK_RESULTS.md). That configuration is the
+research baseline for further growth: another admitted capability must improve
+new answers, preserve these successes, and keep the same maximum work per
+request. Zero unique losses here are selection protection, not learned
+retention; the public example is an imperfect gate. This is not promotion of
+the accepted graph. The opened-development 15/32 diagnostic remains
 not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and

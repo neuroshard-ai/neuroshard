@@ -34,6 +34,38 @@ This does **not** promote the tail into the accepted graph, does not open the
 checklist item 4. It is one bounded measurement that an added shard can earn
 work under an executable gate.
 
+## What the four gains do and do not prove
+
+The four unique wins are complementary capability: the trained tail produced
+full-test-correct programs where the first parent attempt and the parent
+repair did not. That is the mechanism worth keeping.
+
+Zero unique losses are largely guaranteed by the policy. A fully correct
+parent program passes the public example and is retained. That is protection
+through selection, not learned resistance to forgetting. Eleven first parent
+answers passed the example; eight of those also passed the full tests, so
+three kept parent answers were still wrong on withheld tests. The example is
+an imperfect gate.
+
+## Research baseline
+
+This exact configuration is the research baseline for further growth:
+
+- rejected-trial terminal checkpoint `46bd2e76…`
+- public-example checking rule
+- one extra decode and a 256 output-token cap
+
+The next growth experiment must compare an expanded system against this
+complete fallback system, not restart against the unmodified parent. Its
+question is:
+
+> Can another admitted capability improve new answers, preserve previously
+> demonstrated successes, and keep the same maximum work per request?
+
+That question is not yet a frozen GPU contract. Public promotion and opt-in
+research serving remain separate decisions. No new consensus mechanism is
+required to run it.
+
 ## Resources
 
 Four temporary g5.xlarge hosts in us-east-1. Conservative GPU instance-time
