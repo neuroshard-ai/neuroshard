@@ -51,8 +51,9 @@ def pack(row, arm, *, ids, text, seconds, observation, prompt_ids, prompt_kind, 
     }
 
 
-def evaluate(network, rows, plan, home):
-    from programming_sandbox import check
+def evaluate(network, rows, plan, home, check=None):
+    if check is None:
+        from programming_sandbox import check
     wire, tokenizer = network.wire, network.tokenizer
     outputs = []
     for row in rows:
