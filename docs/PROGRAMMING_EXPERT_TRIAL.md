@@ -11,6 +11,13 @@ read-only tied output head is replicated at the learner and counted separately.
 This is an operated research candidate, not an update to the accepted alpha
 graph. Native BFT and existing work verification remain unchanged.
 
+**Measured September 20, 2026: rejected in development.** The 256-update run
+completed across four GPU owners. All 24 general responses were preserved,
+but the original model passed 12/32 coding tasks and automatic selection
+passed 11/32. The final stayed unopened. See the
+[committed result](../config/experiments/programming-expert-results.json) and
+[actual generated outputs](../config/experiments/programming-expert-development-outputs.json).
+
 ## Why this method
 
 The earlier [fusion trial](CAUSAL_FUSION_TRIAL.md) failed to transfer specialist
@@ -94,7 +101,7 @@ protocol or a tamper-proof scoring harness for malicious submissions.
 
 ## Stop rule
 
-There is one learning run: 256 updates, four documents per batch, last four
+There is one learning run: 256 updates, up to four documents per batch, last four
 layers only, fixed learning rate schedule. The existing parent never changes.
 The feature bank and final weights, Adam state, router and outputs are saved.
 
@@ -115,6 +122,55 @@ termination; a hard deadline retires them even on controller failure.
 A pass would establish one bounded instance of useful expert growth. Repeated
 cohorts, cross-skill composition, consolidation, independent operators and
 economical verification would still need their own evidence.
+
+## What this run established
+
+Preparation retained 289 training programs after reference checks and
+near-duplicate exclusions, plus 256 general prompts for selector training.
+The selector routed all 32 development coding prompts to the expert and all
+24 general prompts to the original path. Before training, two prompts generated
+the same eight tokens through the parent and the unmodified added-tail path.
+The owners agreed on the cached feature root, and every parent parameter
+remained unchanged through training.
+
+| Development measure | Result |
+| --- | --- |
+| Original model, executable coding tasks | 12/32 |
+| Automatic selection | 11/32 |
+| Trained expert for every request | 11/32 |
+| Coding cases gained / lost versus original | 4 / 5 |
+| Automatic general responses identical to original | 24/24 |
+| Forced expert general responses identical to original | 6/24 |
+| Original / automatic p95 response time | 9.950 / 9.951 seconds |
+| Paired coding gain, one-sided 95% lower bound | −0.1875 |
+
+Different general wording in the forced-expert control is not itself evidence
+of an incorrect answer: this retention measure checks exact preservation.
+The rejection follows the coding gate. Correct domain routing and working
+distributed optimization did not produce a net improvement from this recipe.
+
+There is a narrower signal for the next method. The expert generated four
+test-passing programs where the original failed, but displaced five passing
+original programs. In a **posthoc analysis of the opened development set**,
+retaining the original answer when it passes the user-provided first example,
+and trying the expert only after that check fails, would score 15/32. This
+uses only the example already present in the prompt for selection; all three
+tests still decide the reported score. All 32 setup strings were empty.
+
+That is a candidate mechanism, **not an admission result**. It was chosen
+after looking at development, uses an additional inference attempt on some
+requests, and has not been compared against giving the original model an
+equally funded self-correction attempt. A fresh frozen comparison must resolve
+that before opening finals or crediting useful growth. No further training or
+model promotion follows from this diagnostic.
+
+An independent CPU rescore exactly matched the GPU host. All four temporary
+instances, their volumes and network interfaces are gone; the temporary
+security group is deleted and the protected hosts retain their original
+states. The conservative GPU instance-time estimate through observed
+retirement is **$1.858**, excluding preparation-host, storage and transfer
+charges. Full checkpoint, Adam and feature-bank artifacts remain preserved
+off the retired hosts. No S3 copy is claimed.
 
 ## Reproduction
 

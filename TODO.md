@@ -16,6 +16,10 @@ tests whether a contributed neural tail improves executable answers from the
 complete automatically routed assistant while preserving general responses
 and bounding serving latency. This extends capability evidence beyond the
 completed fact-learning demonstration; it does not change these six criteria.
+The first candidate failed development (12/32 original versus 11/32 automatic,
+24/24 general responses preserved); its final remains unopened. The next
+comparison must test complementary expert answers against spending the same
+extra inference budget on the original model.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
