@@ -178,6 +178,12 @@ Trust and security boundaries remain explicit:
 - Cached useful results can coexist with recomputed mining transcripts. A proof
   of challenge-dependent work must not be advertised as proof that learning was
   new. Numerical deduplication and protocol-level eligibility are still required.
+- Each fixed context offers only a finite set of tile attempts. The no-winner
+  case proves output preservation, not continued block production. A consensus
+  design still needs rules for fresh encoding attempts, admissible challenges,
+  difficulty and progress when no available job yields a winning ticket. An
+  encoding nonce would have to change the expensive computation, rather than
+  merely rehash a cached receipt.
 
 Reproduce from the committed checkout with the same NumPy environment:
 
