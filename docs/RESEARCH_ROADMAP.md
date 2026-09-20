@@ -5,9 +5,11 @@ The intended product is a sovereign network whose participants train a shared mo
 The active capability experiment is the [programming expert trial](PROGRAMMING_EXPERT_TRIAL.md).
 Its first candidate failed automatic serving. The next frozen comparison is
 [equal extra-attempt fallback](PROGRAMMING_FALLBACK_COMPARISON.md): a checked extra
-expert decode versus a parent repair generation on leftover tasks. The arms share
-an attempt count and output-token cap, not wall-clock compute. It reuses
-the existing sharded runtime and does not require a new consensus mechanism.
+expert decode versus a parent repair generation on leftover tasks. The
+[leftover result](PROGRAMMING_FALLBACK_RESULTS.md) passed +4/32 versus both
+controls. The arms shared an attempt count and output-token cap, not wall-clock
+compute. This is complementary skill under an executable gate, not promotion
+and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

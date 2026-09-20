@@ -164,6 +164,9 @@ extra decode under the same output-token cap. A fresh frozen comparison must
 resolve that before opening finals or crediting useful growth. No further
 training or model promotion follows from this diagnostic. The frozen follow-up
 is the [equal extra-attempt fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md).
+Its leftover result passed +4/32 versus parent and parent repair without
+opening this trial's final or promoting the tail; see
+[PROGRAMMING_FALLBACK_RESULTS.md](PROGRAMMING_FALLBACK_RESULTS.md).
 
 An independent CPU rescore exactly matched the GPU host. All four temporary
 instances, their volumes and network interfaces are gone; the temporary

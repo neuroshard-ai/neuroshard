@@ -1,16 +1,12 @@
 # Equal extra-attempt programming fallback
 
-**Status: frozen comparison, not yet executed.** The [programming expert
-trial](PROGRAMMING_EXPERT_TRIAL.md) rejected automatic routing (12/32 → 11/32).
-A posthoc rule on that **opened** development set scores 15/32. This file
-freezes the missing control before any new GPU generation.
+**Status: leftover comparison passed its frozen gates. Not promoted.**
+The original 128-task final stays closed. No further training was run.
 
-The original 128-task final stays closed. No further training is authorized.
-
-This is a test of whether an additional trained shard earns a place through
-measurable complementary skill. A pass would be bounded growth evidence for
-that one skill, not an ever-growing public assistant and not promotion of the
-accepted graph.
+The [leftover result](PROGRAMMING_FALLBACK_RESULTS.md) is +4/32 versus both the
+first parent attempt and parent repair, with no unique losses. That is
+complementary skill under an executable public-example gate. It is not learned
+routing, not promotion, and not an ever-growing public model.
 
 ## Question
 
@@ -92,7 +88,6 @@ torchrun --nnodes=4 --nproc-per-node=1 --node-rank=RANK \
   --expert /path/to/rejected-trial/expert
 ```
 
-The runner refuses uncommitted sources, a mismatched leftover row, a different
-tokenizer, or any expert checkpoint other than the rejected terminal. Four
-temporary g5.xlarge hosts, two-hour cap, $40 planning ceiling. Retire them
-after evidence copy. No native issuance.
+Four temporary g5.xlarge hosts, two-hour cap, $40 planning ceiling. Evidence
+from the executed run is in [PROGRAMMING_FALLBACK_RESULTS.md](PROGRAMMING_FALLBACK_RESULTS.md).
+Retire them after evidence copy. No native issuance.
