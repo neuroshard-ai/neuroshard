@@ -1,0 +1,22 @@
+{
+  "schema": "neuroshard-neural-work-reference-plan-v1",
+  "date": "2026-09-20",
+  "status": "research-only; no native issuance or consensus activation",
+  "objective": "Test complete arithmetic binding of a linear training shard and distinguish correctness evidence from fresh resource expenditure.",
+  "profile": "neuroshard-linear-fixed-point-research-v1",
+  "shapes": [[32, 64, 64], [64, 256, 256], [128, 512, 512]],
+  "scale": 64,
+  "learning_rate_denominator": 8,
+  "fixture_seed": 20260920,
+  "moduli": [65521, 65519],
+  "rounds_per_modulus": 5,
+  "timing_repetitions": 5,
+  "learning_steps": 16,
+  "learning_shape": [64, 16, 8],
+  "backends": ["int64", "float64-exact-within-profile"],
+  "decision_rule": "Report verification time against the faster exact dense replay, including commitment checking. Neither correctness, lower arithmetic cost nor toy learning authorizes a PoW security or LLM-quality claim.",
+  "cpu_only": true,
+  "aws_budget_usd": 0,
+  "live_network_changes": false,
+  "holdout_or_final_evaluation": false
+}

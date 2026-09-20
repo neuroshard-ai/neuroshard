@@ -2,6 +2,12 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
+The current [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
+productive shard execution can also support mining security. Its CPU reference
+separates arithmetic verification from fresh resource expenditure, includes
+explicit shortcut attacks and retains stewarded admission assumptions. It does
+not replace the native consensus or change earlier experimental completion criteria.
+
 The [scaling design](SCALING_DESIGN.md) now specifies the architectural direction and release gates. Additional peers should first cover auditing, artifact replication, serving and training throughput; parameter growth follows sustained capacity and quality evidence. The [compact optimizer dispute](COMPACT_UPDATE_DISPUTES.md) is the first implemented bounded refutation primitive, with a complete-replay fallback.
 
 The [v2 experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.
