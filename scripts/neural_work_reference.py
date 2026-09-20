@@ -17,6 +17,7 @@ import numpy as np
 PROFILE = "neuroshard-linear-fixed-point-research-v1"
 PRIMES = (65521, 65519)
 ROUNDS = 5
+INTEGER_ROUNDS = 10
 MAX_DIM = 512
 MAX_ENTRY = 32768
 MAX_PRODUCT = (PRIMES[0] * PRIMES[1] - 1) // 2
@@ -175,19 +176,48 @@ def check_product(left: np.ndarray, right: np.ndarray, claimed: np.ndarray,
             raise Rejected(f"incorrect product: {context}")
 
 
+def check_product_integer(left: np.ndarray, right: np.ndarray, claimed: np.ndarray,
+                          *, seed: bytes, context: str) -> None:
+    """Freivalds over rationals with ten independent byte-valued vectors.
+
+    Range bounds make all integer intermediates exactly representable in
+    binary64. This avoids modular arithmetic without float tolerances.
+    """
+    bound = product_bound(left, right)
+    matrix(claimed, limit=bound)
+    if claimed.shape != (left.shape[0], right.shape[1]):
+        raise Rejected("claimed product shape mismatch")
+    if bound * right.shape[1] * 255 >= 1 << 53:
+        raise Rejected("projection is outside exact binary64 integer range")
+    if not isinstance(seed, bytes) or len(seed) != 32:
+        raise Rejected("expected a 256-bit verifier seed")
+    payload = b"neuroshard/research/integer-projection/v1\0" + seed + context.encode()
+    raw = hashlib.shake_256(payload).digest(right.shape[1] * INTEGER_ROUNDS)
+    vectors = np.frombuffer(raw, dtype=np.uint8).astype(np.float64).reshape(
+        right.shape[1], INTEGER_ROUNDS)
+    projected_right = right.astype(np.float64) @ vectors
+    expected = left.astype(np.float64) @ projected_right
+    observed = claimed.astype(np.float64) @ vectors
+    if not np.array_equal(expected, observed):
+        raise Rejected(f"incorrect product: {context}")
+
+
 def verify(job: Job, trace: dict[str, np.ndarray], *, committed_root: str,
-           seed: bytes) -> None:
+           seed: bytes, method: str = "integer") -> None:
     """Check the entire declared linear-shard transition, without dense replay."""
     if trace_root(job, trace) != committed_root:
         raise Rejected("witness changed after commitment")
+    if method not in ("integer", "modular"):
+        raise Rejected("unsupported verifier")
+    checker = check_product_integer if method == "integer" else check_product
     context = committed_root + "/"
-    check_product(job.inputs, job.weights, trace["forward"], seed=seed,
-                  context=context + "forward")
+    checker(job.inputs, job.weights, trace["forward"], seed=seed,
+            context=context + "forward")
     residual = matrix(rounded_divide(trace["forward"], job.scale) - job.targets)
-    check_product(job.inputs.T, residual, trace["weight_gradient"], seed=seed,
-                  context=context + "weight_gradient")
-    check_product(residual, job.weights.T, trace["input_gradient"], seed=seed,
-                  context=context + "input_gradient")
+    checker(job.inputs.T, residual, trace["weight_gradient"], seed=seed,
+            context=context + "weight_gradient")
+    checker(residual, job.weights.T, trace["input_gradient"], seed=seed,
+            context=context + "input_gradient")
     denominator = job.scale * len(job.inputs) * job.learning_rate_denominator
     expected = matrix(job.weights - rounded_divide(trace["weight_gradient"], denominator))
     if not np.array_equal(expected, trace["after"]):

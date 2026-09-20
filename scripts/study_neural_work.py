@@ -72,6 +72,9 @@ def run_shape(shape: list[int], plan: dict) -> dict:
     timings["projected_verification"] = measure(
         lambda: nw.verify(job, trace, committed_root=root, seed=seed),
         plan["timing_repetitions"])
+    timings["modular_verification"] = measure(
+        lambda: nw.verify(job, trace, committed_root=root, seed=seed, method="modular"),
+        plan["timing_repetitions"])
     timings["witness_serialization"] = measure(
         lambda: b"".join(np.asarray(trace[name], dtype="<i8", order="C").tobytes()
                          for name in nw.TRACE_NAMES), plan["timing_repetitions"])
@@ -135,7 +138,11 @@ def learning_demo(plan: dict) -> dict:
     start = job.work_id()
     book = nw.AdmissionBook()
     losses = []
+    stop_reason = "step budget reached"
     for step in range(plan["learning_steps"]):
+        if job.work_id() in book.accepted_results:
+            stop_reason = "quantized fixed point; identical work is not paid again"
+            break
         trace = nw.train(job, backend="float64")
         residual = nw.rounded_divide(trace["forward"], job.scale) - job.targets
         losses.append(float(np.mean(residual.astype(np.float64) ** 2)))
@@ -150,6 +157,7 @@ def learning_demo(plan: dict) -> dict:
         raise RuntimeError("toy training did not reduce training error")
     return {"initial_work_id": start, "loss_before_each_step": losses,
             "loss_after_last_step": final_loss, "accepted_steps": len(book.accepted_results),
+            "stop_reason": stop_reason,
             "final_weight_root": nw.matrix_root(job.weights),
             "interpretation": "Synthetic linear training-set fit only; no LLM or held-out quality claim."}
 
@@ -161,7 +169,10 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     plan = json.loads(args.plan.read_text())
-    if plan["profile"] != nw.PROFILE or plan["moduli"] != list(nw.PRIMES) or plan["rounds_per_modulus"] != nw.ROUNDS:
+    if (plan["profile"] != nw.PROFILE or plan["moduli"] != list(nw.PRIMES)
+            or plan["rounds_per_modulus"] != nw.ROUNDS
+            or plan["integer_projection_rounds"] != nw.INTEGER_ROUNDS
+            or plan["scale"] != 64 or plan["learning_rate_denominator"] != 8):
         raise SystemExit("plan and implementation disagree")
     if any(os.environ.get(name) != "1" for name in
            ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS")):
@@ -174,6 +185,8 @@ def main() -> None:
             raise SystemExit(f"commit the frozen source before measuring: {path}")
     if args.plan.resolve() != (ROOT / paths[-1]).resolve():
         raise SystemExit("this study uses the committed plan")
+    if args.output.exists():
+        raise SystemExit("use a new output path; preserve earlier runs")
     results = {
         "schema": "neuroshard-neural-work-reference-result-v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -182,9 +195,7 @@ def main() -> None:
         "environment": {"python": platform.python_version(), "numpy": np.__version__,
                         "platform": platform.platform(), "machine": platform.machine(),
                         "blas_threads_requested": 1},
-        "shapes": [run_shape(shape, plan) for shape in plan["shapes"]],
-        "toy_learning": learning_demo(plan),
-        "output_only_noising_attack": nw.output_only_noise_attack(),
+        "shapes": [],
         "decision": {
             "arithmetic_binding": "implemented for the declared linear fixed-point shard only",
             "receipt_hash_mining": "rejected: cheap nonce grinding after cached training",
@@ -196,7 +207,25 @@ def main() -> None:
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
+    def save():
+        temporary = args.output.with_suffix(".tmp")
+        temporary.write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
+        temporary.replace(args.output)
+    results["status"] = "running"
+    save()
+    try:
+        for shape in plan["shapes"]:
+            results["shapes"].append(run_shape(shape, plan))
+            save()
+        results["toy_learning"] = learning_demo(plan)
+        results["output_only_noising_attack"] = nw.output_only_noise_attack()
+        results["status"] = "completed"
+        save()
+    except Exception as error:
+        results["status"] = "failed"
+        results["error"] = {"type": type(error).__name__, "message": str(error)}
+        save()
+        raise
     print(json.dumps({"output": str(args.output), "source_commit": results["source_commit"],
                       "verification_over_fastest_replay": [r["verification_over_fastest_exact_replay"]
                                                             for r in results["shapes"]],

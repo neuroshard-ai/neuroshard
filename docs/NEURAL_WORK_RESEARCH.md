@@ -99,16 +99,26 @@ admitted job; their external provenance and desirability are stewarded assumptio
 For each product, the verifier derives an absolute bound
 `B = inner_dimension * max_abs(A) * max_abs(B_matrix)`. Both the true product
 and claimed product must lie in `[-B, B]`, with
-`2 B < 65521 * 65519`. It checks the product over **both** prime fields.
+`2 B < 65521 * 65519`. The modular control checks **both** prime fields.
 Consequently a nonzero bounded integer error cannot vanish in both fields.
 The tests explicitly attempt to add one modulus to a product: a one-field check
 would miss it, while this two-field check rejects it.
 
-Five independent projection columns per field give a per-fixed-invalid-transcript
-arithmetic error bound of at most `65519^-5` (approximately `2^-80`) in the ideal
-random-vector model. This is **not** a complete protocol security level. SHAKE
-expands a 256-bit verifier seed using domain-separated contexts and rejection
-sampling. The concrete construction additionally assumes cryptographic hash/XOF
+Five independent projection columns per field give the modular control a
+per-fixed-invalid-transcript arithmetic error bound of at most `65519^-5`
+(approximately `2^-80`) in the ideal random-vector model.
+
+The second verifier uses ten byte-valued projection columns over the rationals,
+without modular reduction. All intermediates are integers, and their absolute
+bound is `B * output_width * 255 < 2^53`. Binary64 BLAS therefore evaluates the
+checks exactly, with **no tolerance**. For a nonzero error row, fixing all but one
+vector coordinate leaves at most one satisfying value of that coordinate out of
+256 choices. Ten independent columns give a bound `256^-10 = 2^-80`. Near-limit
+tests check signed cancellation, unit errors, and modular-alias attempts.
+
+These arithmetic bounds are **not** a complete protocol security level. SHAKE
+expands a 256-bit verifier seed using domain-separated contexts and, for the
+modular control, rejection sampling. The construction also assumes hash/XOF
 security, an immutable pre-challenge commitment and an unpredictable honest
 challenge. Across many attempts the error bound accumulates. No adversary may
 choose the seed, reroll challenges or edit its transcript after learning one.
@@ -195,8 +205,9 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
 ```
 
 The driver refuses uncommitted changes to its numerical source or frozen plan.
-The synthetic 16-step linear fit only checks that the declared arithmetic can
-learn a toy relationship; it is not a fresh LLM holdout, retention test or model
+The synthetic linear fit has a 16-step ceiling and stops at repeated numerical
+work (a quantized fixed point). It only checks that the arithmetic can learn a
+toy relationship; it is not a fresh LLM holdout, retention test or model
 promotion. Timing samples repeat cached inputs, include one warmup, and are
 reported individually. Lower verification time must survive the optimized exact
 baseline and all commitment/transport costs before motivating a GPU trial.

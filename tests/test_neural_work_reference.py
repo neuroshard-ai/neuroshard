@@ -40,15 +40,16 @@ def test_honest_transition_and_exact_binary64_baseline(job):
     assert book.settle(job, trace, "worker-a") == nw.matrix_root(trace["after"])
 
 
+@pytest.mark.parametrize("method", ["integer", "modular"])
 @pytest.mark.parametrize("tensor", nw.TRACE_NAMES)
-def test_each_forged_operation_is_rejected_before_payment(job, tensor):
+def test_each_forged_operation_is_rejected_before_payment(job, tensor, method):
     trace = nw.train(job)
     trace[tensor][0, 0] += 1
     book, root, seed = challenge_trace(job, trace)
     with pytest.raises(nw.Rejected):
         nw.full_replay(job, trace, committed_root=root)
     with pytest.raises(nw.Rejected):
-        nw.verify(job, trace, committed_root=root, seed=seed)
+        nw.verify(job, trace, committed_root=root, seed=seed, method=method)
     with pytest.raises(nw.Rejected):
         book.settle(job, trace, "worker-a")
     assert book.accepted_results == {}
@@ -197,3 +198,36 @@ def test_quantized_sgd_learns_a_small_linear_task():
         losses.append(float(np.mean(residual.astype(np.float64) ** 2)))
         job = replace(job, weights=trace["after"])
     assert losses[-1] < losses[0]
+
+
+def test_integer_projection_near_range_limit_is_exact():
+    left = np.full((16, 512), 2000, dtype=np.int64)
+    right = np.full((512, 24), 2000, dtype=np.int64)
+    left[0, ::2] *= -1  # exercise signed cancellation as well as large sums
+    claimed = left @ right
+    assert np.array_equal(claimed, left.astype(object) @ right.astype(object))
+    nw.check_product_integer(left, right, claimed, seed=bytes(32), context="bounds")
+    claimed[1, 0] -= 1  # must detect unit error even near the allowed maximum
+    with pytest.raises(nw.Rejected):
+        nw.check_product_integer(left, right, claimed, seed=bytes(32), context="bounds")
+
+
+def test_integer_projection_has_no_float_tolerance_or_modular_alias():
+    left = np.full((2, 3), 300, dtype=np.int64)
+    right = np.full((3, 2), 300, dtype=np.int64)
+    claimed = left @ right
+    nw.check_product_integer(left, right, claimed, seed=bytes(32), context="honest")
+    claimed[0, 0] -= nw.PRIMES[0]
+    with pytest.raises(nw.Rejected):
+        nw.check_product_integer(left, right, claimed, seed=bytes(32), context="alias")
+
+
+def test_learning_driver_records_fixed_point_without_duplicate_payment():
+    import json
+    from study_neural_work import learning_demo
+    plan = json.loads((Path(__file__).resolve().parents[1]
+                       / "config/experiments/neural-work-reference.json").read_text())
+    result = learning_demo(plan)
+    assert result["accepted_steps"] < plan["learning_steps"]
+    assert "fixed point" in result["stop_reason"]
+    assert result["loss_after_last_step"] < result["loss_before_each_step"][0]
