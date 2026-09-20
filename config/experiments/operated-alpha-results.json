@@ -1,0 +1,171 @@
+{
+  "chain_id": "neuroshard-portable-life-2c112e87d560",
+  "complete_audit_claims": 12,
+  "complete_replays": 36,
+  "cost": {
+    "close_future_capacity": false,
+    "complete_window_plus_observed_transfers_usd": 731.8235044398178,
+    "fixed_complete_window": {
+      "all_public_ipv4": 5.46,
+      "complete_gpu_window": 422.52,
+      "complete_ledger_window": 27.955199999999998,
+      "complete_surplus_cpu_upper_bound": 67.2,
+      "gpu_gp3_with_provisioned_performance": 43.726027397260275,
+      "initial_model_delivery_metadata_requests_and_retention_reserve": 50.0,
+      "ledger_gp3": 2.9457534246575343,
+      "prior_failed_deployment_reserve": 100,
+      "whole_shared_controller": 11.52
+    },
+    "network_out": {
+      "i-03dd92f0439794513": 2205835346.0,
+      "i-045e9e89e8c1df085": 246786168.0,
+      "i-0477b43de8e63e22e": 402346417.0,
+      "i-09dc4c255294e1e93": 304150777.0,
+      "i-09ed78116ffb8ac9c": 323199666.0,
+      "i-0b85a9ca05a341ae2": 206004018.0,
+      "i-0c6787cfc382cbcd2": 295289327.0,
+      "i-0ca1e2b69caf695f4": 317556899.0,
+      "i-0f0e40a7e26100e7c": 247677331.0,
+      "i-0f7c6632abfb99a22": 194344772.0,
+      "i-0fe7562afa4f577c1": 222045458.0
+    },
+    "observed_at": 1789867571.0291982,
+    "observed_network_out_bytes": 4965236179.0,
+    "planning_ceiling_usd": 800,
+    "resource_amendment": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "scope": "Conservative planning estimate, not an AWS invoice. Includes complete declared runtimes in advance. Metrics may arrive late; retain a USD 50 drain reserve. Existing retained model objects are unchanged.",
+    "transfer_upper_estimate_usd": 0.4965236179
+  },
+  "cpu_preflight_evidence": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/4c3af5187d8e1bd215e5baa77d2796d0854ef1f08372754db70347eafdcfb4f1",
+  "cpu_preflight_resource_note": "Initial launcher ceiling was 300% CPU, corrected to the declared 150% after the ordinary case. Protocol behavior passed; this is not a CPU-envelope performance claim.",
+  "exact_preceding_neural_output_matches": [
+    "client-package",
+    "retained-directory",
+    "ordinary-general",
+    "constrained-general",
+    "multiturn-context",
+    "combined-question",
+    "coordinator-loss",
+    "backbone-loss"
+  ],
+  "faults": [
+    {
+      "case": "coordinator-loss",
+      "settled_seconds": 446.3614574028179,
+      "text": "neuroshard-ai"
+    },
+    {
+      "case": "backbone-loss",
+      "settled_seconds": 504.2701711310074,
+      "text": "The sky appears blue due to a phenomenon called Rayleigh scattering, where shorter blue wavelengths of light are scattered more than longer red wavelengths by the tiny molecules of gases in the Earth's atmosphere. This scattering effect makes the sky appear blue during the daytime."
+    }
+  ],
+  "format": "neuroshard-operated-alpha-result-v1",
+  "gate_requests": 10,
+  "gpu_funded_until": "2026-09-22T12:39:20.816762+00:00",
+  "graph": "bbb0d751fa1ff1195f89fe084d8603ac30d9a8ddb47d90e66d184c4491d9fb49",
+  "ledger_available_until": "2026-09-26T23:49:07.187438+00:00",
+  "ledger_replay": {
+    "accepted_transactions": 697,
+    "final_state_root": "e8c9ceaac60be926c10a713bc1075e1532daaa6ec9f54207604dcb318dc77bf7",
+    "genesis": "d9ad84e53458b047352bca9ad0b822dfc5368ee15c6f06c3a1a23b52a8c08521",
+    "headers": 3369,
+    "issued_atoms": 0,
+    "matched_validators": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "passed": true,
+    "rejected_transactions": 0,
+    "scope": "Application replay against stored validator states; separate numerical reports cover neural work. This does not prove independent administration or independently validate CometBFT commit signatures.",
+    "settled_claims": 12
+  },
+  "limits": [
+    "One administrator; no independent-operator soak",
+    "No new training or inference issuance in this serving window",
+    "Public conversations; full numerical replay remains expensive",
+    "Finite service window and sponsor credits; no token price or perpetual availability claim"
+  ],
+  "model_quality_observation": "The first remember-the-phrase reply invented an irrelevant definition of violet kettle. The follow-up retained the phrase. This demonstrates context retention and settlement, not broad answer quality.",
+  "native_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "onboarding": {
+    "final_balance_atoms": 478951059,
+    "finished_at": 1789867356.3343673,
+    "first_answer": "The phrase \"violet kettle\" is a term used to describe a kettle that is not in good working condition, often due to rust or corrosion.",
+    "first_request": "38db312be7183d6eedf6f247c1ba4bb6faae212a5f9e2d55fb103a5c89f8fa07",
+    "followup_answer": "violet kettle",
+    "fresh_observer_from_public_genesis": true,
+    "invocation_repair": "Preserved invalid 1200-second CLI invocation; resumed the same admitted request with 600 seconds. No source or network changes.",
+    "observed_provisional_stream": true,
+    "operator_count": 1,
+    "paid_turns": 2,
+    "passed": true,
+    "retained_phrase": "violet kettle",
+    "session_graph": "bbb0d751fa1ff1195f89fe084d8603ac30d9a8ddb47d90e66d184c4491d9fb49",
+    "session_tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e",
+    "short_wait_resume_same_nonce": true,
+    "source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+    "starter_credit_atoms": 500000000,
+    "starter_credit_retry_same_transfer": true
+  },
+  "operating_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "operator_count": 1,
+  "ordinary": [
+    {
+      "case": "client-package",
+      "first_visible_seconds": 34.01785985566676,
+      "generated_seconds": 37.038199534639716,
+      "settled_seconds": 99.67710509710014,
+      "text": "neuroshard-ai"
+    },
+    {
+      "case": "retained-directory",
+      "first_visible_seconds": 36.511661228723824,
+      "generated_seconds": 40.13785784877837,
+      "settled_seconds": 161.51292405091226,
+      "text": "{\"answer\":\"Sofia\"}"
+    },
+    {
+      "case": "ordinary-general",
+      "first_visible_seconds": 34.296852361410856,
+      "generated_seconds": 49.34333013929427,
+      "settled_seconds": 168.09205050114542,
+      "text": "The sky appears blue due to a phenomenon called Rayleigh scattering, where shorter blue wavelengths of light are scattered more than longer red wavelengths by the tiny molecules of gases in the Earth's atmosphere. This scattering effect makes the sky appear blue during the daytime."
+    },
+    {
+      "case": "constrained-general",
+      "first_visible_seconds": 33.15008052624762,
+      "generated_seconds": 34.75216269399971,
+      "settled_seconds": 99.62019658088684,
+      "text": "43"
+    },
+    {
+      "case": "multiturn-context",
+      "first_visible_seconds": 36.212875165976584,
+      "generated_seconds": 38.27687743213028,
+      "settled_seconds": 111.4739806521684,
+      "text": "violet kettle"
+    },
+    {
+      "case": "combined-question",
+      "first_visible_seconds": 42.17341440171003,
+      "generated_seconds": 46.98543570842594,
+      "settled_seconds": 180.27228133939207,
+      "text": "What is Fenn Varden's city?\n{\"answer\":\"Sofia\"}\n\nWhat is the name of the NeuroShard client package?\nneuroshard-ai"
+    }
+  ],
+  "passed": true,
+  "previous_failed_deployments": 4,
+  "previous_failed_gate_attempts": 5,
+  "previous_failure_evidence": [
+    "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7c292c6a5f8f43822cd00896a21d8adc09193adfeaa8f5020bf4df66624bc629",
+    "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/4d8ea87af7ab6470c63b916973ff831fb58c123ec9c24a3262850e168c9cfbf9"
+  ],
+  "written_at": 1789867656.9720857,
+  "access_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7a0a49c8d9f8731145fc88078cd3c2fcbd526d4483d63c29e3b1b8e490c40bfd",
+  "access_sha256": "7a0a49c8d9f8731145fc88078cd3c2fcbd526d4483d63c29e3b1b8e490c40bfd",
+  "evidence_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679",
+  "evidence_sha256": "6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679"
+}

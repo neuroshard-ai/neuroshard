@@ -1,7 +1,7 @@
 # Operated alpha
 
-The next deployment uses the accepted growing graph on separately hosted AWS
-machines. One administrator still controls the deployment. Different machines,
+The [running alpha](OPERATED_ALPHA_RESULT.md) serves the accepted growing graph
+on separately hosted AWS machines. One administrator still controls the deployment. Different machines,
 availability zones, wallets and consensus keys test failures and protocol access;
 they do not establish independent administration. TODO 4 remains open until its
 independent-operator criterion is met. A working public deployment addresses
@@ -14,8 +14,8 @@ volunteers. Independent operators may also use AWS, but must control their own
 keys and infrastructure. Simulated participation is sufficient for the operated
 alpha; the independent-operation requirement remains part of item 4.
 
-The implementation is on `development/operated-alpha`. It requires a new genesis
-and matching source. The existing 0.4.0 chain and balances are not upgraded by
+The implementation uses a separate alpha genesis and matching pinned source;
+[the joining guide](JOIN_ALPHA.md) identifies both. The existing 0.4.0 chain and balances are not upgraded by
 these changes. No new learning or final evaluation is needed to test deployment
 of the already accepted graph.
 
@@ -81,7 +81,7 @@ unknown outcome stays unknown; retirement is not a fabricated refund or receipt.
 
 ## Deployment checks
 
-The committed native preflight passed on source
+The original native preflight passed on source
 `ca0752bb993afa1da11c38b2583b9062f9455782`. Five assigned CPU shards answered each
 request; advertised standby owners replaced a killed coordinator and backbone
 owner through the recovery daemon. Each of the three responses received three
@@ -95,15 +95,15 @@ and [exact source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-l
 were uploaded with complete checksum readback. These are synthetic-model
 operability results, not another LLM quality result or the independent soak.
 
-The next [funded deployment contract](../config/experiments/operated-alpha.json)
-specifies seven GPUs for at most 72 hours, four separate ledger hosts for at most
+The current [funded deployment contract](../config/experiments/operated-alpha.json)
+specifies seven GPUs for at most 60 hours, four separate ledger hosts for at most
 seven days, two serving replicas on different physical hosts, and an $800
 aggregate planning ceiling with a spending watch. The ledger outlives GPU
 service so native expiries can refund unfinished work. Public starter credits
 are finite sponsor transfers; the larger declared bootstrap stake keeps that
 credit pool below a blocking minority. It still belongs to one administrator.
-Deployment must pass the declared accepted-model service gate before advertising
-availability. The contract does not itself establish a running public service.
+The [deployed result](OPERATED_ALPHA_RESULT.md) now passes the declared service
+gate and publishes its access descriptor, ledger replay and numerical evidence.
 The [joining guide](JOIN_ALPHA.md) covers source installation, a validating local
 observer, bounded starter credits and the existing chat client. The GPU gate
 stops one provider service in each recovery case so systemd cannot immediately

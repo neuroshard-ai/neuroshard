@@ -1,0 +1,52 @@
+{
+  "admission_scheduled_until": "2026-09-22T11:09:20.816762+00:00",
+  "availability": "release gate passed; bounded operated alpha",
+  "chain_id": "neuroshard-portable-life-2c112e87d560",
+  "client": "Source-installed hosted CLI; PyPI 0.4.0 and the website use another chain",
+  "code_hash": "64ef247c6ed5db42bcf87206e5b958a9e1661f5e9ac67fb0666d4b749f30fccc",
+  "controller_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "engine_sha256": "1f60b0350ea57408697ec50414b4f6e7ef3fbd49fafb76c7f0b32008a1a87051",
+  "engine_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/1f60b0350ea57408697ec50414b4f6e7ef3fbd49fafb76c7f0b32008a1a87051",
+  "evidence_sha256": "6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679",
+  "evidence_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679",
+  "format": "neuroshard-operated-alpha-access-v1",
+  "funding": {
+    "aggregate_ceiling_usd": 800,
+    "per_key_grant_atoms": 500000000,
+    "starter_pool_atoms": 10000000000
+  },
+  "gate_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "genesis_sha256": "d9ad84e53458b047352bca9ad0b822dfc5368ee15c6f06c3a1a23b52a8c08521",
+  "genesis_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/d9ad84e53458b047352bca9ad0b822dfc5368ee15c6f06c3a1a23b52a8c08521",
+  "gpu_funded_until": "2026-09-22T12:39:20.816762+00:00",
+  "graph": "bbb0d751fa1ff1195f89fe084d8603ac30d9a8ddb47d90e66d184c4491d9fb49",
+  "learning": "This funded window serves the already accepted growing graph; no new training jobs or inference issuance",
+  "ledger_available_until": "2026-09-26T23:49:07.187438+00:00",
+  "ledger_funded_until": "2026-09-27T00:39:07.187438+00:00",
+  "manifest_root": "5eaf74f18b3a2df353053e8f675cf2a1cf3b0e22dea82ab3bab5b43b048cb411",
+  "native_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "operator_count": 1,
+  "peers": [
+    "db620fbab9efc4e281239eda2a53dda5004f15d2@100.27.39.210:26656",
+    "f6a631a725f1bcda49293751e6fe56b48821e649@44.203.37.122:26656",
+    "8ad0d1ec373f68d416f174d9c9f7b6b98c03fd28@54.161.10.122:26656",
+    "8940d7218a6cc0ebd130e0e02eb351cff59bd001@54.89.3.224:26656"
+  ],
+  "public_conversations": true,
+  "service_limits": {
+    "max_settled_requests": 256,
+    "max_tokens": 64,
+    "simultaneous_requests": 2,
+    "stop_earlier_on_budget_or_request_limit": true
+  },
+  "source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "source_archive_sha256": "7484da5237e1295cb6ccfb470136cb4ee3d349ee73247cb62ab5e035605c2362",
+  "source_archive_url": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7484da5237e1295cb6ccfb470136cb4ee3d349ee73247cb62ab5e035605c2362",
+  "starter_credits": {
+    "ceiling_atoms": 10000000000,
+    "certificate": "5c62a7b3825f4cfb532d257b72a923803fee0f6d45840830740307c0a12decdb",
+    "endpoint": "https://100.27.39.210:18480",
+    "grant_atoms": 500000000,
+    "owner": "03ab8bdaec51ea12d94f61149b0d9dc20c5cb1773b8033ed7c0b80a3c2d86ad2f4"
+  }
+}

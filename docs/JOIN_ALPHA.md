@@ -1,23 +1,32 @@
 # Join the operated alpha
 
-This deployment is being prepared. Use the published access descriptor only
-after its availability field records a passing deployment gate. The earlier
-0.4.0 chain and PyPI package are different releases.
+The alpha is available for a bounded public trial. [The deployment result](OPERATED_ALPHA_RESULT.md)
+publishes the complete service gate, failures and reproducible evidence.
+Admission is scheduled through **September 22, 2026 at 11:09 UTC**, with GPU
+shutdown by **September 22, 2026 at 12:39 UTC**. Funding or request limits can close it earlier.
+The ledger stays scheduled through **September 26, 2026 at 23:49 UTC** for settlement
+and refunds. This window serves the already accepted growing graph; it runs no
+new training jobs.
 
-The alpha runs the accepted shard graph, with paid provider discovery and three
-complete replays before settlement. Its GPU window is funded for at most 60 hours;
-the descriptor gives the exact service and ledger deadlines. All bootstrap
-hosts belong to one administrator. Additional AWS hosts do not establish
-independent ownership. Starter credits have no demonstrated market value.
+Two customers can use the service concurrently, with up to 64 output tokens.
+The six ordinary deployment cases returned first text in 33.15–42.17 seconds;
+full verification and payment settled later. All bootstrap hosts belong to one
+administrator. Trial credits have no demonstrated market value. The website and
+PyPI 0.4.0 package use a different chain; follow this source installation.
 
 ## Run your own ledger observer
 
 Use Linux x86_64 with Python 3.10–3.12, at least 4 GB RAM and several GB of free
 disk. This observer needs the pinned CPU dependencies, but no GPU or model
 weights. Review the descriptor and its exact source commit before installation.
-From that checkout:
+Download the reviewed source and public descriptor:
 
 ```bash
+git clone https://github.com/neuroshard-ai/neuroshard.git
+cd neuroshard
+git checkout 52ec72f49b5e77b682bc5e48174fdb9f9544ca25
+curl -fSL 'https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7a0a49c8d9f8731145fc88078cd3c2fcbd526d4483d63c29e3b1b8e490c40bfd' -o access.json
+printf '%s\n' '7a0a49c8d9f8731145fc88078cd3c2fcbd526d4483d63c29e3b1b8e490c40bfd  access.json' | sha256sum --check
 python3 -m venv .venv-alpha
 .venv-alpha/bin/python -m pip install -r docs/evolution-requirements.txt
 .venv-alpha/bin/python -m pip install .
@@ -53,7 +62,7 @@ the complete quote, including verification and occupied capacity, before paying:
 ```bash
 neuroshard chat "What is the name of the NeuroShard client package?" \
   --home ./customer --hosted-config ./alpha-node/hosting.json \
-  --max-tokens 64 --max-price 500 --session ./conversation.json --wait-seconds 1200
+  --max-tokens 64 --max-price 500 --session ./conversation.json --wait-seconds 600
 ```
 
 Provisional text appears before native settlement and remains unverified until

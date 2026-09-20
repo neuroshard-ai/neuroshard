@@ -1,5 +1,20 @@
 # Native releases
 
+## Operated alpha — September 2026 (source release)
+
+The [growing-model alpha](docs/JOIN_ALPHA.md) now serves the accepted graph through
+native funded admission, advertised shard replicas and three complete replays
+before settlement. Concurrent streaming, automatic coordinator/backbone process
+recovery and a fresh user's paid multi-turn conversation pass. The deliberate
+client timeout resumes without another payment. [All results, failed attempts,
+ledger replay and pinned source](docs/OPERATED_ALPHA_RESULT.md) are public.
+
+The funded service window ends September 22, with the ledger retained longer
+for expiry/refunds. The website and PyPI 0.4.0 remain on their earlier chain.
+This serving-only alpha has one administrator and public conversations; it does
+not close independent hosting or establish general assistant capability.
+
+
 ## Repository maintenance — protocol source scope
 
 The current tree contains protocol/client source, tests, example configuration, network manifests, technical documentation and reproducibility tools. Website publishing projects, manuscripts, generated figures, old prototypes and raw measurement dumps have moved out of the tracked tree. Historical evidence remains linked to immutable revision `108b4ba3d6c6fb5760ff211b447ee95a67fa9112`; history and released artifacts are preserved.

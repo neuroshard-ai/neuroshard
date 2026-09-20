@@ -4,9 +4,17 @@
 
 NeuroShard is an experimental native blockchain for verifying and rewarding neural computation. Its public testnet demonstrates small-scale training and paid inference; permissionless full-model training remains under development. The goal is a collectively trained LLM whose usable capacity can expand as reliable compute joins. Keys stay on your machine and participation requires no website registration.
 
+**Try the [operated growing-model alpha](docs/JOIN_ALPHA.md).** The accepted shard
+graph serves concurrent, streamed conversations with native payment, complete
+replay and automatic provider replacement. [Results and exact source](docs/OPERATED_ALPHA_RESULT.md)
+are public. This source-installed CLI window is scheduled through September 22,
+2026; prompts are public, responses are capped at 64 tokens and all hosts remain
+under one administrator. It serves the accepted model without new training in
+this window. The website and PyPI release below use the earlier chain.
+
 Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruct with a 4,608-parameter trainable adapter**. Native validators replay training and inference before accepting work or paying providers. The pretrained backbone is frozen. The initial validators share one operator across two hosts; this is a working protocol baseline, with economical large-model verification and independent ownership still to solve.
 
-## Join
+## Join the 0.4.0 baseline
 
 ```bash
 python3 -m venv ~/.venvs/neuroshard
@@ -32,8 +40,8 @@ Keep the backup private. It also works in the [browser inference interface](http
 
 ## Protocol and evidence
 
-- [Three admitted learning cohorts and automatic continuation](docs/CONTINUAL_ADMISSION_RESULTS.md): conversation, audit and storage improve ordinary single and combined answers without losing measured retained-correct answers. The latest two are admitted, trained, audited and promoted automatically on seven GPU hosts; complete ledger replay and an equal-resource growth comparison pass. This bounded research result completes checklist items 1 and 2. Independent public hosting and persistent growing-model chat remain open; bounded verification/serving costs are now covered by the finite sponsorship below.
-- [Accepted-model provider service](docs/PROVIDER_LLM_SERVICE.md#seventh-allocation-complete-serving-and-recovery-pass): seven GPU hosts serve the accepted graph through native discovery, concurrent streamed requests and three full replays per response. Coordinator and backbone replacement recover without duplicate payment. The [complete $792.54 cost record](docs/FINITE_SPONSORSHIP.md) meets a frozen $1,000 finite sponsorship. This completes item 5's bounded funding criterion; all trial endpoints are retired, and independent hosting and persistent public chat remain open.
+- [Three admitted learning cohorts and automatic continuation](docs/CONTINUAL_ADMISSION_RESULTS.md): conversation, audit and storage improve ordinary single and combined answers without losing measured retained-correct answers. The latest two are admitted, trained, audited and promoted automatically on seven GPU hosts; complete ledger replay and an equal-resource growth comparison pass. This bounded research result completes checklist items 1 and 2. Independent public hosting remains open; the [bounded chat alpha](docs/JOIN_ALPHA.md) is now available; bounded verification/serving costs are now covered by the finite sponsorship below.
+- [Accepted-model provider service](docs/PROVIDER_LLM_SERVICE.md#seventh-allocation-complete-serving-and-recovery-pass): seven GPU hosts serve the accepted graph through native discovery, concurrent streamed requests and three full replays per response. Coordinator and backbone replacement recover without duplicate payment. The [complete $792.54 cost record](docs/FINITE_SPONSORSHIP.md) meets a frozen $1,000 finite sponsorship. This completes item 5's bounded funding criterion; those trial endpoints are retired. The [subsequent operated alpha](docs/OPERATED_ALPHA_RESULT.md) provides bounded public chat; independent hosting remains open.
 - [Completed native expert lifecycle](docs/NATIVE_EXPERT_LIVE_RESULT.md): 560 audited updates earned 560 NEURO, followed by separate quality promotion and inference paid from earned tokens. Full ledger and execution evidence are public; checklist item 3 is complete.
 - [Four-owner knowledge and retention pass](docs/PRESERVED_INTERPRETER_RESULTS.md): a preserved neural interpreter plus a learned expert answers 949/1,024 newly worded questions, reproduces all 768 earlier answers and 256 conversation losses exactly, and keeps the parent serving after the expert exits. This is a bounded synthetic-knowledge result using disjoint model portions across four machines.
 
@@ -55,7 +63,7 @@ Keep the backup private. It also works in the [browser inference interface](http
 - [Funded audit candidate](docs/FUNDED_AUDITING.md): prepaid complete-graph replay services, collateral, refunds and a [recovering full-model operator](docs/CANDIDATE_OPERATIONS.md), with [integration evidence](docs/FUNDED_AUDIT_RESULTS.md). The sponsor selects auditors; independent ownership and collusion resistance remain open requirements.
 - [Inherited native ledger rules](docs/PROTOCOL_CANDIDATE_V2.md) and the [published research paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf).
 
-Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. Four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. The initial allocation is 90 NEURO and the profile caps training issuance at 10,000 tasks. See the specification for these explicit limits.
+Correct computation, improved model quality, decentralization and economic sustainability are separate claims. Full replay provides a precise acceptance rule but duplicates computation. In the 0.4.0 baseline, four fixed public validation sequences gate serving promotion and can be overfit. Signatures do not prove new physical energy expenditure. That baseline allocates 90 initial NEURO and caps training issuance at 10,000 tasks. See the specification for these explicit limits.
 
 ## Develop and verify
 

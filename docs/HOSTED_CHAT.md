@@ -4,8 +4,9 @@ The provider research profile connects the existing lightweight client to the
 complete answering graph. It requires that profile's freshly pinned native
 genesis, available provider offers and running full-replay auditors. It is not
 enabled by the public 0.4.0 genesis. The [accepted-LLM trial](PROVIDER_LLM_SERVICE.md) passed its frozen two-customer
-latency and owner-recovery gates. Those experimental endpoints have been retired;
-a persistent public deployment remains open in the fixed TODO.
+latency and owner-recovery gates. Those experimental endpoints are retired.
+The subsequent [operated alpha is available](JOIN_ALPHA.md) during its published
+funded window, with [complete deployment evidence](OPERATED_ALPHA_RESULT.md).
 
 These commands require the matching research source release. The existing
 `neuroshard-ai` 0.4.0 package on PyPI does not include `--hosted-config`. From
