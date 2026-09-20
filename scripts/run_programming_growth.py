@@ -1,9 +1,10 @@
 """Train a disjoint second programming tail, isolate it, then compare growth.
 
-Four owners. Rank 3 stores the parent tail, incumbent tail and added tail.
-After isolation, growth activates one extra decode on their unit task-vector
-merge. Isolation failure stops before the new-answer slice is scored. The
-original programming-expert final stays closed.
+Four owners. Rank 3 trains the added tail from the parent last-four-layer
+weights, then stores parent, incumbent and added checkpoints. After isolation,
+growth activates one extra decode on their unit task-vector merge. Isolation
+failure stops before the new-answer slice is scored. The original
+programming-expert final stays closed.
 """
 import argparse
 from datetime import timedelta
@@ -37,13 +38,16 @@ def fallback_driver():
 
 def read_role(home, prepared, role, plan):
     spec = prepared['roles'][role]
+    expected = experiment.committed_task_ids(plan, role)
+    if spec.get('task_ids') != expected:
+        raise ValueError('Prepared ' + role + ' IDs differ from the committed plan')
     path = Path(home) / spec['file']
     if sha256(path) != spec['sha256']:
         raise ValueError('Frozen ' + role + ' bytes changed')
     rows = [json.loads(line) for line in path.read_text().splitlines()]
     if [r['id'] for r in rows] != spec['ids']:
         raise ValueError('Prepared ' + role + ' IDs changed')
-    return experiment.load_role_rows(plan, rows, spec['task_ids'], role=role)
+    return experiment.load_role_rows(plan, rows, expected, role=role)
 
 
 def generate(network, ids, use_expert, plan):
@@ -221,8 +225,11 @@ def main():
     shard.load_weights(args.home / 'objects', selection['owners'][rank])
     incumbent_manifest = json.loads((args.incumbent / 'manifest.json').read_bytes())
     experiment.bind_execution(plan, selection, incumbent_manifest, digest)
+    parent_manifest = selection['owners'][3]
     if rank == 3:
-        load_tail(shard, args.incumbent, incumbent_manifest)
+        experiment.require_independent_added_tail(
+            dict(shard.named_owned_parameters()),
+            load_named(args.home / 'objects', parent_manifest))
     shard.eval()
     dist.init_process_group('gloo', timeout=timedelta(hours=6))
     parent_group = dist.new_group([0, 1, 2], backend='gloo', timeout=timedelta(hours=6))
@@ -265,7 +272,7 @@ def main():
             network, rows, plan, args.home, args.incumbent, incumbent_manifest,
             added_dir, manifest, check,
             parent_dir=args.home / 'objects',
-            parent_manifest=selection['owners'][3])
+            parent_manifest=parent_manifest)
         if rank == 0:
             result['growth'] = experiment.score_growth(
                 read_role(args.home / 'inputs', prepared, 'preservation', plan),

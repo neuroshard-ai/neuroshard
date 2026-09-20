@@ -24,6 +24,12 @@ BASELINE_OUTPUTS = '3a34dea159358de4d910ff3f8ef23dee948ad98939c1b696a457afb96292
 INCUMBENT = 'incumbent'
 ADDED = 'added'
 MERGED = 'merged'
+ROLE_SPLITS = {
+    'preservation': 'preservation_task_ids',
+    'new': 'new_task_ids',
+    'development': 'development_task_ids',
+    'train': 'train_task_ids',
+}
 EXECUTION_SOURCES = (
     'config/experiments/programming-expert-selection.json',
     'config/experiments/programming-expert.json',
@@ -32,6 +38,7 @@ EXECUTION_SOURCES = (
     'docs/learning-reference-requirements.txt',
     'scripts/prepare_programming_growth.py',
     'scripts/programming_sandbox.py',
+    'scripts/run_programming_expert.py',
     'scripts/run_programming_fallback.py',
     'scripts/run_programming_growth.py',
     'src/neuroshard/evolution/programming_expert.py',
@@ -41,6 +48,10 @@ EXECUTION_SOURCES = (
     'src/neuroshard/evolution/reference_data.py',
     'src/neuroshard/evolution/sharded/branch.py',
     'src/neuroshard/evolution/sharded/cached_inference.py',
+    'src/neuroshard/evolution/sharded/cohort_features.py',
+    'src/neuroshard/evolution/sharded/feature_bank.py',
+    'src/neuroshard/evolution/sharded/features.py',
+    'src/neuroshard/evolution/sharded/incremental.py',
     'src/neuroshard/evolution/sharded/model.py',
     'src/neuroshard/evolution/sharded/wire.py',
 )
@@ -58,6 +69,45 @@ def leftover_ranking(plan):
     return fallback.ranked_leftover_tasks(leftover_comparison(plan))
 
 
+def near_duplicate_train_exclusions(texts, remainder, heldout):
+    """Drop leftover-remainder prompts that match a frozen eval prompt.
+
+    Uses the programming-expert Jaccard word rule. Evaluation IDs stay fixed.
+    """
+    excluded = []
+    for number in remainder:
+        prompt = texts[number]
+        if any(parent._similar(prompt, texts[other]) for other in heldout):
+            excluded.append(number)
+    return excluded
+
+
+def committed_task_ids(plan, role):
+    bind_splits(plan)
+    try:
+        return plan['splits'][ROLE_SPLITS[role]]
+    except KeyError as exc:
+        raise ValueError('Unknown growth role') from exc
+
+
+def require_independent_added_tail(owned, parent):
+    """The added tail must still be the parent before its own training."""
+    if set(owned) != set(parent):
+        raise ValueError('Added tail tensors do not match the parent')
+    for name in parent:
+        left, right = owned[name], parent[name]
+        left = left.detach().cpu() if hasattr(left, 'detach') else left
+        right = right.detach().cpu() if hasattr(right, 'detach') else right
+        try:
+            if float((left - right).abs().max()) > 0:
+                raise ValueError('Added tail must train from the parent, not the incumbent')
+        except ValueError:
+            raise
+        except Exception:
+            if left != right:
+                raise ValueError('Added tail must train from the parent, not the incumbent')
+
+
 def bind_splits(plan):
     """Recompute leftover continuation splits from the frozen leftover ranking."""
     ranked = leftover_ranking(plan)
@@ -65,8 +115,16 @@ def bind_splits(plan):
     rest = ranked[plan['counts']['preservation']:]
     new = rest[:plan['counts']['new']]
     development = rest[plan['counts']['new']:plan['counts']['new'] + plan['counts']['development']]
-    train = rest[plan['counts']['new'] + plan['counts']['development']:]
+    remainder = rest[plan['counts']['new'] + plan['counts']['development']:]
     splits = plan['splits']
+    excluded = splits.get('excluded_near_duplicate_train_task_ids')
+    if excluded is None:
+        raise ValueError('Near-duplicate training exclusions are not frozen')
+    if excluded != [n for n in remainder if n in set(excluded)]:
+        raise ValueError('Near-duplicate training exclusions must keep leftover ranking order')
+    if set(excluded) - set(remainder):
+        raise ValueError('Near-duplicate exclusions are not leftover training remainder')
+    train = [n for n in remainder if n not in set(excluded)]
     if preservation != splits['preservation_task_ids']:
         raise ValueError('Preservation leftover IDs changed')
     if new != splits['new_task_ids']:
@@ -75,15 +133,17 @@ def bind_splits(plan):
         raise ValueError('Second-expert development IDs changed')
     if train != splits['train_task_ids']:
         raise ValueError('Second-expert training IDs changed')
+    if set(train) & set(excluded) or set(train) | set(excluded) != set(remainder):
+        raise ValueError('Training exclusions do not partition the leftover remainder')
     blocked = set(plan['excluded_parent_pool_tasks']) | set(plan['parent_final_task_ids'])
     used = preservation + new + development + train
     if len(set(used)) != len(used):
         raise ValueError('Growth splits overlap')
-    if used != ranked:
-        raise ValueError('Growth splits do not exhaust the leftover ranking')
-    if any(n in blocked or not 11 <= n <= 510 for n in used):
+    if ranked != preservation + new + development + remainder:
+        raise ValueError('Growth splits do not follow the leftover ranking')
+    if any(n in blocked or not 11 <= n <= 510 for n in used + excluded):
         raise ValueError('Growth splits include a reserved or out-of-range task')
-    if set(splits['incumbent_train_task_ids']) & set(used):
+    if set(splits['incumbent_train_task_ids']) & set(used + excluded):
         raise ValueError('Second expert trains on the incumbent expert training IDs')
     required = splits['required_success_task_ids']
     if any(n not in set(preservation) for n in required):
@@ -109,6 +169,9 @@ def task_vector_merge(parent, incumbent, added, incumbent_scale, added_scale):
 
 
 def load_role_rows(plan, rows, task_ids, *, role):
+    expected_ids = committed_task_ids(plan, role)
+    if task_ids != expected_ids:
+        raise ValueError('Loaded ' + role + ' task IDs differ from the committed split')
     if not isinstance(rows, list) or len(rows) != len(task_ids):
         raise ValueError('Loaded ' + role + ' rows do not match the frozen count')
     actual = [row['task_id'] for row in rows]
@@ -121,7 +184,6 @@ def load_role_rows(plan, rows, task_ids, *, role):
         raise ValueError(role + ' row identities do not match task IDs')
     if any(row.get('kind') != 'code' for row in rows):
         raise ValueError(role + ' rows must be coding tasks')
-    bind_splits(plan)
     return rows
 
 

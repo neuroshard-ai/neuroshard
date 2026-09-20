@@ -21,10 +21,17 @@ disjoint from:
 - the new-answer held-out set (32 tasks)
 - the incumbent tail's training IDs (official MBPP train 601–974 after the
   parent exclusions)
+- leftover-remainder prompts that are near-duplicates of those frozen
+  evaluation sets under the programming-expert Jaccard rule
 
-The new tail is another programming specialist, not a new domain. Training
-hyperparameters copy the rejected first expert: 256 updates, last four layers
-only, frozen 1.7B parent.
+The new tail is another programming specialist, not a new domain. It starts
+from the **parent** last-four-layer weights, not the incumbent checkpoint.
+Training on the incumbent first would make `θ_added = θ_incumbent + Δ_new`,
+and unit merge would double-count the incumbent update. Hyperparameters copy
+the rejected first expert: 256 updates, last four layers only, frozen 1.7B
+parent. Leftover-remainder prompts that are near-duplicates of the frozen
+preservation, new, or development sets are dropped from training only. Those
+evaluation IDs stay fixed.
 
 ## Serving rule
 
@@ -37,10 +44,14 @@ Available capacity grows by one stored tail. Activation does not:
 
    `θ_merged = θ_parent + (θ_incumbent − θ_parent) + (θ_added − θ_parent)`
 
-   That is linear task arithmetic, not learned routing and not a second decode.
-   Jaccard overlap over leftover-like prompts would send those requests to the
-   new tail and can drop the incumbent leftover wins; merge tests whether the
-   two skills add in weight space instead.
+   That is linear task arithmetic of two independently learned deltas, not
+   learned routing and not a second decode. Serving still uses one extra
+   decode of a last-four-layer tail. Storing another checkpoint is not the
+   same as expanding active parameters per answer. Jaccard overlap over
+   leftover-like prompts would send those requests to the new tail and can
+   drop the incumbent leftover wins; merge tests whether the two skills add
+   in weight space instead. A failed unit merge rejects this coefficient
+   choice. It does not settle other composition methods.
 
 Paired measurement may generate the incumbent extra and the merged extra so
 both policies can be scored. Latency gates count only the attempts the serving
@@ -82,6 +93,7 @@ torchrun --nnodes=4 --nproc-per-node=1 --node-rank=RANK \
   --incumbent /path/to/rejected-trial/expert
 ```
 
-Copy parent owner objects from the rejected programming-expert trial. Four
-temporary g5.xlarge hosts, six-hour cap, $80 planning ceiling. Retire them
-after evidence copy. No native issuance.
+Copy parent owner objects from the rejected programming-expert trial. Wait for
+the image `unattended-upgrades` dpkg lock before `apt-get`. Four temporary
+g5.xlarge hosts, six-hour cap, $80 planning ceiling. Retire them after
+evidence copy. No native issuance.

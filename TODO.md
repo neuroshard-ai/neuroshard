@@ -15,10 +15,11 @@ See the [retirement record](config/experiments/operated-alpha-retirement.json).
 failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
 passed +4/32 and is the research baseline. The frozen next experiment is
 [second-capability growth](docs/PROGRAMMING_GROWTH.md): another disjoint
-programming tail must isolate on its own slice, then beat this complete
-fallback system on new leftover answers, keep the 12 recorded successes, and
-still spend at most one extra decode on the unit task-vector merge of both
-tails. This does not change the six checklist
+programming tail, trained from the parent, must isolate on its own slice,
+then beat this complete fallback system on new leftover answers, keep the 12
+recorded successes, and still spend at most one extra decode on the unit
+task-vector merge of both tails. Training drops leftover prompts that are
+near-duplicates of the frozen evaluation sets. This does not change the six checklist
 criteria, the 0.4.0 genesis, or item 4. The opened-development 15/32
 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked

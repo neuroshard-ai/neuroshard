@@ -53,9 +53,17 @@ def prepare(plan, mbpp, home, gold_check, tokenizer):
     for line in Path(mbpp).read_text().splitlines():
         row = json.loads(line)
         raw[row['task_id']] = row
+    splits = plan['splits']
+    heldout = (splits['preservation_task_ids'] + splits['new_task_ids']
+               + splits['development_task_ids'])
+    remainder = experiment.leftover_ranking(plan)[sum(plan['counts'][k] for k in
+                                                      ('preservation', 'new', 'development')):]
+    texts = {n: raw[n]['text'] for n in remainder + heldout}
+    if experiment.near_duplicate_train_exclusions(texts, remainder, heldout) != splits[
+            'excluded_near_duplicate_train_task_ids']:
+        raise ValueError('Near-duplicate training exclusions changed')
     home = Path(home)
     home.mkdir(parents=True, exist_ok=False)
-    splits = plan['splits']
     train = code_rows(splits['train_task_ids'], raw, gold_check, tokenizer, plan['max_length'])
     development = code_rows(splits['development_task_ids'], raw, gold_check)
     new = code_rows(splits['new_task_ids'], raw, gold_check)

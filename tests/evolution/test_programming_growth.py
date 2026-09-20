@@ -52,9 +52,14 @@ def test_growth_splits_are_disjoint_from_the_reserved_final_and_incumbent_train(
     splits = growth.bind_splits(current)
     used = (splits['preservation_task_ids'] + splits['new_task_ids']
             + splits['development_task_ids'] + splits['train_task_ids'])
+    excluded = splits['excluded_near_duplicate_train_task_ids']
+    ranked = fallback.ranked_leftover_tasks(leftover()['comparison'])
     blocked = set(current['parent_final_task_ids']) | set(current['excluded_parent_pool_tasks'])
+    remainder = ranked[96:]
     assert not set(used) & blocked
-    assert not set(used) & set(splits['incumbent_train_task_ids'])
+    assert not set(used + excluded) & set(splits['incumbent_train_task_ids'])
+    assert set(remainder) == set(splits['train_task_ids']) | set(excluded)
+    assert not set(splits['train_task_ids']) & set(excluded)
     assert splits['required_success_task_ids'] == [399, 201, 169, 505, 11, 478, 258, 412, 115, 70, 292, 249]
 
 
@@ -154,6 +159,44 @@ def test_growth_requires_preserved_successes_and_new_answer_gain():
         preservation, new_rows, lost, current, check)['gates']['preserved_successes']
 
 
+def test_near_duplicate_training_prompts_are_dropped_and_eval_ids_stay_fixed():
+    texts = {
+        10: 'compute the factorial of a number',
+        20: 'compute the factorial of a number',
+        21: 'sort a list of unique integers',
+    }
+    assert growth.near_duplicate_train_exclusions(texts, [20, 21], [10]) == [20]
+    current = plan()
+    current['splits'] = dict(current['splits'])
+    current['splits']['excluded_near_duplicate_train_task_ids'] = []
+    with pytest.raises(ValueError, match='training IDs changed'):
+        growth.bind_splits(current)
+
+
+def test_loader_rejects_prepared_metadata_that_swaps_in_a_holdout():
+    current = plan()
+    holdout = current['splits']['new_task_ids'][0]
+    prepared = {'roles': {'train': {
+        'file': 'train.jsonl', 'sha256': '00', 'ids': ['x'], 'task_ids': [holdout]}}}
+    import importlib.util
+    path = ROOT / 'scripts/run_programming_growth.py'
+    spec = importlib.util.spec_from_file_location('growth_loader_test', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with pytest.raises(ValueError, match='committed plan'):
+        module.read_role(ROOT, prepared, 'train', current)
+
+
+def test_added_tail_must_still_be_the_parent_before_training():
+    growth.require_independent_added_tail({'w': 5}, {'w': 5})
+    with pytest.raises(ValueError, match='parent, not the incumbent'):
+        growth.require_independent_added_tail({'w': 7}, {'w': 5})
+    parent, inc, add = 10, 12, 13
+    assert growth.task_vector_merge(parent, inc, add, 1, 1) == 15
+    doubled = inc + (add - parent)
+    assert growth.task_vector_merge(parent, inc, doubled, 1, 1) == 17
+
+
 def test_bind_execution_requires_the_incumbent_leftover_checkpoint():
     current = plan()
     selection = json.loads((ROOT / 'config/experiments/programming-expert-selection.json').read_bytes())
@@ -164,3 +207,6 @@ def test_bind_execution_requires_the_incumbent_leftover_checkpoint():
     assert freeze['incumbent_expert'] == growth.INCUMBENT_EXPERT
     assert freeze['parent_fallback_plan'] == growth.PARENT_FALLBACK_PLAN
     assert 'src/neuroshard/evolution/programming_growth.py' in freeze['sources']
+    assert 'scripts/run_programming_expert.py' in freeze['sources']
+    assert 'src/neuroshard/evolution/sharded/cohort_features.py' in freeze['sources']
+    assert 'src/neuroshard/evolution/sharded/incremental.py' in freeze['sources']
