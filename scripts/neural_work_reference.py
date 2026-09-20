@@ -233,6 +233,22 @@ def full_replay(job: Job, trace: dict[str, np.ndarray], *, committed_root: str,
         raise Rejected("dense replay mismatch")
 
 
+def boundary_root(job: Job, after: np.ndarray, input_gradient: np.ndarray) -> str:
+    """Minimal replay needs the shard's outputs, not its internal F/GW witness."""
+    return digest({"work_id": job.work_id(), "after": matrix_root(after),
+                   "input_gradient": matrix_root(input_gradient)})
+
+
+def replay_boundary(job: Job, after: np.ndarray, input_gradient: np.ndarray,
+                    *, committed_root: str, backend: str = "float64") -> None:
+    if boundary_root(job, after, input_gradient) != committed_root:
+        raise Rejected("boundary outputs changed after commitment")
+    expected = train(job, backend=backend)
+    if (not np.array_equal(after, expected["after"])
+            or not np.array_equal(input_gradient, expected["input_gradient"])):
+        raise Rejected("boundary replay mismatch")
+
+
 class AdmissionBook:
     """In-memory authorization/payment MODEL, not a ledger or identity system.
 

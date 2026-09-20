@@ -54,6 +54,7 @@ def run_shape(shape: list[int], plan: dict) -> dict:
     job = fixture(shape, plan["fixture_seed"])
     trace = nw.train(job)
     root = nw.trace_root(job, trace)
+    boundary = nw.boundary_root(job, trace["after"], trace["input_gradient"])
     book = nw.AdmissionBook()
     work_id = book.admit(job, "assigned-worker")
     book.commit(work_id, "assigned-worker", root)
@@ -67,8 +68,15 @@ def run_shape(shape: list[int], plan: dict) -> dict:
         timings["replay_" + backend] = measure(
             lambda: nw.full_replay(job, trace, committed_root=root, backend=backend),
             plan["timing_repetitions"])
+        timings["boundary_replay_" + backend] = measure(
+            lambda: nw.replay_boundary(job, trace["after"], trace["input_gradient"],
+                                       committed_root=boundary, backend=backend),
+            plan["timing_repetitions"])
     timings["producer_commitment"] = measure(
         lambda: nw.trace_root(job, trace), plan["timing_repetitions"])
+    timings["boundary_commitment"] = measure(
+        lambda: nw.boundary_root(job, trace["after"], trace["input_gradient"]),
+        plan["timing_repetitions"])
     timings["projected_verification"] = measure(
         lambda: nw.verify(job, trace, committed_root=root, seed=seed),
         plan["timing_repetitions"])
@@ -112,6 +120,8 @@ def run_shape(shape: list[int], plan: dict) -> dict:
     replay = min(timings["replay_int64"]["median_seconds"],
                  timings["replay_float64"]["median_seconds"])
     audit = timings["projected_verification"]["median_seconds"]
+    boundary_replay = min(timings["boundary_replay_int64"]["median_seconds"],
+                          timings["boundary_replay_float64"]["median_seconds"])
     witness_bytes = sum(value.nbytes for value in trace.values())
     input_bytes = sum(value.nbytes for value in (job.inputs, job.weights, job.targets))
     return {
@@ -119,10 +129,13 @@ def run_shape(shape: list[int], plan: dict) -> dict:
         "challenge_seed": seed.hex(), "cached_result_fresh_seed": cached_seed.hex(),
         "honest_checks_passed": True, "accepted_result": book.accepted_results[work_id],
         "timings": timings, "verification_over_fastest_exact_replay": audit / replay,
+        "verification_over_fastest_boundary_replay": audit / boundary_replay,
         "producer_commitment_over_fastest_training": timings["producer_commitment"]["median_seconds"]
         / min(timings["training_int64"]["median_seconds"],
               timings["training_float64"]["median_seconds"]),
         "witness_tensor_bytes": witness_bytes, "uncached_job_tensor_bytes": input_bytes,
+        "boundary_replay_tensor_bytes": trace["after"].nbytes + trace["input_gradient"].nbytes,
+        "boundary_replay_commitment": boundary,
         "ideal_witness_transfer_seconds_at_100_mbit": witness_bytes * 8 / 100_000_000,
         "traffic_note": "Payload bytes and ideal transfer floor only; no network measurement or framing included.",
         "numerical_attacks": attacks,
@@ -227,8 +240,8 @@ def main() -> None:
         save()
         raise
     print(json.dumps({"output": str(args.output), "source_commit": results["source_commit"],
-                      "verification_over_fastest_replay": [r["verification_over_fastest_exact_replay"]
-                                                            for r in results["shapes"]],
+                      "verification_over_fastest_boundary_replay": [r["verification_over_fastest_boundary_replay"]
+                                                                     for r in results["shapes"]],
                       "decision": results["decision"]}, indent=2))
 
 

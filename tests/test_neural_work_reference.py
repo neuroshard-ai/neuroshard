@@ -40,6 +40,29 @@ def test_honest_transition_and_exact_binary64_baseline(job):
     assert book.settle(job, trace, "worker-a") == nw.matrix_root(trace["after"])
 
 
+def test_linear_training_matches_hand_calculated_forward_backward_and_update():
+    job = nw.Job(np.array([[64, 0], [0, 64]], dtype=np.int64),
+                 np.array([[64, -64], [32, 64]], dtype=np.int64),
+                 np.array([[0, 64], [64, 0]], dtype=np.int64))
+    trace = nw.train(job)
+    assert trace["forward"].tolist() == [[4096, -4096], [2048, 4096]]
+    assert trace["weight_gradient"].tolist() == [[4096, -8192], [-2048, 4096]]
+    assert trace["input_gradient"].tolist() == [[12288, -6144], [-6144, 3072]]
+    assert trace["after"].tolist() == [[60, -56], [34, 60]]
+    nw.verify(job, trace, committed_root=nw.trace_root(job, trace), seed=bytes(32))
+
+
+def test_minimal_replay_checks_outputs_without_intermediate_witness(job):
+    trace = nw.train(job)
+    after, gradient = trace["after"], trace["input_gradient"]
+    commitment = nw.boundary_root(job, after, gradient)
+    nw.replay_boundary(job, after, gradient, committed_root=commitment)
+    after[0, 0] += 1
+    forged_commitment = nw.boundary_root(job, after, gradient)
+    with pytest.raises(nw.Rejected, match="boundary replay mismatch"):
+        nw.replay_boundary(job, after, gradient, committed_root=forged_commitment)
+
+
 @pytest.mark.parametrize("method", ["integer", "modular"])
 @pytest.mark.parametrize("tensor", nw.TRACE_NAMES)
 def test_each_forged_operation_is_rejected_before_payment(job, tensor, method):
