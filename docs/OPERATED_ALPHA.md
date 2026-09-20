@@ -1,5 +1,10 @@
 # Operated alpha
 
+**Availability update, September 20, 2026:** the operated GPU service is retired.
+The separate ledger remains scheduled for expiry and refunds. This document
+preserves the deployment contract and development history; consult the
+[result and retirement record](OPERATED_ALPHA_RESULT.md) for current status.
+
 The [running alpha](OPERATED_ALPHA_RESULT.md) serves the accepted growing graph
 on separately hosted AWS machines. One administrator still controls the deployment. Different machines,
 availability zones, wallets and consensus keys test failures and protocol access;

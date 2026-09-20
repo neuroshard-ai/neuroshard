@@ -1,7 +1,13 @@
 # Operated alpha deployment result
 
-The accepted growing graph is available through a source-installed CLI alpha.
-[Join the alpha](JOIN_ALPHA.md). This is a finite service operated by one
+**GPU serving closed on September 20, 2026 at the owner's request.** The seven
+GPU hosts were retired after closing admission, draining work and preserving
+recovery records. The four ledger hosts remain scheduled for expiry and refunds.
+See the [retirement record](../config/experiments/operated-alpha-retirement.json)
+and [historical joining guide](JOIN_ALPHA.md).
+
+The accepted growing graph was served through a source-installed CLI alpha.
+This was a finite service operated by one
 administrator on seven GPU hosts and four separate ledger hosts. AWS participants
 have separate keys and machines; they do not establish independent ownership.
 No physical host contains the complete backbone.
@@ -57,7 +63,7 @@ replays across 12 claims**, covering the deployment gate
 and onboarding. Serving issued **zero** new tokens. The final snapshot
 state is `e8c9ceaac60be926c10a713bc1075e1532daaa6ec9f54207604dcb318dc77bf7`.
 
-- [Current ledger, numerical reports and replies](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679)
+- [Deployment-gate ledger, numerical reports and replies](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679)
   — SHA-256 `6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679`.
 - [Exact source](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/7484da5237e1295cb6ccfb470136cb4ee3d349ee73247cb62ab5e035605c2362) — SHA-256
   `7484da5237e1295cb6ccfb470136cb4ee3d349ee73247cb62ab5e035605c2362`; commit `52ec72f49b5e77b682bc5e48174fdb9f9544ca25`.
@@ -81,12 +87,15 @@ they are not proof of independent auditing.
 
 ## Availability, funding and limits
 
-Admission is scheduled to close **September 22, 2026 at 11:09 UTC**. GPU service
-ends by **September 22, 2026 at 12:39 UTC**, or earlier at the funding/request limit. The ledger remains
+Admission and GPU service **closed early on September 20, 2026**. The original
+maximum deadlines were September 22 at 11:09 UTC for admission and 12:39 UTC for
+GPUs. This serving-only window was retired to preserve resources for further
+assistant-learning research; no new learning result is claimed. The ledger remains
 scheduled through **September 26, 2026 at 23:49 UTC** for expiry/refunds, then private
 validator signing state and block stores are preserved before retirement.
-Hourly private provider-wallet backups and absolute resource retirement timers
-are enabled. These records are excluded from the public archive.
+Final private provider-wallet backups were preserved before GPU retirement.
+The scheduled ledger backup and absolute ledger retirement timers remain enabled.
+Private recovery records are excluded from public evidence.
 
 The aggregate ceiling is **$800**. The complete-window planning estimate at
 publication is **$731.82**,

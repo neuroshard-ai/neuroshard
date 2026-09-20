@@ -1,14 +1,16 @@
-# Join the operated alpha
+# Operated alpha: retired GPU service
 
-The alpha is available for a bounded public trial. [The deployment result](OPERATED_ALPHA_RESULT.md)
-publishes the complete service gate, failures and reproducible evidence.
-Admission is scheduled through **September 22, 2026 at 11:09 UTC**, with GPU
-shutdown by **September 22, 2026 at 12:39 UTC**. Funding or request limits can close it earlier.
+**GPU serving and new admissions closed on September 20, 2026 at the owner's request.**
+[The deployment result](OPERATED_ALPHA_RESULT.md) preserves the complete service
+gate, failures, reproducible evidence and retirement record. The original
+September 22 GPU deadline was a maximum lifetime, not a promise of continued service.
 The ledger stays scheduled through **September 26, 2026 at 23:49 UTC** for settlement
-and refunds. This window serves the already accepted growing graph; it runs no
-new training jobs.
+and refunds. The retired window served the already accepted growing graph and
+ran no new training jobs. Observer instructions remain useful while the ledger
+is online; the starter-credit and chat commands below are historical and do not
+provide a live GPU service. No replacement GPU deployment has been announced.
 
-Two customers can use the service concurrently, with up to 64 output tokens.
+The trial supported two concurrent customers, with up to 64 output tokens.
 The six ordinary deployment cases returned first text in 33.15–42.17 seconds;
 full verification and payment settled later. All bootstrap hosts belong to one
 administrator. Trial credits have no demonstrated market value. The website and
@@ -39,7 +41,10 @@ it reports `ready`; its RPC listens only on your machine. The descriptor pins
 the genesis, manifest, executable checksum, complete answering graph and native
 peer endpoints. Merely starting an observer neither spends nor bonds tokens.
 
-## Get bounded starter credits and chat
+## Historical starter-credit and chat commands
+
+The starter-credit endpoint and GPU service are closed. These commands document
+the completed trial; retain an existing wallet when inspecting prior payments.
 
 In another terminal using the same environment:
 

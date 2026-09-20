@@ -1,0 +1,66 @@
+{
+  "format": "neuroshard-operated-alpha-retirement-v1",
+  "status": "retired",
+  "reason": "Owner-requested early retirement of the serving-only GPU alpha; preserve resources for further general-assistant learning and verification research.",
+  "admissions_closed_at": "2026-09-20T14:41:03.305367+00:00",
+  "gpu_retirement_completed_at": "2026-09-20T14:45:38.067326+00:00",
+  "chain_id": "neuroshard-portable-life-2c112e87d560",
+  "native_source": "52ec72f49b5e77b682bc5e48174fdb9f9544ca25",
+  "serving_graph": "bbb0d751fa1ff1195f89fe084d8603ac30d9a8ddb47d90e66d184c4491d9fb49",
+  "closure": {
+    "active_leases": 0,
+    "audit_budgets": 0,
+    "closed_audit_services": 3,
+    "issued_atoms": 0,
+    "same_chain_manifest_serving_root_and_settlements": true,
+    "settled_claims": 12,
+    "supply_invariants_passed": true,
+    "withdrawn_provider_offers": 18
+  },
+  "gpu_resources": {
+    "compute_cost_upper_estimate_usd": 99.32594401991335,
+    "cost_scope": "Compute upper estimate; record EBS, S3 and transfer separately.",
+    "finished": "2026-09-20T14:45:38.067326+00:00",
+    "protected_states": {
+      "i-06bf7f1f01e6228bb": "running",
+      "i-0d681a8ef83f72619": "running",
+      "i-0ebe86ca07e97cf29": "stopped"
+    },
+    "remaining_volumes": [],
+    "seconds_since_allocation": 50777.250564,
+    "security_group_retired": true,
+    "terminated_instances": [
+      "i-09dc4c255294e1e93",
+      "i-09ed78116ffb8ac9c",
+      "i-0b85a9ca05a341ae2",
+      "i-0c6787cfc382cbcd2",
+      "i-0ca1e2b69caf695f4",
+      "i-0f7c6632abfb99a22",
+      "i-0fe7562afa4f577c1"
+    ]
+  },
+  "retained_artifacts": {
+    "bytes": 40893573150,
+    "check": "Public HEAD and exact expected lengths; prior checksum-verified publication retained.",
+    "checked_at": "2026-09-20T14:39:54.698885+00:00",
+    "inventory_sha256": "0e872bfdba5c40d0ec351eac272a2775c8193e86aa3039a05aef9f3ba201f0c9",
+    "objects": 623,
+    "retention_catalog_sha256": "c12ed4fa623dcf79627c86d235f4343196122f62fe9c3e4df4174b03fd6b5f73"
+  },
+  "private_provider_recovery": {
+    "providers": 18,
+    "copied_at": "2026-09-20T14:41:00.789678+00:00",
+    "public": false
+  },
+  "ledger": {
+    "instances": 4,
+    "status": "running_for_expiry_refunds_and_observation",
+    "scheduled_final_backup": "2026-09-26T23:49:07Z",
+    "absolute_resource_deadline": "2026-09-27T00:39:07Z",
+    "schedule_extended": false
+  },
+  "original_deployment_evidence": "https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/6579c3fef23c36f109711e3f8e757bf82509d5fda5a62ec2b15a6ecced33f679",
+  "learning_criteria_changed": false,
+  "new_training_or_quality_claim": false,
+  "replacement_gpu_deployment": null
+}

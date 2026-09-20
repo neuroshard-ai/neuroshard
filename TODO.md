@@ -5,6 +5,11 @@ serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
 
 This is the fixed six-item completion checklist. **5/6 complete. Tasks 1, 2, 3 and 5 are complete against their bounded demonstration criteria; task 6 is complete for the funded operated alpha. Task 4 remains open.**
+
+**Availability, September 20, 2026:** the operated GPU alpha is retired at the
+owner's request. Its evidence and completed demonstration criteria remain;
+the separate ledger stays scheduled through September 26 for expiry/refunds.
+See the [retirement record](config/experiments/operated-alpha-retirement.json).
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -265,8 +270,8 @@ before the affected work, rather than changing the target after a result.
   and native recovery from advertised spares. Its committed CPU native preflight
   passes both automatic owner replacements, nine complete numerical replays and
   exact replay of 620 blocks and 143 transactions. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
-  now passes its ordinary and automatic process-recovery gates and is available
-  for a funded public window. The independent availability soak remains open. AWS machines under our account
+  passed its ordinary and automatic process-recovery gates; its GPU service
+  retired on September 20. The independent availability soak remains open. AWS machines under our account
   do not satisfy the independent-administration criterion below.
 
   Done when independent providers can discover work, acquire assigned shards,
@@ -349,7 +354,7 @@ before the affected work, rather than changing the target after a result.
 
 - [x] **6. Usable chat service — COMPLETE for the funded operated alpha**
 
-  The [public alpha](docs/JOIN_ALPHA.md) now serves the accepted growing graph
+  The [public alpha](docs/JOIN_ALPHA.md) served the accepted growing graph
   with two concurrent customers, streaming, bounded complete prices and pinned
   graph/tokenizer conversation history. All ten frozen deployment requests pass,
   including automatic coordinator/backbone process recovery. Six ordinary cases
@@ -361,9 +366,9 @@ before the affected work, rather than changing the target after a result.
   turn retained the phrase. This is a service/context check, not broad answer quality.
 
   [Results, replies, failures and reproducible evidence](docs/OPERATED_ALPHA_RESULT.md)
-  are public. Admission is scheduled through September 22, 2026 at 11:09 UTC, GPUs
-  through September 22, 2026 at 12:39 UTC and the separate ledger through September 26, 2026 at 23:49 UTC;
-  funding/request limits may close admission sooner. The service is a source CLI,
+  are public. Admission and GPU service closed early on September 20, 2026;
+  the separate ledger remains scheduled through September 26, 2026 at 23:49 UTC
+  for expiry/refunds. The demonstrated service was a source CLI,
   with public conversations and 64-token outputs, under one administrator.
   These are a finite alpha's measured guarantees, not perpetual availability,
   independent ownership or ChatGPT-level capability. The existing done-when
