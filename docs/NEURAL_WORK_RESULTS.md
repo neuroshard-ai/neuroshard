@@ -97,7 +97,8 @@ The proposed research contract is:
 2. A separate mining statement binds a fresh chain challenge, claimant and an
    operation inside that task. Its witness must concern expensive intermediate
    execution, under an explicit hardness assumption. A cached correct output
-   is insufficient. No construction satisfying this statement is implemented here.
+   is insufficient. The mechanism below tests bindings but does not establish
+   this resource-security statement.
 3. Verification must bind operation inputs to the full graph, including nonlinear
    operations, backward computation and optimizer state. Tensor roots alone do
    not establish their origin. Useful results should survive a lost block lottery
@@ -116,3 +117,79 @@ Native consensus can order and fund this research without equating audit receipt
 with consensus weight. Neural-work block production requires a separate
 resource-security argument, complete dependency binding and independent review.
 Account registration supplies none of these properties.
+
+## Intermediate mining mechanism
+
+The next CPU step is implemented in
+[neural_work_mining.py](../scripts/neural_work_mining.py), under the
+[mining sketch plan](../config/experiments/neural-work-mining-sketch.json).
+Source `1954dd3da5840256e3b0224eb91c6bc9edcc73f7` produced the
+[complete mechanism record](../config/experiments/neural-work-mining-results.json),
+including every winning witness, operation roots, measurements and verifier seed.
+
+For each actual forward/backward matrix product, the context binds its numerical
+job, operation, input tensor roots, worker identifier and chain challenge. Two
+prime fields encode signed integers. Public challenge-dependent low-rank factors
+produce `A' = A+E` and `B' = B+F`. The worker computes 4-by-4 intermediate products
+`A'[I,K] B'[K,J]`; their hashes supply lottery attempts with no free receipt nonce.
+Summing **all** tiles, including losers, recovers `A'B'`. Subtracting `AF + E(B+F)`
+through the low-rank factors and applying signed CRT recovers the original `AB`.
+
+The 16-by-16 toy training step executes all three real products through this
+path: it is not a separate random matrix job appended to ordinary training.
+Its forward result, both gradients and final weights exactly match unmodified
+training. At the four-bit test target, 384 tile attempts yield **27 tickets**.
+At a sixteen-bit target the same fixture yields **zero** tickets and still
+produces the identical useful result. A changed test header changes the encoded
+transcript without changing the recovered training transition.
+
+The bundle verifier reconstructs the expected operation operands from the
+admitted job and audited training trace, rather than trusting matrices attached
+by the miner. Tested attempts to reuse tickets under another header, claimant,
+operation or job fail. Rehashing an old partial product under a new header fails;
+so do changed partials, free nonce/target fields, duplicated tickets within a
+bundle, and coherent fabricated gradients. These are specific tested attacks,
+not a proof that all shortcuts fail.
+
+**The CPU sketch is about 103x slower to produce than ordinary training on this
+tiny fixture.** It is a mechanism demonstration with Python tile/hash loops and
+toy parameters, not an optimized cuPOW implementation or evidence for the paper's
+asymptotic efficiency. The complete timing samples are retained. There was no
+GPU allocation or NEURO issuance. The combined targeted suite has 47 tests.
+
+Trust and security boundaries remain explicit:
+
+- The test headers/worker identifiers are predetermined fixture bytes, not a
+  demonstrated unpredictable chain beacon, authenticated public network or key
+  admission system. Arithmetic-audit randomness is sampled separately after the
+  committed training result.
+- Ticket verification uses the actual input matrices, currently available to
+  the verifier; it is not a succinct commitment-opening proof. The full linear
+  arithmetic audit is still required. Graph-wide nonlinear dependencies remain
+  outside this toy stage.
+- The sketch adapts the intermediate-work idea with two fields and toy constants.
+  It does not claim to implement the paper's full construction or inherit its
+  hardness conjecture/theorem. No fair resource meter, ASIC/shortcut resistance,
+  fork choice, cross-block spent set, public assignment or economic equilibrium
+  is established by passing these tests.
+- Zero matrices also yield resource tickets. An explicit test preserves that
+  limitation: mining evidence cannot decide whether a job teaches the model
+  anything. Admission and quality evaluation remain separate obligations.
+- Cached useful results can coexist with recomputed mining transcripts. A proof
+  of challenge-dependent work must not be advertised as proof that learning was
+  new. Numerical deduplication and protocol-level eligibility are still required.
+
+Reproduce from the committed checkout with the same NumPy environment:
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  python -m pytest -q tests/test_neural_work_reference.py tests/test_neural_work_mining.py
+
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  python scripts/study_neural_mining.py \
+  --output .neuroshard/neural-work-mining/result.json
+```
+
+This gives the next research step an executable object to analyze: bind useful
+training to intermediate-work tickets, attempt shortcut attacks, and reduce
+complete proof cost before proposing a consensus change.

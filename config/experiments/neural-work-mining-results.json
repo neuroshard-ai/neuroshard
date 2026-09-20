@@ -1,0 +1,1098 @@
+{
+  "accepted_ticket_ids": [
+    "019962165b892c82621193a7f1664a924cc8013e3206901a99140cb5c345ed8c",
+    "04dcde71f83d9caeba658c87efa0fdfff3be69f7a5f04a3a85cb4ad69f8e29e3",
+    "0a778c69f16cde2c6634062ee414ee007de1cd27d0b38a3a3bf39cb840d4d071",
+    "0b1643b37f9aae0a641365d2bdd258113a49587b72cef0e74c45ef4ea8343443",
+    "19cdb02c6405042fbfceeb339bc1545ba9cfb323e3b9769d498890b5be60ca41",
+    "2c55869b438eda5b102f68743779414ab2036b946e6c420d37fbb8c6541ad98e",
+    "34ddb15cd12992c17947f86d3a071fcdec610af291b3ed5720abd331dfafbfb5",
+    "3d790cf4c409fcfd7114a6b07d9ccae13bddc7d620b8f6475d309e40119bf22c",
+    "46557e829c061117ef9bb3295819d1d1f9d73c8797ed3c313efccf9540f300b5",
+    "48db91d064356a52fb88b29ba2e19ac25f44124bdfb87274d44f54cc9760ec2b",
+    "4976b51ab64e0bd3b0e00b76a09d7c356b062bb95347b5836808faf5da478d86",
+    "49c27532cd2f815beea60cef520b7afc554cca585aaeb924f36beb25226045e4",
+    "62f554e4e4091c2993780798e645aa0bd2641978a7a4852a247b127ee9af9a34",
+    "7586ffc2a0be9f8f482a7eafcbfb5cd89d7ec00b4e9a41f3efd342fd46b58909",
+    "8142242d49b86d422955101bf503a94a2836823eaeee6bd8d5224839e65bbfce",
+    "9063748c418186a6e0d2865a5065f51e6caaae3fadca0aaec06fe7fb6221440b",
+    "a6bc1c10bddc56e9d8ca5bcf6d360fb8cf132a5b0aecffc8b2fdd6b89bf3271f",
+    "b3727f833615c173585ad731f7a46d1033616cb36c793931096cf0aecebaa252",
+    "b89f16a2b9fc05e6493342fda7c5c5bcde95739f347cd29a23b3812cdf6ffb16",
+    "ba3a2c7ad8fc533748047062a86c61aeee6ac271db0ff3bacffd3a230a100d7b",
+    "d3ec40fea01d1d87e8c7c79754d65a93969915e6a263489065b3485f5b89fe2b",
+    "db059566e3bb83fa21de1fd84bdd316da220a4afb7bf8746c606cd9458d64473",
+    "e0f694c58ad87a9d1c0ddef1d50c403805c83e3e74989267db69503789006bbd",
+    "e2d7616033e9f0138e62f88ae104cc238911a741690cb141b4807fbe231d6937",
+    "eabd7230b5239c08b5f8c4cd5a71a8d15cbae12402062f5b42c54bfb6111922e",
+    "eee84d3451a82e58c0bb766b57ea804acc1ca1b94e0c5c122b98c267112def8d",
+    "f0252165169f941ad64e1bb1dbba53e852ccf1348ca3b5f0764221c01538d725"
+  ],
+  "audit_seed": "3b33055641cf47296609086792ada2f8b5386eb7fa5060e1125a45e0257924f1",
+  "challenge_and_lottery_preserve_useful_result": true,
+  "changed_challenge_operations": [
+    {
+      "descriptor": "7cbde28fc5a327fabbcb5822872343cfd1759c2ef61243b2dad47df1510eb6cd",
+      "operation": "forward",
+      "seconds": 0.01283887680619955,
+      "tile_attempts": 128,
+      "winning_tiles": 10
+    },
+    {
+      "descriptor": "fd753e85eb2d2cc485b6a1c09c5da2209abe026f276f8872b1dfd189c333d44b",
+      "operation": "weight_gradient",
+      "seconds": 0.010653343051671982,
+      "tile_attempts": 128,
+      "winning_tiles": 8
+    },
+    {
+      "descriptor": "ee91db4f66478e672b5cf8cd580edf167b22f6f0670c1af10e6b26e9030adfb4",
+      "operation": "input_gradient",
+      "seconds": 0.011393752880394459,
+      "tile_attempts": 128,
+      "winning_tiles": 10
+    }
+  ],
+  "created_at": "2026-09-20T15:36:16.620843+00:00",
+  "decision": {
+    "deployment": "not authorized; no fork choice, public admission or new native issuance",
+    "mechanism": "numerical preservation and tested bindings pass",
+    "neuro_issued": 0,
+    "new_aws_instances": 0,
+    "resource_hardness": "unproved; toy scheme does not inherit cuPOW security",
+    "total_efficiency": "CPU sketch includes substantial encoding/hash/proof overhead"
+  },
+  "environment": {
+    "blas_threads_requested": 1,
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1060-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12"
+  },
+  "losing_operations": [
+    {
+      "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+      "operation": "forward",
+      "seconds": 0.01089533045887947,
+      "tile_attempts": 128,
+      "winning_tiles": 0
+    },
+    {
+      "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+      "operation": "weight_gradient",
+      "seconds": 0.010198565199971199,
+      "tile_attempts": 128,
+      "winning_tiles": 0
+    },
+    {
+      "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+      "operation": "input_gradient",
+      "seconds": 0.01016383059322834,
+      "tile_attempts": 128,
+      "winning_tiles": 0
+    }
+  ],
+  "mined_result_equals_ordinary_training": true,
+  "operations": [
+    {
+      "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+      "operation": "forward",
+      "seconds": 0.011172528378665447,
+      "tile_attempts": 128,
+      "winning_tiles": 13
+    },
+    {
+      "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+      "operation": "weight_gradient",
+      "seconds": 0.010985365137457848,
+      "tile_attempts": 128,
+      "winning_tiles": 6
+    },
+    {
+      "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+      "operation": "input_gradient",
+      "seconds": 0.011159486137330532,
+      "tile_attempts": 128,
+      "winning_tiles": 8
+    }
+  ],
+  "producer_time_over_ordinary": 103.2592352119121,
+  "relabel_attempts_rejected": {
+    "chain_challenge": true,
+    "operation": true,
+    "work_id": true,
+    "worker": true
+  },
+  "schema": "neuroshard-tile-mining-sketch-result-v1",
+  "source_commit": "1954dd3da5840256e3b0224eb91c6bc9edcc73f7",
+  "source_sha256": {
+    "config/experiments/neural-work-mining-sketch.json": "25a7f10eed9871153f7119937fd0fc2cf8971fef7ceb8c99f230fa563bb6c0c3",
+    "scripts/neural_work_mining.py": "1935007c7d3cec1cc7f94f5a28c6f5b0ebdabe7388cc51569682e9f959cee18b",
+    "scripts/neural_work_reference.py": "465d4e22eb3dc96c57cbabe1d68d61a806f47bd3f9f804f02f1e7d3912742827",
+    "scripts/study_neural_mining.py": "bfe985f63c5b27238e9ea793fbe7e61f8f4b3095ed0da8c823f7d8e3cc99f215",
+    "scripts/study_neural_work.py": "057bd327a76a5a19b7398de4bf01143064d07c978a0ddf06adb879b47d9d0271"
+  },
+  "status": "completed",
+  "test_challenge": "1111111111111111111111111111111111111111111111111111111111111111",
+  "test_worker": "2222222222222222222222222222222222222222222222222222222222222222",
+  "ticket_count": 27,
+  "timings": {
+    "arithmetic_and_all_winning_tickets": {
+      "median_seconds": 0.05355456192046404,
+      "samples_seconds": [
+        0.05268384329974651,
+        0.05283137131482363,
+        0.05475447606295347,
+        0.054896012879908085,
+        0.05355456192046404
+      ]
+    },
+    "mining_training": {
+      "median_seconds": 0.031104082241654396,
+      "samples_seconds": [
+        0.031104082241654396,
+        0.03155762981623411,
+        0.03125489875674248,
+        0.03080534189939499,
+        0.03109992016106844
+      ]
+    },
+    "ordinary_training": {
+      "median_seconds": 0.0003012232482433319,
+      "samples_seconds": [
+        0.00035667046904563904,
+        0.000262383371591568,
+        0.00027524400502443314,
+        0.00031134020537137985,
+        0.0003012232482433319
+      ]
+    }
+  },
+  "trace_root": "3b8b9a616c4d68eb1d033b2a6d6c87754b1aae40d09e8256387c9ea1650a53f9",
+  "winning_ticket_witnesses": {
+    "forward": [
+      {
+        "column": 4,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 8,
+        "partial": [
+          [
+            61713,
+            4936,
+            42182,
+            24906
+          ],
+          [
+            32325,
+            27523,
+            17870,
+            37801
+          ],
+          [
+            5499,
+            29746,
+            30442,
+            2480
+          ],
+          [
+            44368,
+            24844,
+            22156,
+            1254
+          ]
+        ],
+        "prime": 65521,
+        "row": 8,
+        "ticket": "0f1b9b2cb6082657ba667ba9732f84188ff3926612abc48b3cc1b3c7c6c3b00e"
+      },
+      {
+        "column": 8,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 12,
+        "partial": [
+          [
+            6537,
+            40647,
+            5249,
+            23930
+          ],
+          [
+            59236,
+            20338,
+            56127,
+            44535
+          ],
+          [
+            33285,
+            46932,
+            8668,
+            6621
+          ],
+          [
+            45391,
+            45297,
+            60467,
+            18601
+          ]
+        ],
+        "prime": 65521,
+        "row": 8,
+        "ticket": "0d2e27ade0516eb6efbd63a5ab2dfceeffbff569365faf846346c7b3d35115dc"
+      },
+      {
+        "column": 12,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 0,
+        "partial": [
+          [
+            63074,
+            59385,
+            58464,
+            14480
+          ],
+          [
+            13190,
+            20068,
+            3904,
+            28939
+          ],
+          [
+            19178,
+            26135,
+            30487,
+            62073
+          ],
+          [
+            3061,
+            63155,
+            7111,
+            12913
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "05062a6dfbdb66ad0d783d712838ea5182ee77180045d9c8b916928cf6c015b7"
+      },
+      {
+        "column": 0,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 8,
+        "partial": [
+          [
+            56625,
+            23628,
+            42733,
+            47653
+          ],
+          [
+            2191,
+            24232,
+            35635,
+            44937
+          ],
+          [
+            56633,
+            53187,
+            42007,
+            7192
+          ],
+          [
+            65093,
+            2600,
+            64183,
+            55094
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "02e3e85d084be55bf5e3ace00418eeef9c72d8f779fb6a43f541dd57b8844f8f"
+      },
+      {
+        "column": 4,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 12,
+        "partial": [
+          [
+            64717,
+            33888,
+            9071,
+            61923
+          ],
+          [
+            43668,
+            11504,
+            15248,
+            50319
+          ],
+          [
+            46449,
+            35943,
+            33099,
+            46558
+          ],
+          [
+            16437,
+            11974,
+            2316,
+            34878
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "0789cc7c68d1fbb7853a5c612056dade9e59bbaced1822c7d4d7aad207b87a67"
+      },
+      {
+        "column": 0,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 4,
+        "partial": [
+          [
+            24376,
+            20316,
+            38797,
+            17749
+          ],
+          [
+            33616,
+            39017,
+            18997,
+            52173
+          ],
+          [
+            30046,
+            5630,
+            42429,
+            56823
+          ],
+          [
+            52336,
+            63288,
+            36072,
+            15876
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "002fe26c28f459f334e59cee1e5a4e2792ea71dbc64a81623f80da4053a06ef2"
+      },
+      {
+        "column": 8,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 8,
+        "partial": [
+          [
+            24802,
+            43128,
+            36119,
+            46341
+          ],
+          [
+            45104,
+            98,
+            46976,
+            46585
+          ],
+          [
+            3463,
+            13578,
+            16177,
+            20397
+          ],
+          [
+            35494,
+            20735,
+            15693,
+            44195
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "0c24d7e1fe62befb6b3ebe54cb51407282d5bd924c5c14b122a4e9ff13882433"
+      },
+      {
+        "column": 12,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 8,
+        "partial": [
+          [
+            19325,
+            55420,
+            39398,
+            59088
+          ],
+          [
+            54672,
+            5723,
+            40206,
+            22664
+          ],
+          [
+            30615,
+            16925,
+            59963,
+            30753
+          ],
+          [
+            48484,
+            59344,
+            20976,
+            7370
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "062cb73afd3ae7c07f0f530a088ae3592e16aca1c4ce03f91228d8a974f0be44"
+      },
+      {
+        "column": 12,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 0,
+        "partial": [
+          [
+            58719,
+            36587,
+            31160,
+            38136
+          ],
+          [
+            49590,
+            43625,
+            60405,
+            51565
+          ],
+          [
+            25232,
+            59692,
+            38626,
+            18493
+          ],
+          [
+            27069,
+            45344,
+            63508,
+            1601
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "0986094e649ce3e5f70d3f84a75757a7e7bf05fc7d7ab684393e61fc2ac330a7"
+      },
+      {
+        "column": 12,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 8,
+        "partial": [
+          [
+            20656,
+            9738,
+            54597,
+            10391
+          ],
+          [
+            22055,
+            16086,
+            48255,
+            19876
+          ],
+          [
+            38206,
+            6239,
+            6864,
+            50627
+          ],
+          [
+            53890,
+            27573,
+            8488,
+            51360
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "02b193903d2563d2c1b8ab506e443bdf4d4e9fd5697c856e7af01373d565dd54"
+      },
+      {
+        "column": 8,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 0,
+        "partial": [
+          [
+            43346,
+            52624,
+            46702,
+            27003
+          ],
+          [
+            244,
+            34420,
+            31512,
+            47735
+          ],
+          [
+            760,
+            24502,
+            35296,
+            22035
+          ],
+          [
+            59650,
+            19642,
+            52704,
+            52537
+          ]
+        ],
+        "prime": 65519,
+        "row": 12,
+        "ticket": "0dbe7adaa73984b0199d5c9bb11a9893caf3298c09886c2469711569d579bc29"
+      },
+      {
+        "column": 0,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 4,
+        "partial": [
+          [
+            36521,
+            54781,
+            46588,
+            30583
+          ],
+          [
+            11682,
+            60821,
+            30448,
+            54833
+          ],
+          [
+            36735,
+            53944,
+            20276,
+            42827
+          ],
+          [
+            31685,
+            37757,
+            6825,
+            20546
+          ]
+        ],
+        "prime": 65519,
+        "row": 12,
+        "ticket": "0724d31e8cb7d7dc273cf055217591db46e9b3c88d13fe2c17dc74db9eca157d"
+      },
+      {
+        "column": 8,
+        "descriptor": "cdf8ffbc61941e7127d55e46166f668e04dfe92ea3c470461baa0f9a9a50baf8",
+        "inner": 12,
+        "partial": [
+          [
+            55196,
+            61734,
+            26286,
+            7668
+          ],
+          [
+            29401,
+            64608,
+            16385,
+            12312
+          ],
+          [
+            53606,
+            47445,
+            61036,
+            2827
+          ],
+          [
+            61165,
+            29487,
+            29934,
+            61984
+          ]
+        ],
+        "prime": 65519,
+        "row": 12,
+        "ticket": "04a409647b28fd99465296b003c0498f1a3a5a5144914129b60d0f152665c57c"
+      }
+    ],
+    "input_gradient": [
+      {
+        "column": 12,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 8,
+        "partial": [
+          [
+            11394,
+            28536,
+            22273,
+            13413
+          ],
+          [
+            6847,
+            9306,
+            61159,
+            62429
+          ],
+          [
+            13792,
+            40925,
+            22024,
+            42802
+          ],
+          [
+            5990,
+            17395,
+            11791,
+            26431
+          ]
+        ],
+        "prime": 65521,
+        "row": 8,
+        "ticket": "04c37b3a303df8697790c9cb904bfaa663943fabddf6c2f22da5ad3473eff9d0"
+      },
+      {
+        "column": 12,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 0,
+        "partial": [
+          [
+            9699,
+            43356,
+            53216,
+            15462
+          ],
+          [
+            49705,
+            39284,
+            9153,
+            47101
+          ],
+          [
+            15722,
+            60253,
+            3444,
+            50661
+          ],
+          [
+            60564,
+            45401,
+            14448,
+            16677
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "0b9ada578608d8f9f5737c9244dff53c09daefea02ddf2536f7a764b24e14be7"
+      },
+      {
+        "column": 0,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 0,
+        "partial": [
+          [
+            28717,
+            58675,
+            58131,
+            51258
+          ],
+          [
+            23330,
+            61142,
+            44907,
+            18446
+          ],
+          [
+            14066,
+            22878,
+            21248,
+            59521
+          ],
+          [
+            42776,
+            39859,
+            36195,
+            7078
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "0fa9ca9342c5642415eeea7c56191ca42295232bef711a5d16b89a915a00f3ef"
+      },
+      {
+        "column": 12,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 0,
+        "partial": [
+          [
+            10026,
+            43843,
+            45598,
+            55836
+          ],
+          [
+            35448,
+            15218,
+            29572,
+            20157
+          ],
+          [
+            52753,
+            53853,
+            19830,
+            64510
+          ],
+          [
+            20765,
+            5626,
+            16341,
+            41726
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "0c232b21f0d375a9327df133036d91ad5ecbd9426d8ed24596efef29be5631a8"
+      },
+      {
+        "column": 8,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 4,
+        "partial": [
+          [
+            23783,
+            44093,
+            3755,
+            46382
+          ],
+          [
+            41453,
+            9632,
+            29606,
+            36634
+          ],
+          [
+            22370,
+            48055,
+            40695,
+            18114
+          ],
+          [
+            59381,
+            53035,
+            27941,
+            61932
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "03f2b017bee82b6efa5669aabef20dcdb0bbba1ff070e58d915efec463c011c7"
+      },
+      {
+        "column": 0,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 12,
+        "partial": [
+          [
+            25544,
+            35695,
+            54046,
+            45025
+          ],
+          [
+            60979,
+            37090,
+            29475,
+            29646
+          ],
+          [
+            249,
+            1748,
+            62978,
+            53027
+          ],
+          [
+            3100,
+            37696,
+            22066,
+            8450
+          ]
+        ],
+        "prime": 65519,
+        "row": 4,
+        "ticket": "0f1bc2dd69f2d5709f1dc9b2091a9adb9e4e4e8ea62dc8a7a235ba075c2f5892"
+      },
+      {
+        "column": 0,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 12,
+        "partial": [
+          [
+            28986,
+            40209,
+            44778,
+            42049
+          ],
+          [
+            64769,
+            39812,
+            54204,
+            13893
+          ],
+          [
+            33611,
+            28963,
+            49225,
+            49584
+          ],
+          [
+            18843,
+            10439,
+            13914,
+            48642
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "09881b50efe9672c6cec8574aad116f0888fa92bbe88f01e301d30905c503209"
+      },
+      {
+        "column": 8,
+        "descriptor": "d85a3a853684e163cd331add3eb37d868396a146cf618d3b00c308644c6f7227",
+        "inner": 12,
+        "partial": [
+          [
+            41159,
+            43836,
+            59085,
+            64361
+          ],
+          [
+            42397,
+            40184,
+            5923,
+            669
+          ],
+          [
+            14938,
+            61546,
+            54300,
+            19104
+          ],
+          [
+            63511,
+            39890,
+            25138,
+            44572
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "04b81a6faa86724afd9577cc7245af4ea07fea9f872ad4dee361596fe6aeee20"
+      }
+    ],
+    "weight_gradient": [
+      {
+        "column": 0,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 0,
+        "partial": [
+          [
+            55052,
+            26922,
+            54546,
+            49117
+          ],
+          [
+            33286,
+            1696,
+            62833,
+            1921
+          ],
+          [
+            15806,
+            21531,
+            63925,
+            38462
+          ],
+          [
+            2468,
+            45863,
+            45914,
+            44055
+          ]
+        ],
+        "prime": 65521,
+        "row": 8,
+        "ticket": "0255aeb380a2c6f97e6ef439646ba2fbd402be2bc04e631e80538a2d1d11df38"
+      },
+      {
+        "column": 12,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 0,
+        "partial": [
+          [
+            28014,
+            26556,
+            31043,
+            7244
+          ],
+          [
+            31134,
+            28411,
+            12748,
+            28310
+          ],
+          [
+            4100,
+            6805,
+            23166,
+            48232
+          ],
+          [
+            55761,
+            17334,
+            31281,
+            37497
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "0f5aa1de042c3e42892b149a2c0adb1f915212158ced65d0dbf3fe7440371e68"
+      },
+      {
+        "column": 4,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 8,
+        "partial": [
+          [
+            50233,
+            57020,
+            21275,
+            63929
+          ],
+          [
+            20332,
+            30007,
+            51840,
+            61807
+          ],
+          [
+            30998,
+            44782,
+            33436,
+            9749
+          ],
+          [
+            5068,
+            6961,
+            10540,
+            23537
+          ]
+        ],
+        "prime": 65521,
+        "row": 12,
+        "ticket": "073949a026dca44c0142d6061f5801a57c7adab65bfb97e2ca1a5508d50c6172"
+      },
+      {
+        "column": 4,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 8,
+        "partial": [
+          [
+            32487,
+            32534,
+            6080,
+            61368
+          ],
+          [
+            54118,
+            33055,
+            63610,
+            33337
+          ],
+          [
+            22654,
+            26755,
+            401,
+            45513
+          ],
+          [
+            23178,
+            51128,
+            34709,
+            16940
+          ]
+        ],
+        "prime": 65519,
+        "row": 0,
+        "ticket": "094f6522e0422026b67b78b9ad50fee69ea1d5c7a47ca5df9298fd0704e43615"
+      },
+      {
+        "column": 8,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 0,
+        "partial": [
+          [
+            4924,
+            39058,
+            29968,
+            51369
+          ],
+          [
+            10975,
+            16856,
+            36850,
+            4222
+          ],
+          [
+            15755,
+            4110,
+            51123,
+            37747
+          ],
+          [
+            42461,
+            51499,
+            10656,
+            21490
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "06d62e873ae8017c1e27b388b9f32047df6b9d74fd78ce8d02711441a24038e0"
+      },
+      {
+        "column": 12,
+        "descriptor": "c479ad0a12c567579c5f346c77a144e47f64d49d3c178532d05a2c5f63884f28",
+        "inner": 4,
+        "partial": [
+          [
+            23683,
+            71,
+            9596,
+            4315
+          ],
+          [
+            11806,
+            35930,
+            5336,
+            18434
+          ],
+          [
+            62317,
+            9237,
+            14458,
+            63500
+          ],
+          [
+            33365,
+            22599,
+            50705,
+            58165
+          ]
+        ],
+        "prime": 65519,
+        "row": 8,
+        "ticket": "07703b0032aa04f803034b7b3cff4745200546433ffbef6d792a35b411833620"
+      }
+    ]
+  },
+  "work_id": "fe44f646b2dae56fe30ef4678e90ecc6014dfdeca19c9e744994cca807057bd0"
+}

@@ -7,7 +7,10 @@ GPU alpha, or change the six bounded [live-LLM criteria](../TODO.md).
 The [first measured result](NEURAL_WORK_RESULTS.md) is complete. The arithmetic
 checks work, but their witness is slower and larger than minimal dense replay
 in all three measured cases. Both deliberately weak mining constructions fail.
-No GPU or native integration follows from this result.
+The subsequent [intermediate mining sketch](NEURAL_WORK_RESULTS.md#intermediate-mining-mechanism)
+recovers the exact training result and rejects tested ticket replay/relabeling,
+with substantial CPU overhead and unproved resource security. No GPU or native
+integration follows from either result.
 
 ## Objective and decision
 
