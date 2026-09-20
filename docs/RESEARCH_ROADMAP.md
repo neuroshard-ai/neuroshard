@@ -8,6 +8,13 @@ separates arithmetic verification from fresh resource expenditure, includes
 explicit shortcut attacks and retains stewarded admission assumptions. It does
 not replace the native consensus or change earlier experimental completion criteria.
 
+The follow-up [hybrid verifier](HYBRID_SHARD_VERIFICATION.md) freezes a 2× audit
+cost target and tests replaying forward while checking compact backward witnesses.
+It fails: primary audit cost is 1.265× minimal replay, with 37.5% more witness
+bytes. This candidate is stopped; economical verification and the actual
+floating-point Transformer bridge remain open. Its negative result does not
+authorize another cluster or a consensus change.
+
 The [scaling design](SCALING_DESIGN.md) now specifies the architectural direction and release gates. Additional peers should first cover auditing, artifact replication, serving and training throughput; parameter growth follows sustained capacity and quality evidence. The [compact optimizer dispute](COMPACT_UPDATE_DISPUTES.md) is the first implemented bounded refutation primitive, with a complete-replay fallback.
 
 The [v2 experiment report](https://github.com/neuroshard-ai/neuroshard/blob/108b4ba3d6c6fb5760ff211b447ee95a67fa9112/docs/PROTOCOL_EXPERIMENTS.md) records tests of earned-stake validator admission, both unbond windows, real consensus evidence, task collateral, paid inference, and numerical conformance across two different Xeon hosts. Its [protocol specification](PROTOCOL_CANDIDATE_V2.md) defines that reference lifecycle. The [revised working paper](https://neuroshard.com/papers/FINE2026_neuroshard_short.pdf) now covers the subsequent full-model experiments and distinguishes their results from the public release.

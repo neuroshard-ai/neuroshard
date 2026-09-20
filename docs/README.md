@@ -15,6 +15,7 @@ retaining the existing generated-answer and retention requirements.
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
+| [Hybrid shard verification](HYBRID_SHARD_VERIFICATION.md) | Frozen 2× cost target, compact backward witness and failed complete-cost result; candidate stopped, no infrastructure or consensus change. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |
 | [Operated alpha](OPERATED_ALPHA.md) | Atomic funded admission, provider maintenance, automatic recovery and the distinction between AWS hosts and independent operators. |

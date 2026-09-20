@@ -17,6 +17,15 @@ The public 0.4.0 adapter network, the experimental full-model native lifecycle, 
 
 The useful-computation mining concept survives. It is a work allocation and settlement mechanism, not a claim that a gradient supplies Bitcoin-like block-selection security. Token issuance alone does not finance hardware in the real world or create demand for inference.
 
+Network growth must not require each answer to traverse more shards. Bound the
+active backbone path, selected experts, token budget and latency budget per
+request; use additional machines for nearby replicas and independently assigned
+training jobs first. No peer is required to hold the whole backbone. Retention
+means preservation on declared evaluations, not a guarantee for every possible
+answer. The next verification experiment has a separate
+[cost target and stop rule](HYBRID_SHARD_VERIFICATION.md); a pass would not establish
+general assistant quality, an independent operator or a new consensus mechanism.
+
 ## Current measured learning method
 
 The [completed continual-admission result](CONTINUAL_ADMISSION_RESULTS.md)
