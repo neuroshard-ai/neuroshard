@@ -221,3 +221,38 @@ Changed source requires a new pinned genesis; no running chain silently changes
 its source commitment. Both failed candidates are included in a $100 reserve.
 The next GPU window is bounded to 60 hours, with paid CPU bursting declared at
 ledger launch, under the same $800 aggregate ceiling and unchanged service gates.
+
+
+The corrected source `f593b3c` passed ordinary CPU serving and both automatic
+process replacements, with nine complete numerical replays. Application replay
+matched 620 headers, 143 accepted transactions, zero rejected transactions and
+all four stored states, with zero issuance. [The complete CPU evidence](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/4c3af5187d8e1bd215e5baa77d2796d0854ef1f08372754db70347eafdcfb4f1)
+also records a launcher configuration deviation: its initial CPU ceiling was
+300%, corrected to the declared 150% after the ordinary case. This establishes
+protocol behavior, not conformity to that CPU resource envelope or a performance
+improvement. The corrected source passed all five CI checks.
+
+The [second candidate's complete failed gates and ledger](https://dwquwt9gkkeil.cloudfront.net/research/native-expert-live-20260916/objects/4d8ea87af7ab6470c63b916973ff831fb58c123ec9c24a3262850e168c9cfbf9)
+reproduce 6,536 headers and 1,288 transactions against all four states. All 27
+requests settled and future audit services closed. Its only starter grant went
+to the operator's onboarding wallet. Private signing state was copied after
+stopping consensus; all eleven instances and their volumes are retired. GPU
+compute was at most $11.21, with complete costs covered by the failure reserve.
+
+A subsequent allocation stopped before installation or model execution because
+its bootstrap invoked `git archive` from an ignored exported source directory.
+The [checkout repair](../config/experiments/operated-alpha-checkout-repair.json)
+uses a detached Git worktree at the identical tested commit and checks the full
+archive command before allocation. It reuses the passing CPU evidence, changes
+no model or protocol bytes, and keeps the 60-hour window, $800 total ceiling and
+all service gates. This failed setup also remains within the $100 prior-attempt
+reserve.
+
+The fourth setup reached provider funding but failed during its first offer.
+Its launcher had discarded remote stderr, so the exact cause is unknown.
+The [bootstrap repair](../config/experiments/operated-alpha-bootstrap-repair.json)
+closes an observed readiness gap: each provider must confirm its funding
+transaction on its own synchronized, pinned full node before registering.
+Remote startup errors are now preserved privately before cleanup. All eleven
+R4 hosts and their volumes are retired; no public inference was admitted. The
+protocol and neural source, passed CPU preflight and service gates are unchanged.

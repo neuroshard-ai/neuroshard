@@ -1,0 +1,70 @@
+{
+  "format": "neuroshard-operated-alpha-bootstrap-repair-v1",
+  "recorded_before_retry_at": "2026-09-20T00:38:12.007147+00:00",
+  "prior_source": "f593b3c77fe7f561a6db98d3d47949926ba10583",
+  "failure": "R4 stopped during the first provider publish-offer after its funding transfer committed. The subprocess stderr was not preserved; the exact cause cannot be established from the surviving log. No public admission or inference occurred.",
+  "identified_startup_gap": "The controller checked its validators but did not wait for each provider observer to synchronize and confirm the funding transfer.",
+  "repair": [
+    "Require the same successful funding transaction on the provider own pinned synchronized full node before registration.",
+    "Preserve bounded private remote subprocess diagnostics before terminating ephemeral hosts.",
+    "Use a real detached Git worktree for bootstrap."
+  ],
+  "protocol_and_neural_source_unchanged": true,
+  "reuse_passed_preflight": ".neuroshard/operated-alpha-renewal-preflight-20260920",
+  "same_service_gates": true,
+  "gpu_hours": 60,
+  "aggregate_ceiling_usd": 800,
+  "all_prior_attempts_reserve_usd": 100,
+  "retirement": {
+    "gpu": {
+      "compute_cost_upper_estimate_usd": 1.2206688751522223,
+      "cost_scope": "Compute upper estimate; record EBS, S3 and transfer separately.",
+      "finished": "2026-09-20T00:32:39.389077+00:00",
+      "protected_states": {
+        "i-06bf7f1f01e6228bb": "running",
+        "i-0d681a8ef83f72619": "running",
+        "i-0ebe86ca07e97cf29": "stopped"
+      },
+      "remaining_volumes": [],
+      "seconds_since_allocation": 624.028394,
+      "security_group_retired": true,
+      "terminated_instances": [
+        "i-029dd446a4bf9eddd",
+        "i-03441f6442330db49",
+        "i-05c093b36c0d91ce7",
+        "i-06ba5c3c745657104",
+        "i-0bbfdf8fa4dc190a8",
+        "i-0bdec67dbf918ad93",
+        "i-0f96e26353554c914"
+      ]
+    },
+    "ledger": {
+      "finished": "2026-09-20T00:34:23.103779+00:00",
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "terminated_instances": [
+        "i-022d562c4d322e4cb",
+        "i-0a820c7e1e53177fa",
+        "i-0ac528cf55a41d07e",
+        "i-0f96d26415ac17325"
+      ]
+    }
+  },
+  "local_validation": {
+    "readiness_tests_passed": 5,
+    "native_provider_registration": {
+      "offer": {
+        "capacity": 1,
+        "expires_in": 14000,
+        "fee": 100,
+        "graph": "bbb0d751fa1ff1195f89fe084d8603ac30d9a8ddb47d90e66d184c4491d9fb49",
+        "offer_id": "e83b8e1c084512a66f812e6b29a7878a3525d660106e05608d31f0ddf0ffa21b",
+        "owner": "02602374741c3fb058b91c0d32c4d815c9ad13bec61effb5ea38cdea174d35a6d9",
+        "rank": 0
+      },
+      "passed": true,
+      "source_code_hash": "64ef247c6ed5db42bcf87206e5b958a9e1661f5e9ac67fb0666d4b749f30fccc"
+    },
+    "purpose": "Real four-validator CPU network executes funding, the local confirmation barrier, registration and offer; no GPU or neural run."
+  }
+}

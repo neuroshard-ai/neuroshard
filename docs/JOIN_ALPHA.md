@@ -5,7 +5,7 @@ after its availability field records a passing deployment gate. The earlier
 0.4.0 chain and PyPI package are different releases.
 
 The alpha runs the accepted shard graph, with paid provider discovery and three
-complete replays before settlement. Its GPU window is funded for at most 66 hours;
+complete replays before settlement. Its GPU window is funded for at most 60 hours;
 the descriptor gives the exact service and ledger deadlines. All bootstrap
 hosts belong to one administrator. Additional AWS hosts do not establish
 independent ownership. Starter credits have no demonstrated market value.

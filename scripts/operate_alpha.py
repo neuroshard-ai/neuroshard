@@ -18,6 +18,7 @@ import sys
 import time
 import fcntl
 import traceback
+import os
 
 from neuroshard.client import wire
 from neuroshard.demo import client, protocol
@@ -196,7 +197,14 @@ def provider(cloud, network, graph, rank, physical, index, offer_blocks):
     cloud.command(physical, ['sudo', 'mount', '--bind', cache, folder+'/models'])
     public = json.loads(cloud.python(physical, ['-m', 'neuroshard.evolution.provider_runtime',
         '--config', folder+'/config.json', '--identity']).stdout)
-    network.send(3, f'fund-provider-{index}', 'transfer', to=public['owner'], amount=250_000_000)
+    funding = network.send(3, f'fund-provider-{index}', 'transfer', to=public['owner'], amount=250_000_000)
+    cloud.put(physical, folder+'/funding.json', funding)
+    # A transfer confirmed by the controller's validator may not yet exist on
+    # this newly started observer. Never sign registration against stale state.
+    confirmed = json.loads(cloud.command(physical, ['env', 'PYTHONPATH='+REPO+'/src', CPU,
+        REPO+'/scripts/operated_alpha_bootstrap.py', '--config', folder+'/config.json',
+        '--funding', folder+'/funding.json'], timeout=200).stdout)
+    save(cloud.home/'bootstrap-funding'/f'{index}.json', confirmed)
     offer = json.loads(cloud.python(physical, ['-m', 'neuroshard.evolution.provider_runtime',
         '--config', folder+'/config.json', '--publish-offer'], timeout=180).stdout)
     row = {'index': index, 'rank': rank, 'physical': physical, 'home': folder, 'config': config,
@@ -346,7 +354,21 @@ def launch(args):
             save(home/'deployment.json', {**deployment, 'phase': 'running-release-gate-pending'})
         finally:
             network.close()
-    except BaseException:
+    except BaseException as error:
+        # Preserve the useful remote error BEFORE retiring ephemeral disks.
+        # This private diagnostic is never part of the public evidence bundle.
+        details = traceback.format_exc()
+        if isinstance(error, subprocess.CalledProcessError):
+            for name in ('stdout', 'stderr'):
+                value = getattr(error, name, None)
+                if value:
+                    if isinstance(value, bytes):
+                        value = value.decode('utf-8', errors='replace')
+                    details += '\nREMOTE '+name+':\n'+value[-65536:]
+        path = home/'startup-failure.log'
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), 'w') as log:
+            log.write(details)
+        print('Startup failed; private diagnostic saved to '+str(path), file=sys.stderr, flush=True)
         if (home/'allocation.json').exists():
             retire_gpu(home)
         from operated_alpha_hosts import retire
