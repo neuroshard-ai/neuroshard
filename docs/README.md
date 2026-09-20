@@ -14,7 +14,7 @@ retaining the existing generated-answer and retention requirements.
 | Start here | Purpose |
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
-| [Join the alpha](JOIN_ALPHA.md) | Pinned source, public ledger observer, starter credits and paid multi-turn chat during the funded window. |
+| [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |
 | [Operated alpha](OPERATED_ALPHA.md) | Atomic funded admission, provider maintenance, automatic recovery and the distinction between AWS hosts and independent operators. |
 | [Provider LLM service](PROVIDER_LLM_SERVICE.md) | Frozen accepted-model concurrency, streaming, recovery and complete-cost trial, including failed setups. |
