@@ -1,10 +1,11 @@
-"""One CPU picker between two unchanged programming tails.
+"""CPU pickers between two unchanged programming tails.
 
-The evaluation contract is frozen separately. This module is the first picker
-candidate: nearest training-prompt Jaccard, default incumbent. It is not fitted
-on opened diagnosis labels. A screen without the picker execution freeze is
-invalid. The original 128-task final stays closed.
+The evaluation contract is frozen separately. Stopped candidates remain in this
+module for replay. A later candidate must be a separately declared family. None
+of these pickers is fitted on opened diagnosis labels. A screen without the
+picker execution freeze is invalid. The original 128-task final stays closed.
 """
+import ast
 import math
 import time
 from pathlib import Path
@@ -18,6 +19,8 @@ FORMAT = 'neuroshard-programming-selector-v1'
 CONTRACT_IDENTITY = 'a0618c63a026317723657494f17da970ba585f0732c77ba4195cb483ec89287a'
 V2_FORMAT = 'neuroshard-programming-selector-v2'
 V2_CONTRACT_IDENTITY = 'e6c663aeb1def4a116d546c533474d35fd77f9e80bc105171c0dc7b80c9841fe'
+V3_FORMAT = 'neuroshard-programming-selector-v3'
+V3_CONTRACT_IDENTITY = '0c4c72ba72a3828d6bd417c3521da801381e6014634a3387fd01d999d92c6295'
 EVALUATION_FREEZE_COMMIT = '8e39b746ab7087e1c1a47c437b644c939f36e739'
 V1_STOPPED_PICKER_COMMIT = '963de13242c40517b78524a882df931678416936'
 V1_SCREEN_RECORD_COMMIT = '2dfa5f1dd6575d35131d77b7ecb3b43fe6f2d32b'
@@ -33,6 +36,7 @@ def bind_contract(contract):
     expected = {
         FORMAT + '/contract': CONTRACT_IDENTITY,
         V2_FORMAT + '/contract': V2_CONTRACT_IDENTITY,
+        V3_FORMAT + '/contract': V3_CONTRACT_IDENTITY,
     }
     digest = identity(contract)
     if expected.get(contract.get('format')) != digest:
@@ -115,6 +119,26 @@ def build_view(question, failed_parent_program, check):
         'public_example': example,
         'public_feedback': feedback,
     })
+
+
+def parse_program(text):
+    if not isinstance(text, str) or not text:
+        return None
+    try:
+        return ast.parse(extract_code(text))
+    except (ValueError, SyntaxError, TypeError):
+        try:
+            return ast.parse(text)
+        except (ValueError, SyntaxError, TypeError):
+            return None
+
+
+def ast_shape(text):
+    """Frozen structural feature: the set of AST node type names."""
+    tree = parse_program(text)
+    if tree is None:
+        return set()
+    return {type(node).__name__ for node in ast.walk(tree)}
 
 
 def load_assets(assets):
@@ -228,12 +252,77 @@ class AgreementPicker:
         }
 
 
+def load_code_assets(assets):
+    if assets.get('format') != V3_FORMAT + '/assets':
+        raise ValueError('Picker assets do not bind the AST-shape candidate')
+    incumbent = assets.get('incumbent_programs')
+    added = assets.get('added_programs')
+    if (not isinstance(incumbent, list) or not isinstance(added, list)
+            or not incumbent or not added
+            or any(not isinstance(text, str) or not text.strip() for text in incumbent + added)):
+        raise ValueError('Train program assets are incomplete')
+    shapes = [ast_shape(text) for text in incumbent + added]
+    if any(not shape for shape in shapes):
+        raise ValueError('Train gold programs must parse to a nonempty AST shape')
+    split = len(incumbent)
+    return {
+        'incumbent': shapes[:split],
+        'added': shapes[split:],
+        'identity': identity(assets),
+    }
+
+
+class AstShapePicker:
+    """Pick added only when the failed parent's AST shape is strictly nearer a train gold program of the added tail."""
+
+    def __init__(self, spec, assets):
+        if spec.get('format') != V3_FORMAT + '/picker':
+            raise ValueError('Picker spec does not bind the AST-shape candidate')
+        if spec.get('rule') != 'nearest-train-ast-shape':
+            raise ValueError('This implementation is the nearest-train AST-shape picker')
+        if spec.get('margin') != 0:
+            raise ValueError('Jaccard margin must stay at the frozen zero')
+        if spec.get('default') != INCUMBENT or spec.get('tie') != INCUMBENT:
+            raise ValueError('Ties and uncertainty must select the incumbent')
+        if spec.get('uses_fields') != ['failed_parent_program']:
+            raise ValueError('This picker may read only the failed parent program')
+        if spec.get('case_specific_lookup_rules') is not False:
+            raise ValueError('Lookup exceptions are prohibited')
+        loaded = load_code_assets(assets)
+        if spec.get('assets') != loaded['identity']:
+            raise ValueError('Picker spec is not bound to these assets')
+        self.spec = spec
+        self.incumbent = loaded['incumbent']
+        self.added = loaded['added']
+        self.assets_identity = loaded['identity']
+
+    def scores(self, text):
+        shape = ast_shape(text)
+        incumbent = max(jaccard(shape, program) for program in self.incumbent)
+        added = max(jaccard(shape, program) for program in self.added)
+        return incumbent, added
+
+    def pick(self, view):
+        validate_view(view)
+        incumbent, added = self.scores(view['failed_parent_program'])
+        choice = ADDED if added > incumbent else INCUMBENT
+        return {
+            'choice': choice,
+            'incumbent_score': incumbent,
+            'added_score': added,
+            'margin': added - incumbent,
+            'rule': 'nearest-train-ast-shape',
+        }
+
+
 def load_picker(spec, assets):
     rule = spec.get('rule')
     if rule == 'nearest-train-jaccard':
         return NearestTrainPicker(spec, assets)
     if rule == 'nearest-train-jaccard-agreement':
         return AgreementPicker(spec, assets)
+    if rule == 'nearest-train-ast-shape':
+        return AstShapePicker(spec, assets)
     raise ValueError('Unknown picker rule')
 
 
@@ -486,6 +575,7 @@ def bind_picker_freeze(freeze, spec, assets, contract):
     allowed = {
         FORMAT + '/picker-execution-freeze',
         V2_FORMAT + '/picker-execution-freeze',
+        V3_FORMAT + '/picker-execution-freeze',
     }
     if freeze.get('format') not in allowed:
         raise ValueError('Picker execution freeze does not bind this candidate')
@@ -498,7 +588,7 @@ def bind_picker_freeze(freeze, spec, assets, contract):
     if identity(spec) != freeze.get('picker') or identity(assets) != freeze.get('assets'):
         raise ValueError('Picker freeze does not match the committed artifacts')
     if spec.get('assets') != identity(assets):
-        raise ValueError('Picker spec does not hash its train-prompt assets')
+        raise ValueError('Picker spec does not hash its assets')
     load_picker(spec, assets)
     expected = freeze.get('files') or {}
     root = Path(freeze['root']) if freeze.get('root') else Path('.')

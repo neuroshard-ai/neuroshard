@@ -5,8 +5,9 @@ from pathlib import Path
 import pytest
 
 from neuroshard.evolution.programming_selector import (
-    CONTRACT_IDENTITY, FORMAT, AgreementPicker, NearestTrainPicker, V2_CONTRACT_IDENTITY,
-    V2_FORMAT, bind_contract, bind_picker_freeze, build_view, decide_picker_calls, jaccard,
+    CONTRACT_IDENTITY, FORMAT, AgreementPicker, AstShapePicker, NearestTrainPicker,
+    V2_CONTRACT_IDENTITY, V2_FORMAT, V3_CONTRACT_IDENTITY, V3_FORMAT, ast_shape,
+    bind_contract, bind_picker_freeze, build_view, decide_picker_calls, jaccard,
     load_picker, nearest_rank_p95, public_example_from_question, serve, validate_view,
 )
 from neuroshard.evolution.reference_data import identity, sha256
@@ -212,6 +213,95 @@ def test_workspace_picker_freeze_binds_the_specified_candidate():
     picker = NearestTrainPicker(spec, payload)
     assert picker.pick(view_from_prompt(payload['added_prompts'][0]))['choice'] == 'added'
     assert picker.pick(view_from_prompt(payload['incumbent_prompts'][0]))['choice'] == 'incumbent'
+
+
+def test_recorded_v2_screen_keeps_the_failed_gates_and_decision_hash():
+    decisions = ROOT / 'config/experiments/programming-selector-v2-decisions.json'
+    recorded = json.loads((ROOT / 'config/experiments/programming-selector-v2-decisions-hash.json').read_text())
+    score = json.loads((ROOT / 'config/experiments/programming-selector-v2-screen-score.json').read_text())
+    record = json.loads((ROOT / 'config/experiments/programming-selector-v2-screen-record.json').read_text())
+    assert sha256(decisions) == 'e89117acbdb4cfc1b5c6e4c4cbe0feb728b8287a9763d2782256dee166b46aca'
+    assert recorded['sha256'] == sha256(decisions)
+    assert record['decisions_sha256'] == sha256(decisions)
+    assert record['status'] == 'stop-this-picker'
+    assert score['passed'] is False
+    assert score['selected_correct'] == 29
+    assert score['unique_added_recovered'] == 1
+    assert score['incumbent_successes_preserved'] == 28
+    assert score['next'] == 'stop-this-picker'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
+
+
+def test_recorded_v3_screen_keeps_the_failed_gates_and_decision_hash():
+    decisions = ROOT / 'config/experiments/programming-selector-v3-decisions.json'
+    recorded = json.loads((ROOT / 'config/experiments/programming-selector-v3-decisions-hash.json').read_text())
+    score = json.loads((ROOT / 'config/experiments/programming-selector-v3-screen-score.json').read_text())
+    record = json.loads((ROOT / 'config/experiments/programming-selector-v3-screen-record.json').read_text())
+    assert sha256(decisions) == 'b08ab22d19f1c32dfd1369a07698710e5b46e8e930c67c87bc5f9c1cdc13753e'
+    assert recorded['sha256'] == sha256(decisions)
+    assert record['decisions_sha256'] == sha256(decisions)
+    assert record['status'] == 'stop-this-picker'
+    assert score['passed'] is False
+    assert score['selected_correct'] == 29
+    assert score['unique_added_recovered'] == 0
+    assert score['incumbent_successes_preserved'] == 29
+    assert score['next'] == 'stop-this-picker'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
+
+
+def test_frozen_v3_contract_identity_is_pinned():
+    current = json.loads((ROOT / 'config/experiments/programming-selector-v3-contract.json').read_text())
+    assert identity(current) == V3_CONTRACT_IDENTITY
+    bind_contract(current)
+
+
+def code_assets(incumbent=None, added=None):
+    incumbent = incumbent or ['def f():\n    return 1\n']
+    added = added or ['def f(xs):\n    for x in xs:\n        pass\n']
+    return {
+        'format': V3_FORMAT + '/assets',
+        'incumbent_programs': incumbent,
+        'added_programs': added,
+        'provenance': {'synthetic': True},
+    }
+
+
+def test_ast_shape_picker_uses_failed_parent_structure_not_the_question():
+    payload = code_assets()
+    spec = {
+        'format': V3_FORMAT + '/picker',
+        'rule': 'nearest-train-ast-shape',
+        'assets': identity(payload),
+        'margin': 0,
+        'default': 'incumbent',
+        'tie': 'incumbent',
+        'uses_fields': ['failed_parent_program'],
+        'case_specific_lookup_rules': False,
+    }
+    picker = AstShapePicker(spec, payload)
+    loop_parent = view('incumbent train on matrices', 'assert m()==1',
+                       parent='```python\ndef g(items):\n    for item in items:\n        pass\n```')
+    return_parent = view('added train on string palindromes', 'assert p("aba")==True',
+                         parent='```python\ndef g():\n    return 2\n```')
+    assert 'For' in ast_shape(loop_parent['failed_parent_program'])
+    assert picker.pick(loop_parent)['choice'] == 'added'
+    assert picker.pick(return_parent)['choice'] == 'incumbent'
+    assert load_picker(spec, payload).pick(loop_parent)['choice'] == 'added'
+
+
+def test_workspace_v3_picker_freeze_binds_the_ast_shape_candidate():
+    spec = json.loads((ROOT / 'config/experiments/programming-selector-v3-picker.json').read_text())
+    payload = json.loads((ROOT / 'config/experiments/programming-selector-v3-assets.json').read_text())
+    freeze = json.loads((ROOT / 'config/experiments/programming-selector-v3-freeze.json').read_text())
+    contract = json.loads((ROOT / 'config/experiments/programming-selector-v3-contract.json').read_text())
+    bind_picker_freeze(freeze, spec, payload, contract)
+    picker = AstShapePicker(spec, payload)
+    loop = view(parent='```python\ndef g(items):\n    for item in items:\n        pass\n```')
+    ret = view(parent='```python\ndef g():\n    return 2\n```')
+    assert picker.pick(loop)['choice'] in ('incumbent', 'added')
+    assert picker.pick(ret)['choice'] in ('incumbent', 'added')
 
 
 def test_picker_freeze_rejects_a_changed_asset_hash():

@@ -5,7 +5,10 @@ Isolation of the added tail passed leftover development 32. Growth against the
 complete leftover fallback system failed. Complementarity of the unchanged tails
 on the 38 opened extras found unique added coverage. The
 [selector evaluation contract](PROGRAMMING_SELECTOR_CONTRACT.md) is frozen
-(`8e39b74`). Picker `963de13` failed its CPU screen (30/64) and is stopped. The original 128-task final stays closed. This is not an upgrade of the 0.4.0 genesis.
+(`8e39b74`). Picker `963de13` failed its CPU screen (30/64) and is stopped. The
+[v2 agreement picker](PROGRAMMING_SELECTOR_V2.md) failed (29/64). The
+[v3 AST-shape picker](PROGRAMMING_SELECTOR_V3.md) failed (29/64). The original
+128-task final stays closed. This is not an upgrade of the 0.4.0 genesis.
 
 The leftover [fallback result](PROGRAMMING_FALLBACK_RESULTS.md) remains the
 complete system to beat: parent plus the incumbent tail `46bd2e76…`, public-example
@@ -57,13 +60,15 @@ trained tail.
 The serving hypothesis remains `parent → public example → one tail`. The frozen
 selector contract uses only the question, failed parent program, public example
 and normalized public-example feedback. Hidden tests stay hidden. Default is
-incumbent. Question-only Jaccard and question+parent agreement both failed
-their CPU screens and are stopped. Complementary coverage still exists in the
-two tails; these selectors did not connect it. These 64 cases remain opened
-development data. Any later method needs a separately declared experiment. See
+incumbent. Question-only Jaccard, question+parent agreement, and failed-parent
+AST-shape nearest gold program all failed their CPU screens and are stopped.
+Complementary coverage still exists in the two tails; these selectors did not
+connect it. These 64 cases remain opened development data. Serving stays the
+leftover incumbent extra. See
 [PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md),
-[PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md) and
-[PROGRAMMING_SELECTOR_V2.md](PROGRAMMING_SELECTOR_V2.md).
+[PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md),
+[PROGRAMMING_SELECTOR_V2.md](PROGRAMMING_SELECTOR_V2.md) and
+[PROGRAMMING_SELECTOR_V3.md](PROGRAMMING_SELECTOR_V3.md).
 
 Evidence: `.neuroshard/programming-growth-diagnosis-20260920/evidence/0/diagnosis.json`
 (`90e8c7e9…`), `config/experiments/programming-growth-added-outputs.json`
