@@ -10,8 +10,7 @@ import sys
 
 from neuroshard.evolution.programming_expert import MBPP_SHA, code_prompt
 from neuroshard.evolution.programming_selector import (
-    CONTRACT_IDENTITY, FORMAT, NearestTrainPicker, bind_contract, bind_picker_freeze,
-    decide_picker_calls, score_screen,
+    bind_contract, bind_picker_freeze, decide_picker_calls, load_picker, score_screen,
 )
 from neuroshard.evolution.reference_data import identity, save, sha256
 
@@ -84,16 +83,16 @@ def main():
         parent = [out for out in outputs if out['arm'] == 'base']
         rows = mbpp_rows(args.mbpp, contract['cpu_screen']['picker_call_task_ids'])
         require_empty_setup(rows)
-        picker = NearestTrainPicker(spec, assets)
+        picker = load_picker(spec, assets)
         decisions = decide_picker_calls(rows, parent, picker, check, contract)
         save(args.home / 'decisions.json', decisions)
         save(args.home / 'decisions-hash.json', {
-            'format': FORMAT + '/decisions-hash',
+            'format': contract['format'].rsplit('/', 1)[0] + '/decisions-hash',
             'sha256': sha256(args.home / 'decisions.json'),
             'identity': identity(decisions),
             'picker': decisions['picker'],
             'assets': decisions['assets'],
-            'contract': CONTRACT_IDENTITY,
+            'contract': identity(contract),
         })
         print(json.dumps({
             'phase': 'decide',

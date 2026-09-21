@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 
 from neuroshard.evolution.programming_selector import (
-    CONTRACT_IDENTITY, FORMAT, NearestTrainPicker, bind_contract, bind_picker_freeze,
-    build_view, decide_picker_calls, jaccard, nearest_rank_p95, public_example_from_question,
-    serve, validate_view,
+    CONTRACT_IDENTITY, FORMAT, AgreementPicker, NearestTrainPicker, V2_CONTRACT_IDENTITY,
+    V2_FORMAT, bind_contract, bind_picker_freeze, build_view, decide_picker_calls, jaccard,
+    load_picker, nearest_rank_p95, public_example_from_question, serve, validate_view,
 )
 from neuroshard.evolution.reference_data import identity, sha256
 
@@ -172,6 +172,36 @@ def test_recorded_screen_keeps_the_failed_gates_and_decision_hash():
     assert score['next'] == 'stop-this-picker'
     assert score['admission_evidence'] is False
     assert score['gpu_authorized_by_screen'] is False
+
+
+def test_frozen_v2_contract_identity_is_pinned():
+    current = json.loads((ROOT / 'config/experiments/programming-selector-v2-contract.json').read_text())
+    assert identity(current) == V2_CONTRACT_IDENTITY
+    bind_contract(current)
+
+
+def test_agreement_picker_requires_both_views_to_prefer_added():
+    payload = assets()
+    spec = {
+        'format': V2_FORMAT + '/picker',
+        'rule': 'nearest-train-jaccard-agreement',
+        'assets': identity(payload),
+        'margin': 0,
+        'default': 'incumbent',
+        'tie': 'incumbent',
+        'uses_fields': ['question', 'failed_parent_program'],
+        'case_specific_lookup_rules': False,
+    }
+    picker = AgreementPicker(spec, payload)
+    added_prompt = question('added train on string palindromes', 'assert p("aba")==True')
+    inc_prompt = question('incumbent train on matrices', 'assert m()==1')
+    both = view('added train on string palindromes', 'assert p("aba")==True', parent=added_prompt)
+    disagree = view('added train on string palindromes', 'assert p("aba")==True', parent=inc_prompt)
+    incumbent_like = view('incumbent train on matrices', 'assert m()==1', parent=inc_prompt)
+    assert picker.pick(both)['choice'] == 'added'
+    assert picker.pick(disagree)['choice'] == 'incumbent'
+    assert picker.pick(incumbent_like)['choice'] == 'incumbent'
+    assert load_picker(spec, payload).pick(both)['choice'] == 'added'
 
 
 def test_workspace_picker_freeze_binds_the_specified_candidate():

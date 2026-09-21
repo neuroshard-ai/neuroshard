@@ -17,12 +17,10 @@ passed +4/32 and is the research baseline. The [second-capability growth](docs/P
 unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
 on the 38 opened extras found unique added coverage (oracle union +3). That bound
 is not a policy. The [selector evaluation contract](docs/PROGRAMMING_SELECTOR_CONTRACT.md)
-is frozen at `8e39b74`. Picker `963de13` (nearest-train Jaccard) **failed** its
-CPU screen (30/64, 2/3 unique added, 28/29 incumbent) and is stopped. The
-scorer lookup correction is recorded with unchanged decision hash `344c68ac…`;
-it does not change that outcome. Do not train a tail or selector. Do not
-launch GPUs. These 64 cases remain opened. Any later method needs its own
-declared experiment.
+is frozen at `8e39b74`. Question-only Jaccard (`963de13`) and question+parent
+agreement both **failed** their CPU screens and are stopped. Complementary
+coverage still exists; neither frozen selector connected it. Do not train a
+tail or selector. Do not launch GPUs. These 64 cases remain opened.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -436,6 +434,16 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-20: **Selector v2 (question+parent Jaccard agreement) failed.**
+  Decisions `e89117ac…`. Score 29/64, unique added 1/3 (only 276), incumbent
+  28/29 (lost 249). Agreement fired on 7 extras. `stop-this-picker`. Not
+  admission. No GPU. These 64 cases remain opened.
+
+- 2026-09-20: **Declared selector v2: Jaccard agreement of question and failed
+  parent.** Separate contract from stopped picker `963de13`. Added only when
+  both views strictly prefer added; disagreement selects incumbent. Same 64
+  opened cases remain diagnostic. Not trained, no GPU yet.
 
 - 2026-09-20: **Nearest-train Jaccard selector failed its CPU screen.** Picker
   commit `963de13`. Decide hashed 38 calls (`344c68ac…`) before joining tails.

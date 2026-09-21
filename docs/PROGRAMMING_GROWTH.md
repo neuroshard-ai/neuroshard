@@ -57,13 +57,13 @@ trained tail.
 The serving hypothesis remains `parent → public example → one tail`. The frozen
 selector contract uses only the question, failed parent program, public example
 and normalized public-example feedback. Hidden tests stay hidden. Default is
-incumbent. Picker `963de13` (nearest training-prompt Jaccard) failed its CPU
-screen (30/64, 2/3 unique added, 28/29 incumbent) and is stopped. The scorer
-lookup correction is recorded with unchanged decision hash `344c68ac…`; it does
-not change that outcome. These 64 cases remain opened development data. Any
-later method needs a separately declared experiment. See
-[PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md) and
-[PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md).
+incumbent. Question-only Jaccard and question+parent agreement both failed
+their CPU screens and are stopped. Complementary coverage still exists in the
+two tails; these selectors did not connect it. These 64 cases remain opened
+development data. Any later method needs a separately declared experiment. See
+[PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md),
+[PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md) and
+[PROGRAMMING_SELECTOR_V2.md](PROGRAMMING_SELECTOR_V2.md).
 
 Evidence: `.neuroshard/programming-growth-diagnosis-20260920/evidence/0/diagnosis.json`
 (`90e8c7e9…`), `config/experiments/programming-growth-added-outputs.json`

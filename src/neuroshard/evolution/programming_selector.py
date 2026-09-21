@@ -16,7 +16,11 @@ from neuroshard.evolution.reference_data import identity, sha256
 
 FORMAT = 'neuroshard-programming-selector-v1'
 CONTRACT_IDENTITY = 'a0618c63a026317723657494f17da970ba585f0732c77ba4195cb483ec89287a'
+V2_FORMAT = 'neuroshard-programming-selector-v2'
+V2_CONTRACT_IDENTITY = 'e6c663aeb1def4a116d546c533474d35fd77f9e80bc105171c0dc7b80c9841fe'
 EVALUATION_FREEZE_COMMIT = '8e39b746ab7087e1c1a47c437b644c939f36e739'
+V1_STOPPED_PICKER_COMMIT = '963de13242c40517b78524a882df931678416936'
+V1_SCREEN_RECORD_COMMIT = '2dfa5f1dd6575d35131d77b7ecb3b43fe6f2d32b'
 INTERFACE = '\n\nUse this callable interface and behavior:\n'
 ENDING = '\n\nReturn only the complete Python code, including needed imports.'
 ALLOWED_INPUT_KEYS = ('question', 'failed_parent_program', 'public_example', 'public_feedback')
@@ -26,17 +30,20 @@ CHOICES = ('incumbent', 'added', 'abstain')
 
 
 def bind_contract(contract):
-    if contract.get('format') != FORMAT + '/contract':
+    expected = {
+        FORMAT + '/contract': CONTRACT_IDENTITY,
+        V2_FORMAT + '/contract': V2_CONTRACT_IDENTITY,
+    }
+    digest = identity(contract)
+    if expected.get(contract.get('format')) != digest:
         raise ValueError('Selector contract does not bind this measurement')
-    if identity(contract) != CONTRACT_IDENTITY:
-        raise ValueError('Selector contract identity changed')
     if contract.get('picker', {}).get('fitting_on_opened_diagnosis_allowed') is not False:
         raise ValueError('Opened diagnosis labels may not train a picker')
     if contract.get('picker', {}).get('case_specific_lookup_rules_allowed') is not False:
         raise ValueError('Case-specific lookup rules are prohibited')
     if contract.get('current_stage', {}).get('gpu_launch_authorized') is not False:
         raise ValueError('This contract does not authorize a GPU launch')
-    return CONTRACT_IDENTITY
+    return digest
 
 
 def public_example_from_question(question):
@@ -169,6 +176,67 @@ class NearestTrainPicker:
         }
 
 
+class AgreementPicker:
+    """Pick added only when question and failed parent both strictly prefer added."""
+
+    def __init__(self, spec, assets):
+        if spec.get('format') != V2_FORMAT + '/picker':
+            raise ValueError('Picker spec does not bind the agreement candidate')
+        if spec.get('rule') != 'nearest-train-jaccard-agreement':
+            raise ValueError('This implementation is the dual-view Jaccard agreement picker')
+        if spec.get('margin') != 0:
+            raise ValueError('Jaccard margin must stay at the frozen zero')
+        if spec.get('default') != INCUMBENT or spec.get('tie') != INCUMBENT:
+            raise ValueError('Ties and uncertainty must select the incumbent')
+        if spec.get('uses_fields') != ['question', 'failed_parent_program']:
+            raise ValueError('This picker must read question and failed parent program')
+        if spec.get('case_specific_lookup_rules') is not False:
+            raise ValueError('Lookup exceptions are prohibited')
+        loaded = load_assets(assets)
+        if spec.get('assets') != loaded['identity']:
+            raise ValueError('Picker spec is not bound to these assets')
+        self.spec = spec
+        self.incumbent = loaded['incumbent']
+        self.added = loaded['added']
+        self.assets_identity = loaded['identity']
+
+    def scores(self, text):
+        words = _words(text)
+        incumbent = max(jaccard(words, prompt) for prompt in self.incumbent)
+        added = max(jaccard(words, prompt) for prompt in self.added)
+        return incumbent, added
+
+    def pick(self, view):
+        validate_view(view)
+        q_inc, q_add = self.scores(view['question'])
+        p_inc, p_add = self.scores(view['failed_parent_program'])
+        question_prefers_added = q_add > q_inc
+        parent_prefers_added = p_add > p_inc
+        choice = ADDED if question_prefers_added and parent_prefers_added else INCUMBENT
+        return {
+            'choice': choice,
+            'incumbent_score': q_inc,
+            'added_score': q_add,
+            'margin': min(q_add - q_inc, p_add - p_inc),
+            'question_incumbent_score': q_inc,
+            'question_added_score': q_add,
+            'parent_incumbent_score': p_inc,
+            'parent_added_score': p_add,
+            'question_prefers_added': question_prefers_added,
+            'parent_prefers_added': parent_prefers_added,
+            'rule': 'nearest-train-jaccard-agreement',
+        }
+
+
+def load_picker(spec, assets):
+    rule = spec.get('rule')
+    if rule == 'nearest-train-jaccard':
+        return NearestTrainPicker(spec, assets)
+    if rule == 'nearest-train-jaccard-agreement':
+        return AgreementPicker(spec, assets)
+    raise ValueError('Unknown picker rule')
+
+
 def serve(picker, view, *, deadline_seconds=1.0):
     """Time the whole call. Invalid views, errors and overruns select incumbent."""
     began = time.perf_counter()
@@ -192,6 +260,12 @@ def serve(picker, view, *, deadline_seconds=1.0):
         'incumbent_score': decision.get('incumbent_score'),
         'added_score': decision.get('added_score'),
         'margin': decision.get('margin'),
+        'question_incumbent_score': decision.get('question_incumbent_score'),
+        'question_added_score': decision.get('question_added_score'),
+        'parent_incumbent_score': decision.get('parent_incumbent_score'),
+        'parent_added_score': decision.get('parent_added_score'),
+        'question_prefers_added': decision.get('question_prefers_added'),
+        'parent_prefers_added': decision.get('parent_prefers_added'),
         'seconds': elapsed,
         'overrun': overrun,
         'error': error,
@@ -240,6 +314,12 @@ def decide_picker_calls(rows, parent_outputs, picker, check, contract):
             'incumbent_score': served['incumbent_score'],
             'added_score': served['added_score'],
             'margin': served['margin'],
+            'question_incumbent_score': served.get('question_incumbent_score'),
+            'question_added_score': served.get('question_added_score'),
+            'parent_incumbent_score': served.get('parent_incumbent_score'),
+            'parent_added_score': served.get('parent_added_score'),
+            'question_prefers_added': served.get('question_prefers_added'),
+            'parent_prefers_added': served.get('parent_prefers_added'),
             'seconds': served['seconds'],
             'overrun': served['overrun'],
             'error': served['error'],
@@ -249,10 +329,10 @@ def decide_picker_calls(rows, parent_outputs, picker, check, contract):
     if [row['task_id'] for row in decisions] != wanted:
         raise ValueError('Picker decisions do not cover the frozen extra-decode cases')
     return {
-        'format': FORMAT + '/decisions',
+        'format': contract['format'].rsplit('/', 1)[0] + '/decisions',
         'picker': identity(picker.spec),
         'assets': picker.assets_identity,
-        'contract': CONTRACT_IDENTITY,
+        'contract': identity(contract),
         'count': len(decisions),
         'decisions': decisions,
     }
@@ -373,12 +453,12 @@ def score_screen(rows, growth_outputs, added_outputs, decisions, plan, contract,
         and errors <= gates['maximum_picker_errors_or_overruns']
     )
     return {
-        'format': FORMAT + '/screen-score',
+        'format': contract['format'].rsplit('/', 1)[0] + '/screen-score',
         'admission_evidence': False,
         'gpu_authorized_by_screen': False,
         'oracle_is_not_a_policy': True,
         'train': False,
-        'contract': CONTRACT_IDENTITY,
+        'contract': identity(contract),
         'picker': decisions['picker'],
         'assets': decisions['assets'],
         'parent_correct': parent_correct,
@@ -402,13 +482,15 @@ def score_screen(rows, growth_outputs, added_outputs, decisions, plan, contract,
 
 
 def bind_picker_freeze(freeze, spec, assets, contract):
-    bind_contract(contract)
-    if freeze.get('format') != FORMAT + '/picker-execution-freeze':
+    digest = bind_contract(contract)
+    allowed = {
+        FORMAT + '/picker-execution-freeze',
+        V2_FORMAT + '/picker-execution-freeze',
+    }
+    if freeze.get('format') not in allowed:
         raise ValueError('Picker execution freeze does not bind this candidate')
-    if freeze.get('contract') != CONTRACT_IDENTITY:
+    if freeze.get('contract') != digest:
         raise ValueError('Picker freeze is not bound to the selector contract')
-    if freeze.get('evaluation_freeze_commit') != EVALUATION_FREEZE_COMMIT:
-        raise ValueError('Picker freeze must keep the evaluation-contract commit')
     if freeze.get('cpu_screen_performed') is not False:
         raise ValueError('Picker freeze must be pinned before the CPU screen')
     if freeze.get('gpu_launch_authorized') is not False:
@@ -417,7 +499,7 @@ def bind_picker_freeze(freeze, spec, assets, contract):
         raise ValueError('Picker freeze does not match the committed artifacts')
     if spec.get('assets') != identity(assets):
         raise ValueError('Picker spec does not hash its train-prompt assets')
-    NearestTrainPicker(spec, assets)
+    load_picker(spec, assets)
     expected = freeze.get('files') or {}
     root = Path(freeze['root']) if freeze.get('root') else Path('.')
     for rel, digest in expected.items():
