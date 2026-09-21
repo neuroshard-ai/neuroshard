@@ -1,0 +1,252 @@
+{
+  "format": "neuroshard-programming-selector-v1/pool",
+  "dataset": {
+    "name": "MBPP",
+    "sha256": "ccf64ceae9c5403bf50a044cb6d505bfd2a2963ee58338ba268fd65beab92a9f",
+    "source": "https://raw.githubusercontent.com/google-research/google-research/f82046ba5aabbbb427dbfd38a254d26bff08b533/mbpp/mbpp.jsonl"
+  },
+  "growth_plan": "c5662eabc3f3fc719468f3f8948d124e2dd8ee11599640bf6789ef3ab2c5f1e8",
+  "original_selection": "fbff46def4eec6580a87def14153a0a139a4efd4f73c6c0aa47e6fb98f6bd393",
+  "pool_inclusive": [
+    511,
+    600
+  ],
+  "opened_original_development_task_ids": [
+    515,
+    516,
+    518,
+    519,
+    525,
+    528,
+    529,
+    531,
+    533,
+    536,
+    540,
+    542,
+    549,
+    552,
+    557,
+    559,
+    560,
+    561,
+    562,
+    563,
+    564,
+    569,
+    570,
+    572,
+    575,
+    583,
+    585,
+    586,
+    588,
+    594,
+    596,
+    598
+  ],
+  "exclusion_sources": {
+    "trained": "programming-growth.json: splits.incumbent_train_task_ids + splits.train_task_ids",
+    "opened": "original opened development + growth preservation/new/development",
+    "rule": "programming_expert._similar: lowercase alphanumeric word-set Jaccard >= 0.8"
+  },
+  "near_duplicate_exclusions": {
+    "514": [
+      205
+    ],
+    "517": [
+      443
+    ],
+    "520": [
+      45
+    ],
+    "521": [
+      51
+    ],
+    "530": [
+      442,
+      137
+    ],
+    "537": [
+      395
+    ],
+    "538": [
+      310
+    ],
+    "541": [
+      179
+    ],
+    "550": [
+      225
+    ],
+    "551": [
+      353
+    ],
+    "556": [
+      166
+    ],
+    "574": [
+      233,
+      85
+    ],
+    "577": [
+      435
+    ],
+    "584": [
+      440
+    ]
+  },
+  "ranking": {
+    "identity": "sha256(canonical JSON)",
+    "preimage": [
+      "neuroshard-programming-selector-fresh-v1",
+      "ccf64ceae9c5403bf50a044cb6d505bfd2a2963ee58338ba268fd65beab92a9f",
+      "integer task_id"
+    ],
+    "order": "ascending hexadecimal identity"
+  },
+  "within_pool_exclusions": [],
+  "eligible_ranked_task_ids": [
+    566,
+    523,
+    522,
+    580,
+    591,
+    567,
+    511,
+    571,
+    590,
+    555,
+    573,
+    592,
+    568,
+    589,
+    576,
+    548,
+    578,
+    527,
+    579,
+    547,
+    545,
+    535,
+    526,
+    582,
+    539,
+    599,
+    554,
+    543,
+    553,
+    600,
+    512,
+    513,
+    597,
+    587,
+    558,
+    534,
+    595,
+    544,
+    593,
+    546,
+    581,
+    565,
+    532,
+    524
+  ],
+  "confirmation_task_ids": [
+    566,
+    523,
+    522,
+    580,
+    591,
+    567,
+    511,
+    571,
+    590,
+    555,
+    573,
+    592,
+    568,
+    589,
+    576,
+    548,
+    578,
+    527,
+    579,
+    547,
+    545,
+    535,
+    526,
+    582,
+    539,
+    599,
+    554,
+    543,
+    553,
+    600,
+    512,
+    513
+  ],
+  "confirmation_row_ids": [
+    "30f9429ec485eb417f4fde73798a0338970bd66589e0e4d0f6a9819ec86ddc45",
+    "f16132ceac6b709d82969beb96cce2f50c99ed0f9d8e758ff4f78a6f10fbd5d5",
+    "dc87bddff072e7441f6d24746f21d0a0ca63dbd09d75da391f2a73c100beee5c",
+    "fc6ae6ef15a58b116ced132bdd7d96034b46fb1c544c0f2781575ef83125b118",
+    "37286c29afa7c11df56b9768cbf10b8b2ed3a19f5a6347f7371ab976c9fcb2bf",
+    "8c2bf4a95ba08da4b63d47fc393ee35c9fa4a1e2afc771a9ed752f7452310d6c",
+    "e1242d56ea1bb49fc52be93bd488e5309e5ff295da6e927b20d49b64a9e3bc2b",
+    "aecf9d68a1188279ea39ff50ae38c49598ffae3d6166ce5a8b5ff39a1421ba96",
+    "46d5c99e08ac5603b35ec01117d01178b5e298290ddfab53a22242b5a99ec01d",
+    "ee9da80ec424e294efaef68b07fe8e5073c765d59b1adc6a51f9c217f5ba2f9d",
+    "13ef9937e9d574e6d11f621c356cbc2816b91816448333123258125215e27a2b",
+    "fe776b8589a38ce6a393dd609d69d80b93467829c0fa6d922fa3ebbef70a0c3e",
+    "d44e6f63b3e2eb01f702b69a2d7a7ea1373f1147c02993bf0bf70870cc9741d5",
+    "65b566b62c2898cbcc219b2fdb59c2ea2367e599321ce2238a3e4d1f243c8bcb",
+    "4c72d303772bbd8dc25880f857a650d41353da101b57bc28804beeb418985081",
+    "27271b438465fa79da6cd353cddb2eeeff0abd2af1eb936984102763239b4ee0",
+    "651af34a45726ff7c1f9cf864be762e0fcaa1ac909930cb9329e75a895ddc3d5",
+    "93cfbcaf72ff3f07bb3b405912b42e22945c78733d93c20474ccd89b28e1a0db",
+    "0bcddcffd93bfcf6bb4284e94cebc3e57adc6d1703822f78e8803b49fba49226",
+    "85c927ba1e0c74d1d13fcf3b8817c232f4200028b06eacb05f8716e2263691bb",
+    "d8a3e99008f18ed669e16f3cacea389206a84a483b025b780b70a64a0ef8fd99",
+    "19da418b334dc7af93347e8050f9d553a6e1a6e9a6a53ab9a7ac5eccb0780692",
+    "780c40c6f0591f46c02b3326283a1598b05a63bdf3d403cdbeaee5518dabe273",
+    "e2f7aadc8464304da792269ea3009dd551c03b5bde26446e9947aaa85e7e102d",
+    "a0386bfa761c8ea3a0d8934024aa43cf5dddc385738a69546243b9c12737fd3c",
+    "6f362b1243c61b107e1bd4ec3b1509c1977ba08b5de6ccf4fd3ab636ad87f582",
+    "7576c1847fdb1f480265bdb36927bdc67308140519483dba7d4768ca3f121efc",
+    "51847f1bba8e27b2f460ecc189c658b04559e2a639ccfe6dc77161107c15ac74",
+    "17901ea8922208cf5a9822c69598f89dc54f2287e6a1a1c46f5124b89da66b81",
+    "2c3b68e519618b7be686108a7edbe444bfa2e5765bee71765a811cc81cc5661b",
+    "973ba7382e02f7973b50855e0236d9589fb25de371169b490a0c58f624f4abb8",
+    "0e62a3d1653beec2cc0f8c9c642a56afc2aba9f2f01afee472fa72fa0ae795ff"
+  ],
+  "unused_ranked_task_ids": [
+    597,
+    587,
+    558,
+    534,
+    595,
+    544,
+    593,
+    546,
+    581,
+    565,
+    532,
+    524
+  ],
+  "counts": {
+    "original_pool": 90,
+    "opened_original_development": 32,
+    "remaining": 58,
+    "near_duplicate_excluded": 14,
+    "eligible": 44,
+    "selected": 32,
+    "unused": 12
+  },
+  "confirmation_ids_replacement_allowed": false,
+  "nonempty_setup_in_selected": 0,
+  "all_nonfinal_11_510_allocated": true,
+  "original_final_opened": false,
+  "model_generation_performed": false,
+  "novelty_scope": "Not trained or generated in the pinned programming-trial records; public benchmark, no pretraining-contamination claim."
+}

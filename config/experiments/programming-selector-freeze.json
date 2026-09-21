@@ -1,0 +1,21 @@
+{
+  "format": "neuroshard-programming-selector-v1/evaluation-freeze",
+  "contract": "a0618c63a026317723657494f17da970ba585f0732c77ba4195cb483ec89287a",
+  "parent_execution_commit": "dcc66936a746f7fdc6b6dfa25d1c47ad6f366758",
+  "scope": "evaluation contract and reviewed evidence; not a picker execution freeze",
+  "files": {
+    "config/experiments/programming-expert-selection.json": "fbff46def4eec6580a87def14153a0a139a4efd4f73c6c0aa47e6fb98f6bd393",
+    "config/experiments/programming-growth-added-outputs.json": "5ec67305b573b7d68e65897e2f0e81a6f08ebb2b2cdcee686266c94c5b6e2fe8",
+    "config/experiments/programming-growth-diagnosis-score.json": "90e8c7e92f8cf84ed967205fc4aeee939a026053f05e94d734f6e96b00536ddb",
+    "config/experiments/programming-growth-diagnosis.json": "32e57921728c5c2af97e55ca6176b3192f3e69bc22d971ec0d4b995b5c46fd6a",
+    "config/experiments/programming-growth-freeze.json": "a52e1d4916e345e1203a30fa935d3ead0733eab522d014522a5770a498dfaf69",
+    "config/experiments/programming-growth-outputs.json": "7ba33b47e923978ff83c900894fb38425b4f4eb63b359051386f61cb1fd42077",
+    "config/experiments/programming-growth.json": "4b47e8e157cbf550c1376f5abe612c23d4cb609ed55fcdb495ae6cac1f06fa34",
+    "config/experiments/programming-selector-contract.json": "9b28908fdb01a683ae6e47ec2ca57223be6d3399184aedc2064dfa2106c12def",
+    "config/experiments/programming-selector-pool.json": "e2cfec54acbd4a9cc2f9c9975f898db471ab3c574a3c582e953a7e187c6a7e14",
+    "docs/PROGRAMMING_SELECTOR_CONTRACT.md": "8a7730db5ffab4fbc857e5b1618f56f37d99f1c7bb521c9785fefe606d85b4b9"
+  },
+  "picker_execution_manifest": null,
+  "cpu_screen_performed": false,
+  "gpu_launch_authorized": false
+}
