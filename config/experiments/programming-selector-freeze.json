@@ -13,7 +13,7 @@
     "config/experiments/programming-growth.json": "4b47e8e157cbf550c1376f5abe612c23d4cb609ed55fcdb495ae6cac1f06fa34",
     "config/experiments/programming-selector-contract.json": "9b28908fdb01a683ae6e47ec2ca57223be6d3399184aedc2064dfa2106c12def",
     "config/experiments/programming-selector-pool.json": "e2cfec54acbd4a9cc2f9c9975f898db471ab3c574a3c582e953a7e187c6a7e14",
-    "docs/PROGRAMMING_SELECTOR_CONTRACT.md": "8a7730db5ffab4fbc857e5b1618f56f37d99f1c7bb521c9785fefe606d85b4b9"
+    "docs/PROGRAMMING_SELECTOR_CONTRACT.md": "bdba2f6b7eeef03df48ea205709383092da8ad92f8cf8327c69784983991709b"
   },
   "picker_execution_manifest": null,
   "cpu_screen_performed": false,
