@@ -16,7 +16,8 @@ retaining the existing generated-answer and retention requirements.
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
 | [Programming expert trial](PROGRAMMING_EXPERT_TRIAL.md) | One new neural skill, executable answers, learned selection, preserved general responses and bounded serving latency. |
 | [Programming fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md) / [result](PROGRAMMING_FALLBACK_RESULTS.md) | Research baseline: leftover extra attempt +4/32 versus parent and parent repair; not promoted. |
-| [TIES composition](PROGRAMMING_GROWTH_TIES.md) | Replace failed unit merge with trim/sign-elect/disjoint-mean; extras not yet decoded. |
+| [TIES composition](PROGRAMMING_GROWTH_TIES.md) | Trim/sign-elect/disjoint-mean restored extractable extras (38/38) and scored 31/64; unique added 1/3. Stopped. |
+| [Elect-sign composition](PROGRAMMING_GROWTH_ELECT.md) | Same tails, sign-election and disjoint mean, no magnitude trim; extras not yet decoded. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |

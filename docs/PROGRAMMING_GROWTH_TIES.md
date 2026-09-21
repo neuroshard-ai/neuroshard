@@ -1,46 +1,50 @@
 # TIES composition of two programming tails
 
-**Status: composition frozen; extras not yet decoded.**
+**Status: decoded and failed. Stop this composition.**
 Unit task-vector addition failed because the merged extra was often not even
 valid Python (18/38 extractable versus 38/38 for each frozen tail). On the
 frozen last-four-layer tensors, **33.6%** of jointly nonzero signed parameters
-have opposite signs. This experiment replaces that sum with TIES: keep the top
-20% magnitude of each delta, elect a consensus sign, and average only the
-values that agree. It does not train. It does not open the original 128-task
-final. It is not a selector.
+have opposite signs. TIES replaced that sum: keep the top 20% magnitude of each
+delta, elect a consensus sign, and average only the values that agree. It did
+not train. It did not open the original 128-task final. It was not a selector.
 
-Serving stays one extra decode. Parent public-example pass still returns the
-parent. Failure spends that extra on the TIES mix instead of the unit mix.
+Serving stayed one extra decode. Parent public-example pass still returned the
+parent. Failure spent that extra on the TIES mix instead of the unit mix.
 
-## Frozen rule
+## Frozen rule (failed)
 
 `θ = θ_parent + mean({trim_0.2(θ_inc − θ_parent), trim_0.2(θ_add − θ_parent)}`
-restricted to the elected sign). Keep `0.2` and scale `1.0` are taken from the
-TIES paper defaults and are not tuned on the opened 64 cases.
+restricted to the elected sign). Keep `0.2` and scale `1.0` were taken from the
+TIES paper defaults and were not tuned on the opened 64 cases.
 
 CPU merge of the frozen checkpoints is pinned in
 `config/experiments/programming-growth-ties-expert.json`
-(`9c06f100…`). A GPU worker must reproduce those hashes before decoding.
+(`9c06f100…`). The GPU worker loaded those hashes; it did not re-merge.
 
 ## Screen (opened 64, not admission)
 
-Generate the 38 extras whose parent public example already failed. Join the
-saved parent, incumbent and added traces. Required:
+Generated the 38 extras whose parent public example already failed. Joined the
+saved parent, incumbent and added traces. Required versus measured:
 
-| Gate | Required |
-| --- | ---: |
-| TIES extras extractable | 38/38 |
-| unique added recovered | 3 |
-| incumbent successes preserved | 29 |
-| old successes preserved | 12 |
-| selected full-test | 32/64 |
+| Gate | Required | Measured |
+| --- | ---: | ---: |
+| TIES extras extractable | 38/38 | **38/38** |
+| unique added recovered | 3 | **1** (503 yes; missed 276, 265) |
+| incumbent successes preserved | 29 | **29** (kept 249) |
+| old successes preserved | 12 | **12** |
+| selected full-test | 32/64 | **31/64** |
 
-A pass is only eligibility for a separate 511–600 confirmation freeze. Failure
-stops this composition. No native issuance.
+Parent 22, incumbent 29, always-added 31, oracle union 32. TIES scored 31: it
+recovered unique-added 503, kept unique-incumbent 249, and created leftover
+task 54 which neither frozen tail had. It did not recover 276 or 265. `next` is
+`stop-this-composition`. `admission_evidence` false.
 
-## What this is for
+Score `86a6a489…`, extras `3de80b42…`, record `29887a86…`. Source `9e85585`.
+Four g5.xlarge hosts, two-hour /$50 cap, ~7 minutes, then retired. No native
+issuance.
 
-The vision is a served skill that grows when another shard joins. Routing the
-two tails from the question/parent text failed three times. This tries the other
-honest door: compose the shards in weight space without the interference that
-broke code syntax.
+Do not iterate keep or scale on these 64 cases. Trim discarded small unique
+directions that sign-election itself had already made extractable. The next
+composition is [elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md) of the
+same frozen tails, without magnitude trim. These 64 cases remain opened
+development data. Serving stays the leftover incumbent extra.

@@ -30,8 +30,11 @@ Growth failed:
   incumbent extra added seven
 - 18/38 merged extra responses passed `extract_code`; 38/38 incumbent responses did
 
-The unit mix is rejected. The next composition is
-[TIES](PROGRAMMING_GROWTH_TIES.md) on the same frozen tails. Evidence:
+The unit mix is rejected. [TIES](PROGRAMMING_GROWTH_TIES.md) on the same frozen
+tails restored extractable extras (38/38) and scored 31/64, then failed the
+screen (unique added 1/3; required 32). Stop that composition. The next
+composition is [elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md) without
+magnitude trim. Evidence:
 `.neuroshard/programming-growth-20260920/evidence/0/result.json` and
 `config/experiments/programming-growth-outputs.json`.
 
@@ -63,7 +66,8 @@ and normalized public-example feedback. Hidden tests stay hidden. Default is
 incumbent. Question-only Jaccard, question+parent agreement, and failed-parent
 AST-shape nearest gold program all failed their CPU screens and are stopped.
 Complementary coverage still exists in the two tails; these selectors did not
-connect it. These 64 cases remain opened development data. Serving stays the
+connect it. TIES composition then failed its screen (31/64, unique added 1/3)
+and is stopped. These 64 cases remain opened development data. Serving stays the
 leftover incumbent extra. See
 [PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md),
 [PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md),

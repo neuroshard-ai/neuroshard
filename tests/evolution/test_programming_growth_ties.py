@@ -79,3 +79,29 @@ def test_frozen_ties_contract_identity_is_pinned():
     assert spec['keep'] == 0.2
     assert spec['train'] is False
     assert spec['admission_evidence'] is False
+
+
+def test_recorded_ties_screen_keeps_the_failed_gates():
+    from neuroshard.evolution.reference_data import sha256
+    score_path = ROOT / 'config/experiments/programming-growth-ties-screen-score.json'
+    outputs_path = ROOT / 'config/experiments/programming-growth-ties-outputs.json'
+    record = json.loads((ROOT / 'config/experiments/programming-growth-ties-screen-record.json').read_text())
+    score = json.loads(score_path.read_text())
+    assert sha256(score_path) == '86a6a4895bc9cae6d3779df79f079a6aa2de5423bd918c03500cb76d8ba7f913'
+    assert sha256(outputs_path) == '3de80b42714d54162dbeb84685cc04caf5bf9fd3024cf69fd8406c883de61943'
+    assert record['screen_score_sha256'] == sha256(score_path)
+    assert record['outputs_sha256'] == sha256(outputs_path)
+    assert record['status'] == 'stop-this-composition'
+    assert record['later_method'] == 'do-not-iterate-keep-or-scale-on-these-64'
+    assert score['passed'] is False
+    assert score['ties_correct'] == 31
+    assert score['extractable']['ties'] == 38
+    assert score['unique_added_recovered'] == 1
+    assert score['incumbent_successes_preserved'] == 29
+    assert score['old_successes_preserved'] == 12
+    assert score['next'] == 'stop-this-composition'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
+    assert record['unique_added_recovered_task_ids'] == [503]
+    assert record['unique_added_missed_task_ids'] == [276, 265]
+    assert record['ties_only_task_ids'] == [54]
