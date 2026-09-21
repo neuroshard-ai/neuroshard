@@ -13,25 +13,29 @@ The ledger remains scheduled through September 26 for expiry and refunds;
 the [historical joining guide](docs/JOIN_ALPHA.md) records the original setup.
 The website and PyPI release below use the earlier chain.
 
-NeuroShard's **capability work** is a bounded-activation growing assistant:
-a 1.7B parent plus checked extra shards, at most one extra decode per
-request. The leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
-is the research baseline (+4/32 versus parent and parent repair). Independent
-tails plus heuristic integration is closed
-([programming growth](docs/PROGRAMMING_GROWTH.md)). The subsequent experiment was
-[learned integration of new capacity](docs/LEARNED_INTEGRATION.md). Stage-1
-135M [failed development](docs/LEARNED_INTEGRATION_RESULTS.md) (expansion 0/32,
-control 5/32). Confirmation was never opened. A separate
-[staged-integration candidate](docs/STAGED_INTEGRATION_RESULTS.md) stopped before
-training: its eight-token exact-answer baseline had no protected successes.
-The separate [staged-answering study](docs/STAGED_ANSWERING.md) keeps expert-then-gate
-training and the same gates, with complete-answer scoring and fresh operands.
-Its [first execution](docs/STAGED_ANSWERING_RESULTS.md) established 15 protected
-answers and timed out after 127/128 updates, before the answer comparison.
-It is a 135M CPU mechanism study, not an assistant-capability result. No GPU is authorized.
-[Independent hosting](docs/INDEPENDENT_HOSTING.md) remains the separate item 4
-track and requires four real independent operators.
-Not a public promoted model.
+The intended assistant is one useful model whose learning and serving capacity
+grow as independent peers contribute shards. The [live checklist](TODO.md) is
+**5/6** against bounded demonstrations. Item 4, reliable permissionless hosting,
+remains open. [Independent hosting](docs/INDEPENDENT_HOSTING.md) requires four
+independently administered operators and aggregates voting power by
+administrator. This operator may hold at most one of the four validators.
+Machines under one AWS account do not satisfy that criterion. The soak is not
+authorized, and no GPU is authorized.
+
+Learning is a separate track. Programming-growth is closed. Stage-1
+[learned integration](docs/LEARNED_INTEGRATION_RESULTS.md) failed development
+(expansion 0/32, control 5/32); confirmation was never opened. The staged
+expert-then-gate study [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md)
+on an unusable output format. Its successor
+[timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert updates and 63 of
+64 gate updates, with 15 protected answers saved and no candidate answers scored.
+The [recovery amendment](docs/STAGED_ANSWERING_RECOVERY.md) restores that expert,
+restarts the gate, charges the interrupted work, and finishes the same
+comparison. It [completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
+expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
+This candidate is stopped. The research serving baseline remains
+the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
+(+4/32). None of this is a public promoted model.
 
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
 with a 4,608-parameter adapter, native replay, and paid inference. It is not
