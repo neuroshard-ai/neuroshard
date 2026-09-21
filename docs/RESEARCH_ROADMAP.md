@@ -20,7 +20,10 @@ existing capacity, and score generated answers on a fresh split. Stage 1 ran
 on CPU and [failed development](LEARNED_INTEGRATION_RESULTS.md): expansion
 0/32 versus control 5/32, with 8/8 general parent match. Confirmation stays
 closed. No GPU is authorized. This is not promotion, not a 0.4.0 upgrade, and
-not a new consensus mechanism.
+not a new consensus mechanism. The next experiment is
+[independent hosting](INDEPENDENT_HOSTING.md) of the accepted graph: a CPU
+protocol preflight, then an independent-operator soak that one AWS account
+cannot satisfy. Item 4 remains open.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

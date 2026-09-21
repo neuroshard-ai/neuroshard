@@ -31,7 +31,10 @@ and score generated answers on a fresh split. The stage-1 method is frozen. The 
 [failed development](docs/LEARNED_INTEGRATION_RESULTS.md): expansion 0/32,
 control 5/32, general 8/8. Confirmation stays closed. No GPU is authorized.
 Serving stays the leftover incumbent extra. A fresh dataset by itself would
-not address the failure.
+not address the failure. The next experiment is
+[independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
+equal-power genesis and stranger-provider join, then an independent-operator
+soak that this operator's AWS account cannot satisfy. No GPU is authorized.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -288,15 +291,14 @@ before the affected work, rather than changing the target after a result.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
-  Current development: [operated alpha admission and recovery](docs/OPERATED_ALPHA.md)
-  replaces unaccepted audit offers with atomic work reservation against funded
-  standing services, charges occupied capacity, and adds provider maintenance
-  and native recovery from advertised spares. Its committed CPU native preflight
-  passes both automatic owner replacements, nine complete numerical replays and
-  exact replay of 620 blocks and 143 transactions. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
-  passed its ordinary and automatic process-recovery gates; its GPU service
-  retired on September 20. The independent availability soak remains open. AWS machines under our account
-  do not satisfy the independent-administration criterion below.
+  Current development: [independent hosting](docs/INDEPENDENT_HOSTING.md) freezes
+  the remaining item-4 soak. The CPU protocol preflight uses four equal genesis
+  validators (each share strictly below one third) and a non-genesis provider
+  join without SSH. The independent-operator soak stays unauthorized until three
+  independently administered operators exist. AWS machines under our account
+  do not satisfy that criterion. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
+  remains the last one-administrator hosting evidence; its GPU service retired
+  on September 20.
 
   Done when independent providers can discover work, acquire assigned shards,
   join, leave and replace unavailable providers through the protocol. Demonstrate
@@ -318,8 +320,10 @@ before the affected work, rather than changing the target after a result.
   partitions through certificate-pinned HTTPS, matching the fixed-group
   executor for ordinary and multi-turn fixtures. Providers discover their own
   native assignments, restore committed partitions without SSH and jointly
-  sign the complete response. Operated LLM recovery has since passed below; the availability soak
-  and independent administration remain required. See
+  sign the complete response.   Operated LLM recovery has since passed below. The item-4
+  [independent hosting](docs/INDEPENDENT_HOSTING.md) freeze now specifies the CPU
+  protocol preflight (four equal validators, stranger-provider join). The
+  independent-operator soak remains unauthorized. See
   [the provider-market design](docs/PROVIDER_MARKET_RFC.md).
 
   The subsequent [native provider preflight](docs/PROVIDER_NATIVE_PREFLIGHT.md)
@@ -445,6 +449,11 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Froze independent hosting for item 4. No GPU.**
+  CPU protocol: four equal genesis validators, stranger-provider join, no key
+  may hold the complete backbone. Independent soak unauthorized. AWS under one
+  account does not satisfy. Contract `5dc22aab…`. Not admission.
 
 - 2026-09-21: **Stage-1 learned integration failed development. Stop. No GPU.**
   Expansion 0/32, control 5/32 (517, 733, 807, 896, 924), parent 0/32,

@@ -21,7 +21,9 @@ tails plus heuristic integration is closed
 ([programming growth](docs/PROGRAMMING_GROWTH.md)). The next experiment is
 [learned integration of new capacity](docs/LEARNED_INTEGRATION.md). Stage-1
 135M [failed development](docs/LEARNED_INTEGRATION_RESULTS.md) (expansion 0/32,
-control 5/32). Confirmation stays closed. Not a public promoted model.
+control 5/32). Confirmation stays closed. The next experiment is
+[independent hosting](docs/INDEPENDENT_HOSTING.md) for checklist item 4.
+Not a public promoted model.
 
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
 with a 4,608-parameter adapter, native replay, and paid inference. It is not
