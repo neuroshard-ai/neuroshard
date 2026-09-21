@@ -31,7 +31,9 @@ on an unusable output format. Its successor
 64 gate updates, with 15 protected answers saved and no candidate answers scored.
 The [recovery amendment](docs/STAGED_ANSWERING_RECOVERY.md) restores that expert,
 restarts the gate, charges the interrupted work, and finishes the same
-comparison. It is frozen and has not run. The research serving baseline remains
+comparison. It [completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
+expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
+This candidate is stopped. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 

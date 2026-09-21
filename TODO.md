@@ -39,8 +39,11 @@ It [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md) on an unsuitabl
 output-format baseline. The separate [staged-answering study](docs/STAGED_ANSWERING.md)
 uses complete-answer scoring and fresh operands, with unchanged training and gates.
 Its [execution timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert and
-63 gate updates. The baseline protected 15 answers; candidate quality was not scored.
-Neither can mark a checklist item complete. The separate systems track is
+63 gate updates. The baseline protected 15 answers; candidate quality was not scored
+in that interrupted run. Its separate
+[recovery completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
+expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
+This candidate is stopped and receives no checklist credit. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
 soak that requires four independently administered operators. This operator's
