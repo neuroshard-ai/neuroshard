@@ -22,9 +22,11 @@ tails plus heuristic integration is closed
 [learned integration of new capacity](docs/LEARNED_INTEGRATION.md). Stage-1
 135M [failed development](docs/LEARNED_INTEGRATION_RESULTS.md) (expansion 0/32,
 control 5/32). Confirmation was never opened. A separate
-[staged-integration candidate](docs/STAGED_INTEGRATION.md) trains the expert,
-then its gate, with a 135M CPU-only arithmetic mechanism study; it has not run
-and is not a coding or assistant-capability result. No GPU is authorized.
+[staged-integration candidate](docs/STAGED_INTEGRATION_RESULTS.md) stopped before
+training: its eight-token exact-answer baseline had no protected successes.
+The separate [staged-answering study](docs/STAGED_ANSWERING.md) keeps expert-then-gate
+training and the same gates, with complete-answer scoring and fresh operands.
+It is a 135M CPU mechanism study, not an assistant-capability result. No GPU is authorized.
 [Independent hosting](docs/INDEPENDENT_HOSTING.md) remains the separate item 4
 track and requires four real independent operators.
 Not a public promoted model.

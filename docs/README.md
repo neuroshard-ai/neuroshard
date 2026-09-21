@@ -23,7 +23,8 @@ retaining the existing generated-answer and retention requirements.
 | [Learned integration](LEARNED_INTEGRATION.md) | Last-layer expert and gate versus matched no-expansion control. Method frozen. |
 | [Stage-1 execution freeze](LEARNED_INTEGRATION_EXECUTION.md) | CPU 135M last-layer train/score loop frozen. No GPU. |
 | [Stage-1 learned-integration result](LEARNED_INTEGRATION_RESULTS.md) | Expansion 0/32 vs control 5/32. Failed development. Confirmation closed. |
-| [Staged integration](STAGED_INTEGRATION.md) | New 135M CPU mechanism candidate: expert then gate, automatic serving, preserved answers and measured costs. Not run; no GPU. |
+| [Staged integration](STAGED_INTEGRATION.md) / [baseline result](STAGED_INTEGRATION_RESULTS.md) | Stopped before training: 0/32 under the frozen exact-string, eight-token output rule. |
+| [Staged answering](STAGED_ANSWERING.md) | Separate 135M CPU candidate: complete answers, fresh operands, unchanged expert-then-gate training and acceptance gates. No GPU. |
 | [Independent hosting](INDEPENDENT_HOSTING.md) | Item 4 soak freeze: equal-power CPU genesis and stranger-provider join. No GPU. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |

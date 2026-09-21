@@ -35,7 +35,10 @@ not address the failure. The new [staged-integration candidate](docs/STAGED_INTE
 trains an expert with guaranteed access, freezes it, then trains its gate. Its
 separate 135M CPU arithmetic mechanism contract includes checkpoints, route
 traces, per-answer preservation, isolated peak memory and actual CPU spend.
-It has not run and cannot mark a checklist item complete. The separate systems track is
+It [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md) on an unsuitable
+output-format baseline. The separate [staged-answering study](docs/STAGED_ANSWERING.md)
+uses complete-answer scoring and fresh operands, with unchanged training and gates.
+Neither can mark a checklist item complete. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
 soak that requires four independently administered operators. This operator's

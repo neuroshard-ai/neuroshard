@@ -24,8 +24,11 @@ a 0.4.0 upgrade, or a new consensus mechanism. The separate
 [staged-integration candidate](STAGED_INTEGRATION.md) trains an expert first,
 then its gate, on a new 135M CPU arithmetic mechanism set. It saves checkpoints
 and routes, protects individual answers, isolates process memory and measures
-actual training expenditure. It has not run and is not an assistant-capability
-result. The separate systems experiment remains
+actual training expenditure. It [stopped before training](STAGED_INTEGRATION_RESULTS.md)
+because the output-format baseline had no protected answers. The separate
+[staged-answering candidate](STAGED_ANSWERING.md) corrects the output protocol and
+uses fresh operands under unchanged training and gates. It is not an
+assistant-capability result. The separate systems experiment remains
 [independent hosting](INDEPENDENT_HOSTING.md) of the accepted graph: a CPU
 protocol preflight, then an independent-operator soak that one AWS account
 cannot satisfy. Item 4 remains open.
