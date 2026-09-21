@@ -20,6 +20,7 @@ failed unique-added recovery and is stopped. [Elect-sign disjoint mean](PROGRAMM
 without magnitude trim then matched TIES on every opened task and is stopped.
 Task-vector sign-consensus of these two tails is closed. The next attempt is
 the [public-feedback-status picker](PROGRAMMING_SELECTOR_V4.md).
+That picker failed its CPU screen (29/64, unique added 0/3) and is stopped.
 This is not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether

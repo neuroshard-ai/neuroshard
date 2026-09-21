@@ -16,7 +16,7 @@ failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FA
 passed +4/32 and is the research baseline. The [second-capability growth](docs/PROGRAMMING_GROWTH.md)
 unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
 on the 38 opened extras found unique added coverage (oracle union +3). That bound
-is not a policy. Three frozen selectors failed to connect it.
+is not a policy. Four frozen selectors failed to connect it.
 [TIES composition](docs/PROGRAMMING_GROWTH_TIES.md) restored extractable extras
 (38/38 vs unit-merge 18/38) and scored 31/64 (incumbent 29, oracle 32), recovering
 unique-added 503 and creating leftover 54, then **failed** unique-added 276 and
@@ -25,9 +25,9 @@ unique-added 503 and creating leftover 54, then **failed** unique-added 276 and
 keep, or scale on these 64. Task-vector sign-consensus of these two tails is
 closed. Complementary coverage still exists in the unchanged tails. Do not train
 a new tail. Do not open the original 128-task final. These 64 cases remain
-opened. Serving stays the leftover incumbent extra. The next attempt is the
-[public-feedback-status picker](docs/PROGRAMMING_SELECTOR_V4.md): added only on
-parent extraction-error. Not fitted. No GPU yet.
+opened. Serving stays the leftover incumbent extra. Four frozen selectors and
+two sign-consensus merges did not connect complementary coverage. Do not iterate
+those families on these 64.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -441,6 +441,12 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Selector v4 (public-feedback extraction-error) failed.**
+  Decisions `7bd95df8…`. Score 29/64, unique added 0/3, incumbent 29/29.
+  37/38 extras were execution-error; the one extraction-error was not
+  unique-added. `stop-this-picker`. Not admission. No GPU. These 64 cases
+  remain opened. Serving stays leftover incumbent extra.
 
 - 2026-09-21: **Declared public-feedback-status selector v4.** Added only when
   the parent public-example status is extraction-error; otherwise incumbent.

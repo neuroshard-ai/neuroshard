@@ -346,6 +346,24 @@ def test_workspace_v4_picker_freeze_binds_the_feedback_status_candidate():
     assert picker.pick(view(status='execution-error'))['choice'] == 'incumbent'
 
 
+def test_recorded_v4_screen_keeps_the_failed_gates_and_decision_hash():
+    decisions = ROOT / 'config/experiments/programming-selector-v4-decisions.json'
+    recorded = json.loads((ROOT / 'config/experiments/programming-selector-v4-decisions-hash.json').read_text())
+    score = json.loads((ROOT / 'config/experiments/programming-selector-v4-screen-score.json').read_text())
+    record = json.loads((ROOT / 'config/experiments/programming-selector-v4-screen-record.json').read_text())
+    assert sha256(decisions) == '7bd95df8062d6f0919182f6fe69e341edd0e318025ca4f6e90b24dafe7fe83b1'
+    assert recorded['sha256'] == sha256(decisions)
+    assert record['decisions_sha256'] == sha256(decisions)
+    assert record['status'] == 'stop-this-picker'
+    assert score['passed'] is False
+    assert score['selected_correct'] == 29
+    assert score['unique_added_recovered'] == 0
+    assert score['incumbent_successes_preserved'] == 29
+    assert score['next'] == 'stop-this-picker'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
+
+
 def test_picker_freeze_rejects_a_changed_asset_hash():
     payload = assets()
     spec = spec_for(payload)
