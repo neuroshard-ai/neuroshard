@@ -27,9 +27,10 @@ work. Stop work on these two tails and the opened 64 cases. Do not open the
 original 128-task final. Serving stays the leftover incumbent extra. The next
 experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
 train a new module and its gate together versus a matched no-expansion control,
-and score generated answers on a fresh split. The stage-1 method is frozen and
-not executed. No GPU is authorized. A fresh dataset by itself would not address
-the failure.
+and score generated answers on a fresh split. The stage-1 method is frozen.
+The [CPU execution freeze](docs/LEARNED_INTEGRATION_EXECUTION.md) records 135M
+seed hashes and eight general-retention identities. It is not run. No GPU is
+authorized. A fresh dataset by itself would not address the failure.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -443,6 +444,12 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Recorded the stage-1 CPU execution freeze. Not run. No GPU.**
+  Seed `12fd25f7…` file hashes including `model.safetensors` `5af571cb…`.
+  Eight general-retention identities from Smol-SmolTalk rows 13712, 10926,
+  17751, 6645, 4043, 4233, 20506, 20999. Confirmation closed. Execution freeze
+  `1f838d4d…`. Method freeze now `dc76e6ad…`.
 
 - 2026-09-21: **Froze the learned-integration stage-1 method. No GPU.**
   Last-layer top-1 expert plus trained gate versus matched last-layer MLP

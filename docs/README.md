@@ -20,7 +20,8 @@ retaining the existing generated-answer and retention requirements.
 | [TIES composition](PROGRAMMING_GROWTH_TIES.md) | Preserved 29 incumbent successes, scored 31/64 including leftover 54; failed declared gate. Stopped. |
 | [Elect-sign composition](PROGRAMMING_GROWTH_ELECT.md) | Same tails, sign-election without trim; matched TIES 31/64. Stopped. |
 | [Feedback-status selector](PROGRAMMING_SELECTOR_V4.md) | Added only on parent extraction-error; 29/64, unique added 0/3. Stopped. |
-| [Learned integration](LEARNED_INTEGRATION.md) | Next experiment: last-layer expert and gate versus matched no-expansion control. Method frozen, not executed, no GPU. |
+| [Learned integration](LEARNED_INTEGRATION.md) | Last-layer expert and gate versus matched no-expansion control. Method frozen. |
+| [Stage-1 execution freeze](LEARNED_INTEGRATION_EXECUTION.md) | CPU 135M seed hashes and eight general-retention identities. Not run. No GPU. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |

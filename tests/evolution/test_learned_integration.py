@@ -260,7 +260,7 @@ def test_method_freeze_refuses_launch():
     assert freeze['gpu_launch_authorized'] is False
     assert freeze['train'] is False
     assert saved == freeze
-    assert identity(saved) == '6a21a3dfc3ec47a66365b6e1ce0e8e4dd763da0c67081648a0354db9d0d71657'
+    assert identity(saved) == 'dc76e6ad287131144d1f5060224c9181ad3248186876429a1e25c5c2098233a5'
     digest = bind_method_freeze(freeze, current)
     assert digest == identity(saved)
     with pytest.raises(ValueError, match='does not authorize training or a GPU launch'):

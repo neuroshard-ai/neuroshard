@@ -15,11 +15,10 @@ Machine-readable contract:
 [`learned-integration.json`](../config/experiments/learned-integration.json)
 (`6801d1a2…`). Method freeze:
 [`learned-integration-method.json`](../config/experiments/learned-integration-method.json).
-`gpu_launch_authorized` is false. `train` is false. This document does not
-spend GPUs. Stage 1 is implemented as a last-layer top-1 expert plus a trained
-linear gate, compared with matched-budget training of the original last-layer
-MLP. `src/neuroshard/core/model/moe.py` is not this runtime. Confirmation stays
-closed. General retention document identities wait for a later execution freeze.
+`gpu_launch_authorized` is false. `train` is false on the research contract.
+The [stage-1 CPU execution freeze](LEARNED_INTEGRATION_EXECUTION.md) records
+seed hashes and eight general-retention identities. It still does not spend
+GPUs. Confirmation stays closed.
 
 ## Closed campaign, recorded combination
 
@@ -86,8 +85,9 @@ Seed `20260921`. Remaining MBPP identities after the burned programming-growth
 union (789 ineligible tasks, including the parent 128-task final and the opened
 64). New train 64, replay train 32, code retention 16, development 32,
 confirmation 32. Eight general conversations from the existing programming-expert
-general corpus are reserved for exact parent-response preservation; their
-document identities are recorded in a later execution freeze, not here.
+general corpus are reserved for exact parent-response preservation. Their
+identities are recorded in
+[LEARNED_INTEGRATION_EXECUTION.md](LEARNED_INTEGRATION_EXECUTION.md).
 
 Gate, frozen before confirmation: expansion must beat the matched control by at
 least one full-test success, keep at least the parent's code-retention successes,
@@ -96,9 +96,11 @@ stay within 1.5× control p95 latency and peak memory, with p95 ≤ 90 s.
 
 ## What this specification does not do
 
-The method freeze pins the stage-1 implementation. It does not train. It does
-not authorize a GPU launch. It does not promote a model. It does not reopen the
-original final. It does not reuse the opened 64 as evaluation. It does not
-treat the leftover tail as accepted. It does not replace the 0.4.0 genesis.
-Item 4 remains an independent operator. `scripts/run_learned_integration.py`
-refuses until a later execution freeze authorizes a run.
+The method freeze pins the stage-1 implementation. The CPU execution freeze
+records seed hashes and general-retention identities. Neither trains until a
+committed CPU run. They do not authorize a GPU launch. They do not promote a
+model. They do not reopen the original final. They do not reuse the opened 64
+as evaluation. They do not treat the leftover tail as accepted. They do not
+replace the 0.4.0 genesis. Item 4 remains an independent operator.
+`scripts/run_learned_integration.py` refuses a method-only launch.
+`scripts/run_learned_integration_stage1.py` binds the CPU freeze.
