@@ -13,15 +13,15 @@ See the [retirement record](config/experiments/operated-alpha-retirement.json).
 
 **Current learning work:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
 failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
-passed +4/32 and is the research baseline. The frozen next experiment is
-[second-capability growth](docs/PROGRAMMING_GROWTH.md): another disjoint
-programming tail, trained from the parent, must isolate on its own slice,
-then beat this complete fallback system on new leftover answers, keep the 12
-recorded successes, and still spend at most one extra decode on the unit
-task-vector merge of both tails. Training drops leftover prompts that are
-near-duplicates of the frozen evaluation sets. This does not change the six checklist
-criteria, the 0.4.0 genesis, or item 4. The opened-development 15/32
-diagnostic remains not admission evidence.
+passed +4/32 and is the research baseline. The [second-capability growth](docs/PROGRAMMING_GROWTH.md)
+unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
+on the 38 opened extras found unique added coverage (oracle union +3). That bound
+is not a policy. The [selector evaluation contract](docs/PROGRAMMING_SELECTOR_CONTRACT.md)
+is frozen at `8e39b74`; the first picker is specified as nearest-train Jaccard
+and is **not yet screened**. Do not train another tail. Do not launch GPUs until
+a pinned picker passes its CPU screen and a separate confirmation freeze exists.
+This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
+The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -433,6 +433,28 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-20: **Selector evaluation contract frozen (`8e39b74`).** Independent
+  CPU rescore matched complementarity (incumbent 29, always-added 31, oracle 32).
+  Picker inputs, incumbent-default, CPU qualification and fresh MBPP 511–600
+  confirmation slice are pinned. First picker specified as nearest-train Jaccard
+  (train prompts only; not fitted on opened labels). Not screened. No GPU.
+
+- 2026-09-20: **Programming-tail complementarity: unique added coverage exists.**
+  Inference-only on freeze `dcc6693`, added extras 38/38 extractable. Unique
+  added 3 (tasks 276, 503, 265), unique incumbent 1 (249), both 6, neither 28.
+  Oracle union 32 versus incumbent policy 29 (+3). Not a serving policy, not
+  admission. GPUs retired (~8 min, ~$0.55). Next is selection between the two
+  unchanged tails, not another trained tail. Merge remains failed.
+
+- 2026-09-20: **Programming unit-merge growth failed after isolation passed.**
+  Freeze `dcc6693` trained 256 parent-init updates. Isolation +7/32 on leftover
+  development. Growth lost leftover specialist wins 115/169/249/258, scored
+  −3/32 new leftover answers versus the incumbent extra, and merged extras
+  added zero successes beyond the parent (18/38 extractable). GPUs retired;
+  all five launch attempts included in accounting (~$3). Not promoted. The
+  next measurement is inference-only complementarity of the two unchanged
+  tails on the 38 opened extras.
 
 - 2026-09-20: **Completed item 6 for the funded operated alpha.** The accepted
   graph passes ten deployment requests, ordinary concurrent latency gates and

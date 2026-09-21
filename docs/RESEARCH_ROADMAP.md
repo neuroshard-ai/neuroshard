@@ -3,15 +3,16 @@
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
 The active capability experiment is the leftover
-[fallback baseline](PROGRAMMING_FALLBACK_RESULTS.md) and the frozen
-[second-capability growth comparison](PROGRAMMING_GROWTH.md). Automatic routing
-of the first programming tail failed. The leftover extra-attempt policy passed
-+4/32 and stays fixed. The next run trains a disjoint second tail from the parent, drops leftover
-training prompts that are near-duplicates of the frozen evaluation sets,
-isolates the new tail on its own leftover slice, then asks whether a unit
-task-vector merge of both tails can improve new answers without losing the
-recorded leftover successes. This is
-not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
+[fallback baseline](PROGRAMMING_FALLBACK_RESULTS.md). Automatic routing of the
+first programming tail failed. The leftover extra-attempt policy passed +4/32
+and stays fixed. The [second-capability growth comparison](PROGRAMMING_GROWTH.md)
+isolated a disjoint second tail and then failed unit task-vector merge: the
+merged extra added no leftover successes beyond the parent. Complementarity
+on the opened extras found unique added coverage (oracle union +3 versus the
+incumbent extra). That bound is not a policy. The
+[selector evaluation contract](PROGRAMMING_SELECTOR_CONTRACT.md) is frozen;
+the first picker is specified and not screened. This is not promotion, not a
+0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference
