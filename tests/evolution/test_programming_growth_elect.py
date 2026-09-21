@@ -75,3 +75,30 @@ def test_frozen_elect_execution_binds_the_cpu_merge():
     assert freeze['parent_stopped_ties_commit'] == '9e855852f529514ba7d9eff603e8fff67b15b519'
     for name, digest in freeze['files'].items():
         assert sha256(ROOT / name) == digest
+
+
+def test_recorded_elect_screen_keeps_the_failed_gates():
+    score_path = ROOT / 'config/experiments/programming-growth-elect-screen-score.json'
+    outputs_path = ROOT / 'config/experiments/programming-growth-elect-outputs.json'
+    record = json.loads((ROOT / 'config/experiments/programming-growth-elect-screen-record.json').read_text())
+    score = json.loads(score_path.read_text())
+    assert sha256(score_path) == '7491a09b3814d1c4d4ecb5354d422b8efc27fd17494836e02e76f7c151aa9ba1'
+    assert sha256(outputs_path) == '3d1e80f207149f4b906829553766a9cde4817ff02828d43189e658841a83ddc8'
+    assert record['screen_score_sha256'] == sha256(score_path)
+    assert record['outputs_sha256'] == sha256(outputs_path)
+    assert record['status'] == 'stop-this-composition'
+    assert record['later_method'] == 'do-not-iterate-sign-election-on-these-64'
+    assert record['closed_family'] == 'task-vector-sign-consensus'
+    assert record['matched_ties_task_outcomes'] is True
+    assert score['passed'] is False
+    assert score['elect_correct'] == 31
+    assert score['extractable']['elect'] == 38
+    assert score['unique_added_recovered'] == 1
+    assert score['incumbent_successes_preserved'] == 29
+    assert score['old_successes_preserved'] == 12
+    assert score['next'] == 'stop-this-composition'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
+    assert record['unique_added_recovered_task_ids'] == [503]
+    assert record['unique_added_missed_task_ids'] == [276, 265]
+    assert record['elect_only_task_ids'] == [54]

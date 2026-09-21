@@ -44,7 +44,8 @@ Four g5.xlarge hosts, two-hour /$50 cap, ~7 minutes, then retired. No native
 issuance.
 
 Do not iterate keep or scale on these 64 cases. Trim discarded small unique
-directions that sign-election itself had already made extractable. The next
-composition is [elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md) of the
-same frozen tails, without magnitude trim. These 64 cases remain opened
-development data. Serving stays the leftover incumbent extra.
+directions that sign-election itself had already made extractable. [Elect-sign
+without trim](PROGRAMMING_GROWTH_ELECT.md) then matched this screen, so trim
+was not the unique-added loss. Task-vector sign-consensus of these two tails
+is stopped. These 64 cases remain opened development data. Serving stays the
+leftover incumbent extra.

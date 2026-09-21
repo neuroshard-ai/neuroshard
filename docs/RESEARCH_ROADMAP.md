@@ -16,9 +16,10 @@ nearest-train Jaccard failed its CPU screen and is stopped. Question-and-parent
 is stopped. Failed-parent [AST-shape nearest gold program](PROGRAMMING_SELECTOR_V3.md)
 also failed its CPU screen and is stopped. [TIES composition](PROGRAMMING_GROWTH_TIES.md)
 of the same frozen tails restored extractable extras and scored 31/64, then
-failed unique-added recovery and is stopped. The next attempt is
-[elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md) without magnitude trim.
-This is not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
+failed unique-added recovery and is stopped. [Elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md)
+without magnitude trim then matched TIES on every opened task and is stopped.
+Task-vector sign-consensus of these two tails is closed. This is not promotion,
+not a 0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

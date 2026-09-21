@@ -20,11 +20,12 @@ is not a policy. Three frozen selectors failed to connect it.
 [TIES composition](docs/PROGRAMMING_GROWTH_TIES.md) restored extractable extras
 (38/38 vs unit-merge 18/38) and scored 31/64 (incumbent 29, oracle 32), recovering
 unique-added 503 and creating leftover 54, then **failed** unique-added 276 and
-265. Stop that composition. Do not iterate TIES keep or scale on these 64. The
-next attempt is [elect-sign disjoint mean](docs/PROGRAMMING_GROWTH_ELECT.md) of
-the same frozen tails, without magnitude trim. Do not train a new tail. Do not
-open the original 128-task final. These 64 cases remain opened. Serving stays
-the leftover incumbent extra until a composition passes.
+265. [Elect-sign disjoint mean](docs/PROGRAMMING_GROWTH_ELECT.md) without trim then
+**matched TIES on every opened task**. Stop both. Do not iterate sign-election,
+keep, or scale on these 64. Task-vector sign-consensus of these two tails is
+closed. Complementary coverage still exists in the unchanged tails. Do not train
+a new tail. Do not open the original 128-task final. These 64 cases remain
+opened. Serving stays the leftover incumbent extra.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -438,6 +439,14 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Elect-sign composition failed its screen and matched TIES.**
+  Source `8ea046a`. Extractable 38/38. Full-test 31/64. Unique added 1/3
+  (recovered 503; missed 276, 265). Incumbent 29/29 including 249. Leftover 54
+  again. Same opened-task outcomes as TIES; trim was not the unique-added loss.
+  Score `7491a09b…`. `stop-this-composition`. Close task-vector sign-consensus
+  on these tails. First GPU attempt died on SSH; retry decoded (~10 min) and
+  retired. Not admission. Serving stays leftover incumbent extra.
 
 - 2026-09-21: **Declared elect-sign disjoint mean of the same frozen tails.**
   TIES trim is the step that deletes small unique directions. This keeps
