@@ -53,6 +53,7 @@ This picker does not abstain.
 It reads only `question`. Train prompt assets store texts only. It was not
 fitted on opened diagnosis labels.
 
-A later method needs its own declared experiment. These 64 cases remain opened.
-Do not train a tail or a selector. Do not launch GPUs. The original 128-task
-final stays closed.
+A later method needs its own declared experiment. These 64 cases remain opened
+development history. Do not iterate this family on them. The next experiment is
+[learned integration](LEARNED_INTEGRATION.md). The original 128-task final
+stays closed.

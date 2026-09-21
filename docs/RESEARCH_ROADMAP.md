@@ -2,26 +2,23 @@
 
 The intended product is a sovereign network whose participants train a shared model, serve it, and earn native rewards. The first reference chooses a concrete division of responsibility: NeuroShard-native consensus orders tasks and settlement; correctly executed neural work earns newly issued NEURO. This choice preserves useful-computation mining while giving the ledger a separately testable security assumption.
 
-The active capability experiment is the leftover
-[fallback baseline](PROGRAMMING_FALLBACK_RESULTS.md). Automatic routing of the
-first programming tail failed. The leftover extra-attempt policy passed +4/32
-and stays fixed. The [second-capability growth comparison](PROGRAMMING_GROWTH.md)
-isolated a disjoint second tail and then failed unit task-vector merge: the
-merged extra added no leftover successes beyond the parent. Complementarity
-on the opened extras found unique added coverage (oracle union +3 versus the
-incumbent extra). That bound is not a policy. The
-[selector evaluation contract](PROGRAMMING_SELECTOR_CONTRACT.md) is frozen;
-nearest-train Jaccard failed its CPU screen and is stopped. Question-and-parent
-[Jaccard agreement](PROGRAMMING_SELECTOR_V2.md) also failed its CPU screen and
-is stopped. Failed-parent [AST-shape nearest gold program](PROGRAMMING_SELECTOR_V3.md)
-also failed its CPU screen and is stopped. [TIES composition](PROGRAMMING_GROWTH_TIES.md)
-of the same frozen tails restored extractable extras and scored 31/64, then
-failed unique-added recovery and is stopped. [Elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md)
-without magnitude trim then matched TIES on every opened task and is stopped.
-Task-vector sign-consensus of these two tails is closed. The next attempt is
-the [public-feedback-status picker](PROGRAMMING_SELECTOR_V4.md).
-That picker failed its CPU screen (29/64, unique added 0/3) and is stopped.
-This is not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
+The leftover [fallback baseline](PROGRAMMING_FALLBACK_RESULTS.md) remains the
+research baseline (+4/32). Automatic routing of the first programming tail
+failed. The leftover extra-attempt policy stays fixed because later challengers
+failed acceptance, not because it had the highest observed score. The
+[second-capability growth comparison](PROGRAMMING_GROWTH.md) is closed:
+isolation of a disjoint second tail passed, unit-merge failed, four heuristic
+selectors failed, and two sign-consensus mixes failed their declared gates.
+[TIES](PROGRAMMING_GROWTH_TIES.md) preserved all 29 incumbent successes and
+reached 31/64, including an answer neither original tail produced, then failed
+the declared gate and remains rejected. Complementary coverage still exists in
+those unchanged tails. Four heuristic selectors failing does not establish that
+learned routing cannot work. The next experiment is
+[learned integration of new capacity](LEARNED_INTEGRATION.md): train a new
+module and its gate together, compare against matched-budget training of
+existing capacity, and score generated answers on a fresh split. It is
+specified and not executed. No GPU is authorized. This is not promotion, not a
+0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

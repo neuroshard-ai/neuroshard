@@ -56,15 +56,14 @@ This exact configuration is the research baseline for further growth:
 - one extra decode and a 256 output-token cap
 
 The next growth experiment must compare an expanded system against this
-complete fallback system, not restart against the unmodified parent. Its
-question is:
-
-> Can another admitted capability improve new answers, preserve previously
-> demonstrated successes, and keep the same maximum work per request?
-
-That question is frozen in [PROGRAMMING_GROWTH.md](PROGRAMMING_GROWTH.md).
-Public promotion and opt-in research serving remain separate decisions. The
-0.4.0 genesis is unchanged.
+complete fallback system, not restart against the unmodified parent. The
+[second-capability growth](PROGRAMMING_GROWTH.md) campaign that asked that
+question is closed: isolation passed, then independent-tail merges and
+heuristic selectors failed their declared gates. This leftover extra remains
+the research baseline because those challengers failed acceptance. The next
+experiment is [learned integration](LEARNED_INTEGRATION.md). Public promotion
+and opt-in research serving remain separate decisions. The 0.4.0 genesis is
+unchanged.
 
 ## Resources
 

@@ -13,21 +13,22 @@ See the [retirement record](config/experiments/operated-alpha-retirement.json).
 
 **Current learning work:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
 failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
-passed +4/32 and is the research baseline. The [second-capability growth](docs/PROGRAMMING_GROWTH.md)
-unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
-on the 38 opened extras found unique added coverage (oracle union +3). That bound
-is not a policy. Four frozen selectors failed to connect it.
-[TIES composition](docs/PROGRAMMING_GROWTH_TIES.md) restored extractable extras
-(38/38 vs unit-merge 18/38) and scored 31/64 (incumbent 29, oracle 32), recovering
-unique-added 503 and creating leftover 54, then **failed** unique-added 276 and
-265. [Elect-sign disjoint mean](docs/PROGRAMMING_GROWTH_ELECT.md) without trim then
-**matched TIES on every opened task**. Stop both. Do not iterate sign-election,
-keep, or scale on these 64. Task-vector sign-consensus of these two tails is
-closed. Complementary coverage still exists in the unchanged tails. Do not train
-a new tail. Do not open the original 128-task final. These 64 cases remain
-opened. Serving stays the leftover incumbent extra. Four frozen selectors and
-two sign-consensus merges did not connect complementary coverage. Do not iterate
-those families on these 64.
+passed +4/32 and remains the research baseline because later challengers failed
+acceptance, not because it had the highest observed score. The
+[second-capability growth](docs/PROGRAMMING_GROWTH.md) campaign is **closed**:
+isolation passed (+7/32), unit-merge failed, four heuristic selectors failed,
+and two sign-consensus mixes failed their declared gates.
+[TIES](docs/PROGRAMMING_GROWTH_TIES.md) preserved all 29 incumbent successes
+and reached 31/64, including leftover 54 which neither original tail produced,
+then failed unique-added 276 and 265. That is partial combination, not
+acceptance. Complementary coverage still exists in the unchanged tails. Four
+heuristic selectors failing does not establish that learned routing cannot
+work. Stop work on these two tails and the opened 64 cases. Do not open the
+original 128-task final. Serving stays the leftover incumbent extra. The next
+experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
+train a new module and its gate together versus a matched no-expansion control,
+and score generated answers on a fresh split. It is specified and not executed.
+No GPU is authorized. A fresh dataset by itself would not address the failure.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -441,6 +442,15 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Closed independent-tail programming growth. Specified learned
+  integration.** Stop the two tails and the opened 64 cases. TIES remains
+  rejected after partial combination (29 incumbent preserved, 31/64, leftover
+  54). Incumbent extra stays the research baseline because challengers failed
+  acceptance. Next experiment trains a new expert and its gate together versus
+  a matched no-expansion control on unused MBPP IDs. Contract
+  `config/experiments/learned-integration.json` (`6801d1a2…`). No GPU. Not
+  admission. Original 128-task final stays closed.
 
 - 2026-09-21: **Selector v4 (public-feedback extraction-error) failed.**
   Decisions `7bd95df8…`. Score 29/64, unique added 0/3, incumbent 29/29.

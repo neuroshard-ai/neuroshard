@@ -1,9 +1,10 @@
 # Programming selector evaluation contract
 
-**Status: contract frozen; picker implementation not yet selected or scored.**
-This contract authorizes preparation of a CPU screen. It does not launch GPUs,
+**Status: contract frozen; all four pickers failed their screens. Campaign closed.**
+This contract authorized preparation of CPU screens. It did not launch GPUs,
 train a tail or a selector, admit a model, or change the failed merge result.
-The original 128-task programming-expert final remains closed.
+The original 128-task programming-expert final remains closed. The next
+experiment is [learned integration](LEARNED_INTEGRATION.md).
 
 Machine-readable contract:
 [`programming-selector-contract.json`](../config/experiments/programming-selector-contract.json).

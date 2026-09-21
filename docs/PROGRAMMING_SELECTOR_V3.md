@@ -32,6 +32,6 @@ training gold program. Unparseable parents and ties default to incumbent.
 Question, public example and public feedback were unused. Not fitted on opened
 labels.
 
-Do not iterate this family on these 64 cases. Do not train a tail or a
-selector. Do not launch GPUs. These 64 cases remain opened development data.
-Serving stays the leftover incumbent extra.
+Do not iterate this family on these 64 cases. They remain opened development
+history. Serving stays the leftover incumbent extra. The next experiment is
+[learned integration](LEARNED_INTEGRATION.md).

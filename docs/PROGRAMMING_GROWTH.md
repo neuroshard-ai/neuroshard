@@ -1,18 +1,20 @@
 # Second admitted programming capability
 
-**Status: unit-merge executed and failed. Not promoted.**
+**Status: campaign closed. Not promoted.**
 Isolation of the added tail passed leftover development 32. Growth against the
 complete leftover fallback system failed. Complementarity of the unchanged tails
-on the 38 opened extras found unique added coverage. The
-[selector evaluation contract](PROGRAMMING_SELECTOR_CONTRACT.md) is frozen
-(`8e39b74`). Picker `963de13` failed its CPU screen (30/64) and is stopped. The
-[v2 agreement picker](PROGRAMMING_SELECTOR_V2.md) failed (29/64). The
-[v3 AST-shape picker](PROGRAMMING_SELECTOR_V3.md) failed (29/64). The original
+on the 38 opened extras found unique added coverage. Four frozen selectors and
+two sign-consensus merges failed their declared gates. Stop work on these two
+tails and the opened 64 cases. The leftover incumbent extra remains the research
+baseline because challengers failed acceptance, not because it had the highest
+observed score. The next experiment is
+[learned integration of new capacity](LEARNED_INTEGRATION.md). The original
 128-task final stays closed. This is not an upgrade of the 0.4.0 genesis.
 
 The leftover [fallback result](PROGRAMMING_FALLBACK_RESULTS.md) remains the
-complete system to beat: parent plus the incumbent tail `46bd2e76…`, public-example
-gate, one extra decode, 256 output tokens.
+research baseline: parent plus the incumbent tail `46bd2e76…`, public-example
+gate, one extra decode, 256 output tokens. Challengers of that baseline failed
+acceptance. They are not discarded because a later mix scored 31/64.
 
 Measured freeze `dcc6693`, plan `c5662eab…`, added checkpoint `3abb54ee…`.
 
@@ -58,19 +60,23 @@ Both tails: 169, 258, 115, 224, 353, 96. Neither: 28.
 
 Parent full-test 22/64. Incumbent policy 29. Oracle union (always pick a
 successful tail) 32, gain +3 versus incumbent. That bound is **not** a serving
-policy. `useful_additional_coverage` is true; `next` is selection, not another
-trained tail.
+policy. `useful_additional_coverage` is true. Selection among these frozen
+tails is closed. The next experiment learns integration during training.
 
-The serving hypothesis remains `parent → public example → one tail`. The frozen
-selector contract uses only the question, failed parent program, public example
-and normalized public-example feedback. Hidden tests stay hidden. Default is
-incumbent. Question-only Jaccard, question+parent agreement, failed-parent
-AST-shape nearest gold program, and public-feedback extraction-error all failed
-their CPU screens and are stopped. Complementary coverage still exists in the
-two tails; these selectors did not connect it. TIES composition then failed its
-screen (31/64, unique added 1/3) and is stopped. Elect-sign without trim matched
-that screen and is stopped. These 64 cases remain opened development data.
-Serving stays the leftover incumbent extra. See
+The serving hypothesis for that campaign was `parent → public example → one tail`.
+The frozen selector contract uses only the question, failed parent program,
+public example and normalized public-example feedback. Hidden tests stay hidden.
+Default is incumbent. Question-only Jaccard, question+parent agreement,
+failed-parent AST-shape nearest gold program, and public-feedback
+extraction-error all failed their CPU screens and are stopped. Complementary
+coverage still exists in the two tails; these selectors did not connect it.
+That does not establish that learned routing cannot work. TIES composition
+preserved all 29 incumbent successes, scored 31/64, created leftover 54, then
+failed its declared gate (unique added 1/3) and is stopped. Elect-sign without
+trim matched that screen and is stopped. These 64 cases remain opened
+development history and are not reusable as evaluation. Serving stays the
+leftover incumbent extra. The next experiment trains a new module and its gate
+together; see [LEARNED_INTEGRATION.md](LEARNED_INTEGRATION.md),
 [PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md),
 [PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md),
 [PROGRAMMING_SELECTOR_V2.md](PROGRAMMING_SELECTOR_V2.md),

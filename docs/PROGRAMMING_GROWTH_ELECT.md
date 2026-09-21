@@ -45,4 +45,5 @@ issuance.
 
 Do not iterate sign-election, keep, or scale on these 64 cases. Task-vector
 sign-consensus of these two tails is stopped. These 64 cases remain opened
-development data. Serving stays the leftover incumbent extra.
+development history. Serving stays the leftover incumbent extra. The next
+experiment is [learned integration](LEARNED_INTEGRATION.md).

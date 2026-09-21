@@ -31,6 +31,8 @@ Select `added` only when the parent public-example feedback status is
 Question, failed parent program, and public example text were unused. Not
 fitted on opened labels.
 
-Do not iterate this fail-class map on these 64 cases. Do not train a tail or a
-selector. Do not launch GPUs. These 64 cases remain opened development data.
-Serving stays the leftover incumbent extra.
+Do not iterate this fail-class map on these 64 cases. Four heuristic selectors
+failing does not establish that learned routing cannot work. These 64 cases
+remain opened development history. Serving stays the leftover incumbent extra.
+The next experiment is [learned integration](LEARNED_INTEGRATION.md). No GPU
+until that specification authorizes one.

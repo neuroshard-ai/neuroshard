@@ -59,7 +59,15 @@ An [operated four-worker prototype](LOCAL_TRAINING_WINDOWS_RESULTS.md) implement
 
 The [batched shared-gradient comparison](BATCHED_LEARNING_STUDY_RESULTS.md) supports a different numerical candidate: one shared AdamW update rule, globally normalized target loss and PowerSGD-compressed gradients with error feedback. With efficient batching on both controls, two GPUs complete 1.7B full-model training 1.45× faster than one GPU while passing the declared narrow quality/retention screen. Allocated GPU seconds increase by 38%. Both workers still hold the full model, and recovery of this method's optimizer and compression state remains untested. This candidate should first establish continuation, recovery and pooled memory before native integration or growth.
 
-Do not accept arbitrary stale updates or assign reward in proportion to gradient norm. Adding asynchronous windows, optimizer momentum, sparse experts or a changed numerical profile requires a separately tested state transition. Sparse experts may eventually reduce active compute per token, but routing, expert availability, shared layers, load imbalance and training verification remain obligations. Merely creating more experts does not solve them.
+Do not accept arbitrary stale updates or assign reward in proportion to
+gradient norm. Adding asynchronous windows, optimizer momentum, sparse experts
+or a changed numerical profile requires a separately tested state transition.
+Sparse experts may eventually reduce active compute per token, but routing,
+expert availability, shared layers, load imbalance and training verification
+remain obligations. Merely creating more experts does not solve them. The next
+learning experiment that investigates sparse added capacity is
+[learned integration](LEARNED_INTEGRATION.md); it does not relax these
+obligations.
 
 ## Resource admission before growth
 

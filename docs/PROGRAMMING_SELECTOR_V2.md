@@ -29,5 +29,6 @@ Select `added` only when nearest-train Jaccard on **both** the question and the
 failed parent program strictly prefer added. Disagreement defaults to
 incumbent. Public-example feedback was unused. Not fitted on opened labels.
 
-A later method needs its own declared experiment. Do not train a tail or a
-selector. Do not launch GPUs. These 64 cases remain opened development data.
+A later method needs its own declared experiment. Do not iterate this family
+on these 64 cases. They remain opened development history. The next experiment
+is [learned integration](LEARNED_INTEGRATION.md).

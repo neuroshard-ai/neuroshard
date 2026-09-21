@@ -36,7 +36,10 @@ saved parent, incumbent and added traces. Required versus measured:
 
 Parent 22, incumbent 29, always-added 31, oracle union 32. TIES scored 31: it
 recovered unique-added 503, kept unique-incumbent 249, and created leftover
-task 54 which neither frozen tail had. It did not recover 276 or 265. `next` is
+task 54 which neither frozen tail had. It did not recover 276 or 265. That is
+partial combination. It failed the declared gate and remains rejected. The
+incumbent extra remains the research baseline because this challenger failed
+acceptance, not because 31 was lower than 29. `next` is
 `stop-this-composition`. `admission_evidence` false.
 
 Score `86a6a489…`, extras `3de80b42…`, record `29887a86…`. Source `9e85585`.
@@ -47,5 +50,6 @@ Do not iterate keep or scale on these 64 cases. Trim discarded small unique
 directions that sign-election itself had already made extractable. [Elect-sign
 without trim](PROGRAMMING_GROWTH_ELECT.md) then matched this screen, so trim
 was not the unique-added loss. Task-vector sign-consensus of these two tails
-is stopped. These 64 cases remain opened development data. Serving stays the
-leftover incumbent extra.
+is stopped. These 64 cases remain opened development history. Serving stays
+the leftover incumbent extra. The next experiment is
+[learned integration](LEARNED_INTEGRATION.md).
