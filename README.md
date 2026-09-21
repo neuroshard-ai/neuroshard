@@ -18,11 +18,15 @@ a 1.7B parent plus checked extra shards, at most one extra decode per
 request. The leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 is the research baseline (+4/32 versus parent and parent repair). Independent
 tails plus heuristic integration is closed
-([programming growth](docs/PROGRAMMING_GROWTH.md)). The next experiment is
+([programming growth](docs/PROGRAMMING_GROWTH.md)). The subsequent experiment was
 [learned integration of new capacity](docs/LEARNED_INTEGRATION.md). Stage-1
 135M [failed development](docs/LEARNED_INTEGRATION_RESULTS.md) (expansion 0/32,
-control 5/32). Confirmation stays closed. The next experiment is
-[independent hosting](docs/INDEPENDENT_HOSTING.md) for checklist item 4.
+control 5/32). Confirmation was never opened. A separate
+[staged-integration candidate](docs/STAGED_INTEGRATION.md) trains the expert,
+then its gate, with a 135M CPU-only arithmetic mechanism study; it has not run
+and is not a coding or assistant-capability result. No GPU is authorized.
+[Independent hosting](docs/INDEPENDENT_HOSTING.md) remains the separate item 4
+track and requires four real independent operators.
 Not a public promoted model.
 
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct

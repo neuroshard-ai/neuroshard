@@ -19,8 +19,13 @@ module and its gate together, compare against matched-budget training of
 existing capacity, and score generated answers on a fresh split. Stage 1 ran
 on CPU and [failed development](LEARNED_INTEGRATION_RESULTS.md): expansion
 0/32 versus control 5/32, with 8/8 general parent match. Confirmation stays
-closed. No GPU is authorized. This is not promotion, not a 0.4.0 upgrade, and
-not a new consensus mechanism. The next experiment is
+closed and was never opened. No GPU is authorized. This is not promotion,
+a 0.4.0 upgrade, or a new consensus mechanism. The separate
+[staged-integration candidate](STAGED_INTEGRATION.md) trains an expert first,
+then its gate, on a new 135M CPU arithmetic mechanism set. It saves checkpoints
+and routes, protects individual answers, isolates process memory and measures
+actual training expenditure. It has not run and is not an assistant-capability
+result. The separate systems experiment remains
 [independent hosting](INDEPENDENT_HOSTING.md) of the accepted graph: a CPU
 protocol preflight, then an independent-operator soak that one AWS account
 cannot satisfy. Item 4 remains open.

@@ -24,14 +24,18 @@ then failed unique-added 276 and 265. That is partial combination, not
 acceptance. Complementary coverage still exists in the unchanged tails. Four
 heuristic selectors failing does not establish that learned routing cannot
 work. Stop work on these two tails and the opened 64 cases. Do not open the
-original 128-task final. Serving stays the leftover incumbent extra. The next
-experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
+original 128-task final. Serving stays the leftover incumbent extra. The subsequent
+experiment was [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
 train a new module and its gate together versus a matched no-expansion control,
 and score generated answers on a fresh split. The stage-1 method is frozen. The 135M CPU run
 [failed development](docs/LEARNED_INTEGRATION_RESULTS.md): expansion 0/32,
-control 5/32, general 8/8. Confirmation stays closed. No GPU is authorized.
+control 5/32, general 8/8. Confirmation was never opened. No GPU is authorized.
 Serving stays the leftover incumbent extra. A fresh dataset by itself would
-not address the failure. The next experiment is
+not address the failure. The new [staged-integration candidate](docs/STAGED_INTEGRATION.md)
+trains an expert with guaranteed access, freezes it, then trains its gate. Its
+separate 135M CPU arithmetic mechanism contract includes checkpoints, route
+traces, per-answer preservation, isolated peak memory and actual CPU spend.
+It has not run and cannot mark a checklist item complete. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
 soak that requires four independently administered operators. This operator's
