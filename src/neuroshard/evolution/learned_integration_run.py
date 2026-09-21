@@ -242,12 +242,20 @@ def load_general_conversations(path, identities):
         if row.get('kind') != 'general':
             raise ValueError('Frozen general identity is not a general conversation')
         messages = list(row['messages'])
-        if not messages or messages[-1]['role'] != 'assistant':
-            raise ValueError('General conversation must end in an assistant answer')
+        if not messages:
+            raise ValueError('Empty general conversation')
+        if messages[-1]['role'] == 'assistant':
+            reference = messages[-1]['content']
+            prompt = messages[:-1]
+        else:
+            prompt = messages
+            reference = row.get('reference')
+        if not prompt or prompt[-1]['role'] not in {'user', 'system'}:
+            raise ValueError('General generation prompt must end on a non-assistant turn')
         conversations.append({
             **item,
-            'messages': messages[:-1],
-            'reference': messages[-1]['content'],
+            'messages': prompt,
+            'reference': reference,
         })
     return conversations
 

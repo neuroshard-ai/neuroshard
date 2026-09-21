@@ -90,6 +90,18 @@ def test_load_general_conversations_uses_frozen_identities(tmp_path):
     assert rows[0]['reference'] == 'Hello'
 
 
+def test_load_general_conversations_accepts_prompt_only_rows(tmp_path):
+    wanted = [{'id': 'ddd', 'row': 3, 'group': 'constraints'}]
+    path = tmp_path / 'train.jsonl'
+    path.write_text(json.dumps({
+        'id': 'ddd', 'kind': 'general', 'reference': 'gold',
+        'messages': [{'role': 'user', 'content': 'Name three things.'}],
+    }) + '\n')
+    rows = load_general_conversations(path, wanted)
+    assert rows[0]['messages'] == [{'role': 'user', 'content': 'Name three things.'}]
+    assert rows[0]['reference'] == 'gold'
+
+
 def test_score_refuses_confirmation():
     with pytest.raises(ValueError, match='Confirmation remains closed'):
         refuse_confirmation('confirmation')
