@@ -20,7 +20,7 @@ is the research baseline (+4/32 versus parent and parent repair). Independent
 tails plus heuristic integration is closed
 ([programming growth](docs/PROGRAMMING_GROWTH.md)). The next experiment is
 [learned integration of new capacity](docs/LEARNED_INTEGRATION.md). That is
-specified, not executed, and not a public promoted model.
+method-frozen, not executed, and not a public promoted model.
 
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
 with a 4,608-parameter adapter, native replay, and paid inference. It is not

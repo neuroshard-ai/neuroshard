@@ -17,8 +17,9 @@ learned routing cannot work. The next experiment is
 [learned integration of new capacity](LEARNED_INTEGRATION.md): train a new
 module and its gate together, compare against matched-budget training of
 existing capacity, and score generated answers on a fresh split. It is
-specified and not executed. No GPU is authorized. This is not promotion, not a
-0.4.0 upgrade, and not a new consensus mechanism.
+specified and not executed. The stage-1 method is now frozen. No GPU is
+authorized. This is not promotion, not a 0.4.0 upgrade, and not a new consensus
+mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

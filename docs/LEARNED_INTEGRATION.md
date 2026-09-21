@@ -1,6 +1,6 @@
 # Learned integration of new capacity
 
-**Status: specified, not executed. No GPU. Not admission.**
+**Status: method frozen, not executed. No GPU. Not admission.**
 The [programming-growth campaign](PROGRAMMING_GROWTH.md) trained two last-four-layer
 tails independently and then tried inexpensive selectors or weight arithmetic.
 Those challengers failed their declared gates. Complementary coverage still
@@ -13,8 +13,13 @@ leftover cases remain development history.
 
 Machine-readable contract:
 [`learned-integration.json`](../config/experiments/learned-integration.json)
-(`6801d1a2…`). `gpu_launch_authorized` is false. `train` is false. This document
-does not spend GPUs.
+(`6801d1a2…`). Method freeze:
+[`learned-integration-method.json`](../config/experiments/learned-integration-method.json).
+`gpu_launch_authorized` is false. `train` is false. This document does not
+spend GPUs. Stage 1 is implemented as a last-layer top-1 expert plus a trained
+linear gate, compared with matched-budget training of the original last-layer
+MLP. `src/neuroshard/core/model/moe.py` is not this runtime. Confirmation stays
+closed. General retention document identities wait for a later execution freeze.
 
 ## Closed campaign, recorded combination
 
@@ -46,9 +51,11 @@ answers, permissionless operation, or NeuroShard serving latency.
 1. **Learn integration during training.** Freeze accepted modules. Add one
    expert, initialized as a copy of the incumbent expert in the last decoder
    layer. Train that expert and a linear token-to-expert gate on new examples
-   plus replay of earlier training data. Still evaluate retention: changing
-   routing can break answers without changing their weights. Active experts per
-   token stay at one.
+   plus replay of earlier training data. Training uses hard Gumbel-softmax so
+   exactly one expert is selected per token while the gate still receives a
+   gradient. Serving uses argmax top-1 and does not evaluate the unselected
+   expert. Still evaluate retention: changing routing can break answers without
+   changing their weights. Active experts per token stay at one.
 
 2. **Use a meaningful control.** Continue training the existing last-layer MLP
    without expansion, on the same new and replay examples, matched steps,
@@ -89,7 +96,9 @@ stay within 1.5× control p95 latency and peak memory, with p95 ≤ 90 s.
 
 ## What this specification does not do
 
-It does not train. It does not authorize a GPU launch. It does not promote a
-model. It does not reopen the original final. It does not reuse the opened 64
-as evaluation. It does not treat the leftover tail as accepted. It does not
-replace the 0.4.0 genesis. Item 4 remains an independent operator.
+The method freeze pins the stage-1 implementation. It does not train. It does
+not authorize a GPU launch. It does not promote a model. It does not reopen the
+original final. It does not reuse the opened 64 as evaluation. It does not
+treat the leftover tail as accepted. It does not replace the 0.4.0 genesis.
+Item 4 remains an independent operator. `scripts/run_learned_integration.py`
+refuses until a later execution freeze authorizes a run.

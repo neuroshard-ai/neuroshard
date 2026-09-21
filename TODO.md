@@ -27,8 +27,9 @@ work. Stop work on these two tails and the opened 64 cases. Do not open the
 original 128-task final. Serving stays the leftover incumbent extra. The next
 experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
 train a new module and its gate together versus a matched no-expansion control,
-and score generated answers on a fresh split. It is specified and not executed.
-No GPU is authorized. A fresh dataset by itself would not address the failure.
+and score generated answers on a fresh split. The stage-1 method is frozen and
+not executed. No GPU is authorized. A fresh dataset by itself would not address
+the failure.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -442,6 +443,12 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Froze the learned-integration stage-1 method. No GPU.**
+  Last-layer top-1 expert plus trained gate versus matched last-layer MLP
+  training. Confirmation closed. General document identities wait for a later
+  execution freeze. `scripts/run_learned_integration.py` refuses launch.
+  Method freeze `6a21a3df…`.
 
 - 2026-09-21: **Closed independent-tail programming growth. Specified learned
   integration.** Stop the two tails and the opened 64 cases. TIES remains
