@@ -108,3 +108,9 @@ def test_freeze_except_keeps_unrelated_weights_fixed():
 
 def test_max_length_is_frozen():
     assert MAX_LENGTH == 768
+
+
+def test_repo_root_finds_sandbox():
+    from neuroshard.evolution.learned_integration_run import repo_root, sandbox_check
+    assert (repo_root() / 'scripts' / 'programming_sandbox.py').is_file()
+    assert callable(sandbox_check())

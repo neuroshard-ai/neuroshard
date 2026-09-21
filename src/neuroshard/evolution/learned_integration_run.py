@@ -30,8 +30,16 @@ MAX_LENGTH = 768
 ACTIVE_EXPERTS_PER_TOKEN = 1
 
 
+def repo_root():
+    marker = Path('scripts/programming_sandbox.py')
+    for parent in Path(__file__).resolve().parents:
+        if (parent / marker).is_file():
+            return parent
+    raise FileNotFoundError('programming_sandbox.py is not next to this source tree')
+
+
 def sandbox_check():
-    path = Path(__file__).resolve().parents[2] / 'scripts' / 'programming_sandbox.py'
+    path = repo_root() / 'scripts' / 'programming_sandbox.py'
     spec = importlib.util.spec_from_file_location('programming_sandbox', path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
