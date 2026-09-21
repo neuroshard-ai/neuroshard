@@ -1,7 +1,9 @@
 # Equal extra-attempt programming fallback
 
 **Status: leftover comparison passed. This configuration is the research
-baseline for further growth. Not promoted.**
+baseline because later challengers failed acceptance. Independent-tail
+growth is closed ([PROGRAMMING_GROWTH.md](PROGRAMMING_GROWTH.md)). The next
+experiment is [learned integration](LEARNED_INTEGRATION.md). Not promoted.**
 The original 128-task final stays closed. No further training was run.
 
 The [leftover result](PROGRAMMING_FALLBACK_RESULTS.md) is +4/32 versus both the

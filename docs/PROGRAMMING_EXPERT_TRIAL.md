@@ -167,7 +167,10 @@ is the [equal extra-attempt fallback comparison](PROGRAMMING_FALLBACK_COMPARISON
 Its leftover result passed +4/32 versus parent and parent repair without
 opening this trial's final or promoting the tail; see
 [PROGRAMMING_FALLBACK_RESULTS.md](PROGRAMMING_FALLBACK_RESULTS.md). That
-fallback configuration is the research baseline for further growth.
+fallback configuration is the research baseline for further growth. The
+[second-capability growth](PROGRAMMING_GROWTH.md) campaign that followed is
+closed. The next experiment is
+[learned integration of new capacity](LEARNED_INTEGRATION.md).
 
 An independent CPU rescore exactly matched the GPU host. All four temporary
 instances, their volumes and network interfaces are gone; the temporary

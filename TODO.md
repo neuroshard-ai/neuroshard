@@ -12,22 +12,41 @@ the separate ledger stays scheduled through September 26 for expiry/refunds.
 See the [retirement record](config/experiments/operated-alpha-retirement.json).
 
 **Current learning work:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
-tests whether a contributed neural tail improves executable answers from the
-complete automatically routed assistant while preserving general responses
-and bounding serving latency. This extends capability evidence beyond the
-completed fact-learning demonstration; it does not change these six criteria.
-The first candidate failed development (12/32 original versus 11/32 automatic,
-24/24 general responses preserved); its final remains unopened. The
-[equal extra-attempt fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
-passed on leftover MBPP tasks (+4/32 versus the first parent attempt and versus
-parent repair) without opening the original final or promoting the tail. See
-the [result](docs/PROGRAMMING_FALLBACK_RESULTS.md). That configuration is the
-research baseline for further growth: another admitted capability must improve
-new answers, preserve these successes, and keep the same maximum work per
-request. Zero unique losses here are selection protection, not learned
-retention; the public example is an imperfect gate. This is not promotion of
-the accepted graph. The opened-development 15/32 diagnostic remains
-not admission evidence.
+failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
+passed +4/32 and remains the research baseline because later challengers failed
+acceptance, not because it had the highest observed score. The
+[second-capability growth](docs/PROGRAMMING_GROWTH.md) campaign is **closed**:
+isolation passed (+7/32), unit-merge failed, four heuristic selectors failed,
+and two sign-consensus mixes failed their declared gates.
+[TIES](docs/PROGRAMMING_GROWTH_TIES.md) preserved all 29 incumbent successes
+and reached 31/64, including leftover 54 which neither original tail produced,
+then failed unique-added 276 and 265. That is partial combination, not
+acceptance. Complementary coverage still exists in the unchanged tails. Four
+heuristic selectors failing does not establish that learned routing cannot
+work. Stop work on these two tails and the opened 64 cases. Do not open the
+original 128-task final. Serving stays the leftover incumbent extra. The subsequent
+experiment was [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
+train a new module and its gate together versus a matched no-expansion control,
+and score generated answers on a fresh split. The stage-1 method is frozen. The 135M CPU run
+[failed development](docs/LEARNED_INTEGRATION_RESULTS.md): expansion 0/32,
+control 5/32, general 8/8. Confirmation was never opened. No GPU is authorized.
+Serving stays the leftover incumbent extra. A fresh dataset by itself would
+not address the failure. The new [staged-integration candidate](docs/STAGED_INTEGRATION.md)
+trains an expert with guaranteed access, freezes it, then trains its gate. Its
+separate 135M CPU arithmetic mechanism contract includes checkpoints, route
+traces, per-answer preservation, isolated peak memory and actual CPU spend.
+It [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md) on an unsuitable
+output-format baseline. The separate [staged-answering study](docs/STAGED_ANSWERING.md)
+uses complete-answer scoring and fresh operands, with unchanged training and gates.
+Its [execution timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert and
+63 gate updates. The baseline protected 15 answers; candidate quality was not scored.
+Neither can mark a checklist item complete. The separate systems track is
+[independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
+equal-power genesis and stranger-provider join, then an independent-operator
+soak that requires four independently administered operators. This operator's
+AWS account cannot satisfy that criterion. No GPU is authorized.
+This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
+The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
 only when all of its completion criteria have a committed implementation and
 reproducible evidence. Changes to these criteria must be recorded explicitly,
@@ -282,15 +301,15 @@ before the affected work, rather than changing the target after a result.
 
 - [ ] **4. Reliable permissionless shard hosting**
 
-  Current development: [operated alpha admission and recovery](docs/OPERATED_ALPHA.md)
-  replaces unaccepted audit offers with atomic work reservation against funded
-  standing services, charges occupied capacity, and adds provider maintenance
-  and native recovery from advertised spares. Its committed CPU native preflight
-  passes both automatic owner replacements, nine complete numerical replays and
-  exact replay of 620 blocks and 143 transactions. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
-  passed its ordinary and automatic process-recovery gates; its GPU service
-  retired on September 20. The independent availability soak remains open. AWS machines under our account
-  do not satisfy the independent-administration criterion below.
+  Current development: [independent hosting](docs/INDEPENDENT_HOSTING.md) freezes
+  the remaining item-4 soak. The CPU protocol preflight uses four equal genesis
+  validators (each share strictly below one third) and a non-genesis provider
+  join without SSH. The independent-operator soak stays unauthorized until four
+  independently administered operators exist. Voting share is aggregated by
+  administrator, not by key. AWS machines under our account do not satisfy that
+  criterion. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
+  remains the last one-administrator hosting evidence; its GPU service retired
+  on September 20.
 
   Done when independent providers can discover work, acquire assigned shards,
   join, leave and replace unavailable providers through the protocol. Demonstrate
@@ -312,8 +331,10 @@ before the affected work, rather than changing the target after a result.
   partitions through certificate-pinned HTTPS, matching the fixed-group
   executor for ordinary and multi-turn fixtures. Providers discover their own
   native assignments, restore committed partitions without SSH and jointly
-  sign the complete response. Operated LLM recovery has since passed below; the availability soak
-  and independent administration remain required. See
+  sign the complete response.   Operated LLM recovery has since passed below. The item-4
+  [independent hosting](docs/INDEPENDENT_HOSTING.md) freeze now specifies the CPU
+  protocol preflight (four equal validators, stranger-provider join). The
+  independent-operator soak remains unauthorized. See
   [the provider-market design](docs/PROVIDER_MARKET_RFC.md).
 
   The subsequent [native provider preflight](docs/PROVIDER_NATIVE_PREFLIGHT.md)
@@ -439,6 +460,131 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Revised independent-hosting soak to four operators. No GPU.**
+  Three operators cannot each hold strictly less than one third of voting power.
+  Soak requires four independently administered operators and aggregates share
+  by administrator. Replaces `5dc22aab…`. Contract `8213fdfd…`. Soak unauthorized.
+  Not admission.
+
+- 2026-09-21: **Froze independent hosting for item 4. No GPU.**
+  CPU protocol: four equal genesis validators, stranger-provider join, no key
+  may hold the complete backbone. Independent soak unauthorized. AWS under one
+  account does not satisfy. Contract `5dc22aab…`. Not admission.
+
+- 2026-09-21: **Stage-1 learned integration failed development. Stop. No GPU.**
+  Expansion 0/32, control 5/32 (517, 733, 807, 896, 924), parent 0/32,
+  general 8/8, retention 0=0. Serving budget passed. Confirmation closed.
+  Score `07d4ac47…`. Execution freeze `e87456a6…`. Not admission.
+
+- 2026-09-21: **Froze the stage-1 CPU train/score loop. Not scored. No GPU.**
+  Last-layer expert plus gate versus matched last-layer MLP, 128 teacher-forced
+  steps on unused MBPP, then generated development/retention/general only.
+  Confirmation closed. Execution freeze `e87456a6…`.
+
+- 2026-09-21: **Recorded the stage-1 CPU execution freeze. Not run. No GPU.**
+  Seed `12fd25f7…` file hashes including `model.safetensors` `5af571cb…`.
+  Eight general-retention identities from Smol-SmolTalk rows 13712, 10926,
+  17751, 6645, 4043, 4233, 20506, 20999. Confirmation closed. Execution freeze
+  `1f838d4d…`. Method freeze now `dc76e6ad…`.
+
+- 2026-09-21: **Froze the learned-integration stage-1 method. No GPU.**
+  Last-layer top-1 expert plus trained gate versus matched last-layer MLP
+  training. Confirmation closed. General document identities wait for a later
+  execution freeze. `scripts/run_learned_integration.py` refuses launch.
+  Method freeze `6a21a3df…`.
+
+- 2026-09-21: **Closed independent-tail programming growth. Specified learned
+  integration.** Stop the two tails and the opened 64 cases. TIES remains
+  rejected after partial combination (29 incumbent preserved, 31/64, leftover
+  54). Incumbent extra stays the research baseline because challengers failed
+  acceptance. Next experiment trains a new expert and its gate together versus
+  a matched no-expansion control on unused MBPP IDs. Contract
+  `config/experiments/learned-integration.json` (`6801d1a2…`). No GPU. Not
+  admission. Original 128-task final stays closed.
+
+- 2026-09-21: **Selector v4 (public-feedback extraction-error) failed.**
+  Decisions `7bd95df8…`. Score 29/64, unique added 0/3, incumbent 29/29.
+  37/38 extras were execution-error; the one extraction-error was not
+  unique-added. `stop-this-picker`. Not admission. No GPU. These 64 cases
+  remain opened. Serving stays leftover incumbent extra.
+
+- 2026-09-21: **Declared public-feedback-status selector v4.** Added only when
+  the parent public-example status is extraction-error; otherwise incumbent.
+  A priori fail-class rule on the unused allowed feedback field. Not fitted.
+  CPU screen not yet scored. No GPU.
+
+- 2026-09-21: **Elect-sign composition failed its screen and matched TIES.**
+  Source `8ea046a`. Extractable 38/38. Full-test 31/64. Unique added 1/3
+  (recovered 503; missed 276, 265). Incumbent 29/29 including 249. Leftover 54
+  again. Same opened-task outcomes as TIES; trim was not the unique-added loss.
+  Score `7491a09b…`. `stop-this-composition`. Close task-vector sign-consensus
+  on these tails. First GPU attempt died on SSH; retry decoded (~10 min) and
+  retired. Not admission. Serving stays leftover incumbent extra.
+
+- 2026-09-21: **Declared elect-sign disjoint mean of the same frozen tails.**
+  TIES trim is the step that deletes small unique directions. This keeps
+  sign-election and the disjoint mean and drops trim. CPU merge pinned
+  (`65058087…`); extras not yet decoded. Not admission. No training.
+
+- 2026-09-21: **TIES composition failed its screen.** Source `9e85585`.
+  Extractable 38/38 (unit merge was 18/38). Full-test 31/64 versus incumbent 29
+  / always-added 31 / oracle 32. Unique added 1/3 (recovered 503; missed 276,
+  265). Incumbent 29/29 including 249. Leftover task 54 passed under TIES and
+  under neither frozen tail. Score `86a6a489…`. `stop-this-composition`. Do not
+  iterate keep or scale on these 64. GPUs retired (~7 min). Not admission.
+  Serving stays leftover incumbent extra.
+
+- 2026-09-20: **Declared TIES composition of the two frozen programming tails.**
+  Unit merge left 18/38 extras unparseable. Raw last-four-layer deltas disagree
+  in sign on 33.6% of jointly nonzero parameters. TIES keep 0.2 / disjoint mean
+  is frozen (`6a994d62…`); extras not yet decoded. Not admission. No training.
+
+- 2026-09-20: **Selector v3 (failed-parent AST shape vs train gold programs)
+  failed.** Decisions `b08ab22d…`. Score 29/64, unique added 0/3, incumbent
+  29/29. Chose added on 8 extras, none unique-added. `stop-this-picker`. Not
+  admission. No GPU. These 64 cases remain opened. Serving stays leftover
+  incumbent extra.
+
+- 2026-09-20: **Selector v2 (question+parent Jaccard agreement) failed.**
+  Decisions `e89117ac…`. Score 29/64, unique added 1/3 (only 276), incumbent
+  28/29 (lost 249). Agreement fired on 7 extras. `stop-this-picker`. Not
+  admission. No GPU. These 64 cases remain opened.
+
+- 2026-09-20: **Declared selector v2: Jaccard agreement of question and failed
+  parent.** Separate contract from stopped picker `963de13`. Added only when
+  both views strictly prefer added; disagreement selects incumbent. Same 64
+  opened cases remain diagnostic. Not trained, no GPU yet.
+
+- 2026-09-20: **Nearest-train Jaccard selector failed its CPU screen.** Picker
+  commit `963de13`. Decide hashed 38 calls (`344c68ac…`) before joining tails.
+  Score 30/64 versus incumbent 29 / always-added 31 / oracle 32. Recovered
+  unique added 276 and 265; missed 503; lost leftover success 249. Picker p95
+  3.6 ms, zero errors. Scorer lookup now uses added extras only on the 38
+  visible-fail rows; decisions were not regenerated. `stop-this-picker`. Not
+  admission. No GPU. These 64 cases remain opened.
+
+- 2026-09-20: **Selector evaluation contract frozen (`8e39b74`).** Independent
+  CPU rescore matched complementarity (incumbent 29, always-added 31, oracle 32).
+  Picker inputs, incumbent-default, CPU qualification and fresh MBPP 511–600
+  confirmation slice are pinned. First picker specified as nearest-train Jaccard
+  (train prompts only; not fitted on opened labels). Not screened. No GPU.
+
+- 2026-09-20: **Programming-tail complementarity: unique added coverage exists.**
+  Inference-only on freeze `dcc6693`, added extras 38/38 extractable. Unique
+  added 3 (tasks 276, 503, 265), unique incumbent 1 (249), both 6, neither 28.
+  Oracle union 32 versus incumbent policy 29 (+3). Not a serving policy, not
+  admission. GPUs retired (~8 min, ~$0.55). Next is selection between the two
+  unchanged tails, not another trained tail. Merge remains failed.
+
+- 2026-09-20: **Programming unit-merge growth failed after isolation passed.**
+  Freeze `dcc6693` trained 256 parent-init updates. Isolation +7/32 on leftover
+  development. Growth lost leftover specialist wins 115/169/249/258, scored
+  −3/32 new leftover answers versus the incumbent extra, and merged extras
+  added zero successes beyond the parent (18/38 extractable). GPUs retired;
+  all five launch attempts included in accounting (~$3). Not promoted. The
+  next measurement is inference-only complementarity of the two unchanged
+  tails on the 38 opened extras.
 
 - 2026-09-20: **Completed item 6 for the funded operated alpha.** The accepted
   graph passes ten deployment requests, ordinary concurrent latency gates and

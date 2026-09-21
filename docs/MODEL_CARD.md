@@ -1,6 +1,6 @@
 # NeuroShard LLM testnet model card
 
-The release serves **SmolLM2-135M-Instruct plus a NeuroShard residual adapter**. It can produce short instruction responses, but its capability is limited. This is a working CPU training/payment experiment, not a production assistant.
+The release serves **SmolLM2-135M-Instruct plus a NeuroShard residual adapter**. It can produce short instruction responses, but its capability is limited. This card describes the 0.4.0 protocol testnet, not the 1.7B bounded-activation research assistant. This is a working CPU training/payment experiment, not a production assistant.
 
 | Component | Current profile |
 |---|---|

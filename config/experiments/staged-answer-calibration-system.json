@@ -1,0 +1,364 @@
+{
+  "format": "neuroshard-staged-answer-calibration-system-v1",
+  "purpose": "Output-format calibration only; exclude every calibration pair from the successor study.",
+  "seed": 20260923,
+  "operand_limit_exclusive": 32,
+  "excluded_previous_data": "4555b74c56da84d9596ae728510e1f08b6087bc1a5e0a9a5beef661d31a54dc0",
+  "training": {
+    "max_length": 128,
+    "generation_tokens": 32
+  },
+  "roles": {
+    "retention": [
+      {
+        "id": "7ff6b68dddfc10f0549b943ee0ee5080f95c198fc45cbcc1a17b4ec9a8fd9d8c",
+        "a": 16,
+        "b": 30,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 16 + 30? Reply with only the number."
+          }
+        ],
+        "answer": "46"
+      },
+      {
+        "id": "8314d629df6ab3bd020f6622e2215b84a824e45ee38b262e3aab014683b08957",
+        "a": 19,
+        "b": 30,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 19 + 30? Reply with only the number."
+          }
+        ],
+        "answer": "49"
+      },
+      {
+        "id": "40a07763d143521b3fe772da56d766b131404cb12a40fc0df6ef2fb9a92dda4f",
+        "a": 22,
+        "b": 29,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 22 + 29? Reply with only the number."
+          }
+        ],
+        "answer": "51"
+      },
+      {
+        "id": "3c3c967e85274041483575e8bf2a811d0b119a0a0fb72a26dd0fd05a64e955bb",
+        "a": 8,
+        "b": 27,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 8 + 27? Reply with only the number."
+          }
+        ],
+        "answer": "35"
+      },
+      {
+        "id": "c55ffc361eb0352af3993b8a5f77bd0088d99acb0b33075619be054d7148141f",
+        "a": 4,
+        "b": 6,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 4 + 6? Reply with only the number."
+          }
+        ],
+        "answer": "10"
+      },
+      {
+        "id": "1abb3d10065c5eaebc6fed1f0be084ed9bfd8a2448908f9b0f583576877a5b39",
+        "a": 7,
+        "b": 22,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 7 + 22? Reply with only the number."
+          }
+        ],
+        "answer": "29"
+      },
+      {
+        "id": "d5c2a30eaa1f4bf5328cf94fc2c1af97f240cef3b10e0d22fb8eb4b3271eee6c",
+        "a": 2,
+        "b": 24,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 2 + 24? Reply with only the number."
+          }
+        ],
+        "answer": "26"
+      },
+      {
+        "id": "7b1b4d779e0d3b704a24e149ce31f67c33f003562eba46a3da1b22363110fc82",
+        "a": 4,
+        "b": 25,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 4 + 25? Reply with only the number."
+          }
+        ],
+        "answer": "29"
+      },
+      {
+        "id": "1e9d56b068b27ffd1b246f33d97dd92c2b3dd94b5fe03279f959b47dbb633174",
+        "a": 17,
+        "b": 30,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 17 + 30? Reply with only the number."
+          }
+        ],
+        "answer": "47"
+      },
+      {
+        "id": "7485761c51fc582a1d19a7d2e5c6cb4c7dd548ed5bc8ee3b2ab1423671591249",
+        "a": 18,
+        "b": 30,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 18 + 30? Reply with only the number."
+          }
+        ],
+        "answer": "48"
+      },
+      {
+        "id": "f00254e7e94aa87ae22853b820fc167d8705a4e411153cdd23bd37289efb493e",
+        "a": 6,
+        "b": 10,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 6 + 10? Reply with only the number."
+          }
+        ],
+        "answer": "16"
+      },
+      {
+        "id": "1a6f76fa1ca53fa10f7c3eee83f3b341c3c69b77d79f0fae3c3c400badf8c0a9",
+        "a": 4,
+        "b": 26,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 4 + 26? Reply with only the number."
+          }
+        ],
+        "answer": "30"
+      },
+      {
+        "id": "b422110b1c42111c693a4ae98d52b9fac6c59e5982d1450c10fe4b99216463f0",
+        "a": 3,
+        "b": 31,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 3 + 31? Reply with only the number."
+          }
+        ],
+        "answer": "34"
+      },
+      {
+        "id": "6840220c68c240ee7c2089cbeb3af3479027b8e55f9b1b59f3a3352d6065849e",
+        "a": 17,
+        "b": 26,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 17 + 26? Reply with only the number."
+          }
+        ],
+        "answer": "43"
+      },
+      {
+        "id": "b1b89e86f5047c87beda7782877a2a56aa739f2ca129373e8ecadbf733371ca7",
+        "a": 16,
+        "b": 29,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 16 + 29? Reply with only the number."
+          }
+        ],
+        "answer": "45"
+      },
+      {
+        "id": "263a20f175f079543cf7995d4f56b5b48e34b4fd1dde7ae774f601cfaaff4348",
+        "a": 15,
+        "b": 31,
+        "family": "addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is 15 + 31? Reply with only the number."
+          }
+        ],
+        "answer": "46"
+      }
+    ],
+    "development": [
+      {
+        "id": "3718137b99a8febac0dca6ffeb5fa19ecad452f8acd371709a2c75500e2547fb",
+        "a": 13,
+        "b": 31,
+        "family": "modular-addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is the remainder when 13 + 31 is divided by 7? Reply with only the number."
+          }
+        ],
+        "answer": "2"
+      },
+      {
+        "id": "4201ede325bc32911818c35a0fa659b5b9f0fc2ff5434c95a5eaf3518ec4b552",
+        "a": 9,
+        "b": 28,
+        "family": "modular-addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is the remainder when 9 + 28 is divided by 7? Reply with only the number."
+          }
+        ],
+        "answer": "2"
+      },
+      {
+        "id": "7656cd61b8ef2e14877ae411e1845f371c25b8d8faed1d1aa14e1c6ee8ad6893",
+        "a": 10,
+        "b": 28,
+        "family": "modular-addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is the remainder when 10 + 28 is divided by 7? Reply with only the number."
+          }
+        ],
+        "answer": "3"
+      },
+      {
+        "id": "fd3923f6c84ccf5be41dc04c11f7c079589df13dcf3a1887693b07d40411aa86",
+        "a": 14,
+        "b": 25,
+        "family": "modular-addition",
+        "messages": [
+          {
+            "role": "system",
+            "content": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+          },
+          {
+            "role": "user",
+            "content": "What is the remainder when 14 + 25 is divided by 7? Reply with only the number."
+          }
+        ],
+        "answer": "4"
+      }
+    ]
+  },
+  "minimum_retention_correct": 12,
+  "rule": "EOS required; one unsigned integer or one complete equation matching the prompt operands and operation; optional terminal full stop; no prose extraction or arithmetic repair.",
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "parent_calibration": "cfa97e05f59414b40e01265d075a0eef6eadf03c10742e5576515d5898e933d7",
+  "instruction": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation."
+}

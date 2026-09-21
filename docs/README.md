@@ -15,7 +15,17 @@ retaining the existing generated-answer and retention requirements.
 | --- | --- |
 | [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
 | [Programming expert trial](PROGRAMMING_EXPERT_TRIAL.md) | One new neural skill, executable answers, learned selection, preserved general responses and bounded serving latency. |
-| [Programming fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md) / [result](PROGRAMMING_FALLBACK_RESULTS.md) | Research baseline: leftover extra attempt +4/32 versus parent and parent repair; not promoted; next growth experiment must beat this system. |
+| [Programming fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md) / [result](PROGRAMMING_FALLBACK_RESULTS.md) | Research baseline: leftover extra attempt +4/32 versus parent and parent repair; not promoted. |
+| [Second-capability growth](PROGRAMMING_GROWTH.md) | Independent second tail plus heuristic integration; campaign closed. |
+| [TIES composition](PROGRAMMING_GROWTH_TIES.md) | Preserved 29 incumbent successes, scored 31/64 including leftover 54; failed declared gate. Stopped. |
+| [Elect-sign composition](PROGRAMMING_GROWTH_ELECT.md) | Same tails, sign-election without trim; matched TIES 31/64. Stopped. |
+| [Feedback-status selector](PROGRAMMING_SELECTOR_V4.md) | Added only on parent extraction-error; 29/64, unique added 0/3. Stopped. |
+| [Learned integration](LEARNED_INTEGRATION.md) | Last-layer expert and gate versus matched no-expansion control. Method frozen. |
+| [Stage-1 execution freeze](LEARNED_INTEGRATION_EXECUTION.md) | CPU 135M last-layer train/score loop frozen. No GPU. |
+| [Stage-1 learned-integration result](LEARNED_INTEGRATION_RESULTS.md) | Expansion 0/32 vs control 5/32. Failed development. Confirmation closed. |
+| [Staged integration](STAGED_INTEGRATION.md) / [baseline result](STAGED_INTEGRATION_RESULTS.md) | Stopped before training: 0/32 under the frozen exact-string, eight-token output rule. |
+| [Staged answering](STAGED_ANSWERING.md) / [execution result](STAGED_ANSWERING_RESULTS.md) | Baseline protected 15 answers; timed out after 127/128 updates before candidate scoring. No GPU. |
+| [Independent hosting](INDEPENDENT_HOSTING.md) | Item 4 soak freeze: equal-power CPU genesis and stranger-provider join. No GPU. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |

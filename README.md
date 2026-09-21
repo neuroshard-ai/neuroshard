@@ -13,9 +13,32 @@ The ledger remains scheduled through September 26 for expiry and refunds;
 the [historical joining guide](docs/JOIN_ALPHA.md) records the original setup.
 The website and PyPI release below use the earlier chain.
 
-Release **0.4.0** is an experimental public testnet using **SmolLM2-135M-Instruct with a 4,608-parameter trainable adapter**. Native validators replay training and inference before accepting work or paying providers. The pretrained backbone is frozen. The initial validators share one operator across two hosts; this is a working protocol baseline, with economical large-model verification and independent ownership still to solve.
+NeuroShard's **capability work** is a bounded-activation growing assistant:
+a 1.7B parent plus checked extra shards, at most one extra decode per
+request. The leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
+is the research baseline (+4/32 versus parent and parent repair). Independent
+tails plus heuristic integration is closed
+([programming growth](docs/PROGRAMMING_GROWTH.md)). The subsequent experiment was
+[learned integration of new capacity](docs/LEARNED_INTEGRATION.md). Stage-1
+135M [failed development](docs/LEARNED_INTEGRATION_RESULTS.md) (expansion 0/32,
+control 5/32). Confirmation was never opened. A separate
+[staged-integration candidate](docs/STAGED_INTEGRATION_RESULTS.md) stopped before
+training: its eight-token exact-answer baseline had no protected successes.
+The separate [staged-answering study](docs/STAGED_ANSWERING.md) keeps expert-then-gate
+training and the same gates, with complete-answer scoring and fresh operands.
+Its [first execution](docs/STAGED_ANSWERING_RESULTS.md) established 15 protected
+answers and timed out after 127/128 updates, before the answer comparison.
+It is a 135M CPU mechanism study, not an assistant-capability result. No GPU is authorized.
+[Independent hosting](docs/INDEPENDENT_HOSTING.md) remains the separate item 4
+track and requires four real independent operators.
+Not a public promoted model.
 
-## Join the 0.4.0 baseline
+Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
+with a 4,608-parameter adapter, native replay, and paid inference. It is not
+the assistant being grown. Independent ownership and economical large-model
+verification remain open.
+
+## Join the 0.4.0 protocol testnet
 
 ```bash
 python3 -m venv ~/.venvs/neuroshard

@@ -85,11 +85,22 @@ def choose_after_visible_example(base, specialist, row, check):
     return 'specialist', specialist
 
 
-def leftover_task_ids(plan, *, excluded, parent_final_tasks, all_pool_tasks):
-    blocked = set(excluded) | set(parent_final_tasks)
+def ranked_leftover_tasks(comparison, all_pool_tasks=None):
+    """Rank leftover MBPP 11–510 IDs after the reserved parent final and exclusions."""
+    if all_pool_tasks is None:
+        all_pool_tasks = list(range(11, 511))
+    blocked = set(comparison['excluded_parent_pool_tasks']) | set(comparison['parent_final_task_ids'])
     eligible = [n for n in all_pool_tasks if 11 <= n <= 510 and n not in blocked]
-    seed = plan['comparison']['seed']
-    ranked = sorted(eligible, key=lambda n: identity([seed, identity({'dataset': MBPP_SHA, 'task': n})]))
+    return sorted(eligible, key=lambda n: identity([comparison['seed'], identity({'dataset': MBPP_SHA, 'task': n})]))
+
+
+def leftover_task_ids(plan, *, excluded, parent_final_tasks, all_pool_tasks):
+    comparison = {
+        'seed': plan['comparison']['seed'],
+        'excluded_parent_pool_tasks': excluded,
+        'parent_final_task_ids': parent_final_tasks,
+    }
+    ranked = ranked_leftover_tasks(comparison, all_pool_tasks)
     chosen = ranked[:plan['comparison']['code_tasks']]
     if chosen != plan['comparison']['task_ids']:
         raise ValueError('Frozen leftover comparison IDs changed')
