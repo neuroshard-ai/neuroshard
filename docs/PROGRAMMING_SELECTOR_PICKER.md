@@ -1,12 +1,46 @@
 # First programming-selector picker
 
-**Status: implementation specified; not yet committed as an execution freeze
-in git, and not screened.** This candidate is nearest-training-prompt Jaccard.
-It was not fitted on opened diagnosis labels. The evaluation contract remains
-[`PROGRAMMING_SELECTOR_CONTRACT.md`](PROGRAMMING_SELECTOR_CONTRACT.md). A CPU
-screen without a pinned picker execution freeze is invalid.
+**Status: CPU screen failed. Stop this picker. No GPU.**
+Nearest-training-prompt Jaccard did not recover complementary coverage.
+The evaluation contract remains
+[`PROGRAMMING_SELECTOR_CONTRACT.md`](PROGRAMMING_SELECTOR_CONTRACT.md).
+This is not admission, not a second extra decode, and not a new trained tail.
 
-## Rule
+## Measured screen
+
+Decide hashed 38 picker calls before joining tail answers
+(`344c68ac…`). Score then joined the frozen parent, incumbent and added
+traces. Controls reproduced the diagnosis: parent 22, incumbent 29,
+always-added 31, oracle 32.
+
+| Gate | Required | Measured |
+| --- | ---: | ---: |
+| unique added recovered | 3 | **2** |
+| incumbent successes preserved | 29 | **28** |
+| old successes preserved | 12 | **11** |
+| selected full-test | 32/64 | **30/64** |
+| picker p95 | ≤ 50 ms | 3.6 ms |
+| picker errors | 0 | 0 |
+
+The picker chose added on 15 extras and incumbent on 23. It recovered unique
+added tasks 276 and 265, missed 503 (chose incumbent), and lost unique
+incumbent 249 (chose added), which is one of the 12 leftover successes.
+`next` is `stop-this-picker`. `admission_evidence` false.
+`gpu_authorized_by_screen` false.
+
+Evidence: `config/experiments/programming-selector-decisions.json` (`344c68ac…`),
+`config/experiments/programming-selector-screen-score.json`, and
+`.neuroshard/programming-selector-screen-20260920/`.
+
+## Scorer correction
+
+The first score attempt raised `KeyError` on parent-pass rows. Added extras
+exist only for the 38 public-example failures. The scorer now loads an added
+output only on those extras. Picker rule, assets, and the decide-phase file
+were not regenerated; the decision hash remains `344c68ac…`. The correction
+does not change the failed gates and does not justify another attempt.
+
+## Rule (unchanged, failed)
 
 After the parent public example fails, compare the original question to every
 frozen incumbent train prompt and every frozen added-tail train prompt using
@@ -16,38 +50,9 @@ the nearest added prompt is **strictly** closer. Equal scores, empty overlap,
 invalid input, picker errors and the one-second deadline select `incumbent`.
 This picker does not abstain.
 
-It reads only `question`. The failed parent program, public example and public
-feedback are accepted as unused allowed fields so the serving object stays
-exactly the frozen four-key input.
+It reads only `question`. Train prompt assets store texts only. It was not
+fitted on opened diagnosis labels.
 
-No evaluation-question, task-ID, row-order, split-label, hidden-test, reference
-or tail-answer lookup is present. Train prompt assets store texts only.
-
-## Why this candidate, not a fitted rule
-
-The two tails were trained on disjoint public MBPP slices (official train
-601–974 versus leftover remainder 12–510). Routing by nearest training prompt
-is the serving-time analogue of that split. It does not use the disclosed
-unique IDs 276, 503, 265 or 249, and it does not search thresholds on the
-opened 38 extras.
-
-The CPU screen may still fail. Failure stops this picker.
-
-## Artifacts
-
-- [`programming-selector-picker.json`](../config/experiments/programming-selector-picker.json)
-- [`programming-selector-assets.json`](../config/experiments/programming-selector-assets.json)
-- [`programming-selector-picker-freeze.json`](../config/experiments/programming-selector-picker-freeze.json)
-
-```sh
-PYTHONPATH=src python scripts/prepare_programming_selector.py \
-  --mbpp MBPP.jsonl
-# After this picker freeze is committed:
-PYTHONPATH=src python scripts/screen_programming_selector.py \
-  --phase decide --home STUDY --mbpp MBPP.jsonl
-PYTHONPATH=src python scripts/screen_programming_selector.py \
-  --phase score --home STUDY --mbpp MBPP.jsonl
-```
-
-Do not train a tail or a selector. Do not launch GPUs from a screen pass.
-The original 128-task final stays closed.
+A later method needs its own declared experiment. These 64 cases remain opened.
+Do not train a tail or a selector. Do not launch GPUs. The original 128-task
+final stays closed.

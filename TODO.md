@@ -17,9 +17,12 @@ passed +4/32 and is the research baseline. The [second-capability growth](docs/P
 unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
 on the 38 opened extras found unique added coverage (oracle union +3). That bound
 is not a policy. The [selector evaluation contract](docs/PROGRAMMING_SELECTOR_CONTRACT.md)
-is frozen at `8e39b74`; the first picker is specified as nearest-train Jaccard
-and is **not yet screened**. Do not train another tail. Do not launch GPUs until
-a pinned picker passes its CPU screen and a separate confirmation freeze exists.
+is frozen at `8e39b74`. Picker `963de13` (nearest-train Jaccard) **failed** its
+CPU screen (30/64, 2/3 unique added, 28/29 incumbent) and is stopped. The
+scorer lookup correction is recorded with unchanged decision hash `344c68ac…`;
+it does not change that outcome. Do not train a tail or selector. Do not
+launch GPUs. These 64 cases remain opened. Any later method needs its own
+declared experiment.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -433,6 +436,14 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-20: **Nearest-train Jaccard selector failed its CPU screen.** Picker
+  commit `963de13`. Decide hashed 38 calls (`344c68ac…`) before joining tails.
+  Score 30/64 versus incumbent 29 / always-added 31 / oracle 32. Recovered
+  unique added 276 and 265; missed 503; lost leftover success 249. Picker p95
+  3.6 ms, zero errors. Scorer lookup now uses added extras only on the 38
+  visible-fail rows; decisions were not regenerated. `stop-this-picker`. Not
+  admission. No GPU. These 64 cases remain opened.
 
 - 2026-09-20: **Selector evaluation contract frozen (`8e39b74`).** Independent
   CPU rescore matched complementarity (incumbent 29, always-added 31, oracle 32).

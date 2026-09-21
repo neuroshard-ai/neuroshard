@@ -9,7 +9,7 @@ from neuroshard.evolution.programming_selector import (
     build_view, decide_picker_calls, jaccard, nearest_rank_p95, public_example_from_question,
     serve, validate_view,
 )
-from neuroshard.evolution.reference_data import identity
+from neuroshard.evolution.reference_data import identity, sha256
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -152,6 +152,26 @@ def view_from_prompt(prompt):
         'public_example': example,
         'public_feedback': {'passed': False, 'status': 'execution-error'},
     }
+
+
+def test_recorded_screen_keeps_the_failed_gates_and_decision_hash():
+    decisions = ROOT / 'config/experiments/programming-selector-decisions.json'
+    recorded = json.loads((ROOT / 'config/experiments/programming-selector-decisions-hash.json').read_text())
+    score = json.loads((ROOT / 'config/experiments/programming-selector-screen-score.json').read_text())
+    record = json.loads((ROOT / 'config/experiments/programming-selector-screen-record.json').read_text())
+    assert sha256(decisions) == '344c68aca63d9f0da640accdb1c12db316af5e28e77649778621585435ba3187'
+    assert recorded['sha256'] == sha256(decisions)
+    assert record['decisions_sha256'] == sha256(decisions)
+    assert record['decisions_regenerated'] is False
+    assert record['outcome_changed_by_scorer_correction'] is False
+    assert record['status'] == 'stop-this-picker'
+    assert score['passed'] is False
+    assert score['selected_correct'] == 30
+    assert score['unique_added_recovered'] == 2
+    assert score['incumbent_successes_preserved'] == 28
+    assert score['next'] == 'stop-this-picker'
+    assert score['admission_evidence'] is False
+    assert score['gpu_authorized_by_screen'] is False
 
 
 def test_workspace_picker_freeze_binds_the_specified_candidate():

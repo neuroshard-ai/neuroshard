@@ -5,8 +5,7 @@ Isolation of the added tail passed leftover development 32. Growth against the
 complete leftover fallback system failed. Complementarity of the unchanged tails
 on the 38 opened extras found unique added coverage. The
 [selector evaluation contract](PROGRAMMING_SELECTOR_CONTRACT.md) is frozen
-(`8e39b74`). A nearest-train Jaccard picker is specified and not yet screened.
-The original 128-task final stays closed. This is not an upgrade of the 0.4.0 genesis.
+(`8e39b74`). Picker `963de13` failed its CPU screen (30/64) and is stopped. The original 128-task final stays closed. This is not an upgrade of the 0.4.0 genesis.
 
 The leftover [fallback result](PROGRAMMING_FALLBACK_RESULTS.md) remains the
 complete system to beat: parent plus the incumbent tail `46bd2e76…`, public-example
@@ -58,8 +57,11 @@ trained tail.
 The serving hypothesis remains `parent → public example → one tail`. The frozen
 selector contract uses only the question, failed parent program, public example
 and normalized public-example feedback. Hidden tests stay hidden. Default is
-incumbent. The first picker candidate is nearest training-prompt Jaccard; it is
-not fitted on these opened labels and has not been screened. See
+incumbent. Picker `963de13` (nearest training-prompt Jaccard) failed its CPU
+screen (30/64, 2/3 unique added, 28/29 incumbent) and is stopped. The scorer
+lookup correction is recorded with unchanged decision hash `344c68ac…`; it does
+not change that outcome. These 64 cases remain opened development data. Any
+later method needs a separately declared experiment. See
 [PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md) and
 [PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md).
 

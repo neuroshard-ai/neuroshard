@@ -267,7 +267,12 @@ def selected_output(row, parent, incumbent, added, selected):
 
 
 def score_screen(rows, growth_outputs, added_outputs, decisions, plan, contract, check):
-    """Join hashed picker decisions to saved tails. Not admission evidence."""
+    """Join hashed picker decisions to saved tails. Not admission evidence.
+
+    Added extras exist only for the 38 public-example failures. Parent-pass
+    rows keep the parent answer and have no added output. This lookup was
+    corrected after decide hashed 344c68ac…; decisions were not regenerated.
+    """
     bind_contract(contract)
     table = growth_table(list(growth_outputs) + list(added_outputs))
     by_id = {item['id']: item for item in decisions['decisions']}
@@ -287,12 +292,16 @@ def score_screen(rows, growth_outputs, added_outputs, decisions, plan, contract,
         row = by_task[task_id]
         parent = table[row['id'], 'base']
         incumbent = table[row['id'], INCUMBENT]
-        added = table[row['id'], ADDED]
         visible = passes(parent, row, visible_tests(row), check)
         full = row['tests']
         parent_full = passes(parent, row, full, check)
-        inc_full = parent_full if visible else passes(incumbent, row, full, check)
-        add_full = parent_full if visible else passes(added, row, full, check)
+        if visible:
+            added = None
+            inc_full = add_full = parent_full
+        else:
+            added = table[row['id'], ADDED]
+            inc_full = passes(incumbent, row, full, check)
+            add_full = passes(added, row, full, check)
         parent_correct += int(parent_full)
         incumbent_correct += int(inc_full)
         always_added += int(add_full)
@@ -340,6 +349,10 @@ def score_screen(rows, growth_outputs, added_outputs, decisions, plan, contract,
         })
     if [row['task_id'] for row in details] != wanted:
         raise ValueError('Screen did not score the frozen 64-case list in order')
+    expected_added = {(by_task[task_id]['id'], ADDED) for task_id in picker_ids}
+    actual_added = {(key[0], key[1]) for key in table if key[1] == ADDED}
+    if actual_added != expected_added:
+        raise ValueError('Added extras must cover exactly the 38 opened extra-decode questions')
     timings = [item['seconds'] for item in decisions['decisions']]
     errors = sum(int(bool(item['error']) or item['overrun']) for item in decisions['decisions'])
     p95_ms = nearest_rank_p95(timings) * 1000
