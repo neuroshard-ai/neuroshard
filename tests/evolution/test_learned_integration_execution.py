@@ -29,7 +29,7 @@ def test_execution_freeze_is_pinned():
     assert method == method_freeze()
     assert method == load_method()
     assert execution == execution_freeze()
-    assert identity(execution) == 'bf5cdbe421f248da4bde7d2ae83ffb4622dbd3516743e55b64e3a430f6401fdf'
+    assert identity(execution) == '99e806613734115c0583f380a1d05819d8a1974da7bacdbe82b22c6722d1b719'
     assert execution['format'] == EXECUTION_FORMAT
     assert bind_execution(spec, method, execution)['host'] == HOST
 

@@ -47,6 +47,13 @@ def sandbox_check():
     return module.check
 
 
+def mbpp_check(code, setup, tests, isolated=None):
+    """Run candidate code before MBPP fixtures. The OS sandbox stays unchanged."""
+    isolated = sandbox_check() if isolated is None else isolated
+    payload = code if not setup else code + '\n' + setup
+    return isolated(payload, '', tests)
+
+
 def rss_bytes():
     with open('/proc/self/status') as status:
         for line in status:
@@ -345,7 +352,8 @@ def run_stage1(*, home, seed, spec, method, execution, mbpp, general_train,
     if execution.get('confirmation_opened') is not False or execution.get('confirmation_scored') is not False:
         raise ValueError('Confirmation remains closed')
     verify(seed)
-    check = sandbox_check() if check is None else check
+    isolated = sandbox_check() if check is None else check
+    check = (lambda code, setup, tests: mbpp_check(code, setup, tests, isolated=isolated))
     gold_check = check if gold_check is None else gold_check
     home = Path(home)
     home.mkdir(parents=True, exist_ok=False)

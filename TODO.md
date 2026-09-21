@@ -449,7 +449,7 @@ under the same admission rules.
 - 2026-09-21: **Froze the stage-1 CPU train/score loop. Not scored. No GPU.**
   Last-layer expert plus gate versus matched last-layer MLP, 128 teacher-forced
   steps on unused MBPP, then generated development/retention/general only.
-  Confirmation closed. Execution freeze `bf5cdbe4…`.
+  Confirmation closed. Execution freeze `99e80661…`.
 
 - 2026-09-21: **Recorded the stage-1 CPU execution freeze. Not run. No GPU.**
   Seed `12fd25f7…` file hashes including `model.safetensors` `5af571cb…`.

@@ -106,6 +106,17 @@ def test_freeze_except_keeps_unrelated_weights_fixed():
     assert not model.model.layers[0].other.weight.requires_grad
 
 
+def test_mbpp_check_runs_candidate_before_setup():
+    from neuroshard.evolution.learned_integration_run import mbpp_check
+    calls = []
+    def isolated(code, setup, tests):
+        calls.append((code, setup, tests))
+        return {'passed': True}
+    verdict = mbpp_check('class Node:\n    pass\n', 'root = Node()\n', ['assert True'], isolated=isolated)
+    assert verdict['passed'] is True
+    assert calls == [('class Node:\n    pass\n\nroot = Node()\n', '', ['assert True'])]
+
+
 def test_max_length_is_frozen():
     assert MAX_LENGTH == 768
 
