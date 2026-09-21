@@ -5,8 +5,9 @@ from pathlib import Path
 import pytest
 
 from neuroshard.evolution.programming_selector import (
-    CONTRACT_IDENTITY, FORMAT, AgreementPicker, AstShapePicker, NearestTrainPicker,
-    V2_CONTRACT_IDENTITY, V2_FORMAT, V3_CONTRACT_IDENTITY, V3_FORMAT, ast_shape,
+    CONTRACT_IDENTITY, FORMAT, AgreementPicker, AstShapePicker, FeedbackStatusPicker,
+    NearestTrainPicker, V2_CONTRACT_IDENTITY, V2_FORMAT, V3_CONTRACT_IDENTITY,
+    V3_FORMAT, V4_CONTRACT_IDENTITY, V4_FORMAT, ast_shape,
     bind_contract, bind_picker_freeze, build_view, decide_picker_calls, jaccard,
     load_picker, nearest_rank_p95, public_example_from_question, serve, validate_view,
 )
@@ -302,6 +303,47 @@ def test_workspace_v3_picker_freeze_binds_the_ast_shape_candidate():
     ret = view(parent='```python\ndef g():\n    return 2\n```')
     assert picker.pick(loop)['choice'] in ('incumbent', 'added')
     assert picker.pick(ret)['choice'] in ('incumbent', 'added')
+
+
+def test_feedback_status_picker_selects_added_only_on_extraction_error():
+    payload = {
+        'format': V4_FORMAT + '/assets',
+        'added_statuses': ['extraction-error'],
+        'purpose': 'synthetic',
+    }
+    spec = {
+        'format': V4_FORMAT + '/picker',
+        'rule': 'public-feedback-status',
+        'assets': identity(payload),
+        'added_statuses': ['extraction-error'],
+        'default': 'incumbent',
+        'uses_fields': ['public_feedback'],
+        'case_specific_lookup_rules': False,
+        'fitted_on_opened_diagnosis': False,
+    }
+    picker = FeedbackStatusPicker(spec, payload)
+    assert picker.pick(view(status='extraction-error'))['choice'] == 'added'
+    assert picker.pick(view(status='execution-error'))['choice'] == 'incumbent'
+    assert picker.pick(view(status='timeout'))['choice'] == 'incumbent'
+    assert picker.pick(view(status='early-exit'))['choice'] == 'incumbent'
+    assert load_picker(spec, payload).pick(view(status='extraction-error'))['choice'] == 'added'
+
+
+def test_frozen_v4_contract_identity_is_pinned():
+    current = json.loads((ROOT / 'config/experiments/programming-selector-v4-contract.json').read_text())
+    assert identity(current) == V4_CONTRACT_IDENTITY
+    bind_contract(current)
+
+
+def test_workspace_v4_picker_freeze_binds_the_feedback_status_candidate():
+    spec = json.loads((ROOT / 'config/experiments/programming-selector-v4-picker.json').read_text())
+    payload = json.loads((ROOT / 'config/experiments/programming-selector-v4-assets.json').read_text())
+    freeze = json.loads((ROOT / 'config/experiments/programming-selector-v4-freeze.json').read_text())
+    contract = json.loads((ROOT / 'config/experiments/programming-selector-v4-contract.json').read_text())
+    bind_picker_freeze(freeze, spec, payload, contract)
+    picker = FeedbackStatusPicker(spec, payload)
+    assert picker.pick(view(status='extraction-error'))['choice'] == 'added'
+    assert picker.pick(view(status='execution-error'))['choice'] == 'incumbent'
 
 
 def test_picker_freeze_rejects_a_changed_asset_hash():

@@ -21,6 +21,8 @@ V2_FORMAT = 'neuroshard-programming-selector-v2'
 V2_CONTRACT_IDENTITY = 'e6c663aeb1def4a116d546c533474d35fd77f9e80bc105171c0dc7b80c9841fe'
 V3_FORMAT = 'neuroshard-programming-selector-v3'
 V3_CONTRACT_IDENTITY = '0c4c72ba72a3828d6bd417c3521da801381e6014634a3387fd01d999d92c6295'
+V4_FORMAT = 'neuroshard-programming-selector-v4'
+V4_CONTRACT_IDENTITY = 'd14726ebde98ffa749e483ea77391e835e54ed3f6a01899da341552a5a67756b'
 EVALUATION_FREEZE_COMMIT = '8e39b746ab7087e1c1a47c437b644c939f36e739'
 V1_STOPPED_PICKER_COMMIT = '963de13242c40517b78524a882df931678416936'
 V1_SCREEN_RECORD_COMMIT = '2dfa5f1dd6575d35131d77b7ecb3b43fe6f2d32b'
@@ -37,6 +39,7 @@ def bind_contract(contract):
         FORMAT + '/contract': CONTRACT_IDENTITY,
         V2_FORMAT + '/contract': V2_CONTRACT_IDENTITY,
         V3_FORMAT + '/contract': V3_CONTRACT_IDENTITY,
+        V4_FORMAT + '/contract': V4_CONTRACT_IDENTITY,
     }
     digest = identity(contract)
     if expected.get(contract.get('format')) != digest:
@@ -315,6 +318,54 @@ class AstShapePicker:
         }
 
 
+ADDED_STATUSES = ('extraction-error',)
+
+
+def load_feedback_assets(assets):
+    if assets.get('format') != V4_FORMAT + '/assets':
+        raise ValueError('Feedback-status assets do not bind this candidate')
+    statuses = assets.get('added_statuses')
+    if statuses != list(ADDED_STATUSES):
+        raise ValueError('Added statuses must stay the frozen extraction-error class')
+    return {'added_statuses': tuple(statuses), 'identity': identity(assets)}
+
+
+class FeedbackStatusPicker:
+    """Pick added only when the public-example failure class is extraction-error."""
+
+    def __init__(self, spec, assets):
+        if spec.get('format') != V4_FORMAT + '/picker':
+            raise ValueError('Picker spec does not bind the feedback-status candidate')
+        if spec.get('rule') != 'public-feedback-status':
+            raise ValueError('This implementation is the public-feedback-status picker')
+        if spec.get('default') != INCUMBENT:
+            raise ValueError('Uncertainty must select the incumbent')
+        if spec.get('uses_fields') != ['public_feedback']:
+            raise ValueError('This picker may read only public feedback')
+        if spec.get('case_specific_lookup_rules') is not False:
+            raise ValueError('Lookup exceptions are prohibited')
+        if spec.get('fitted_on_opened_diagnosis') is not False:
+            raise ValueError('This picker may not be fitted on opened labels')
+        loaded = load_feedback_assets(assets)
+        if spec.get('assets') != loaded['identity']:
+            raise ValueError('Picker spec is not bound to these assets')
+        if spec.get('added_statuses') != list(loaded['added_statuses']):
+            raise ValueError('Picker spec statuses do not match the frozen assets')
+        self.spec = spec
+        self.added_statuses = loaded['added_statuses']
+        self.assets_identity = loaded['identity']
+
+    def pick(self, view):
+        validate_view(view)
+        status = view['public_feedback']['status']
+        choice = ADDED if status in self.added_statuses else INCUMBENT
+        return {
+            'choice': choice,
+            'status': status,
+            'rule': 'public-feedback-status',
+        }
+
+
 def load_picker(spec, assets):
     rule = spec.get('rule')
     if rule == 'nearest-train-jaccard':
@@ -323,6 +374,8 @@ def load_picker(spec, assets):
         return AgreementPicker(spec, assets)
     if rule == 'nearest-train-ast-shape':
         return AstShapePicker(spec, assets)
+    if rule == 'public-feedback-status':
+        return FeedbackStatusPicker(spec, assets)
     raise ValueError('Unknown picker rule')
 
 
@@ -355,6 +408,7 @@ def serve(picker, view, *, deadline_seconds=1.0):
         'parent_added_score': decision.get('parent_added_score'),
         'question_prefers_added': decision.get('question_prefers_added'),
         'parent_prefers_added': decision.get('parent_prefers_added'),
+        'status': decision.get('status'),
         'seconds': elapsed,
         'overrun': overrun,
         'error': error,
@@ -409,6 +463,7 @@ def decide_picker_calls(rows, parent_outputs, picker, check, contract):
             'parent_added_score': served.get('parent_added_score'),
             'question_prefers_added': served.get('question_prefers_added'),
             'parent_prefers_added': served.get('parent_prefers_added'),
+            'status': served.get('status'),
             'seconds': served['seconds'],
             'overrun': served['overrun'],
             'error': served['error'],
@@ -576,6 +631,7 @@ def bind_picker_freeze(freeze, spec, assets, contract):
         FORMAT + '/picker-execution-freeze',
         V2_FORMAT + '/picker-execution-freeze',
         V3_FORMAT + '/picker-execution-freeze',
+        V4_FORMAT + '/picker-execution-freeze',
     }
     if freeze.get('format') not in allowed:
         raise ValueError('Picker execution freeze does not bind this candidate')

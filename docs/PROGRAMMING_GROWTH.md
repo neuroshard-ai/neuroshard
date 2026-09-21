@@ -69,8 +69,9 @@ AST-shape nearest gold program all failed their CPU screens and are stopped.
 Complementary coverage still exists in the two tails; these selectors did not
 connect it. TIES composition then failed its screen (31/64, unique added 1/3)
 and is stopped. Elect-sign without trim matched that screen and is stopped.
-These 64 cases remain opened development data. Serving stays the leftover
-incumbent extra. See
+The next attempt is the
+[public-feedback-status picker](PROGRAMMING_SELECTOR_V4.md). These 64 cases
+remain opened development data. Serving stays the leftover incumbent extra. See
 [PROGRAMMING_SELECTOR_CONTRACT.md](PROGRAMMING_SELECTOR_CONTRACT.md),
 [PROGRAMMING_SELECTOR_PICKER.md](PROGRAMMING_SELECTOR_PICKER.md),
 [PROGRAMMING_SELECTOR_V2.md](PROGRAMMING_SELECTOR_V2.md) and

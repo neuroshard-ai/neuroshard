@@ -18,8 +18,9 @@ also failed its CPU screen and is stopped. [TIES composition](PROGRAMMING_GROWTH
 of the same frozen tails restored extractable extras and scored 31/64, then
 failed unique-added recovery and is stopped. [Elect-sign disjoint mean](PROGRAMMING_GROWTH_ELECT.md)
 without magnitude trim then matched TIES on every opened task and is stopped.
-Task-vector sign-consensus of these two tails is closed. This is not promotion,
-not a 0.4.0 upgrade, and not a new consensus mechanism.
+Task-vector sign-consensus of these two tails is closed. The next attempt is
+the [public-feedback-status picker](PROGRAMMING_SELECTOR_V4.md).
+This is not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

@@ -25,7 +25,9 @@ unique-added 503 and creating leftover 54, then **failed** unique-added 276 and
 keep, or scale on these 64. Task-vector sign-consensus of these two tails is
 closed. Complementary coverage still exists in the unchanged tails. Do not train
 a new tail. Do not open the original 128-task final. These 64 cases remain
-opened. Serving stays the leftover incumbent extra.
+opened. Serving stays the leftover incumbent extra. The next attempt is the
+[public-feedback-status picker](docs/PROGRAMMING_SELECTOR_V4.md): added only on
+parent extraction-error. Not fitted. No GPU yet.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -439,6 +441,11 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Declared public-feedback-status selector v4.** Added only when
+  the parent public-example status is extraction-error; otherwise incumbent.
+  A priori fail-class rule on the unused allowed feedback field. Not fitted.
+  CPU screen not yet scored. No GPU.
 
 - 2026-09-21: **Elect-sign composition failed its screen and matched TIES.**
   Source `8ea046a`. Extractable 38/38. Full-test 31/64. Unique added 1/3
