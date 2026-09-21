@@ -13,15 +13,14 @@ selectors failed, and two sign-consensus mixes failed their declared gates.
 reached 31/64, including an answer neither original tail produced, then failed
 the declared gate and remains rejected. Complementary coverage still exists in
 those unchanged tails. Four heuristic selectors failing does not establish that
-learned routing cannot work. The next experiment is
+learned routing cannot work. The next experiment was
 [learned integration of new capacity](LEARNED_INTEGRATION.md): train a new
 module and its gate together, compare against matched-budget training of
-existing capacity, and score generated answers on a fresh split. It is
-specified and not executed. The stage-1 method is frozen. The
-[CPU execution freeze](LEARNED_INTEGRATION_EXECUTION.md) records 135M seed
-hashes, eight general-retention identities, and the last-layer train/score
-loop. Development has not been scored. No GPU is authorized. This is
-not promotion, not a 0.4.0 upgrade, and not a new consensus mechanism.
+existing capacity, and score generated answers on a fresh split. Stage 1 ran
+on CPU and [failed development](LEARNED_INTEGRATION_RESULTS.md): expansion
+0/32 versus control 5/32, with 8/8 general parent match. Confirmation stays
+closed. No GPU is authorized. This is not promotion, not a 0.4.0 upgrade, and
+not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether
 productive shard execution can also support mining security. Its CPU reference

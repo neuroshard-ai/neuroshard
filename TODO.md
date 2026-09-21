@@ -27,11 +27,11 @@ work. Stop work on these two tails and the opened 64 cases. Do not open the
 original 128-task final. Serving stays the leftover incumbent extra. The next
 experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md):
 train a new module and its gate together versus a matched no-expansion control,
-and score generated answers on a fresh split. The stage-1 method is frozen.
-The [CPU execution freeze](docs/LEARNED_INTEGRATION_EXECUTION.md) records 135M
-seed hashes, eight general-retention identities, and the last-layer train/score
-loop. Development has not been scored. No GPU is authorized. A fresh dataset
-by itself would not address the failure.
+and score generated answers on a fresh split. The stage-1 method is frozen. The 135M CPU run
+[failed development](docs/LEARNED_INTEGRATION_RESULTS.md): expansion 0/32,
+control 5/32, general 8/8. Confirmation stays closed. No GPU is authorized.
+Serving stays the leftover incumbent extra. A fresh dataset by itself would
+not address the failure.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -445,6 +445,11 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Stage-1 learned integration failed development. Stop. No GPU.**
+  Expansion 0/32, control 5/32 (517, 733, 807, 896, 924), parent 0/32,
+  general 8/8, retention 0=0. Serving budget passed. Confirmation closed.
+  Score `07d4ac47…`. Execution freeze `e87456a6…`. Not admission.
 
 - 2026-09-21: **Froze the stage-1 CPU train/score loop. Not scored. No GPU.**
   Last-layer expert plus gate versus matched last-layer MLP, 128 teacher-forced
