@@ -14,7 +14,9 @@ incumbent extra). That bound is not a policy. The
 nearest-train Jaccard failed its CPU screen and is stopped. Question-and-parent
 [Jaccard agreement](PROGRAMMING_SELECTOR_V2.md) also failed its CPU screen and
 is stopped. Failed-parent [AST-shape nearest gold program](PROGRAMMING_SELECTOR_V3.md)
-also failed its CPU screen and is stopped. This is not promotion, not a
+also failed its CPU screen and is stopped. The next attempt is
+[TIES composition](PROGRAMMING_GROWTH_TIES.md) of the same frozen tails,
+not another prompt-space selector. This is not promotion, not a
 0.4.0 upgrade, and not a new consensus mechanism.
 
 The separate [neural-work research](NEURAL_WORK_RESEARCH.md) investigates whether

@@ -30,8 +30,8 @@ Growth failed:
   incumbent extra added seven
 - 18/38 merged extra responses passed `extract_code`; 38/38 incumbent responses did
 
-The unit mix `θ_parent + (θ_incumbent − θ_parent) + (θ_added − θ_parent)` is
-rejected. That does not settle other composition methods. Evidence:
+The unit mix is rejected. The next composition is
+[TIES](PROGRAMMING_GROWTH_TIES.md) on the same frozen tails. Evidence:
 `.neuroshard/programming-growth-20260920/evidence/0/result.json` and
 `config/experiments/programming-growth-outputs.json`.
 

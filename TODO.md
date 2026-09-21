@@ -16,12 +16,13 @@ failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FA
 passed +4/32 and is the research baseline. The [second-capability growth](docs/PROGRAMMING_GROWTH.md)
 unit-merge comparison isolated (+7/32) and then **failed** growth. Complementarity
 on the 38 opened extras found unique added coverage (oracle union +3). That bound
-is not a policy. The [selector evaluation contract](docs/PROGRAMMING_SELECTOR_CONTRACT.md)
-is frozen at `8e39b74`. Question-only Jaccard (`963de13`), question+parent
-agreement, and parent-AST-shape nearest gold program all **failed** their CPU
-screens and are stopped. Complementary coverage still exists; no frozen
-selector connected it. Do not train a tail or selector. Do not launch GPUs.
-These 64 cases remain opened. Serving stays the leftover incumbent extra.
+is not a policy. Three frozen selectors failed to connect it. The next attempt
+is [TIES composition](docs/PROGRAMMING_GROWTH_TIES.md) of the same two tails:
+unit merge failed by interfering on 33.6% of signed last-four-layer parameters
+and breaking extractable Python. TIES is frozen (keep 0.2) and not yet decoded.
+Do not train a new tail. Do not open the original 128-task final. These 64
+cases remain opened. Serving stays the leftover incumbent extra until TIES
+passes.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -435,6 +436,11 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-20: **Declared TIES composition of the two frozen programming tails.**
+  Unit merge left 18/38 extras unparseable. Raw last-four-layer deltas disagree
+  in sign on 33.6% of jointly nonzero parameters. TIES keep 0.2 / disjoint mean
+  is frozen (`6a994d62…`); extras not yet decoded. Not admission. No training.
 
 - 2026-09-20: **Selector v3 (failed-parent AST shape vs train gold programs)
   failed.** Decisions `b08ab22d…`. Score 29/64, unique added 0/3, incumbent
