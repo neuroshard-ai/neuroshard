@@ -38,6 +38,8 @@ traces, per-answer preservation, isolated peak memory and actual CPU spend.
 It [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md) on an unsuitable
 output-format baseline. The separate [staged-answering study](docs/STAGED_ANSWERING.md)
 uses complete-answer scoring and fresh operands, with unchanged training and gates.
+Its [execution timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert and
+63 gate updates. The baseline protected 15 answers; candidate quality was not scored.
 Neither can mark a checklist item complete. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator

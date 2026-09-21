@@ -26,6 +26,8 @@ control 5/32). Confirmation was never opened. A separate
 training: its eight-token exact-answer baseline had no protected successes.
 The separate [staged-answering study](docs/STAGED_ANSWERING.md) keeps expert-then-gate
 training and the same gates, with complete-answer scoring and fresh operands.
+Its [first execution](docs/STAGED_ANSWERING_RESULTS.md) established 15 protected
+answers and timed out after 127/128 updates, before the answer comparison.
 It is a 135M CPU mechanism study, not an assistant-capability result. No GPU is authorized.
 [Independent hosting](docs/INDEPENDENT_HOSTING.md) remains the separate item 4
 track and requires four real independent operators.
