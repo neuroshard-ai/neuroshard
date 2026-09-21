@@ -29,8 +29,9 @@ experiment is [learned integration of new capacity](docs/LEARNED_INTEGRATION.md)
 train a new module and its gate together versus a matched no-expansion control,
 and score generated answers on a fresh split. The stage-1 method is frozen.
 The [CPU execution freeze](docs/LEARNED_INTEGRATION_EXECUTION.md) records 135M
-seed hashes and eight general-retention identities. It is not run. No GPU is
-authorized. A fresh dataset by itself would not address the failure.
+seed hashes, eight general-retention identities, and the last-layer train/score
+loop. Development has not been scored. No GPU is authorized. A fresh dataset
+by itself would not address the failure.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -444,6 +445,11 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Froze the stage-1 CPU train/score loop. Not scored. No GPU.**
+  Last-layer expert plus gate versus matched last-layer MLP, 128 teacher-forced
+  steps on unused MBPP, then generated development/retention/general only.
+  Confirmation closed. Execution freeze `231dbbf7…`.
 
 - 2026-09-21: **Recorded the stage-1 CPU execution freeze. Not run. No GPU.**
   Seed `12fd25f7…` file hashes including `model.safetensors` `5af571cb…`.

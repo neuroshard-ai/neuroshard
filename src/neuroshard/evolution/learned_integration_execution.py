@@ -1,9 +1,9 @@
 """Stage-1 CPU execution freeze for learned integration.
 
 This document records the 135M seed hashes, eight general-retention identities,
-and a single-process CPU host. It does not authorize a GPU launch. It does not
-open confirmation. It does not score parent responses. A later committed run
-may train on this host only after bind_execution succeeds.
+and a single-process CPU host. After the freeze is committed, the CPU loop in
+learned_integration_run.py may train and score development. It does not
+authorize a GPU launch. It does not open confirmation.
 """
 import json
 import subprocess
@@ -42,6 +42,7 @@ EXECUTION_SOURCES = (
     'docs/LEARNED_INTEGRATION_EXECUTION.md',
     'scripts/run_learned_integration_stage1.py',
     'src/neuroshard/evolution/learned_integration_execution.py',
+    'src/neuroshard/evolution/learned_integration_run.py',
     'src/neuroshard/evolution/seed.py',
 )
 
