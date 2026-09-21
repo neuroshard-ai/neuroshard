@@ -34,7 +34,8 @@ Serving stays the leftover incumbent extra. A fresh dataset by itself would
 not address the failure. The next experiment is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
-soak that this operator's AWS account cannot satisfy. No GPU is authorized.
+soak that requires four independently administered operators. This operator's
+AWS account cannot satisfy that criterion. No GPU is authorized.
 This does not change the six checklist criteria, the 0.4.0 genesis, or item 4.
 The opened-development 15/32 diagnostic remains not admission evidence.
 A passing experiment counts as supporting evidence; a top-level box is checked
@@ -294,9 +295,10 @@ before the affected work, rather than changing the target after a result.
   Current development: [independent hosting](docs/INDEPENDENT_HOSTING.md) freezes
   the remaining item-4 soak. The CPU protocol preflight uses four equal genesis
   validators (each share strictly below one third) and a non-genesis provider
-  join without SSH. The independent-operator soak stays unauthorized until three
-  independently administered operators exist. AWS machines under our account
-  do not satisfy that criterion. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
+  join without SSH. The independent-operator soak stays unauthorized until four
+  independently administered operators exist. Voting share is aggregated by
+  administrator, not by key. AWS machines under our account do not satisfy that
+  criterion. The [operated LLM alpha](docs/OPERATED_ALPHA_RESULT.md)
   remains the last one-administrator hosting evidence; its GPU service retired
   on September 20.
 
@@ -449,6 +451,12 @@ items is the live-LLM milestone; future quality and capacity improvements contin
 under the same admission rules.
 
 ## Progress log
+
+- 2026-09-21: **Revised independent-hosting soak to four operators. No GPU.**
+  Three operators cannot each hold strictly less than one third of voting power.
+  Soak requires four independently administered operators and aggregates share
+  by administrator. Replaces `5dc22aab…`. Contract `8213fdfd…`. Soak unauthorized.
+  Not admission.
 
 - 2026-09-21: **Froze independent hosting for item 4. No GPU.**
   CPU protocol: four equal genesis validators, stranger-provider join, no key

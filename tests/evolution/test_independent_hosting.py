@@ -10,8 +10,9 @@ from neuroshard.demo import protocol
 from neuroshard.evolution import auditing, expert_lifecycle as life, expert_work, hosting, settlement as state
 from neuroshard.evolution.independent_hosting import (
     ACCEPTED_GRAPH, CONTRACT_IDENTITY, FORMAT, ITEM, LEARNED_INTEGRATION, METHOD_FORMAT,
-    bind_cpu_genesis, bind_method_freeze, bind_spec, load_spec, method_freeze,
-    refuse_launch, share_is_concentrated, validator_powers,
+    PREVIOUS_CONTRACT, administrator_powers, bind_cpu_genesis, bind_method_freeze,
+    bind_soak_administration, bind_spec, load_spec, method_freeze, refuse_launch,
+    share_is_concentrated, validator_powers,
 )
 from neuroshard.evolution.reference_data import identity, sha256
 from test_expert_lifecycle import send
@@ -74,6 +75,10 @@ def test_frozen_contract_identity_is_pinned():
     assert current['item'] == ITEM
     assert current['accepted_graph'] == ACCEPTED_GRAPH
     assert current['parent']['learned_integration'] == LEARNED_INTEGRATION
+    assert current['parent']['independent_hosting'] == PREVIOUS_CONTRACT
+    assert current['revision']['replaces'] == PREVIOUS_CONTRACT
+    assert current['independent_soak']['minimum_independent_operators'] == 4
+    assert current['independent_soak']['voting_share_aggregates_by'] == 'administrator'
     assert bind_spec(current) == {
         'independent_hosting': CONTRACT_IDENTITY,
         'gpu_launch_authorized': False,
@@ -99,6 +104,11 @@ def test_bind_rejects_gpu_admission_and_public_upgrade(monkeypatch):
     reject('reopen_learned_integration_confirmation', True, 'confirmation stays closed')
     reject('independent_soak', {**spec()['independent_soak'], 'authorized': True},
            'soak is not authorized')
+    reject('independent_soak', {**spec()['independent_soak'], 'minimum_independent_operators': 3},
+           'four independently administered operators')
+    reject('independent_soak', {**spec()['independent_soak'],
+                                'voting_share_aggregates_by': 'key'},
+           'by administrator, not key')
 
 
 def test_four_equal_validators_pass_the_cpu_genesis_bound(graphs):
@@ -166,6 +176,30 @@ def test_one_provider_key_still_cannot_hold_the_complete_backbone(graphs):
                        {'0', '1', '2'}, offers, network['height'] + 32, 20000)
 
 
+def test_four_administrators_with_one_validator_each_pass_the_soak_bound(graphs):
+    owners = [protocol.Identity('independent-host-admin-' + str(i)) for i in range(4)]
+    network = genesis_for(graphs, owners, [state.PARAMS['bond_unit']] * 4)
+    powers = bind_cpu_genesis(network)
+    ownership = {key: 'operator-' + str(i) for i, key in enumerate(sorted(powers))}
+    admins = bind_soak_administration(powers, ownership)
+    assert len(admins) == 4
+    assert share_is_concentrated(admins) is False
+
+
+def test_three_administrators_cannot_satisfy_the_strict_one_third_bound(graphs):
+    owners = [protocol.Identity('independent-host-shared-admin-' + str(i)) for i in range(4)]
+    network = genesis_for(graphs, owners, [state.PARAMS['bond_unit']] * 4)
+    powers = bind_cpu_genesis(network)
+    keys = sorted(powers)
+    ownership = {keys[0]: 'operator-a', keys[1]: 'operator-a',
+                 keys[2]: 'operator-b', keys[3]: 'operator-c'}
+    admins = administrator_powers(powers, ownership)
+    assert len(admins) == 3
+    assert share_is_concentrated(admins) is True
+    with pytest.raises(ValueError, match='four independently administered operators'):
+        bind_soak_administration(powers, ownership)
+
+
 def test_method_freeze_refuses_gpu_and_soak():
     current = spec()
     freeze = method_freeze()
@@ -175,7 +209,7 @@ def test_method_freeze_refuses_gpu_and_soak():
     assert freeze['independent_soak_authorized'] is False
     assert freeze['neural_execution'] is False
     assert saved == freeze
-    assert identity(saved) == '01a61518d8b609ca746fdb1afae515155e8130a58b1697af9b43aafc871fde8d'
+    assert identity(saved) == '5d44fdd0523e0e168a5bd0fca9f0b975c7ef71bf8851ca29fb9e3a65d07c047c'
     digest = bind_method_freeze(freeze, current)
     assert digest == identity(saved)
     with pytest.raises(ValueError, match='does not authorize a GPU launch or independent-operator soak'):

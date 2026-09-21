@@ -11,10 +11,13 @@ upgrade the public 0.4.0 chain.
 
 Machine-readable contract:
 [`independent-hosting.json`](../config/experiments/independent-hosting.json)
-(`5dc22aab…`). Method freeze:
+(`8213fdfd…`). This **revises** `5dc22aab…`. Three operators cannot each hold
+strictly less than one third of voting power. The soak now requires four
+independently administered operators and aggregates voting share by
+administrator, not by key. Method freeze:
 [`independent-hosting-method.json`](../config/experiments/independent-hosting-method.json).
 `gpu_launch_authorized` is false. The independent-operator soak
-is unauthorized until the CPU protocol preflight passes **and** three
+is unauthorized until the CPU protocol preflight passes **and** four
 independently administered operators exist.
 
 ## Closed evidence this experiment reuses
@@ -28,9 +31,9 @@ administrator. Records:
 [OPERATED_ALPHA_RESULT.md](OPERATED_ALPHA_RESULT.md).
 
 The [learned-integration](LEARNED_INTEGRATION_RESULTS.md) stage-1 CPU run failed
-development. Serving for the 1.7B research assistant remains the leftover
-incumbent extra. That quality campaign is closed. Item 4 does not wait on a
-better programming tail.
+**development**. Confirmation was never opened. Serving for the 1.7B research
+assistant remains the leftover incumbent extra. That quality campaign is closed.
+Item 4 does not wait on a better programming tail.
 
 ## Question
 
@@ -41,8 +44,8 @@ better programming tail.
 
 Separate keys, availability zones or wallets under one administrator do not
 answer this. The protocol sees keys, not operators. The soak therefore names
-operators explicitly and refuses to count this operator's AWS account as more
-than one of them.
+operators explicitly, aggregates voting power by administrator, and refuses to
+count this operator's AWS account as more than one of them.
 
 ## Two frozen stages
 
@@ -54,11 +57,13 @@ than one of them.
    complete backbone. This stage executes no neural tensors and does not claim
    independent administration.
 
-2. **Independent-operator soak.** Only after stage 1. At least three
-   independently administered operators. This operator may hold at most one of
-   the four validators. Demonstrate join, leave, required-backbone-shard loss,
-   coordinator loss, state recovery and continued service. No GPU is authorized
-   by this specification.
+2. **Independent-operator soak.** Only after stage 1. At least four
+   independently administered operators. Voting concentration is computed by
+   administrator: four equal keys under three administrators (2+1+1) fail,
+   because one administrator holds half the power. This operator may hold at
+   most one of the four validators. Demonstrate join, leave,
+   required-backbone-shard loss, coordinator loss, state recovery and continued
+   service. No GPU is authorized by this specification.
 
 ## What this specification does not do
 

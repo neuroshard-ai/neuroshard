@@ -14,11 +14,13 @@ from neuroshard.lab import state as ledger
 from neuroshard.evolution.reference_data import identity, sha256
 
 FORMAT = 'neuroshard-independent-hosting-v1'
-CONTRACT_IDENTITY = '5dc22aab5901cfb7a778c5897d50cf79e4c57013aab9ceb3c1368334e38e2141'
+CONTRACT_IDENTITY = '8213fdfd1a6f8713adc0356c99714e2587867f55f1b61cc16540175b75891e28'
+PREVIOUS_CONTRACT = '5dc22aab5901cfb7a778c5897d50cf79e4c57013aab9ceb3c1368334e38e2141'
 LEARNED_INTEGRATION = '6801d1a260e622948fa90714d41be11223d36d6a5d7a000c7d173f74f174186f'
 ACCEPTED_GRAPH = '54f2361bf99e092e7fe9eb10597cbb31b19a509bc85608d35391553eb5ccfafa'
 ITEM = 4
 VALIDATORS = 4
+OPERATORS = 4
 SHARE_NUMERATOR = 1
 SHARE_DENOMINATOR = 3
 METHOD_FORMAT = FORMAT + '/method'
@@ -70,6 +72,10 @@ def bind_spec(spec):
         raise ValueError('Independent hosting is bound to the accepted operated-alpha graph')
     if spec.get('parent', {}).get('learned_integration') != LEARNED_INTEGRATION:
         raise ValueError('Independent hosting is bound to the failed learned-integration contract')
+    if spec.get('revision', {}).get('replaces') != PREVIOUS_CONTRACT:
+        raise ValueError('Independent-hosting revision must replace the three-operator contract')
+    if spec.get('parent', {}).get('independent_hosting') != PREVIOUS_CONTRACT:
+        raise ValueError('Independent-hosting parent must record the three-operator contract')
     protocol = spec.get('cpu_protocol') or {}
     if protocol.get('authorized') is not True or protocol.get('neural_execution') is not False:
         raise ValueError('The CPU protocol preflight is authorized without neural execution')
@@ -84,8 +90,10 @@ def bind_spec(spec):
     soak = spec.get('independent_soak') or {}
     if soak.get('authorized') is not False:
         raise ValueError('The independent-operator soak is not authorized')
-    if soak.get('minimum_independent_operators') != 3:
-        raise ValueError('The soak requires three independently administered operators')
+    if soak.get('minimum_independent_operators') != OPERATORS:
+        raise ValueError('The soak requires four independently administered operators')
+    if soak.get('voting_share_aggregates_by') != 'administrator':
+        raise ValueError('Soak voting concentration is by administrator, not key')
     if soak.get('this_operator_may_hold_at_most_validators') != 1:
         raise ValueError('This operator may hold at most one soak validator')
     return {
@@ -137,6 +145,29 @@ def share_is_concentrated(powers, spec=None):
         raise ValueError('Soak genesis requires bonded voting weight')
     return any(power * bound['denominator'] >= total * bound['numerator']
                for power in powers.values())
+
+
+def administrator_powers(powers, ownership):
+    if set(ownership) != set(powers):
+        raise ValueError('Administrator ownership must name every bonded validator')
+    if any(not administrator for administrator in ownership.values()):
+        raise ValueError('Administrator identity is required')
+    aggregated = {}
+    for key, power in powers.items():
+        administrator = ownership[key]
+        aggregated[administrator] = aggregated.get(administrator, 0) + power
+    return aggregated
+
+
+def bind_soak_administration(powers, ownership, spec=None):
+    spec = spec or load_spec()
+    bind_spec(spec)
+    admins = administrator_powers(powers, ownership)
+    if len(admins) < spec['independent_soak']['minimum_independent_operators']:
+        raise ValueError('Soak requires four independently administered operators')
+    if share_is_concentrated(admins, spec):
+        raise ValueError('No administrator may hold one third or more of voting power')
+    return admins
 
 
 def bind_cpu_genesis(state, spec=None):
