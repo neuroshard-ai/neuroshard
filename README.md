@@ -33,15 +33,12 @@ The [recovery amendment](docs/STAGED_ANSWERING_RECOVERY.md) restores that expert
 restarts the gate, charges the interrupted work, and finishes the same
 comparison. It [completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
 expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
-This candidate is stopped. The research serving baseline remains
+The later [block-expert study](docs/BLOCK_EXPERT_RESULTS.md) stopped before
+training at 6/64 protected answers. The [measurement contract](docs/BLOCK_EXPERT_MEASURE.md)
+records that baseline and still trains the added blocks. It is frozen and has
+not run. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
-
-The separate [CPU block-expert study](docs/BLOCK_EXPERT.md)
-[stopped before training](docs/BLOCK_EXPERT_RESULTS.md): the parent supplied
-6/64 correct retention answers, below the required eight. Its proposed added
-Transformer blocks have no learning-quality result. No router was trained and
-no checklist credit follows.
 
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
 with a 4,608-parameter adapter, native replay, and paid inference. It is not

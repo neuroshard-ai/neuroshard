@@ -48,7 +48,9 @@ This candidate is stopped and receives no checklist credit. The separate
 blocks on fresh arithmetic questions against a matched-cost control, before any
 selector training. It [stopped at the baseline](docs/BLOCK_EXPERT_RESULTS.md)
 with 6/64 protected answers against a minimum of eight; no expert was trained.
-Explicit expert competence alone does not prove automatic
+The separate [measurement contract](docs/BLOCK_EXPERT_MEASURE.md) records parent
+retention and unfinished replies, then trains anyway. It is frozen and has not
+run. Explicit expert competence alone does not prove automatic
 serving or preservation. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
