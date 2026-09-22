@@ -37,6 +37,12 @@ This candidate is stopped. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
+The separate [CPU block-expert study](docs/BLOCK_EXPERT.md)
+[stopped before training](docs/BLOCK_EXPERT_RESULTS.md): the parent supplied
+6/64 correct retention answers, below the required eight. Its proposed added
+Transformer blocks have no learning-quality result. No router was trained and
+no checklist credit follows.
+
 Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
 with a 4,608-parameter adapter, native replay, and paid inference. It is not
 the assistant being grown. Independent ownership and economical large-model
