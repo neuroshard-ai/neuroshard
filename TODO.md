@@ -43,7 +43,11 @@ Its [execution timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert and
 in that interrupted run. Its separate
 [recovery completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
 expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
-This candidate is stopped and receives no checklist credit. The separate systems track is
+This candidate is stopped and receives no checklist credit. The separate
+[block-expert competence study](docs/BLOCK_EXPERT.md) tests added Transformer
+blocks on fresh arithmetic questions against a matched-cost control, before any
+selector training. Explicit expert competence alone does not prove automatic
+serving or preservation. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
 soak that requires four independently administered operators. This operator's
