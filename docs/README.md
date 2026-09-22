@@ -26,7 +26,7 @@ retaining the existing generated-answer and retention requirements.
 | [Staged integration](STAGED_INTEGRATION.md) / [baseline result](STAGED_INTEGRATION_RESULTS.md) | Stopped before training: 0/32 under the frozen exact-string, eight-token output rule. |
 | [Staged answering](STAGED_ANSWERING.md) / [execution result](STAGED_ANSWERING_RESULTS.md) | Baseline protected 15 answers; timed out after 127/128 updates before candidate scoring. No GPU. |
 | [Staged execution recovery](STAGED_ANSWERING_RECOVERY.md) / [result](STAGED_ANSWERING_RECOVERY_RESULTS.md) | Completed and rejected: expansion 0/32 versus control 2/32; 11 of 15 protected answers lost. Interrupted and repeated work charged; candidate stopped. |
-| [Block expert competence](BLOCK_EXPERT.md) | Separate CPU experiment: two identity-initialized blocks, broader training coverage and matched-cost control. No selector training or automatic-serving claim. |
+| [Block expert competence](BLOCK_EXPERT.md) / [baseline result](BLOCK_EXPERT_RESULTS.md) | Stopped before training: parent 6/64 retention answers, below eight required. Added blocks have no learning-quality result. |
 | [Independent hosting](INDEPENDENT_HOSTING.md) | Item 4 soak freeze: equal-power CPU genesis and stranger-provider join. No GPU. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
