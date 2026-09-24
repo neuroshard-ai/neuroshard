@@ -1,0 +1,33 @@
+{
+  "format": "neuroshard-append-only-growth-v1",
+  "purpose": "Keep every protected parent answer and consult an added shard only where the parent missed.",
+  "host": "cpu",
+  "train": false,
+  "gpu_launch_authorized": false,
+  "selector_training_authorized": false,
+  "admission_evidence": false,
+  "item4_complete": false,
+  "reuses_opened_measurement": false,
+  "parent_result": {
+    "contract": "4dd616028de2fd6019677a5634c754bbcf6535db400ac74e70bcc937aa4e1ecf",
+    "outcome": "failed",
+    "expert_new": 10,
+    "control_new": 11,
+    "parent_new": 0,
+    "parent_retention": 8,
+    "expert_retention": 0,
+    "control_retention": 0
+  },
+  "serving": {
+    "default": "parent",
+    "consult_added_only_when_parent_misses": true,
+    "protected_answers_stay_with_parent": true,
+    "wrong_added_keeps_parent": true,
+    "unfinished_reply_is_incorrect": true
+  },
+  "later_execution": {
+    "authorized": false,
+    "requires_fresh_questions": true,
+    "success": "served system keeps every protected parent answer and adds correct answers the parent missed"
+  }
+}

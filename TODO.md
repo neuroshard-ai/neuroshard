@@ -49,8 +49,12 @@ blocks on fresh arithmetic questions against a matched-cost control, before any
 selector training. It [stopped at the baseline](docs/BLOCK_EXPERT_RESULTS.md)
 with 6/64 protected answers against a minimum of eight; no expert was trained.
 The separate [measurement contract](docs/BLOCK_EXPERT_MEASURE.md) records parent
-retention and unfinished replies, then trains anyway. It is frozen and has not
-run. Explicit expert competence alone does not prove automatic
+retention and unfinished replies, then trains anyway. It
+[failed](docs/BLOCK_EXPERT_MEASURE_RESULTS.md): added blocks 10/64, control
+11/64, and both lost all 8 protected answers. The next rule is
+[append-only growth](docs/APPEND_ONLY_GROWTH.md): the parent keeps protected
+answers, and a new shard is used only where the parent missed. It has not
+trained. Explicit expert competence alone does not prove automatic
 serving or preservation. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
