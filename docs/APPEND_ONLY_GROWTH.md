@@ -21,7 +21,7 @@ The opened measurement cases stay closed and cannot be rescored as a pass.
    answer.
 5. An unfinished reply is incorrect.
 
-A later execution freeze may train an added shard under this rule. It must use
+The CPU execution is [append-only execution](APPEND_ONLY_EXECUTION.md). It uses
 fresh questions. Success for that later run is: every protected parent answer
 is still served, and the served system gains correct answers the parent missed.
 Beating an in-place control that is allowed to forget is not the product test.

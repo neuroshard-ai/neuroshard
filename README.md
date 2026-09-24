@@ -39,8 +39,9 @@ records that baseline and still trains the added blocks. That run
 [failed](docs/BLOCK_EXPERT_MEASURE_RESULTS.md): added blocks 10/64 versus
 control 11/64, and both erased all 8 protected answers. The next rule is
 [append-only growth](docs/APPEND_ONLY_GROWTH.md): the parent keeps every
-protected answer, and a new shard is used only where the parent missed. It is
-frozen and has not trained. The research serving baseline remains
+protected answer, and a new shard is used only where the parent missed. The
+[CPU execution](docs/APPEND_ONLY_EXECUTION.md) is the run of that rule. It does
+not issue NEURO or upgrade public 0.4.0. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
