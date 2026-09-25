@@ -1,0 +1,20 @@
+{
+  "format": "neuroshard-observable-selection-v1",
+  "purpose": "Choose a shard without the hidden answer, and beat the most common training label while keeping protected answers.",
+  "host": "cpu",
+  "train": false,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "item4_complete": false,
+  "upgrade_public_0_4_0": false,
+  "reuses_append_only_questions": false,
+  "parent_result": "config/experiments/append-only-execution-result.json",
+  "selector_may_read": ["question_text", "parent_generation", "added_generation", "model_internal_scores"],
+  "selector_must_not_read": ["gold_answer", "passed", "parsed_answer_equals_gold"],
+  "evaluation_may_compare_to_gold_after_choice": true,
+  "success": {
+    "beat_most_common_training_label": true,
+    "keep_every_predeclared_protected_answer": true
+  },
+  "later_execution_authorized": false
+}
