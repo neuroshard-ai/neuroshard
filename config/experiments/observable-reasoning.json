@@ -1,0 +1,144 @@
+{
+  "format": "neuroshard-observable-reasoning-v1",
+  "purpose": "Test whether worked-example supervision yields useful new answers and question-only routing preserves the parent, against a compute-matched control.",
+  "host": "cpu",
+  "train": true,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "upgrade_public_0_4_0": false,
+  "item4_complete": false,
+  "original_final_opened": false,
+  "reuses_opened_64": false,
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "files": {
+      "config.json": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "generation_config.json": "87b916edaaab66b3899b9d0dd0752727dff6666686da0504d89ae0a6e055a013",
+      "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+      "model.safetensors": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+      "tokenizer.json": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "tokenizer_config.json": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79"
+    }
+  },
+  "architecture": {
+    "blocks": 2,
+    "expert": "append identity-initialized copies of final two blocks; freeze parent",
+    "control": "train original final two blocks; same supervision and actual matched training CPU",
+    "selector": "training-only multinomial naive Bayes on question words, equal class priors, Laplace smoothing 1, candidate only when log odds > log(9); otherwise parent",
+    "selection_inputs": [
+      "question_text"
+    ],
+    "selection_receives_protected_ids": false,
+    "serving": "select once before decoding; one greedy generation; no external arithmetic solver",
+    "head": "frozen",
+    "training_execution": "verified frozen-prefix cache for training only",
+    "distributed_execution": false
+  },
+  "data": {
+    "seed": 2026092501,
+    "operand_limit_exclusive": 192,
+    "counts": {
+      "train_new": 768,
+      "train_replay": 384,
+      "development": 96,
+      "retention": 128
+    },
+    "system": "Answer arithmetic questions. For a remainder question, use four lines: First remainder: integer, Second remainder: integer, Sum: integer, Answer: integer. For ordinary addition, reply with only the final integer.",
+    "prompts": {
+      "train": {
+        "modular-addition": [
+          "What is the remainder when {a} + {b} is divided by 7?",
+          "Add {a} and {b}, then give the remainder after division by seven.",
+          "Compute ({a} + {b}) modulo 7.",
+          "Find the remainder of the sum of {a} and {b} after division by 7.",
+          "For {a} plus {b}, what is left over after dividing by seven?",
+          "Calculate ({a} + {b}) mod 7."
+        ],
+        "addition": [
+          "What is {a} + {b}?",
+          "Add {a} and {b}.",
+          "Compute the sum of {a} and {b}.",
+          "How much is {a} plus {b}?",
+          "Give the total of {a} and {b}.",
+          "Calculate {a} + {b}."
+        ]
+      },
+      "evaluation": {
+        "modular-addition": [
+          "After adding {a} to {b} and dividing the total by 7, which remainder remains?",
+          "I need the sum of {a} and {b} modulo seven. What is it?",
+          "If {a} plus {b} is divided by seven, how much is left over?",
+          "Tell me the remainder for ({a} + {b}) mod 7."
+        ],
+        "addition": [
+          "Tell me how much I get from adding {a} to {b}.",
+          "I need the total when {a} and {b} are added together.",
+          "If I start at {a} and add {b}, what is the result?",
+          "Please work out the sum: {a} plus {b}."
+        ]
+      }
+    },
+    "split": "unordered pairs unique across all roles; exclude all six previous arithmetic datasets; evaluation question templates disjoint from training",
+    "confirmation": null,
+    "mbpp_access": false,
+    "supervision": "training modular replies show two operand remainders, their sum and final remainder; evaluation scores complete generated final answer only",
+    "retention_scope": "fresh ordinary arithmetic, not general conversation or previously admitted network windows"
+  },
+  "training": {
+    "seed": 2026092501,
+    "steps": 864,
+    "batch_documents": 8,
+    "learning_rate": 0.0003,
+    "warmup_steps": 32,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "max_length": 192,
+    "generation_tokens": 64,
+    "maximum_control_steps": 2592,
+    "cache_logit_atol": 2e-05,
+    "schedule": "six passes over one deterministic shuffled set; no tuning or quality-based early stopping",
+    "control_stop": "first complete step meeting entire expert child CPU bill plus expert-only prefix extension CPU"
+  },
+  "budget": {
+    "threads": 1,
+    "maximum_peak_rss_bytes": 4294967296,
+    "total_wall_seconds": 21600,
+    "arms": {
+      "baseline": 2400,
+      "prepare": 2400,
+      "expert-train": 5400,
+      "control-train": 6000,
+      "expert-evaluate": 2400,
+      "control-evaluate": 2400
+    },
+    "retries": 0,
+    "unit": "per-arm CPU and wall seconds; six-hour overall cap; no paid infrastructure",
+    "accounting": "all children including failures and forced diagnostics billed; common cache and router fit charged once; actual optimization target gives control all expert process overhead"
+  },
+  "gates": {
+    "minimum_protected": 4,
+    "minimum_new_correct": 32,
+    "minimum_gain": 6,
+    "bootstrap_seed": 2026092501,
+    "bootstrap_draws": 10000,
+    "maximum_latency_ratio": 1.5,
+    "maximum_p95_seconds": 20.0,
+    "maximum_memory_ratio": 1.5,
+    "protection": "all baseline-correct answers across both evaluation roles; declared before training; never supplied to selector",
+    "required_comparisons": "served answer beats parent, same-route control and training-majority constant; forced expert must also beat forced control; all paired lower 95% bounds > 0",
+    "low_parent_retention": "record and finish competence experiment; fewer than four retained correct parent answers fails final protection gate"
+  },
+  "runtime": {
+    "packages": {
+      "torch": "2.9.1+cpu",
+      "transformers": "4.57.3",
+      "tokenizers": "0.22.1",
+      "safetensors": "0.7.0"
+    }
+  },
+  "scope": "single-host synthetic arithmetic mechanism only; no network, general assistant, permissionless verification or repeated-growth claim",
+  "stop_rule": "one committed run; any failed gate stops candidate; no automatic retry, tuning, promotion or follow-up run"
+}
