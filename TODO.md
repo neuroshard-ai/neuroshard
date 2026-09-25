@@ -53,8 +53,11 @@ retention and unfinished replies, then trains anyway. It
 [failed](docs/BLOCK_EXPERT_MEASURE_RESULTS.md): added blocks 10/64, control
 11/64, and both lost all 8 protected answers. The next rule is
 [append-only growth](docs/APPEND_ONLY_GROWTH.md): the parent keeps protected
-answers, and a new shard is used only where the parent missed. It has not
-trained. Explicit expert competence alone does not prove automatic
+answers, and a new shard is used only where the parent missed. Its
+[CPU execution](docs/APPEND_ONLY_EXECUTION_RESULTS.md) met the oracle gates and
+tied a constant training label at 9/64. The selector read the hidden answer, so
+this is not a deployable assistant. The next rule is
+[observable selection](docs/OBSERVABLE_SELECTION.md). It has not trained. Explicit expert competence alone does not prove automatic
 serving or preservation. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator

@@ -40,8 +40,10 @@ records that baseline and still trains the added blocks. That run
 control 11/64, and both erased all 8 protected answers. The next rule is
 [append-only growth](docs/APPEND_ONLY_GROWTH.md): the parent keeps every
 protected answer, and a new shard is used only where the parent missed. The
-[CPU execution](docs/APPEND_ONLY_EXECUTION.md) is the run of that rule. It does
-not issue NEURO or upgrade public 0.4.0. The research serving baseline remains
+[CPU execution](docs/APPEND_ONLY_EXECUTION_RESULTS.md) met that rule only by
+reading the hidden answer, and the added blocks tied a constant training label
+at 9/64. It is not a deployable assistant. The next rule is
+[observable selection](docs/OBSERVABLE_SELECTION.md). It has not trained. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
