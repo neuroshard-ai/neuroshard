@@ -1,10 +1,10 @@
 # Fresh BAR reference comparison
 
-**Execution status:** after the [CI correction](MODULAR_REFERENCE_FRESH_CI.md),
-the first allocated study stopped on nondeterministic parser error text after
-nine baseline generations. Its evidence is preserved. The
-[recovery amendment](MODULAR_REFERENCE_FRESH_RECOVERY.md) fixes rejection text,
-retains the same plan and gates, and carries prior costs into one new CPU study.
+**Execution status:** the [recovered baseline](MODULAR_REFERENCE_FRESH_RESULTS.md)
+finished 11/24 and failed the unchanged quality gate. The study is closed;
+modular evaluation and scheduled replays were not started. The first allocation's
+parser failure and the [recovery amendment](MODULAR_REFERENCE_FRESH_RECOVERY.md)
+remain recorded, with all costs charged and temporary resources retired.
 
 **Purpose:** measure what published neural composition adds, what it loses, and
 what it costs, before training a NeuroShard expert. This is the next A1 reference

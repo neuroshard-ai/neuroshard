@@ -1,5 +1,9 @@
 # Fresh reference: deterministic rejection and execution recovery
 
+**Result:** the [recovered baseline](MODULAR_REFERENCE_FRESH_RESULTS.md) finished
+11/24 and failed the unchanged quality gate. This study is closed and its
+temporary resources are retired. The contract below is retained as frozen.
+
 The CPU study on `f1e384b58c8b8bc5dbfeba2c7afa029a0a05880f` stopped
 after nine baseline generations, eight of which entered the progress record.
 CI had passed. No replay or modular checkpoint preparation began. The stopped

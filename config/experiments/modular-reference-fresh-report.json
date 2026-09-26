@@ -1,0 +1,437 @@
+{
+  "format": "neuroshard-modular-reference-fresh-report/1",
+  "source_commit": "0494826da6c3a90ea50e10e8a00a2776466dfd3f",
+  "raw_result_sha256": "2d4cf929bd791f056c40190378802648f0d8d064ed0f60039c8a6193b0f5d6fa",
+  "plan_sha256": "f77e934cef4c9526a1e5e4b3dacd9eace264ca560d4518de9f17345fdff93599",
+  "decision": "Stop: the dense baseline failed the unchanged usability gate. Modular comparison and replay were not started.",
+  "baseline_primary_completed": true,
+  "baseline_gate": false,
+  "baseline": {
+    "correct": 11,
+    "tasks": 24,
+    "category_correct": {
+      "conversation": 4,
+      "instruction": 4,
+      "tool-use": 3
+    },
+    "latency": {
+      "p95_seconds": 77.931,
+      "p95_first_token_seconds": 3.912784066000029,
+      "peak_rss_bytes": 14819889152
+    }
+  },
+  "modular": {
+    "evaluated": false,
+    "correct": null,
+    "tasks": 0,
+    "gain": null,
+    "losses": null
+  },
+  "scheduled_replay_completed": false,
+  "verification": {
+    "saved_reply_rescore_count": 24,
+    "score_provenance_and_native_tool_validation_agree": true,
+    "completed_worker_outcomes": 25,
+    "independent_neural_replay": false
+  },
+  "quality_ready": false,
+  "reference_ready": false,
+  "growth_screen_passed": false,
+  "milestone_complete": false,
+  "admission_evidence": false,
+  "ci": {
+    "id": 36250720669,
+    "head_sha": "0494826da6c3a90ea50e10e8a00a2776466dfd3f",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36250720669"
+  },
+  "accounting": {
+    "baseline": {
+      "evaluation_seconds": 12306.291761946834,
+      "preparation_seconds": 296.377400791,
+      "historical_preparation_seconds": 143.48857155000002,
+      "new_preparation_seconds": 152.888829241,
+      "new_evaluation_seconds": 718.3340951140001,
+      "historical_evaluation_seconds": 11587.957666832835
+    },
+    "modular": {
+      "evaluation_seconds": 0,
+      "preparation_seconds": 0.0,
+      "historical_preparation_seconds": 0.0,
+      "new_preparation_seconds": 0.0,
+      "new_evaluation_seconds": 0,
+      "historical_evaluation_seconds": 0
+    }
+  },
+  "allocation": {
+    "name": "neuroshard-reference-bfcd15e16b37",
+    "commit": "0494826da6c3a90ea50e10e8a00a2776466dfd3f",
+    "created": "2026-09-26T15:25:47.261168+00:00",
+    "deadline": "2026-09-26T23:13:47.261168+00:00",
+    "resources": {
+      "format": "neuroshard-modular-reference-recovery-resources/1",
+      "region": "us-east-1",
+      "instances": 1,
+      "instance_type": "r7i.4xlarge",
+      "hours": 7.8,
+      "planning_cap_usd": 15,
+      "disk_gib": 160,
+      "disk_type": "gp3",
+      "setup_seconds": 3600,
+      "copy_seconds": 600,
+      "image": {
+        "ImageId": "ami-05a3e9423ae4d7a19",
+        "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+        "CreationDate": "2026-09-04T08:02:48.000Z",
+        "OwnerId": "099720109477",
+        "RootDeviceName": "/dev/sda1"
+      },
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "QN6NV26MDYTYVNSE",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.0584
+      },
+      "source_instance": "i-0d681a8ef83f72619",
+      "gpu": false,
+      "purpose": "modular-reference-fresh-recovery",
+      "shutdown_terminates": true,
+      "terminate_after_evidence_copy": true,
+      "attempts": 1,
+      "outbound_upload_cap_bytes": 33554432,
+      "prior_resources": {
+        "path": "config/experiments/modular-reference-fresh-interrupted-receipts.json",
+        "sha256": "bfbf62d89abca5d85cbab87e65646ddffdabc8ac7c03557d69dab3ab5de1d1ab"
+      },
+      "combined_instance_seconds_cap": 28800,
+      "combined_planning_cap_usd": 15
+    },
+    "instance_ids": [
+      "i-047c47703df2126f2"
+    ],
+    "security_group": "sg-034367190e6bf9313",
+    "private_ip": "172.31.76.159",
+    "public_ip": "3.239.49.149"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-26T15:42:14.698907+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-047c47703df2126f2"
+    ],
+    "conservative_instance_seconds": 987.43771,
+    "conservative_compute_usd": 0.29030668674000004,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "combined_fresh_resources": {
+    "conservative_instance_seconds": 1514.089173,
+    "conservative_compute_usd": 0.44514221686200006,
+    "includes_interrupted_allocation": true,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "worker_outcomes": [
+    {
+      "name": "baseline-prepare",
+      "outcome": {
+        "seconds": 152.888829241,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-e71c000faed04288",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-bounded-json",
+      "outcome": {
+        "seconds": 22.747212519999948,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-6c74eeafad5c45a5",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-boxes",
+      "outcome": {
+        "seconds": 7.092498398999965,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-0cdad9b2c16c490d",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-calendar",
+      "outcome": {
+        "seconds": 7.091754307000031,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-fc1b12a3cb2f498c",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-condition",
+      "outcome": {
+        "seconds": 7.39211659700004,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-c0fa06f5c3d34e87",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-constraint",
+      "outcome": {
+        "seconds": 9.10020400299993,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-682c6d56c4944bac",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-deduplicate",
+      "outcome": {
+        "seconds": 19.086735625000017,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-6b68e765289144b4",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-extract",
+      "outcome": {
+        "seconds": 13.11488698700009,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-859b16f2c5894b38",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-filter",
+      "outcome": {
+        "seconds": 11.207138978000017,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-201c818da1184ad6",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-initials",
+      "outcome": {
+        "seconds": 12.952701029000025,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-06f5e88243124e0a",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-inventory",
+      "outcome": {
+        "seconds": 7.192334104999986,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-b10c45d288b5476c",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-ownership",
+      "outcome": {
+        "seconds": 7.392017308999982,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-c157b41e42e94f20",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-quoted-note",
+      "outcome": {
+        "seconds": 9.099876398999982,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-a027f63eb38e49b2",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-reverse",
+      "outcome": {
+        "seconds": 14.71962434599999,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-048a740236674997",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-route",
+      "outcome": {
+        "seconds": 7.492421099000012,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-5cef1f21a49e49eb",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-schedule",
+      "outcome": {
+        "seconds": 11.357379965999996,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-31187b50deda4433",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-sort-words",
+      "outcome": {
+        "seconds": 14.922444556000073,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-7072732b0833491c",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-account",
+      "outcome": {
+        "seconds": 74.934732962,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-506eb5eda63c4c84",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-documents",
+      "outcome": {
+        "seconds": 53.80947644400004,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-171e186322024112",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-label",
+      "outcome": {
+        "seconds": 65.95676015900005,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-a0e15d85bf374946",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-reminder",
+      "outcome": {
+        "seconds": 81.66473789499997,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-f7281a2a4b06419a",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-reschedule",
+      "outcome": {
+        "seconds": 80.413528213,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-f3a562a0ea384f26",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-stock",
+      "outcome": {
+        "seconds": 55.012790374999895,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-85f28ba2f82041bc",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-travel",
+      "outcome": {
+        "seconds": 64.90153823800006,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-5eb5a903f95b4cd7",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-primary-fresh-tool-units",
+      "outcome": {
+        "seconds": 59.67918460299998,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-f4ffb5bc431a4a60",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    }
+  ],
+  "next_decision": "Audit custom decoder parity with the upstream implementation before attributing the result solely to model quality; any replacement foundation or changed method needs a separate prospective contract. No further BAR run is authorized by this result."
+}
