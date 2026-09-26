@@ -24,8 +24,8 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** A1's artifact and recipe review, followed by a committed
-reproduction plan. No new experiment is running. The
+**Next action:** run the committed A1 reproduction. BAR is the reference;
+FlexOlmo is not. No scored outputs exist yet. The
 [observable-reasoning candidate](docs/OBSERVABLE_REASONING_RESULTS.md) is closed.
 
 **Order:** A1 → A2 → A3 is the learning priority. Plan A4's memory and network
@@ -225,6 +225,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | Date | Milestone | Decision / evidence |
 | --- | --- | --- |
 | 2026-09-26 | A1–A6 | New direction recorded; all milestones open. Start with reference artifacts and recipe review. |
+| 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 
 ## Research informing this direction
 

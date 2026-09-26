@@ -47,7 +47,8 @@ at 9/64. It is not a deployable assistant. The subsequent
 failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
 no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
 starts with a capable pretrained foundation and a reproducible modular learning
-recipe; its six milestones remain open. The research serving baseline remains
+recipe; its six milestones remain open. The
+[BAR reference contract](docs/MODULAR_REFERENCE.md) is the current A1 step. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
