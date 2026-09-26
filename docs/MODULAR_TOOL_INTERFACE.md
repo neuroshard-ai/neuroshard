@@ -1,5 +1,8 @@
 # BAR tool-interface diagnostic
 
+**Completed:** [3/3 correct calls and three exact replays](MODULAR_TOOL_INTERFACE_RESULTS.md).
+This contract remains the pre-execution record; A1 is still open.
+
 The completed BAR-7B baseline scored **0/3 tool calls**. Its prompt requested
 function use but never specified the tagged, keyword-argument syntax required
 by its scorer. This is an interface mismatch worth correcting before selecting

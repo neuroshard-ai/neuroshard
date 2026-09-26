@@ -24,10 +24,12 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** run the committed [tool-interface diagnostic](docs/MODULAR_TOOL_INTERFACE.md)
-after CI. The audit found that our prompt omitted the call-format instructions
-used upstream. Three opened cases check that correction on the cached CPU
-model; they cannot close A1. The [original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
+**Next action:** freeze a fresh A1 baseline/reference comparison using the
+corrected interface and a declared compute/latency budget. The
+[tool-interface diagnostic](docs/MODULAR_TOOL_INTERFACE_RESULTS.md) finished:
+3/3 correct calls and three exact independent replays, on opened cases. This
+resolves their formatting failure but cannot close A1. The
+[original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
 remains failed at 4/9, including 0/3 valid tool calls. The original
 [execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md) and larger modular
 comparison have not been run. The
@@ -234,6 +236,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 | 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
 | 2026-09-26 | A1 | [Interface audit and separate diagnostic](docs/MODULAR_TOOL_INTERFACE.md) correct omitted call-format instructions, retain the failed record, and freeze three opened CPU cases with successful-call replay. No capability result or milestone credit. |
+| 2026-09-26 | A1 | [Corrected interface result](docs/MODULAR_TOOL_INTERFACE_RESULTS.md): 3/3 correct tool calls and three exact replays; 103.4 minutes of new CPU worker time. Opened-case interface check only; A1 remains open. |
 
 ## Research informing this direction
 

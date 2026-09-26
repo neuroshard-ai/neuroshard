@@ -1,0 +1,266 @@
+{
+  "execution_commit": "2664b1253eaa9495a1fd932b623c46222e237720",
+  "result_sha256": "cf569c62e199f82cb50f2d382b8aec84370158f316689a04f61200e7fff1ce3b",
+  "replays": [
+    {
+      "id": "tool-add",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>add(a=12, b=30)</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        723,
+        2948,
+        28,
+        717,
+        11,
+        293,
+        28,
+        966,
+        12817,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 256,
+      "generated_tokens": 17,
+      "seconds": 959.085,
+      "max_rss_bytes": 6735618048,
+      "rendered_sha256": "7ed188532325a607ac2e271dad369826dccd2be199d995164a3c897cfb4f675d",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "add",
+            "arguments": {
+              "a": 12,
+              "b": 30
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "replay",
+      "task_sha256": "5724e038ec36961702ab7312c7618e86d3f78636af71b048285e63bcb0ac7052",
+      "process_cpu_seconds": 394.069355493
+    },
+    {
+      "id": "tool-weather",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>get_weather(city=\"Paris\")</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        456,
+        70464,
+        44602,
+        429,
+        60704,
+        909,
+        524,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 239,
+      "generated_tokens": 15,
+      "seconds": 854.862,
+      "max_rss_bytes": 6733553664,
+      "rendered_sha256": "263e831cc631b1201472f11835ac5ca39e35f19856e5d213b7466ae3ab234fc5",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "replay",
+      "task_sha256": "8891388e72ae7f19042bc32501f32f31073af5c9f8c773d0c115c2db06d23284",
+      "process_cpu_seconds": 356.793853484
+    },
+    {
+      "id": "tool-balance",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>lookup_balance(account=\"cedar-47\", currency=\"USD\")</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        21696,
+        30496,
+        24692,
+        429,
+        2041,
+        277,
+        12,
+        2618,
+        498,
+        11667,
+        429,
+        27847,
+        909,
+        524,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 240,
+      "generated_tokens": 22,
+      "seconds": 1254.744,
+      "max_rss_bytes": 6744805376,
+      "rendered_sha256": "f1131d7f46cd126b79356d77d7b44f7ef0df8abe97f10201880c599988858d41",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "lookup_balance",
+            "arguments": {
+              "account": "cedar-47",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "replay",
+      "task_sha256": "7c9e1d1ad061e370cbafc310a6e04c5052cdb2a14641b19eeb5d3aea6cc39420",
+      "process_cpu_seconds": 456.916223047
+    }
+  ],
+  "receipts": [
+    {
+      "attempt": "baseline-prepare",
+      "request_sha256": "509f266b1caece3c55c49c5d83babb80b994a4902eae9ff47391faf997b0c75c",
+      "reply_sha256": "775a9653cfbcfd3e50ee2761dfbdf4ecc5d1a6c00b6f009020951f3f95a5fc18",
+      "outcome": {
+        "seconds": 78.2834999114275,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-b7b013c70ed74d03",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 48.447154411
+    },
+    {
+      "attempt": "baseline-primary-tool-add",
+      "request_sha256": "a7c3571adbf0f136fef2b8eedbf3379a9f7342d88ebc5864ab0ad3f6d3de40bf",
+      "reply_sha256": "d71d5ac1c0e0a5faebe624a84624e233d3328ece650e1e9f2023df64a4f63837",
+      "outcome": {
+        "seconds": 967.0906725013629,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-18b9fdc821f541dc",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 397.903238583
+    },
+    {
+      "attempt": "baseline-primary-tool-balance",
+      "request_sha256": "b6e49dbb4aab39b557b73f833bf061d1236638f93e7d9178496541a4964bad03",
+      "reply_sha256": "9e07d82d0177967be12b48560f62f6d977e78eb9f55480fc64209451e27aff49",
+      "outcome": {
+        "seconds": 1198.1033950410783,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-b8ba446bafc542f9",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 456.970314282
+    },
+    {
+      "attempt": "baseline-primary-tool-weather",
+      "request_sha256": "6167ef1bf23d2bcbb59726c357ebf896d3d6a1039419db50be3e37f76a8a906c",
+      "reply_sha256": "1d096b0a5f0fc2228ffc9fef0df09939544b2bb63cfba9c597f1e144d4d92977",
+      "outcome": {
+        "seconds": 865.4275438087061,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-07ee397e23c4498b",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 359.186809396
+    },
+    {
+      "attempt": "baseline-replay-tool-add",
+      "request_sha256": "4adcd3494f576296afff087c3d787fae546335fd2b8720c8a386a26934c5c43f",
+      "reply_sha256": "8ab778551b43cae0538b514c054bbc8cb1379091820c76ea63467d56d5a4f658",
+      "outcome": {
+        "seconds": 967.729335851036,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-19ac3f46c76842b5",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 394.069355493
+    },
+    {
+      "attempt": "baseline-replay-tool-balance",
+      "request_sha256": "d51cf94bd22fbe7fa3bc1d9c57b20933ae7ff9f97475ea0c8f7a7a30d20aad44",
+      "reply_sha256": "86a1d10c674a1f60c391be6dad2d8d7fbfd23433d5f4ea9dd965add0dc527bd2",
+      "outcome": {
+        "seconds": 1263.4245374733582,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-a750a418b2ac4720",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 456.916223047
+    },
+    {
+      "attempt": "baseline-replay-tool-weather",
+      "request_sha256": "04f0cda6622ae93c137a8bc2a780487e8919e59c82cf2a8f00f603a2fbbb9680",
+      "reply_sha256": "6a11f7bcd018f9501b95c2f8a7c02477df378e7d5ce890d1046b55edf3b05f18",
+      "outcome": {
+        "seconds": 863.6357207912952,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-51549584f731468a",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      },
+      "process_cpu_seconds": 356.793853484
+    }
+  ],
+  "legacy_evaluation_seconds": 5203.386
+}

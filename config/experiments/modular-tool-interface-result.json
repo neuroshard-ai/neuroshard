@@ -1,0 +1,243 @@
+{
+  "execution_completed": true,
+  "primary_complete": true,
+  "correct_calls": 3,
+  "wire_valid_calls": 3,
+  "replay_complete": true,
+  "interface_confirmed": true,
+  "quality_ready": false,
+  "admission_evidence": false,
+  "milestone_complete": false,
+  "opened_diagnostic_cases": true,
+  "binding": {
+    "freeze": {
+      "commit": "2664b1253eaa9495a1fd932b623c46222e237720",
+      "profile": "tool-interface",
+      "sources": {
+        "scripts/run_modular_reference.py": "c494d1aadbbd5413e202b1a69b0acaa992a18a16574760fe41f6295f4b58af1d",
+        "src/neuroshard/evolution/modular_reference.py": "ec9f6c3db917b6a9b723209e4bd66908d7eb780e3f8fac8d714cf89469e05370",
+        "src/neuroshard/evolution/modular_reference_run.py": "a3d898ea90fe4c82068c71e8bf5feb222b5df04e043775c6c9b3385cc1e9ff70",
+        "src/neuroshard/evolution/modular_reference_execution.py": "c9c7cda040eda1196ea053c742be1c9759858ef38f79aca987fcd9f9e5f4586b",
+        "config/experiments/modular-reference-a1.json": "773d5d59403554e3c9713e8636d235d3e39287d59c6e075fed30c26c88aab7e4",
+        "config/experiments/modular-reference-chat-template.jinja": "1fd2eac6d6f73da1f9e30d9b0511f91a70cc8455ffffe48d20f48e77357f5029",
+        "config/experiments/modular-reference-a1-artifacts.json": "e096227b60249bdffdbd563738353714fc7372396180e57f70a88ca0311776be",
+        "config/experiments/modular-reference-a1-execution.json": "e7e62b6b1198be6b293c6e6e3d2d060c4a9cda43dce7924694b36215d188b84c",
+        "src/neuroshard/__init__.py": "4ed35ca7a44e55cdd74e6a10b6e3cc3523258456a21aee45159b2dea3a0c0266",
+        "src/neuroshard/version.py": "e364931a8afff672985ee99f795e6d8b20ff33c55d71d757ec211ec6689b3c19",
+        "src/neuroshard/evolution/__init__.py": "01db1888cb7b1947c173c0fb401427b0339812f5b3aea68db97d09d60cb28b3d",
+        "src/neuroshard/evolution/modular_tools.py": "256d0d71cd9ffd07733a0a5851fda7f5f13a0ed1ef58365c7d83ad267af82480",
+        "config/experiments/modular-tool-interface-diagnostic.json": "67d8e2d0d67ffdf76da3293c7d928ba7d9feb1196c6a0b1e76c1c9146825edee",
+        "config/experiments/modular-tool-interface-execution.json": "26311bcf3e3eeb4ca523acaff46513db1287a8367462f5e75e8a39f0574405c2",
+        "config/experiments/modular-tool-interface-audit.json": "7063220fa1bc0e71c73b9ce71c5032099b55bb410f8035e09ebad1f4e52d187e",
+        "config/experiments/modular-reference-a1-legacy-baseline-result.json": "a087a02063ad3b727b423238fab90fe1d25d523d5d994ff1724890931f6c4322"
+      },
+      "packages": {
+        "torch": "2.9.1+cpu",
+        "transformers": "4.57.3",
+        "safetensors": "0.7.0",
+        "huggingface-hub": "0.36.0",
+        "tokenizers": "0.22.1",
+        "jinja2": "3.1.6",
+        "numpy": "2.2.6"
+      },
+      "environment": {
+        "ATEN_CPU_CAPABILITY": "default",
+        "MKL_ENABLE_INSTRUCTIONS": "SSE4_2",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "TOKENIZERS_PARALLELISM": "false"
+      },
+      "python": "3.10.12",
+      "cpu_features": [
+        "flags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault pti fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves ida arat pku ospke",
+        "model name\t: Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz"
+      ],
+      "plan_sha256": "67d8e2d0d67ffdf76da3293c7d928ba7d9feb1196c6a0b1e76c1c9146825edee",
+      "amendment_sha256": "26311bcf3e3eeb4ca523acaff46513db1287a8367462f5e75e8a39f0574405c2",
+      "artifacts_sha256": "e096227b60249bdffdbd563738353714fc7372396180e57f70a88ca0311776be"
+    },
+    "profile": "tool-interface",
+    "models": "/home/ubuntu/neuroshard/.neuroshard/modular-reference",
+    "legacy_sha256": "a087a02063ad3b727b423238fab90fe1d25d523d5d994ff1724890931f6c4322"
+  },
+  "accounting": {
+    "baseline": {
+      "evaluation_seconds": 11328.797205466837,
+      "preparation_seconds": 78.2834999114275
+    }
+  },
+  "primary": [
+    {
+      "id": "tool-add",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>add(a=12, b=30)</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        723,
+        2948,
+        28,
+        717,
+        11,
+        293,
+        28,
+        966,
+        12817,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 256,
+      "generated_tokens": 17,
+      "seconds": 962.212,
+      "max_rss_bytes": 6736920576,
+      "rendered_sha256": "7ed188532325a607ac2e271dad369826dccd2be199d995164a3c897cfb4f675d",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "add",
+            "arguments": {
+              "a": 12,
+              "b": 30
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "primary",
+      "task_sha256": "5724e038ec36961702ab7312c7618e86d3f78636af71b048285e63bcb0ac7052",
+      "process_cpu_seconds": 397.903238583
+    },
+    {
+      "id": "tool-weather",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>get_weather(city=\"Paris\")</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        456,
+        70464,
+        44602,
+        429,
+        60704,
+        909,
+        524,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 239,
+      "generated_tokens": 15,
+      "seconds": 856.473,
+      "max_rss_bytes": 6727421952,
+      "rendered_sha256": "263e831cc631b1201472f11835ac5ca39e35f19856e5d213b7466ae3ab234fc5",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "primary",
+      "task_sha256": "8891388e72ae7f19042bc32501f32f31073af5c9f8c773d0c115c2db06d23284",
+      "process_cpu_seconds": 359.186809396
+    },
+    {
+      "id": "tool-balance",
+      "model": "baseline",
+      "category": "tool-use",
+      "text": "<function_calls>lookup_balance(account=\"cedar-47\", currency=\"USD\")</function_calls>",
+      "token_ids": [
+        27,
+        1723,
+        46736,
+        29,
+        21696,
+        30496,
+        24692,
+        429,
+        2041,
+        277,
+        12,
+        2618,
+        498,
+        11667,
+        429,
+        27847,
+        909,
+        524,
+        1723,
+        46736,
+        29,
+        100257
+      ],
+      "terminated": true,
+      "passed": true,
+      "reason": "tool-call",
+      "prompt_tokens": 240,
+      "generated_tokens": 22,
+      "seconds": 1189.492,
+      "max_rss_bytes": 6735470592,
+      "rendered_sha256": "f1131d7f46cd126b79356d77d7b44f7ef0df8abe97f10201880c599988858d41",
+      "stopped": false,
+      "wire_validation": {
+        "valid": true,
+        "calls": [
+          {
+            "name": "lookup_balance",
+            "arguments": {
+              "account": "cedar-47",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      "binding": "0225ea86b5d0bd18f5f0f5a644ae0eea21463fbd47c2210c0d5b06d2a5125c82",
+      "phase": "primary",
+      "task_sha256": "7c9e1d1ad061e370cbafc310a6e04c5052cdb2a14641b19eeb5d3aea6cc39420",
+      "process_cpu_seconds": 456.970314282
+    }
+  ],
+  "replays": [
+    {
+      "model": "baseline",
+      "id": "tool-add",
+      "matched": true,
+      "tokens_matched": true
+    },
+    {
+      "model": "baseline",
+      "id": "tool-weather",
+      "matched": true,
+      "tokens_matched": true
+    },
+    {
+      "model": "baseline",
+      "id": "tool-balance",
+      "matched": true,
+      "tokens_matched": true
+    }
+  ]
+}
