@@ -7,10 +7,10 @@ failed the adapter's reference regression gate; A1 remains open.
 The [completed adapter audit](GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md) matches
 all declared tensor checks and 16 paired/replayed answers. Both implementations
 retain the same quality failure. Integration diagnosis is closed; A1 remains open.
-The next [contextual assistant reference](GRANITE_CONTEXT_REFERENCE.md) compares
-final document-grounded answers with a published query-rewrite module, an equally
-prompted parent and full-history retrieval. Its new 64-case freeze has no quality
-result yet; execution waits for committed-source CI.
+The [contextual assistant reference failed](GRANITE_CONTEXT_REFERENCE_RESULTS.md):
+29/64 for history, 35/64 for both parent and module rewriting. All 18 protected
+assistant answers survived. Full-history retrieval already found every required
+source; evidence copying and serialization are the next implementation target.
 It remains separate from the earlier demonstration results below.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural

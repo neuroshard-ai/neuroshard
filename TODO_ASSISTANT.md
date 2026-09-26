@@ -24,12 +24,13 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** execute the committed [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE.md)
-after its exact-commit CI passes: 64 fresh document-grounded questions, comparing
-full-history retrieval, parent rewriting and the published query-rewrite module.
-Score final answers, preserve the parent-rewrite successes and all 18 existing
-assistant successes, and charge the complete pipelines. One CPU allocation,
-two hours/$6 maximum; no training, GPU or automatic retry. No quality result yet.
+**Next action:** replace fragile value/citation generation with bounded evidence
+selection and deterministic copying. Freeze any model execution separately;
+opened cases can diagnose the interface but cannot prove new capability.
+The [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md)
+failed: history 29/64, parent rewrite 35/64, module rewrite 35/64. All 18 protected
+assistant answers survived. History already retrieved 48/48 answerable sources;
+stop trying to improve retrieval on this opened set. The allocation is retired.
 Stop integration debugging and reruns of the opened checker cases:
 the [completed adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
 matched all 243 backbone comparisons, 320 adapter matrices and 240 zero non-target

@@ -1,0 +1,264 @@
+{
+  "format": "neuroshard-granite-context-reference-report/1",
+  "source_commit": "386e07cd2257b85dd106686f3053ba0cc4126505",
+  "result_sha256": "a2310db30fffea66983d1bd58318c650fffa34ce3db6f195de029951f4f660fd",
+  "execution_completed": true,
+  "reference_passed": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "independent_rescore": true,
+  "decision": "Failed. Module and parent rewrite both score 35/64; no gain over the matched parent control. All 18 prior assistant successes retained. Stop query rewriting on these cases; ordinary history retrieval already has every answerable source. Review and replace the copying/serialization interface without revising this score or claiming new learned capability.",
+  "report": {
+    "complete": true,
+    "retention": {
+      "baseline": true,
+      "modular": true
+    },
+    "comparisons": {
+      "history": {
+        "gained_ids": [
+          "context-03-changed",
+          "context-05-changed",
+          "context-09-changed",
+          "context-10-changed",
+          "context-13-changed",
+          "context-16-changed"
+        ],
+        "lost_ids": [],
+        "net": 6,
+        "block_bootstrap_lower_95": 0.03125,
+        "blocks": 16
+      },
+      "parent-rewrite": {
+        "gained_ids": [],
+        "lost_ids": [],
+        "net": 0,
+        "block_bootstrap_lower_95": 0.0,
+        "blocks": 16
+      }
+    },
+    "quality_gate": false,
+    "checklist_credit": false,
+    "admission_evidence": false,
+    "training_authorized": false,
+    "automatic_composition_proven": false,
+    "correct": {
+      "history": 29,
+      "parent-rewrite": 35,
+      "module-rewrite": 35
+    },
+    "failures": {
+      "history": {
+        "rewrite-format": [],
+        "retrieval": [],
+        "grounded-answer": [
+          "context-01-first",
+          "context-01-changed",
+          "context-02-first",
+          "context-02-changed",
+          "context-03-first",
+          "context-03-changed",
+          "context-04-first",
+          "context-04-changed",
+          "context-05-first",
+          "context-05-changed",
+          "context-06-first",
+          "context-06-changed",
+          "context-06-direct",
+          "context-07-first",
+          "context-07-changed",
+          "context-08-first",
+          "context-08-changed",
+          "context-09-changed",
+          "context-09-direct",
+          "context-10-first",
+          "context-10-changed",
+          "context-11-first",
+          "context-11-changed",
+          "context-11-direct",
+          "context-12-first",
+          "context-12-changed",
+          "context-12-direct",
+          "context-13-first",
+          "context-13-changed",
+          "context-14-first",
+          "context-14-changed",
+          "context-15-first",
+          "context-15-changed",
+          "context-16-first",
+          "context-16-changed"
+        ],
+        "abstention": []
+      },
+      "parent-rewrite": {
+        "rewrite-format": [
+          "context-01-first",
+          "context-01-changed",
+          "context-02-first",
+          "context-04-first",
+          "context-04-changed",
+          "context-06-changed",
+          "context-07-changed"
+        ],
+        "retrieval": [
+          "context-06-first"
+        ],
+        "grounded-answer": [
+          "context-02-changed",
+          "context-03-first",
+          "context-05-first",
+          "context-06-direct",
+          "context-07-first",
+          "context-08-first",
+          "context-08-changed",
+          "context-09-direct",
+          "context-10-first",
+          "context-11-first",
+          "context-11-changed",
+          "context-11-direct",
+          "context-12-first",
+          "context-12-changed",
+          "context-12-direct",
+          "context-13-first",
+          "context-14-first",
+          "context-14-changed",
+          "context-15-first",
+          "context-15-changed",
+          "context-16-first"
+        ],
+        "abstention": []
+      },
+      "module-rewrite": {
+        "rewrite-format": [],
+        "retrieval": [
+          "context-06-first",
+          "context-10-first"
+        ],
+        "grounded-answer": [
+          "context-01-first",
+          "context-01-changed",
+          "context-02-first",
+          "context-02-changed",
+          "context-03-first",
+          "context-04-first",
+          "context-04-changed",
+          "context-05-first",
+          "context-06-changed",
+          "context-06-direct",
+          "context-07-first",
+          "context-07-changed",
+          "context-08-first",
+          "context-08-changed",
+          "context-09-direct",
+          "context-11-first",
+          "context-11-changed",
+          "context-11-direct",
+          "context-12-first",
+          "context-12-changed",
+          "context-12-direct",
+          "context-13-first",
+          "context-14-first",
+          "context-14-changed",
+          "context-15-first",
+          "context-15-changed",
+          "context-16-first"
+        ],
+        "abstention": []
+      }
+    },
+    "work": {
+      "history": {
+        "input_tokens": 18733,
+        "output_tokens": 1229,
+        "generation_calls": 64
+      },
+      "parent-rewrite": {
+        "input_tokens": 23633,
+        "output_tokens": 2438,
+        "generation_calls": 121
+      },
+      "module-rewrite": {
+        "input_tokens": 25860,
+        "output_tokens": 2613,
+        "generation_calls": 128
+      }
+    },
+    "candidate_by_category": {
+      "contextual": 7,
+      "standalone": 12,
+      "unanswerable": 16
+    },
+    "p95_seconds": {
+      "history": 4.632645972000006,
+      "parent-rewrite": 7.110797297999966,
+      "module-rewrite": 8.518517026000154
+    }
+  },
+  "diagnostic_only": {
+    "history": {
+      "supported_sources_retrieved": 48,
+      "supported_cases": 48,
+      "failed_non_json": 29,
+      "failed_json_parseable": 6,
+      "failed_with_expected_literal_present": 32
+    },
+    "parent-rewrite": {
+      "supported_sources_retrieved": 40,
+      "supported_cases": 48,
+      "failed_non_json": 13,
+      "failed_json_parseable": 9,
+      "failed_with_expected_literal_present": 18
+    },
+    "module-rewrite": {
+      "supported_sources_retrieved": 46,
+      "supported_cases": 48,
+      "failed_non_json": 19,
+      "failed_json_parseable": 10,
+      "failed_with_expected_literal_present": 23
+    }
+  },
+  "retained_anchor_successes": {
+    "baseline": 18,
+    "modular": 18
+  },
+  "conditional_replays_run": 0,
+  "resources_finished": {
+    "finished_utc": "2026-09-26T21:28:00.524594+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0846312eff33f5485"
+    ],
+    "conservative_instance_seconds": 1327.845855,
+    "conservative_compute_usd": 0.39038668137,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "independent_resource_verification": {
+    "checked_utc": "2026-09-26T21:41:15.074945+00:00",
+    "result_sha256": "a2310db30fffea66983d1bd58318c650fffa34ce3db6f195de029951f4f660fd",
+    "independent_cpu_rescore_matches": true,
+    "aws_instance_state": "terminated",
+    "remaining_tagged_volumes": [],
+    "security_group_retired": true,
+    "diagnostic_only": {
+      "module_failed_non_json": 19,
+      "module_failed_json_parseable": 10,
+      "module_failed_with_expected_literal_present": 23
+    },
+    "quality_gate_unchanged": false,
+    "new_run_queued": false
+  },
+  "ci": {
+    "id": 36270580478,
+    "head_sha": "386e07cd2257b85dd106686f3053ba0cc4126505",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36270580478"
+  },
+  "accounting": {
+    "wall_seconds": 1230.608884844,
+    "process_cpu_seconds": 8696.988653764,
+    "cumulative_process_peak_rss_bytes": 9517174784
+  }
+}

@@ -1,6 +1,7 @@
 # Contextual assistant reference contract
 
-September 26, 2026. **New prospective A1 study; no results yet.** The earlier
+September 26, 2026. **Completed and failed; [results](GRANITE_CONTEXT_REFERENCE_RESULTS.md).**
+The frozen contract below is unchanged. The earlier
 [requirement-check comparison](GRANITE_REFERENCE_RESULTS.md) remains failed.
 The [completed audit](GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md) reproduced its
 errors and closed that integration diagnosis. This contract tests a different,
