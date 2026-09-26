@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -122,14 +123,22 @@ def test_controller_blocks_modular_until_baseline_passes_and_charges_all_prior_w
         assert "baseline quality gate failed" in result["error"]
 
 
-def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile():
+def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile(tmp_path, monkeypatch):
+    # pytest's source path does not propagate to subprocesses. CI also installs
+    # a wheel, which intentionally excludes the repository experiment contracts.
+    # Make a foreign package fail loudly if the child inherits its import path.
+    foreign = tmp_path / "neuroshard"
+    foreign.mkdir()
+    (foreign / "__init__.py").write_text("raise RuntimeError('foreign installed package selected')\n")
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path))
     code = (
         "import os; from neuroshard.evolution.modular_reference_execution import configure_runtime; "
         "assert os.environ['ATEN_CPU_CAPABILITY']=='default'; configure_runtime('fresh-reference'); "
         "assert 'ATEN_CPU_CAPABILITY' not in os.environ; assert os.environ['OMP_NUM_THREADS']=='8'; "
         "import torch; "
         "configure_runtime('fresh-reference')")
-    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                            cwd=ROOT, env={**os.environ, "PYTHONPATH": str(ROOT / "src")})
     assert result.returncode != 0 and "before importing torch" in result.stderr
 
 

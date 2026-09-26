@@ -1,5 +1,9 @@
 # Fresh BAR reference comparison
 
+**Pre-execution status:** the first queue stopped at CI, before allocation.
+The [test correction](MODULAR_REFERENCE_FRESH_CI.md) preserves the entire experiment
+contract and requires green CI at its new committed revision before launch.
+
 **Purpose:** measure what published neural composition adds, what it loses, and
 what it costs, before training a NeuroShard expert. This is the next A1 reference
 measurement for the [assistant checklist](../TODO_ASSISTANT.md). It does not

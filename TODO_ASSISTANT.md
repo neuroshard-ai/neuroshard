@@ -239,6 +239,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | [Interface audit and separate diagnostic](docs/MODULAR_TOOL_INTERFACE.md) correct omitted call-format instructions, retain the failed record, and freeze three opened CPU cases with successful-call replay. No capability result or milestone credit. |
 | 2026-09-26 | A1 | [Corrected interface result](docs/MODULAR_TOOL_INTERFACE_RESULTS.md): 3/3 correct tool calls and three exact replays; 103.4 minutes of new CPU worker time. Opened-case interface check only; A1 remains open. |
 | 2026-09-26 | A1 | [Fresh comparison](docs/MODULAR_REFERENCE_FRESH.md) declares 24 cases, baseline usability, full replay, per-answer retention and latency on one disposable 128 GiB CPU host. No result or milestone credit at freeze. |
+| 2026-09-26 | A1 | [Pre-execution CI correction](docs/MODULAR_REFERENCE_FRESH_CI.md): first queue stopped before allocation due to a test subprocess import path. No generation or EC2 cost; method and budget unchanged. |
 
 ## Research informing this direction
 
