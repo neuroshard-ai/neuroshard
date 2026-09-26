@@ -35,8 +35,11 @@ PROFILES = {
                         "config/experiments/modular-reference-fresh-execution.json"),
     "fresh-reference-recovery": ("config/experiments/modular-reference-fresh.json",
                                  "config/experiments/modular-reference-fresh-recovery-execution.json"),
+    "decoder-parity": ("config/experiments/modular-reference-fresh.json",
+                       "config/experiments/modular-decoder-parity-execution.json"),
 }
 FRESH_PROFILES = ("fresh-reference", "fresh-reference-recovery")
+NATIVE_CPU_PROFILES = (*FRESH_PROFILES, "decoder-parity")
 
 
 def read(path):
@@ -93,7 +96,7 @@ def committed_sources(root=ROOT, profile="reference"):
 
 def configure_runtime(profile):
     """Set the explicit research profile before importing the numerical stack."""
-    if profile not in FRESH_PROFILES:
+    if profile not in NATIVE_CPU_PROFILES:
         return
     if "torch" in sys.modules:
         raise ValueError("configure the numerical profile before importing torch")
@@ -324,7 +327,9 @@ def worker(request_path):
     save(request_path.parent / "reply.json", result, exclusive=True)
 
 
-def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=None, stats=None):
+def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=None, stats=None, worker_script=None):
+    if worker_script is not None and worker_script not in binding["freeze"]["sources"]:
+        raise ValueError("worker entrypoint is outside the execution freeze")
     name = f"{which}-{phase}" + (f"-{task['id']}" if task else "")
     attempt = home / "attempts" / name
     attempt.mkdir(parents=True, exist_ok=False)
@@ -334,7 +339,7 @@ def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=N
                "file_state": stats, "seconds": seconds, "started_unix": time.time()}
     save(attempt / "request.json", request, exclusive=True)
     unit = "neuroshard-a1-" + uuid.uuid4().hex[:16]
-    command = [sys.executable, str(ROOT / SCRIPT), "worker", "--request", str(attempt / "request.json")]
+    command = [sys.executable, str(ROOT / (worker_script or SCRIPT)), "worker", "--request", str(attempt / "request.json")]
     started = time.monotonic()
     try:
         outcome = supervised(command, attempt / "worker.log", seconds, memory_bytes, unit)

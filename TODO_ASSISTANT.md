@@ -24,8 +24,9 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** audit decoder agreement with the upstream implementation, then
-revisit the foundation decision. The [recovered A1 baseline](docs/MODULAR_REFERENCE_FRESH_RESULTS.md)
+**Next action:** run the [committed decoder agreement audit](docs/MODULAR_DECODER_PARITY.md)
+after exact-commit CI, then revisit the foundation decision. The
+[recovered A1 baseline](docs/MODULAR_REFERENCE_FRESH_RESULTS.md)
 finished **11/24** and failed its unchanged quality gate. The modular checkpoint
 and scheduled replays were not run; temporary resources were retired. The
 [recovery amendment](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md) preserved and charged
@@ -245,6 +246,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | [Pre-execution CI correction](docs/MODULAR_REFERENCE_FRESH_CI.md): first queue stopped before allocation due to a test subprocess import path. No generation or EC2 cost; method and budget unchanged. |
 | 2026-09-26 | A1 | [Execution recovery](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md): first CPU allocation stopped after nine generations on process-specific parser error text. Record all receipts, stabilize rejection without changing scores, and freeze one restart within the remaining combined time/cost budget. No completed quality result or milestone credit. |
 | 2026-09-26 | A1 | [Recovered baseline result](docs/MODULAR_REFERENCE_FRESH_RESULTS.md): 11/24 (conversation 4/8, instruction 4/8, tools 3/8). Quality gate failed; no modular evaluation or scheduled replay. All saved scores rechecked, resources retired; combined fresh-allocation compute $0.445142. Study closed, A1 open. |
+| 2026-09-26 | A1 | [Decoder audit](docs/MODULAR_DECODER_PARITY.md): strengthen local serialized-weight parity checks and freeze standard-generation/logit comparisons on opened BAR-7B outputs. One CPU host, two-hour/$6 incremental allowance, no training or credit. Actual checkpoint agreement pending. |
 
 ## Research informing this direction
 

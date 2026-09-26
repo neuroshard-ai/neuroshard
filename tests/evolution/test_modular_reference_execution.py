@@ -227,7 +227,7 @@ def test_controller_generates_separate_replay_and_stops_on_disagreement(tmp_path
 
 @pytest.mark.parametrize("config_cls,model_cls", [(Olmo2Config, Olmo2ForCausalLM), (FlexOlmoConfig, FlexOlmoForCausalLM)])
 @pytest.mark.parametrize("dtype", [torch.float32, torch.bfloat16])
-def test_streamed_prefill_and_cached_decode_match_transformers(config_cls, model_cls, dtype):
+def test_streamed_prefill_and_cached_decode_match_transformers(config_cls, model_cls, dtype, tmp_path):
     previous_threads = torch.get_num_threads()
     previous_dtype = torch.get_default_dtype()
     try:
@@ -242,12 +242,15 @@ def test_streamed_prefill_and_cached_decode_match_transformers(config_cls, model
             torch.set_default_dtype(dtype)
             model = model_cls(config).eval()
             torch.set_default_dtype(previous_dtype)
-
-        class Checkpoint:
-            def layer_weights(self, index):
-                return model.model.layers[index].state_dict()
-
-        layer_cls, _, rotary_cls = layer_classes(config)
+        # Exercise the real safetensors index/loader, not weights borrowed from
+        # the oracle object. Loading also preserves upstream FP32 RoPE buffers.
+        model.save_pretrained(tmp_path, max_shard_size="10KB")
+        model = model_cls.from_pretrained(tmp_path, dtype=dtype, attn_implementation="eager").eval()
+        from neuroshard.evolution.modular_reference_run import Checkpoint, assign_weights
+        checkpoint = Checkpoint(tmp_path)
+        layer_cls, norm_cls, rotary_cls = layer_classes(config)
+        norm = assign_weights(norm_cls(config.hidden_size, eps=config.rms_norm_eps),
+                              {"weight": checkpoint.tensor("model.norm.weight")})
         rotary = rotary_cls(config)
         reference_cache, streamed_cache = DynamicCache(config=config), DynamicCache(config=config)
         tokens, seen = torch.tensor([[11, 9, 4, 31]]), 0
@@ -255,8 +258,8 @@ def test_streamed_prefill_and_cached_decode_match_transformers(config_cls, model
             for _ in range(4):
                 native = model(input_ids=tokens, attention_mask=torch.ones((1, seen + tokens.shape[1]), dtype=torch.long),
                                past_key_values=reference_cache, use_cache=True).logits
-                streamed = forward_logits(config, layer_cls, Checkpoint(), model.model.embed_tokens.weight,
-                                          model.lm_head.weight, model.model.norm, rotary, streamed_cache, tokens, seen)
+                streamed = forward_logits(config, layer_cls, checkpoint, checkpoint.tensor("model.embed_tokens.weight"),
+                                          checkpoint.tensor("lm_head.weight"), norm, rotary, streamed_cache, tokens, seen)
                 assert torch.equal(native, streamed)
                 seen += tokens.shape[1]
                 tokens = native[:, -1].argmax(-1).reshape(1, 1)

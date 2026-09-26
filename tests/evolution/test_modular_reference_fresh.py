@@ -123,7 +123,7 @@ def test_controller_blocks_modular_until_baseline_passes_and_charges_all_prior_w
         assert "baseline quality gate failed" in result["error"]
 
 
-@pytest.mark.parametrize("profile", execution.FRESH_PROFILES)
+@pytest.mark.parametrize("profile", execution.NATIVE_CPU_PROFILES)
 def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile(tmp_path, monkeypatch, profile):
     # pytest's source path does not propagate to subprocesses. CI also installs
     # a wheel, which intentionally excludes the repository experiment contracts.

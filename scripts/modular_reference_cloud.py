@@ -20,13 +20,15 @@ from neuroshard.evolution.modular_reference_execution import (
 
 PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
+RESOURCE_PROFILES = {PROFILE: RESOURCES,
+                     "decoder-parity": "config/experiments/modular-decoder-parity-resources.json"}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
 
 
-def resources():
-    value = read(ROOT / RESOURCES)
+def resources(profile=PROFILE):
+    value = read(ROOT / RESOURCE_PROFILES[profile])
     if (value["instances"] != 1 or value["instance_type"] != "r7i.4xlarge"
             or value["gpu"] or not 0 < value["hours"] <= 8 or value["disk_gib"] > 160
             or value["attempts"] != 1 or not value["shutdown_terminates"]
@@ -37,11 +39,14 @@ def resources():
     if sha256(ROOT / prior["path"]) != prior["sha256"]:
         raise ValueError("prior resource receipt changed")
     receipt = read(ROOT / prior["path"])["resources_finished"]
-    if (receipt["remaining_instances"] or receipt["remaining_volumes"]
-            or not receipt["security_group_retired"]
-            or receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
+    if receipt["remaining_instances"] or receipt["remaining_volumes"] or not receipt["security_group_retired"]:
+        raise ValueError("prior allocation remains live")
+    if profile == PROFILE and (
+            receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
             or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
+    if profile == "decoder-parity" and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
+        raise ValueError("decoder parity exceeds its separate two-hour six-dollar allowance")
     return value
 
 
@@ -101,8 +106,8 @@ def retire(home, ec2=None):
         "storage_and_transfer_invoice_not_in_compute_total": True})
 
 
-def allocate(home, commit):
-    limits = resources()
+def allocate(home, commit, profile=PROFILE):
+    limits = resources(profile)
     ec2 = boto3.client("ec2", region_name=limits["region"])
     source = ec2.describe_instances(InstanceIds=[limits["source_instance"]])["Reservations"][0]["Instances"][0]
     image = ec2.describe_images(ImageIds=[limits["image"]["ImageId"]])["Images"][0]
@@ -171,7 +176,7 @@ def ssh(home, allocation, args, *, data=None, timeout=60):
         input=data, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, timeout=timeout)
 
 
-def bootstrap(home, allocation, source):
+def bootstrap(home, allocation, source, profile=PROFILE):
     stop = time.monotonic() + 300
     while True:
         try:
@@ -196,10 +201,11 @@ def bootstrap(home, allocation, source):
         ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
         "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
             "from neuroshard.evolution.modular_reference_execution import configure_runtime,freeze; "
-            f"configure_runtime({PROFILE!r}); print(freeze(profile={PROFILE!r})['commit'])")])
+            f"configure_runtime({profile!r}); print(freeze(profile={profile!r})['commit'])")])
+    setup_seconds = allocation["resources"]["setup_seconds"]
     try:
-        result = ssh(home, allocation, ["timeout", "--kill-after=10", "3600", "bash", "-s"],
-                     data=setup.encode(), timeout=3615)
+        result = ssh(home, allocation, ["timeout", "--kill-after=10", str(setup_seconds), "bash", "-s"],
+                     data=setup.encode(), timeout=setup_seconds + 15)
         (home / "setup.log").write_bytes(result.stdout)
     except subprocess.CalledProcessError as error:
         (home / "setup.log").write_bytes(error.stdout or b"")
@@ -227,21 +233,19 @@ def collect(home, allocation):
         save(home / "result.json", read(target / ".study/result.json"))
 
 
-def run(home):
+def run(home, profile=PROFILE):
     home.mkdir(parents=True, exist_ok=True)
-    source = committed_sources(profile=PROFILE)
+    source = committed_sources(profile=profile)
     wait_for_ci(home, source["commit"])
-    if committed_sources(profile=PROFILE) != source:
+    if committed_sources(profile=profile) != source:
         raise ValueError("source changed while waiting for CI")
     failure = None
     try:
         save(home / "status.json", {"state": "allocating", "commit": source["commit"]})
-        allocation = allocate(home, source["commit"])
+        allocation = allocate(home, source["commit"], profile)
         save(home / "status.json", {"state": "setup", "instance_ids": allocation["instance_ids"]})
-        bootstrap(home, allocation, source)
-        run_args = [PYTHON, REMOTE + "/scripts/run_modular_reference.py", "run", "--profile", PROFILE,
-                    "--home", STUDY, "--models", REMOTE + "/.models", "--legacy",
-                    REMOTE + "/config/experiments/modular-reference-a1-legacy-baseline-result.json"]
+        bootstrap(home, allocation, source, profile)
+        run_args = remote_command(profile)
         remaining = int((datetime.fromisoformat(allocation["deadline"]) - datetime.now(timezone.utc)).total_seconds()) - 600
         if remaining < 60:
             raise TimeoutError("setup exhausted the allocation")
@@ -289,16 +293,28 @@ def run(home):
         raise RuntimeError(failure)
 
 
+def remote_command(profile):
+    if profile == "decoder-parity":
+        return [PYTHON, REMOTE + "/scripts/run_modular_decoder_parity.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile != PROFILE:
+        raise ValueError("unsupported cloud execution profile")
+    return [PYTHON, REMOTE + "/scripts/run_modular_reference.py", "run", "--profile", profile,
+            "--home", STUDY, "--models", REMOTE + "/.models", "--legacy",
+            REMOTE + "/config/experiments/modular-reference-a1-legacy-baseline-result.json"]
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=("run", "retire"))
     parser.add_argument("--home", type=Path, required=True)
+    parser.add_argument("--profile", choices=tuple(RESOURCE_PROFILES), default=PROFILE)
     args = parser.parse_args()
     if args.command == "retire":
         retire(args.home.resolve())
     else:
         try:
-            run(args.home.resolve())
+            run(args.home.resolve(), args.profile)
         except Exception as error:
             save(args.home / "status.json", {"state": "stopped", "error": str(error)})
             raise
