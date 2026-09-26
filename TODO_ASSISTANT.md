@@ -24,14 +24,19 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** decide and freeze a useful complete-assistant reference
-capability on fresh cases. Stop integration debugging and reruns of the opened
-checker cases: the [completed adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
+**Next action:** execute the committed [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE.md)
+after its exact-commit CI passes: 64 fresh document-grounded questions, comparing
+full-history retrieval, parent rewriting and the published query-rewrite module.
+Score final answers, preserve the parent-rewrite successes and all 18 existing
+assistant successes, and charge the complete pipelines. One CPU allocation,
+two hours/$6 maximum; no training, GPU or automatic retry. No quality result yet.
+Stop integration debugging and reruns of the opened checker cases:
+the [completed adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
 matched all 243 backbone comparisons, 320 adapter matrices and 240 zero non-target
 tensors. Both fresh 16-case arms agree exactly and Switch replays its original
 outputs/routes. Both still score 12/16 with the same two regressions. The stopped
-attempt is preserved and charged; both allocations are retired. No new run or
-expert training is queued. A1 still needs a passing functional reference.
+attempt is preserved and charged; both allocations are retired. No expert
+training is authorized. A1 still needs a passing functional reference.
 The [completed Granite reference](docs/GRANITE_REFERENCE_RESULTS.md) is unchanged.
 The parent
 qualified at **18/24**; the modular checkpoint preserved **18/18** successful

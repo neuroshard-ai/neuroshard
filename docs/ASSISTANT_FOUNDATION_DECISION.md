@@ -7,6 +7,9 @@ checkpoint.** This is a reference candidate, not the accepted assistant.
 **Outcome:** the [completed comparison](GRANITE_REFERENCE_RESULTS.md) qualified
 the parent and preserved its assistant answers, but failed the reference
 regression gate. The contract below remains unchanged; no rerun is queued.
+The subsequent audit matched the published adapter exactly. The next study is a
+separate [contextual assistant reference](GRANITE_CONTEXT_REFERENCE.md), testing
+final document-grounded answers with a query-rewrite module and two controls.
 
 The [BAR baseline](MODULAR_REFERENCE_FRESH_RESULTS.md) stays failed at 11/24.
 The [decoder audit](MODULAR_DECODER_PARITY_RESULTS.md) reproduced all 24 answers

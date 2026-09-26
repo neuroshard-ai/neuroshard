@@ -1,0 +1,527 @@
+{
+  "format": "neuroshard-granite-context-reference-preflight/1",
+  "plan_sha256": "fe1d4b7bcadb20691c339f41bd7c8dd83d2802d497b957223dae65e900b2f932",
+  "models_loaded": false,
+  "neural_generation_calls": 0,
+  "cases": 64,
+  "matched_rewrite_prompts": 64,
+  "identical_answer_prompts": 64,
+  "maximum_rewrite_tokens": 160,
+  "maximum_oracle_answer_prompt_tokens": 353,
+  "conservative_answer_prompt_bound_tokens": 426,
+  "metadata_source": "config/experiments/granite-reference-artifacts.json",
+  "records": [
+    {
+      "id": "context-01-first",
+      "rewrite_tokens": 132,
+      "oracle_answer_prompt_tokens": 312,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-01-changed",
+      "rewrite_tokens": 147,
+      "oracle_answer_prompt_tokens": 326,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-01-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 254,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-01-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 264,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-02-first",
+      "rewrite_tokens": 134,
+      "oracle_answer_prompt_tokens": 314,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-02-changed",
+      "rewrite_tokens": 149,
+      "oracle_answer_prompt_tokens": 326,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-02-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 256,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-02-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 264,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-03-first",
+      "rewrite_tokens": 143,
+      "oracle_answer_prompt_tokens": 328,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-03-changed",
+      "rewrite_tokens": 160,
+      "oracle_answer_prompt_tokens": 353,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-03-direct",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 271,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-03-missing",
+      "rewrite_tokens": 86,
+      "oracle_answer_prompt_tokens": 271,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-04-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 307,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-04-changed",
+      "rewrite_tokens": 153,
+      "oracle_answer_prompt_tokens": 335,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-04-direct",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 263,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-04-missing",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 257,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-05-first",
+      "rewrite_tokens": 131,
+      "oracle_answer_prompt_tokens": 309,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-05-changed",
+      "rewrite_tokens": 151,
+      "oracle_answer_prompt_tokens": 329,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-05-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 254,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-05-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 262,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-06-first",
+      "rewrite_tokens": 136,
+      "oracle_answer_prompt_tokens": 313,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-06-changed",
+      "rewrite_tokens": 146,
+      "oracle_answer_prompt_tokens": 323,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-06-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 253,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-06-missing",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 260,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-07-first",
+      "rewrite_tokens": 130,
+      "oracle_answer_prompt_tokens": 306,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-07-changed",
+      "rewrite_tokens": 148,
+      "oracle_answer_prompt_tokens": 335,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-07-direct",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 266,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-07-missing",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 259,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-08-first",
+      "rewrite_tokens": 131,
+      "oracle_answer_prompt_tokens": 305,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-08-changed",
+      "rewrite_tokens": 150,
+      "oracle_answer_prompt_tokens": 328,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-08-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 255,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-08-missing",
+      "rewrite_tokens": 85,
+      "oracle_answer_prompt_tokens": 259,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-09-first",
+      "rewrite_tokens": 134,
+      "oracle_answer_prompt_tokens": 304,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-09-changed",
+      "rewrite_tokens": 152,
+      "oracle_answer_prompt_tokens": 330,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-09-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 259,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-09-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 254,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-10-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 312,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-10-changed",
+      "rewrite_tokens": 154,
+      "oracle_answer_prompt_tokens": 340,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-10-direct",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 262,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-10-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 263,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-11-first",
+      "rewrite_tokens": 139,
+      "oracle_answer_prompt_tokens": 326,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-11-changed",
+      "rewrite_tokens": 160,
+      "oracle_answer_prompt_tokens": 350,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-11-direct",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 270,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-11-missing",
+      "rewrite_tokens": 85,
+      "oracle_answer_prompt_tokens": 272,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-12-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 310,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-12-changed",
+      "rewrite_tokens": 149,
+      "oracle_answer_prompt_tokens": 327,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-12-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 256,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-12-missing",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 260,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-13-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 312,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-13-changed",
+      "rewrite_tokens": 152,
+      "oracle_answer_prompt_tokens": 333,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-13-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 258,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-13-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 263,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-14-first",
+      "rewrite_tokens": 135,
+      "oracle_answer_prompt_tokens": 311,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-14-changed",
+      "rewrite_tokens": 156,
+      "oracle_answer_prompt_tokens": 340,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-14-direct",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 264,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-14-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 260,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-15-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 306,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-15-changed",
+      "rewrite_tokens": 151,
+      "oracle_answer_prompt_tokens": 334,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-15-direct",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 264,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-15-missing",
+      "rewrite_tokens": 83,
+      "oracle_answer_prompt_tokens": 256,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-16-first",
+      "rewrite_tokens": 133,
+      "oracle_answer_prompt_tokens": 307,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-16-changed",
+      "rewrite_tokens": 149,
+      "oracle_answer_prompt_tokens": 329,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-16-direct",
+      "rewrite_tokens": 82,
+      "oracle_answer_prompt_tokens": 258,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    },
+    {
+      "id": "context-16-missing",
+      "rewrite_tokens": 84,
+      "oracle_answer_prompt_tokens": 258,
+      "only_activation_token_differs": true,
+      "base_answer_prompts_equal": true,
+      "oracle_support_retrieved": true
+    }
+  ]
+}
