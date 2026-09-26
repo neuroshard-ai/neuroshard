@@ -1,0 +1,57 @@
+{
+  "format": "neuroshard-native-tool-interface-audit/1",
+  "sources": [
+    {
+      "url": "https://github.com/allenai/olmes/blob/5a51f502d463b8cdc4a2dcad7d7096c41ff1197e/oe_eval/dependencies/BFCL/bfcl/model_handler/local_inference/allenai.py",
+      "commit": "5a51f502d463b8cdc4a2dcad7d7096c41ff1197e",
+      "sha256": "4966f53785447089127187821ab79ba70ec83a298c933468949755f085f26005",
+      "finding": "Code-call handler specifies tagged function calls with keyword arguments and wraps definitions in the OpenAI function envelope."
+    },
+    {
+      "url": "https://huggingface.co/datasets/allenai/Dolci-Instruct-SFT-Tool-Use",
+      "viewer_sample_sha256": "918963b868e7f2b9d0fe67056eef1331c5500e2348981ccaa1ffcf5a3c154934",
+      "row_id": "olmo-toolu-sft-mix-T2-S2-f2-bfclv3-decontaminated_S2_179340",
+      "scope": "Training-format illustration only; no training or evaluation data imported."
+    }
+  ],
+  "plan_sha256": "67d8e2d0d67ffdf76da3293c7d928ba7d9feb1196c6a0b1e76c1c9146825edee",
+  "old_plan_sha256": "773d5d59403554e3c9713e8636d235d3e39287d59c6e075fed30c26c88aab7e4",
+  "rows": [
+    {
+      "id": "tool-weather",
+      "legacy_prompt_tokens": 145,
+      "corrected_prompt_tokens": 239,
+      "legacy_specifies_call_tags": false,
+      "corrected_specifies_call_tags": true,
+      "expected_call_tokens_including_eos": 15,
+      "schemas_unchanged": true,
+      "user_message_unchanged": true,
+      "expected_call_absent_from_prompt": true
+    },
+    {
+      "id": "tool-add",
+      "legacy_prompt_tokens": 162,
+      "corrected_prompt_tokens": 256,
+      "legacy_specifies_call_tags": false,
+      "corrected_specifies_call_tags": true,
+      "expected_call_tokens_including_eos": 17,
+      "schemas_unchanged": true,
+      "user_message_unchanged": true,
+      "expected_call_absent_from_prompt": true
+    },
+    {
+      "id": "tool-balance",
+      "legacy_prompt_tokens": 146,
+      "corrected_prompt_tokens": 240,
+      "legacy_specifies_call_tags": false,
+      "corrected_specifies_call_tags": true,
+      "expected_call_tokens_including_eos": 22,
+      "schemas_unchanged": true,
+      "user_message_unchanged": true,
+      "expected_call_absent_from_prompt": true
+    }
+  ],
+  "finding": "The original system message omitted the call-format instructions. Function definition schema and chat-template transport match the upstream format.",
+  "neural_generations": 0,
+  "admission_evidence": false
+}

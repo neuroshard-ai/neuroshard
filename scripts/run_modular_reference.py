@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Run the committed A1 execution amendment; retain the old freeze in git."""
+"""Run a committed reference or interface diagnostic without changing old freezes."""
 
 import argparse
 import json
 from pathlib import Path
 
-from neuroshard.evolution.modular_reference_execution import ROOT, read, run, worker
+from neuroshard.evolution.modular_reference_execution import ROOT, PROFILES, freeze, read, run, save, wait_for_ci, worker
 
 
 def main():
@@ -15,6 +15,9 @@ def main():
     parser.add_argument("--models", type=Path, default=ROOT / ".neuroshard/modular-reference")
     parser.add_argument("--legacy", type=Path)
     parser.add_argument("--request", type=Path)
+    parser.add_argument("--profile", choices=tuple(PROFILES), default="reference")
+    parser.add_argument("--wait-for-ci", action="store_true",
+                        help="Wait at most one hour for successful push CI at this committed freeze")
     args = parser.parse_args()
     if args.command == "worker":
         if args.request is None:
@@ -27,9 +30,19 @@ def main():
     else:
         if args.home is None or args.legacy is None:
             parser.error("run requires a new --home and the completed --legacy baseline summary")
-        result = run(args.home, args.models, args.legacy)
+        if args.wait_for_ci:
+            try:
+                frozen = freeze(profile=args.profile)
+                wait_for_ci(args.home, frozen["commit"])
+                if freeze(profile=args.profile) != frozen:
+                    raise ValueError("execution freeze changed while waiting for CI")
+            except Exception as error:
+                save(args.home / "status.json", {"state": "stopped-before-inference", "error": str(error)})
+                raise
+        result = run(args.home, args.models, args.legacy, profile=args.profile)
         print(json.dumps({key: result.get(key) for key in
-                          ("execution_completed", "quality_ready", "milestone_complete", "error", "accounting")}, indent=2))
+                          ("execution_completed", "quality_ready", "interface_confirmed", "correct_calls",
+                           "milestone_complete", "error", "accounting")}, indent=2))
         if not result["execution_completed"]:
             raise SystemExit(1)
 

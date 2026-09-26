@@ -1,0 +1,72 @@
+{
+  "format": "neuroshard-modular-tool-interface-execution/1",
+  "original_freeze": "25b39765167fe89526c58cb7181d9a4614a1b380",
+  "plan_sha256": "67d8e2d0d67ffdf76da3293c7d928ba7d9feb1196c6a0b1e76c1c9146825edee",
+  "artifacts_sha256": "e096227b60249bdffdbd563738353714fc7372396180e57f70a88ca0311776be",
+  "sources": [
+    "scripts/run_modular_reference.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_run.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "config/experiments/modular-reference-a1.json",
+    "config/experiments/modular-reference-chat-template.jinja",
+    "config/experiments/modular-reference-a1-artifacts.json",
+    "config/experiments/modular-reference-a1-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_tools.py",
+    "config/experiments/modular-tool-interface-diagnostic.json",
+    "config/experiments/modular-tool-interface-execution.json",
+    "config/experiments/modular-tool-interface-audit.json",
+    "config/experiments/modular-reference-a1-legacy-baseline-result.json"
+  ],
+  "packages": {
+    "torch": "2.9.1+cpu",
+    "transformers": "4.57.3",
+    "safetensors": "0.7.0",
+    "huggingface-hub": "0.36.0",
+    "tokenizers": "0.22.1",
+    "jinja2": "3.1.6",
+    "numpy": "2.2.6"
+  },
+  "python": "3.10.12",
+  "device": "cpu",
+  "gpu_launch_authorized": false,
+  "phases": [
+    "primary",
+    "replay"
+  ],
+  "replay_comparison": "exact decoded text, termination, and scoring; token equality reported separately",
+  "evaluation_budget_scope": "per checkpoint: legacy evaluation plus all primary/replay launch wall time; interrupted launches reserve their entire allowance",
+  "preparation_budget_scope": "Verify already cached baseline files within 600 seconds; no downloads.",
+  "memory_enforcement": "systemd cgroup MemoryMax at max_rss_bytes, MemorySwapMax=0; recorded peak RSS must also pass because shared pages can be charged elsewhere",
+  "timeout_enforcement": "systemd RuntimeMaxSec and TimeoutStopSec=0; min(task limit, remaining checkpoint budget)",
+  "legacy_evidence": "Closed diagnostic comparator and cost record only; no legacy answer is reused as a new reply.",
+  "stop_rule": "Only these three opened cases, once, with one fixed corrected prompt. Replay successful calls; stop on execution or replay failure. Zero correct calls is a negative diagnostic. No automatic new prompt, backbone, training, or larger-model launch.",
+  "method_changed": true,
+  "checklist_credit": false,
+  "worker_environment": "existing evolution package startup profile: ATen default, MKL SSE4.2, one Torch/OMP/MKL thread; CPU only; OpenBLAS also limited to one thread",
+  "environment": {
+    "ATEN_CPU_CAPABILITY": "default",
+    "MKL_ENABLE_INSTRUCTIONS": "SSE4_2",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "TOKENIZERS_PARALLELISM": "false"
+  },
+  "profile": "tool-interface",
+  "legacy_plan_sha256": "773d5d59403554e3c9713e8636d235d3e39287d59c6e075fed30c26c88aab7e4",
+  "legacy_result_sha256": "a087a02063ad3b727b423238fab90fe1d25d523d5d994ff1724890931f6c4322",
+  "task_ids": [
+    "tool-add",
+    "tool-weather",
+    "tool-balance"
+  ],
+  "model_order": [
+    "baseline"
+  ],
+  "allow_download": false,
+  "replay_policy": "Replay only primary calls that both match the frozen expected call and pass native wire/schema validation.",
+  "method_change": "System call-format instruction corrected from upstream evidence; additional wire/schema validation reported separately. Questions, schemas, model weights, CPU profile, greedy decoder, EOS and 32-token cap stay fixed.",
+  "success_interpretation": "At least one correct, independently replayed call shows this interface can produce a valid call on opened cases. It grants no A1 or admission credit."
+}

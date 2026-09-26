@@ -27,6 +27,11 @@ PLAN = "config/experiments/modular-reference-a1.json"
 AMENDMENT = "config/experiments/modular-reference-a1-execution.json"
 ARTIFACTS = "config/experiments/modular-reference-a1-artifacts.json"
 SCRIPT = "scripts/run_modular_reference.py"
+PROFILES = {
+    "reference": (PLAN, AMENDMENT),
+    "tool-interface": ("config/experiments/modular-tool-interface-diagnostic.json",
+                       "config/experiments/modular-tool-interface-execution.json"),
+}
 
 
 def read(path):
@@ -63,10 +68,11 @@ def save(path, value, *, exclusive=False):
         temporary.unlink(missing_ok=True)
 
 
-def freeze(root=ROOT):
+def freeze(root=ROOT, profile="reference"):
     """Reject uncommitted execution bytes and an undeclared numerical runtime."""
-    amendment = read(root / AMENDMENT)
-    if sha256(root / PLAN) != amendment["plan_sha256"]:
+    plan_path, amendment_path = PROFILES[profile]
+    amendment = read(root / amendment_path)
+    if sha256(root / plan_path) != amendment["plan_sha256"]:
         raise ValueError("original task/quality plan changed")
     if sha256(root / ARTIFACTS) != amendment["artifacts_sha256"]:
         raise ValueError("artifact inventory changed")
@@ -88,10 +94,34 @@ def freeze(root=ROOT):
     cpu = Path("/proc/cpuinfo").read_text()
     cpu_features = sorted(set(line for line in cpu.splitlines()
                               if line.startswith(("model name", "flags"))))
-    return {"commit": commit, "sources": sources, "packages": packages, "environment": environment,
+    return {"commit": commit, "profile": profile, "sources": sources, "packages": packages, "environment": environment,
             "python": platform.python_version(), "cpu_features": cpu_features,
-            "plan_sha256": amendment["plan_sha256"], "amendment_sha256": sha256(root / AMENDMENT),
+            "plan_sha256": amendment["plan_sha256"], "amendment_sha256": sha256(root / amendment_path),
             "artifacts_sha256": amendment["artifacts_sha256"]}
+
+
+def wait_for_ci(home, commit, seconds=3600):
+    """Let a background controller wait for this exact push, without inference."""
+    home = Path(home)
+    save(home / "ci-request.json", {"commit": commit, "seconds": seconds}, exclusive=True)
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        payload = subprocess.check_output(
+            ["gh", "api", f"repos/neuroshard-ai/neuroshard/actions/runs?head_sha={commit}&event=push&per_page=100"],
+            cwd=ROOT, text=True, timeout=min(30, max(1, deadline - time.monotonic())))
+        runs = [row for row in json.loads(payload)["workflow_runs"]
+                if row["head_sha"] == commit and row["event"] == "push"
+                and row["name"] == "Native release checks"]
+        latest = max(runs, key=lambda row: row["id"]) if runs else None
+        if latest and latest["status"] == "completed":
+            save(home / "ci.json", latest, exclusive=True)
+            if latest["conclusion"] != "success":
+                raise ValueError("committed freeze did not pass CI")
+            return latest
+        save(home / "status.json", {"state": "waiting-ci", "commit": commit,
+                                    "run_id": latest["id"] if latest else None})
+        time.sleep(min(30, max(0, deadline - time.monotonic())))
+    raise TimeoutError("CI waiting budget exhausted; no inference started")
 
 
 def file_state(model_dir, inventory):
@@ -163,6 +193,11 @@ def checked(plan, row, binding, which, phase, task):
     score = score_reply(task, row["text"], row["terminated"])
     if any(score[key] != row[key] for key in ("passed", "reason")):
         raise ValueError("reply rescore mismatch")
+    if binding.get("profile") == "tool-interface":
+        from neuroshard.evolution.modular_tools import validate_reply
+        validation = validate_reply(row["text"], json.loads(task["messages"][0]["functions"]))
+        if row.get("wire_validation") != validation:
+            raise ValueError("native tool validation mismatch")
     return row
 
 
@@ -232,27 +267,31 @@ def supervised(command, log_path, seconds, memory_bytes, unit):
 def worker(request_path):
     request_path = Path(request_path)
     request = read(request_path)
-    binding = freeze()
+    profile = request.get("profile", "reference")
+    plan_path, amendment_path = PROFILES[profile]
+    binding = freeze(profile=profile)
     if binding != request["freeze"]:
         raise ValueError("worker source/runtime changed")
     which, phase = request["model"], request["phase"]
     inventory = read(ROOT / ARTIFACTS)["models"][which]
     model_dir = Path(request["models"]) / which
-    start_cpu = time.process_time()
     if phase == "prepare":
-        stats = verify_artifacts(model_dir, inventory, download=True)
+        stats = verify_artifacts(model_dir, inventory, download=read(ROOT / amendment_path).get("allow_download", True))
         result = {"binding": request["binding"], "file_state": stats, "verified": True}
     else:
         if file_state(model_dir, inventory) != request["file_state"]:
             raise ValueError("artifact identity changed before generation")
         from neuroshard.evolution.modular_reference_run import generate_task
-        plan = load_plan(ROOT / PLAN)
+        plan = load_plan(ROOT / plan_path)
         task = next(task for task in plan["tasks"] if task["id"] == request["task"])
         result = generate_task(plan, which, model_dir, task)
+        if profile == "tool-interface":
+            from neuroshard.evolution.modular_tools import validate_reply
+            result["wire_validation"] = validate_reply(result["text"], json.loads(task["messages"][0]["functions"]))
         if file_state(model_dir, inventory) != request["file_state"]:
             raise ValueError("artifact identity changed during generation")
         result.update({"binding": request["binding"], "phase": phase, "task_sha256": identity(task)})
-    result["process_cpu_seconds"] = time.process_time() - start_cpu
+    result["process_cpu_seconds"] = time.process_time()
     save(request_path.parent / "reply.json", result, exclusive=True)
 
 
@@ -261,6 +300,7 @@ def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=N
     attempt = home / "attempts" / name
     attempt.mkdir(parents=True, exist_ok=False)
     request = {"freeze": binding["freeze"], "binding": identity(binding), "model": which,
+               "profile": binding.get("profile", "reference"),
                "phase": phase, "task": task["id"] if task else None, "models": str(models),
                "file_state": stats, "seconds": seconds, "started_unix": time.time()}
     save(attempt / "request.json", request, exclusive=True)
@@ -295,23 +335,54 @@ def gate(plan, primary, replays):
     return result
 
 
-def run(home, models, legacy_path):
+def usable_call(row):
+    return bool(row["passed"] and row.get("wire_validation", {}).get("valid"))
+
+
+def diagnostic_gate(tasks, primary, replays):
+    """Successful opened-case diagnostics cannot close A1 or become admission."""
+    expected = {task["id"] for task in tasks}
+    complete = (len(primary) == len(expected) and {row["id"] for row in primary} == expected
+                and all(row["model"] == "baseline" and not row["stopped"] for row in primary))
+    correct = {row["id"] for row in primary if usable_call(row)}
+    replay_complete = (bool(correct) and len(replays) == len(correct)
+                       and {row["id"] for row in replays} == correct
+                       and all(row["model"] == "baseline" and row["matched"] for row in replays))
+    return {"primary_complete": complete, "correct_calls": len(correct),
+            "wire_valid_calls": sum(row.get("wire_validation", {}).get("valid", False) for row in primary),
+            "replay_complete": replay_complete, "interface_confirmed": complete and replay_complete,
+            "quality_ready": False, "admission_evidence": False, "milestone_complete": False,
+            "opened_diagnostic_cases": True}
+
+
+def run(home, models, legacy_path, profile="reference"):
     home, models, legacy_path = Path(home).resolve(), Path(models).resolve(), Path(legacy_path).resolve()
     home.mkdir(parents=True, exist_ok=True)
     with (home / "run.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return _run(home, models, legacy_path)
+        return _run(home, models, legacy_path, profile)
 
 
-def _run(home, models, legacy_path):
-    plan = load_plan(ROOT / PLAN)
-    frozen = freeze()
+def _run(home, models, legacy_path, profile="reference"):
+    plan_path, amendment_path = PROFILES[profile]
+    plan = load_plan(ROOT / plan_path)
+    amendment = read(ROOT / amendment_path)
+    frozen = freeze(profile=profile)
+    diagnostic = profile == "tool-interface"
+    task_ids = amendment.get("task_ids", [task["id"] for task in plan["tasks"]])
+    by_id = {task["id"]: task for task in plan["tasks"]}
+    if len(set(task_ids)) != len(task_ids) or any(identity not in by_id for identity in task_ids):
+        raise ValueError("invalid task selection")
+    tasks = [by_id[identity] for identity in task_ids]
+    model_order = ["baseline"] if diagnostic else ["baseline", "modular"]
     legacy = read(legacy_path)  # Its absence means the old run has not finished.
-    if legacy.get("plan_sha256") != frozen["plan_sha256"] or legacy.get("which") != "baseline":
+    if legacy.get("plan_sha256") != amendment.get("legacy_plan_sha256", frozen["plan_sha256"]) or legacy.get("which") != "baseline":
         raise ValueError("legacy accounting does not match the original baseline")
+    if "legacy_result_sha256" in amendment and sha256(legacy_path) != amendment["legacy_result_sha256"]:
+        raise ValueError("legacy receipt changed")
     if not isinstance(legacy.get("seconds"), (int, float)) or not math.isfinite(legacy["seconds"]) or legacy["seconds"] <= 0:
         raise ValueError("legacy evaluation cost is missing")
-    binding = {"freeze": frozen, "models": str(models), "legacy_sha256": sha256(legacy_path)}
+    binding = {"freeze": frozen, "profile": profile, "models": str(models), "legacy_sha256": sha256(legacy_path)}
     study_path = home / "study.json"
     if study_path.exists():
         if read(study_path)["binding"] != binding:
@@ -332,7 +403,7 @@ def _run(home, models, legacy_path):
     limits = plan["limits"]
     result = None
     try:
-        for which in ("baseline", "modular"):
+        for which in model_order:
             legacy_seconds = legacy["seconds"] if which == "baseline" else 0
             prepare_path = home / "attempts" / f"{which}-prepare" / "reply.json"
             if prepare_path.exists():
@@ -343,7 +414,11 @@ def _run(home, models, legacy_path):
             prepared = launch(home, models, binding, which, "prepare", remaining, limits["max_rss_bytes"])
             model_primary = []
             for phase in ("primary", "replay"):
-                for task in plan["tasks"]:
+                selected = tasks
+                if diagnostic and phase == "replay":
+                    successes = {row["id"] for row in model_primary if usable_call(row)}
+                    selected = [task for task in tasks if task["id"] in successes]
+                for task in selected:
                     remaining = limits["evaluate_seconds"] - spent(home, which, legacy_seconds)
                     seconds = min(limits["per_task_seconds"], remaining)
                     if seconds <= 0:
@@ -363,18 +438,19 @@ def _run(home, models, legacy_path):
                         if not comparison["matched"]:
                             raise ValueError("independent replay mismatch")
                     save(home / "progress.json", {"primary": primary, "replays": replays})
-                if which == "baseline" and phase == "primary" and not assess(plan, primary)["baseline_gate"]:
+                if not diagnostic and which == "baseline" and phase == "primary" and not assess(plan, primary)["baseline_gate"]:
                     raise ValueError("baseline quality gate failed; stop before modular download")
             save(home / f"{which}-result.json", {"binding": binding, "rows": model_primary,
                                                  "replays": [row for row in replays if row["model"] == which]})
-        result = {"execution_completed": True, **gate(plan, primary, replays)}
+        decision = diagnostic_gate(tasks, primary, replays) if diagnostic else gate(plan, primary, replays)
+        result = {"execution_completed": True, **decision}
     except Exception as error:
         result = {"execution_completed": False, "quality_ready": False, "milestone_complete": False,
                   "admission_evidence": False, "error": str(error)}
     finally:
         accounting = {which: {"evaluation_seconds": spent(home, which, legacy["seconds"] if which == "baseline" else 0),
                               "preparation_seconds": spent(home, which, 0, preparation=True)}
-                      for which in ("baseline", "modular")}
+                      for which in model_order}
         if result is not None:
             result.update({"binding": binding, "accounting": accounting, "primary": primary, "replays": replays})
             save(home / "result.json", result, exclusive=True)

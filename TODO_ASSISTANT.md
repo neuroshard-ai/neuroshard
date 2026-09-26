@@ -24,11 +24,13 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** audit the released tool-call interface before another A1
-execution contract. The [original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
-finished at 4/9, including 0/3 valid tool calls, and failed its usability gate.
-The tested [execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md) and larger
-modular comparison have not been run. The
+**Next action:** run the committed [tool-interface diagnostic](docs/MODULAR_TOOL_INTERFACE.md)
+after CI. The audit found that our prompt omitted the call-format instructions
+used upstream. Three opened cases check that correction on the cached CPU
+model; they cannot close A1. The [original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
+remains failed at 4/9, including 0/3 valid tool calls. The original
+[execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md) and larger modular
+comparison have not been run. The
 [observable-reasoning candidate](docs/OBSERVABLE_REASONING_RESULTS.md) is closed.
 
 **Order:** A1 → A2 → A3 is the learning priority. Plan A4's memory and network
@@ -231,6 +233,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 | 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
+| 2026-09-26 | A1 | [Interface audit and separate diagnostic](docs/MODULAR_TOOL_INTERFACE.md) correct omitted call-format instructions, retain the failed record, and freeze three opened CPU cases with successful-call replay. No capability result or milestone credit. |
 
 ## Research informing this direction
 

@@ -54,3 +54,7 @@ The [execution amendment](MODULAR_REFERENCE_EXECUTION.md) at `adafb19` passed CI
 and its 24 focused tests, but was not run against these models. Repeating the
 known-failing baseline unchanged or downloading the larger checkpoint would
 not resolve its failed starting condition.
+
+The subsequent [interface audit and diagnostic contract](MODULAR_TOOL_INTERFACE.md)
+found omitted call-format instructions and freezes a separate CPU check of
+that correction. It does not change this failed result.

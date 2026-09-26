@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -126,6 +127,11 @@ def test_immutable_artifact_inventory_detects_same_size_tampering(tmp_path):
     (tmp_path / "model.safetensors").write_bytes(b"abd")
     with pytest.raises(ValueError, match="hash mismatch"):
         execution.verify_artifacts(tmp_path, inventory)
+    # Back-to-back writes can share a filesystem timestamp. Hashing above
+    # detects those too; the inexpensive metadata check assumes a changed stat.
+    path = tmp_path / "model.safetensors"
+    stat = path.stat()
+    os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
     assert execution.file_state(tmp_path, inventory) != original
     (tmp_path / "added_tokens.json").write_text("{}")
     with pytest.raises(ValueError, match="inventory"):
@@ -184,9 +190,10 @@ def test_controller_generates_separate_replay_and_stops_on_disagreement(tmp_path
     contract = plan()
     root = tmp_path / "source"
     execution.save(root / execution.PLAN, contract)
+    execution.save(root / execution.AMENDMENT, {})
     frozen = {"plan_sha256": execution.sha256(root / execution.PLAN), "commit": "fixture"}
     monkeypatch.setattr(execution, "ROOT", root)
-    monkeypatch.setattr(execution, "freeze", lambda: frozen)
+    monkeypatch.setattr(execution, "freeze", lambda **kwargs: frozen)
     legacy = tmp_path / "legacy.json"
     execution.save(legacy, {"which": "baseline", "plan_sha256": frozen["plan_sha256"], "seconds": 42})
     calls = []
