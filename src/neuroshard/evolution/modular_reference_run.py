@@ -23,11 +23,11 @@ from transformers.masking_utils import create_causal_mask
 from neuroshard.evolution.modular_reference import score_reply
 
 
-def prepare_runtime():
-    torch.set_num_threads(1)
+def prepare_runtime(threads=1):
+    torch.set_num_threads(threads)
     torch.set_grad_enabled(False)
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["OMP_NUM_THREADS"] = str(threads)
+    os.environ["MKL_NUM_THREADS"] = str(threads)
 
 
 def file_sha256(path):
@@ -117,7 +117,7 @@ def assign_weights(module, weights):
 
 
 def generate_task(plan, which, model_dir, task):
-    prepare_runtime()
+    prepare_runtime(plan["limits"]["threads"])
     started = time.monotonic()
     verify_small_files(plan, which, model_dir)
     config = AutoConfig.from_pretrained(model_dir)
@@ -143,6 +143,7 @@ def generate_task(plan, which, model_dir, task):
     cache = DynamicCache(config=config)
     eos_ids = set(json.loads((Path(model_dir) / "generation_config.json").read_text())["eos_token_id"])
     generated = []
+    first_token_seconds = None
     budget_exhausted = False
     seen = 0
     tokens = prompt
@@ -160,6 +161,8 @@ def generate_task(plan, which, model_dir, task):
         seen += tokens.shape[1]
         choice = int(torch.argmax(logits[0, -1]).item())
         generated.append(choice)
+        if first_token_seconds is None:
+            first_token_seconds = time.monotonic() - started
         del logits
         if choice in eos_ids:
             break
@@ -183,6 +186,8 @@ def generate_task(plan, which, model_dir, task):
         "prompt_tokens": int(prompt.shape[1]),
         "generated_tokens": len(generated),
         "seconds": round(time.monotonic() - started, 3),
+        "first_token_seconds": first_token_seconds,
+        "cpu_capability": torch.backends.cpu.get_cpu_capability(),
         "max_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
         "rendered_sha256": hashlib.sha256(rendered.encode("utf-8")).hexdigest(),
         "stopped": budget_exhausted,

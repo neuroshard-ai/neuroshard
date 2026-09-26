@@ -5,7 +5,7 @@ import argparse
 import json
 from pathlib import Path
 
-from neuroshard.evolution.modular_reference_execution import ROOT, PROFILES, freeze, read, run, save, wait_for_ci, worker
+from neuroshard.evolution.modular_reference_execution import ROOT, PROFILES, configure_runtime, freeze, read, run, save, wait_for_ci, worker
 
 
 def main():
@@ -30,6 +30,7 @@ def main():
     else:
         if args.home is None or args.legacy is None:
             parser.error("run requires a new --home and the completed --legacy baseline summary")
+        configure_runtime(args.profile)
         if args.wait_for_ci:
             try:
                 frozen = freeze(profile=args.profile)
@@ -41,7 +42,8 @@ def main():
                 raise
         result = run(args.home, args.models, args.legacy, profile=args.profile)
         print(json.dumps({key: result.get(key) for key in
-                          ("execution_completed", "quality_ready", "interface_confirmed", "correct_calls",
+                          ("execution_completed", "reference_ready", "growth_screen_passed", "net_gain",
+                           "quality_ready", "interface_confirmed", "correct_calls",
                            "milestone_complete", "error", "accounting")}, indent=2))
         if not result["execution_completed"]:
             raise SystemExit(1)

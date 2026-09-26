@@ -16,6 +16,7 @@ retaining the existing generated-answer and retention requirements.
 | [Assistant development plan](../TODO_ASSISTANT.md) | Active six-milestone plan: capable foundation, useful modular learning, repeated growth, sharding, independent operation and public release. |
 | [Modular reference](MODULAR_REFERENCE.md) | A1 decision: reproduce published BAR-7B and BAR-5x7B before training a new expert. FlexOlmo is not the selected recipe. |
 | [Tool-interface diagnostic](MODULAR_TOOL_INTERFACE.md) / [result](MODULAR_TOOL_INTERFACE_RESULTS.md) | Corrected instructions yield 3/3 calls and three exact replays on opened cases; no A1 credit. |
+| [Fresh reference comparison](MODULAR_REFERENCE_FRESH.md) | 24 new cases; paired gains/losses, exact replay and latency on one temporary CPU host. |
 | [Earlier demonstration checklist](../TODO.md) | Original six criteria and bounded evidence; independent hosting remains open. |
 | [Programming expert trial](PROGRAMMING_EXPERT_TRIAL.md) | One new neural skill, executable answers, learned selection, preserved general responses and bounded serving latency. |
 | [Programming fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md) / [result](PROGRAMMING_FALLBACK_RESULTS.md) | Research baseline: leftover extra attempt +4/32 versus parent and parent repair; not promoted. |

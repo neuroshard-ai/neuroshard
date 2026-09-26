@@ -106,7 +106,11 @@ def score_reply(task, text, terminated):
             return {"passed": True, "reason": "exact"}
         return {"passed": False, "reason": "exact-mismatch"}
     try:
-        calls = parse_function_calls(text)
+        if task.get("strict_tools"):
+            from neuroshard.evolution.modular_tools import parse_calls
+            calls = parse_calls(text, json.loads(task["messages"][0]["functions"]))
+        else:
+            calls = parse_function_calls(text)
     except ValueError as error:
         return {"passed": False, "reason": str(error)}
     expected = task["expect"]

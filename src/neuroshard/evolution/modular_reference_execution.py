@@ -31,6 +31,8 @@ PROFILES = {
     "reference": (PLAN, AMENDMENT),
     "tool-interface": ("config/experiments/modular-tool-interface-diagnostic.json",
                        "config/experiments/modular-tool-interface-execution.json"),
+    "fresh-reference": ("config/experiments/modular-reference-fresh.json",
+                        "config/experiments/modular-reference-fresh-execution.json"),
 }
 
 
@@ -68,8 +70,8 @@ def save(path, value, *, exclusive=False):
         temporary.unlink(missing_ok=True)
 
 
-def freeze(root=ROOT, profile="reference"):
-    """Reject uncommitted execution bytes and an undeclared numerical runtime."""
+def committed_sources(root=ROOT, profile="reference"):
+    """Bind source without requiring the allocator to have the worker's CPU."""
     plan_path, amendment_path = PROFILES[profile]
     amendment = read(root / amendment_path)
     if sha256(root / plan_path) != amendment["plan_sha256"]:
@@ -83,6 +85,27 @@ def freeze(root=ROOT, profile="reference"):
         if (root / name).read_bytes() != committed:
             raise ValueError(f"uncommitted execution source: {name}")
         sources[name] = hashlib.sha256(committed).hexdigest()
+    return {"commit": commit, "sources": sources}
+
+
+def configure_runtime(profile):
+    """Set the explicit research profile before importing the numerical stack."""
+    if profile != "fresh-reference":
+        return
+    if "torch" in sys.modules:
+        raise ValueError("configure the numerical profile before importing torch")
+    for key, value in read(ROOT / PROFILES[profile][1])["environment"].items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+
+
+def freeze(root=ROOT, profile="reference"):
+    """Reject uncommitted execution bytes and an undeclared numerical runtime."""
+    _, amendment_path = PROFILES[profile]
+    amendment = read(root / amendment_path)
+    source = committed_sources(root, profile)
     packages = {name: importlib.metadata.version(name) for name in amendment["packages"]}
     if packages != amendment["packages"] or platform.python_version() != amendment["python"]:
         raise ValueError("numerical runtime differs from execution amendment")
@@ -92,9 +115,11 @@ def freeze(root=ROOT, profile="reference"):
     if environment != amendment.get("environment", {}):
         raise ValueError("numerical startup environment differs from amendment")
     cpu = Path("/proc/cpuinfo").read_text()
+    if any(flag not in cpu.split() for flag in amendment.get("required_cpu_flags", [])):
+        raise ValueError("worker CPU lacks the frozen instruction set")
     cpu_features = sorted(set(line for line in cpu.splitlines()
                               if line.startswith(("model name", "flags"))))
-    return {"commit": commit, "profile": profile, "sources": sources, "packages": packages, "environment": environment,
+    return {**source, "profile": profile, "packages": packages, "environment": environment,
             "python": platform.python_version(), "cpu_features": cpu_features,
             "plan_sha256": amendment["plan_sha256"], "amendment_sha256": sha256(root / amendment_path),
             "artifacts_sha256": amendment["artifacts_sha256"]}
@@ -193,7 +218,7 @@ def checked(plan, row, binding, which, phase, task):
     score = score_reply(task, row["text"], row["terminated"])
     if any(score[key] != row[key] for key in ("passed", "reason")):
         raise ValueError("reply rescore mismatch")
-    if binding.get("profile") == "tool-interface":
+    if binding.get("profile") in ("tool-interface", "fresh-reference") and task["kind"] == "tool":
         from neuroshard.evolution.modular_tools import validate_reply
         validation = validate_reply(row["text"], json.loads(task["messages"][0]["functions"]))
         if row.get("wire_validation") != validation:
@@ -268,6 +293,7 @@ def worker(request_path):
     request_path = Path(request_path)
     request = read(request_path)
     profile = request.get("profile", "reference")
+    configure_runtime(profile)
     plan_path, amendment_path = PROFILES[profile]
     binding = freeze(profile=profile)
     if binding != request["freeze"]:
@@ -285,7 +311,7 @@ def worker(request_path):
         plan = load_plan(ROOT / plan_path)
         task = next(task for task in plan["tasks"] if task["id"] == request["task"])
         result = generate_task(plan, which, model_dir, task)
-        if profile == "tool-interface":
+        if profile in ("tool-interface", "fresh-reference") and task["kind"] == "tool":
             from neuroshard.evolution.modular_tools import validate_reply
             result["wire_validation"] = validate_reply(result["text"], json.loads(task["messages"][0]["functions"]))
         if file_state(model_dir, inventory) != request["file_state"]:
@@ -332,6 +358,9 @@ def gate(plan, primary, replays):
     result["route"] = route_estimate()
     result["admission_evidence"] = False
     result["milestone_complete"] = False  # Placement/deviation review still required.
+    if "comparison" in plan:
+        from neuroshard.evolution.modular_reference_comparison import compare
+        result.update(compare(plan, primary, result["replay_complete"]))
     return result
 
 
@@ -382,6 +411,15 @@ def _run(home, models, legacy_path, profile="reference"):
         raise ValueError("legacy receipt changed")
     if not isinstance(legacy.get("seconds"), (int, float)) or not math.isfinite(legacy["seconds"]) or legacy["seconds"] <= 0:
         raise ValueError("legacy evaluation cost is missing")
+    historical_seconds = legacy["seconds"]
+    for prior in amendment.get("additional_evaluations", []):
+        path = ROOT / prior["path"]
+        if sha256(path) != prior["sha256"]:
+            raise ValueError("historical evaluation receipt changed")
+        recorded = read(path)["accounting"]["baseline"]["evaluation_seconds"]
+        if recorded < historical_seconds:
+            raise ValueError("cumulative evaluation accounting went backwards")
+        historical_seconds = recorded
     binding = {"freeze": frozen, "profile": profile, "models": str(models), "legacy_sha256": sha256(legacy_path)}
     study_path = home / "study.json"
     if study_path.exists():
@@ -396,7 +434,7 @@ def _run(home, models, legacy_path, profile="reference"):
                 raise ValueError("interrupted/failed run: retain its charged budget; a new amendment is required")
     else:
         save(study_path, {"binding": binding, "started_unix": time.time(),
-                          "legacy_evaluation_seconds": legacy["seconds"],
+                          "legacy_evaluation_seconds": historical_seconds,
                           "legacy_download_seconds": None, "gpu_launch_authorized": False}, exclusive=True)
         save(home / "legacy-baseline-result.json", legacy, exclusive=True)
     primary, replays = [], []
@@ -404,7 +442,7 @@ def _run(home, models, legacy_path, profile="reference"):
     result = None
     try:
         for which in model_order:
-            legacy_seconds = legacy["seconds"] if which == "baseline" else 0
+            legacy_seconds = historical_seconds if which == "baseline" else 0
             prepare_path = home / "attempts" / f"{which}-prepare" / "reply.json"
             if prepare_path.exists():
                 raise ValueError("partial prepared run is not resumed automatically; preserve it and amend execution")
@@ -420,6 +458,8 @@ def _run(home, models, legacy_path, profile="reference"):
                     selected = [task for task in tasks if task["id"] in successes]
                 for task in selected:
                     remaining = limits["evaluate_seconds"] - spent(home, which, legacy_seconds)
+                    if "new_evaluation_seconds" in amendment:
+                        remaining = min(remaining, amendment["new_evaluation_seconds"] - spent(home, which, 0))
                     seconds = min(limits["per_task_seconds"], remaining)
                     if seconds <= 0:
                         raise TimeoutError("checkpoint evaluation budget exhausted")
@@ -438,8 +478,14 @@ def _run(home, models, legacy_path, profile="reference"):
                         if not comparison["matched"]:
                             raise ValueError("independent replay mismatch")
                     save(home / "progress.json", {"primary": primary, "replays": replays})
-                if not diagnostic and which == "baseline" and phase == "primary" and not assess(plan, primary)["baseline_gate"]:
-                    raise ValueError("baseline quality gate failed; stop before modular download")
+                if not diagnostic and which == "baseline" and phase == "primary":
+                    if "comparison" in plan:
+                        from neuroshard.evolution.modular_reference_comparison import compare
+                        acceptable = compare(plan, primary)["baseline_gate"]
+                    else:
+                        acceptable = assess(plan, primary)["baseline_gate"]
+                    if not acceptable:
+                        raise ValueError("baseline quality gate failed; stop before modular download")
             save(home / f"{which}-result.json", {"binding": binding, "rows": model_primary,
                                                  "replays": [row for row in replays if row["model"] == which]})
         decision = diagnostic_gate(tasks, primary, replays) if diagnostic else gate(plan, primary, replays)
@@ -448,9 +494,13 @@ def _run(home, models, legacy_path, profile="reference"):
         result = {"execution_completed": False, "quality_ready": False, "milestone_complete": False,
                   "admission_evidence": False, "error": str(error)}
     finally:
-        accounting = {which: {"evaluation_seconds": spent(home, which, legacy["seconds"] if which == "baseline" else 0),
+        accounting = {which: {"evaluation_seconds": spent(home, which, historical_seconds if which == "baseline" else 0),
                               "preparation_seconds": spent(home, which, 0, preparation=True)}
                       for which in model_order}
+        if "new_evaluation_seconds" in amendment:
+            for which in model_order:
+                accounting[which].update(new_evaluation_seconds=spent(home, which, 0),
+                    historical_evaluation_seconds=historical_seconds if which == "baseline" else 0)
         if result is not None:
             result.update({"binding": binding, "accounting": accounting, "primary": primary, "replays": replays})
             save(home / "result.json", result, exclusive=True)
