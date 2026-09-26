@@ -24,8 +24,10 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
                      "granite-context-reference": "config/experiments/granite-context-reference-resources.json",
+                     "granite-evidence-diagnostic": "config/experiments/granite-evidence-diagnostic-resources.json",
                      "granite-adapter-audit": "config/experiments/granite-adapter-audit-recovery-resources.json"}
 GRANITE_PROFILES = {
+    "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
     "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
@@ -36,6 +38,9 @@ STUDY = REMOTE + "/.study"
 
 
 def source_freeze(profile):
+    if profile == "granite-evidence-diagnostic":
+        from neuroshard.evolution.granite_evidence_diagnostic import committed_sources as evidence_sources
+        return evidence_sources()
     if profile == "granite-context-reference":
         from neuroshard.evolution.granite_context_reference import committed_sources as context_sources
         return context_sources()
@@ -342,6 +347,9 @@ def run(home, profile=PROFILE):
 
 
 def remote_command(profile):
+    if profile == "granite-evidence-diagnostic":
+        return [PYTHON, REMOTE + "/scripts/run_granite_evidence_diagnostic.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-context-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_context_reference.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]

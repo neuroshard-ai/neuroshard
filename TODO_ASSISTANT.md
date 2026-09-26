@@ -24,9 +24,12 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** replace fragile value/citation generation with bounded evidence
-selection and deterministic copying. Freeze any model execution separately;
-opened cases can diagnose the interface but cannot prove new capability.
+**Next action:** run the [evidence-selection diagnostic](docs/EVIDENCE_SELECTION.md)
+after its committed-source CI passes. The implemented executor binds requests
+and source spans, then copies exact values/citations from a bounded neural
+selection. Compare against a direct parent control with identical source data
+and instruction placement. One CPU allocation, no training or GPU. The opened
+64 cases can diagnose the interface but cannot prove new capability or close A1.
 The [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md)
 failed: history 29/64, parent rewrite 35/64, module rewrite 35/64. All 18 protected
 assistant answers survived. History already retrieved 48/48 answerable sources;
@@ -81,6 +84,7 @@ requires all preceding milestones.
 | Network scale | Use compute groups with measured communication limits. Additional groups can replicate serving and train candidates independently. |
 | Cost per answer | Bound active experts, tokens, routing work and network communication. Sparse activation alone does not guarantee constant latency as the catalogue grows. |
 | Data | Separate source-backed retrieval, user-controlled personal memory, and data admitted for weight training. Improvement from retrieval is reported separately from learned capability. |
+| Module interfaces | Use bounded, typed decisions and source references where possible. Deterministic copying and valid receipts do not prove semantic quality or neural execution. |
 | Native chain | Reuse consensus, commitments, funding and settlement. Correct work and improved assistant quality remain separate decisions. |
 
 ## A1. Capable foundation and reference reproduction
