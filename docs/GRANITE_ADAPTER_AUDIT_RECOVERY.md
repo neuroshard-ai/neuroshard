@@ -5,6 +5,10 @@ The [first attempt](GRANITE_ADAPTER_AUDIT_RESULTS.md) remains stopped and its
 receipts remain unchanged. This amendment completes the implementation comparison;
 it does not train a model, change the failed reference gate or close A1.
 
+**Outcome:** [the implementation audit completed](GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md).
+All declared tensor checks and 16 paired/replayed answers match; both paths
+remain 12/16 with the same quality regressions. Resources are retired; no job is queued.
+
 ## Correction
 
 The published Switch vocabulary adds 12 control tokens. Whole embedding hashes

@@ -1,0 +1,114 @@
+{
+  "format": "neuroshard-granite-adapter-audit-recovery-report/1",
+  "source_commit": "40f065165ece473bb55c3977d6ba2c5fe0610f7c",
+  "result_sha256": "710d7063ee966d81818d09e9f4f36566974c227ce6070a4b32473d646c1dd34f",
+  "decision": "The implementation audit completes: 243 backbone comparisons, 320 adapter matrices and 240 zero non-target tensors match; both 16-case generation arms agree exactly, and Switch reproduces its original outputs and routes. The same 12/16 accuracy and two previous regressions remain. Stop integration diagnosis for this profile; A1 and model-quality admission remain open.",
+  "execution_completed": true,
+  "implementation_audit_passed": true,
+  "reference_quality_passed": false,
+  "milestone_complete": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "independent_rescore": true,
+  "source_task_receipt_and_activation_bindings_verified": true,
+  "structural_receipt_verified": true,
+  "backbone_tensor_matches": 243,
+  "adapter_matrix_matches": 320,
+  "zero_non_target_tensors": 240,
+  "added_vocabulary_rows": {
+    "model.embed_tokens.weight": {
+      "shape": [
+        12,
+        2560
+      ],
+      "sha256": "35ff70f2286d53808461dc60ef63457ec3c0619719b2f2fa9f0244b12eef0b7f",
+      "finite": true,
+      "nonzero_elements": 30720,
+      "min": -0.06298828125,
+      "max": 0.055419921875
+    },
+    "lm_head.weight": {
+      "shape": [
+        12,
+        2560
+      ],
+      "sha256": "35ff70f2286d53808461dc60ef63457ec3c0619719b2f2fa9f0244b12eef0b7f",
+      "finite": true,
+      "nonzero_elements": 30720,
+      "min": -0.06298828125,
+      "max": 0.055419921875
+    }
+  },
+  "same_run_exact_output_pairs": 16,
+  "original_switch_exact_replays": 16,
+  "standalone_exact_matches_to_stopped_attempt": 16,
+  "report": {
+    "decision": "same-published-adapter-errors",
+    "pair_mismatch_ids": [],
+    "replay_mismatch_ids": [],
+    "correct": {
+      "standalone": 12,
+      "modular": 12
+    },
+    "admission_evidence": false,
+    "checklist_credit": false,
+    "old_failure_unchanged": true
+  },
+  "wrong_ids": [
+    "granite-reference-words-yes",
+    "granite-reference-case-yes",
+    "granite-reference-exclude-no",
+    "granite-reference-ending-no"
+  ],
+  "previous_regressions_still_wrong": [
+    "granite-reference-words-yes",
+    "granite-reference-case-yes"
+  ],
+  "worker_outcome": {
+    "seconds": 224.876040356,
+    "returncode": 0,
+    "reason": "completed",
+    "completed": true,
+    "unit": "neuroshard-a1-4cbdb1b613cb474b",
+    "cpu_seconds": null,
+    "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+  },
+  "accounting": {
+    "wall_seconds": 217.424911068,
+    "process_cpu_seconds": 488.331569833,
+    "cumulative_process_peak_rss_bytes": 9059344384,
+    "combined_worker_wall_seconds": 409.567234923,
+    "combined_worker_cpu_seconds": 771.175328884
+  },
+  "combined_audit_resources": {
+    "conservative_instance_seconds": 616.195106,
+    "conservative_compute_usd": 0.181161361164,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "ci": {
+    "id": 36267377327,
+    "head_sha": "40f065165ece473bb55c3977d6ba2c5fe0610f7c",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36267377327"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-26T20:14:53.866279+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-024b9b7abac3ca692"
+    ],
+    "conservative_instance_seconds": 322.711929,
+    "conservative_compute_usd": 0.09487730712600001,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "cleanup_confirmation": {
+    "checked_utc": "2026-09-26T20:29:41.288406+00:00",
+    "instance_states": {
+      "i-024b9b7abac3ca692": "terminated"
+    },
+    "remaining_tagged_volumes": [],
+    "security_group_absent": true
+  }
+}

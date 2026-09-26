@@ -24,14 +24,14 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** execute the committed, CI-gated
-[vocabulary comparison amendment](docs/GRANITE_ADAPTER_AUDIT_RECOVERY.md) for the
-[stopped adapter audit](docs/GRANITE_ADAPTER_AUDIT_RESULTS.md). Sixteen standalone
-outputs exactly match the earlier Switch outputs, including its two regressions.
-The audit stopped because it compared whole embeddings despite 12 added control
-tokens; full tensor checks and fresh Switch replay remain incomplete. The first
-allocation is retired; the amendment preserves and charges it. The local token audit
-and actual standalone activation receipts are preserved.
+**Next action:** decide and freeze a useful complete-assistant reference
+capability on fresh cases. Stop integration debugging and reruns of the opened
+checker cases: the [completed adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
+matched all 243 backbone comparisons, 320 adapter matrices and 240 zero non-target
+tensors. Both fresh 16-case arms agree exactly and Switch replays its original
+outputs/routes. Both still score 12/16 with the same two regressions. The stopped
+attempt is preserved and charged; both allocations are retired. No new run or
+expert training is queued. A1 still needs a passing functional reference.
 The [completed Granite reference](docs/GRANITE_REFERENCE_RESULTS.md) is unchanged.
 The parent
 qualified at **18/24**; the modular checkpoint preserved **18/18** successful
@@ -260,6 +260,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | [Adapter audit](docs/GRANITE_ADAPTER_AUDIT.md) separates standalone invocation, tensor composition and reproduced answers on 16 opened cases. Local default-PEFT activation mismatch recorded; one bounded CPU comparison frozen, no learning or milestone credit. |
 | 2026-09-26 | A1 | [Audit stopped](docs/GRANITE_ADAPTER_AUDIT_RESULTS.md): 16 standalone outputs match earlier Switch outputs, 12 correct. Our whole-embedding comparison failed to account for 12 control-token rows. Full tensor audit and fresh replay incomplete; resources retired, compute $0.086284, no retry or credit. |
 | 2026-09-26 | A1 | [Execution amendment](docs/GRANITE_ADAPTER_AUDIT_RECOVERY.md) checks original vocabulary rows exactly and accounts for the 12 added rows. Backbone/adapter checks move before generation. One CI-gated CPU attempt, $6 combined planning cap; original data, weights and failed quality result remain unchanged. |
+| 2026-09-26 | A1 | [Implementation audit completed](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md): 243 backbone comparisons, 320 adapter matrices, 240 zero non-target tensors and 16 paired/replayed outputs match. Both implementations remain 12/16 with the same regressions. Stop integration diagnosis; original quality failure and A1 remain open. Resources retired; both audits cost $0.181161 compute. |
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 | 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
