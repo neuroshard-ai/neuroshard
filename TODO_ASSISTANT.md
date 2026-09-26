@@ -24,10 +24,11 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** complete the A1 BAR reference under the
-[execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md). Initial baseline
-outputs are diagnostics; independent replay and the modular comparison remain
-required. The
+**Next action:** audit the released tool-call interface before another A1
+execution contract. The [original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
+finished at 4/9, including 0/3 valid tool calls, and failed its usability gate.
+The tested [execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md) and larger
+modular comparison have not been run. The
 [observable-reasoning candidate](docs/OBSERVABLE_REASONING_RESULTS.md) is closed.
 
 **Order:** A1 → A2 → A3 is the learning priority. Plan A4's memory and network
@@ -229,6 +230,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1–A6 | New direction recorded; all milestones open. Start with reference artifacts and recipe review. |
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
+| 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
 
 ## Research informing this direction
 

@@ -1,6 +1,8 @@
 # Modular reference decision
 
-**A1 contract, September 26, 2026.** No scored generation has been read.
+**A1 contract, September 26, 2026.** Committed before scored generation was read.
+The [original baseline diagnostic](MODULAR_REFERENCE_BASELINE_RESULTS.md) later
+finished at 4/9 with no valid tool calls; the larger comparison was not started.
 The [assistant checklist](../TODO_ASSISTANT.md) stays open until the committed
 run meets every A1 criterion. SmolLM2-135M-Instruct remains the protocol
 fixture. It is not the assistant foundation. Historical experiment freezes are
