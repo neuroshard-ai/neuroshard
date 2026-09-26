@@ -10,10 +10,12 @@ retain the same quality failure. Integration diagnosis is closed; A1 remains ope
 The [contextual assistant reference failed](GRANITE_CONTEXT_REFERENCE_RESULTS.md):
 29/64 for history, 35/64 for both parent and module rewriting. All 18 protected
 assistant answers survived. Full-history retrieval already found every required
-source; evidence copying and serialization are the next implementation target.
+source; evidence copying and serialization identified the next implementation target.
 The [evidence-selection primitive and CPU diagnostic](EVIDENCE_SELECTION.md)
 separate bounded neural source selection from exact copying and citation creation.
-Its opened-case diagnostic cannot earn learning or checklist credit.
+The [completed diagnostic](EVIDENCE_SELECTION_RESULTS.md) scores 64/64 versus
+59/64 for direct generation, retaining all 18 protected answers with six exact
+replays. These opened cases cannot earn learning or checklist credit.
 It remains separate from the earlier demonstration results below.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural

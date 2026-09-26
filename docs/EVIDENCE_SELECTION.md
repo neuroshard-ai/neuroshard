@@ -1,6 +1,6 @@
 # Evidence selection as a neural module interface
 
-September 26, 2026. **Implemented experimental primitive; model diagnostic pending.**
+September 26, 2026. **Implemented experimental primitive; [diagnostic passed](EVIDENCE_SELECTION_RESULTS.md).**
 The previous [contextual reference](GRANITE_CONTEXT_REFERENCE_RESULTS.md) remains
 failed. A1 remains open. This work addresses exact copying and serialization;
 it does not claim a new learned capability, module admission or a new consensus.
