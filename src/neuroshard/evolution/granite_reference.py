@@ -195,7 +195,7 @@ def load_model(model_dir, which):
     return model.eval(), tokenizer
 
 
-def generate(model, tokenizer, plan, task, which):
+def generate(model, tokenizer, plan, task, which, *, generation_kwargs=None):
     import torch
     from transformers import LogitsProcessor, LogitsProcessorList, StoppingCriteria, StoppingCriteriaList
 
@@ -242,7 +242,8 @@ def generate(model, tokenizer, plan, task, which):
         with torch.inference_mode():
             output = model.generate(**inputs, do_sample=False, num_beams=1, use_cache=True,
                                     max_new_tokens=cap, stopping_criteria=StoppingCriteriaList([Observe()]),
-                                    logits_processor=LogitsProcessorList([CheckLogits()]))
+                                    logits_processor=LogitsProcessorList([CheckLogits()]),
+                                    **(generation_kwargs or {}))
     finally:
         if handle:
             handle.remove()

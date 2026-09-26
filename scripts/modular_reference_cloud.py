@@ -22,13 +22,21 @@ PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
-                     "granite-reference": "config/experiments/granite-reference-resources.json"}
+                     "granite-reference": "config/experiments/granite-reference-resources.json",
+                     "granite-adapter-audit": "config/experiments/granite-adapter-audit-resources.json"}
+GRANITE_PROFILES = {
+    "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
+    "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
+}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
 
 
 def source_freeze(profile):
+    if profile == "granite-adapter-audit":
+        from neuroshard.evolution.granite_adapter_audit import committed_sources as audit_sources
+        return audit_sources()
     if profile == "granite-reference":
         from neuroshard.evolution.granite_reference import committed_sources as granite_sources
         return granite_sources()
@@ -53,7 +61,7 @@ def resources(profile=PROFILE):
             receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
             or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
-    if profile in ("decoder-parity", "granite-reference") and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
+    if profile in ("decoder-parity", *GRANITE_PROFILES) and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
         raise ValueError("reference profile exceeds its separate two-hour six-dollar allowance")
     return value
 
@@ -206,21 +214,22 @@ def bootstrap(home, allocation, source, profile=PROFILE):
         "git sparse-checkout init --no-cone", shlex.join(["git", "sparse-checkout", "set", "--no-cone", *paths]),
         shlex.join(["git", "fetch", "--depth=1", "--filter=blob:none", "origin", source["commit"]]),
         "git checkout --detach FETCH_HEAD"]
-    if profile == "granite-reference":
+    if profile in GRANITE_PROFILES:
         from neuroshard.evolution.granite_reference import ARTIFACTS
         upstream = read(ROOT / ARTIFACTS)["upstream"]
+        module, requirements = GRANITE_PROFILES[profile]
         setup_lines += [
             "python3 -m venv .bootstrap",
             ".bootstrap/bin/pip install uv==0.12.19",
             ".bootstrap/bin/uv venv --python 3.12.12 .venv",
-            ".bootstrap/bin/uv pip install --python .venv/bin/python -r docs/granite-reference-requirements.txt",
+            shlex.join([".bootstrap/bin/uv", "pip", "install", "--python", ".venv/bin/python", "-r", requirements]),
             "mkdir -p .upstream/granite-switch",
             "git -C .upstream/granite-switch init -q",
             shlex.join(["git", "-C", ".upstream/granite-switch", "remote", "add", "origin", upstream["repo"]]),
             shlex.join(["git", "-C", ".upstream/granite-switch", "fetch", "--depth=1", "origin", upstream["commit"]]),
             "git -C .upstream/granite-switch checkout --detach FETCH_HEAD",
             "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
-                "from neuroshard.evolution.granite_reference import configure,freeze; "
+                f"from neuroshard.evolution.{module} import configure,freeze; "
                 "configure(); print(freeze()['commit'])")]
     else:
         setup_lines += ["python3 -m venv .venv",
@@ -321,6 +330,9 @@ def run(home, profile=PROFILE):
 
 
 def remote_command(profile):
+    if profile == "granite-adapter-audit":
+        return [PYTHON, REMOTE + "/scripts/run_granite_adapter_audit.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_reference.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]

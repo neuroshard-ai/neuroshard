@@ -1,0 +1,95 @@
+{
+  "format": "neuroshard-granite-adapter-audit/1",
+  "milestone": "A1-diagnosis-only",
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "checklist_credit": false,
+  "old_result": "config/experiments/granite-reference-result.json",
+  "task_ids": [
+    "granite-reference-words-yes",
+    "granite-reference-words-no",
+    "granite-reference-case-yes",
+    "granite-reference-case-no",
+    "granite-reference-json-yes",
+    "granite-reference-json-no",
+    "granite-reference-lines-yes",
+    "granite-reference-lines-no",
+    "granite-reference-exclude-yes",
+    "granite-reference-exclude-no",
+    "granite-reference-sort-yes",
+    "granite-reference-sort-no",
+    "granite-reference-both-yes",
+    "granite-reference-both-no",
+    "granite-reference-ending-yes",
+    "granite-reference-ending-no"
+  ],
+  "data_policy": "Only the 16 already-opened reference cases. No new prompts, task labels, training, thresholds, decoding changes or candidate selection.",
+  "adapter_subfolder": "requirement-check/granite-4.1-3b/alora",
+  "auxiliary_artifacts": [
+    {
+      "repo": "ibm-granite/granitelib-core-r1.0",
+      "revision": "d0a2a96a4cd07e96f0fe7ca29a42bfe088299d43",
+      "filename": "requirement-check/granite-4.1-3b/alora/adapter_config.json",
+      "bytes": 1083,
+      "sha256": "230653206a02e303f1d860e929777d45b8aadfe376af73ea4fde1a8fb9dd7b68",
+      "license": "apache-2.0"
+    },
+    {
+      "repo": "ibm-granite/granitelib-core-r1.0",
+      "revision": "d0a2a96a4cd07e96f0fe7ca29a42bfe088299d43",
+      "filename": "requirement-check/granite-4.1-3b/alora/adapter_model.safetensors",
+      "bytes": 41985952,
+      "sha256": "d436e7c4a6a27bee5166d48d6dc4674623016b902dfbdf06c2b3fb6bd9b20fb6",
+      "license": "apache-2.0"
+    },
+    {
+      "repo": "ibm-granite/granitelib-core-r1.0",
+      "revision": "d0a2a96a4cd07e96f0fe7ca29a42bfe088299d43",
+      "filename": "requirement-check/granite-4.1-3b/alora/io.yaml",
+      "bytes": 1086,
+      "sha256": "696cbcfc5803138f7d898bcddbff79c6addbeecc71db5aa62fd317486d45ad8a",
+      "license": "apache-2.0"
+    },
+    {
+      "repo": "ibm-granite/granitelib-core-r1.0",
+      "revision": "d0a2a96a4cd07e96f0fe7ca29a42bfe088299d43",
+      "filename": "requirement-check/README.md",
+      "bytes": 10898,
+      "sha256": "9e4f70095b616df6883227446a05169ff4a7e48663a20fd332fd1d9d26538f39",
+      "license": "apache-2.0"
+    },
+    {
+      "repo": "ibm-granite/granite-switch-4.1-3b-preview",
+      "revision": "7a3ac02e07868411424ac89440397b475da66fa7",
+      "filename": "compose_report.json",
+      "bytes": 517970,
+      "sha256": "616bb3f20f610afc2e2fdea1a9cd098ae37cbf2ee39e44aee510a120a667303d",
+      "license": "apache-2.0"
+    }
+  ],
+  "precision": "Both paths BF16, eager CPU, 8 threads, seed 0. Convert F32 standalone tensors to BF16; disable PEFT adapter autocast. This audits the composed profile, not upstream F32 accuracy.",
+  "measurements": [
+    "Exact effective prompt tokens and recorded Switch activation starts for all 16 saved cases. Separately record default PEFT invocation detection; explicit offsets align standalone activation to Switch without changing prompts.",
+    "Exact backbone projection tensors under the published composition mapping.",
+    "All 320 adapter tensors equal BF16 standalone A and alpha/rank-scaled B, with exact zero padding and zero non-target MLP weights.",
+    "32 greedy generation calls: 16 standalone PEFT, 16 composed Switch; original 32-token cap and native prompts. Record actual PEFT offsets and Switch routes.",
+    "Exact text, generated tokens, termination and verdict comparisons; all 16 composed calls also compared to previous result including prompt tokens and routes.",
+    "Wall time, CPU time and cumulative process peak RSS. No isolated per-model peak claim."
+  ],
+  "decision": {
+    "structural_mismatch": "Stop with source/weight/invocation error. No inference repair or rerun under this freeze.",
+    "prior_switch_replay_mismatch": "Execution difference remains unresolved. No quality conclusion.",
+    "paired_output_mismatch": "Standalone and embedded implementations differ on opened cases; report all differences without electing a better output or changing thresholds.",
+    "all_outputs_match": "Same published adapter errors reproduced: stop loader/prompt diagnosis. No further invocation tuning. Future learning needs a separate prospective contract."
+  },
+  "resources": {
+    "worker_seconds": 3600,
+    "memory_bytes": 68719476736,
+    "threads": 8,
+    "generation_calls": 32
+  },
+  "attempts": 1,
+  "stop_rule": "One committed, CI-green CPU allocation. Copy evidence and retire after completion or any failure. No automatic retries, training or A1 credit. Original reference failure remains unchanged.",
+  "invocation_policy": "All 16 opened prompts tokenize <requirements>: with token 27916 for >:, so PEFT default detection of [27,71226,29] is inactive. Preserve exact prompts and weights. For standalone generation only, explicitly pass alora_offsets=[prompt_length-control_position] derived from the Switch control token, without expected labels. Record default offset and actual active offsets. This tests aligned activation, not automatic PEFT invocation."
+}
