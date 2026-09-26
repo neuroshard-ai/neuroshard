@@ -1,6 +1,6 @@
 # NeuroShard
 
-[Live LLM checklist — six fixed completion goals](TODO.md)
+[Assistant development plan](TODO_ASSISTANT.md) · [Earlier demonstration checklist](TODO.md)
 
 NeuroShard is an experimental native blockchain for verifying and rewarding neural computation. Its public testnet demonstrates small-scale training and paid inference; permissionless full-model training remains under development. The goal is a collectively trained LLM whose usable capacity can expand as reliable compute joins. Keys stay on your machine and participation requires no website registration.
 
@@ -14,7 +14,7 @@ the [historical joining guide](docs/JOIN_ALPHA.md) records the original setup.
 The website and PyPI release below use the earlier chain.
 
 The intended assistant is one useful model whose learning and serving capacity
-grow as independent peers contribute shards. The [live checklist](TODO.md) is
+grow as independent peers contribute shards. The [earlier checklist](TODO.md) is
 **5/6** against bounded demonstrations. Item 4, reliable permissionless hosting,
 remains open. [Independent hosting](docs/INDEPENDENT_HOSTING.md) requires four
 independently administered operators and aggregates voting power by
@@ -42,8 +42,12 @@ control 11/64, and both erased all 8 protected answers. The next rule is
 protected answer, and a new shard is used only where the parent missed. The
 [CPU execution](docs/APPEND_ONLY_EXECUTION_RESULTS.md) met that rule only by
 reading the hidden answer, and the added blocks tied a constant training label
-at 9/64. It is not a deployable assistant. The next rule is
-[observable selection](docs/OBSERVABLE_SELECTION.md). It has not trained. The research serving baseline remains
+at 9/64. It is not a deployable assistant. The subsequent
+[observable-reasoning experiment](docs/OBSERVABLE_REASONING_RESULTS.md) also
+failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
+no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
+starts with a capable pretrained foundation and a reproducible modular learning
+recipe; its six milestones remain open. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 

@@ -13,7 +13,8 @@ retaining the existing generated-answer and retention requirements.
 
 | Start here | Purpose |
 | --- | --- |
-| [Live LLM checklist](../TODO.md) | Six fixed completion goals, the active milestone and evidence of completion. |
+| [Assistant development plan](../TODO_ASSISTANT.md) | Active six-milestone plan: capable foundation, useful modular learning, repeated growth, sharding, independent operation and public release. |
+| [Earlier demonstration checklist](../TODO.md) | Original six criteria and bounded evidence; independent hosting remains open. |
 | [Programming expert trial](PROGRAMMING_EXPERT_TRIAL.md) | One new neural skill, executable answers, learned selection, preserved general responses and bounded serving latency. |
 | [Programming fallback comparison](PROGRAMMING_FALLBACK_COMPARISON.md) / [result](PROGRAMMING_FALLBACK_RESULTS.md) | Research baseline: leftover extra attempt +4/32 versus parent and parent repair; not promoted. |
 | [Second-capability growth](PROGRAMMING_GROWTH.md) | Independent second tail plus heuristic integration; campaign closed. |

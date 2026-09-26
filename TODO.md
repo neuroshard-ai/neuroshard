@@ -1,5 +1,9 @@
 # Live LLM checklist
 
+**Active assistant-development plan:** [TODO_ASSISTANT.md](TODO_ASSISTANT.md).
+This file retains the earlier six demonstration criteria and their evidence.
+Its completion count is not a readiness estimate for the new modular assistant.
+
 NeuroShard's goal is one useful, openly available assistant whose learning and
 serving capacity can grow through contributed model shards, coordinated by its
 own permissionless blockchain.
@@ -11,7 +15,7 @@ owner's request. Its evidence and completed demonstration criteria remain;
 the separate ledger stays scheduled through September 26 for expiry/refunds.
 See the [retirement record](config/experiments/operated-alpha-retirement.json).
 
-**Current learning work:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
+**Learning record:** the [programming expert trial](docs/PROGRAMMING_EXPERT_TRIAL.md)
 failed automatic serving. The leftover [fallback comparison](docs/PROGRAMMING_FALLBACK_COMPARISON.md)
 passed +4/32 and remains the research baseline because later challengers failed
 acceptance, not because it had the highest observed score. The
@@ -56,9 +60,14 @@ retention and unfinished replies, then trains anyway. It
 answers, and a new shard is used only where the parent missed. Its
 [CPU execution](docs/APPEND_ONLY_EXECUTION_RESULTS.md) met the oracle gates and
 tied a constant training label at 9/64. The selector read the hidden answer, so
-this is not a deployable assistant. The next rule is
-[observable selection](docs/OBSERVABLE_SELECTION.md). It has not trained. Explicit expert competence alone does not prove automatic
-serving or preservation. The separate systems track is
+this is not a deployable assistant. The subsequent rule is
+[observable selection](docs/OBSERVABLE_SELECTION.md). The separately frozen
+[observable-reasoning execution](docs/OBSERVABLE_REASONING_RESULTS.md) completed
+and failed: added blocks 7/96, trained control 10/96, constant baseline 16/96,
+with no qualifying protected answers. That candidate is closed. The new
+[assistant-development plan](TODO_ASSISTANT.md) starts with a capable modular
+reference before further expert training. Explicit expert competence alone
+does not prove automatic serving or preservation. The separate systems track is
 [independent hosting](docs/INDEPENDENT_HOSTING.md): a CPU protocol preflight of
 equal-power genesis and stranger-provider join, then an independent-operator
 soak that requires four independently administered operators. This operator's
