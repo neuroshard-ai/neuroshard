@@ -21,10 +21,18 @@ from neuroshard.evolution.modular_reference_execution import (
 PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
-                     "decoder-parity": "config/experiments/modular-decoder-parity-resources.json"}
+                     "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
+                     "granite-reference": "config/experiments/granite-reference-resources.json"}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
+
+
+def source_freeze(profile):
+    if profile == "granite-reference":
+        from neuroshard.evolution.granite_reference import committed_sources as granite_sources
+        return granite_sources()
+    return committed_sources(profile=profile)
 
 
 def resources(profile=PROFILE):
@@ -45,8 +53,8 @@ def resources(profile=PROFILE):
             receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
             or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
-    if profile == "decoder-parity" and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
-        raise ValueError("decoder parity exceeds its separate two-hour six-dollar allowance")
+    if profile in ("decoder-parity", "granite-reference") and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
+        raise ValueError("reference profile exceeds its separate two-hour six-dollar allowance")
     return value
 
 
@@ -187,7 +195,7 @@ def bootstrap(home, allocation, source, profile=PROFILE):
                 raise
             time.sleep(5)
     paths = ["/" + path for path in source["sources"]]
-    setup = "\n".join([
+    setup_lines = [
         "set -eu",
         "sudo cloud-init status --wait",
         "sudo systemctl is-active neuroshard-reference-expiry.timer",
@@ -197,11 +205,30 @@ def bootstrap(home, allocation, source, profile=PROFILE):
         "git init -q", "git remote add origin https://github.com/neuroshard-ai/neuroshard.git",
         "git sparse-checkout init --no-cone", shlex.join(["git", "sparse-checkout", "set", "--no-cone", *paths]),
         shlex.join(["git", "fetch", "--depth=1", "--filter=blob:none", "origin", source["commit"]]),
-        "git checkout --detach FETCH_HEAD", "python3 -m venv .venv",
-        ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
-        "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
+        "git checkout --detach FETCH_HEAD"]
+    if profile == "granite-reference":
+        from neuroshard.evolution.granite_reference import ARTIFACTS
+        upstream = read(ROOT / ARTIFACTS)["upstream"]
+        setup_lines += [
+            "python3 -m venv .bootstrap",
+            ".bootstrap/bin/pip install uv==0.12.19",
+            ".bootstrap/bin/uv venv --python 3.12.12 .venv",
+            ".bootstrap/bin/uv pip install --python .venv/bin/python -r docs/granite-reference-requirements.txt",
+            "mkdir -p .upstream/granite-switch",
+            "git -C .upstream/granite-switch init -q",
+            shlex.join(["git", "-C", ".upstream/granite-switch", "remote", "add", "origin", upstream["repo"]]),
+            shlex.join(["git", "-C", ".upstream/granite-switch", "fetch", "--depth=1", "origin", upstream["commit"]]),
+            "git -C .upstream/granite-switch checkout --detach FETCH_HEAD",
+            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
+                "from neuroshard.evolution.granite_reference import configure,freeze; "
+                "configure(); print(freeze()['commit'])")]
+    else:
+        setup_lines += ["python3 -m venv .venv",
+            ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
+            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
             "from neuroshard.evolution.modular_reference_execution import configure_runtime,freeze; "
-            f"configure_runtime({profile!r}); print(freeze(profile={profile!r})['commit'])")])
+            f"configure_runtime({profile!r}); print(freeze(profile={profile!r})['commit'])")]
+    setup = "\n".join(setup_lines)
     setup_seconds = allocation["resources"]["setup_seconds"]
     try:
         result = ssh(home, allocation, ["timeout", "--kill-after=10", str(setup_seconds), "bash", "-s"],
@@ -235,9 +262,9 @@ def collect(home, allocation):
 
 def run(home, profile=PROFILE):
     home.mkdir(parents=True, exist_ok=True)
-    source = committed_sources(profile=profile)
+    source = source_freeze(profile)
     wait_for_ci(home, source["commit"])
-    if committed_sources(profile=profile) != source:
+    if source_freeze(profile) != source:
         raise ValueError("source changed while waiting for CI")
     failure = None
     try:
@@ -294,6 +321,9 @@ def run(home, profile=PROFILE):
 
 
 def remote_command(profile):
+    if profile == "granite-reference":
+        return [PYTHON, REMOTE + "/scripts/run_granite_reference.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "decoder-parity":
         return [PYTHON, REMOTE + "/scripts/run_modular_decoder_parity.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]

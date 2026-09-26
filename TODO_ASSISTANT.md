@@ -24,7 +24,14 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** revisit the foundation/interface decision before growth training.
+**Next action:** run the [Granite assistant/reference comparison](docs/ASSISTANT_FOUNDATION_DECISION.md)
+after its source freeze passes CI. Research selected a published assistant pair
+with native tool calls and embedded adapters; its matching runtime is pinned.
+The CPU study qualifies the parent, checks retained answers and compares an
+explicitly invoked published neural function. It does not prove automatic
+composition or authorize a new expert's training. A1 stays open.
+
+**Prior evidence:**
 The [decoder audit passed](docs/MODULAR_DECODER_PARITY_RESULTS.md): 65/65 logit
 checks and all 24 generated answers matched the standard implementation. The
 [recovered A1 baseline](docs/MODULAR_REFERENCE_FRESH_RESULTS.md)
@@ -238,6 +245,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | Date | Milestone | Decision / evidence |
 | --- | --- | --- |
 | 2026-09-26 | A1–A6 | New direction recorded; all milestones open. Start with reference artifacts and recipe review. |
+| 2026-09-26 | A1 | BAR baseline failed and decoder agreement passed. Research selected Granite for a new bounded functional reference; no learning or milestone credit. |
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 | 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |

@@ -1,5 +1,9 @@
 # Protocol and development documentation
 
+The active [assistant checklist](../TODO_ASSISTANT.md) starts with the
+[foundation decision and frozen Granite reference](ASSISTANT_FOUNDATION_DECISION.md).
+It remains separate from the earlier demonstration results below.
+
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural
 expert while retaining original instruction-following weights. The
 [four-owner final passes](PRESERVED_INTERPRETER_RESULTS.md): 949/1,024 newly

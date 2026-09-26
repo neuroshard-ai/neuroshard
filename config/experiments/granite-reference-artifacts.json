@@ -1,0 +1,175 @@
+{
+  "format": "neuroshard-granite-reference-artifacts/1",
+  "models": {
+    "baseline": {
+      "repo": "ibm-granite/granite-4.1-3b",
+      "revision": "c0650403e44e78ec0262dab1c90914c65b196c4e",
+      "license": "apache-2.0",
+      "parameters": 3402836480,
+      "files": {
+        "chat_template.jinja": {
+          "bytes": 6099,
+          "algorithm": "git-blob-sha1",
+          "digest": "903cac6443fe2b41f95d4418da168b6e4129c073"
+        },
+        "config.json": {
+          "bytes": 801,
+          "algorithm": "git-blob-sha1",
+          "digest": "89b7e1c376451ee194ed75ba2683a8d08e824540"
+        },
+        "generation_config.json": {
+          "bytes": 147,
+          "algorithm": "git-blob-sha1",
+          "digest": "dbfc5e2d737d6224789d5e84da0ac398298697b7"
+        },
+        "merges.txt": {
+          "bytes": 916646,
+          "algorithm": "git-blob-sha1",
+          "digest": "354558edcdbd64ca7abd407b8be3d5d09d39d781"
+        },
+        "model-00001-of-00002.safetensors": {
+          "bytes": 4991538344,
+          "algorithm": "sha256",
+          "digest": "895bf5f2d7c8b06ca902499567d3c3d9ed30061e4c5ad94bf8216286ca67e2fd"
+        },
+        "model-00002-of-00002.safetensors": {
+          "bytes": 1814176448,
+          "algorithm": "sha256",
+          "digest": "de8c9efdaa6f669d595bda8b949213cba92ea69689fd2a27fbceed3d1ebeb2f7"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 29871,
+          "algorithm": "git-blob-sha1",
+          "digest": "ee09c9989261737ee8343f553f5df78589ba7700"
+        },
+        "special_tokens_map.json": {
+          "bytes": 579,
+          "algorithm": "git-blob-sha1",
+          "digest": "3f67e7c50d57b16925f4f15469a774e7bf439047"
+        },
+        "tokenizer.json": {
+          "bytes": 7153421,
+          "algorithm": "git-blob-sha1",
+          "digest": "d7e1714703eb97dcef3435aa50eb1de1cf241d62"
+        },
+        "tokenizer_config.json": {
+          "bytes": 17659,
+          "algorithm": "git-blob-sha1",
+          "digest": "7a6b382740c0c6587ae8af40aeb4b40f8fb8c431"
+        },
+        "vocab.json": {
+          "bytes": 1612704,
+          "algorithm": "git-blob-sha1",
+          "digest": "4764ec73731a47701c2f49b01bb428342870f498"
+        }
+      }
+    },
+    "modular": {
+      "repo": "ibm-granite/granite-switch-4.1-3b-preview",
+      "revision": "7a3ac02e07868411424ac89440397b475da66fa7",
+      "license": "apache-2.0",
+      "parameters": 4149977600,
+      "files": {
+        "chat_template.jinja": {
+          "bytes": 11300,
+          "algorithm": "git-blob-sha1",
+          "digest": "05d0800b0822648c2ece456f41d18d08f252a5e0"
+        },
+        "config.json": {
+          "bytes": 3120,
+          "algorithm": "git-blob-sha1",
+          "digest": "5503086268497ee4628cad5fe38a582de782c54c"
+        },
+        "generation_config.json": {
+          "bytes": 230,
+          "algorithm": "git-blob-sha1",
+          "digest": "4689c5e7f5940cc282c5bce119134d3446192ac1"
+        },
+        "merges.txt": {
+          "bytes": 916646,
+          "algorithm": "git-blob-sha1",
+          "digest": "354558edcdbd64ca7abd407b8be3d5d09d39d781"
+        },
+        "model-00001-of-00002.safetensors": {
+          "bytes": 4991726304,
+          "algorithm": "sha256",
+          "digest": "4021a960334cee5207a0288ccdfa6e73d2f033a940328d46fc3896e5c2f78d95"
+        },
+        "model-00002-of-00002.safetensors": {
+          "bytes": 3309136000,
+          "algorithm": "sha256",
+          "digest": "42750a927de0194ddc7acb550d0e708413fc527be35c7717380b4bfae30a33b0"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 75150,
+          "algorithm": "git-blob-sha1",
+          "digest": "f93918ad9b67ee8074aa0b17ba2088aa3989a22c"
+        },
+        "special_tokens_map.json": {
+          "bytes": 579,
+          "algorithm": "git-blob-sha1",
+          "digest": "3f67e7c50d57b16925f4f15469a774e7bf439047"
+        },
+        "tokenizer.json": {
+          "bytes": 7155801,
+          "algorithm": "git-blob-sha1",
+          "digest": "2226eaf96f45714f111e1f8fbafeb55e61e9ed63"
+        },
+        "tokenizer_config.json": {
+          "bytes": 753,
+          "algorithm": "git-blob-sha1",
+          "digest": "839327a7c1bf0f5f5d875674bc82546d87743e50"
+        },
+        "vocab.json": {
+          "bytes": 1612704,
+          "algorithm": "git-blob-sha1",
+          "digest": "4764ec73731a47701c2f49b01bb428342870f498"
+        }
+      }
+    }
+  },
+  "upstream": {
+    "repo": "https://github.com/generative-computing/granite-switch",
+    "commit": "60d546d211907bf42934113a3e69e9a302af9868",
+    "license": "Apache-2.0",
+    "sources": {
+      "src/granite_switch/__init__.py": "3d47f2a42fe8197a05100473c567066cc5247c945cd6d8270787fe71ff3ec16d",
+      "src/granite_switch/composer/__init__.py": "1060cca2e367e4121ea6632a5a40053117a085bdcb45df854781906be118a7f8",
+      "src/granite_switch/composer/adapter_discovery.py": "e18e2f0a1c34ed52bd55e572168942dbc507e43dddab5115a1a1a4ddc20268b3",
+      "src/granite_switch/composer/adapter_loader.py": "a6b3ae88df0e7f989b5a346a662516947afa9ebca7902c59a0e3109cee1056a2",
+      "src/granite_switch/composer/arch.py": "f12d34fe26550d0557fa4d3040d415fdaebfee7d5f5c1f22f6a3cf36da5752e5",
+      "src/granite_switch/composer/compose_granite_switch.py": "7bf16771398ea1bc488d15c7afaae3b27c087be3359aae8fb1cc829f48aa6894",
+      "src/granite_switch/composer/compose_utils.py": "b79cb0f4990a4f88304179401f9d2ee491691307eba5b8928339b71834457e19",
+      "src/granite_switch/composer/reporting/__init__.py": "233e8eb3c5d2b1259aaff4ad728fc1a8a3b742a863b410d5a9ffd23939b6d525",
+      "src/granite_switch/composer/reporting/adapter_analysis.py": "4214b67742f1a217f913b4247d475d43876973359029a0b8b9fae9496558e5b3",
+      "src/granite_switch/composer/reporting/compose_report.py": "c91f3677652e8f9850f0fc70adee4eb314668e28ef1b129a25d0cbf777dd9d67",
+      "src/granite_switch/composer/reporting/model_card.py": "d4a22cd2f9b748d19523b2dd0bc5f966d94857bd0ae3576adf73f3495ae7c5c1",
+      "src/granite_switch/composer/reporting/population_table.py": "533b077761ecfb50951f7744b043eef0a18373808e97fd53d02b937daa2ba111",
+      "src/granite_switch/composer/tokenizer_setup.py": "f650ef46dbad0e7cf69efff2aed35a91ab5801d7aab23ef3fa42fe6ca5534719",
+      "src/granite_switch/composer/validator.py": "541be8af4d15b1dd657f37de7fc955b46f5b7253930482319819a71df7e564a4",
+      "src/granite_switch/composer/weight_remapper.py": "3f770db28b2edd54c0b4ecea098bac2627547d6b736a4e42dd474479b22486a4",
+      "src/granite_switch/composer/weight_transfer.py": "6556262dffaedc59c43ff74e0b8393b5f949395246f016ccb120ff7d66724ef9",
+      "src/granite_switch/config.py": "a26b73810fe8dd6ea45807a452c2de7e22515d06ea4acbe4b99aaf5f35b8eac5",
+      "src/granite_switch/hf/__init__.py": "83d612ddb9a3fc244cd61e6e1666718a140e5b31f7eabe7df747d2a2942e4acc",
+      "src/granite_switch/hf/core/__init__.py": "33ba9392bd703938c71932918e7155ca981278f67a158af9c25a9b09bb9cf1ff",
+      "src/granite_switch/hf/core/lora.py": "806e9e19d956ab237e6dee4260c86cc02d7215153a6d58bd8e1afbb046c9fa2f",
+      "src/granite_switch/hf/modeling_granite_switch.py": "18754d6d892a8b151f3dcc30bcf7a9b677afd15f0231e6ae66698b09c6e3cfab",
+      "src/granite_switch/hf/switch/__init__.py": "f93dce8fb55526dee0133a57ef4da83a463a5c83d8db8ba62f220006333a8ade",
+      "src/granite_switch/hf/switch/single.py": "8b9da2d77b027c7e78b849f4cd4e14e4985c131058e3e9492027eaef3d8d7835",
+      "src/granite_switch/tutorials/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/granite_switch/tutorials/chroma_loader.py": "4aaddbe1dde904627b13cacf5f18e0b7b7bad8c5d20327a1475ae4fea1774f90",
+      "src/granite_switch/tutorials/rag_display.py": "799c324db6aa6e32cbc6d25363a943bde8b837359d53a9ca9eb516ca3604c7d4",
+      "src/granite_switch/tutorials/utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/granite_switch/tutorials/utils/hf_helpers.py": "76d9f6d08fe4052b40244768f6aeca9b0a259af732e9e6cced4b74bac8b59da7",
+      "src/granite_switch/tutorials/vllm_server.py": "809916b940c8332b36cbcbdc0fa4e91d353cd3c770f7532b21bcbe40f5baa270",
+      "src/granite_switch/vllm/__init__.py": "8914d7b17bf76899ba04b2adee2325063d951827cf149d98fb71aa95895edaf7",
+      "src/granite_switch/vllm/core/__init__.py": "ab2b0824476840f1352ad2132e2d89d46fa2901b2c57936ec238b1298d7b5188",
+      "src/granite_switch/vllm/core/decoder.py": "59adf14bc9eb6d86a629158f52c86511fdfbc11816a96ac72077343b6b369d0f",
+      "src/granite_switch/vllm/core/lora.py": "0c9db044ed34ac35bd82833b4270396f222ce3749083a6c76e7c37e0b524fac8",
+      "src/granite_switch/vllm/core/lora_kernel_meta.py": "947c055ee1060a876e46e3ba047fc6d7cd2828bfc69931ed37a2ea6c64baccf3",
+      "src/granite_switch/vllm/granite_switch_model.py": "ae61f9d25966782ba5dd078652890e8955466a823631833327f8b37247412ca2",
+      "src/granite_switch/vllm/switch/__init__.py": "0f736148510862c6ef1e7b3b650228019057190e683b42d831de821442a51e7a",
+      "src/granite_switch/vllm/switch/single.py": "c06807c54aa242bbc27c3c2ff847b221b44b53b22808b4d4e74479defaad68b1"
+    }
+  }
+}
