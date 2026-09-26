@@ -1,6 +1,10 @@
 # Granite standalone adapter integration audit
 
 September 26, 2026. **Opened-case diagnosis; no new learning or admission.**
+**Outcome:** [16 standalone calls completed, then the audit stopped](GRANITE_ADAPTER_AUDIT_RESULTS.md)
+on an invalid whole-embedding comparison across an expanded vocabulary. No fresh
+Switch replay or full tensor audit completed; resources are retired. No retry is queued.
+
 The [Granite reference](GRANITE_REFERENCE_RESULTS.md) remains failed. Its parent
 qualified and the composed model preserved 18/18 assistant successes, but the
 requirement checker lost two checks where at most one was allowed.

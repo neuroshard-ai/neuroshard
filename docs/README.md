@@ -4,8 +4,9 @@ The active [assistant checklist](../TODO_ASSISTANT.md) starts with the
 [foundation decision and frozen Granite reference](ASSISTANT_FOUNDATION_DECISION.md).
 The [completed result](GRANITE_REFERENCE_RESULTS.md) qualified the parent but
 failed the adapter's reference regression gate; A1 remains open.
-The [frozen adapter audit](GRANITE_ADAPTER_AUDIT.md) checks the standalone
-invocation and composed weights before further learning work.
+The [adapter audit stopped](GRANITE_ADAPTER_AUDIT_RESULTS.md) after 16 standalone
+outputs matched the earlier Switch outputs. Its tensor comparison needs an
+explicit vocabulary-expansion correction; no retry is queued.
 It remains separate from the earlier demonstration results below.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural

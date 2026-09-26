@@ -24,19 +24,22 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** execute the separately frozen
-[standalone-versus-composed adapter audit](docs/GRANITE_ADAPTER_AUDIT.md) after
-commit and CI. The local token audit found correct Switch activation, but default
-PEFT would miss the invocation sequence; the comparison explicitly aligns that
-boundary while retaining the original inputs and weights. It diagnoses the
-two false rejections in the [completed Granite reference](docs/GRANITE_REFERENCE_RESULTS.md).
+**Next action:** correct the vocabulary-aware tensor comparison and declare a
+new execution amendment for the
+[stopped adapter audit](docs/GRANITE_ADAPTER_AUDIT_RESULTS.md). Sixteen standalone
+outputs exactly match the earlier Switch outputs, including its two regressions.
+The audit stopped because it compared whole embeddings despite 12 added control
+tokens; full tensor checks and fresh Switch replay remain incomplete. Resources
+are retired; no retry is queued under the closed freeze. The local token audit
+and actual standalone activation receipts are preserved.
+The [completed Granite reference](docs/GRANITE_REFERENCE_RESULTS.md) is unchanged.
 The parent
 qualified at **18/24**; the modular checkpoint preserved **18/18** successful
 assistant answers. Explicit requirement checking improved **8/16 → 12/16**, but
 lost **two** correct reference checks where at most **one** was allowed. The study
 failed that gate; conditional replays did not run and resources were retired.
-Keep this as partial A1 evidence. The audit has its own bounded CPU contract;
-the failed result authorizes no expert training, and A1 remains open.
+Keep this as partial A1 evidence. The failed result authorizes no expert training,
+and A1 remains open.
 
 **Prior evidence:**
 The [decoder audit passed](docs/MODULAR_DECODER_PARITY_RESULTS.md): 65/65 logit
@@ -255,6 +258,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | BAR baseline failed and decoder agreement passed. Research selected Granite for a new bounded functional reference; no learning or milestone credit. |
 | 2026-09-26 | A1 | Granite parent qualified, all 18 assistant successes preserved; published checker 8/16 → 12/16 but two regressions exceeded the one-loss cap. Reference rejected; no milestone credit. |
 | 2026-09-26 | A1 | [Adapter audit](docs/GRANITE_ADAPTER_AUDIT.md) separates standalone invocation, tensor composition and reproduced answers on 16 opened cases. Local default-PEFT activation mismatch recorded; one bounded CPU comparison frozen, no learning or milestone credit. |
+| 2026-09-26 | A1 | [Audit stopped](docs/GRANITE_ADAPTER_AUDIT_RESULTS.md): 16 standalone outputs match earlier Switch outputs, 12 correct. Our whole-embedding comparison failed to account for 12 control-token rows. Full tensor audit and fresh replay incomplete; resources retired, compute $0.086284, no retry or credit. |
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
 | 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 | 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
