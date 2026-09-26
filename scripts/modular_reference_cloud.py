@@ -21,12 +21,14 @@ from neuroshard.evolution.modular_reference_execution import (
 PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
+                     "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
                      "granite-context-reference": "config/experiments/granite-context-reference-resources.json",
                      "granite-evidence-diagnostic": "config/experiments/granite-evidence-diagnostic-resources.json",
                      "granite-adapter-audit": "config/experiments/granite-adapter-audit-recovery-resources.json"}
 GRANITE_PROFILES = {
+    "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
     "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
@@ -38,6 +40,9 @@ STUDY = REMOTE + "/.study"
 
 
 def source_freeze(profile):
+    if profile == "granite-answerability-reference":
+        from neuroshard.evolution.granite_answerability_reference import committed_sources as answerability_sources
+        return answerability_sources()
     if profile == "granite-evidence-diagnostic":
         from neuroshard.evolution.granite_evidence_diagnostic import committed_sources as evidence_sources
         return evidence_sources()
@@ -347,6 +352,9 @@ def run(home, profile=PROFILE):
 
 
 def remote_command(profile):
+    if profile == "granite-answerability-reference":
+        return [PYTHON, REMOTE + "/scripts/run_granite_answerability_reference.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-evidence-diagnostic":
         return [PYTHON, REMOTE + "/scripts/run_granite_evidence_diagnostic.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]

@@ -16,7 +16,10 @@ separate bounded neural source selection from exact copying and citation creatio
 The [completed diagnostic](EVIDENCE_SELECTION_RESULTS.md) scores 64/64 versus
 59/64 for direct generation, retaining all 18 protected answers with six exact
 replays. These opened cases cannot earn learning or checklist credit.
-It remains separate from the earlier demonstration results below.
+The next [fresh answerability comparison](GRANITE_ANSWERABILITY_REFERENCE.md)
+tests an actual published module against selection and matched parent checking,
+with fresh quality and cumulative preservation gates. No training is authorized.
+These studies remain separate from the earlier demonstration results below.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural
 expert while retaining original instruction-following weights. The

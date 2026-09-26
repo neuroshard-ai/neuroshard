@@ -1,0 +1,96 @@
+{
+  "format": "neuroshard-granite-answerability-reference/1",
+  "purpose": "Measure whether a published answerability module improves complete evidence-backed answers over both selection alone and equally budgeted parent checking, with exact preservation. A1 reference evidence only; no newly learned capability or admission.",
+  "cases": "config/experiments/granite-answerability-cases.json",
+  "selector_plan": "config/experiments/granite-evidence-diagnostic.json",
+  "opened_retention_plan": "config/experiments/granite-context-reference.json",
+  "arms": [
+    "selection",
+    "parent-check",
+    "module-check"
+  ],
+  "module": "answerability",
+  "module_route": 5,
+  "module_token": 100356,
+  "checker_instruction": "Determine whether the last user question can be answered using only the supplied document. Resolve references and corrections from the conversation. Do not fill missing conditions, subjects, dates or facts from assumptions. Return only the JSON string \"answerable\" or \"unanswerable\".",
+  "checker_decoding": {
+    "choices": [
+      "\"answerable\"",
+      "\"unanswerable\""
+    ],
+    "max_new_tokens": 6,
+    "eos_token_id": 100257,
+    "rule": "Native generate, greedy, exact finite token trie including EOS. Both parent and module receive the same instruction and native documents template; only module activation differs. This explicit output constraint is a declared deviation from unconstrained upstream examples."
+  },
+  "serving_rule": "Base chooses one evidence span or Z. If Z, abstain without an extra call. Otherwise check the original conversation against ONLY the selected complete record. answerable keeps the selected span; unanswerable returns Z. No alternative record, retry, threshold or learned router. Maximum two calls, one active adapter, fresh cache per call. Selection-only uses the parent first stage; the two checked arms each execute their own full path.",
+  "generation": {
+    "max_input_tokens": 2048,
+    "max_new_tokens": 6,
+    "reference_max_new_tokens": 6
+  },
+  "quality": {
+    "minimum_correct": 64,
+    "minimum_per_category": {
+      "supported": 32,
+      "unsupported": 32
+    },
+    "minimum_net_gain": 4,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 20260927,
+    "bootstrap_cluster": "eight semantic template families, not eighty independent samples",
+    "minimum_lower_bound_exclusive": 0,
+    "maximum_lost_control_answers": 0,
+    "p95_seconds": 30,
+    "p95_ratio_vs_parent_check": 1.5,
+    "maximum_worker_peak_rss_bytes": 68719476736
+  },
+  "protected_ids": [
+    "granite-chat-booking",
+    "granite-chat-allergy",
+    "granite-chat-document",
+    "granite-chat-expense",
+    "granite-chat-quoted-data",
+    "granite-chat-handoff",
+    "granite-chat-packing",
+    "granite-instruction-extract",
+    "granite-instruction-filter",
+    "granite-instruction-negation",
+    "granite-instruction-counts",
+    "granite-instruction-typed",
+    "granite-tool-calendar",
+    "granite-tool-notes",
+    "granite-tool-document",
+    "granite-tool-ticket",
+    "granite-tool-archive",
+    "granite-tool-timer"
+  ],
+  "retention": "The baseline selector must preserve all 64 opened evidence-selection successes. The optional parent checker is a control and may fail them; its failures do not cancel candidate evaluation. The complete candidate must preserve all 64. Both checkpoints preserve the original 18 assistant successes and original total/category gate. Candidate selectors must exactly match parent selectors on all 144 source tasks. Opened tasks never count toward fresh quality.",
+  "replay_ids": [
+    "support-24efb38b831c",
+    "support-18f420af447d",
+    "support-1955f0bcd5a5"
+  ],
+  "resources": {
+    "threads": 8,
+    "primary_worker_seconds": 1800,
+    "replay_worker_seconds": 600,
+    "memory_bytes": 68719476736
+  },
+  "accounting": "Separate processes for parent, candidate and each conditional replay. Record isolated worker peak RSS, every generation and route, input/output tokens, wall/CPU/device time and full checkpoint bytes. Selection-only reuses the parent-check first stage in the lab; its serving work is charged separately without inventing another executed call. Parent and candidate checks receive equal maximum calls and tokens, not equal parameter counts.",
+  "stop_rule": "One new committed CI-green CPU allocation. Stop if parent retention fails or either control scores above 76/80 (insufficient room for the fixed +4 gate). Otherwise execute one modular comparison. Any quality/retention/latency/memory/base-parity failure rejects the candidate. Conditional six fresh-process path replays only after all gates pass. No automatic retries or tuning on this set.",
+  "gpu_launch_authorized": false,
+  "training_authorized": false,
+  "admission_evidence": false,
+  "checklist_credit": false,
+  "new_learning_proven": false,
+  "interpretation": "Authored finite-record answerability measures bounded functional composition, not open-domain reasoning, automatic module discovery, learned tool composition, long-term growth or decentralized execution. Valid finite outputs and receipts are not semantic proofs. A pass requires review of all A1 criteria; it never automatically authorizes A2 training.",
+  "preflight": "config/experiments/granite-answerability-reference-preflight.json",
+  "module_reference": {
+    "rag_repository": "ibm-granite/granitelib-rag-r1.0",
+    "revision": "2f0b2c79c6731068625aca8045c2eb2e8912b353",
+    "model_card_sha256": "010d3765af42b4c69a906bca1762b236b1db9e1f13592c4c7b78dc96db8381b8",
+    "raw_adapter_config_sha256": "79409b5fc9702a59d89b55d827cb9fa5d1c41fe1af01ddafceae227698",
+    "implementation": "Pinned Switch embedded answerability aLoRA, rank 16, alpha 32, q/k/v/o plus gate/up/down projections; frozen shared backbone. Raw config and composed BUILD agree. Model card says rank 32 attention-only; its reported benchmark scores are not this experiment or an equivalence guarantee.",
+    "activation": "Route 5 / token 100356 substitutes the assistant role-start token; native fresh-cache call. Only generated answering tokens use this adapter. No automatic semantic router."
+  }
+}

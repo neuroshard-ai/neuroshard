@@ -24,13 +24,14 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** freeze a fresh comparison of a published neural module against
-this evidence interface and a parent given the same extra checking opportunity.
-The [evidence-selection diagnostic](docs/EVIDENCE_SELECTION_RESULTS.md) passed:
-64/64 versus 59/64 for direct generation, all 18 protected assistant answers
-retained, six exact reload replays. Resources are retired. This establishes
-interface reliability on opened cases, not new capability or A1 completion.
-No training is authorized; the next claim must measure actual neural benefit.
+**Next action:** run the frozen [fresh answerability comparison](docs/GRANITE_ANSWERABILITY_REFERENCE.md)
+after exact-commit CI. A published module must beat both selection alone and
+matched parent checking on 80 fresh requests, preserving all 64 prior lookup
+successes and 18 original assistant answers. One CPU allocation, $6 cap; no
+training or GPU. Stop without the candidate if controls leave insufficient gain
+headroom. The [evidence-selection diagnostic](docs/EVIDENCE_SELECTION_RESULTS.md)
+passed 64/64 versus 59/64 direct, with six exact replays. Its resources are retired.
+That establishes interface reliability on opened cases, not A1 completion.
 The [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md)
 failed: history 29/64, parent rewrite 35/64, module rewrite 35/64. All 18 protected
 assistant answers survived. History already retrieved 48/48 answerable sources;

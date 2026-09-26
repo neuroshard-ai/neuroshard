@@ -200,6 +200,8 @@ def generate(model, tokenizer, plan, task, which, *, generation_kwargs=None):
     from transformers import LogitsProcessor, LogitsProcessorList, StoppingCriteria, StoppingCriteriaList
 
     kwargs = {"tools": task.get("tools"), "add_generation_prompt": True, "tokenize": False}
+    if "documents" in task:
+        kwargs["documents"] = task["documents"]
     adapter = task.get("adapter") if which == "modular" else None
     if adapter:
         kwargs["adapter_name"] = adapter
