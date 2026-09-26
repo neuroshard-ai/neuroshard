@@ -1,5 +1,9 @@
 # BAR decoder agreement audit
 
+**Result:** [decoder agreement passed](MODULAR_DECODER_PARITY_RESULTS.md):
+65/65 logit checks and 24/24 generated answers matched. The 11/24 quality failure
+stands. The audit is closed and its temporary resources are retired.
+
 The [fresh reference baseline](MODULAR_REFERENCE_FRESH_RESULTS.md) failed at
 11/24. That result remains closed. This audit distinguishes an execution
 discrepancy from the model/interface's observed capability before another
