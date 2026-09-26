@@ -1,0 +1,159 @@
+{
+  "format": "neuroshard-granite-reference-report/1",
+  "source_commit": "551238a8de41483ca3cd6c297650627da29f61b9",
+  "result_sha256": "774f68e6fbf57286fa1a0eca0692acf811af181c64fc473f39fc0321c7beb361",
+  "decision": "Parent qualifies and modular assistant preserves 18/18 successful answers. Published checker gains six and loses two versus the prompted parent: 12/16 vs 8/16. Two regressions exceed the allowed one; reference gate fails. Study closed; no replay, training, promotion or A1 credit.",
+  "execution_completed": true,
+  "reference_passed": false,
+  "milestone_complete": false,
+  "independent_rescore": true,
+  "source_task_and_receipt_bindings_verified": true,
+  "route_traces_verified": true,
+  "assistant_exact_text_matches": 24,
+  "assistant_exact_token_matches": 24,
+  "report": {
+    "baseline_gate": true,
+    "complete": true,
+    "protected_ids": [
+      "granite-chat-booking",
+      "granite-chat-allergy",
+      "granite-chat-document",
+      "granite-chat-expense",
+      "granite-chat-quoted-data",
+      "granite-chat-handoff",
+      "granite-chat-packing",
+      "granite-instruction-extract",
+      "granite-instruction-filter",
+      "granite-instruction-negation",
+      "granite-instruction-counts",
+      "granite-instruction-typed",
+      "granite-tool-calendar",
+      "granite-tool-notes",
+      "granite-tool-document",
+      "granite-tool-ticket",
+      "granite-tool-archive",
+      "granite-tool-timer"
+    ],
+    "lost_ids": [],
+    "reference_correct": {
+      "baseline": 8,
+      "modular": 12
+    },
+    "reference_lost_ids": [
+      "granite-reference-words-yes",
+      "granite-reference-case-yes"
+    ],
+    "reference_gate": false,
+    "p95_seconds": 5.062516484000014,
+    "quality_gate": false,
+    "automatic_composition_proven": false,
+    "checklist_credit": false
+  },
+  "models": {
+    "baseline": {
+      "categories": {
+        "conversation": {
+          "correct": 7,
+          "total": 8
+        },
+        "instruction": {
+          "correct": 5,
+          "total": 8
+        },
+        "tool-use": {
+          "correct": 6,
+          "total": 8
+        },
+        "reference": {
+          "correct": 8,
+          "total": 16
+        }
+      },
+      "reference_by_label": {
+        "yes": 7,
+        "no": 1
+      },
+      "p95_seconds": 5.062516484000014,
+      "p95_first_token_seconds": 0.4235133090000147
+    },
+    "modular": {
+      "categories": {
+        "conversation": {
+          "correct": 7,
+          "total": 8
+        },
+        "instruction": {
+          "correct": 5,
+          "total": 8
+        },
+        "tool-use": {
+          "correct": 6,
+          "total": 8
+        },
+        "reference": {
+          "correct": 12,
+          "total": 16
+        }
+      },
+      "reference_by_label": {
+        "yes": 6,
+        "no": 6
+      },
+      "p95_seconds": 5.01621428499999,
+      "p95_first_token_seconds": 0.40994061200001397
+    }
+  },
+  "reference_gained_ids": [
+    "granite-reference-words-no",
+    "granite-reference-case-no",
+    "granite-reference-json-no",
+    "granite-reference-lines-no",
+    "granite-reference-both-no",
+    "granite-reference-ending-yes"
+  ],
+  "reference_lost_ids": [
+    "granite-reference-words-yes",
+    "granite-reference-case-yes"
+  ],
+  "replay_count": 0,
+  "worker_outcome": {
+    "seconds": 328.195305224,
+    "returncode": 0,
+    "reason": "completed",
+    "completed": true,
+    "unit": "neuroshard-a1-51502a3815c64dcd",
+    "cpu_seconds": null,
+    "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+  },
+  "accounting": {
+    "worker_wall_seconds": 325.34023445599996,
+    "worker_process_cpu_seconds": 1418.731963864,
+    "cumulative_process_peak_rss_bytes": 8962760704
+  },
+  "ci": {
+    "id": 36260376207,
+    "head_sha": "551238a8de41483ca3cd6c297650627da29f61b9",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36260376207"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-26T18:15:55.552559+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0f0b9e2410aaf789e"
+    ],
+    "conservative_instance_seconds": 411.965582,
+    "conservative_compute_usd": 0.121117881108,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "cleanup_confirmation": {
+    "checked_utc": "2026-09-26T18:20:22.979043+00:00",
+    "instance_states": {
+      "i-0f0b9e2410aaf789e": "terminated"
+    },
+    "remaining_tagged_volumes": [],
+    "security_group_absent": true
+  }
+}

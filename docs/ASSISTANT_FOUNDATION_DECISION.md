@@ -4,6 +4,10 @@ September 26, 2026. **Qualify Granite 4.1 3B and its published Granite Switch
 checkpoint.** This is a reference candidate, not the accepted assistant.
 [A1](../TODO_ASSISTANT.md) remains open; do not train a new expert yet.
 
+**Outcome:** the [completed comparison](GRANITE_REFERENCE_RESULTS.md) qualified
+the parent and preserved its assistant answers, but failed the reference
+regression gate. The contract below remains unchanged; no rerun is queued.
+
 The [BAR baseline](MODULAR_REFERENCE_FRESH_RESULTS.md) stays failed at 11/24.
 The [decoder audit](MODULAR_DECODER_PARITY_RESULTS.md) reproduced all 24 answers
 with the upstream implementation. More work on that decoder is not the next
