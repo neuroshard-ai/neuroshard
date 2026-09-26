@@ -124,7 +124,12 @@ def parse_calls(text, functions):
             for keyword in node.keywords:
                 if keyword.arg is None or keyword.arg in kwargs:
                     raise ValueError("expanded or duplicate keyword argument")
-                kwargs[keyword.arg] = ast.literal_eval(keyword.value)
+                try:
+                    kwargs[keyword.arg] = ast.literal_eval(keyword.value)
+                except ValueError as error:
+                    # CPython's message includes an AST object's memory address.
+                    # Rejection must agree across worker/controller processes.
+                    raise ValueError("argument must be a Python literal") from error
             _check_value(kwargs, registry[name]["parameters"])
             calls.append({"name": name, "arguments": kwargs})
         except (SyntaxError, TypeError, KeyError, RecursionError, OverflowError) as error:

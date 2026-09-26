@@ -123,7 +123,8 @@ def test_controller_blocks_modular_until_baseline_passes_and_charges_all_prior_w
         assert "baseline quality gate failed" in result["error"]
 
 
-def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile(tmp_path, monkeypatch):
+@pytest.mark.parametrize("profile", execution.FRESH_PROFILES)
+def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile(tmp_path, monkeypatch, profile):
     # pytest's source path does not propagate to subprocesses. CI also installs
     # a wheel, which intentionally excludes the repository experiment contracts.
     # Make a foreign package fail loudly if the child inherits its import path.
@@ -133,10 +134,10 @@ def test_runtime_opt_in_occurs_before_torch_and_does_not_change_default_profile(
     monkeypatch.setenv("PYTHONPATH", str(tmp_path))
     code = (
         "import os; from neuroshard.evolution.modular_reference_execution import configure_runtime; "
-        "assert os.environ['ATEN_CPU_CAPABILITY']=='default'; configure_runtime('fresh-reference'); "
+        f"assert os.environ['ATEN_CPU_CAPABILITY']=='default'; configure_runtime({profile!r}); "
         "assert 'ATEN_CPU_CAPABILITY' not in os.environ; assert os.environ['OMP_NUM_THREADS']=='8'; "
         "import torch; "
-        "configure_runtime('fresh-reference')")
+        f"configure_runtime({profile!r})")
     result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
                             cwd=ROOT, env={**os.environ, "PYTHONPATH": str(ROOT / "src")})
     assert result.returncode != 0 and "before importing torch" in result.stderr
@@ -156,6 +157,22 @@ def test_cloud_budget_is_checked_before_any_allocation(monkeypatch):
         monkeypatch.setattr(cloud, "read", lambda p: {**good, **changes})
         with pytest.raises(ValueError, match="allowance"):
             cloud.resources()
+
+
+def test_recovery_resource_cap_counts_prior_allocation_and_requires_retirement(monkeypatch):
+    cloud = cloud_module()
+    good = cloud.resources()
+    original_read = cloud.read
+    # Eight new hours would pass a standalone cap, but exceed the combined cap.
+    monkeypatch.setattr(cloud, "read", lambda p: {**good, "hours": 8} if p == cloud.ROOT / cloud.RESOURCES
+                        else original_read(p))
+    with pytest.raises(ValueError, match="combined allowance"):
+        cloud.resources()
+    prior = original_read(cloud.ROOT / good["prior_resources"]["path"])
+    prior["resources_finished"]["remaining_instances"] = ["old-worker"]
+    monkeypatch.setattr(cloud, "read", lambda p: good if p == cloud.ROOT / cloud.RESOURCES else prior)
+    with pytest.raises(ValueError, match="prior allocation remains live"):
+        cloud.resources()
 
 
 def test_retirement_refuses_a_different_operator_or_protected_instance(tmp_path):

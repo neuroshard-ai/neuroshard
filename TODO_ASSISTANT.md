@@ -24,8 +24,10 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** run the [fresh A1 reference comparison](docs/MODULAR_REFERENCE_FRESH.md)
-after exact-commit CI, on one bounded temporary CPU host. The 24-case contract
+**Next action:** run the [A1 execution recovery](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md)
+after exact-commit CI, on one bounded temporary CPU host. The first allocated
+fresh study stopped on nondeterministic parser error text; its nine generations
+and resource costs remain recorded and charged. The unchanged 24-case contract
 separates completed comparison from gains, losses and latency. The
 [tool-interface diagnostic](docs/MODULAR_TOOL_INTERFACE_RESULTS.md) finished:
 3/3 correct calls and three exact independent replays, on opened cases. This
@@ -240,6 +242,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | 2026-09-26 | A1 | [Corrected interface result](docs/MODULAR_TOOL_INTERFACE_RESULTS.md): 3/3 correct tool calls and three exact replays; 103.4 minutes of new CPU worker time. Opened-case interface check only; A1 remains open. |
 | 2026-09-26 | A1 | [Fresh comparison](docs/MODULAR_REFERENCE_FRESH.md) declares 24 cases, baseline usability, full replay, per-answer retention and latency on one disposable 128 GiB CPU host. No result or milestone credit at freeze. |
 | 2026-09-26 | A1 | [Pre-execution CI correction](docs/MODULAR_REFERENCE_FRESH_CI.md): first queue stopped before allocation due to a test subprocess import path. No generation or EC2 cost; method and budget unchanged. |
+| 2026-09-26 | A1 | [Execution recovery](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md): first CPU allocation stopped after nine generations on process-specific parser error text. Record all receipts, stabilize rejection without changing scores, and freeze one restart within the remaining combined time/cost budget. No completed quality result or milestone credit. |
 
 ## Research informing this direction
 

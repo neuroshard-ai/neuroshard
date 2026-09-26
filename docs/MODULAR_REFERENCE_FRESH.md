@@ -1,8 +1,10 @@
 # Fresh BAR reference comparison
 
-**Pre-execution status:** the first queue stopped at CI, before allocation.
-The [test correction](MODULAR_REFERENCE_FRESH_CI.md) preserves the entire experiment
-contract and requires green CI at its new committed revision before launch.
+**Execution status:** after the [CI correction](MODULAR_REFERENCE_FRESH_CI.md),
+the first allocated study stopped on nondeterministic parser error text after
+nine baseline generations. Its evidence is preserved. The
+[recovery amendment](MODULAR_REFERENCE_FRESH_RECOVERY.md) fixes rejection text,
+retains the same plan and gates, and carries prior costs into one new CPU study.
 
 **Purpose:** measure what published neural composition adds, what it loses, and
 what it costs, before training a NeuroShard expert. This is the next A1 reference
@@ -102,6 +104,9 @@ of decentralized hosting, faster multi-peer inference or an independent operator
 Weights remain on that disposable host and are not committed or copied back.
 
 ## Run and handoff
+
+The instructions below describe the original freeze. For the current recovery
+profile and remaining budget, use the [execution amendment](MODULAR_REFERENCE_FRESH_RECOVERY.md).
 
 Commit the contract and implementation first. From an isolated checkout at that
 commit, with the existing AWS provisioning role and GitHub CLI:

@@ -1,0 +1,147 @@
+{
+  "format": "neuroshard-modular-reference-fresh-recovery-execution/1",
+  "original_freeze": "25b39765167fe89526c58cb7181d9a4614a1b380",
+  "plan_sha256": "f77e934cef4c9526a1e5e4b3dacd9eace264ca560d4518de9f17345fdff93599",
+  "artifacts_sha256": "e096227b60249bdffdbd563738353714fc7372396180e57f70a88ca0311776be",
+  "sources": [
+    "scripts/run_modular_reference.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_run.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "config/experiments/modular-reference-a1.json",
+    "config/experiments/modular-reference-chat-template.jinja",
+    "config/experiments/modular-reference-a1-artifacts.json",
+    "config/experiments/modular-reference-a1-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_tools.py",
+    "config/experiments/modular-tool-interface-diagnostic.json",
+    "config/experiments/modular-tool-interface-execution.json",
+    "config/experiments/modular-tool-interface-audit.json",
+    "config/experiments/modular-reference-a1-legacy-baseline-result.json",
+    "src/neuroshard/evolution/modular_reference_comparison.py",
+    "scripts/modular_reference_cloud.py",
+    "config/experiments/modular-reference-fresh.json",
+    "config/experiments/modular-reference-fresh-execution.json",
+    "config/experiments/modular-reference-fresh-resources.json",
+    "config/experiments/modular-tool-interface-result.json",
+    "docs/llm-requirements.txt",
+    "docs/evolution-requirements.txt",
+    "config/experiments/modular-reference-fresh-interrupted-result.json",
+    "config/experiments/modular-reference-fresh-interrupted-receipts.json",
+    "config/experiments/modular-reference-fresh-recovery-execution.json",
+    "config/experiments/modular-reference-fresh-recovery-resources.json"
+  ],
+  "packages": {
+    "torch": "2.9.1+cpu",
+    "transformers": "4.57.3",
+    "safetensors": "0.7.0",
+    "huggingface-hub": "0.36.0",
+    "tokenizers": "0.22.1",
+    "jinja2": "3.1.6",
+    "numpy": "2.2.6"
+  },
+  "python": "3.10.12",
+  "device": "cpu",
+  "gpu_launch_authorized": false,
+  "phases": [
+    "primary",
+    "replay"
+  ],
+  "replay_comparison": "exact decoded text, termination, and scoring; token equality reported separately",
+  "evaluation_budget_scope": "per checkpoint: legacy evaluation plus all primary/replay launch wall time; interrupted launches reserve their entire allowance",
+  "preparation_budget_scope": "3600 seconds per checkpoint including preparation in the interrupted fresh study. Original legacy download cost remains unknown; the separate interface diagnostic preparation remains in its own published receipt.",
+  "memory_enforcement": "systemd cgroup MemoryMax at max_rss_bytes, MemorySwapMax=0; recorded peak RSS must also pass because shared pages can be charged elsewhere",
+  "timeout_enforcement": "systemd RuntimeMaxSec and TimeoutStopSec=0; min(task limit, remaining checkpoint budget)",
+  "legacy_evidence": "Closed diagnostic comparator and cost record only; no legacy answer is reused as a new reply.",
+  "stop_rule": "One new CPU allocation under the remaining combined original resource allowance. Start a new study; never reuse interrupted replies or resume the old binding. Preserve baseline usability, full independent replay, retention, gain and latency gates. Stop on any execution failure or failed gate. No further automatic retry, training or promotion.",
+  "method_changed": false,
+  "checklist_credit": false,
+  "worker_environment": "Research-only CPU native instruction selection and eight threads, set before torch import; exact replay on the same host. No change to ledger numerical rules.",
+  "environment": {
+    "ATEN_CPU_CAPABILITY": null,
+    "MKL_ENABLE_INSTRUCTIONS": null,
+    "OMP_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "TOKENIZERS_PARALLELISM": "false"
+  },
+  "profile": "fresh-reference-recovery",
+  "legacy_plan_sha256": "773d5d59403554e3c9713e8636d235d3e39287d59c6e075fed30c26c88aab7e4",
+  "legacy_result_sha256": "a087a02063ad3b727b423238fab90fe1d25d523d5d994ff1724890931f6c4322",
+  "task_ids": [
+    "fresh-schedule",
+    "fresh-filter",
+    "fresh-tool-units",
+    "fresh-inventory",
+    "fresh-initials",
+    "fresh-tool-reschedule",
+    "fresh-ownership",
+    "fresh-reverse",
+    "fresh-tool-documents",
+    "fresh-calendar",
+    "fresh-deduplicate",
+    "fresh-tool-reminder",
+    "fresh-boxes",
+    "fresh-condition",
+    "fresh-tool-travel",
+    "fresh-constraint",
+    "fresh-extract",
+    "fresh-tool-stock",
+    "fresh-quoted-note",
+    "fresh-sort-words",
+    "fresh-tool-label",
+    "fresh-route",
+    "fresh-bounded-json",
+    "fresh-tool-account"
+  ],
+  "model_order": [
+    "baseline",
+    "modular"
+  ],
+  "allow_download": true,
+  "replay_policy": "All 24 replies per checkpoint, generated independently in fresh workers.",
+  "method_change": "No inference, prompt, data, model, score acceptance or quality-gate change. Normalize invalid-literal rejection text so worker/controller agree. Start a new study and regenerate all 24 baseline answers; old receipts are accounting and diagnostics only.",
+  "success_interpretation": "reference_ready measures completed baseline and modular comparison with replay. growth_screen_passed additionally requires preservation, gains and latency; neither grants admission or A2 credit.",
+  "required_cpu_flags": [
+    "amx_bf16",
+    "avx512_bf16"
+  ],
+  "new_evaluation_seconds": 7200,
+  "additional_evaluations": [
+    {
+      "path": "config/experiments/modular-tool-interface-result.json",
+      "sha256": "cf569c62e199f82cb50f2d382b8aec84370158f316689a04f61200e7fff1ce3b"
+    },
+    {
+      "path": "config/experiments/modular-reference-fresh-interrupted-result.json",
+      "sha256": "17a7048a7b0bb341bd3a2ed01c084f281a2fe2fd0ca2a8d094239e4f43002fa0",
+      "carry_preparation": true
+    }
+  ],
+  "supersedes_execution_commit": "f1e384b58c8b8bc5dbfeba2c7afa029a0a05880f",
+  "recovery": {
+    "prior_study_closed": true,
+    "prior_primary_generations": 9,
+    "prior_recorded_primary_rows": 8,
+    "opened_case_ids": [
+      "fresh-schedule",
+      "fresh-filter",
+      "fresh-tool-units",
+      "fresh-inventory",
+      "fresh-initials",
+      "fresh-tool-reschedule",
+      "fresh-ownership",
+      "fresh-reverse",
+      "fresh-tool-documents"
+    ],
+    "reuse_replies": false,
+    "new_unopened_evidence": false,
+    "automatic_retry": false
+  },
+  "remaining_evaluation_seconds": {
+    "baseline": 6940.839538634,
+    "modular": 7200
+  }
+}

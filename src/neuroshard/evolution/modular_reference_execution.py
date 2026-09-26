@@ -33,7 +33,10 @@ PROFILES = {
                        "config/experiments/modular-tool-interface-execution.json"),
     "fresh-reference": ("config/experiments/modular-reference-fresh.json",
                         "config/experiments/modular-reference-fresh-execution.json"),
+    "fresh-reference-recovery": ("config/experiments/modular-reference-fresh.json",
+                                 "config/experiments/modular-reference-fresh-recovery-execution.json"),
 }
+FRESH_PROFILES = ("fresh-reference", "fresh-reference-recovery")
 
 
 def read(path):
@@ -90,7 +93,7 @@ def committed_sources(root=ROOT, profile="reference"):
 
 def configure_runtime(profile):
     """Set the explicit research profile before importing the numerical stack."""
-    if profile != "fresh-reference":
+    if profile not in FRESH_PROFILES:
         return
     if "torch" in sys.modules:
         raise ValueError("configure the numerical profile before importing torch")
@@ -218,7 +221,7 @@ def checked(plan, row, binding, which, phase, task):
     score = score_reply(task, row["text"], row["terminated"])
     if any(score[key] != row[key] for key in ("passed", "reason")):
         raise ValueError("reply rescore mismatch")
-    if binding.get("profile") in ("tool-interface", "fresh-reference") and task["kind"] == "tool":
+    if binding.get("profile") in ("tool-interface", *FRESH_PROFILES) and task["kind"] == "tool":
         from neuroshard.evolution.modular_tools import validate_reply
         validation = validate_reply(row["text"], json.loads(task["messages"][0]["functions"]))
         if row.get("wire_validation") != validation:
@@ -311,7 +314,7 @@ def worker(request_path):
         plan = load_plan(ROOT / plan_path)
         task = next(task for task in plan["tasks"] if task["id"] == request["task"])
         result = generate_task(plan, which, model_dir, task)
-        if profile in ("tool-interface", "fresh-reference") and task["kind"] == "tool":
+        if profile in ("tool-interface", *FRESH_PROFILES) and task["kind"] == "tool":
             from neuroshard.evolution.modular_tools import validate_reply
             result["wire_validation"] = validate_reply(result["text"], json.loads(task["messages"][0]["functions"]))
         if file_state(model_dir, inventory) != request["file_state"]:
@@ -412,14 +415,22 @@ def _run(home, models, legacy_path, profile="reference"):
     if not isinstance(legacy.get("seconds"), (int, float)) or not math.isfinite(legacy["seconds"]) or legacy["seconds"] <= 0:
         raise ValueError("legacy evaluation cost is missing")
     historical_seconds = legacy["seconds"]
+    historical_preparation = {which: 0.0 for which in model_order}
     for prior in amendment.get("additional_evaluations", []):
         path = ROOT / prior["path"]
         if sha256(path) != prior["sha256"]:
             raise ValueError("historical evaluation receipt changed")
-        recorded = read(path)["accounting"]["baseline"]["evaluation_seconds"]
+        accounting = read(path)["accounting"]
+        recorded = accounting["baseline"]["evaluation_seconds"]
         if recorded < historical_seconds:
             raise ValueError("cumulative evaluation accounting went backwards")
         historical_seconds = recorded
+        if prior.get("carry_preparation"):
+            for which in model_order:
+                seconds = accounting[which]["preparation_seconds"]
+                if not isinstance(seconds, (int, float)) or not math.isfinite(seconds) or seconds < 0:
+                    raise ValueError("invalid historical preparation cost")
+                historical_preparation[which] += seconds
     binding = {"freeze": frozen, "profile": profile, "models": str(models), "legacy_sha256": sha256(legacy_path)}
     study_path = home / "study.json"
     if study_path.exists():
@@ -446,7 +457,10 @@ def _run(home, models, legacy_path, profile="reference"):
             prepare_path = home / "attempts" / f"{which}-prepare" / "reply.json"
             if prepare_path.exists():
                 raise ValueError("partial prepared run is not resumed automatically; preserve it and amend execution")
-            remaining = limits["fetch_seconds"] - spent(home, which, 0, preparation=True)
+            remaining = (limits["fetch_seconds"] - historical_preparation[which]
+                         - spent(home, which, 0, preparation=True))
+            if remaining <= 0:
+                raise TimeoutError("checkpoint preparation budget exhausted")
             save(home / "status.json", {"state": "running", "model": which, "phase": "prepare",
                                         "deadline_unix": time.time() + remaining})
             prepared = launch(home, models, binding, which, "prepare", remaining, limits["max_rss_bytes"])
@@ -459,7 +473,9 @@ def _run(home, models, legacy_path, profile="reference"):
                 for task in selected:
                     remaining = limits["evaluate_seconds"] - spent(home, which, legacy_seconds)
                     if "new_evaluation_seconds" in amendment:
-                        remaining = min(remaining, amendment["new_evaluation_seconds"] - spent(home, which, 0))
+                        allowance = amendment.get("remaining_evaluation_seconds", {}).get(
+                            which, amendment["new_evaluation_seconds"])
+                        remaining = min(remaining, allowance - spent(home, which, 0))
                     seconds = min(limits["per_task_seconds"], remaining)
                     if seconds <= 0:
                         raise TimeoutError("checkpoint evaluation budget exhausted")
@@ -495,7 +511,9 @@ def _run(home, models, legacy_path, profile="reference"):
                   "admission_evidence": False, "error": str(error)}
     finally:
         accounting = {which: {"evaluation_seconds": spent(home, which, historical_seconds if which == "baseline" else 0),
-                              "preparation_seconds": spent(home, which, 0, preparation=True)}
+                              "preparation_seconds": historical_preparation[which] + spent(home, which, 0, preparation=True),
+                              "historical_preparation_seconds": historical_preparation[which],
+                              "new_preparation_seconds": spent(home, which, 0, preparation=True)}
                       for which in model_order}
         if "new_evaluation_seconds" in amendment:
             for which in model_order:

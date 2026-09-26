@@ -15,11 +15,11 @@ import boto3
 from botocore.exceptions import ClientError
 
 from neuroshard.evolution.modular_reference_execution import (
-    ROOT, PROFILES, committed_sources, read, save, wait_for_ci)
+    ROOT, PROFILES, committed_sources, read, save, sha256, wait_for_ci)
 
 
-PROFILE = "fresh-reference"
-RESOURCES = "config/experiments/modular-reference-fresh-resources.json"
+PROFILE = "fresh-reference-recovery"
+RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -33,6 +33,15 @@ def resources():
             or value["hours"] * value["price"]["usd_per_hour"] + 3 > value["planning_cap_usd"]
             or value["planning_cap_usd"] > 15):
         raise ValueError("resource contract exceeds the single-host allowance")
+    prior = value["prior_resources"]
+    if sha256(ROOT / prior["path"]) != prior["sha256"]:
+        raise ValueError("prior resource receipt changed")
+    receipt = read(ROOT / prior["path"])["resources_finished"]
+    if (receipt["remaining_instances"] or receipt["remaining_volumes"]
+            or not receipt["security_group_retired"]
+            or receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
+            or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
+        raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
     return value
 
 
@@ -187,7 +196,7 @@ def bootstrap(home, allocation, source):
         ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
         "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
             "from neuroshard.evolution.modular_reference_execution import configure_runtime,freeze; "
-            "configure_runtime('fresh-reference'); print(freeze(profile='fresh-reference')['commit'])")])
+            f"configure_runtime({PROFILE!r}); print(freeze(profile={PROFILE!r})['commit'])")])
     try:
         result = ssh(home, allocation, ["timeout", "--kill-after=10", "3600", "bash", "-s"],
                      data=setup.encode(), timeout=3615)
