@@ -6,7 +6,8 @@ The [completed result](GRANITE_REFERENCE_RESULTS.md) qualified the parent but
 failed the adapter's reference regression gate; A1 remains open.
 The [adapter audit stopped](GRANITE_ADAPTER_AUDIT_RESULTS.md) after 16 standalone
 outputs matched the earlier Switch outputs. Its tensor comparison needs an
-explicit vocabulary-expansion correction; no retry is queued.
+explicit vocabulary-expansion correction; a separate
+[execution amendment](GRANITE_ADAPTER_AUDIT_RECOVERY.md) freezes that correction.
 It remains separate from the earlier demonstration results below.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural

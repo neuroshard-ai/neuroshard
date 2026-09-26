@@ -5,6 +5,10 @@ commit `302c254e8b81ad41ea4f1f0116e788a1d5f49cb8` passed
 [CI](https://github.com/neuroshard-ai/neuroshard/actions/runs/36263183266).
 All temporary resources were retired at **19:03:09 UTC**. No retry is queued.
 
+**Follow-up:** a separate [execution amendment](GRANITE_ADAPTER_AUDIT_RECOVERY.md)
+now freezes the vocabulary-aware correction. It does not resume or rewrite this
+stopped attempt.
+
 ## Completed evidence
 
 All 16 standalone PEFT generations completed with explicitly aligned activation.

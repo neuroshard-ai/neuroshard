@@ -23,7 +23,7 @@ RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
-                     "granite-adapter-audit": "config/experiments/granite-adapter-audit-resources.json"}
+                     "granite-adapter-audit": "config/experiments/granite-adapter-audit-recovery-resources.json"}
 GRANITE_PROFILES = {
     "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
@@ -63,6 +63,13 @@ def resources(profile=PROFILE):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
     if profile in ("decoder-parity", *GRANITE_PROFILES) and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
         raise ValueError("reference profile exceeds its separate two-hour six-dollar allowance")
+    if profile == "granite-adapter-audit" and (
+            receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3
+            > value["combined_planning_cap_usd"]
+            or value["combined_planning_cap_usd"] > 6
+            or receipt["conservative_instance_seconds"] + value["hours"] * 3600
+            > value["combined_instance_seconds_cap"]):
+        raise ValueError("adapter audit recovery exceeds the combined allowance")
     return value
 
 

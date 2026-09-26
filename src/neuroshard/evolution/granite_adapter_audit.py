@@ -19,7 +19,8 @@ from neuroshard.evolution.modular_reference_execution import (
 )
 
 PLAN = "config/experiments/granite-adapter-audit.json"
-EXECUTION = "config/experiments/granite-adapter-audit-execution.json"
+EXECUTION = "config/experiments/granite-adapter-audit-recovery-execution.json"
+AMENDMENT = "config/experiments/granite-adapter-audit-recovery.json"
 SCRIPT = "scripts/run_granite_adapter_audit.py"
 configure = reference.configure
 
@@ -129,10 +130,64 @@ def mapped_base_digests(state, mappings):
             tensor = torch.cat(tensors, dim=0)
         else:
             raise ValueError("unknown base projection mapping")
-        result[row["target"]] = tensor_digest(tensor)
+        result[row["target"]] = {"sha256": tensor_digest(tensor),
+                                 "shape": list(tensor.shape), "dtype": str(tensor.dtype)}
     if len(result) != len(mappings):
         raise ValueError("duplicate base target mapping")
     return result
+
+
+def compare_base_weights(state, expected, vocabulary):
+    """Only the two declared vocabulary matrices may have additional rows."""
+    import torch
+    old_rows = vocabulary["parent_rows"]
+    new_rows = vocabulary["switch_rows"]
+    width = vocabulary["hidden_size"]
+    vocabulary_names = {"model.embed_tokens.weight", "lm_head.weight"}
+    if not vocabulary_names.issubset(expected) or new_rows <= old_rows:
+        raise ValueError("incomplete vocabulary comparison contract")
+    report = {"matched": [], "added_vocabulary_rows": {}}
+    for name, record in expected.items():
+        tensor = state[name]
+        shape = record["shape"]
+        if str(tensor.dtype) != record["dtype"]:
+            raise ValueError(f"composed backbone dtype differs: {name}")
+        if name in vocabulary_names:
+            if shape != [old_rows, width] or list(tensor.shape) != [new_rows, width]:
+                raise ValueError(f"undeclared vocabulary shape: {name}")
+            comparable = tensor[:old_rows]
+            added = tensor[old_rows:]
+            if not torch.isfinite(added).all():
+                raise ValueError(f"nonfinite added vocabulary rows: {name}")
+            report["added_vocabulary_rows"][name] = {
+                "shape": list(added.shape), "sha256": tensor_digest(added),
+                "finite": True, "nonzero_elements": int(torch.count_nonzero(added)),
+                "min": float(added.min()), "max": float(added.max())}
+        else:
+            if list(tensor.shape) != shape:
+                raise ValueError(f"composed backbone shape differs: {name}")
+            comparable = tensor
+        if tensor_digest(comparable) != record["sha256"]:
+            raise ValueError(f"composed backbone differs: {name}")
+        report["matched"].append(name)
+    embeddings = state["model.embed_tokens.weight"]
+    head = state["lm_head.weight"]
+    if not torch.equal(embeddings, head) or embeddings.data_ptr() != head.data_ptr():
+        raise ValueError("published tied vocabulary weights are not tied")
+    report["tied_vocabulary_exact"] = True
+    return report
+
+
+def validate_vocabulary(model, vocabulary):
+    config = model.config
+    old_rows, new_rows = vocabulary["parent_rows"], vocabulary["switch_rows"]
+    if (config.vocab_size != new_rows or config.hidden_size != vocabulary["hidden_size"]
+            or not config.tie_word_embeddings
+            or list(config.adapter_token_ids) != list(range(old_rows, new_rows))
+            or len(config.adapter_substitute_token_ids) != new_rows - old_rows
+            or any(type(token) is not int or not 0 <= token < old_rows
+                   for token in config.adapter_substitute_token_ids)):
+        raise ValueError("published control-token vocabulary differs")
 
 
 def compare_adapter_weights(state, raw, layers=40):
@@ -233,6 +288,7 @@ def worker(request_path):
     torch.set_num_interop_threads(1)
     torch.manual_seed(0)
     plan = read(ROOT / PLAN)
+    amendment = read(ROOT / AMENDMENT)
     reference_plan = read(ROOT / reference.PLAN)
     tasks = reference_plan["reference_tasks"]
     if [task["id"] for task in tasks] != plan["task_ids"]:
@@ -241,7 +297,9 @@ def worker(request_path):
            if row["category"] == "reference"]
     models = Path(request["models"])
     reply = {"binding": request["binding"], "execution_completed": False,
-             "admission_evidence": False, "checklist_credit": False, "results": {}}
+             "admission_evidence": False, "checklist_credit": False, "results": {},
+             "amendment_sha256": sha256(ROOT / AMENDMENT),
+             "prior_accounting": amendment["prior_accounting"]}
     started = time.monotonic()
     try:
         inventory = read(ROOT / reference.ARTIFACTS)["models"]
@@ -260,27 +318,33 @@ def worker(request_path):
         reply["invocation"] = invocation
         positions = {row["id"]: row for row in invocation}
         base_digests = mapped_base_digests(model.state_dict(), read(aux / "compose_report.json")["base_model_mapping"])
+        reply["expected_base_tensors"] = base_digests
         raw = load_file(adapter_dir / "adapter_model.safetensors")
-        model = PeftModel.from_pretrained(model, adapter_dir, is_trainable=False, autocast_adapter_dtype=False).eval()
-        # Raw adapter is F32; compare in the published composed checkpoint's BF16 profile.
-        model.to(dtype=torch.bfloat16)
-        from peft import get_peft_model_state_dict
-        loaded = get_peft_model_state_dict(model)
-        if set(loaded) != set(raw) or any(not torch.equal(loaded[k], raw[k].to(torch.bfloat16)) for k in raw):
-            raise ValueError("standalone loader omitted or changed adapter tensors")
-        del loaded
-        if any(p.requires_grad or p.dtype != torch.bfloat16 for p in model.parameters()):
-            raise ValueError("standalone has trainable or non-BF16 parameters")
-        for which in ("standalone", "modular"):
+        del model, tokenizer
+        gc.collect()
+        # Backbone and embedded-adapter checks precede either generation arm.
+        for which in ("modular", "standalone"):
             if which == "modular":
                 model, tokenizer = reference.load_model(models / "modular", "modular")
+                validate_vocabulary(model, amendment["vocabulary"])
                 state = model.state_dict()
-                for name, digest in base_digests.items():
-                    if tensor_digest(state[name]) != digest:
-                        raise ValueError(f"composed backbone differs: {name}")
+                reply["base_comparison"] = compare_base_weights(state, base_digests, amendment["vocabulary"])
                 reply["base_tensor_matches"] = len(base_digests)
                 reply["weights"] = compare_adapter_weights(state, raw)
                 del state
+            else:
+                model, tokenizer = reference.load_model(models / "baseline", "baseline")
+                model = PeftModel.from_pretrained(model, adapter_dir, is_trainable=False,
+                                                 autocast_adapter_dtype=False).eval()
+                # Raw adapter is F32; use the original composed checkpoint's BF16 profile.
+                model.to(dtype=torch.bfloat16)
+                from peft import get_peft_model_state_dict
+                loaded = get_peft_model_state_dict(model)
+                if set(loaded) != set(raw) or any(not torch.equal(loaded[k], raw[k].to(torch.bfloat16)) for k in raw):
+                    raise ValueError("standalone loader omitted or changed adapter tensors")
+                del loaded
+                if any(p.requires_grad or p.dtype != torch.bfloat16 for p in model.parameters()):
+                    raise ValueError("standalone has trainable or non-BF16 parameters")
             rows = reply["results"][which] = []
             for task in tasks:
                 row = (standalone_generate(model, tokenizer, reference_plan, task,
@@ -303,12 +367,15 @@ def worker(request_path):
     finally:
         reply.update(wall_seconds=time.monotonic() - started, process_cpu_seconds=time.process_time(),
                      cumulative_process_peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024)
+        reply["combined_worker_wall_seconds"] = amendment["prior_accounting"]["wall_seconds"] + reply["wall_seconds"]
+        reply["combined_worker_cpu_seconds"] = amendment["prior_accounting"]["process_cpu_seconds"] + reply["process_cpu_seconds"]
         save(request_path.parent / "reply.json", reply, exclusive=True)
 
 
 def run(home, models):
     configure()
-    binding = {"freeze": freeze(), "profile": "granite-adapter-audit", "plan_sha256": sha256(ROOT / PLAN)}
+    binding = {"freeze": freeze(), "profile": "granite-adapter-audit", "plan_sha256": sha256(ROOT / PLAN),
+               "amendment_sha256": sha256(ROOT / AMENDMENT)}
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
     save(home / "binding.json", binding, exclusive=True)

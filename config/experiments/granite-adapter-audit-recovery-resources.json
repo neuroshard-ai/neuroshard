@@ -1,0 +1,39 @@
+{
+  "format": "neuroshard-granite-adapter-audit-recovery-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 2,
+  "planning_cap_usd": 6,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "granite-adapter-audit-recovery",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 33554432,
+  "prior_resources": {
+    "path": "config/experiments/granite-adapter-audit-report.json",
+    "sha256": "b41dc371a7fb0365a4146bf3614e344912dd1ea0113d61fed28d73e2b35a2d3a"
+  },
+  "budget_scope": "One additional CPU allocation, at most two hours. Combined compute allowance with the previous attempt plus $3 reserve stays within $6. All original accounting remains recorded.",
+  "combined_planning_cap_usd": 6,
+  "combined_instance_seconds_cap": 7494
+}
