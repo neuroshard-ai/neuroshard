@@ -143,14 +143,20 @@ def generate_task(plan, which, model_dir, task):
     cache = DynamicCache(config=config)
     eos_ids = set(json.loads((Path(model_dir) / "generation_config.json").read_text())["eos_token_id"])
     generated = []
+    budget_exhausted = False
     seen = 0
     tokens = prompt
     deadline = started + plan["limits"]["per_task_seconds"]
     while len(generated) < plan["limits"]["max_new_tokens"]:
         if time.monotonic() > deadline:
+            budget_exhausted = True
             break
         logits = forward_logits(
             config, layer_cls, checkpoint, embed, head, norm, rotary, cache, tokens, seen)
+        if time.monotonic() > deadline:
+            budget_exhausted = True
+            del logits
+            break
         seen += tokens.shape[1]
         choice = int(torch.argmax(logits[0, -1]).item())
         generated.append(choice)
@@ -163,6 +169,8 @@ def generate_task(plan, which, model_dir, task):
     reply_ids = generated[:-1] if terminated else generated
     text = tokenizer.decode(reply_ids, skip_special_tokens=True)
     scored = score_reply(task, text, terminated)
+    if budget_exhausted:
+        scored = {"passed": False, "reason": "time-limit"}
     return {
         "id": task["id"],
         "model": which,
@@ -177,7 +185,7 @@ def generate_task(plan, which, model_dir, task):
         "seconds": round(time.monotonic() - started, 3),
         "max_rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
         "rendered_sha256": hashlib.sha256(rendered.encode("utf-8")).hexdigest(),
-        "stopped": False,
+        "stopped": budget_exhausted,
     }
 
 

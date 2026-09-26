@@ -136,10 +136,12 @@ same worker.
 | One layer, FP32 weights, gradients, and both Adam moments | 11,895,635,968 | one training worker per layer |
 | Embedding and output head, same Adam state | 13,143,703,552 | a separate training worker |
 
-Four 16 GiB hosts can hold inference without any host storing the full
-backbone. The largest inference worker still fits under 16 GiB after its
-share of the 2,048-token cache. Training state needs 32 layer workers plus
-one embedding worker at the same 16 GiB budget, or fewer larger GPUs. A
+The weights and cache fit the estimated budgets of four 16 GiB hosts without
+any host storing the full backbone. This is a tensor-state estimate, not a
+measured peak-memory result: runtime, attention workspaces, activation buffers
+and communication buffers still need headroom. Training tensor state would use
+32 layer workers plus one embedding worker at the same 16 GiB budget, or fewer
+larger GPUs; training activations are not included. A
 generated token crossing a four-stage pipeline sends 24,576 bytes of hidden
 state. That is small next to reading a layer. Active compute still touches
 all five feed-forward networks, so adding experts does not by itself keep
@@ -148,17 +150,11 @@ reproduction keeps the released value of 5.
 
 ## Run
 
-The driver is [run_modular_reference.py](../scripts/run_modular_reference.py).
-It refuses a config or template hash that differs from the plan before
-decoding. Downloads and replies stay outside git until a result file is
-copied into `config/experiments/`.
-
-```bash
-python scripts/run_modular_reference.py fetch --which baseline
-python scripts/run_modular_reference.py evaluate --which baseline
-python scripts/run_modular_reference.py fetch --which modular
-python scripts/run_modular_reference.py evaluate --which modular
-```
+The original driver and its outputs remain associated with commit `25b3976`.
+New execution uses the [execution amendment](MODULAR_REFERENCE_EXECUTION.md),
+which enforces input identities, worker limits and an independently generated
+replay. The questions and quality gates above are unchanged. Downloads and replies
+stay outside git until a result file is copied into `config/experiments/`.
 
 A1 closes only when both checkpoints finish, the baseline gate passes, the
 placement estimate still fits, and the deviations above still describe the

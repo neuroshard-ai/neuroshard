@@ -24,8 +24,10 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** run the committed A1 reproduction. BAR is the reference;
-FlexOlmo is not. No scored outputs exist yet. The
+**Next action:** complete the A1 BAR reference under the
+[execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md). Initial baseline
+outputs are diagnostics; independent replay and the modular comparison remain
+required. The
 [observable-reasoning candidate](docs/OBSERVABLE_REASONING_RESULTS.md) is closed.
 
 **Order:** A1 → A2 → A3 is the learning priority. Plan A4's memory and network
@@ -226,6 +228,7 @@ completion target. Update the table below when a milestone's evidence changes.
 | --- | --- | --- |
 | 2026-09-26 | A1–A6 | New direction recorded; all milestones open. Start with reference artifacts and recipe review. |
 | 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
+| 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
 
 ## Research informing this direction
 

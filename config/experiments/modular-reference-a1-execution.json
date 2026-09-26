@@ -1,0 +1,52 @@
+{
+  "format": "neuroshard-modular-reference-execution/1",
+  "original_freeze": "25b39765167fe89526c58cb7181d9a4614a1b380",
+  "plan_sha256": "773d5d59403554e3c9713e8636d235d3e39287d59c6e075fed30c26c88aab7e4",
+  "artifacts_sha256": "e096227b60249bdffdbd563738353714fc7372396180e57f70a88ca0311776be",
+  "sources": [
+    "scripts/run_modular_reference.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_run.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "config/experiments/modular-reference-a1.json",
+    "config/experiments/modular-reference-chat-template.jinja",
+    "config/experiments/modular-reference-a1-artifacts.json",
+    "config/experiments/modular-reference-a1-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py"
+  ],
+  "packages": {
+    "torch": "2.9.1+cpu",
+    "transformers": "4.57.3",
+    "safetensors": "0.7.0",
+    "huggingface-hub": "0.36.0",
+    "tokenizers": "0.22.1",
+    "jinja2": "3.1.6",
+    "numpy": "2.2.6"
+  },
+  "python": "3.10.12",
+  "device": "cpu",
+  "gpu_launch_authorized": false,
+  "phases": [
+    "primary",
+    "replay"
+  ],
+  "replay_comparison": "exact decoded text, termination, and scoring; token equality reported separately",
+  "evaluation_budget_scope": "per checkpoint: legacy evaluation plus all primary/replay launch wall time; interrupted launches reserve their entire allowance",
+  "preparation_budget_scope": "per checkpoint: download, file hashing, and verification within fetch_seconds; historical download time is unknown and reported as unknown",
+  "memory_enforcement": "systemd cgroup MemoryMax at max_rss_bytes, MemorySwapMax=0; recorded peak RSS must also pass because shared pages can be charged elsewhere",
+  "timeout_enforcement": "systemd RuntimeMaxSec and TimeoutStopSec=0; min(task limit, remaining checkpoint budget)",
+  "legacy_evidence": "original baseline replies retained only as diagnostics; require completed legacy summary and bill its elapsed evaluation time",
+  "stop_rule": "any execution/provenance/replay failure stops this run; no automatic retry; baseline quality failure stops before modular download",
+  "method_changed": false,
+  "checklist_credit": false,
+  "worker_environment": "existing evolution package startup profile: ATen default, MKL SSE4.2, one Torch/OMP/MKL thread; CPU only; OpenBLAS also limited to one thread",
+  "environment": {
+    "ATEN_CPU_CAPABILITY": "default",
+    "MKL_ENABLE_INSTRUCTIONS": "SSE4_2",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "TOKENIZERS_PARALLELISM": "false"
+  }
+}
