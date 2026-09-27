@@ -47,15 +47,20 @@ remain evidence, not readiness claims for this assistant.
   despite the failed primitive gate; A1 stays open). [Result](docs/ASSISTANT_EXPERIENCE_GPU_RESULTS.md):
   722 verified trajectories; on 64 integration episodes the parent completes 34
   greedily, the update and addition arms 42 each; $6.31 across all attempts.
-- [ ] Run CPU development evaluation of both routed systems; open confirmation only
-  after a development pass.
+- [x] Run CPU development evaluation of both routed systems. [Result](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_RESULTS.md):
+  failed. Addition 14/24, update 15/24, parent 9/24; net +5 and parity with the
+  update pass, but the total, one lost protected success and p95 latency (189 s
+  with routing) fail. Confirmation stays sealed.
+- [ ] Run the declared decision-preference round (37 verified version-choice pairs),
+  then development again. Latency needs a separate declared efficiency change.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. Both trained arms improve integration
-episodes (34/64 to 42/64), mostly in the call-budget family; version choice remains
-weak. Development evaluation on the canonical CPU runtime is running.
+(34/64 to 42/64) and development (9/24 to 14–15/24), mostly in the call-budget
+family, but fail the development gate on total, one lost success and latency.
+The declared decision-preference round is running.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
