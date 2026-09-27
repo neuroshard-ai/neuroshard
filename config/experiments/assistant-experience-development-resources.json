@@ -30,7 +30,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927/evidence/.study/attempts/baseline-experience",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927d/evidence/.study/attempts/baseline-experience",
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
@@ -41,8 +41,8 @@
     "maximum_bytes": 419430400
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-workflow-canonical-report.json",
-    "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
+    "path": "config/experiments/assistant-experience-gpu-report.json",
+    "sha256": "efa95efa422d875c9f36a321dc3eb10a68ec6c4cb7f7cf18a471b1b7fa172471"
   },
   "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline; three-hour expiry and seven-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation."
 }

@@ -1,0 +1,502 @@
+{
+  "format": "neuroshard-assistant-experience-gpu-report/1",
+  "execution_completed": true,
+  "error": null,
+  "attempts": [
+    {
+      "home": "assistant-experience-20260927",
+      "commit": "19877504f646aab1315f8cc3f8e403f0494dcca8",
+      "outcome": "RunInstances refused g6e.xlarge in us-east-1f; no instance started.",
+      "resources_finished": {
+        "finished_utc": "2026-09-27T14:20:28.466827+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "conservative_instance_seconds": 1.948174,
+        "conservative_compute_usd": 0.0010070977261111111,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "home": "assistant-experience-20260927b",
+      "commit": "5877b4da6c9516f069753ad75518a850eb40f48b",
+      "outcome": "InsufficientInstanceCapacity for g6e.xlarge in us-east-1a to 1d; no instance started.",
+      "resources_finished": {
+        "finished_utc": "2026-09-27T14:46:57.917657+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "conservative_instance_seconds": 39.626284,
+        "conservative_compute_usd": 0.020484587367777776,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "home": "assistant-experience-20260927c",
+      "commit": "fc4e1923a631e0a548c366cde45bdc19221f5f54",
+      "outcome": "Collection, replay recording and update-arm training completed on g5.2xlarge; the addition arm failed with RuntimeError: Expected a 'cuda' device type for generator but found 'cpu'.",
+      "phases_seconds": {
+        "collect": 12123.80192825,
+        "replay": 30.80744681499891
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-27T18:52:38.578972+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-03bdaf9c371f15543"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 13120.562803,
+        "conservative_compute_usd": 4.417256143676667,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "home": "assistant-experience-20260927d",
+      "commit": "621125dbb3fdc9e26d5a2a8bf667a5126a3217e4",
+      "outcome": "Re-verified the pinned collection, retrained both arms under the corrected trainer and fitted gates.",
+      "gpu": "NVIDIA A10G",
+      "phases_seconds": {
+        "verify_collection": 17.147385981000014,
+        "train": 561.382858158,
+        "integrate": 4318.606757458
+      },
+      "peak_gpu_bytes": 11887228416,
+      "resources_finished": {
+        "finished_utc": "2026-09-27T20:40:48.893132+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-001230461d9f70370"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 5551.266135,
+        "conservative_compute_usd": 1.8689262654499998,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    }
+  ],
+  "collection": {
+    "summary": {
+      "cases": 256,
+      "rollouts": 2640,
+      "accepted": 722,
+      "complete": 722,
+      "coached": 48,
+      "cases_without_experience": [
+        "workflow-05bc03162863",
+        "workflow-06bd8b2574c0",
+        "workflow-079556e895e1",
+        "workflow-143d33a22e2a",
+        "workflow-1f20e77524eb",
+        "workflow-25898e66ae73",
+        "workflow-37d163a08676",
+        "workflow-38736ec109b3",
+        "workflow-414235cf57ef",
+        "workflow-41b4d7e9e5fe",
+        "workflow-49fe4420e4bc",
+        "workflow-4c3f4f1c3965",
+        "workflow-4c95193db75b",
+        "workflow-4e6a38daefaf",
+        "workflow-50e8eedc4ac5",
+        "workflow-567b9ced30d8",
+        "workflow-576be951e7f9",
+        "workflow-5db171445a99",
+        "workflow-5e4e30efbbbf",
+        "workflow-627d28f9e4e7",
+        "workflow-63f90f35dad7",
+        "workflow-68688e86a845",
+        "workflow-703048824008",
+        "workflow-7d236fc075b6",
+        "workflow-7e687d5d6003",
+        "workflow-7f7bd37a2698",
+        "workflow-81a1263b5083",
+        "workflow-830c5d7a02fb",
+        "workflow-83e356a9071f",
+        "workflow-8ac0e56c7fa0",
+        "workflow-8d3dce3f70f9",
+        "workflow-9018695f4d22",
+        "workflow-924489a045a6",
+        "workflow-937bc9c4cbc5",
+        "workflow-9ade89053065",
+        "workflow-a0ed0c878f34",
+        "workflow-a3fba96d76e3",
+        "workflow-a6a2e20ca76d",
+        "workflow-a6b6f586f77b",
+        "workflow-a898d0a423fe",
+        "workflow-b1ad6b1f2e1a",
+        "workflow-b48d3d2faae6",
+        "workflow-b508bd772460",
+        "workflow-c172b97adf07",
+        "workflow-c2899b0845a0",
+        "workflow-d349b2464c29",
+        "workflow-dc6f556f61f7",
+        "workflow-e03fa66da7d6",
+        "workflow-e5b13d8e00da",
+        "workflow-e65b6e302efe",
+        "workflow-f19b87c67755",
+        "workflow-f64de8028809",
+        "workflow-f6ff7564a4b0",
+        "workflow-f8a351942aec",
+        "workflow-fb380791a087",
+        "workflow-ff13a46974a5"
+      ],
+      "by_family": {
+        "date": {
+          "cases": 32,
+          "complete": 25,
+          "coached_only": 0
+        },
+        "copy": {
+          "cases": 32,
+          "complete": 26,
+          "coached_only": 0
+        },
+        "reschedule": {
+          "cases": 32,
+          "complete": 26,
+          "coached_only": 0
+        },
+        "sum": {
+          "cases": 32,
+          "complete": 26,
+          "coached_only": 0
+        },
+        "difference": {
+          "cases": 32,
+          "complete": 20,
+          "coached_only": 16
+        },
+        "recipient": {
+          "cases": 32,
+          "complete": 26,
+          "coached_only": 0
+        },
+        "scope": {
+          "cases": 32,
+          "complete": 26,
+          "coached_only": 1
+        },
+        "latest": {
+          "cases": 32,
+          "complete": 25,
+          "coached_only": 1
+        }
+      }
+    },
+    "accepted_before_filter": 1355,
+    "near_policy_ceiling": 0.0887308344244957,
+    "model_calls": 19381,
+    "input_tokens": 24312430,
+    "output_tokens": 813501,
+    "coached_cases": 74,
+    "files": {
+      "experience.json": "3b276b933a51016774ae08150ad93370e082eed63da788b926dbf787058c34be",
+      "rollouts.jsonl.gz": "669c49096d9f86856e8e9e5ac29569f579542d9a4b487a9a02ee117d75895629",
+      "trajectories.jsonl.gz": "210cfb4497ec527bb2567c91022717038888655719666550ada7ea68dd3efaec",
+      "replay.json": "b89cdc2cfcd797474f061880517c1c9e7fb0d634ba1b06c428c8372165b58de3",
+      "replay.jsonl.gz": "e977ff6086d63968d3b06557ab1609772cc0563d5b75c6c271aeee29550b5452"
+    }
+  },
+  "training": {
+    "update": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "update",
+      "trainable_sha256": "878a6c80ee95950447d9ed594aa9889905ed11f76ae00ab1c133ee794dcc3902",
+      "trainable_parameters": 62914560,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.weight": [
+          512,
+          2560
+        ]
+      },
+      "steps": 128,
+      "schedule_sha256": "713a40673212df2009faa97ae32a8032a69a02d82984facfcd6095601c06e1aa",
+      "final_loss": 0.024125523672410054,
+      "roots": {
+        "experience": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "plan": "65d43bcd8134b811b2bc1031e0e5974e44c512bbda6ad3017ecc3d646ef85619"
+      },
+      "seconds": 278.33302915099995,
+      "tokens_processed": 1279692
+    },
+    "addition": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "addition",
+      "trainable_sha256": "92c9aab2a263dcb06eb907fa3c47fdef0ac2496342322d60aeac9f9ddb169e17",
+      "trainable_parameters": 1048576,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.32.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.33.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.33.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.34.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.34.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.35.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.35.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.36.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.36.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.37.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.37.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.38.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.38.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.39.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.39.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ]
+      },
+      "steps": 128,
+      "schedule_sha256": "713a40673212df2009faa97ae32a8032a69a02d82984facfcd6095601c06e1aa",
+      "final_loss": 0.02446989022777757,
+      "roots": {
+        "experience": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "plan": "65d43bcd8134b811b2bc1031e0e5974e44c512bbda6ad3017ecc3d646ef85619"
+      },
+      "seconds": 277.548200244,
+      "tokens_processed": 1279692
+    }
+  },
+  "integration": {
+    "parent_success_rates": {
+      "greedy": 0.53125,
+      "sampled": 0.515625,
+      "episodes": 64
+    },
+    "arms": {
+      "update": {
+        "gate": {
+          "rule": "logistic",
+          "bias": 0.051316000521183014,
+          "epsilon": 1e-06,
+          "threshold": 0.5,
+          "counts": {
+            "arm_better": 17,
+            "parent_better": 2,
+            "ties": 45
+          },
+          "sha256": "b1141670fbc7b14646d33b328ed285812508ad8b1dbb81a4f192c081d1a1c54e"
+        },
+        "success_rates": {
+          "greedy": 0.65625,
+          "sampled": 0.6484375,
+          "episodes": 64
+        }
+      },
+      "addition": {
+        "gate": {
+          "rule": "logistic",
+          "bias": 0.06596482545137405,
+          "epsilon": 1e-06,
+          "threshold": 0.5,
+          "counts": {
+            "arm_better": 16,
+            "parent_better": 1,
+            "ties": 47
+          },
+          "sha256": "b30e3672e2627342f24615edf1ab39840003022f742fc9d10e0b16867511e159"
+        },
+        "success_rates": {
+          "greedy": 0.65625,
+          "sampled": 0.65625,
+          "episodes": 64
+        }
+      }
+    },
+    "integration_sha256": "d118c61994f7bcb95ffd55440e49e5ba08f53cb6dc47445a59598ae95b721b9c",
+    "features_sha256": "314da746c18df6a93f8b642b919513e104142ce07b3dee8e37da42bca41592ff"
+  },
+  "conservative_compute_usd_all_attempts": 6.307674094220556,
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-03bdaf9c371f15543",
+      "i-001230461d9f70370"
+    ],
+    "conservative_instance_seconds": 18713.403396,
+    "conservative_compute_usd": 6.307674094220556,
+    "scope": "All four GPU attempts combined."
+  },
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false
+}

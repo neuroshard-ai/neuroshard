@@ -124,6 +124,32 @@ def test_cpu_profile_uploads_only_declared_regular_files_within_its_allowance(tm
         cloud.upload_bundle({**spec, 'maximum_bytes': 10})
 
 
+def test_development_inventory_pins_arms_runtime_and_every_imported_source():
+    import subprocess
+    import sys
+
+    execution = read(ROOT / evaluation.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources'])
+    baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
+    assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
+    assert execution['threads'] == read(ROOT / 'config/experiments/assistant-workflow-canonical.json')['resources']['threads']
+    assert set(execution['arms']) == {'update', 'addition', 'integration_sha256'}
+    assert sha256(ROOT / execution['canonical_result']['path']) == execution['canonical_result']['sha256']
+    probe = ('import os, sys; import neuroshard.evolution.assistant_experience_eval as m; '
+             'import neuroshard.evolution.assistant_experience_run, neuroshard.evolution.assistant_experience_train, '
+             'neuroshard.evolution.assistant_selector, neuroshard.evolution.assistant_experience_gate; '
+             'root = os.path.abspath("src"); '
+             'print("\\n".join(sorted(os.path.relpath(x.__file__) for x in list(sys.modules.values()) '
+             'if getattr(x, "__file__", None) and os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources'])
+    assert execution['prepare_seconds'] + 2 * execution['worker_seconds'] + 1800 <= 3 * 3600
+    assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
+
+
 def test_importing_evaluation_does_not_load_torch():
     import subprocess
     import sys
