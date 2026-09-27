@@ -82,11 +82,13 @@ class Batcher:
             ids[row, width - len(slot['ids']):] = torch.tensor(slot['ids'])
             mask[row, width - len(slot['ids']):] = 1
         torch.manual_seed(self._seed + len(self.batches))
+        sampling = self.generation['temperature'] > 0
+        options = ({'do_sample': True, 'temperature': self.generation['temperature'],
+                    'top_p': self.generation['top_p'], 'top_k': 0} if sampling else {'do_sample': False})
         with torch.inference_mode():
             output = self.model.generate(input_ids=ids.to(self.device), attention_mask=mask.to(self.device),
-                                         do_sample=True, temperature=self.generation['temperature'],
-                                         top_p=self.generation['top_p'], top_k=0, num_beams=1, use_cache=True,
-                                         max_new_tokens=self.generation['max_new_tokens'], pad_token_id=pad)
+                                         num_beams=1, use_cache=True, pad_token_id=pad,
+                                         max_new_tokens=self.generation['max_new_tokens'], **options)
         self.batches.append(len(batch))
         for row, slot in enumerate(batch):
             tokens = output[row, width:].tolist()

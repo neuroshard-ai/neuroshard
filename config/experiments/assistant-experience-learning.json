@@ -65,6 +65,17 @@
     "activation": "Select once at the first request of a workspace episode; keep that selection through its follow-ups.",
     "accounting": "Charge feature prefill, every integration rollout, gate fit and rejected work."
   },
+  "experience_selection_per_case": 4,
+  "selection_recipe": {
+    "seed": 27092027,
+    "epsilon": 1e-06,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "updates": 128,
+    "batch": 8,
+    "threshold": 0.5
+  },
+  "accelerator_runtime": "Collection, replay recording, training and integration may use one GPU host with SDPA attention in BF16: acceptance is by outcome replay, so collection needs no numerical parity. Development and confirmation evaluation use the CPU runtime of the canonical parent baseline.",
   "development_gate": {
     "cases": 24,
     "minimum_total": 18,
