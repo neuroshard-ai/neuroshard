@@ -5,7 +5,9 @@ The active [assistant checklist](../TODO_ASSISTANT.md) follows the
 is the [workspace learning contract](ASSISTANT_WORKFLOW_LEARNING.md): a complete
 parent conversation baseline, followed by trained update and added-capacity
 comparisons with automatic selection and individual retention. A Granite-specific
-shard port is required before activation. All six milestones remain open.
+shard port is required before activation. All six milestones remain open. The [first workspace baseline](ASSISTANT_WORKFLOW_BASELINE_RESULTS.md)
+completed at 2/24, retaining all 18 prior assistant answers but failing primitive
+quality and latency. Resources are retired; no training or retry is queued.
 
 The earlier [Granite reference](GRANITE_REFERENCE_RESULTS.md),
 [context reference](GRANITE_CONTEXT_REFERENCE_RESULTS.md) and

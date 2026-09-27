@@ -21,13 +21,19 @@ remain evidence, not readiness claims for this assistant.
   separate training, integration, development and confirmation partitions.
 - [x] Derive the Granite partition/storage/communication plan; identify native
   model semantics that the current Llama runtime does not implement.
-- [ ] Run the committed parent baseline: 24 workflows plus prior assistant anchors,
-  two conditional process replays, one CPU allocation, two hours / $6 allowance.
-- [ ] Publish baseline outcomes and pin every successful workflow for retention.
+- [x] Run the committed parent baseline. [Result](docs/ASSISTANT_WORKFLOW_BASELINE_RESULTS.md):
+  2/24 workflows, 18/18 prior answers retained; baseline qualification failed.
+  Conditional replays were skipped; the CPU allocation is retired.
+- [x] Publish baseline outcomes and pin both successful workflows for retention.
+- [ ] Diagnose and amend grounded tool use and follow-up state before another
+  execution. Preserve the failed baseline; no training or retry is queued.
 - [ ] Implement the declared training and gate stages, validate trajectories and
   memory, commit their execution inventory, then compare the three complete arms.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
+
+**Current status:** the first run completed but failed primitive and latency
+gates. A1 remains open; the declared training comparison has not started.
 
 Execution details and stopping rules: [workspace learning contract](docs/ASSISTANT_WORKFLOW_LEARNING.md).
 No automatic training or admission follows the baseline. This is the first

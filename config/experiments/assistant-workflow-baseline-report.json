@@ -1,0 +1,434 @@
+{
+  "format": "neuroshard-assistant-workflow-baseline-report/1",
+  "source_commit": "6e44dcaa766978684af8740fd5d16ce94f35bcd8",
+  "result_sha256": "a76de0e5f88ba03db1dfa7f5a9a3f934ec00d458ef7b62ed25e6e15a87de1bcc",
+  "execution_completed": true,
+  "baseline_passed": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "training_authorized": false,
+  "confirmation_opened": false,
+  "independent_rescore_matches": true,
+  "source_inventory_and_worker_binding_verified": true,
+  "ci": {
+    "id": 36291619057,
+    "head_sha": "6e44dcaa766978684af8740fd5d16ce94f35bcd8",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36291619057"
+  },
+  "decision": "Baseline rejected: 2/8 primitive workflows and 0/16 compound conversations; per-family and latency gates fail. All 18 prior assistant anchors retained. Preserve the two complete workflow successes. No training, conditional replay or relaunch follows automatically. Diagnose grounded tool use and multi-turn behavior before a new execution amendment; this result stays failed.",
+  "report": {
+    "complete": true,
+    "anchor_retention": true,
+    "baseline_qualified": false,
+    "correct": 2,
+    "total": 24,
+    "by_family": {
+      "copy": 1,
+      "date": 0,
+      "sum": 1,
+      "difference": 0,
+      "latest": 0,
+      "recipient": 0,
+      "reschedule": 0,
+      "scope": 0
+    },
+    "primitive_correct": 2,
+    "compound_correct": 0,
+    "protected_workflow_ids": [
+      "workflow-bd845e98b603",
+      "workflow-cdda343cccd8"
+    ],
+    "insufficient_development_headroom": false,
+    "p95_episode_seconds": 199.97349637000002,
+    "work": {
+      "model_calls": 193,
+      "tool_calls": 131,
+      "input_tokens": 249237,
+      "output_tokens": 8641
+    },
+    "native_generation_calls": 193,
+    "prose_quality_evaluated": false,
+    "checklist_credit": false,
+    "training_authorized": false,
+    "admission_evidence": false,
+    "decentralized_execution_proven": false
+  },
+  "primary": {
+    "wall_seconds": 2781.416106274,
+    "process_cpu_seconds": 20699.735230389,
+    "peak_rss_bytes": 11824570368,
+    "checkpoint_bytes": 6815452719
+  },
+  "original_anchors": {
+    "correct": 18,
+    "total": 24,
+    "protected_retained": 18,
+    "protected_total": 18
+  },
+  "conditional_replay_executed": false,
+  "diagnosis": {
+    "format": "neuroshard-assistant-workflow-opened-trace-diagnosis/1",
+    "counts": {
+      "episodes": 24,
+      "first_read_revision_2": 11,
+      "rounds": 35,
+      "round_stop_model-turn budget exhausted": 14,
+      "exact_draft_states": 9,
+      "correct_first_rounds": 7,
+      "correct_draft_without_completion": 2,
+      "tool_error_messages": 51,
+      "invalid_syntax_episodes": 11,
+      "first_read_revision_1": 11,
+      "initial_read_wrong_source": 10,
+      "rounds_without_draft": 5,
+      "correct_followup_rounds": 0,
+      "round_stop_generation did not terminate within its token/input budget": 1
+    },
+    "wrong_draft_fields": {
+      "due_date": 19,
+      "total": 21,
+      "source_ids": 19,
+      "recipient": 6
+    },
+    "tool_errors": {
+      "invalid tool-call syntax or schema": 41,
+      "invalid tool arguments or unavailable workspace object": 10
+    },
+    "cases": [
+      {
+        "id": "workflow-842f73726ac2",
+        "family": "scope",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-e47fa617df9c",
+        "family": "date",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-5512bfdcbf01",
+        "family": "latest",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": null,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-fddb97d8bc7d",
+        "family": "latest",
+        "correct": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-bd845e98b603",
+        "family": "copy",
+        "correct": true,
+        "round_successes": [
+          true
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {}
+      },
+      {
+        "id": "workflow-cdda343cccd8",
+        "family": "sum",
+        "correct": true,
+        "round_successes": [
+          true
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {}
+      },
+      {
+        "id": "workflow-1124e7a2f25c",
+        "family": "latest",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "generation did not terminate within its token/input budget": 1
+        }
+      },
+      {
+        "id": "workflow-5b59fbf07de4",
+        "family": "recipient",
+        "correct": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-c6b1500447f3",
+        "family": "latest",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-c5a251cb9186",
+        "family": "recipient",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-901496964dce",
+        "family": "reschedule",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-705b57ba50cb",
+        "family": "scope",
+        "correct": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-614a08aecd66",
+        "family": "recipient",
+        "correct": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-9e59abaad961",
+        "family": "reschedule",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-13de433c562f",
+        "family": "recipient",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-bf78a2b7a3ee",
+        "family": "scope",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-0a46caf718a9",
+        "family": "difference",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": null,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-22e0b95f5781",
+        "family": "copy",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-21c0be04a7be",
+        "family": "reschedule",
+        "correct": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-f4f40d77e7cd",
+        "family": "sum",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-5b541f25dc67",
+        "family": "date",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": true,
+        "stops": {}
+      },
+      {
+        "id": "workflow-cceb5a621834",
+        "family": "difference",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-e5a0d5c80f43",
+        "family": "reschedule",
+        "correct": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {
+          "model-turn budget exhausted": 1
+        }
+      },
+      {
+        "id": "workflow-caf22532f0f4",
+        "family": "scope",
+        "correct": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "first_read_wrong_source": false,
+        "stops": {}
+      }
+    ],
+    "method_changed": false,
+    "admission_evidence": false
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-27T04:35:55.846340+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-085094a8ff2ffa7ca"
+    ],
+    "conservative_instance_seconds": 2860.998494,
+    "conservative_compute_usd": 0.841133557236,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-09-27T04:52:15.581308+00:00",
+    "instance_ids": [
+      "i-085094a8ff2ffa7ca"
+    ],
+    "instances": [
+      {
+        "id": "i-085094a8ff2ffa7ca",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group_query_error": "InvalidGroup.NotFound"
+  }
+}
