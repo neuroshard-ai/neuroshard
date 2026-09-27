@@ -1,0 +1,187 @@
+{
+  "format": "neuroshard-granite-answerability-reference-report/1",
+  "source_commit": "a327e7e2d37aa42fac44f530cce7eef3fc6c8ed6",
+  "result_sha256": "81099c5f68fb37c3fc961f1c6a74a3b2efd389e0e7d4cacea2049cce10016d93",
+  "execution_completed": true,
+  "reference_passed": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "training_authorized": false,
+  "decision": "Rejected. Module 74/80, parent checking 69/80, selector 41/80. All five gains over parent checking are in the metric family, giving family-bootstrap lower bound zero. Module loses two of 64 protected lookup answers. Both retain all 18 original assistant anchors. Stop this candidate; no replays, promotion, training or next allocation. Preserve the method failure and review context preservation at module boundaries before any new contract.",
+  "report": {
+    "complete": true,
+    "quality_gate": false,
+    "retention": {
+      "baseline": true,
+      "modular": false
+    },
+    "checklist_credit": false,
+    "admission_evidence": false,
+    "new_learning_proven": false,
+    "training_authorized": false,
+    "control_correct": {
+      "selection": 41,
+      "parent-check": 69
+    },
+    "insufficient_headroom": false,
+    "selector_parity": true,
+    "correct": {
+      "selection": 41,
+      "parent-check": 69,
+      "module-check": 74
+    },
+    "candidate_by_category": {
+      "supported": 39,
+      "unsupported": 35
+    },
+    "comparisons": {
+      "selection": {
+        "gained_ids": [
+          "support-18f420af447d",
+          "support-44ccb27e5183",
+          "support-65021a0bab6f",
+          "support-7f3d54e9ccf9",
+          "support-137f28022a98",
+          "support-11b1a5b2effc",
+          "support-ba1969383d54",
+          "support-28d382a7b2f4",
+          "support-5cb5126b1344",
+          "support-28d2e79eab7e",
+          "support-ab19867fd920",
+          "support-296933c06226",
+          "support-d96e3f874aaa",
+          "support-7fcfc565f6fd",
+          "support-2a960fe4bf4d",
+          "support-dbdae5a25405",
+          "support-96dbed758b8d",
+          "support-d28b4b2a35a9",
+          "support-3f4264d7708d",
+          "support-b1d8c671cb5c",
+          "support-5260c27e740e",
+          "support-16cfa43df8d5",
+          "support-6ea56073163c",
+          "support-493b07976015",
+          "support-69ebae6b7bad",
+          "support-779b32b69f94",
+          "support-102b6bb83d81",
+          "support-9320bcbfa34c",
+          "support-e5bd385776a1",
+          "support-7075b0eb039f",
+          "support-b102cdb1974f",
+          "support-a366b7ec5017",
+          "support-b7950bcd860a"
+        ],
+        "lost_ids": [],
+        "net": 33,
+        "block_bootstrap_lower_95": 0.2875,
+        "blocks": 8
+      },
+      "parent-check": {
+        "gained_ids": [
+          "support-44ccb27e5183",
+          "support-11b1a5b2effc",
+          "support-16cfa43df8d5",
+          "support-493b07976015",
+          "support-b102cdb1974f"
+        ],
+        "lost_ids": [],
+        "net": 5,
+        "block_bootstrap_lower_95": 0.0,
+        "blocks": 8
+      }
+    },
+    "p95_seconds": {
+      "selection": 1.0274504349999916,
+      "parent-check": 2.2541329270000006,
+      "module-check": 2.579784898000071
+    },
+    "work": {
+      "selection": {
+        "input_tokens": 32555,
+        "output_tokens": 80,
+        "generation_calls": 80
+      },
+      "parent-check": {
+        "input_tokens": 53959,
+        "output_tokens": 499,
+        "generation_calls": 158
+      },
+      "module-check": {
+        "input_tokens": 53959,
+        "output_tokens": 504,
+        "generation_calls": 158
+      }
+    },
+    "retention_failures": {
+      "baseline": [],
+      "modular": [
+        "context-03-first",
+        "context-10-first"
+      ]
+    },
+    "isolated_worker_peak_rss_bytes": {
+      "baseline": 8508846080,
+      "modular": 9669087232
+    }
+  },
+  "protected_anchor_successes": {
+    "baseline": 18,
+    "modular": 18
+  },
+  "gain_families_vs_parent_check": {
+    "metric": 5
+  },
+  "conditional_replays_run": 0,
+  "resources_finished": {
+    "finished_utc": "2026-09-26T23:23:01.085524+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0bdde1639416c76a3"
+    ],
+    "conservative_instance_seconds": 934.841357,
+    "conservative_compute_usd": 0.274843358958,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "independent_verification": {
+    "checked_utc": "2026-09-27T03:02:40.544741+00:00",
+    "result_sha256": "81099c5f68fb37c3fc961f1c6a74a3b2efd389e0e7d4cacea2049cce10016d93",
+    "independent_rescore_matches": true,
+    "exact_commit_ci_and_execution_binding_verified": true,
+    "reported_instance_ids": [
+      "i-0bdde1639416c76a3"
+    ],
+    "current_instance_states": {},
+    "instance_absent_from_ec2_response": true,
+    "no_live_reported_instances": true,
+    "remaining_tagged_volumes": [],
+    "security_group_retired": true,
+    "conditional_replays_run": 0,
+    "new_run_queued": false
+  },
+  "ci": {
+    "id": 36277482670,
+    "head_sha": "a327e7e2d37aa42fac44f530cce7eef3fc6c8ed6",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36277482670"
+  },
+  "accounting": {
+    "controller_wall_seconds": 840.2148258139999,
+    "workers": {
+      "baseline": {
+        "wall_seconds": 398.834063282,
+        "process_cpu_seconds": 2583.86580008,
+        "peak_rss_bytes": 8508846080,
+        "checkpoint_bytes": 6815452719
+      },
+      "modular": {
+        "wall_seconds": 436.368722556,
+        "process_cpu_seconds": 2835.9966824,
+        "peak_rss_bytes": 9669087232,
+        "checkpoint_bytes": 8310638587
+      }
+    }
+  }
+}

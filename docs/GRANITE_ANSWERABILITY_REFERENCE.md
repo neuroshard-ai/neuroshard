@@ -1,6 +1,6 @@
 # Fresh answerability module comparison
 
-**September 26, 2026. New contract; no model results yet.** This continues A1
+**Frozen September 26, 2026; [completed result: failed](GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md).** This continues A1
 with the published Granite checkpoints and the implemented
 [evidence-selection interface](EVIDENCE_SELECTION.md). The earlier failed
 requirement-checking and query-rewriting references remain failed. The

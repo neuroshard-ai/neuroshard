@@ -24,14 +24,19 @@ automatically close a new milestone.
 - [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
 - [ ] **A6. Release and sustain the resulting public assistant.**
 
-**Next action:** run the frozen [fresh answerability comparison](docs/GRANITE_ANSWERABILITY_REFERENCE.md)
-after exact-commit CI. A published module must beat both selection alone and
-matched parent checking on 80 fresh requests, preserving all 64 prior lookup
-successes and 18 original assistant answers. One CPU allocation, $6 cap; no
-training or GPU. Stop without the candidate if controls leave insufficient gain
-headroom. The [evidence-selection diagnostic](docs/EVIDENCE_SELECTION_RESULTS.md)
-passed 64/64 versus 59/64 direct, with six exact replays. Its resources are retired.
-That establishes interface reliability on opened cases, not A1 completion.
+**Next action:** review how contributed modules preserve conversation context
+before freezing another method. The [answerability reference](docs/GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md)
+finished and failed: selector 41/80, parent checking 69/80, module 74/80. All five
+incremental gains were in one template family; the frozen lower bound was zero.
+The module also lost two of 64 protected lookup answers, although all 18 original
+assistant anchors survived. Selectors matched exactly. The extra checker rejected
+correct evidence on two conversational-reference requests. Do not rescue this
+candidate by changing its gates or adding exceptions for those cases. No rerun,
+training or new allocation is queued; A1 remains open. The instance is retired.
+The [evidence-selection diagnostic](docs/EVIDENCE_SELECTION_RESULTS.md) remains
+64/64 versus 59/64 direct on its opened cases, with six exact replays. The fresh
+41/80 selector score shows that this interface alone does not establish semantic
+reliability across document scope and conditions.
 The [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md)
 failed: history 29/64, parent rewrite 35/64, module rewrite 35/64. All 18 protected
 assistant answers survived. History already retrieved 48/48 answerable sources;

@@ -7,9 +7,14 @@ checkpoint.** This is a reference candidate, not the accepted assistant.
 **Outcome:** the [completed comparison](GRANITE_REFERENCE_RESULTS.md) qualified
 the parent and preserved its assistant answers, but failed the reference
 regression gate. The contract below remains unchanged; no rerun is queued.
-The subsequent audit matched the published adapter exactly. The next study is a
-separate [contextual assistant reference](GRANITE_CONTEXT_REFERENCE.md), testing
-final document-grounded answers with a query-rewrite module and two controls.
+The subsequent audit matched the published adapter exactly. The separate
+[contextual assistant reference](GRANITE_CONTEXT_REFERENCE_RESULTS.md) failed;
+the [opened evidence-interface diagnostic](EVIDENCE_SELECTION_RESULTS.md) passed.
+The latest [fresh answerability reference](GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md)
+also failed: 74/80 versus parent checking at 69/80, but two lost protected lookup
+answers and a zero lower bound across template families. All 18 assistant anchors
+survived. No rerun or training is queued; review context preservation at module
+boundaries before another contract.
 
 The [BAR baseline](MODULAR_REFERENCE_FRESH_RESULTS.md) stays failed at 11/24.
 The [decoder audit](MODULAR_DECODER_PARITY_RESULTS.md) reproduced all 24 answers
