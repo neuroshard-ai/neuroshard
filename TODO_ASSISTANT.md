@@ -43,16 +43,19 @@ remain evidence, not readiness claims for this assistant.
   verified self-generated conversations, coached practice distilled without the
   coaching, parent-answer replay, both trained arms, a success-rate selector, the
   development/confirmation gates and CPU evaluation with checkpoint upload.
-- [ ] Run collection, training and integration on one GPU host (user-authorized
-  despite the failed primitive gate; A1 stays open), then CPU development
-  evaluation, then confirmation only after a development pass.
+- [x] Run collection, training and integration on one GPU host (user-authorized
+  despite the failed primitive gate; A1 stays open). [Result](docs/ASSISTANT_EXPERIENCE_GPU_RESULTS.md):
+  722 verified trajectories; on 64 integration episodes the parent completes 34
+  greedily, the update and addition arms 42 each; $6.31 across all attempts.
+- [ ] Run CPU development evaluation of both routed systems; open confirmation only
+  after a development pass.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
-primitive qualification, so A1 remains open. The verified-experience GPU execution
-is running on one A10G host after L40S capacity was unavailable; no trained result
-exists yet.
+primitive qualification, so A1 remains open. Both trained arms improve integration
+episodes (34/64 to 42/64), mostly in the call-budget family; version choice remains
+weak. Development evaluation on the canonical CPU runtime is running.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

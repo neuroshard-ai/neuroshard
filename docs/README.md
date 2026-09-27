@@ -41,7 +41,7 @@ retaining the existing generated-answer and retention requirements.
 | [Assistant development plan](../TODO_ASSISTANT.md) | Active six-milestone plan: capable foundation, useful modular learning, repeated growth, sharding, independent operation and public release. |
 | [Architecture amendment](ASSISTANT_ARCHITECTURE.md) / [workflow contract](ASSISTANT_WORKFLOW_LEARNING.md) | Current complete-assistant direction, controls, execution and shard requirements. |
 | [Canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) / [result](ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md) | Tokenizer defect in all Granite executions. Corrected parent: 9/24 workflows, zero tool errors, primitive qualification failed on version choice and the call budget. |
-| [Verified-experience learning](ASSISTANT_EXPERIENCE_LEARNING.md) | A2 method: scorer-verified self-generated conversations, coached practice, parent-answer replay and success-rate selection. |
+| [Verified-experience learning](ASSISTANT_EXPERIENCE_LEARNING.md) / [GPU result](ASSISTANT_EXPERIENCE_GPU_RESULTS.md) | A2 method: scorer-verified self-generated conversations, coached practice, parent-answer replay and success-rate selection. Integration: parent 34/64, both arms 42/64. |
 | [Modular reference](MODULAR_REFERENCE.md) | Historical BAR contract; baseline failed and decoder agreement was confirmed. |
 | [Tool-interface diagnostic](MODULAR_TOOL_INTERFACE.md) / [result](MODULAR_TOOL_INTERFACE_RESULTS.md) | Corrected instructions yield 3/3 calls and three exact replays on opened cases; no A1 credit. |
 | [Fresh reference comparison](MODULAR_REFERENCE_FRESH.md) | 24 new cases; paired gains/losses, exact replay and latency on one temporary CPU host. |
