@@ -1,305 +1,86 @@
-# Modular assistant development checklist
+# Decentralized assistant — active TODO
 
-**Direction agreed September 26, 2026. Status: 0/6 milestones complete.**
+**Updated September 27, 2026. Status: 0/6 milestones complete.**
 
-Build one useful, openly available personal assistant whose capabilities can
-improve through contributed data and neural modules, with weights partitioned
-across peers and coordination through NeuroShard's native blockchain. More
-devices should provide useful training capacity, pooled memory and reliable
-serving. Model growth must earn its cost through measured improvement.
+Build one useful conversational assistant that can learn new capabilities from
+contributed data, execute across independently owned machines, and pay for useful
+work through NeuroShard's native ledger. More peers first provide memory,
+replicas, training and audits. Add parameters only when measured benefit pays
+for the extra cost; keep each answer's active computation bounded.
 
-This is the active checklist for the new learning direction. The earlier
-[six-item demonstration checklist](TODO.md) and its results remain historical
-evidence. Its **5/6** is not a readiness estimate for this assistant. Existing
-implementations may satisfy parts of this plan after validation against the
-selected model and execution profile; their previous completion does not
-automatically close a new milestone.
+The [architecture amendment](docs/ASSISTANT_ARCHITECTURE.md) defines the current
+direction. The older [demonstration checklist](TODO.md) and all experiment reports
+remain evidence, not readiness claims for this assistant.
 
-## Track completion here
+## Current deliverable
 
-- [ ] **A1. Establish a capable foundation and reproduce a modular reference.**
-- [ ] **A2. Add one useful capability without degrading the assistant.**
-- [ ] **A3. Repeat useful growth and demonstrate an upgrade or consolidation.**
-- [ ] **A4. Run the accepted model across shards and measure the value of more peers.**
-- [ ] **A5. Operate the learning and payment loop with independent participants and funded verification.**
-- [ ] **A6. Release and sustain the resulting public assistant.**
+- [x] Replace isolated checker qualification with a complete-assistant contract.
+- [x] Implement a reusable document/tool/draft workspace with multi-turn execution,
+  transcript replay, outcome scoring and separate evaluation goals.
+- [x] Freeze parent, no-growth update and added-capacity comparisons; reserve
+  separate training, integration, development and confirmation partitions.
+- [x] Derive the Granite partition/storage/communication plan; identify native
+  model semantics that the current Llama runtime does not implement.
+- [ ] Run the committed parent baseline: 24 workflows plus prior assistant anchors,
+  two conditional process replays, one CPU allocation, two hours / $6 allowance.
+- [ ] Publish baseline outcomes and pin every successful workflow for retention.
+- [ ] Implement the declared training and gate stages, validate trajectories and
+  memory, commit their execution inventory, then compare the three complete arms.
+- [ ] Port Granite execution to the shard runtime and validate numerical/cache
+  agreement and checkpoint recovery before distributing a passing candidate.
 
-**Next action:** review how contributed modules preserve conversation context
-before freezing another method. The [answerability reference](docs/GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md)
-finished and failed: selector 41/80, parent checking 69/80, module 74/80. All five
-incremental gains were in one template family; the frozen lower bound was zero.
-The module also lost two of 64 protected lookup answers, although all 18 original
-assistant anchors survived. Selectors matched exactly. The extra checker rejected
-correct evidence on two conversational-reference requests. Do not rescue this
-candidate by changing its gates or adding exceptions for those cases. No rerun,
-training or new allocation is queued; A1 remains open. The instance is retired.
-The [evidence-selection diagnostic](docs/EVIDENCE_SELECTION_RESULTS.md) remains
-64/64 versus 59/64 direct on its opened cases, with six exact replays. The fresh
-41/80 selector score shows that this interface alone does not establish semantic
-reliability across document scope and conditions.
-The [contextual assistant reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md)
-failed: history 29/64, parent rewrite 35/64, module rewrite 35/64. All 18 protected
-assistant answers survived. History already retrieved 48/48 answerable sources;
-stop trying to improve retrieval on this opened set. The allocation is retired.
-Stop integration debugging and reruns of the opened checker cases:
-the [completed adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
-matched all 243 backbone comparisons, 320 adapter matrices and 240 zero non-target
-tensors. Both fresh 16-case arms agree exactly and Switch replays its original
-outputs/routes. Both still score 12/16 with the same two regressions. The stopped
-attempt is preserved and charged; both allocations are retired. No expert
-training is authorized. A1 still needs a passing functional reference.
-The [completed Granite reference](docs/GRANITE_REFERENCE_RESULTS.md) is unchanged.
-The parent
-qualified at **18/24**; the modular checkpoint preserved **18/18** successful
-assistant answers. Explicit requirement checking improved **8/16 → 12/16**, but
-lost **two** correct reference checks where at most **one** was allowed. The study
-failed that gate; conditional replays did not run and resources were retired.
-Keep this as partial A1 evidence. The failed result authorizes no expert training,
-and A1 remains open.
+Execution details and stopping rules: [workspace learning contract](docs/ASSISTANT_WORKFLOW_LEARNING.md).
+No automatic training or admission follows the baseline. This is the first
+implementation of that contract, not a public assistant launch.
 
-**Prior evidence:**
-The [decoder audit passed](docs/MODULAR_DECODER_PARITY_RESULTS.md): 65/65 logit
-checks and all 24 generated answers matched the standard implementation. The
-[recovered A1 baseline](docs/MODULAR_REFERENCE_FRESH_RESULTS.md)
-finished **11/24** and failed its unchanged quality gate. The modular checkpoint
-and scheduled replays were not run; temporary resources were retired. The
-[recovery amendment](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md) preserved and charged
-the earlier interrupted work. The
-[tool-interface diagnostic](docs/MODULAR_TOOL_INTERFACE_RESULTS.md) finished:
-3/3 correct calls and three exact independent replays, on opened cases. This
-resolves their formatting failure but cannot close A1. The
-[original BAR baseline](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md)
-remains failed at 4/9, including 0/3 valid tool calls. The original
-[execution amendment](docs/MODULAR_REFERENCE_EXECUTION.md) and larger modular
-comparison have not been run. The
-[observable-reasoning candidate](docs/OBSERVABLE_REASONING_RESULTS.md) is closed.
+## Six completion criteria
 
-**Order:** A1 → A2 → A3 is the learning priority. Plan A4's memory and network
-constraints during A1; perform the distributed comparison after A2 produces a
-passing candidate. Independent-operator recruitment can proceed separately;
-A5's operational proof needs the selected model and execution profile. A6
-requires all preceding milestones.
+- [ ] **A1 — Usable foundation and reproducible execution.** Pin weights,
+  tokenizer, runtime and licenses; retain successful conversation, instruction
+  and tool-use anchors; complete the workspace primitive baseline and process
+  replay; publish feasible shard estimates. A1 no longer requires a third-party
+  adapter to pass an unrelated quality benchmark. This is a prospective change:
+  every failed reference remains failed, and no existing box is marked complete.
+- [ ] **A2 — One useful learned capability in the complete assistant.** New module
+  and automatic selection beat unchanged parent and no-growth update on frozen
+  development and fresh confirmation gates, with per-answer preservation, actual
+  training/serving costs and bounded latency. Tools supply execution, not hidden
+  answers. Forced routing and retrieval-only gains do not satisfy this criterion.
+- [ ] **A3 — Repeated useful growth and an upgrade/consolidation.** Three successive
+  accepted cohorts, cumulative retention and cross-capability tasks; at least one
+  new capability and one upgrade. Demonstrate a beneficial update or consolidation
+  against keeping the previous system under a declared resource budget. This
+  establishes bounded growth, not unlimited intelligence or a no-forgetting theorem.
+- [ ] **A4 — Actual sharding and value from additional peers.** No execution worker
+  holds the complete backbone. Measure forward/backward/generation agreement,
+  per-owner memory and traffic, outage recovery and a benefit from extra machines
+  (pooled memory, throughput, training capacity or availability). Include placement,
+  communication and failed work; throughput is not single-request latency.
+- [ ] **A5 — Independent operation and funded settlement.** Four independently
+  administered operators under the [hosting contract](docs/INDEPENDENT_HOSTING.md),
+  separate keys, whole-graph admission/promotion, rejection/refund/recovery and
+  funded honest auditing. Publish collusion assumptions and the verification bill.
+  More AWS instances owned by us do not provide independent ownership.
+- [ ] **A6 — Sustainable public assistant.** Versioned chat/tool/memory interface,
+  consent and private-data boundaries, join/recovery guides, monitored quality,
+  resource limits, funding, rollback and a public operating soak. Requires A1–A5;
+  neither a research pass nor a token transaction substitutes for usability.
 
-## Architecture decisions
+A1 baseline and A4 port preparation proceed together. A2 execution follows a
+usable baseline; A3 follows a passing learned capability. Recruitment for A5 can
+proceed now. Native 0.4.0 stays separate until a complete candidate passes its
+activation contract.
 
-| Decision | Working rule |
-| --- | --- |
-| General ability | Start from a capable, openly licensed pretrained assistant. Keep 135M as an implementation fixture. |
-| Neural growth | Train compatible expert layers and integrate them inside one model using a validated modular recipe. A choice between finished answers alone does not establish neural composition. |
-| Shared weights | Specify which parameters may adapt at each stage. Protect accepted behavior with evaluation and rollback; do not freeze all shared weights forever by assumption. |
-| Hardware ownership | A learned expert and a hardware shard are different things. An expert can span machines; a machine can host parts of several experts. |
-| Network scale | Use compute groups with measured communication limits. Additional groups can replicate serving and train candidates independently. |
-| Cost per answer | Bound active experts, tokens, routing work and network communication. Sparse activation alone does not guarantee constant latency as the catalogue grows. |
-| Data | Separate source-backed retrieval, user-controlled personal memory, and data admitted for weight training. Improvement from retrieval is reported separately from learned capability. |
-| Module interfaces | Use bounded, typed decisions and source references where possible. Deterministic copying and valid receipts do not prove semantic quality or neural execution. |
-| Native chain | Reuse consensus, commitments, funding and settlement. Correct work and improved assistant quality remain separate decisions. |
+## Evidence carried forward
 
-## A1. Capable foundation and reference reproduction
-
-**Deliver:** a model/recipe decision record, reproducible baseline, and reference
-comparison using published artifacts before training a new expert.
-
-Choose a reference from BAR, FlexOlmo or another documented modular method
-based on reproducibility and the assistant use case. BAR is a candidate, not
-an adopted dependency or a guarantee of retention. Its reported combined model
-has a lower chat score than its initial model; that tradeoff must be measured.
-
-**Done when:**
-
-- Model, tokenizer, code and weight revisions, licenses, artifact availability,
-  parameter counts, training stages and hardware requirements are documented.
-- The recipe identifies expert initialization, permitted changes to attention,
-  embeddings and output head, how shared weights combine, router training,
-  and compatibility between model versions. Differences from upstream are explicit.
-- Baseline conversation, instruction following and tool-use results exist.
-  Every protected category has a predeclared, nonempty set of successful tasks;
-  format scoring cannot turn an unusable baseline into a retention claim.
-- A published baseline and modular checkpoint run through the same evaluation
-  harness. Reproduction tolerances and resource limits were declared before
-  inspecting outputs; deviations are explained before proceeding.
-- Memory and communication estimates show a feasible route to A4. No full
-  reproduction of a large pretraining pipeline is required to close this item.
-
-**Evidence:** pending. **Stop:** unavailable artifacts, unusable baseline,
-unexplained reproduction failure or an unaffordable execution profile blocks A2.
-
-## A2. One useful new capability
-
-**Deliver:** a newly trained tool-use extension integrated into the complete
-assistant. It should select tools, supply correct arguments and complete
-previously unseen combinations of operations in an isolated test environment.
-
-**Done when:**
-
-- A committed plan fixes the data splits, recipe, model interfaces, sample
-  sizes, numerical success margins, retention criteria, serving limits and
-  total budget before training. The development set and unopened evaluation
-  set have distinct roles; familiar examples do not count as new evidence.
-- Compare the unchanged parent, a matched-budget no-growth update, and the
-  added-capacity candidate. Each receives the same tools, descriptions and
-  external information. Account for actual training and serving expenditure.
-- Automatic end-to-end task success beats both controls by the frozen margin
-  and uncertainty criterion. Forced-expert diagnostics do not count as serving.
-  Selection receives no evaluation labels or protected task identities.
-- All predeclared must-keep tasks remain successful, and each broader chat,
-  instruction-following and retained-skill gate passes. An aggregate score
-  cannot hide a failed category. Publish individual regressions.
-- The complete model, router, tokenizer and generation policy pass the memory,
-  latency and cost gates together. The previous accepted version remains usable.
-
-**Evidence:** pending. **Stop:** any failed gate rejects this candidate. Diagnose
-training fit versus generalization before proposing a different learning method;
-do not respond to weak experts with more routing heuristics alone.
-
-## A3. Repeated growth, upgrade and consolidation
-
-**Deliver:** a recorded lineage of three successive accepted cohorts under this
-new architecture. A2 may count as the first; older fact-cohort demonstrations do
-not substitute for this lineage.
-
-**Done when:**
-
-- Each cohort passes its prospectively frozen new-task and cumulative
-  retention gates. Evaluation includes tasks combining earlier and later
-  capabilities, as well as general assistant behavior.
-- At least one subsequent cohort upgrades an existing capability, and at
-  least one adds a distinct capability. Every comparison starts from the
-  complete previously accepted system, not the original seed.
-- Adding, updating and consolidating have declared admission rules. At least
-  one upgrade or consolidation passes against retaining the previous version
-  under a matched resource budget. Failed consolidation remains a failure.
-- Active compute, routing overhead, storage, audit cost and response latency
-  stay within the declared growth envelope. Shared-weight changes are evaluated
-  as changes to the whole assistant, even when old expert weights are untouched.
-
-**Evidence:** pending. **Stop:** repeated new-skill gains that degrade earlier
-behavior, or growth that escapes the resource envelope, do not complete A3.
-Three passing cohorts establish bounded repeated growth, not unlimited scaling.
-
-## A4. Actual sharding and useful additional peers
-
-**Deliver:** the accepted assistant and its training checkpoint state run across
-separate machines, with no execution worker holding the complete backbone.
-
-**Done when:**
-
-- Reuse and adapt the existing partitioning/recovery implementation. Record
-  per-worker weights, optimizer state, activations, caches and peak memory.
-- Sharded generation and training meet a declared agreement standard against
-  the reference execution; exact versus tolerance-based checks are explicit.
-- A declared worker outage and replacement recover within measured limits
-  without silent checkpoint changes, lost accepted updates or duplicate rewards.
-- A controlled comparison shows what extra peers buy: pooled memory, faster
-  bounded training, greater serving throughput or better availability. Include
-  network transfers, setup, failures and total device time in that comparison.
-- Replicas and placement keep request latency within the assistant's budget.
-  More throughput is not reported as a faster individual response.
-
-**Evidence:** pending. Existing [sharding and recovery results](docs/SHARDED_TRAINING_RESULTS.md)
-must be revalidated for the new architecture.
-
-## A5. Independent operation, admission and economics
-
-**Deliver:** independent participants operate this model's funded data → training
-→ verification → quality → promotion/rejection loop on NeuroShard's own ledger.
-
-**Done when:**
-
-- Adapt the existing lifecycle rather than create another parallel chain
-  implementation. Bind the entire answering system in each promoted version;
-  data provenance, deduplication and poisoning/contamination checks precede jobs.
-- Show accepted and rejected updates, unavailable workers/artifacts, disputes,
-  restart, refunds and recovery while the last accepted model remains available.
-- Meet the existing [independent-hosting contract](docs/INDEPENDENT_HOSTING.md):
-  four independently administered operators, with separate keys and machines.
-  Additional instances controlled by this administrator do not count.
-- Publish the verification threat model, collusion assumptions and measured
-  attack results for the new numerical profile. No optimistic claim or
-  signature is presented as an unconditional computation proof.
-- Measured honest auditing, failed work, storage, transfers and serving fit a
-  declared funded operating envelope, including payments when there is no fraud.
-  Full replay may be used if its cost fits; cheaper verification needs its own
-  evidence. Finite sponsorship and recurring demand are reported separately.
-- Operator admission and job assignment function without private manual
-  installation by this project's administrator. Correct work payment does not
-  depend on a candidate being promoted; budgeted rejection is accounted for.
-
-**Evidence:** pending. Prior native settlement remains reusable evidence, not
-proof of independent operation or sustainable large-model verification.
-
-## A6. Public assistant and release
-
-**Deliver:** a versioned public assistant with documented capabilities, operating
-limits, funding and a reproducible route for new participants to join.
-
-**Done when:**
-
-- Real multi-turn conversations, approved tool use and streamed responses use
-  the accepted distributed model. Personal memory and prompt privacy have an
-  explicit implementation and disclosure; raw private conversations are not
-  silently treated as public training data or ledger payloads.
-- End-to-end quality, task completion, time to first token, response speed,
-  concurrency, outages and cost per successful request pass a predeclared soak.
-- The public client, website and operator instructions match the running model,
-  network and limits. Published checkpoints and source reproduce the release.
-- Reviewed source is merged to `main` with CI passing. Network/model activation
-  follows its separately reviewed version, migration and rollback plan. Merging
-  code alone never upgrades genesis, token accounting or the serving checkpoint.
-- Ongoing hosting and audit costs have actual funding, automatic spend limits,
-  and a clear failure/recovery policy. New peers can participate under A5's rules.
-
-**Evidence:** pending. Completion establishes a working public assistant under
-published bounds; frontier-model parity and million-device scale remain claims
-that require separate evidence.
-
-## Rules for updating this checklist
-
-Check a milestone only when all its criteria have linked implementation,
-committed outputs, reproducible scoring and a cost record. Record failed runs
-without rewriting their contracts. A specification, green CI, paper result or
-downloaded checkpoint alone cannot close a capability milestone.
-
-Before each run, commit its own execution plan with numeric quality/retention
-gates, data policy, seed/revisions, full runtime dependencies, resource limits,
-stop rule and progress/result locations. Resolve model and budget choices under
-the existing authorization before launch. This checklist starts no jobs and
-changes none of the earlier CPU-only study freezes or closed evaluation sets.
-
-If a criterion or method must change, record the reason and its effect on past
-evidence before the replacement run. Do not silently change this checklist's
-completion target. Update the table below when a milestone's evidence changes.
-
-| Date | Milestone | Decision / evidence |
-| --- | --- | --- |
-| 2026-09-26 | A1–A6 | New direction recorded; all milestones open. Start with reference artifacts and recipe review. |
-| 2026-09-26 | A1 | BAR baseline failed and decoder agreement passed. Research selected Granite for a new bounded functional reference; no learning or milestone credit. |
-| 2026-09-26 | A1 | Granite parent qualified, all 18 assistant successes preserved; published checker 8/16 → 12/16 but two regressions exceeded the one-loss cap. Reference rejected; no milestone credit. |
-| 2026-09-26 | A1 | [Adapter audit](docs/GRANITE_ADAPTER_AUDIT.md) separates standalone invocation, tensor composition and reproduced answers on 16 opened cases. Local default-PEFT activation mismatch recorded; one bounded CPU comparison frozen, no learning or milestone credit. |
-| 2026-09-26 | A1 | [Audit stopped](docs/GRANITE_ADAPTER_AUDIT_RESULTS.md): 16 standalone outputs match earlier Switch outputs, 12 correct. Our whole-embedding comparison failed to account for 12 control-token rows. Full tensor audit and fresh replay incomplete; resources retired, compute $0.086284, no retry or credit. |
-| 2026-09-26 | A1 | [Execution amendment](docs/GRANITE_ADAPTER_AUDIT_RECOVERY.md) checks original vocabulary rows exactly and accounts for the 12 added rows. Backbone/adapter checks move before generation. One CI-gated CPU attempt, $6 combined planning cap; original data, weights and failed quality result remain unchanged. |
-| 2026-09-26 | A1 | [Implementation audit completed](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md): 243 backbone comparisons, 320 adapter matrices, 240 zero non-target tensors and 16 paired/replayed outputs match. Both implementations remain 12/16 with the same regressions. Stop integration diagnosis; original quality failure and A1 remain open. Resources retired; both audits cost $0.181161 compute. |
-| 2026-09-26 | A1 | BAR selected. [Decision and reproduction contract](docs/MODULAR_REFERENCE.md) committed before any scored output. Milestone remains open. |
-| 2026-09-26 | A1 | Execution amendment adds complete artifact/source binding, enforced worker limits, historical cost accounting and independent replay. Original questions and quality gates remain fixed; no milestone credit. |
-| 2026-09-26 | A1 | Original dense baseline completed: conversation 3/3, instruction 1/3, tool use 0/3. Usability gate failed. [Diagnostic and raw evidence](docs/MODULAR_REFERENCE_BASELINE_RESULTS.md) recorded; amended execution and modular comparison remain unstarted. |
-| 2026-09-26 | A1 | [Interface audit and separate diagnostic](docs/MODULAR_TOOL_INTERFACE.md) correct omitted call-format instructions, retain the failed record, and freeze three opened CPU cases with successful-call replay. No capability result or milestone credit. |
-| 2026-09-26 | A1 | [Corrected interface result](docs/MODULAR_TOOL_INTERFACE_RESULTS.md): 3/3 correct tool calls and three exact replays; 103.4 minutes of new CPU worker time. Opened-case interface check only; A1 remains open. |
-| 2026-09-26 | A1 | [Fresh comparison](docs/MODULAR_REFERENCE_FRESH.md) declares 24 cases, baseline usability, full replay, per-answer retention and latency on one disposable 128 GiB CPU host. No result or milestone credit at freeze. |
-| 2026-09-26 | A1 | [Pre-execution CI correction](docs/MODULAR_REFERENCE_FRESH_CI.md): first queue stopped before allocation due to a test subprocess import path. No generation or EC2 cost; method and budget unchanged. |
-| 2026-09-26 | A1 | [Execution recovery](docs/MODULAR_REFERENCE_FRESH_RECOVERY.md): first CPU allocation stopped after nine generations on process-specific parser error text. Record all receipts, stabilize rejection without changing scores, and freeze one restart within the remaining combined time/cost budget. No completed quality result or milestone credit. |
-| 2026-09-26 | A1 | [Recovered baseline result](docs/MODULAR_REFERENCE_FRESH_RESULTS.md): 11/24 (conversation 4/8, instruction 4/8, tools 3/8). Quality gate failed; no modular evaluation or scheduled replay. All saved scores rechecked, resources retired; combined fresh-allocation compute $0.445142. Study closed, A1 open. |
-| 2026-09-26 | A1 | [Decoder audit](docs/MODULAR_DECODER_PARITY.md): strengthen local serialized-weight parity checks and freeze standard-generation/logit comparisons on opened BAR-7B outputs. One CPU host, two-hour/$6 incremental allowance, no training or credit. Actual checkpoint agreement pending. |
-| 2026-09-26 | A1 | [Decoder agreement confirmed](docs/MODULAR_DECODER_PARITY_RESULTS.md): all 65 logit checks and 24 generated answers matched; 11/24 baseline failure stands. Resources retired, audit compute $0.145642. Reconsider the foundation/interface; A1 remains open. |
-
-## Research informing this direction
-
-- [BAR: modular post-training](https://arxiv.org/abs/2604.18473) and
-  [released model suite and results](https://huggingface.co/allenai/BAR-7B):
-  independently trained experts, stage-specific shared-parameter adaptation and
-  router integration. Reported chat falls from 48.9 to 38.7 in the combined model;
-  specialist gains do not prove our retention criteria.
-- [FlexOlmo](https://arxiv.org/abs/2507.07024): compatible expert training against
-  a shared model and composition without pooled training data. Its pretraining
-  setting is not interchangeable with assistant post-training.
-- [Petals](https://arxiv.org/abs/2312.08361): distributed transformer inference
-  and fine-tuning across heterogeneous hosts. This is systems precedent, not
-  a solution to permissionless verification, incentives or model improvement.
+- [Granite reference](docs/GRANITE_REFERENCE_RESULTS.md): parent 18/24; published
+  adapter retained 18 anchors but failed its reference-regression gate.
+- [Adapter audit](docs/GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md): implementation
+  agreement confirmed; the quality failure is real, so integration debugging is closed.
+- [Context reference](docs/GRANITE_CONTEXT_REFERENCE_RESULTS.md) and
+  [answerability reference](docs/GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md): closed
+  failures. Correct evidence plus an added checker did not preserve complete behavior.
+- [Evidence selection](docs/EVIDENCE_SELECTION_RESULTS.md): useful opened-set
+  primitive, not learned capability or a replacement for complete conversations.
+- Earlier learning, growth, sharding and settlement reports remain indexed in
+  [the documentation](docs/README.md). Their successes and failures remain unchanged.

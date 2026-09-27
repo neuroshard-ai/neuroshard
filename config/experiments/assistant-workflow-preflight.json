@@ -1,0 +1,28 @@
+{
+  "format": "neuroshard-assistant-workflow-preflight/1",
+  "policy_sha256": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+  "model_config_sha256": "9a0e589b69e7d3ad9fb9fb2c844aa7d7156e052cb7ea4211de7de48ab7c8525c",
+  "metadata_sha256": {
+    "chat_template.jinja": "fed2756d2d24e127b951dcf139d0b03ab7db8ef23a456128ebc9c2db4901d476",
+    "config.json": "9a0e589b69e7d3ad9fb9fb2c844aa7d7156e052cb7ea4211de7de48ab7c8525c",
+    "generation_config.json": "9117fb03fed79dbb459373edeef9a3eec966bce52a1842e03a6716e83117f0d1",
+    "merges.txt": "b6fe424e334903f7fb84d3a106d9730455f4744b9fe3c21ee136d97a00e72502",
+    "special_tokens_map.json": "c08676c49fd7969a3130f72be6d4bf34da66aa484a6e21dffe359893a1bd5f2e",
+    "tokenizer.json": "e2bad66439538cb4d5a7580680932432ed9ece9d3b8577e675512bdf11599253",
+    "tokenizer_config.json": "a5ec5daab12ba090a90f3dd169c8f9c275557013a87b9c1258dc7cb497a35c86",
+    "vocab.json": "8af71076de8b0b626eed0f4c984faf0a7c062479164b2a31308a948524d4f69c"
+  },
+  "runtime": {
+    "torch": "2.10.0+cpu",
+    "transformers": "5.5.4"
+  },
+  "scripted_environment_cases": 24,
+  "scripted_transcripts_root": "b3f85c3841e9b1db63929bb6b32281aada0311a36c876a63d6e9115cd2b48086",
+  "native_prompt_count": 160,
+  "native_prompt_inventory_root": "066c6c0ff943e166619dd39a2ffcf95cb3e5d9cdfc20cb472cb2a83417729c49",
+  "maximum_scripted_prompt_tokens": 1864,
+  "tiny_random_bf16_native_generation_calls": 1,
+  "pretrained_model_generations": 0,
+  "training_performed": false,
+  "admission_evidence": false
+}

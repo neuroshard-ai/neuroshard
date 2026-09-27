@@ -1,5 +1,11 @@
 # A1 foundation decision after the BAR failure
 
+**Prospective amendment, September 27:** the [complete-assistant architecture](ASSISTANT_ARCHITECTURE.md)
+replaces published-adapter qualification as the prerequisite for new learning.
+The [workspace contract](ASSISTANT_WORKFLOW_LEARNING.md) is the current next step.
+This page preserves the earlier decision and all failed results; its study-specific
+training restrictions do not define the new contract.
+
 September 26, 2026. **Qualify Granite 4.1 3B and its published Granite Switch
 checkpoint.** This is a reference candidate, not the accepted assistant.
 [A1](../TODO_ASSISTANT.md) remains open; do not train a new expert yet.

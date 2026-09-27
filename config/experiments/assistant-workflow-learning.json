@@ -1,0 +1,103 @@
+{
+  "format": "neuroshard-assistant-workflow-learning/1",
+  "status": "Method declared; baseline executable. Training and sharded execution require their implementation/resource freeze; no automatic training from a baseline pass.",
+  "architecture": "docs/ASSISTANT_ARCHITECTURE.md",
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "data": "config/experiments/assistant-workflow-data.json",
+  "parent_artifacts": "config/experiments/granite-reference-artifacts.json",
+  "parent_model": "baseline",
+  "arms": {
+    "parent": "Unchanged Granite 4.1 3B with the common tool runtime.",
+    "update": "Update existing q_proj and v_proj matrices in layers 32..39. Model topology and active backbone parameter count unchanged. Keep the accepted parent available for rollback and routing; its storage is charged.",
+    "addition": "Keep backbone unchanged. Add LoRA rank 16, alpha 32, dropout 0 to q_proj and v_proj in layers 32..39. Normal zero-output initialization; seed 27092026. Do not merge into the backbone. This adds learned parameters, not a second complete backbone."
+  },
+  "expert_training": {
+    "optimizer": "AdamW",
+    "steps": 128,
+    "microbatch": 1,
+    "gradient_accumulation": 8,
+    "gradient_clip": 1.0,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "learning_rates": {
+      "update": 1e-05,
+      "addition": 0.0003
+    },
+    "warmup_steps": 8,
+    "schedule": "linear warmup then constant",
+    "seed": 27092026,
+    "objective": "Teacher-forced assistant decision tokens only. Tool results and user/system/prompt tokens have label -100. Use validated tool trajectories from train split only. Identical decision-window schedule and target tokens for both trained arms; no truncation.",
+    "checkpoint": "Terminal step 128 only. Save optimizer/RNG, all trainable tensors, source/data/tokenizer and execution roots. No best-checkpoint shopping.",
+    "compute_control": "Same examples, targets, update count and declared GPU-time cap per trained arm. Count actual GPU seconds, memory and tokens; these do not imply exactly equal FLOPs. Reject a cost advantage that relies on uncharged parent features, failed work or routing rollouts."
+  },
+  "integration": {
+    "staging": "Freeze the trained arm before fitting its gate. Gate training uses integration only, not protected/development/confirmation answers.",
+    "features": "Frozen parent final-layer hidden state at the first assistant-generation boundary of the episode. Original user request, system instruction and tool definitions only; no project document contents until tools read them, no task/family/split IDs. Record token/prompt roots.",
+    "gate": "One logistic linear binary gate (2560 weights plus bias), zero initialization, L2-normalized features with epsilon 1e-6, AdamW lr 0.001, weight decay 0.01, 128 updates, batch 8, seed 27092027; threshold 0.5, exact tie selects parent. Same recipe for update and addition.",
+    "labels": "Run parent and trained arm to completion on each of the 64 integration episodes. Positive only when trained arm succeeds on every round and parent fails; otherwise parent. Labels use this training partition only. Report class counts. With no positives use constant parent; with no negatives use constant trained arm. Otherwise fit the declared gate. The degenerate rule is fixed here, not chosen after evaluation.",
+    "activation": "Select parent or trained arm once at the first request of a bounded workspace episode; keep that selection through its follow-up. Tools and all arguments are still generated automatically. This is episode routing, not per-token MoE or arbitrary lifelong conversation routing.",
+    "accounting": "Charge parent feature prefill, all label-generating rollouts, gate fit, and rejected work. Vanilla LoRA changes prefix states; use fresh candidate KV caches after selection. No unverified cache reuse.",
+    "ordinary_requests": "Outside this workspace API, retain the unchanged accepted parent. This explicit public operation boundary is not evidence of automatic general-domain module discovery. General conversation/other tool APIs retain their own evaluation requirements."
+  },
+  "development_gate": {
+    "cases": 24,
+    "minimum_total": 18,
+    "minimum_compound": 12,
+    "minimum_net_vs_each_control": 4,
+    "maximum_lost_control_successes": 0,
+    "protected_parent_successes": "Every successful baseline development episode, fixed by the baseline result root before training. Original 18 assistant anchors also remain required.",
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0
+  },
+  "confirmation_gate": {
+    "cases": 96,
+    "opens": "Once, only after both trained controls finish and candidate passes development. If update arm failed execution or comparison is missing, do not open.",
+    "minimum_total": 77,
+    "minimum_per_family": 8,
+    "minimum_net_vs_each_control": 10,
+    "maximum_lost_control_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092028,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_strictly_above": 0,
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0
+  },
+  "protected_anchor_ids": [
+    "granite-chat-booking",
+    "granite-chat-allergy",
+    "granite-chat-document",
+    "granite-chat-expense",
+    "granite-chat-quoted-data",
+    "granite-chat-handoff",
+    "granite-chat-packing",
+    "granite-instruction-extract",
+    "granite-instruction-filter",
+    "granite-instruction-negation",
+    "granite-instruction-counts",
+    "granite-instruction-typed",
+    "granite-tool-calendar",
+    "granite-tool-notes",
+    "granite-tool-document",
+    "granite-tool-ticket",
+    "granite-tool-archive",
+    "granite-tool-timer"
+  ],
+  "maximum_active_learned_modules": 1,
+  "sharding": "Passing complete graph must undergo the Granite-specific A4 conformance/recovery contract before native activation. Existing Llama partition implementation is not Granite-compatible by assumption.",
+  "budget": {
+    "baseline_planning_cap_usd": 6,
+    "later_training_comparison_ceiling_usd": 100,
+    "training_spend_currently_authorized": false,
+    "note": "The later ceiling is not an AWS allocation. Exact hardware, package hashes, prepared training windows and memory measurement must be committed before a paid training run. Existing user authorization covers completing that preparation; no account permission request is introduced."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false,
+  "checklist_credit": false,
+  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch, quality-paid issuance or silent serving change. A failed third-party adapter benchmark is not a prerequisite for this new contract."
+}

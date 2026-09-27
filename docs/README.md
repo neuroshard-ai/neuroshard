@@ -1,27 +1,18 @@
 # Protocol and development documentation
 
-The active [assistant checklist](../TODO_ASSISTANT.md) starts with the
-[foundation decision and frozen Granite reference](ASSISTANT_FOUNDATION_DECISION.md).
-The [completed result](GRANITE_REFERENCE_RESULTS.md) qualified the parent but
-failed the adapter's reference regression gate; A1 remains open.
-The [completed adapter audit](GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md) matches
-all declared tensor checks and 16 paired/replayed answers. Both implementations
-retain the same quality failure. Integration diagnosis is closed; A1 remains open.
-The [contextual assistant reference failed](GRANITE_CONTEXT_REFERENCE_RESULTS.md):
-29/64 for history, 35/64 for both parent and module rewriting. All 18 protected
-assistant answers survived. Full-history retrieval already found every required
-source; evidence copying and serialization identified the next implementation target.
-The [evidence-selection primitive and CPU diagnostic](EVIDENCE_SELECTION.md)
-separate bounded neural source selection from exact copying and citation creation.
-The [completed diagnostic](EVIDENCE_SELECTION_RESULTS.md) scores 64/64 versus
-59/64 for direct generation, retaining all 18 protected answers with six exact
-replays. These opened cases cannot earn learning or checklist credit.
-The [completed answerability comparison](GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md)
-scores 41/80, 69/80 and 74/80 for selection, parent checking and module checking.
-It fails preservation (62/64 prior lookups) and uncertainty (all five incremental
-gains in one family). All 18 original assistant anchors remain correct. No
-training or rerun is authorized; A1 remains open.
-These studies remain separate from the earlier demonstration results below.
+The active [assistant checklist](../TODO_ASSISTANT.md) follows the
+[complete-assistant architecture](ASSISTANT_ARCHITECTURE.md). The next deliverable
+is the [workspace learning contract](ASSISTANT_WORKFLOW_LEARNING.md): a complete
+parent conversation baseline, followed by trained update and added-capacity
+comparisons with automatic selection and individual retention. A Granite-specific
+shard port is required before activation. All six milestones remain open.
+
+The earlier [Granite reference](GRANITE_REFERENCE_RESULTS.md),
+[context reference](GRANITE_CONTEXT_REFERENCE_RESULTS.md) and
+[answerability comparison](GRANITE_ANSWERABILITY_REFERENCE_RESULTS.md) remain
+closed with their published failures. The [adapter audit](GRANITE_ADAPTER_AUDIT_RECOVERY_RESULTS.md)
+confirmed implementation agreement. Repeatedly qualifying that adapter is no
+longer a prerequisite for a new learning method; no failed score is reclassified.
 
 [Preserved interpretation](PRESERVED_INTERPRETER.md) accesses a learned neural
 expert while retaining original instruction-following weights. The
@@ -37,7 +28,8 @@ retaining the existing generated-answer and retention requirements.
 | Start here | Purpose |
 | --- | --- |
 | [Assistant development plan](../TODO_ASSISTANT.md) | Active six-milestone plan: capable foundation, useful modular learning, repeated growth, sharding, independent operation and public release. |
-| [Modular reference](MODULAR_REFERENCE.md) | A1 decision: reproduce published BAR-7B and BAR-5x7B before training a new expert. FlexOlmo is not the selected recipe. |
+| [Architecture amendment](ASSISTANT_ARCHITECTURE.md) / [workflow contract](ASSISTANT_WORKFLOW_LEARNING.md) | Current complete-assistant direction, controls, execution and shard requirements. |
+| [Modular reference](MODULAR_REFERENCE.md) | Historical BAR contract; baseline failed and decoder agreement was confirmed. |
 | [Tool-interface diagnostic](MODULAR_TOOL_INTERFACE.md) / [result](MODULAR_TOOL_INTERFACE_RESULTS.md) | Corrected instructions yield 3/3 calls and three exact replays on opened cases; no A1 credit. |
 | [Fresh reference comparison](MODULAR_REFERENCE_FRESH.md) | 24 new cases; paired gains/losses, exact replay and latency on one temporary CPU host. |
 | [Earlier demonstration checklist](../TODO.md) | Original six criteria and bounded evidence; independent hosting remains open. |
