@@ -112,7 +112,11 @@ activation contract.
   primitive, not learned capability or a replacement for complete conversations.
 - All Granite results above were measured with transformers 5.5.4's GPT-2
   pre-tokenizer rather than the checkpoint's `tokenizer.json`
-  ([details](docs/ASSISTANT_WORKFLOW_CANONICAL.md)). Their outcomes stand as
-  published; they do not measure the parent under its trained tokenization.
+  ([details](docs/ASSISTANT_WORKFLOW_CANONICAL.md)). The pinned Switch checkpoint's
+  own `tokenizer.json` also serializes GPT-2 splitting, so Switch runs now use the
+  parent's splitting with the Switch control-token IDs preserved
+  ([details](docs/ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md#switch-checkpoint-tokenizer)).
+  Their outcomes stand as published; they do not measure the models under their
+  trained tokenization.
 - Earlier learning, growth, sharding and settlement reports remain indexed in
   [the documentation](docs/README.md). Their successes and failures remain unchanged.

@@ -10,10 +10,9 @@ from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution import assistant_workflow_baseline as first
 from neuroshard.evolution import assistant_workflow_canonical as study
 from neuroshard.evolution import assistant_workflow_data as data
-from neuroshard.evolution import granite_tokenizer
 
 from test_assistant_workflow import execute_fixture, policy
-from test_granite_tokenizer import granite_like
+from test_granite_tokenizer import granite_like, load_tiny
 
 
 def plan():
@@ -126,7 +125,7 @@ def test_native_worker_path_checks_every_encode_through_a_tiny_granite(tmp_path)
     torch = pytest.importorskip('torch')
     from transformers import GraniteConfig, GraniteForCausalLM
 
-    tokenizer, _ = granite_tokenizer.load(granite_like(tmp_path / 'granite'))
+    tokenizer, _ = load_tiny(granite_like(tmp_path / 'granite'))
     torch.manual_seed(0)
     config = GraniteConfig(vocab_size=len(tokenizer.runtime), hidden_size=32, intermediate_size=64,
                            num_hidden_layers=2, num_attention_heads=4, num_key_value_heads=2,

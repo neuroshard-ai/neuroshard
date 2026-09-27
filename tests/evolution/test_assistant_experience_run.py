@@ -8,8 +8,7 @@ from neuroshard.evolution.modular_reference_execution import ROOT, read
 
 from test_assistant_experience import SPEC, TEMPLATE, tiny_model
 from test_assistant_workflow import envelope, policy, reference_texts, reply
-from test_granite_tokenizer import granite_like
-from neuroshard.evolution import granite_tokenizer
+from test_granite_tokenizer import granite_like, load_tiny
 
 torch = pytest.importorskip('torch')
 CASES = [data.make_case('train', 'copy', 0), data.make_case('train', 'latest', 1), data.make_case('train', 'sum', 2)]
@@ -44,7 +43,7 @@ class ScriptedBatcher:
 def setup(tmp_path, monkeypatch):
     directory = granite_like(tmp_path / 'granite')
     (directory / 'chat_template.jinja').write_text(TEMPLATE)
-    tokenizer = granite_tokenizer.load(directory)[0]
+    tokenizer = load_tiny(directory)[0]
     monkeypatch.setattr(run.rollout, 'Batcher', ScriptedBatcher)
     monkeypatch.setattr(run, 'split_cases', lambda plan, split: CASES)
     plan = {**read(ROOT / run.PLAN), 'training': {**SPEC, 'steps': 3}}

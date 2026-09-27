@@ -11,11 +11,10 @@ from neuroshard.evolution import assistant_selector as selector
 from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution import assistant_workspace as workspace
-from neuroshard.evolution import granite_tokenizer
 from neuroshard.evolution.modular_reference_execution import ROOT, read
 
 from test_assistant_workflow import envelope, policy, reference_texts, reply
-from test_granite_tokenizer import granite_like
+from test_granite_tokenizer import granite_like, load_tiny
 
 torch = pytest.importorskip('torch')
 
@@ -45,7 +44,7 @@ def scripted(case, texts, executed_policy=None):
 def tokenizer(tmp_path_factory):
     directory = granite_like(tmp_path_factory.mktemp('granite'))
     (directory / 'chat_template.jinja').write_text(TEMPLATE)
-    return granite_tokenizer.load(directory)[0]
+    return load_tiny(directory)[0]
 
 
 def tiny_model(tokenizer, seed=0):

@@ -43,6 +43,23 @@ stated in the [coaching card](ASSISTANT_EXPERIENCE_LEARNING.md): compare revisio
 numbers, combine date offsets and use both call slots. Whether training learns
 them is not established by this run.
 
+## Switch checkpoint tokenizer
+
+The pinned Switch checkpoint's own `tokenizer.json` serializes GPT-2's byte regex
+as its pre-tokenizer. Its vocabulary, merges and the parent's 96 added-token IDs are
+identical; it adds 12 adapter control tokens at IDs 100352–100363. Matching that
+file therefore reproduces the defect. The Switch-based reference, adapter audit
+and recovery executions used GPT-2 splitting through either loading path.
+
+The [loader](../src/neuroshard/evolution/granite_tokenizer.py) now builds every
+checkpoint's tokenizer from the canonical parent's splitting and that checkpoint's
+own added tokens. The parent `tokenizer.json` must match the pinned parent artifact,
+so the Switch file cannot serve as its own reference. Vocabulary, merges and parent
+token IDs must be identical, and each control token must still encode to its
+checkpoint ID. On the pinned files, the Switch then produces the parent's fixture
+encoding and keeps all 12 control IDs. The parent's pipeline and fixture digests
+are unchanged, so this execution's evidence stands; it used only the parent.
+
 ## Decision
 
 Keep this result failed; the parent alone is not yet a qualified workspace
