@@ -85,6 +85,31 @@ def test_gpu_inventory_pins_contracts_sources_packages_and_matching_authority():
     assert cloud.GRANITE_PROFILES[run.PROFILE] == ('assistant_experience_run', 'docs/assistant-experience-requirements.txt')
 
 
+def test_gpu_placement_leaves_the_controller_zone_only_when_it_lacks_the_instance_type():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location('placement_cloud', ROOT / 'scripts/modular_reference_cloud.py')
+    cloud = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cloud)
+
+    class EC2:
+        def __init__(self, zones):
+            self.zones = zones
+
+        def describe_instance_type_offerings(self, **_):
+            return {'InstanceTypeOfferings': [{'Location': zone} for zone in self.zones]}
+
+        def describe_subnets(self, **_):
+            return {'Subnets': [{'SubnetId': f'subnet-{z[-1]}', 'AvailabilityZone': z, 'State': 'available'}
+                                for z in ('us-east-1f', 'us-east-1c', 'us-east-1a', 'us-east-1e')]}
+
+    source = {'SubnetId': 'subnet-f', 'VpcId': 'vpc-1', 'Placement': {'AvailabilityZone': 'us-east-1f'}}
+    assert cloud.placement_subnets(EC2({'us-east-1f', 'us-east-1a'}), source, 'r7i.4xlarge') == ['subnet-f']
+    assert cloud.placement_subnets(EC2({'us-east-1a', 'us-east-1c'}), source, 'g6e.xlarge') == ['subnet-a', 'subnet-c']
+    with pytest.raises(ValueError, match='not offered'):
+        cloud.placement_subnets(EC2({'us-west-2a'}), source, 'g6e.xlarge')
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

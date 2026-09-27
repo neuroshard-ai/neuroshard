@@ -174,6 +174,21 @@ def retire(home, ec2=None):
         "storage_and_transfer_invoice_not_in_compute_total": True})
 
 
+def placement_subnets(ec2, source, instance_type):
+    """The controller's subnet when its zone offers the type; otherwise offering subnets in its VPC."""
+    offered = {row["Location"] for row in ec2.describe_instance_type_offerings(
+        LocationType="availability-zone", Filters=[{"Name": "instance-type", "Values": [instance_type]}]
+    )["InstanceTypeOfferings"]}
+    if source["Placement"]["AvailabilityZone"] in offered:
+        return [source["SubnetId"]]
+    subnets = sorted(ec2.describe_subnets(Filters=[{"Name": "vpc-id", "Values": [source["VpcId"]]}])["Subnets"],
+                     key=lambda row: (row["AvailabilityZone"], row["SubnetId"]))
+    candidates = [row["SubnetId"] for row in subnets if row["AvailabilityZone"] in offered and row["State"] == "available"]
+    if not candidates:
+        raise ValueError(f"{instance_type} is not offered in any subnet of the controller VPC")
+    return candidates
+
+
 def allocate(home, commit, profile=PROFILE):
     limits = resources(profile)
     ec2 = boto3.client("ec2", region_name=limits["region"])
@@ -213,15 +228,31 @@ def allocate(home, commit, profile=PROFILE):
     tags = [{"Key": k, "Value": str(v)} for k, v in {
         "Name": name, "Project": "NeuroShard", "Purpose": limits["purpose"], "Source": commit,
         "ExpiresAt": deadline.isoformat(), "BudgetUSD": limits["planning_cap_usd"]}.items()]
-    launched = ec2.run_instances(ImageId=image["ImageId"], InstanceType=limits["instance_type"],
-        MinCount=1, MaxCount=1, KeyName=source["KeyName"], ClientToken=name,
-        UserData="#cloud-config\n" + json.dumps(cloud), InstanceInitiatedShutdownBehavior="terminate",
-        MetadataOptions={"HttpTokens": "required", "HttpPutResponseHopLimit": 1},
-        NetworkInterfaces=[{"DeviceIndex": 0, "SubnetId": source["SubnetId"], "Groups": [group],
-                            "AssociatePublicIpAddress": True, "DeleteOnTermination": True}],
-        BlockDeviceMappings=[{"DeviceName": image["RootDeviceName"], "Ebs": {
-            "VolumeSize": limits["disk_gib"], "VolumeType": "gp3", "Encrypted": True, "DeleteOnTermination": True}}],
-        TagSpecifications=[{"ResourceType": kind, "Tags": tags} for kind in ("instance", "volume")])["Instances"]
+    launched, refusals = None, []
+    subnets = (placement_subnets(ec2, source, limits["instance_type"]) if profile in GPU_PROFILES
+               else [source["SubnetId"]])
+    for index, subnet in enumerate(subnets):
+        try:
+            launched = ec2.run_instances(ImageId=image["ImageId"], InstanceType=limits["instance_type"],
+                MinCount=1, MaxCount=1, KeyName=source["KeyName"], ClientToken=f"{name}-{index}",
+                UserData="#cloud-config\n" + json.dumps(cloud), InstanceInitiatedShutdownBehavior="terminate",
+                MetadataOptions={"HttpTokens": "required", "HttpPutResponseHopLimit": 1},
+                NetworkInterfaces=[{"DeviceIndex": 0, "SubnetId": subnet, "Groups": [group],
+                                    "AssociatePublicIpAddress": True, "DeleteOnTermination": True}],
+                BlockDeviceMappings=[{"DeviceName": image["RootDeviceName"], "Ebs": {
+                    "VolumeSize": limits["disk_gib"], "VolumeType": "gp3", "Encrypted": True,
+                    "DeleteOnTermination": True}}],
+                TagSpecifications=[{"ResourceType": kind, "Tags": tags} for kind in ("instance", "volume")])["Instances"]
+            allocation["subnet"] = subnet
+            break
+        except ClientError as error:
+            if error.response["Error"]["Code"] not in ("InsufficientInstanceCapacity", "Unsupported"):
+                raise
+            refusals.append({"subnet": subnet, "code": error.response["Error"]["Code"]})
+            allocation["placement_refusals"] = refusals
+            save(home / "allocation.json", allocation)
+    if launched is None:
+        raise RuntimeError(f"no subnet could place {limits['instance_type']}: {refusals}")
     allocation["instance_ids"] = [r["InstanceId"] for r in launched]
     save(home / "allocation.json", allocation)
     stop = time.monotonic() + 600

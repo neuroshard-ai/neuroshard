@@ -33,5 +33,12 @@
     "path": "config/experiments/assistant-workflow-canonical-report.json",
     "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
-  "budget_scope": "One L40S host for verified-experience collection, parent replay recording, training of both arms and integration gates; six-hour expiry and fifteen-dollar allowance within the $100 comparison ceiling. No development or confirmation goals."
+  "budget_scope": "One L40S host for verified-experience collection, parent replay recording, training of both arms and integration gates; six-hour expiry and fifteen-dollar allowance within the $100 comparison ceiling. No development or confirmation goals.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-27T14:20:28Z",
+      "commit": "19877504f646aab1315f8cc3f8e403f0494dcca8",
+      "outcome": "RunInstances refused g6e.xlarge in the controller subnet (us-east-1f) before any instance started; temporary security group retired; no compute spent. Placement now uses an offering subnet in the same VPC."
+    }
+  ]
 }
