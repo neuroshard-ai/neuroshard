@@ -222,14 +222,15 @@ def test_round_two_continues_both_pinned_arms_on_identical_verified_preferences(
         pinned[arm] = trainer.checkpoint(round1 / f'{arm}-checkpoint', trainable, receipt, {})['trainable_sha256']
     home = tmp_path / 'home'
     home.mkdir()
-    manifests = run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu', 'round2': {'round1': pinned}},
-                                 experience_rows, replay_rows, pair_rows, round1, home)
+    # The worker passes runtime parameters, not the inventory; pinned digests travel separately.
+    manifests = run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu'},
+                                 experience_rows, replay_rows, pair_rows, round1, pinned, home)
     assert {arm: m['roots']['round1'] for arm, m in manifests.items()} == pinned
     assert manifests['update']['schedule_sha256'] == manifests['addition']['schedule_sha256']
     assert all(m['trainable_sha256'] != pinned[arm] for arm, m in manifests.items())
     with pytest.raises(ValueError, match='pinned digest'):
-        run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu', 'round2': {'round1': {**pinned, 'update': 'x'}}},
-                         experience_rows, replay_rows, pair_rows, round1, tmp_path / 'other')
+        run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu'},
+                         experience_rows, replay_rows, pair_rows, round1, {**pinned, 'update': 'x'}, tmp_path / 'other')
     with pytest.raises(ValueError, match='no verified decision'):
         run.build_pairs(tokenizer, plan, policy(), [r for r in rollouts if r['sample'] == 0])
 

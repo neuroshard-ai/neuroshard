@@ -82,6 +82,16 @@
       "utc": "2026-09-27T20:41:09Z",
       "commit": "621125dbb3fdc9e26d5a2a8bf667a5126a3217e4",
       "outcome": "Round 1 retrained both arms from the pinned collection and fitted gates on g5.2xlarge ($1.87)."
+    },
+    {
+      "utc": "2026-09-27T23:25:59Z",
+      "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
+      "outcome": "Round 2 re-verified the collection and built 37 pairs, then stopped with KeyError: 'round2' because the worker passed runtime parameters where the pinned round-1 digests were read; $0.22."
+    },
+    {
+      "utc": "2026-09-27T23:25:59Z",
+      "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
+      "outcome": "Round 2 re-verified the collection and built 37 pairs, then stopped with KeyError: 'round2' because the worker passed runtime parameters where the pinned round-1 digests were read; $0.22."
     }
   ],
   "upload": {

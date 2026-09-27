@@ -230,7 +230,7 @@ def build_pairs(tokenizer, plan, policy, rollouts):
     return pairs, [trainer.encode_pair(tokenizer, pair, sandbox.TOOLS) for pair in pairs]
 
 
-def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, round1, home):
+def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, round1, pinned, home):
     """Continue both round-1 arms on identical experience, replay and preference pairs."""
     from neuroshard.evolution import assistant_experience_train as trainer
 
@@ -241,7 +241,7 @@ def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pai
         model = load_parent()
         started = time.monotonic()
         prior, trainable = trainer.resume(model, arm, plan['training'], Path(round1) / f'{arm}-checkpoint')
-        if prior['trainable_sha256'] != execution['round2']['round1'][arm]:
+        if prior['trainable_sha256'] != pinned[arm]:
             raise ValueError(f'round-1 {arm} checkpoint differs from its pinned digest')
         trainable, receipt = trainer.train(model, arm, experience_rows, replay_rows, spec,
                                            device=execution['device'], trainable=trainable, pairs=pair_rows)
@@ -403,7 +403,7 @@ def worker(request_path):
             reply['phases']['verify_collection'] = time.monotonic() - begun
             begun = time.monotonic()
             reply['training'] = train_round2(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows,
-                                             ROOT / UPLOADED, home)
+                                             ROOT / UPLOADED, execution['round2']['round1'], home)
             reply['phases']['train'] = time.monotonic() - begun
         elif 'collection' in execution:
             experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
