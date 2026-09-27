@@ -50,7 +50,7 @@ def setup(tmp_path, monkeypatch):
     return tokenizer, plan, tmp_path / 'home'
 
 
-def test_gpu_inventory_pins_contracts_sources_and_packages_without_launch_authority():
+def test_gpu_inventory_pins_contracts_sources_packages_and_matching_authority():
     import importlib.util
     import subprocess
     import sys
@@ -72,7 +72,9 @@ def test_gpu_inventory_pins_contracts_sources_and_packages_without_launch_author
               if line and not line.startswith('#') and '==' in line]
     assert set(pinned) | {'torch'} == set(execution['packages'])
     assert execution['environment'] == execution['worker_environment']
-    assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
+    plan = read(ROOT / run.PLAN)
+    assert execution['gpu_launch_authorized'] == plan['gpu_launch_authorized'] == plan['budget']['training_spend_currently_authorized']
+    assert execution['attempts'] == 1 and not plan['native_promotion_authorized'] and not plan['checklist_credit']
     spec = importlib.util.spec_from_file_location('experience_cloud', ROOT / 'scripts/modular_reference_cloud.py')
     cloud = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cloud)

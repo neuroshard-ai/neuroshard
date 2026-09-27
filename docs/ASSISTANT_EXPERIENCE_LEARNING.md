@@ -4,7 +4,7 @@ September 27, 2026. New method for A2; it supersedes the training and gate
 sections of the [workspace learning contract](ASSISTANT_WORKFLOW_LEARNING.md)
 and reuses its data partitions, tools, policy and arms. The
 [JSON plan](../config/experiments/assistant-experience-learning.json) is
-authoritative for numerical settings. Nothing here trains or launches anything.
+authoritative for numerical settings.
 
 ## Why a different method
 
@@ -79,10 +79,19 @@ experiment.
 
 ## Preconditions and limits
 
-The [canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) must qualify first.
-If the parent exceeds 20/24 on development, harder workflows need a new data
-freeze before training. Collection and training need a GPU resource contract
-within the $100 ceiling; evaluation reuses the CPU runtime of the parent baseline.
+The [canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md) completed
+at 9/24 with conforming tokenization and development headroom, but failed primitive
+qualification on version choice and the call budget. On September 27, 2026 the
+user authorized collection and training anyway. A1 stays open, and this comparison
+cannot close it: a pass shows learned capability over a parent that is not yet a
+qualified workspace assistant.
+
+Collection and training run once on one L40S host under the
+[resource contract](../config/experiments/assistant-experience-resources.json)
+(six-hour expiry, $15 allowance) and the pinned
+[execution inventory](../config/experiments/assistant-experience-execution.json).
+Development evaluation reuses the CPU runtime of the parent baseline; confirmation
+opens only after a development pass.
 Precedents for filtered self-training ([STaR](https://arxiv.org/abs/2203.14465),
 [ReST-EM](https://arxiv.org/abs/2312.06585)) and
 [context distillation](https://arxiv.org/abs/2209.15189) do not establish that

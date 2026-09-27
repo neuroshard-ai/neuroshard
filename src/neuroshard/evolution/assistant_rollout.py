@@ -99,11 +99,17 @@ class Batcher:
             slot['result'] = {'token_ids': tokens, 'text': text, 'terminated': terminated}
 
 
-def rollouts(jobs, respond, *, workers):
+def rollouts(jobs, respond, *, workers, progress=None):
     """Execute (case, policy, sample) jobs concurrently; each episode stays sequential."""
+    lock, done = threading.Lock(), [0]
+
     def run(job):
         case, policy, sample = job
         result = workflow.execute(case, respond, policy)
+        if progress:
+            with lock:
+                done[0] += 1
+                progress(done[0], len(jobs))
         return {'case_id': case['id'], 'sample': sample, 'policy_sha256': identity(policy), 'result': result}
 
     with ThreadPoolExecutor(max_workers=workers) as pool:

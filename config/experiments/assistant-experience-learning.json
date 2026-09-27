@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-learning/1",
-  "status": "Method declared. Collection, training and evaluation require the canonical parent re-baseline to qualify, an implementation freeze, prepared data inventories and a GPU resource contract. No automatic training.",
+  "status": "Implemented. On September 27, 2026 the user authorized collection and training although the canonical parent failed primitive qualification (2/8) with tokenizer conformance and development headroom (9/24). A1 stays open; this comparison cannot close it. Development evaluation runs on the CPU parent runtime.",
   "architecture": "docs/ASSISTANT_ARCHITECTURE.md",
   "supersedes_for_a2": "config/experiments/assistant-workflow-learning.json",
   "parent_baseline": "config/experiments/assistant-workflow-canonical.json",
@@ -34,7 +34,16 @@
   "training": {
     "sequences": "One canonical-tokenizer sequence per accepted trajectory; every trainable assistant span and its end token labeled. Loss normalized per trajectory so each accepted conversation has equal weight.",
     "precision": "BF16 backbone and activations; FP32 LoRA tensors and FP32 master copies of updated projections.",
-    "layers": [32, 33, 34, 35, 36, 37, 38, 39],
+    "layers": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
     "rank": 16,
     "alpha": 32,
     "experience_per_replay": 3,
@@ -105,12 +114,12 @@
   "decentralized_role": "Rollouts are the parallel contributor workload. Each is replayed and rescored without trusting its producer or regenerating it; the parent-likelihood check rejects off-policy text. One compute group trains the module; replicas serve it. No settlement or payment is part of this experiment.",
   "budget": {
     "ceiling_usd": 100,
-    "training_spend_currently_authorized": false,
-    "note": "Collection and training need a GPU resource contract with exact hardware, package hashes and memory measurements before any paid run. Evaluation reuses the CPU runtime of the canonical parent baseline."
+    "training_spend_currently_authorized": true,
+    "note": "One GPU host under config/experiments/assistant-experience-resources.json (at most $15), then CPU development evaluation. Confirmation spend requires a development pass."
   },
-  "training_execution_authorized": false,
-  "gpu_launch_authorized": false,
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
   "native_promotion_authorized": false,
   "checklist_credit": false,
-  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. If the canonical parent exceeds 20/24 on development, add harder workflows under a new data freeze before training."
+  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. One GPU attempt; a failed or interrupted run needs a new execution amendment."
 }

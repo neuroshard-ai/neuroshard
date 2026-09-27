@@ -50,6 +50,22 @@ def write_rows(path, rows):
     return identity(rows)
 
 
+def release_accelerator():
+    import gc
+    import torch
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def reporter(home, phase):
+    def report(done, total):
+        if done % 25 == 0 or done == total:
+            save(home / 'progress.json', {'phase': phase, 'completed': done, 'total': total, 'unix': time.time()})
+    return report
+
+
 def sampling(policy, execution, temperature):
     return {**policy['generation'], 'temperature': temperature, 'top_p': execution['top_p']}
 
@@ -67,16 +83,18 @@ def collect(model, tokenizer, plan, policy, execution, home):
     started = time.monotonic()
     try:
         natural = rollout.rollouts([(c, policy, s) for c in cases for s in range(samples)], batcher.respond,
-                                   workers=execution['workers'])
+                                   workers=execution['workers'], progress=reporter(home, 'collect-natural'))
         accepted = [t for row in natural if (t := experience.trajectory(
             by_id[row['case_id']], row['result'], policy, policy, sample=row['sample'])) is not None]
         pending = [c for c in cases if experience.needs_coaching(c, accepted)]
         coached_rows = rollout.rollouts([(c, card_policy, samples + s) for c in pending for s in range(samples)],
-                                        batcher.respond, workers=execution['workers'])
+                                        batcher.respond, workers=execution['workers'],
+                                        progress=reporter(home, 'collect-coached'))
         accepted += [t for row in coached_rows if (t := experience.trajectory(
             by_id[row['case_id']], row['result'], card_policy, policy, sample=row['sample'], coaching=True)) is not None]
     finally:
         batcher.close()
+    save(home / 'progress.json', {'phase': 'parent-likelihood', 'accepted': len(accepted), 'unix': time.time()})
     sequences = {t['transcript_sha256']: trainer.encode(tokenizer, t, sandbox.TOOLS) for t in accepted}
     nll = {key: trainer.negative_log_likelihood(model, value, execution['device']) for key, value in sequences.items()}
     kept, ceiling = experience.near_policy(accepted, nll)
@@ -122,6 +140,7 @@ def train_arms(load_parent, plan, execution, experience_rows, replay_rows, home)
     spec = {**plan['training'], 'seed': plan['training']['seed']}
     manifests = {}
     for arm in ('update', 'addition'):
+        save(home / 'progress.json', {'phase': f'train-{arm}', 'unix': time.time()})
         model = load_parent()
         started = time.monotonic()
         trainable, receipt = trainer.train(model, arm, experience_rows, replay_rows, spec, device=execution['device'])
@@ -129,7 +148,8 @@ def train_arms(load_parent, plan, execution, experience_rows, replay_rows, home)
                  'replay': identity([r['sha256'] for r in replay_rows]), 'plan': identity(plan)}
         manifests[arm] = {**trainer.checkpoint(home / f'{arm}-checkpoint', trainable, receipt, roots),
                           'seconds': time.monotonic() - started, 'tokens_processed': receipt['tokens_processed']}
-        del model, trainable
+        del model, trainable, receipt
+        release_accelerator()
     save(home / 'training.json', manifests, exclusive=True)
     return manifests
 
@@ -146,7 +166,7 @@ def boundary_feature(model, tokenizer, policy, case, device):
         return model.model(input_ids=ids).last_hidden_state[0, -1].float().cpu().tolist()
 
 
-def outcomes(model, tokenizer, policy, execution, cases, seed):
+def outcomes(model, tokenizer, policy, execution, cases, seed, progress=None):
     """One greedy and the declared number of sampled complete episodes per integration case."""
     results = {case['id']: [] for case in cases}
     for temperature, count in ((0, 1), (execution['temperature'], execution['integration_samples'])):
@@ -154,7 +174,7 @@ def outcomes(model, tokenizer, policy, execution, cases, seed):
                                   max_batch=execution['max_batch'], device=execution['device'], seed=seed)
         try:
             rows = rollout.rollouts([(c, policy, s) for c in cases for s in range(count)], batcher.respond,
-                                    workers=execution['workers'])
+                                    workers=execution['workers'], progress=progress)
         finally:
             batcher.close()
         for row in rows:
@@ -169,17 +189,21 @@ def integrate(load_parent, tokenizer, plan, policy, execution, home):
     cases = split_cases(plan, 'integration')
     parent = load_parent()
     features = {c['id']: boundary_feature(parent, tokenizer, policy, c, execution['device']) for c in cases}
-    parent_outcomes = outcomes(parent, tokenizer, policy, execution, cases, execution['seed'] + 1)
+    parent_outcomes = outcomes(parent, tokenizer, policy, execution, cases, execution['seed'] + 1,
+                               progress=reporter(home, 'integrate-parent'))
     del parent
+    release_accelerator()
     recipe = plan['selection_recipe']
     gates = {}
     for arm in ('update', 'addition'):
         model = load_parent()
         trainer.load_trainable(model, arm, plan['training'], home / f'{arm}-checkpoint')
-        arm_outcomes = outcomes(model, tokenizer, policy, execution, cases, execution['seed'] + 2)
+        arm_outcomes = outcomes(model, tokenizer, policy, execution, cases, execution['seed'] + 2,
+                                progress=reporter(home, f'integrate-{arm}'))
         gates[arm] = {'gate': selector.fit(features, selector.targets(parent_outcomes, arm_outcomes), recipe),
                       'outcomes': arm_outcomes}
         del model
+        release_accelerator()
     save(home / 'integration.json', {'parent_outcomes': parent_outcomes, 'arms': gates,
                                      'features_sha256': identity(features)}, exclusive=True)
     return gates
@@ -270,7 +294,7 @@ def worker(request_path):
         replay_rows = record_replay(parent, tokenizer, plan, parameters, home)
         reply['phases']['replay'] = time.monotonic() - begun
         del parent
-        torch.cuda.empty_cache()
+        release_accelerator()
         begun = time.monotonic()
         reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
         reply['phases']['train'] = time.monotonic() - begun
