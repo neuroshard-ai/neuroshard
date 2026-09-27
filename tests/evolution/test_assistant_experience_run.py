@@ -51,6 +51,39 @@ def setup(tmp_path, monkeypatch):
     return tokenizer, plan, tmp_path / 'home'
 
 
+def test_gpu_inventory_pins_contracts_sources_and_packages_without_launch_authority():
+    import importlib.util
+    import subprocess
+    import sys
+
+    execution = read(ROOT / run.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert run.sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources'])
+    probe = ('import os, sys; import neuroshard.evolution.assistant_experience_run as m; '
+             'assert "torch" not in sys.modules; '
+             'import neuroshard.evolution.assistant_experience_train, neuroshard.evolution.assistant_selector; '
+             'root = os.path.abspath("src"); '
+             'print("\\n".join(sorted(os.path.relpath(x.__file__) for x in list(sys.modules.values()) '
+             'if getattr(x, "__file__", None) and os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources'])
+    pinned = [line.split('==')[0] for line in (ROOT / 'docs/assistant-experience-requirements.txt').read_text().splitlines()
+              if line and not line.startswith('#') and '==' in line]
+    assert set(pinned) | {'torch'} == set(execution['packages'])
+    assert execution['environment'] == execution['worker_environment']
+    assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
+    spec = importlib.util.spec_from_file_location('experience_cloud', ROOT / 'scripts/modular_reference_cloud.py')
+    cloud = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cloud)
+    resources = cloud.resources(run.PROFILE)
+    assert resources['gpu'] and resources['instance_type'] == 'g6e.xlarge' and resources['planning_cap_usd'] <= 15
+    assert resources['hours'] * resources['price']['usd_per_hour'] + 3 <= resources['planning_cap_usd']
+    assert cloud.remote_command(run.PROFILE)[1].endswith(run.SCRIPT)
+    assert cloud.GRANITE_PROFILES[run.PROFILE] == ('assistant_experience_run', 'docs/assistant-experience-requirements.txt')
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

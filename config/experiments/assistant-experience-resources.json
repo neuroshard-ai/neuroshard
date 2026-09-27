@@ -1,0 +1,37 @@
+{
+  "format": "neuroshard-assistant-experience-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "g6e.xlarge",
+  "hours": 6,
+  "planning_cap_usd": 15,
+  "disk_gib": 120,
+  "disk_type": "gp3",
+  "setup_seconds": 1800,
+  "copy_seconds": 1200,
+  "image": {
+    "ImageId": "ami-0efd0f6e601922cad",
+    "Name": "Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04) 20260911",
+    "CreationDate": "2026-09-11T14:09:30.000Z",
+    "OwnerId": "898082745236",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "HEU7PA78QPB8SDYY",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.861
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": true,
+  "purpose": "assistant-experience-gpu",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 2147483648,
+  "prior_resources": {
+    "path": "config/experiments/assistant-workflow-baseline-report.json",
+    "sha256": "461ac13286d0d3f1eb1d593afbf82d5c401e45914cdfcc779e1ffed9759503ad"
+  },
+  "budget_scope": "One L40S host for verified-experience collection, parent replay recording, training of both arms and integration gates; six-hour expiry and fifteen-dollar allowance within the $100 comparison ceiling. No development or confirmation goals."
+}

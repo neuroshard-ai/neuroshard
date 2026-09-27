@@ -23,6 +23,7 @@ RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
+                     "assistant-experience-gpu": "config/experiments/assistant-experience-resources.json",
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
@@ -32,12 +33,14 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
 GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
+    "assistant-experience-gpu": ("assistant_experience_run", "docs/assistant-experience-requirements.txt"),
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
     "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
 }
+GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g5.2xlarge")}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -50,6 +53,9 @@ def source_freeze(profile):
     if profile == "assistant-workflow-canonical":
         from neuroshard.evolution.assistant_workflow_canonical import committed_sources as canonical_sources
         return canonical_sources()
+    if profile == "assistant-experience-gpu":
+        from neuroshard.evolution.assistant_experience_run import committed_sources as experience_sources
+        return experience_sources()
     if profile == "granite-answerability-reference":
         from neuroshard.evolution.granite_answerability_reference import committed_sources as answerability_sources
         return answerability_sources()
@@ -70,7 +76,14 @@ def source_freeze(profile):
 
 def resources(profile=PROFILE):
     value = read(ROOT / RESOURCE_PROFILES[profile])
-    if (value["instances"] != 1 or value["instance_type"] != "r7i.4xlarge"
+    if profile in GPU_PROFILES:
+        if (value["instances"] != 1 or value["instance_type"] not in GPU_PROFILES[profile]
+                or not value["gpu"] or not 0 < value["hours"] <= 6 or value["disk_gib"] > 200
+                or value["attempts"] != 1 or not value["shutdown_terminates"]
+                or value["hours"] * value["price"]["usd_per_hour"] + 3 > value["planning_cap_usd"]
+                or value["planning_cap_usd"] > 15):
+            raise ValueError("resource contract exceeds the single GPU host allowance")
+    elif (value["instances"] != 1 or value["instance_type"] != "r7i.4xlarge"
             or value["gpu"] or not 0 < value["hours"] <= 8 or value["disk_gib"] > 160
             or value["attempts"] != 1 or not value["shutdown_terminates"]
             or value["hours"] * value["price"]["usd_per_hour"] + 3 > value["planning_cap_usd"]
@@ -86,7 +99,8 @@ def resources(profile=PROFILE):
             receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
             or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
-    if profile in ("decoder-parity", *GRANITE_PROFILES) and (value["hours"] > 2 or value["planning_cap_usd"] > 6):
+    if (profile in ("decoder-parity", *GRANITE_PROFILES) and profile not in GPU_PROFILES
+            and (value["hours"] > 2 or value["planning_cap_usd"] > 6)):
         raise ValueError("reference profile exceeds its separate two-hour six-dollar allowance")
     if profile == "granite-adapter-audit" and (
             receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3
@@ -367,6 +381,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-workflow-canonical":
         return [PYTHON, REMOTE + "/scripts/run_assistant_workflow_canonical.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-experience-gpu":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_experience.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-answerability-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_answerability_reference.py", "run",

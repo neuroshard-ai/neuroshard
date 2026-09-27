@@ -257,7 +257,7 @@ def spent(home, which, legacy_seconds, *, preparation=False):
     return total
 
 
-def supervised(command, log_path, seconds, memory_bytes, unit):
+def supervised(command, log_path, seconds, memory_bytes, unit, environment=None):
     """A kernel cgroup limit and systemd timer also survive parent interruption."""
     if seconds <= 0:
         raise ValueError("worker has no remaining budget")
@@ -270,7 +270,7 @@ def supervised(command, log_path, seconds, memory_bytes, unit):
     for key, value in {"PYTHONPATH": str(ROOT / "src"), "CUDA_VISIBLE_DEVICES": "",
                        "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
                        "OPENBLAS_NUM_THREADS": "1", "TOKENIZERS_PARALLELISM": "false",
-                       "PYTHONUNBUFFERED": "1"}.items():
+                       "PYTHONUNBUFFERED": "1", **(environment or {})}.items():
         argv += ["--setenv", f"{key}={value}"]
     argv += command
     started = time.monotonic()
@@ -327,7 +327,8 @@ def worker(request_path):
     save(request_path.parent / "reply.json", result, exclusive=True)
 
 
-def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=None, stats=None, worker_script=None):
+def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=None, stats=None, worker_script=None,
+           environment=None):
     if worker_script is not None and worker_script not in binding["freeze"]["sources"]:
         raise ValueError("worker entrypoint is outside the execution freeze")
     name = f"{which}-{phase}" + (f"-{task['id']}" if task else "")
@@ -342,7 +343,7 @@ def launch(home, models, binding, which, phase, seconds, memory_bytes, *, task=N
     command = [sys.executable, str(ROOT / (worker_script or SCRIPT)), "worker", "--request", str(attempt / "request.json")]
     started = time.monotonic()
     try:
-        outcome = supervised(command, attempt / "worker.log", seconds, memory_bytes, unit)
+        outcome = supervised(command, attempt / "worker.log", seconds, memory_bytes, unit, environment)
     except BaseException as error:
         save(attempt / "outcome.json", {"completed": False, "seconds": time.monotonic() - started,
                                         "reason": type(error).__name__, "unit": unit}, exclusive=True)
