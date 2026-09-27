@@ -77,17 +77,26 @@
       "utc": "2026-09-27T18:43:00Z",
       "commit": "fc4e1923a631e0a548c366cde45bdc19221f5f54",
       "outcome": "On g5.2xlarge: 2,640 rollouts, 722 selected verified trajectories and 256 replay answers written and pinned for retraining. The attempt's trainer draws adapter initial values with a CPU generator into CUDA tensors, which PyTorch rejects, so its addition arm and integration cannot complete."
+    },
+    {
+      "utc": "2026-09-27T20:41:09Z",
+      "commit": "621125dbb3fdc9e26d5a2a8bf667a5126a3217e4",
+      "outcome": "Round 1 retrained both arms from the pinned collection and fitted gates on g5.2xlarge ($1.87)."
     }
   ],
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927c-collection",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-round2-inputs",
     "files": [
       "experience.json",
       "rollouts.jsonl.gz",
       "trajectories.jsonl.gz",
       "replay.json",
-      "replay.jsonl.gz"
+      "replay.jsonl.gz",
+      "update-checkpoint/manifest.json",
+      "update-checkpoint/trainable.safetensors",
+      "addition-checkpoint/manifest.json",
+      "addition-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 67108864
+    "maximum_bytes": 319893039
   }
 }

@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Retraining and integration from the pinned collection of an earlier attempt whose trainer failed at the addition arm; both arms retrain on identical sequences under the corrected trainer.",
+  "status": "Round 2 (verified decision preferences) after the round-1 development gate failed. No new rollouts; both round-1 arms continue on identical data and schedule.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -81,7 +81,7 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "a67315822e0a886ca9aa9848a3c70870b2c6a61d75f0695e7144fb93b9d44e4e",
-    "config/experiments/assistant-experience-resources.json": "70d4714740d7faee21504e59249d755cb9748872fbfed9df820bc86095fe59ce",
+    "config/experiments/assistant-experience-resources.json": "beada860c6ecf777ec31ea9dd7b34ccd67ba8dca72672f4193ce656f10ab6da8",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
@@ -151,5 +151,13 @@
       "replay.jsonl.gz": "e977ff6086d63968d3b06557ab1609772cc0563d5b75c6c271aeee29550b5452"
     },
     "rule": "No new rollouts. Every trajectory is rebuilt from its recorded rollout through the frozen scorer; replay items must match the regenerated prompts."
+  },
+  "round2": {
+    "round1": {
+      "update": "878a6c80ee95950447d9ed594aa9889905ed11f76ae00ab1c133ee794dcc3902",
+      "addition": "92c9aab2a263dcb06eb907fa3c47fdef0ac2496342322d60aeac9f9ddb169e17"
+    },
+    "source_home": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927d/evidence",
+    "rule": "Continue both round-1 arms on the pinned experience, replay and verified decision pairs; refit gates on integration."
   }
 }
