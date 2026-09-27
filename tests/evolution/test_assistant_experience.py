@@ -187,6 +187,21 @@ def test_adapter_initialization_never_draws_a_cpu_generator_into_another_device(
     assert all(torch.equal(again[n], expected[n]) for n in expected)
 
 
+def test_serving_stores_updated_projections_in_backbone_dtype_and_keeps_adapters(tokenizer):
+    experience_rows, replay_rows = sequences(tokenizer)
+    model = tiny_model(tokenizer).to(torch.bfloat16)
+    trainer.train(model, 'update', experience_rows, replay_rows, SPEC)
+    trained = trainer.negative_log_likelihood(model, experience_rows[0])
+    assert trainer.serving(model, SPEC) == 4
+    assert not any(isinstance(m, trainer.MasterLinear) for m in model.modules())
+    assert model.model.layers[0].self_attn.q_proj.weight.dtype == torch.bfloat16
+    assert trainer.negative_log_likelihood(model, experience_rows[0]) == pytest.approx(trained, abs=1e-6)
+    adapter = tiny_model(tokenizer)
+    trainer.prepare(adapter, 'addition', SPEC)
+    assert trainer.serving(adapter, SPEC) == 0
+    assert sum(isinstance(m, trainer.LoRALinear) for m in adapter.modules()) == 4
+
+
 def test_update_changes_only_declared_projections_with_the_same_schedule(tokenizer):
     experience_rows, replay_rows = sequences(tokenizer)
     before = {k: v.clone() for k, v in tiny_model(tokenizer).state_dict().items()}

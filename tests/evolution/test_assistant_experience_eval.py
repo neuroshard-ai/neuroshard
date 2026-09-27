@@ -100,7 +100,9 @@ def test_uploaded_arms_must_match_pinned_digests(tmp_path):
 def test_cpu_profile_uploads_only_declared_regular_files_within_its_allowance(tmp_path):
     cloud = cloud_module()
     resources = cloud.resources(evaluation.PROFILE)
-    assert not resources['gpu'] and resources['instance_type'] == 'r7i.4xlarge' and resources['hours'] <= 2
+    assert not resources['gpu'] and resources['instance_type'] == 'r7i.4xlarge'
+    assert (resources['hours'], resources['planning_cap_usd']) == cloud.LONG_CPU_PROFILES[evaluation.PROFILE]
+    assert resources['hours'] * resources['price']['usd_per_hour'] + 3 <= resources['planning_cap_usd']
     assert cloud.remote_command(evaluation.PROFILE)[1].endswith(evaluation.SCRIPT)
     assert cloud.UPLOAD_PROFILES[evaluation.PROFILE] == evaluation.UPLOADED
     assert not any(name.endswith('optimizer.pt') for name in resources['upload']['files'])

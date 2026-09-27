@@ -207,6 +207,26 @@ def checkpoint(directory, trainable, receipt, roots):
     return manifest
 
 
+def serving(model, spec):
+    """Store updated projections as plain Linear layers in the backbone dtype, as a deployment would.
+
+    Adapters stay unmerged; they are the separately served module.
+    """
+    converted = 0
+    for _, attention, projection in projections(model, spec['layers']):
+        module = getattr(attention, projection)
+        if isinstance(module, MasterLinear):
+            dtype = model.get_input_embeddings().weight.dtype
+            linear = torch.nn.Linear(module.weight.shape[1], module.weight.shape[0], bias=False,
+                                     dtype=dtype, device=module.weight.device)
+            with torch.no_grad():
+                linear.weight.copy_(module.weight.to(dtype))
+            linear.weight.requires_grad_(False)
+            setattr(attention, projection, linear)
+            converted += 1
+    return converted
+
+
 def load_trainable(model, arm, spec, directory):
     """Attach a saved arm to a fresh parent for evaluation or serving."""
     from safetensors.torch import load_file

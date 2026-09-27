@@ -44,6 +44,8 @@ GRANITE_PROFILES = {
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience"}
+# Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
+LONG_CPU_PROFILES = {"assistant-experience-development": (3, 7)}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -107,8 +109,9 @@ def resources(profile=PROFILE):
             receipt["conservative_instance_seconds"] + value["hours"] * 3600 > 8 * 3600
             or receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3 > 15):
         raise ValueError("recovery exceeds combined allowance or prior allocation remains live")
+    hours, dollars = LONG_CPU_PROFILES.get(profile, (2, 6))
     if (profile in ("decoder-parity", *GRANITE_PROFILES) and profile not in GPU_PROFILES
-            and (value["hours"] > 2 or value["planning_cap_usd"] > 6)):
+            and (value["hours"] > hours or value["planning_cap_usd"] > dollars)):
         raise ValueError("reference profile exceeds its separate two-hour six-dollar allowance")
     if profile == "granite-adapter-audit" and (
             receipt["conservative_compute_usd"] + value["hours"] * value["price"]["usd_per_hour"] + 3

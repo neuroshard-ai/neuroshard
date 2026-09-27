@@ -5,10 +5,9 @@ the whole episode with the chosen model. The parent control is the canonical
 re-baseline, pinned by its result digest; protected successes come from it.
 Each arm also answers every original anchor with selection forced on, which
 measures forgetting directly; the routed system serves anchors with the parent.
-One worker per arm runs with the baseline's thread count, so numerics match it.
+Each arm runs alone in a fresh worker at the baseline's thread count, so numerics and latency match it.
 """
 
-from concurrent.futures import ThreadPoolExecutor
 import importlib.metadata
 import os
 from pathlib import Path
@@ -127,8 +126,8 @@ def worker(request_path):
     from neuroshard.evolution import assistant_experience_train as trainer
 
     execution = read(ROOT / EXECUTION)
-    arm = request['model']
-    if arm not in ARMS or request['phase'] != 'development':
+    arm, phase = request['model'], request['phase']
+    if (phase, arm) != ('prepare', 'baseline') and (arm not in ARMS or phase != 'development'):
         raise ValueError('unsupported evaluation worker role')
     plan = read(ROOT / PLAN)
     policy = read(ROOT / plan['policy'])
@@ -138,10 +137,14 @@ def worker(request_path):
     started = time.monotonic()
     tokenizer = None
     try:
-        arms = ROOT / UPLOADED
-        gate = verify_arms(arms, execution['arms'])['arms'][arm]['gate']
         inventory = read(ROOT / reference.ARTIFACTS)['models']['baseline']
         directory = Path(request['models']) / 'baseline'
+        if phase == 'prepare':
+            reply['file_state'] = verify_artifacts(directory, inventory, download=True)
+            reply['execution_completed'] = True
+            return
+        arms = ROOT / UPLOADED
+        gate = verify_arms(arms, execution['arms'])['arms'][arm]['gate']
         state = verify_artifacts(directory, inventory, download=False)
         tokenizer, report = granite_tokenizer.load(directory)
         reply['tokenizer'] = report
@@ -149,6 +152,7 @@ def worker(request_path):
         cases = first.load_cases(read(ROOT / canonical.PLAN))
         model, _ = reference.load_model(directory, 'baseline')
         reply['checkpoint'] = trainer.load_trainable(model, arm, plan['training'], arms / f'{arm}-checkpoint')
+        reply['served_projections_converted'] = trainer.serving(model, plan['training'])
 
         def feature(case):
             return accelerator.boundary_feature(parent, tokenizer, policy, case, 'cpu')
@@ -199,15 +203,13 @@ def run(home, models):
               'admission_evidence': False, 'confirmation_opened': False}
     try:
         verify_arms(ROOT / UPLOADED, execution['arms'])
-        inventory = read(ROOT / reference.ARTIFACTS)['models']['baseline']
-        verify_artifacts(Path(models) / 'baseline', inventory, download=True)
-
-        def one(arm):
-            return launch(home, models, binding, arm, 'development', execution['worker_seconds'],
+        prepared = launch(home, models, binding, 'baseline', 'prepare', execution['prepare_seconds'],
                           execution['memory_bytes'], worker_script=SCRIPT)
-
-        with ThreadPoolExecutor(max_workers=len(ARMS)) as pool:
-            replies = dict(zip(ARMS, pool.map(one, ARMS)))
+        if not prepared['execution_completed']:
+            raise ValueError(prepared.get('error', 'parent artifacts were not prepared'))
+        # One fresh worker at a time, as in the canonical baseline, so latency is comparable.
+        replies = {arm: launch(home, models, binding, arm, 'development', execution['worker_seconds'],
+                               execution['memory_bytes'], worker_script=SCRIPT) for arm in ARMS}
         result['replies'] = replies
         failed = [arm for arm in ARMS if not replies[arm]['execution_completed']]
         if failed:
