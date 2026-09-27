@@ -1,0 +1,52 @@
+{
+  "world": {
+    "documents": [
+      {
+        "id": "orchid-approved-v2",
+        "project": "Orchid launch",
+        "title": "Launch delivery plan",
+        "revision": 2,
+        "status": "approved",
+        "content": "Start date: 2027-01-10. Baseline quantity: 20 units. Review interval: 4 calendar days."
+      }
+    ]
+  },
+  "turns": [
+    {
+      "user": "Create a draft for Orchid launch, addressed to the operations team. Use the latest approved plan. Set the due date one review interval after its start date, and add five units to the baseline quantity. Cite the plan and save the draft without sending it.",
+      "expected": {
+        "project": "Orchid launch",
+        "recipient": "operations team",
+        "due_date": "2027-01-14",
+        "total": 25,
+        "source_ids": [
+          "orchid-approved-v2"
+        ]
+      },
+      "assistant": [
+        "<tool_call>\n{\"name\": \"list_documents\", \"arguments\": {\"project\": \"Orchid launch\"}}\n</tool_call>",
+        "<tool_call>\n{\"name\": \"read_document\", \"arguments\": {\"document_id\": \"orchid-approved-v2\"}}\n</tool_call>",
+        "<tool_call>\n{\"name\": \"calculate\", \"arguments\": {\"operation\": \"add\", \"left\": 20, \"right\": 5}}\n</tool_call>\n<tool_call>\n{\"name\": \"shift_date\", \"arguments\": {\"start_date\": \"2027-01-10\", \"days\": 4}}\n</tool_call>",
+        "<tool_call>\n{\"name\": \"save_draft\", \"arguments\": {\"project\": \"Orchid launch\", \"recipient\": \"operations team\", \"due_date\": \"2027-01-14\", \"total\": 25, \"source_ids\": [\"orchid-approved-v2\"]}}\n</tool_call>",
+        "Draft saved locally. Nothing has been sent."
+      ]
+    },
+    {
+      "user": "Change the recipient to the review board and add two more units. Keep the due date and source unchanged.",
+      "expected": {
+        "project": "Orchid launch",
+        "recipient": "review board",
+        "due_date": "2027-01-14",
+        "total": 27,
+        "source_ids": [
+          "orchid-approved-v2"
+        ]
+      },
+      "assistant": [
+        "<tool_call>\n{\"name\": \"calculate\", \"arguments\": {\"operation\": \"add\", \"left\": 25, \"right\": 2}}\n</tool_call>",
+        "<tool_call>\n{\"name\": \"save_draft\", \"arguments\": {\"project\": \"Orchid launch\", \"recipient\": \"review board\", \"due_date\": \"2027-01-14\", \"total\": 27, \"source_ids\": [\"orchid-approved-v2\"]}}\n</tool_call>",
+        "Draft updated locally for the review board with 27 units. Nothing has been sent."
+      ]
+    }
+  ]
+}

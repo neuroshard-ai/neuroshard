@@ -2,7 +2,7 @@
 import fcntl,json,os,signal,subprocess,sys,time
 from pathlib import Path
 
-from . import runtime,wire
+from . import runtime,wire,health
 from .cli import network,neuro
 
 
@@ -64,7 +64,7 @@ def main():
                 if any(child.poll() is not None for child in children):raise ValueError('A node component stopped. Inspect '+str(logs))
                 try:
                     status=wire.query(rpc,'/summary');native=wire.rpc(rpc,'status')
-                    ready=not native['sync_info']['catching_up'] and status['height']>0
+                    ready=health.assess(native,status)['network_ready']
                     checkpoint=current.get('trusted_checkpoint')
                     if ready and checkpoint:
                         observed=wire.rpc(rpc,'block',{'height':str(checkpoint['height'])})

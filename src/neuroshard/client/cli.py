@@ -4,7 +4,7 @@ from decimal import Decimal,InvalidOperation
 from pathlib import Path
 
 from neuroshard import __version__
-from . import runtime,wire
+from . import runtime,wire,health
 
 
 def network(path=None):
@@ -34,6 +34,7 @@ def connected(args):
     config=network(args.network_file);rpc=wire.endpoint(args.rpc or config['rpc'])
     status=wire.query(rpc,'/summary')
     if status['chain_id']!=config['chain_id']:raise ValueError('Endpoint belongs to a different chain')
+    status.update(health.assess(wire.rpc(rpc,'status'),status))
     return config,rpc,status
 
 
@@ -68,7 +69,9 @@ def wallet_action(args):
 
 
 def chat(args):
-    config,rpc,status=connected(args);wallet=wire.Wallet(args.home/'account.key')
+    config,rpc,status=connected(args)
+    health.require_ready(status)
+    wallet=wire.Wallet(args.home/'account.key')
     info=wire.http(config['api']+'/api/inference')
     if info['chain_id']!=config['chain_id'] or info['genesis_sha256']!=config['genesis_sha256']:
         raise ValueError('Inference service identity differs from the installed network')
@@ -116,6 +119,8 @@ def main(argv=None):
     common.add_argument('--rpc',help='Use your own native RPC endpoint')
     common.add_argument('--json',action='store_true',help='Machine-readable results')
     sub=parser.add_subparsers(dest='command',required=True)
+    from . import contribution
+    contribution.register(sub,common)
     sub.add_parser('doctor',parents=[common],help='Check your machine, installation, and connection')
     sub.add_parser('setup',parents=[common],help='Install the pinned CPU runtime in a managed environment')
     for name,help_text in [('join','Set up a node, follow the ledger, and contribute'),('start','Start an initialized node'),
@@ -148,12 +153,15 @@ def main(argv=None):
     transfer.add_argument('--to',required=True);transfer.add_argument('--amount',required=True)
     args=parser.parse_args(argv)
     try:
-        if args.command=='doctor':
+        if args.command=='contribute':
+            contribution.run(args)
+        elif args.command=='doctor':
             value={'client_version':__version__,'python':sys.version.split()[0],'platform':f'{platform.system()} {platform.machine()}',
                 'full_node_supported':runtime.supported(),'cpu_runtime_installed':runtime.ready(),'home':str(args.home),
                 'free_disk_gib':round(shutil.disk_usage(Path.home()).free/1024**3,1)}
             try:
-                _,_,s=connected(args);value.update(chain_id=s['chain_id'],height=s['height'],training_round=s['round'])
+                _,_,s=connected(args);value.update(chain_id=s['chain_id'],height=s['height'],training_round=s['round'],
+                    network_ready=s['network_ready'],network_status=s['network_status'],seconds_since_block=s['seconds_since_block'])
             except (ValueError,OSError) as exc:value['network_status']=str(exc)
             if args.json:print(json.dumps(value))
             else:
@@ -161,10 +169,15 @@ def main(argv=None):
                 print('Full-node CPU profile supported.' if value['full_node_supported'] else 'Wallet/chat supported; full nodes require Linux x86_64 and Python 3.10–3.12.')
                 print(f'Free disk: {value["free_disk_gib"]} GiB. A full node downloads a CPU runtime and model; 8 GiB RAM and 5 GiB free disk are recommended.')
                 print(f'Connected to {value["chain_id"]} at block {value["height"]}.' if 'chain_id' in value else f'Network: {value["network_status"]}')
-                print('Next: neuroshard join — creates local keys, verifies the ledger, and contributes stage 1.' if value['full_node_supported']
-                      else 'Next: neuroshard wallet create — creates a local account for transfers and remote chat.')
+                if not value.get('network_ready',False):
+                    print('Network is not ready: '+value.get('network_status','unavailable')+'. Wait for current blocks before joining or paying.')
+                else:
+                    print('Next: neuroshard join — creates local keys, verifies the ledger, and contributes stage 1.' if value['full_node_supported']
+                          else 'Next: neuroshard wallet create — creates a local account for transfers and remote chat.')
         elif args.command=='setup':runtime.setup(os.environ.get('NEUROSHARD_PACKAGE_SOURCE'))
         elif args.command in ('join','start','work','serve'):
+            if args.command=='join' and not (args.home/'node.json').exists():
+                health.require_ready(connected(args)[2])
             # Pass a single JSON argument, not a shell command; all child processes use argument arrays.
             value={k:str(v) if isinstance(v,Path) else v for k,v in vars(args).items()}
             if not value['network_file']:value['network_file']=str(Path(__file__).parent/'networks/llm-testnet.json')
@@ -193,6 +206,7 @@ def main(argv=None):
                 if args.json:print(json.dumps({'network':status,'account':account}))
                 else:print(f'{config["chain_id"]} · block {status["height"]} · training round {status["round"]}\n{neuro(account["balance"])} NEURO available · {neuro(account.get("locked",0))} locked\nPublic key: {wallet.public_key}')
             elif args.command=='transfer':
+                health.require_ready(status)
                 from cryptography.hazmat.primitives.asymmetric import ec
                 ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256K1(),bytes.fromhex(args.to))
                 amount=atoms(args.amount)

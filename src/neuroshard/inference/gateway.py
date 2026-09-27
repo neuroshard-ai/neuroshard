@@ -38,9 +38,14 @@ class Gateway(base.Gateway):
             provider_online=(heartbeat['public_key']==services.get('provider') and heartbeat['chain_id']==self.config['chain_id']
                              and 0<=time.time()-heartbeat['checked_at']<240)
         except (OSError,ValueError,KeyError,TypeError):provider_online=False
+        provider_connected=provider_online
+        network_ready=(summary.get('ready') is True and summary.get('stalled') is False)
+        provider_online=provider_connected and network_ready
         return {'chain_id':self.config['chain_id'],'genesis_sha256':self.config['genesis_sha256'],
             'model_root':summary['serving_root'],'model_name':'SmolLM2-135M-Instruct + NeuroShard adapter',
             'provider':services.get('provider'),'provider_online':provider_online,'fee_atoms':str(params['fee']),
+            'provider_connected':provider_connected,'network_ready':network_ready,
+            'seconds_since_block':summary.get('seconds_since_block'),
             'price_per_max_token_atoms':str(params['inference_token_price']),'max_tokens':64,
             'request_lifetime_blocks':params['inference_blocks'],'pending_requests':summary['pending_inference'],
             'public_prompts':True,'verification':'Every validator replays inference before native settlement',
@@ -91,6 +96,8 @@ def handler(gateway):
                 raw=self.rfile.read(length)
                 if len(raw)!=length:raise ValueError('Truncated request')
                 request=protocol.parse_json(raw);method,params=validate_rpc(request)
+                if method.startswith('broadcast') and gateway.summary().get('ready') is not True:
+                    return self.respond(503,{'error':'Ledger is not advancing; no transaction was relayed. Query an existing request before retrying.'})
                 result=client.rpc(gateway.rpc,method,params,timeout=90)
                 return self.respond(200,{'jsonrpc':'2.0','id':request.get('id'),'result':result})
             except (ValueError,KeyError,TypeError,OverflowError,RecursionError) as exc:

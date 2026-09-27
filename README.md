@@ -4,6 +4,11 @@
 
 NeuroShard is an experimental native blockchain for verifying and rewarding neural computation. Its public testnet demonstrates small-scale training and paid inference; permissionless full-model training remains under development. The goal is a collectively trained LLM whose usable capacity can expand as reliable compute joins. Keys stay on your machine and participation requires no website registration.
 
+**Start contributing:** [run a worker or submit an assistant correction](docs/CONTRIBUTOR_ALPHA.md).
+The source client can replay, sign and export explicitly reviewed tool-use examples
+without downloading a model. Public workers currently train the small testnet
+adapter; the broader assistant and its learning path are still under development.
+
 **The operated GPU alpha closed on September 20, 2026.** Its
 [results, exact source and retirement record](docs/OPERATED_ALPHA_RESULT.md)
 remain available. It demonstrated streamed conversations with native payment,

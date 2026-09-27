@@ -25,6 +25,11 @@ remain evidence, not readiness claims for this assistant.
   2/24 workflows, 18/18 prior answers retained; baseline qualification failed.
   Conditional replays were skipped; the CPU allocation is retired.
 - [x] Publish baseline outcomes and pin both successful workflows for retention.
+- [x] Restore public testnet block production and settled training after the
+  full-disk incident; make inference availability depend on a progressing ledger.
+- [x] Implement [contributor onboarding](docs/CONTRIBUTOR_ALPHA.md): local signed
+  multi-turn demonstrations, deterministic replay and explicitly reviewed training
+  export. This is data preparation, not evidence of learned improvement.
 - [ ] Diagnose and amend grounded tool use and follow-up state before another
   execution. Preserve the failed baseline; no training or retry is queued.
 - [ ] Implement the declared training and gate stages, validate trajectories and
@@ -34,6 +39,8 @@ remain evidence, not readiness claims for this assistant.
 
 **Current status:** the first run completed but failed primitive and latency
 gates. A1 remains open; the declared training comparison has not started.
+Contributors can join the existing CPU testnet or prepare reviewed demonstrations
+now. That preview does not require all six assistant milestones to be complete.
 
 Execution details and stopping rules: [workspace learning contract](docs/ASSISTANT_WORKFLOW_LEARNING.md).
 No automatic training or admission follows the baseline. This is the first

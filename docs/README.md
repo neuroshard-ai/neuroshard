@@ -1,5 +1,10 @@
 # Protocol and development documentation
 
+Start with the [contributor preview](CONTRIBUTOR_ALPHA.md) to run a testnet worker
+or submit a reproducible assistant correction. The public CPU chain's September 27
+[recovery](NETWORK_RECOVERY_20260927.md) restores existing small-model operation;
+the newer assistant is not yet active on that chain.
+
 The active [assistant checklist](../TODO_ASSISTANT.md) follows the
 [complete-assistant architecture](ASSISTANT_ARCHITECTURE.md). The next deliverable
 is the [workspace learning contract](ASSISTANT_WORKFLOW_LEARNING.md): a complete

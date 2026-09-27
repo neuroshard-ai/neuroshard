@@ -5,6 +5,8 @@ global-exclude *.pyc
 global-exclude __pycache__
 
 recursive-include src/neuroshard/client/networks *.json
+include src/neuroshard/client/assistant-policy.json
+recursive-include examples *.json
 include src/neuroshard/client/consensus/go.mod src/neuroshard/client/consensus/go.sum
 
 # A source distribution must contain its tests, fixtures and execution profiles.

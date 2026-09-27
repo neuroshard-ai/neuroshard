@@ -79,6 +79,10 @@ The `bond`, `unbond`, `withdraw`, `account` and `status` commands operate on nat
 
 ## Failures and recovery
 
+- Ledger freshness: an HTTP response or provider heartbeat does not prove the
+  chain is advancing. Check `/healthz`, block timestamps and disk space. The source
+  client reports this through `neuroshard doctor`; these checks are not yet in a new
+  PyPI release. See the [September 27 recovery](NETWORK_RECOVERY_20260927.md).
 - Runtime installation: inspect `~/.neuroshard/runtimes/0.4.0/install.log`, fix disk/network errors and rerun `neuroshard setup`. Installation is locked against concurrent setup.
 - Consensus build: inspect `~/.neuroshard/tools/consensus-build.log`. Pinned Go and module versions are required.
 - Startup/conformance: inspect the node home's `logs/`. Never bypass a failed profile or checkpoint check.
