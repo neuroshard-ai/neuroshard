@@ -76,13 +76,14 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "93c3c7246e4be7aafe1c21c9ff8736c296a189d96c49d39b99e8c4dfe7a77dc8",
-    "config/experiments/assistant-experience-resources.json": "c24568ed8f10de2e23907a536468b97dd7820af64075088c05d257020fcb1907",
+    "config/experiments/assistant-experience-resources.json": "66112b89eace2f24a99153ad9d5a7494bfe369bd73bfa97e131d4d4c6e440ebd",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2a8e1030f5f8ab531818ce1928f92e59d2db83b28c877884d6f09ec26898d132"
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2a8e1030f5f8ab531818ce1928f92e59d2db83b28c877884d6f09ec26898d132",
+    "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -93,6 +94,7 @@
     "config/experiments/granite-reference-artifacts.json",
     "docs/assistant-experience-requirements.txt",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
+    "config/experiments/assistant-workflow-canonical-report.json",
     "config/experiments/assistant-experience-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/version.py",

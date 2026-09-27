@@ -56,8 +56,8 @@ checkpoint's `tokenizer.json`. Identifiers and digit runs were split differently
 from training (`save_draft` as `save`, `_`, `draft`; `2027` as `20`, `27`). Of the
 51 tool errors above, 39 call a misspelled tool name and most of the rest corrupt
 dates, document IDs or project numbers. This result stays failed. The
-[canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) repeats the measurement
-with every encode checked against `tokenizer.json`.
+[canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md) repeats the
+measurement with every encode checked: 9/24 workflows and zero tool errors.
 
 ## Decision and next boundary
 

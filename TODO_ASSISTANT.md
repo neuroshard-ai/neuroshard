@@ -34,7 +34,11 @@ remain evidence, not readiness claims for this assistant.
   transformers 5.5.4's GPT-2 pre-tokenizer instead of the checkpoint's
   `tokenizer.json`; 39 of 51 tool errors are misspelled tool names. The
   [canonical re-baseline](docs/ASSISTANT_WORKFLOW_CANONICAL.md) checks every encode.
-- [ ] Run the canonical re-baseline on one CPU host. The failed baseline stays failed.
+- [x] Run the canonical re-baseline. [Result](docs/ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md):
+  9/24 workflows (was 2/24), 7/16 compound, zero tool errors, p95 177 s, 19/24
+  anchors with all 18 prior successes retained; qualification failed at 2/8
+  primitive. Remaining failures: version choice by listing position and the
+  six-generation budget. Host retired; $0.86 compute.
 - [ ] Implement the [verified-experience method](docs/ASSISTANT_EXPERIENCE_LEARNING.md):
   verified self-generated conversations, coached practice distilled without the
   coaching, parent-answer replay and a success-rate selector; freeze its data,
@@ -42,8 +46,9 @@ remain evidence, not readiness claims for this assistant.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
-**Current status:** the first run failed under a tokenizer defect. A1 remains open
-until the canonical re-baseline qualifies; the training comparison has not started.
+**Current status:** the canonical parent completes 9/24 workflows but fails
+primitive qualification, so A1 remains open. The verified-experience pipeline and
+its GPU execution are implemented and tested; the training comparison has not started.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

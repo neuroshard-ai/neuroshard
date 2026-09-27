@@ -30,8 +30,8 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 2147483648,
   "prior_resources": {
-    "path": "config/experiments/assistant-workflow-baseline-report.json",
-    "sha256": "461ac13286d0d3f1eb1d593afbf82d5c401e45914cdfcc779e1ffed9759503ad"
+    "path": "config/experiments/assistant-workflow-canonical-report.json",
+    "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
   "budget_scope": "One L40S host for verified-experience collection, parent replay recording, training of both arms and integration gates; six-hour expiry and fifteen-dollar allowance within the $100 comparison ceiling. No development or confirmation goals."
 }

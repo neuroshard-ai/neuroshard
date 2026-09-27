@@ -1,0 +1,543 @@
+{
+  "format": "neuroshard-assistant-workflow-canonical-report/1",
+  "source_commit": "449aecaa9d3665a1a57cb781f5b16d9f2aae0848",
+  "result_sha256": "de899e8bc1f21fddd6416460f68ab77843f19f686606df56e72973642c6c5d30",
+  "execution_completed": true,
+  "baseline_passed": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "training_authorized": false,
+  "confirmation_opened": false,
+  "independent_rescore_matches": true,
+  "tokenizer_encodes_checked": 436,
+  "legacy_autotokenizer_conforms_in_worker": false,
+  "ci": {
+    "id": 36301871613,
+    "head_sha": "449aecaa9d3665a1a57cb781f5b16d9f2aae0848",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36301871613"
+  },
+  "decision": "Canonical baseline completed and failed qualification: 2/8 primitive workflows (date and difference 0). Complete workflows rose from 2/24 to 9/24, compound conversations from 0/16 to 7/16, and p95 latency now passes at 177 s. Anchors 19/24 with all 18 prior successes retained. Zero tool errors. Failures reduce to version choice by listing position and the six-generation budget. No training follows automatically.",
+  "report": {
+    "complete": true,
+    "tokenizer_conforms": true,
+    "canonical_anchor_gate": true,
+    "anchor_correct": 19,
+    "anchor_total": 24,
+    "protected_anchor_ids": [
+      "granite-chat-allergy",
+      "granite-chat-booking",
+      "granite-chat-document",
+      "granite-chat-expense",
+      "granite-chat-handoff",
+      "granite-chat-packing",
+      "granite-chat-quoted-data",
+      "granite-instruction-counts",
+      "granite-instruction-extract",
+      "granite-instruction-filter",
+      "granite-instruction-negation",
+      "granite-instruction-typed",
+      "granite-tool-archive",
+      "granite-tool-calendar",
+      "granite-tool-convert",
+      "granite-tool-document",
+      "granite-tool-notes",
+      "granite-tool-ticket",
+      "granite-tool-timer"
+    ],
+    "prior_anchor_successes_lost": [],
+    "anchors_gained": [
+      "granite-tool-convert"
+    ],
+    "baseline_qualified": false,
+    "correct": 9,
+    "total": 24,
+    "by_family": {
+      "copy": 1,
+      "date": 0,
+      "sum": 1,
+      "difference": 0,
+      "latest": 3,
+      "recipient": 2,
+      "reschedule": 2,
+      "scope": 0
+    },
+    "primitive_correct": 2,
+    "compound_correct": 7,
+    "protected_workflow_ids": [
+      "workflow-1124e7a2f25c",
+      "workflow-5b59fbf07de4",
+      "workflow-614a08aecd66",
+      "workflow-901496964dce",
+      "workflow-bd845e98b603",
+      "workflow-c6b1500447f3",
+      "workflow-cdda343cccd8",
+      "workflow-e5a0d5c80f43",
+      "workflow-fddb97d8bc7d"
+    ],
+    "prior_workflow_successes_lost": [],
+    "workflows_gained": [
+      "workflow-1124e7a2f25c",
+      "workflow-5b59fbf07de4",
+      "workflow-614a08aecd66",
+      "workflow-901496964dce",
+      "workflow-c6b1500447f3",
+      "workflow-e5a0d5c80f43",
+      "workflow-fddb97d8bc7d"
+    ],
+    "insufficient_development_headroom": false,
+    "p95_episode_seconds": 177.10837942299986,
+    "work": {
+      "model_calls": 206,
+      "tool_calls": 172,
+      "input_tokens": 264616,
+      "output_tokens": 8750
+    },
+    "native_generation_calls": 206,
+    "prose_quality_evaluated": false,
+    "checklist_credit": false,
+    "training_authorized": false,
+    "admission_evidence": false,
+    "decentralized_execution_proven": false
+  },
+  "primary": {
+    "wall_seconds": 2817.993139033,
+    "process_cpu_seconds": 20956.721160523,
+    "peak_rss_bytes": 11342200832,
+    "checkpoint_bytes": 6815452719
+  },
+  "conditional_replay_executed": false,
+  "diagnosis": {
+    "format": "neuroshard-assistant-workflow-opened-trace-diagnosis/2",
+    "counts": {
+      "first_read_first_listed_approved": 20,
+      "first_read_wrong_version": 10,
+      "budget_exhausted_rounds": 6,
+      "correct_draft_budget_exhausted_rounds": 6,
+      "tool_error_messages": 0,
+      "correct_first_rounds": 12,
+      "correct_followup_rounds": 7,
+      "executed_followup_rounds": 16
+    },
+    "cases": [
+      {
+        "id": "workflow-842f73726ac2",
+        "family": "scope",
+        "passed": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": false,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          "model-turn budget exhausted"
+        ],
+        "seconds": 159.87211091999998
+      },
+      {
+        "id": "workflow-e47fa617df9c",
+        "family": "date",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null
+        ],
+        "seconds": 50.422093339000014
+      },
+      {
+        "id": "workflow-5512bfdcbf01",
+        "family": "latest",
+        "passed": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 160.14368021500002
+      },
+      {
+        "id": "workflow-fddb97d8bc7d",
+        "family": "latest",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 171.46316834100003
+      },
+      {
+        "id": "workflow-bd845e98b603",
+        "family": "copy",
+        "passed": true,
+        "round_successes": [
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": false,
+        "first_read_wrong_version": false,
+        "stops": [
+          null
+        ],
+        "seconds": 45.677915702000064
+      },
+      {
+        "id": "workflow-cdda343cccd8",
+        "family": "sum",
+        "passed": true,
+        "round_successes": [
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": false,
+        "first_read_wrong_version": false,
+        "stops": [
+          null
+        ],
+        "seconds": 66.42998280500001
+      },
+      {
+        "id": "workflow-1124e7a2f25c",
+        "family": "latest",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 180.68087088000004
+      },
+      {
+        "id": "workflow-5b59fbf07de4",
+        "family": "recipient",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 106.97815889800006
+      },
+      {
+        "id": "workflow-c6b1500447f3",
+        "family": "latest",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 177.10837942299986
+      },
+      {
+        "id": "workflow-c5a251cb9186",
+        "family": "recipient",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 107.25246963299992
+      },
+      {
+        "id": "workflow-901496964dce",
+        "family": "reschedule",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": false,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 109.10886899399998
+      },
+      {
+        "id": "workflow-705b57ba50cb",
+        "family": "scope",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          "model-turn budget exhausted"
+        ],
+        "seconds": 168.96981048599991
+      },
+      {
+        "id": "workflow-614a08aecd66",
+        "family": "recipient",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 105.19868202600014
+      },
+      {
+        "id": "workflow-9e59abaad961",
+        "family": "reschedule",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 117.70985062199998
+      },
+      {
+        "id": "workflow-13de433c562f",
+        "family": "recipient",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 103.71025097699999
+      },
+      {
+        "id": "workflow-bf78a2b7a3ee",
+        "family": "scope",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          "model-turn budget exhausted"
+        ],
+        "seconds": 162.9176660720002
+      },
+      {
+        "id": "workflow-0a46caf718a9",
+        "family": "difference",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          "model-turn budget exhausted"
+        ],
+        "seconds": 65.20600080999975
+      },
+      {
+        "id": "workflow-22e0b95f5781",
+        "family": "copy",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null
+        ],
+        "seconds": 42.4104688059997
+      },
+      {
+        "id": "workflow-21c0be04a7be",
+        "family": "reschedule",
+        "passed": false,
+        "round_successes": [
+          false,
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 118.65211485000009
+      },
+      {
+        "id": "workflow-f4f40d77e7cd",
+        "family": "sum",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null
+        ],
+        "seconds": 56.81811181899957
+      },
+      {
+        "id": "workflow-5b541f25dc67",
+        "family": "date",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": true,
+        "stops": [
+          null
+        ],
+        "seconds": 57.271019475999765
+      },
+      {
+        "id": "workflow-cceb5a621834",
+        "family": "difference",
+        "passed": false,
+        "round_successes": [
+          false
+        ],
+        "first_read_revision": 1,
+        "latest_listed_first": false,
+        "first_read_wrong_version": false,
+        "stops": [
+          "model-turn budget exhausted"
+        ],
+        "seconds": 65.27362092600015
+      },
+      {
+        "id": "workflow-e5a0d5c80f43",
+        "family": "reschedule",
+        "passed": true,
+        "round_successes": [
+          true,
+          true
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          null
+        ],
+        "seconds": 116.58057688300005
+      },
+      {
+        "id": "workflow-caf22532f0f4",
+        "family": "scope",
+        "passed": false,
+        "round_successes": [
+          true,
+          false
+        ],
+        "first_read_revision": 2,
+        "latest_listed_first": true,
+        "first_read_wrong_version": false,
+        "stops": [
+          null,
+          "model-turn budget exhausted"
+        ],
+        "seconds": 167.96686902700003
+      }
+    ]
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-27T08:12:04.324829+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-092d7880384a707d4"
+    ],
+    "conservative_instance_seconds": 2927.640465,
+    "conservative_compute_usd": 0.86072629671,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-09-27T08:13:38.173832+00:00",
+    "instance_ids": [
+      "i-092d7880384a707d4"
+    ],
+    "instances": [
+      {
+        "id": "i-092d7880384a707d4",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "ClientError: The security group 'sg-065191d30ae3e1986' does not exist"
+  }
+}

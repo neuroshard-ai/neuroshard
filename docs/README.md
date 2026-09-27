@@ -13,8 +13,8 @@ comparisons with automatic selection and individual retention. A Granite-specifi
 shard port is required before activation. All six milestones remain open. The [first workspace baseline](ASSISTANT_WORKFLOW_BASELINE_RESULTS.md)
 completed at 2/24, retaining all 18 prior assistant answers but failing primitive
 quality and latency. Every Granite execution, including that one, encoded prompts
-with the wrong pre-tokenizer; the [canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md)
-repeats the measurement with every encode checked. Training then follows the
+with the wrong pre-tokenizer; the [canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md)
+reaches 9/24 with every encode checked but still fails primitive qualification. Training follows the
 [verified-experience contract](ASSISTANT_EXPERIENCE_LEARNING.md): the model learns
 from its own conversations that the deterministic workspace scorer accepts.
 
@@ -40,7 +40,7 @@ retaining the existing generated-answer and retention requirements.
 | --- | --- |
 | [Assistant development plan](../TODO_ASSISTANT.md) | Active six-milestone plan: capable foundation, useful modular learning, repeated growth, sharding, independent operation and public release. |
 | [Architecture amendment](ASSISTANT_ARCHITECTURE.md) / [workflow contract](ASSISTANT_WORKFLOW_LEARNING.md) | Current complete-assistant direction, controls, execution and shard requirements. |
-| [Canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) | Tokenizer defect in all Granite executions; parent re-measured with every encode checked against `tokenizer.json`. |
+| [Canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) / [result](ASSISTANT_WORKFLOW_CANONICAL_RESULTS.md) | Tokenizer defect in all Granite executions. Corrected parent: 9/24 workflows, zero tool errors, primitive qualification failed on version choice and the call budget. |
 | [Verified-experience learning](ASSISTANT_EXPERIENCE_LEARNING.md) | A2 method: scorer-verified self-generated conversations, coached practice, parent-answer replay and success-rate selection. |
 | [Modular reference](MODULAR_REFERENCE.md) | Historical BAR contract; baseline failed and decoder agreement was confirmed. |
 | [Tool-interface diagnostic](MODULAR_TOOL_INTERFACE.md) / [result](MODULAR_TOOL_INTERFACE_RESULTS.md) | Corrected instructions yield 3/3 calls and three exact replays on opened cases; no A1 credit. |
