@@ -199,6 +199,41 @@ def test_pinned_collection_reverifies_every_trajectory_before_training(setup):
         run.load_collection(home, repinned, tokenizer, plan, policy(), EXECUTION, home / 'forged')
 
 
+def test_round_two_continues_both_pinned_arms_on_identical_verified_preferences(tmp_path, monkeypatch):
+    from test_assistant_experience import sequences, version_rollouts
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    directory = granite_like(tmp_path / 'granite')
+    (directory / 'chat_template.jinja').write_text(TEMPLATE)
+    tokenizer = load_tiny(directory)[0]
+    cases = [data.make_case('train', 'copy', i) for i in range(3, 6)]
+    monkeypatch.setattr(run, 'split_cases', lambda plan, split: cases)
+    rollouts = [row for case in cases for row in version_rollouts(case)[0]]
+    base = read(ROOT / run.PLAN)
+    plan = {**base, 'training': SPEC, 'decision_preferences': {**base['decision_preferences'], 'training': {
+        **base['decision_preferences']['training'], 'steps': 3, 'gradient_accumulation': 4,
+        'preference_per_update': 2, 'learning_rates': {'update': 1e-3, 'addition': 1e-2}}}}
+    pairs, pair_rows = run.build_pairs(tokenizer, plan, policy(), rollouts)
+    assert len(pairs) == 3 and {p['case_id'] for p in pairs} == {c['id'] for c in cases}
+    experience_rows, replay_rows = sequences(tokenizer)
+    round1, pinned = tmp_path / 'round1', {}
+    for arm in ('update', 'addition'):
+        trainable, receipt = trainer.train(tiny_model(tokenizer), arm, experience_rows, replay_rows, SPEC)
+        pinned[arm] = trainer.checkpoint(round1 / f'{arm}-checkpoint', trainable, receipt, {})['trainable_sha256']
+    home = tmp_path / 'home'
+    home.mkdir()
+    manifests = run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu', 'round2': {'round1': pinned}},
+                                 experience_rows, replay_rows, pair_rows, round1, home)
+    assert {arm: m['roots']['round1'] for arm, m in manifests.items()} == pinned
+    assert manifests['update']['schedule_sha256'] == manifests['addition']['schedule_sha256']
+    assert all(m['trainable_sha256'] != pinned[arm] for arm, m in manifests.items())
+    with pytest.raises(ValueError, match='pinned digest'):
+        run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu', 'round2': {'round1': {**pinned, 'update': 'x'}}},
+                         experience_rows, replay_rows, pair_rows, round1, tmp_path / 'other')
+    with pytest.raises(ValueError, match='no verified decision'):
+        run.build_pairs(tokenizer, plan, policy(), [r for r in rollouts if r['sample'] == 0])
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

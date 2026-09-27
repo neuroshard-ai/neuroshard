@@ -123,5 +123,38 @@
   "gpu_launch_authorized": true,
   "native_promotion_authorized": false,
   "checklist_credit": false,
-  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. One GPU attempt; a failed or interrupted run needs a new execution amendment."
+  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. One GPU attempt; a failed or interrupted run needs a new execution amendment.",
+  "decision_preferences": {
+    "status": "Declared on September 27, 2026 before any round-1 development outcome was read. Runs only if the round-1 development gate fails.",
+    "motivation": "On integration episodes the round-1 arms complete 95-98% of cases whose latest approved revision is listed first but only 35-36% of cases whose older approved revision is listed first; version choice by listing position is the dominant remaining failure.",
+    "source": "Natural (uncoached) training rollouts pinned from the round-1 collection. No new rollouts and no integration, development or confirmation goals.",
+    "decision": "The first assistant message that calls read_document. Chosen: it opens exactly the latest approved revision and round one passes. Rejected: it opens only older approved revisions and round one fails. Both share every earlier message.",
+    "per_case": 8,
+    "objective": "DPO on the decision message and its end token, with the round-1 arm as reference; reference log-probabilities computed once before the first update. Mixed with the round-1 experience and replay sequences.",
+    "arms": "Both round-1 arms continue from their pinned checkpoints with identical sequences, pairs and schedule.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092031
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-2 arms with the declared recipe.",
+    "gates": "The same development and confirmation gates, comparing the round-2 update and addition systems with the canonical parent. The development split is reused; confirmation remains sealed until a development pass."
+  }
 }

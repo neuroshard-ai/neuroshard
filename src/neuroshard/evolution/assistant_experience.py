@@ -100,6 +100,58 @@ def near_policy(trajectories, nll):
     return [t for t in trajectories if not t['coached'] or nll[t['transcript_sha256']] <= ceiling], ceiling
 
 
+def first_read(messages):
+    """Index and text of the first assistant message that reads a document."""
+    for index, message in enumerate(messages):
+        if message['role'] == 'assistant':
+            try:
+                calls = sandbox.parse_calls(message['content'])
+            except (ValueError, TypeError):
+                continue
+            if any(call['name'] == 'read_document' for call in calls):
+                return index, calls
+    return None, None
+
+
+def decision_pairs(case, rollouts, policy, per_case):
+    """Verified version-choice preferences from natural rollouts of one training case.
+
+    Chosen: the first read opens the latest approved revision and round one passes.
+    Rejected: the first read opens an older approved revision and round one fails.
+    Both share every earlier message, so the pair isolates that one decision.
+    """
+    if case['split'] not in TRAINING_SPLITS:
+        raise ValueError('preferences may only be built from training goals')
+    project = case['turns'][0]['expected']['project']
+    approved = [d for d in case['world']['documents'] if d['project'] == project and d['status'] == 'approved']
+    latest = max(approved, key=lambda d: d['revision'])['id']
+    chosen, rejected = {}, {}
+    for row in sorted(rollouts, key=lambda r: r['sample']):
+        if row['case_id'] != case['id'] or row['policy_sha256'] != identity(policy):
+            continue
+        result = row['result']
+        if workflow.score(case, result, policy) != result['score']:
+            raise ValueError('rollout outcome does not re-verify')
+        index, calls = first_read(result['messages'])
+        if index is None:
+            continue
+        opened = {call['arguments']['document_id'] for call in calls if call['name'] == 'read_document'}
+        prefix, text = result['messages'][:index], result['messages'][index]['content']
+        key = identity(prefix)
+        if opened == {latest} and result['score']['round_successes'][0]:
+            chosen.setdefault(key, {}).setdefault(text, row['sample'])
+        elif opened and latest not in opened and opened <= {d['id'] for d in approved} \
+                and not result['score']['round_successes'][0]:
+            rejected.setdefault(key, {}).setdefault(text, (row['sample'], prefix))
+    pairs = []
+    for key in sorted(set(chosen) & set(rejected)):
+        for good, good_sample in sorted(chosen[key].items(), key=lambda item: item[1]):
+            for bad, (bad_sample, prefix) in sorted(rejected[key].items(), key=lambda item: item[1][0]):
+                pairs.append({'case_id': case['id'], 'messages': copy.deepcopy(prefix), 'chosen': good,
+                              'rejected': bad, 'samples': [good_sample, bad_sample]})
+    return pairs[:per_case]
+
+
 def summary(cases, attempts, accepted):
     by_family = {}
     for case in cases:

@@ -69,6 +69,23 @@ what makes it cheap to distribute and roll back. Whether separate modules beat
 repeated shared-weight updates is an A3 question: cumulative retention across
 cohorts under a declared budget. This amendment precedes any training.
 
+## Conditional second round: verified decision preferences
+
+Declared before any round-1 development outcome was read; it runs only if the
+round-1 development gate fails. On integration episodes the round-1 arms complete
+95–98% of cases whose latest approved revision is listed first, but only 35–36% of
+cases whose older revision is listed first. The pinned round-1 rollouts already
+contain both outcomes of that decision on the same case.
+
+A pair shares every message up to the first `read_document` call. The chosen
+continuation opens the latest approved revision in a rollout whose first round
+passed; the rejected one opens an older approved revision in a rollout whose first
+round failed. Both arms continue from their round-1 checkpoints for 64 steps on the
+same experience, replay and pairs, adding a DPO term on that decision message with
+the round-1 arm as reference. Gates are refitted on integration episodes, and the
+same development and confirmation gates apply. The development split is reused, so
+confirmation remains the decisive fresh test.
+
 ## Role in the network
 
 Rollouts are the parallel contributor workload. Anyone can replay a submitted

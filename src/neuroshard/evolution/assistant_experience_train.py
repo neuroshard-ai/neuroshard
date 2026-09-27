@@ -120,26 +120,51 @@ def negative_log_likelihood(model, sequence, device='cpu'):
     return float(sequence_loss(model, sequence, device))
 
 
-def schedule(experience, replay, spec):
-    """Deterministic microbatch order: per update, fixed counts of experience and replay sequences."""
+def sequence_logprob(model, sequence, device):
+    """Summed log-probability of the labeled tokens (one assistant message and its end token)."""
+    ids = torch.tensor([sequence['input_ids']], device=device)
+    labels = torch.tensor(sequence['labels'][1:], device=device)
+    hidden = model.model(input_ids=ids).last_hidden_state[0, :-1]
+    positions = (labels != -100).nonzero(as_tuple=True)[0]
+    logits = model.lm_head(hidden[positions]).float() / model.config.logits_scaling
+    return torch.log_softmax(logits, dim=-1).gather(1, labels[positions].unsqueeze(1)).sum()
+
+
+def encode_pair(tokenizer, pair, tools):
+    """Chosen and rejected continuations of one shared prefix, each labeled on its message only."""
+    def item(text):
+        return {'messages': pair['messages'] + [{'role': 'assistant', 'content': text}],
+                'trainable': [False] * len(pair['messages']) + [True]}
+
+    chosen, rejected = encode(tokenizer, item(pair['chosen']), tools), encode(tokenizer, item(pair['rejected']), tools)
+    return {'case_id': pair['case_id'], 'chosen': chosen, 'rejected': rejected,
+            'sha256': identity([chosen['sha256'], rejected['sha256']])}
+
+
+def schedule(experience, replay, spec, preferences=0):
+    """Deterministic microbatch order: per update, fixed counts of experience, replay and preference rows."""
     rng = random.Random(spec['seed'])
     per_update = spec['gradient_accumulation']
     replay_count = per_update // (spec['experience_per_replay'] + 1)
     experience_count = per_update - replay_count
+    preference_count = spec.get('preference_per_update', 0) if preferences else 0
     if not experience or (replay_count and not replay):
         raise ValueError('missing experience or replay sequences')
 
     def stream(rows):
         while True:
-            order = list(range(len(rows)))
+            order = list(range(rows))
             rng.shuffle(order)
             yield from order
 
-    experience_stream, replay_stream = stream(experience), stream(replay) if replay else iter(())
+    experience_stream = stream(len(experience))
+    replay_stream = stream(len(replay)) if replay else iter(())
+    preference_stream = stream(preferences) if preference_count else iter(())
     updates = []
     for _ in range(spec['steps']):
         batch = [('experience', next(experience_stream)) for _ in range(experience_count)]
         batch += [('replay', next(replay_stream)) for _ in range(replay_count)]
+        batch += [('preference', next(preference_stream)) for _ in range(preference_count)]
         rng.shuffle(batch)
         updates.append(batch)
     return updates
@@ -150,29 +175,48 @@ def learning_rate(step, spec, arm):
     return base * min(1.0, (step + 1) / spec['warmup_steps']) if spec['warmup_steps'] else base
 
 
-def train(model, arm, experience, replay, spec, *, device='cpu', progress=None):
-    """Run the declared schedule once; returns trainable tensors and a work receipt."""
+def train(model, arm, experience, replay, spec, *, device='cpu', progress=None, trainable=None, pairs=None):
+    """Run the declared schedule once; returns trainable tensors and a work receipt.
+
+    ``trainable`` continues already attached tensors. ``pairs`` adds a DPO term whose
+    reference is the model as it stands before this schedule's first update.
+    """
     torch.manual_seed(spec['seed'])
-    trainable = prepare(model, arm, spec)
+    trainable = trainable if trainable is not None else prepare(model, arm, spec)
     model.to(device)
+    pairs = pairs or []
+    references = []
+    if pairs:
+        model.eval()
+        with torch.no_grad():
+            references = [(float(sequence_logprob(model, p['chosen'], device)),
+                           float(sequence_logprob(model, p['rejected'], device))) for p in pairs]
     model.train()
     optimizer = torch.optim.AdamW(list(trainable.values()), lr=learning_rate(0, spec, arm),
                                   betas=tuple(spec['betas']), eps=spec['epsilon'],
                                   weight_decay=spec['weight_decay'])
-    updates = schedule(experience, replay, spec)
+    updates = schedule(experience, replay, spec, len(pairs))
     sources = {'experience': experience, 'replay': replay}
-    losses, tokens = [], 0
+    losses, margins, tokens = [], [], 0
     for step, batch in enumerate(updates):
         for group in optimizer.param_groups:
             group['lr'] = learning_rate(step, spec, arm)
         optimizer.zero_grad(set_to_none=True)
         total = 0.0
         for kind, index in batch:
-            sequence = sources[kind][index]
-            loss = sequence_loss(model, sequence, device) / len(batch)
+            if kind == 'preference':
+                pair, (chosen_ref, rejected_ref) = pairs[index], references[index]
+                margin = spec['beta'] * ((sequence_logprob(model, pair['chosen'], device) - chosen_ref)
+                                         - (sequence_logprob(model, pair['rejected'], device) - rejected_ref))
+                loss = -torch.nn.functional.logsigmoid(margin) * spec['preference_weight'] / len(batch)
+                margins.append(margin.detach().item())
+                tokens += len(pair['chosen']['input_ids']) + len(pair['rejected']['input_ids'])
+            else:
+                sequence = sources[kind][index]
+                loss = sequence_loss(model, sequence, device) / len(batch)
+                tokens += len(sequence['input_ids'])
             loss.backward()
             total += loss.detach().item()
-            tokens += len(sequence['input_ids'])
         norm = torch.nn.utils.clip_grad_norm_(list(trainable.values()), spec['gradient_clip'])
         if not torch.isfinite(norm):
             raise ValueError('nonfinite gradient norm')
@@ -182,7 +226,8 @@ def train(model, arm, experience, replay, spec, *, device='cpu', progress=None):
             progress(step, total)
     model.eval()
     return trainable, {'arm': arm, 'steps': len(updates), 'microbatches': sum(map(len, updates)),
-                       'tokens_processed': tokens, 'losses': losses,
+                       'tokens_processed': tokens, 'losses': losses, 'preference_margins': margins,
+                       'preference_pairs': len(pairs),
                        'trainable_parameters': sum(p.numel() for p in trainable.values()),
                        'schedule_sha256': identity(updates), 'optimizer_state': optimizer.state_dict()}
 
@@ -229,6 +274,13 @@ def serving(model, spec):
 
 def load_trainable(model, arm, spec, directory):
     """Attach a saved arm to a fresh parent for evaluation or serving."""
+    manifest, _ = resume(model, arm, spec, directory)
+    model.eval()
+    return manifest
+
+
+def resume(model, arm, spec, directory):
+    """Attach a saved arm and return its trainable tensors so training can continue."""
     from safetensors.torch import load_file
 
     directory = Path(directory)
@@ -244,5 +296,4 @@ def load_trainable(model, arm, spec, directory):
     with torch.no_grad():
         for name, parameter in trainable.items():
             parameter.copy_(saved[name].to(parameter.device))
-    model.eval()
-    return manifest
+    return manifest, trainable

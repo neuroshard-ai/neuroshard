@@ -215,6 +215,49 @@ def train_arms(load_parent, plan, execution, experience_rows, replay_rows, home)
     return manifests
 
 
+def build_pairs(tokenizer, plan, policy, rollouts):
+    """Verified version-choice preferences from the pinned natural training rollouts."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    per_case = plan['decision_preferences']['per_case']
+    grouped = {}
+    for row in rollouts:
+        grouped.setdefault(row['case_id'], []).append(row)
+    pairs = [pair for case in split_cases(plan, 'train')
+             for pair in experience.decision_pairs(case, grouped.get(case['id'], []), policy, per_case)]
+    if not pairs:
+        raise ValueError('no verified decision preferences in the pinned rollouts')
+    return pairs, [trainer.encode_pair(tokenizer, pair, sandbox.TOOLS) for pair in pairs]
+
+
+def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, round1, home):
+    """Continue both round-1 arms on identical experience, replay and preference pairs."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    spec = {**plan['training'], **plan['decision_preferences']['training']}
+    manifests = {}
+    for arm in ('update', 'addition'):
+        save(home / 'progress.json', {'phase': f'train-round2-{arm}', 'unix': time.time()})
+        model = load_parent()
+        started = time.monotonic()
+        prior, trainable = trainer.resume(model, arm, plan['training'], Path(round1) / f'{arm}-checkpoint')
+        if prior['trainable_sha256'] != execution['round2']['round1'][arm]:
+            raise ValueError(f'round-1 {arm} checkpoint differs from its pinned digest')
+        trainable, receipt = trainer.train(model, arm, experience_rows, replay_rows, spec,
+                                           device=execution['device'], trainable=trainable, pairs=pair_rows)
+        roots = {'round1': prior['trainable_sha256'], 'experience': identity([r['sha256'] for r in experience_rows]),
+                 'replay': identity([r['sha256'] for r in replay_rows]),
+                 'pairs': identity([p['sha256'] for p in pair_rows]), 'plan': identity(plan)}
+        manifests[arm] = {**trainer.checkpoint(home / f'{arm}-checkpoint', trainable, receipt, roots),
+                          'seconds': time.monotonic() - started, 'tokens_processed': receipt['tokens_processed'],
+                          'first_margins': receipt['preference_margins'][:8],
+                          'last_margins': receipt['preference_margins'][-8:]}
+        del model, trainable, receipt
+        release_accelerator()
+    save(home / 'training.json', manifests, exclusive=True)
+    return manifests
+
+
 def boundary_feature(model, tokenizer, policy, case, device):
     """Frozen parent final-layer state at the first assistant-generation boundary."""
     import torch
@@ -351,7 +394,18 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        if 'collection' in execution:
+        if 'round2' in execution:
+            experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
+                                                           tokenizer, plan, policy, parameters, home)
+            pairs, pair_rows = build_pairs(tokenizer, plan, policy, read_rows(ROOT / UPLOADED / 'rollouts.jsonl.gz'))
+            save(home / 'pairs.json', {'pairs': len(pairs), 'cases': len({p['case_id'] for p in pairs}),
+                                       'pairs_sha256': identity(pairs)}, exclusive=True)
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = train_round2(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows,
+                                             ROOT / UPLOADED, home)
+            reply['phases']['train'] = time.monotonic() - begun
+        elif 'collection' in execution:
             experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
                                                            tokenizer, plan, policy, parameters, home)
             reply['phases']['verify_collection'] = time.monotonic() - begun
@@ -364,9 +418,10 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        begun = time.monotonic()
-        reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
-        reply['phases']['train'] = time.monotonic() - begun
+        if 'round2' not in execution:
+            begun = time.monotonic()
+            reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
+            reply['phases']['train'] = time.monotonic() - begun
         begun = time.monotonic()
         gates = integrate(load_parent, tokenizer, plan, policy, parameters, home)
         reply['gates'] = {arm: value['gate'] for arm, value in gates.items()}

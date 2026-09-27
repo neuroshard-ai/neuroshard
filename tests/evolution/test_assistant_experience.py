@@ -202,6 +202,65 @@ def test_serving_stores_updated_projections_in_backbone_dtype_and_keeps_adapters
     assert sum(isinstance(m, trainer.LoRALinear) for m in adapter.modules()) == 4
 
 
+def version_rollouts(case):
+    """One success that reads the latest approved revision, one failure that reads an older one."""
+    from neuroshard.evolution.modular_reference_execution import identity
+
+    project = case['turns'][0]['expected']['project']
+    approved = sorted((d for d in case['world']['documents'] if d['project'] == project and d['status'] == 'approved'),
+                      key=lambda d: d['revision'])
+    older, latest = approved[0], approved[-1]
+    good = reference_texts(case)
+    bad = list(good)
+    bad[1] = envelope('read_document', {'document_id': older['id']})
+    bad[2] = envelope('save_draft', {**case['turns'][0]['expected'], 'source_ids': [older['id']]})
+    rows = []
+    for sample, texts in enumerate([good, bad, good]):
+        executed = experience.coached(policy(), CARD) if sample == 2 else policy()
+        rows.append({'case_id': case['id'], 'sample': sample, 'policy_sha256': identity(executed),
+                     'result': scripted(case, texts, executed)})
+    return rows, latest, older
+
+
+def test_decision_pairs_isolate_the_version_choice_from_verified_natural_rollouts():
+    case = data.make_case('train', 'copy', 3)
+    rows, latest, older = version_rollouts(case)
+    pairs = experience.decision_pairs(case, rows, policy(), per_case=8)
+    assert len(pairs) == 1 and pairs[0]['samples'] == [0, 1]
+    pair = pairs[0]
+    assert pair['messages'][-1]['role'] == 'tool' and 'list_documents' in pair['messages'][-2]['content']
+    assert latest['id'] in pair['chosen'] and older['id'] in pair['rejected']
+    assert experience.decision_pairs(case, rows[:1], policy(), per_case=8) == []
+    forged = copy.deepcopy(rows)
+    forged[1]['result']['score']['round_successes'] = [True]
+    with pytest.raises(ValueError, match='re-verify'):
+        experience.decision_pairs(case, forged, policy(), per_case=8)
+    with pytest.raises(ValueError, match='training goals'):
+        experience.decision_pairs(data.make_case('development', 'copy', 0), rows, policy(), per_case=8)
+
+
+def test_preference_training_widens_the_verified_margin_and_keeps_round_one_schedules(tokenizer, tmp_path):
+    experience_rows, replay_rows = sequences(tokenizer)
+    assert trainer.schedule(experience_rows, replay_rows, SPEC) == trainer.schedule(experience_rows, replay_rows, SPEC, 0)
+    pairs = []
+    for index in range(3, 6):
+        case = data.make_case('train', 'copy', index)
+        rows, _, _ = version_rollouts(case)
+        pairs += [trainer.encode_pair(tokenizer, p, workspace.TOOLS) for p in experience.decision_pairs(case, rows, policy(), 8)]
+    first = tiny_model(tokenizer)
+    trainable, receipt = trainer.train(first, 'addition', experience_rows, replay_rows, SPEC)
+    trainer.checkpoint(tmp_path / 'round1', trainable, receipt, {})
+    model = tiny_model(tokenizer)
+    before = {k: v.clone() for k, v in model.state_dict().items()}
+    _, resumed = trainer.resume(model, 'addition', SPEC, tmp_path / 'round1')
+    spec = {**SPEC, 'steps': 8, 'preference_per_update': 2, 'beta': 0.5, 'preference_weight': 1.0}
+    _, second = trainer.train(model, 'addition', experience_rows, replay_rows, spec, trainable=resumed, pairs=pairs)
+    assert second['preference_pairs'] == len(pairs) == 3 and len(second['preference_margins']) == 16
+    assert second['preference_margins'][-1] > second['preference_margins'][0]
+    after = {k.replace('.base.', '.'): v for k, v in model.state_dict().items() if 'lora_' not in k}
+    assert all(torch.equal(after[k], before[k]) for k in before)
+
+
 def test_update_changes_only_declared_projections_with_the_same_schedule(tokenizer):
     experience_rows, replay_rows = sequences(tokenizer)
     before = {k: v.clone() for k, v in tiny_model(tokenizer).state_dict().items()}
