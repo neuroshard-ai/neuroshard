@@ -39,16 +39,20 @@ remain evidence, not readiness claims for this assistant.
   anchors with all 18 prior successes retained; qualification failed at 2/8
   primitive. Remaining failures: version choice by listing position and the
   six-generation budget. Host retired; $0.86 compute.
-- [ ] Implement the [verified-experience method](docs/ASSISTANT_EXPERIENCE_LEARNING.md):
+- [x] Implement the [verified-experience method](docs/ASSISTANT_EXPERIENCE_LEARNING.md):
   verified self-generated conversations, coached practice distilled without the
-  coaching, parent-answer replay and a success-rate selector; freeze its data,
-  execution and GPU resource inventories, then compare the three complete arms.
+  coaching, parent-answer replay, both trained arms, a success-rate selector, the
+  development/confirmation gates and CPU evaluation with checkpoint upload.
+- [ ] Run collection, training and integration on one GPU host (user-authorized
+  despite the failed primitive gate; A1 stays open), then CPU development
+  evaluation, then confirmation only after a development pass.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
-primitive qualification, so A1 remains open. The verified-experience pipeline and
-its GPU execution are implemented and tested; the training comparison has not started.
+primitive qualification, so A1 remains open. The verified-experience GPU execution
+is running on one A10G host after L40S capacity was unavailable; no trained result
+exists yet.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
