@@ -24,6 +24,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
                      "assistant-experience-gpu": "config/experiments/assistant-experience-resources.json",
+                     "assistant-experience-development": "config/experiments/assistant-experience-development-resources.json",
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
@@ -34,6 +35,7 @@ GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
     "assistant-experience-gpu": ("assistant_experience_run", "docs/assistant-experience-requirements.txt"),
+    "assistant-experience-development": ("assistant_experience_eval", "docs/granite-reference-requirements.txt"),
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
@@ -41,6 +43,7 @@ GRANITE_PROFILES = {
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g5.2xlarge")}
+UPLOAD_PROFILES = {"assistant-experience-development": ".arms"}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -56,6 +59,9 @@ def source_freeze(profile):
     if profile == "assistant-experience-gpu":
         from neuroshard.evolution.assistant_experience_run import committed_sources as experience_sources
         return experience_sources()
+    if profile == "assistant-experience-development":
+        from neuroshard.evolution.assistant_experience_eval import committed_sources as evaluation_sources
+        return evaluation_sources()
     if profile == "granite-answerability-reference":
         from neuroshard.evolution.granite_answerability_reference import committed_sources as answerability_sources
         return answerability_sources()
@@ -294,6 +300,32 @@ def bootstrap(home, allocation, source, profile=PROFILE):
         raise
 
 
+def upload_bundle(spec):
+    """Only the declared files, as regular members of one gzip tar; the remote verifies digests."""
+    import io
+    import tarfile
+
+    local = Path(spec["local"])
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
+        for name in spec["files"]:
+            path = local / name
+            if Path(name).is_absolute() or ".." in Path(name).parts or not path.is_file() or path.is_symlink():
+                raise ValueError(f"upload member must be a regular declared file: {name}")
+            archive.add(path, arcname=name, recursive=False)
+    payload = buffer.getvalue()
+    if len(payload) > spec["maximum_bytes"]:
+        raise ValueError("upload exceeds its declared size")
+    return payload
+
+
+def upload(home, allocation, profile):
+    payload = upload_bundle(allocation["resources"]["upload"])
+    target = REMOTE + "/" + UPLOAD_PROFILES[profile]
+    ssh(home, allocation, ["bash", "-c", f"mkdir -p {shlex.quote(target)} && tar -xzf - -C {shlex.quote(target)}"],
+        data=payload, timeout=allocation["resources"]["copy_seconds"])
+
+
 def collect(home, allocation):
     size = int(ssh(home, allocation, ["du", "-sb", STUDY]).stdout.split()[0])
     if size > allocation["resources"]["outbound_upload_cap_bytes"]:
@@ -327,6 +359,8 @@ def run(home, profile=PROFILE):
         allocation = allocate(home, source["commit"], profile)
         save(home / "status.json", {"state": "setup", "instance_ids": allocation["instance_ids"]})
         bootstrap(home, allocation, source, profile)
+        if profile in UPLOAD_PROFILES:
+            upload(home, allocation, profile)
         run_args = remote_command(profile)
         remaining = int((datetime.fromisoformat(allocation["deadline"]) - datetime.now(timezone.utc)).total_seconds()) - 600
         if remaining < 60:
@@ -384,6 +418,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-experience-gpu":
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-experience-development":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_experience_development.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-answerability-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_answerability_reference.py", "run",
