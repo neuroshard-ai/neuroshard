@@ -22,6 +22,7 @@ PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
+                     "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
@@ -30,6 +31,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "granite-adapter-audit": "config/experiments/granite-adapter-audit-recovery-resources.json"}
 GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
+    "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
@@ -45,6 +47,9 @@ def source_freeze(profile):
     if profile == "assistant-workflow-baseline":
         from neuroshard.evolution.assistant_workflow_baseline import committed_sources as workflow_sources
         return workflow_sources()
+    if profile == "assistant-workflow-canonical":
+        from neuroshard.evolution.assistant_workflow_canonical import committed_sources as canonical_sources
+        return canonical_sources()
     if profile == "granite-answerability-reference":
         from neuroshard.evolution.granite_answerability_reference import committed_sources as answerability_sources
         return answerability_sources()
@@ -359,6 +364,9 @@ def run(home, profile=PROFILE):
 def remote_command(profile):
     if profile == "assistant-workflow-baseline":
         return [PYTHON, REMOTE + "/scripts/run_assistant_workflow.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-workflow-canonical":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_workflow_canonical.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "granite-answerability-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_answerability_reference.py", "run",

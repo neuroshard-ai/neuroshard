@@ -1,0 +1,100 @@
+{
+  "format": "neuroshard-assistant-experience-learning/1",
+  "status": "Method declared. Collection, training and evaluation require the canonical parent re-baseline to qualify, an implementation freeze, prepared data inventories and a GPU resource contract. No automatic training.",
+  "architecture": "docs/ASSISTANT_ARCHITECTURE.md",
+  "supersedes_for_a2": "config/experiments/assistant-workflow-learning.json",
+  "parent_baseline": "config/experiments/assistant-workflow-canonical.json",
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "data": "config/experiments/assistant-workflow-data.json",
+  "tokenizer": "Canonical tokenizer.json with the per-encode guard in every collection, training and evaluation process.",
+  "experience": {
+    "source": "Training split only (256 episodes). Integration, development and confirmation goals never enter training.",
+    "rollouts": "Parent samples 8 complete episodes per training case in the deterministic workspace under the frozen policy limits. Temperature 0.8, top-p 0.95, seed derived from case ID and sample index.",
+    "verification": "Replay each transcript and score it with the frozen outcome scorer. Accept a complete episode when every round passes. Accept the leading successful rounds of a partial episode as round-level experience.",
+    "masking": "Train on assistant generations only. A generation whose tool call was rejected stays in context with no loss.",
+    "selection": "At most 4 distinct accepted trajectories per case, preferring fewer model calls, then sample index.",
+    "near_policy": "Report each accepted trajectory's mean assistant-token negative log-likelihood under the parent in its uncoached context. Coached trajectories above the largest uncoached accepted value are rejected."
+  },
+  "coaching": {
+    "trigger": "Training cases or rounds without an accepted uncoached rollout.",
+    "card": "Procedure: 1) Call list_documents with the exact project name from the request. 2) The latest approved version is the approved document with the highest revision; use an older revision only when the user names it. 3) Read every document you will cite. 4) Use calculate for each arithmetic step and shift_date for each date offset, copying values exactly from tool results. 5) Call save_draft with every field, citing only documents you read. 6) For a correction, start from the fields of your most recent save_draft, change only what the user asks, recompute derived values with tools and save again before replying. 7) After saving, reply with one short confirmation and no tool call.",
+    "rollouts": "8 samples with the card appended to the system instruction; same verification.",
+    "distillation": "Store accepted coached trajectories with the card removed. The card is identical for every case, contains no case values and never appears during integration or evaluation."
+  },
+  "preservation_replay": {
+    "prompts": "256 generated prompts across conversation state, JSON instructions and single tool calls. Different templates, tools, entities and values from the 24 anchors and 16 reference tasks; checked by identity and 8-gram overlap.",
+    "targets": "Parent greedy responses under the canonical tokenizer, recorded before training.",
+    "mixture": "One replay sequence per three experience sequences in every accumulated update."
+  },
+  "arms": {
+    "parent": "Unchanged Granite 4.1 3B with the common tool runtime.",
+    "update": "Update existing q_proj and v_proj matrices in layers 32..39 (62,914,560 parameters). Parent retained for routing and rollback; its storage is charged.",
+    "addition": "Frozen backbone with rank-16, alpha-32 LoRA on q_proj and v_proj in layers 32..39 (1,048,576 parameters), zero-output initialization, not merged."
+  },
+  "training": {
+    "sequences": "One sequence per accepted trajectory; all trainable assistant spans labeled. Loss normalized per trajectory so each accepted conversation has equal weight.",
+    "optimizer": "AdamW",
+    "steps": 128,
+    "microbatch": 1,
+    "gradient_accumulation": 8,
+    "gradient_clip": 1.0,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "learning_rates": {
+      "update": 1e-05,
+      "addition": 0.0003
+    },
+    "warmup_steps": 8,
+    "seed": 27092026,
+    "checkpoint": "Terminal step only, with optimizer/RNG state, data and source roots. No checkpoint selection."
+  },
+  "selection": {
+    "features": "Frozen parent final-layer hidden state at the first assistant-generation boundary; request, system instruction and tool definitions only.",
+    "estimates": "On each of the 64 integration episodes run parent and trained arm once greedily and 4 times sampled; success rate is the mean of the 5 outcomes.",
+    "labels": "Target the trained arm when its success rate exceeds the parent's, weighted by the absolute difference. Equal rates carry no weight. All targets arm: constant arm. No arm targets: constant parent.",
+    "gate": "One logistic linear gate (2560 weights plus bias), zero initialization, L2-normalized features, AdamW lr 0.001, weight decay 0.01, 128 updates, batch 8, seed 27092027; threshold 0.5, tie selects parent.",
+    "activation": "Select once at the first request of a workspace episode; keep that selection through its follow-ups.",
+    "accounting": "Charge feature prefill, every integration rollout, gate fit and rejected work."
+  },
+  "development_gate": {
+    "cases": 24,
+    "minimum_total": 18,
+    "minimum_net_vs_parent": 4,
+    "minimum_net_vs_update": -1,
+    "maximum_lost_parent_successes": 0,
+    "protected": "Every canonical parent development success and every canonical anchor success.",
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0
+  },
+  "confirmation_gate": {
+    "cases": 96,
+    "opens": "Once, only after both trained arms finish and the addition passes development.",
+    "minimum_total": 77,
+    "minimum_per_family": 8,
+    "minimum_net_vs_parent": 10,
+    "maximum_lost_parent_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092028,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_vs_parent_strictly_above": 0,
+    "lower_95_gain_vs_update_at_least": -0.05,
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0
+  },
+  "growth_claim": "A2 requires beating the parent and matching the equal-data update at a fraction of its trained parameters and update traffic. Whether separate modules beat repeated shared-weight updates is measured in A3, across cohorts, by cumulative retention under a declared budget.",
+  "decentralized_role": "Rollouts are the parallel contributor workload. Each is replayed and rescored without trusting its producer or regenerating it; the parent-likelihood check rejects off-policy text. One compute group trains the module; replicas serve it. No settlement or payment is part of this experiment.",
+  "budget": {
+    "ceiling_usd": 100,
+    "training_spend_currently_authorized": false,
+    "note": "Collection and training need a GPU resource contract with exact hardware, package hashes and memory measurements before any paid run. Evaluation reuses the CPU runtime of the canonical parent baseline."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false,
+  "checklist_credit": false,
+  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. If the canonical parent exceeds 20/24 on development, add harder workflows under a new data freeze before training."
+}

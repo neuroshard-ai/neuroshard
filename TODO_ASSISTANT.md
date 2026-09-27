@@ -30,21 +30,26 @@ remain evidence, not readiness claims for this assistant.
 - [x] Implement [contributor onboarding](docs/CONTRIBUTOR_ALPHA.md): local signed
   multi-turn demonstrations, deterministic replay and explicitly reviewed training
   export. This is data preparation, not evidence of learned improvement.
-- [ ] Diagnose and amend grounded tool use and follow-up state before another
-  execution. Preserve the failed baseline; no training or retry is queued.
-- [ ] Implement the declared training and gate stages, validate trajectories and
-  memory, commit their execution inventory, then compare the three complete arms.
+- [x] Diagnose the failed baseline. Every Granite execution encoded prompts with
+  transformers 5.5.4's GPT-2 pre-tokenizer instead of the checkpoint's
+  `tokenizer.json`; 39 of 51 tool errors are misspelled tool names. The
+  [canonical re-baseline](docs/ASSISTANT_WORKFLOW_CANONICAL.md) checks every encode.
+- [ ] Run the canonical re-baseline on one CPU host. The failed baseline stays failed.
+- [ ] Implement the [verified-experience method](docs/ASSISTANT_EXPERIENCE_LEARNING.md):
+  verified self-generated conversations, coached practice distilled without the
+  coaching, parent-answer replay and a success-rate selector; freeze its data,
+  execution and GPU resource inventories, then compare the three complete arms.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
-**Current status:** the first run completed but failed primitive and latency
-gates. A1 remains open; the declared training comparison has not started.
+**Current status:** the first run failed under a tokenizer defect. A1 remains open
+until the canonical re-baseline qualifies; the training comparison has not started.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
-Execution details and stopping rules: [workspace learning contract](docs/ASSISTANT_WORKFLOW_LEARNING.md).
-No automatic training or admission follows the baseline. This is the first
-implementation of that contract, not a public assistant launch.
+Execution details and stopping rules: [verified-experience contract](docs/ASSISTANT_EXPERIENCE_LEARNING.md),
+which supersedes the training and gate sections of the [workspace learning contract](docs/ASSISTANT_WORKFLOW_LEARNING.md).
+No automatic training or admission follows a baseline. This is not a public assistant launch.
 
 ## Six completion criteria
 
@@ -55,15 +60,19 @@ implementation of that contract, not a public assistant launch.
   adapter to pass an unrelated quality benchmark. This is a prospective change:
   every failed reference remains failed, and no existing box is marked complete.
 - [ ] **A2 — One useful learned capability in the complete assistant.** New module
-  and automatic selection beat unchanged parent and no-growth update on frozen
-  development and fresh confirmation gates, with per-answer preservation, actual
-  training/serving costs and bounded latency. Tools supply execution, not hidden
-  answers. Forced routing and retrieval-only gains do not satisfy this criterion.
+  and automatic selection beat the unchanged parent and match the equal-data
+  no-growth update on frozen development and fresh confirmation gates, while
+  training a small fraction of its parameters. Per-answer preservation, actual
+  training/serving costs and bounded latency are required. Tools supply execution,
+  not hidden answers. Forced routing and retrieval-only gains do not satisfy this.
+  Amended before any training; the previous "beat the update" margin moves to A3.
 - [ ] **A3 — Repeated useful growth and an upgrade/consolidation.** Three successive
   accepted cohorts, cumulative retention and cross-capability tasks; at least one
-  new capability and one upgrade. Demonstrate a beneficial update or consolidation
-  against keeping the previous system under a declared resource budget. This
-  establishes bounded growth, not unlimited intelligence or a no-forgetting theorem.
+  new capability and one upgrade. Separate modules must retain earlier cohorts
+  better than repeated shared-weight updates under the same budget. Demonstrate a
+  beneficial update or consolidation against keeping the previous system under a
+  declared resource budget. This establishes bounded growth, not unlimited
+  intelligence or a no-forgetting theorem.
 - [ ] **A4 — Actual sharding and value from additional peers.** No execution worker
   holds the complete backbone. Measure forward/backward/generation agreement,
   per-owner memory and traffic, outage recovery and a benefit from extra machines
@@ -79,8 +88,9 @@ implementation of that contract, not a public assistant launch.
   resource limits, funding, rollback and a public operating soak. Requires A1–A5;
   neither a research pass nor a token transaction substitutes for usability.
 
-A1 baseline and A4 port preparation proceed together. A2 execution follows a
-usable baseline; A3 follows a passing learned capability. Recruitment for A5 can
+A1 baseline and A4 port preparation proceed together. A2 implementation proceeds
+alongside the re-baseline; its execution follows a usable baseline. A3 follows a
+passing learned capability. Recruitment for A5 can
 proceed now. Native 0.4.0 stays separate until a complete candidate passes its
 activation contract.
 
@@ -95,5 +105,9 @@ activation contract.
   failures. Correct evidence plus an added checker did not preserve complete behavior.
 - [Evidence selection](docs/EVIDENCE_SELECTION_RESULTS.md): useful opened-set
   primitive, not learned capability or a replacement for complete conversations.
+- All Granite results above were measured with transformers 5.5.4's GPT-2
+  pre-tokenizer rather than the checkpoint's `tokenizer.json`
+  ([details](docs/ASSISTANT_WORKFLOW_CANONICAL.md)). Their outcomes stand as
+  published; they do not measure the parent under its trained tokenization.
 - Earlier learning, growth, sharding and settlement reports remain indexed in
   [the documentation](docs/README.md). Their successes and failures remain unchanged.

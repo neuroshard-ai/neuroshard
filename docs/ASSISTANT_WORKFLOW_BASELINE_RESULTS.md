@@ -47,6 +47,18 @@ model responses. This checks the environment and scoring, not the causal source
 of every model error. In particular, the traces do not establish that more training
 or constrained output alone would fix version selection and follow-up reasoning.
 
+## Runtime defect found after publication
+
+The pinned `transformers` 5.5.4 `AutoTokenizer` did not use Granite's serialized
+pre-tokenizer ([upstream issue](https://github.com/huggingface/transformers/issues/45812)).
+All 193 recorded prompts reproduce exactly under that tokenizer and none under the
+checkpoint's `tokenizer.json`. Identifiers and digit runs were split differently
+from training (`save_draft` as `save`, `_`, `draft`; `2027` as `20`, `27`). Of the
+51 tool errors above, 39 call a misspelled tool name and most of the rest corrupt
+dates, document IDs or project numbers. This result stays failed. The
+[canonical re-baseline](ASSISTANT_WORKFLOW_CANONICAL.md) repeats the measurement
+with every encode checked against `tokenizer.json`.
+
 ## Decision and next boundary
 
 Keep this result failed. No new weights were trained, no candidate was compared,

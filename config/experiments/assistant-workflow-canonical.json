@@ -1,0 +1,79 @@
+{
+  "format": "neuroshard-assistant-workflow-canonical/1",
+  "purpose": "Repeat the complete workspace parent baseline with the tokenizer serialized in the pinned Granite checkpoint. Same model, policy, tools, limits, data and development episodes. No training, candidate or confirmation access.",
+  "amends": "config/experiments/assistant-workflow-baseline.json",
+  "failed_baseline": {
+    "result": "config/experiments/assistant-workflow-baseline-result.json",
+    "result_sha256": "a76de0e5f88ba03db1dfa7f5a9a3f934ec00d458ef7b62ed25e6e15a87de1bcc",
+    "report": "config/experiments/assistant-workflow-baseline-report.json",
+    "report_sha256": "461ac13286d0d3f1eb1d593afbf82d5c401e45914cdfcc779e1ffed9759503ad",
+    "status": "Failed and unchanged. Its outcomes were produced under the defect below; they are not reclassified."
+  },
+  "defect": {
+    "summary": "transformers 5.5.4 AutoTokenizer resolves Granite's hub tokenizer_class GPT2Tokenizer to a constructor that replaces the serialized Split(\\p{N}{1,3}) + ByteLevel pre-tokenizer with GPT-2's ByteLevel regex.",
+    "upstream": "https://github.com/huggingface/transformers/issues/45812",
+    "evidence": "All 193 recorded workflow prompts reproduce exactly with the pinned 5.5.4 AutoTokenizer and none with tokenizer.json. 11 of 24 original anchor prompts differ. Examples: save_draft -> save,_,draft instead of save,_draft; 2027 -> 20,27 instead of 202,7. 39 of 51 workflow tool errors name a misspelled tool; most others corrupt dates, document IDs or project numbers.",
+    "affected_executions": "Every Granite execution pinned to transformers 5.5.4: reference, adapter audit and recovery, context, evidence, answerability and the workflow baseline."
+  },
+  "learning_contract": "config/experiments/assistant-workflow-learning.json",
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "data": "config/experiments/assistant-workflow-data.json",
+  "split": "development",
+  "model": "baseline",
+  "tokenizer": {
+    "loader": "PreTrainedTokenizerFast.from_pretrained on the pinned checkpoint directory; the pinned chat template is required.",
+    "guard": "Before any model call, the normalizer, pre-tokenizer, model, decoder and added tokens must equal tokenizer.json and the fixture must encode identically. Every runtime encode is compared with tokenizers.Tokenizer.from_file(tokenizer.json); any difference stops the worker. The encode count must equal one per request plus one per executed generation and one per anchor.",
+    "pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
+    "fixture_sha256": "57351890555a59a2ec04eed0a71589c2ebbd8a832606e96180c12db56f343bbb",
+    "legacy_diagnostic": "Record whether the old AutoTokenizer path conforms in the same runtime; expected false under 5.5.4."
+  },
+  "prior_protected_anchor_ids": [
+    "granite-chat-booking",
+    "granite-chat-allergy",
+    "granite-chat-document",
+    "granite-chat-expense",
+    "granite-chat-quoted-data",
+    "granite-chat-handoff",
+    "granite-chat-packing",
+    "granite-instruction-extract",
+    "granite-instruction-filter",
+    "granite-instruction-negation",
+    "granite-instruction-counts",
+    "granite-instruction-typed",
+    "granite-tool-calendar",
+    "granite-tool-notes",
+    "granite-tool-document",
+    "granite-tool-ticket",
+    "granite-tool-archive",
+    "granite-tool-timer"
+  ],
+  "prior_protected_workflow_ids": [
+    "workflow-bd845e98b603",
+    "workflow-cdda343cccd8"
+  ],
+  "anchors": "Execute all 24 original anchors under the canonical tokenizer before the workflows. The original anchor quality gate applies unchanged. Losing one of the 18 prior successes is published but does not stop workflow execution, because those outcomes were measured under the defective runtime. Canonical successes become the protected anchor set for later comparisons.",
+  "qualification": {
+    "minimum_primitive_successes": 6,
+    "minimum_per_primitive_family": 1,
+    "canonical_anchor_gate_required": true,
+    "p95_episode_seconds": 180,
+    "maximum_rss_bytes": 68719476736
+  },
+  "headroom": "Record whether the parent exceeds 20/24. If it does, the declared +4 development gain has insufficient room; harder workflows are then required before training. Do not weaken the parent or train on this evaluation.",
+  "replay_ids": [
+    "workflow-bd845e98b603",
+    "workflow-5b59fbf07de4"
+  ],
+  "resources": {
+    "threads": 8,
+    "primary_worker_seconds": 4200,
+    "replay_worker_seconds": 600,
+    "memory_bytes": 68719476736
+  },
+  "opened_data": "The 24 development episodes were opened by the failed baseline. This measures the corrected parent on them for later development comparisons; confirmation stays sealed.",
+  "gpu_launch_authorized": false,
+  "training_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "stop_rule": "One exact-commit CI-green CPU allocation. Any tokenizer disagreement stops the worker. Evaluate all 24 anchors and all 24 workflow episodes without tuning. Conditional two fresh-process replays after qualification. Copy evidence and retire. No training or confirmation evaluation follows automatically."
+}
