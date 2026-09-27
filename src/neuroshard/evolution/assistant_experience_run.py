@@ -31,6 +31,8 @@ EXECUTION = 'config/experiments/assistant-experience-execution.json'
 ARTIFACTS = 'config/experiments/granite-reference-artifacts.json'
 SCRIPT = 'scripts/run_assistant_experience.py'
 PROFILE = 'assistant-experience-gpu'
+UPLOADED = '.experience'
+COLLECTION_FILES = ('experience.json', 'rollouts.jsonl.gz', 'trajectories.jsonl.gz', 'replay.json', 'replay.jsonl.gz')
 
 
 def split_cases(plan, split):
@@ -132,6 +134,65 @@ def record_replay(model, tokenizer, plan, execution, home):
     save(home / 'replay.json', {'prompts': len(prompts), 'terminated': len(items),
                                 'items_sha256': write_rows(home / 'replay.jsonl.gz', items)}, exclusive=True)
     return sequences
+
+
+def read_rows(path):
+    with gzip.open(path, 'rt', encoding='utf-8') as handle:
+        return [json.loads(line) for line in handle]
+
+
+def load_collection(directory, pinned, tokenizer, plan, policy, execution, home):
+    """Re-verify experience pinned from an earlier collection and encode it; no new rollouts.
+
+    Every trajectory is rebuilt from its recorded rollout through the frozen scorer,
+    so the files are evidence to re-check, not trusted training data.
+    """
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    directory = Path(directory)
+    for name, digest in pinned.items():
+        if sha256(directory / name) != digest:
+            raise ValueError(f'collected file differs from its pinned digest: {name}')
+    report = read(directory / 'experience.json')
+    rollouts, chosen = read_rows(directory / 'rollouts.jsonl.gz'), read_rows(directory / 'trajectories.jsonl.gz')
+    if identity(rollouts) != report['rollouts_sha256'] or identity(chosen) != report['trajectories_sha256']:
+        raise ValueError('collected rows differ from the collection report')
+    cases = {case['id']: case for case in split_cases(plan, 'train')}
+    card_policy = experience.coached(policy, plan['coaching']['card'])
+    sources = {(row['case_id'], row['sample'], row['policy_sha256']): row for row in rollouts}
+    if len(sources) != len(rollouts):
+        raise ValueError('collected rollouts repeat a case, sample and policy')
+    per_case = {}
+    for item in chosen:
+        executed = card_policy if item['coached'] else policy
+        row = sources.get((item['case_id'], item['sample'], identity(executed)))
+        if row is None or identity(row['result']['messages']) != item['transcript_sha256']:
+            raise ValueError('trajectory has no matching rollout')
+        rebuilt = experience.trajectory(cases[item['case_id']], row['result'], executed, policy,
+                                        sample=item['sample'], coaching=item['coached'])
+        if rebuilt != item:
+            raise ValueError('trajectory does not re-verify from its rollout')
+        if item['coached'] and report['nll'][item['transcript_sha256']] > report['near_policy_ceiling']:
+            raise ValueError('coached trajectory exceeds the near-policy ceiling')
+        per_case[item['case_id']] = per_case.get(item['case_id'], 0) + 1
+    if (max(per_case.values()) > plan['experience_selection_per_case']
+            or len({identity([t['case_id'], experience.assistant_texts(t)]) for t in chosen}) != len(chosen)):
+        raise ValueError('collected selection exceeds the per-case cap or repeats a trajectory')
+    items = read_rows(directory / 'replay.jsonl.gz')
+    if identity(items) != read(directory / 'replay.json')['items_sha256']:
+        raise ValueError('replay rows differ from the replay report')
+    anchors = read(ROOT / 'config/experiments/granite-reference.json')
+    prompts = {p['id']: p for p in replay.prompts(execution['replay_seed'], anchors['tasks'] + anchors['reference_tasks'])}
+    for item in items:
+        prompt = prompts.get(item['id'])
+        if (prompt is None or identity(prompt) != item['prompt_sha256'] or item['messages'][:-1] != prompt['messages']
+                or item['tools'] != prompt['tools'] or item['trainable'] != [False] * len(prompt['messages']) + [True]):
+            raise ValueError('replay item differs from its generated prompt')
+    save(home / 'collection.json', {'trajectories': len(chosen), 'replay_items': len(items), 'rollouts': len(rollouts),
+                                    'cases_with_experience': len(per_case), 'files': pinned}, exclusive=True)
+    # Stored rows sort JSON keys; the chat template renders tool schemas in their original key order.
+    return ([trainer.encode(tokenizer, t, sandbox.TOOLS) for t in chosen],
+            [trainer.encode(tokenizer, i, prompts[i['id']]['tools']) for i in items])
 
 
 def train_arms(load_parent, plan, execution, experience_rows, replay_rows, home):
@@ -289,15 +350,20 @@ def worker(request_path):
                 raise ValueError('parent parameter inventory differs')
             return model.to(parameters['device']).eval()
 
-        parent = load_parent()
         begun = time.monotonic()
-        experience_rows, _ = collect(parent, tokenizer, plan, policy, parameters, home)
-        reply['phases']['collect'] = time.monotonic() - begun
-        begun = time.monotonic()
-        replay_rows = record_replay(parent, tokenizer, plan, parameters, home)
-        reply['phases']['replay'] = time.monotonic() - begun
-        del parent
-        release_accelerator()
+        if 'collection' in execution:
+            experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
+                                                           tokenizer, plan, policy, parameters, home)
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+        else:
+            parent = load_parent()
+            experience_rows, _ = collect(parent, tokenizer, plan, policy, parameters, home)
+            reply['phases']['collect'] = time.monotonic() - begun
+            begun = time.monotonic()
+            replay_rows = record_replay(parent, tokenizer, plan, parameters, home)
+            reply['phases']['replay'] = time.monotonic() - begun
+            del parent
+            release_accelerator()
         begun = time.monotonic()
         reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
         reply['phases']['train'] = time.monotonic() - begun

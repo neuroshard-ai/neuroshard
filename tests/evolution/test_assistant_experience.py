@@ -167,6 +167,26 @@ def test_addition_starts_exactly_at_the_parent_and_never_touches_backbone_tensor
         trainer.load_trainable(tiny_model(tokenizer), 'update', SPEC, tmp_path / 'addition')
 
 
+def test_adapter_initialization_never_draws_a_cpu_generator_into_another_device(tokenizer, monkeypatch):
+    # ATen rejects a generator whose device differs from the tensor's; mirror that check on CPU-only CI.
+    original = torch.Tensor.uniform_
+
+    def checked(tensor, *args, generator=None, **kwargs):
+        if generator is not None and generator.device.type != tensor.device.type:
+            raise RuntimeError(f"Expected a '{tensor.device.type}' device type for generator")
+        return original(tensor, *args, generator=generator, **kwargs)
+
+    monkeypatch.setattr(torch.Tensor, 'uniform_', checked)
+    reference = tiny_model(tokenizer)
+    expected = trainer.prepare(reference, 'addition', SPEC)
+    remote = tiny_model(tokenizer).to('meta')
+    placed = trainer.prepare(remote, 'addition', SPEC)
+    assert all(placed[name].device.type == 'meta' for name in placed)
+    assert set(placed) == set(expected) and all(placed[n].shape == expected[n].shape for n in expected)
+    again = trainer.prepare(tiny_model(tokenizer), 'addition', SPEC)
+    assert all(torch.equal(again[n], expected[n]) for n in expected)
+
+
 def test_update_changes_only_declared_projections_with_the_same_schedule(tokenizer):
     experience_rows, replay_rows = sequences(tokenizer)
     before = {k: v.clone() for k, v in tiny_model(tokenizer).state_dict().items()}

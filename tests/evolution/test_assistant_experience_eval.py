@@ -28,7 +28,34 @@ def canonical(cases, successes):
 
 
 def system(cases, successes, selected):
-    return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), 'selected': selected} for c in cases]
+    return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), 'selected': selected,
+             'selection_seconds': 0.5} for c in cases]
+
+
+def test_each_episode_pays_its_own_selection_forward_pass(monkeypatch):
+    import time as clock
+
+    cases = data.cases('development')[:3]
+    scripted = {c['id']: iter(reference_texts(c)) for c in cases}
+    current = {}
+
+    def responder(model, tokenizer, policy_value):
+        def respond(messages, tools):
+            return reply(next(scripted[current['id']]))
+        return respond
+
+    def feature(case):
+        current['id'] = case['id']
+        clock.sleep(0.05)
+        return [1.0]
+
+    monkeypatch.setattr(evaluation.first, 'native_responder', responder)
+    monkeypatch.setattr(evaluation.reference, 'generate', lambda *a, **kw: {'id': a[3]['id'], 'passed': True})
+    anchors = {'tasks': [{'id': 'granite-chat-booking'}]}
+    report = evaluation.evaluate_arm(None, None, None, {'rule': 'constant-arm'}, feature, cases, policy(), anchors)
+    assert [row['selected'] for row in report['episodes']] == ['arm'] * 3
+    assert all(row['selection_seconds'] >= 0.05 and row['score']['passed'] for row in report['episodes'])
+    assert report['forced_anchors'] == [{'id': 'granite-chat-booking', 'passed': True}]
 
 
 def cloud_module():

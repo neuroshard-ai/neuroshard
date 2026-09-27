@@ -47,16 +47,22 @@ def verify_arms(directory, pinned):
     return read(directory / 'integration.json')
 
 
-def evaluate_arm(parent, model, tokenizer, gate, features, cases, policy, anchor_plan):
-    """Selected complete episodes for one system, plus its forced-arm anchor answers."""
+def evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, anchor_plan):
+    """Selected complete episodes for one system, plus its forced-arm anchor answers.
+
+    ``feature`` runs the parent at the first request; its time is served latency.
+    """
     from neuroshard.evolution import assistant_selector as selector
 
     respond = {'parent': first.native_responder(parent, tokenizer, policy),
                'arm': first.native_responder(model, tokenizer, policy)}
     rows = []
     for case in cases:
-        chosen = 'arm' if selector.choose(gate, features[case['id']]) else 'parent'
-        rows.append({**workflow.execute(case, respond[chosen], policy), 'selected': chosen})
+        started = time.monotonic()
+        chosen = 'arm' if selector.choose(gate, feature(case)) else 'parent'
+        selection = time.monotonic() - started
+        rows.append({**workflow.execute(case, respond[chosen], policy), 'selected': chosen,
+                     'selection_seconds': selection})
     anchors = [reference.generate(model, tokenizer, anchor_plan, task, 'baseline') for task in anchor_plan['tasks']]
     return {'episodes': rows, 'forced_anchors': anchors}
 
@@ -141,10 +147,13 @@ def worker(request_path):
         reply['tokenizer'] = report
         parent, _ = reference.load_model(directory, 'baseline')
         cases = first.load_cases(read(ROOT / canonical.PLAN))
-        features = {c['id']: accelerator.boundary_feature(parent, tokenizer, policy, c, 'cpu') for c in cases}
         model, _ = reference.load_model(directory, 'baseline')
         reply['checkpoint'] = trainer.load_trainable(model, arm, plan['training'], arms / f'{arm}-checkpoint')
-        reply.update(evaluate_arm(parent, model, tokenizer, gate, features, cases, policy, read(ROOT / reference.PLAN)))
+
+        def feature(case):
+            return accelerator.boundary_feature(parent, tokenizer, policy, case, 'cpu')
+
+        reply.update(evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, read(ROOT / reference.PLAN)))
         if file_state(directory, inventory) != state:
             raise ValueError('parent checkpoint changed during evaluation')
         reply['execution_completed'] = True

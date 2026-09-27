@@ -43,7 +43,7 @@ GRANITE_PROFILES = {
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
-UPLOAD_PROFILES = {"assistant-experience-development": ".arms"}
+UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience"}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -402,7 +402,7 @@ def run(home, profile=PROFILE):
         allocation = allocate(home, source["commit"], profile)
         save(home / "status.json", {"state": "setup", "instance_ids": allocation["instance_ids"]})
         bootstrap(home, allocation, source, profile)
-        if profile in UPLOAD_PROFILES:
+        if profile in UPLOAD_PROFILES and "upload" in allocation["resources"]:
             upload(home, allocation, profile)
         run_args = remote_command(profile)
         remaining = int((datetime.fromisoformat(allocation["deadline"]) - datetime.now(timezone.utc)).total_seconds()) - 600

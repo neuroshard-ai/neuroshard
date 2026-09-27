@@ -21,8 +21,11 @@ def paired(system, control):
     return {'gained': gained, 'lost': lost, 'net': len(gained) - len(lost)}
 
 
-def p95(rows):
-    return context.percentile([row['seconds'] for row in rows], .95)
+def p95(rows, routed=False):
+    """Episode latency; a routed system also pays its per-episode selection forward pass."""
+    if routed and any('selection_seconds' not in row for row in rows):
+        raise ValueError('routed episodes must record their selection time')
+    return context.percentile([row['seconds'] + (row['selection_seconds'] if routed else 0) for row in rows], .95)
 
 
 def common(gate, cases, parent, update, addition, protected):
@@ -32,7 +35,7 @@ def common(gate, cases, parent, update, addition, protected):
     p, u, a = passed(parent), passed(update), passed(addition)
     lost_protected = sorted(k for k in protected if not a.get(k))
     versus_parent, versus_update = paired(a, p), paired(a, u)
-    latency = {'addition': p95(addition), 'update': p95(update), 'parent': p95(parent)}
+    latency = {'addition': p95(addition, routed=True), 'update': p95(update, routed=True), 'parent': p95(parent)}
     checks = {
         'total': sum(a.values()) >= gate['minimum_total'],
         'net_vs_parent': versus_parent['net'] >= gate['minimum_net_vs_parent'],

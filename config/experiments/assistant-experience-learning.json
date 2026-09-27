@@ -93,7 +93,8 @@
     "maximum_lost_parent_successes": 0,
     "protected": "Every canonical parent development success and every canonical anchor success.",
     "p95_seconds": 180,
-    "p95_ratio_vs_update": 2.0
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
   },
   "confirmation_gate": {
     "cases": 96,
@@ -108,7 +109,8 @@
     "lower_95_gain_vs_parent_strictly_above": 0,
     "lower_95_gain_vs_update_at_least": -0.05,
     "p95_seconds": 180,
-    "p95_ratio_vs_update": 2.0
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
   },
   "growth_claim": "A2 requires beating the parent and matching the equal-data update at a fraction of its trained parameters and update traffic. Whether separate modules beat repeated shared-weight updates is measured in A3, across cohorts, by cumulative retention under a declared budget.",
   "decentralized_role": "Rollouts are the parallel contributor workload. Each is replayed and rescored without trusting its producer or regenerating it; the parent-likelihood check rejects off-policy text. One compute group trains the module; replicas serve it. No settlement or payment is part of this experiment.",

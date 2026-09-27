@@ -53,11 +53,12 @@ class LoRALinear(torch.nn.Module):
     def __init__(self, base, rank, alpha, generator):
         super().__init__()
         self.base, self.scale = base, alpha / rank
-        self.lora_a = torch.nn.Parameter(torch.empty(rank, base.in_features, dtype=torch.float32,
-                                                     device=base.weight.device))
+        # The seeded generator lives on the CPU; drawing there keeps initialization device-independent.
+        initial = torch.empty(rank, base.in_features, dtype=torch.float32)
+        torch.nn.init.kaiming_uniform_(initial, a=math.sqrt(5), generator=generator)
+        self.lora_a = torch.nn.Parameter(initial.to(base.weight.device))
         self.lora_b = torch.nn.Parameter(torch.zeros(base.out_features, rank, dtype=torch.float32,
                                                      device=base.weight.device))
-        torch.nn.init.kaiming_uniform_(self.lora_a, a=math.sqrt(5), generator=generator)
 
     def forward(self, x):
         delta = (x.to(torch.float32) @ self.lora_a.T) @ self.lora_b.T

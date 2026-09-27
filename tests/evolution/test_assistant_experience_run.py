@@ -169,6 +169,36 @@ def test_gpu_allocation_falls_back_through_declared_types_and_charges_the_placed
     assert len(allocation['placement_refusals']) == 4 and allocation['subnet'] == 'subnet-a'
 
 
+def test_pinned_collection_reverifies_every_trajectory_before_training(setup):
+    import gzip
+    from neuroshard.evolution.modular_reference_execution import identity, save, sha256
+
+    tokenizer, plan, home = setup
+    home.mkdir()
+    model = tiny_model(tokenizer)
+    original, report = run.collect(model, tokenizer, plan, policy(), EXECUTION, home)
+    replay_rows = run.record_replay(model, tokenizer, plan, EXECUTION, home)
+    pinned = {name: sha256(home / name) for name in run.COLLECTION_FILES}
+    again = home / 'again'
+    again.mkdir()
+    experience_rows, reloaded_replay = run.load_collection(home, pinned, tokenizer, plan, policy(), EXECUTION, again)
+    assert experience_rows == original and reloaded_replay == replay_rows
+    assert read(again / 'collection.json')['trajectories'] == len(original)
+
+    rows = run.read_rows(home / 'trajectories.jsonl.gz')
+    rows[0]['messages'][-1]['content'] += ' Extra.'
+    run.write_rows(home / 'trajectories.jsonl.gz', rows)
+    with pytest.raises(ValueError, match='pinned digest'):
+        run.load_collection(home, pinned, tokenizer, plan, policy(), EXECUTION, home / 'tampered')
+    forged = read(home / 'experience.json')
+    forged['trajectories_sha256'] = identity(rows)
+    (home / 'experience.json').unlink()
+    save(home / 'experience.json', forged)
+    repinned = {name: sha256(home / name) for name in run.COLLECTION_FILES}
+    with pytest.raises(ValueError, match='re-verify'):
+        run.load_collection(home, repinned, tokenizer, plan, policy(), EXECUTION, home / 'forged')
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

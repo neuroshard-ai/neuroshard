@@ -57,7 +57,9 @@ no lost parent or anchor success, and at most one fewer success than the update
 control. Confirmation opens once, after a development pass: at least 77/96, eight
 per family, net +10 over the parent, no lost parent success, a positive
 family-bootstrapped lower bound over the parent, and a lower bound over the
-update control of at least −5 percentage points. Latency limits are unchanged.
+update control of at least −5 percentage points. Latency limits are unchanged; a
+routed system's episode latency includes the parent forward pass that selects its
+model, timed per episode.
 
 The previous contract required the addition to beat the equal-data update by +4
 and +10. Both arms see the same data and both keep the parent for fallback, so
