@@ -42,7 +42,7 @@ GRANITE_PROFILES = {
     "granite-reference": ("granite_reference", "docs/granite-reference-requirements.txt"),
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
 }
-GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g5.2xlarge")}
+GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms"}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
@@ -83,11 +83,13 @@ def source_freeze(profile):
 def resources(profile=PROFILE):
     value = read(ROOT / RESOURCE_PROFILES[profile])
     if profile in GPU_PROFILES:
-        if (value["instances"] != 1 or value["instance_type"] not in GPU_PROFILES[profile]
-                or not value["gpu"] or not 0 < value["hours"] <= 6 or value["disk_gib"] > 200
+        candidates = value["candidates"]
+        if (value["instances"] != 1 or not candidates
+                or any(row["instance_type"] not in GPU_PROFILES[profile] for row in candidates)
+                or not value["gpu"] or not 0 < value["hours"] <= 8 or value["disk_gib"] > 200
                 or value["attempts"] != 1 or not value["shutdown_terminates"]
-                or value["hours"] * value["price"]["usd_per_hour"] + 3 > value["planning_cap_usd"]
-                or value["planning_cap_usd"] > 15):
+                or value["hours"] * max(row["price"]["usd_per_hour"] for row in candidates) + 3
+                > value["planning_cap_usd"] or value["planning_cap_usd"] > 25):
             raise ValueError("resource contract exceeds the single GPU host allowance")
     elif (value["instances"] != 1 or value["instance_type"] != "r7i.4xlarge"
             or value["gpu"] or not 0 < value["hours"] <= 8 or value["disk_gib"] > 160
@@ -165,12 +167,17 @@ def retire(home, ec2=None):
     if volumes:
         raise RuntimeError("tagged volumes remain after instance retirement")
     elapsed = max(0, (datetime.now(timezone.utc) - datetime.fromisoformat(allocation["created"])).total_seconds())
+    # Unplaced GPU allocations have no chosen type; charge the most expensive candidate.
+    limits = allocation["resources"]
+    rate = (limits["price"]["usd_per_hour"] if "price" in limits
+            else max(row["price"]["usd_per_hour"] for row in limits["candidates"]))
     save(home / "resources-finished.json", {
         "finished_utc": datetime.now(timezone.utc).isoformat(), "remaining_instances": [],
         "remaining_volumes": [], "security_group_retired": True,
         "instance_ids": allocation.get("instance_ids", []),
+        "instance_type": limits.get("instance_type"),
         "conservative_instance_seconds": elapsed,
-        "conservative_compute_usd": elapsed / 3600 * allocation["resources"]["price"]["usd_per_hour"],
+        "conservative_compute_usd": elapsed / 3600 * rate,
         "storage_and_transfer_invoice_not_in_compute_total": True})
 
 
@@ -229,11 +236,14 @@ def allocate(home, commit, profile=PROFILE):
         "Name": name, "Project": "NeuroShard", "Purpose": limits["purpose"], "Source": commit,
         "ExpiresAt": deadline.isoformat(), "BudgetUSD": limits["planning_cap_usd"]}.items()]
     launched, refusals = None, []
-    subnets = (placement_subnets(ec2, source, limits["instance_type"]) if profile in GPU_PROFILES
-               else [source["SubnetId"]])
-    for index, subnet in enumerate(subnets):
+    options = (limits["candidates"] if profile in GPU_PROFILES
+               else [{"instance_type": limits["instance_type"], "price": limits["price"]}])
+    placements = [(option, subnet) for option in options
+                  for subnet in (placement_subnets(ec2, source, option["instance_type"]) if profile in GPU_PROFILES
+                                 else [source["SubnetId"]])]
+    for index, (option, subnet) in enumerate(placements):
         try:
-            launched = ec2.run_instances(ImageId=image["ImageId"], InstanceType=limits["instance_type"],
+            launched = ec2.run_instances(ImageId=image["ImageId"], InstanceType=option["instance_type"],
                 MinCount=1, MaxCount=1, KeyName=source["KeyName"], ClientToken=f"{name}-{index}",
                 UserData="#cloud-config\n" + json.dumps(cloud), InstanceInitiatedShutdownBehavior="terminate",
                 MetadataOptions={"HttpTokens": "required", "HttpPutResponseHopLimit": 1},
@@ -244,15 +254,17 @@ def allocate(home, commit, profile=PROFILE):
                     "DeleteOnTermination": True}}],
                 TagSpecifications=[{"ResourceType": kind, "Tags": tags} for kind in ("instance", "volume")])["Instances"]
             allocation["subnet"] = subnet
+            allocation["resources"] = {**limits, "instance_type": option["instance_type"], "price": option["price"]}
             break
         except ClientError as error:
             if error.response["Error"]["Code"] not in ("InsufficientInstanceCapacity", "Unsupported"):
                 raise
-            refusals.append({"subnet": subnet, "code": error.response["Error"]["Code"]})
+            refusals.append({"instance_type": option["instance_type"], "subnet": subnet,
+                             "code": error.response["Error"]["Code"]})
             allocation["placement_refusals"] = refusals
             save(home / "allocation.json", allocation)
     if launched is None:
-        raise RuntimeError(f"no subnet could place {limits['instance_type']}: {refusals}")
+        raise RuntimeError(f"no declared instance type could be placed: {refusals}")
     allocation["instance_ids"] = [r["InstanceId"] for r in launched]
     save(home / "allocation.json", allocation)
     stop = time.monotonic() + 600

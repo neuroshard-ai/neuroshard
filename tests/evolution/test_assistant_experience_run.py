@@ -79,8 +79,11 @@ def test_gpu_inventory_pins_contracts_sources_packages_and_matching_authority():
     cloud = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cloud)
     resources = cloud.resources(run.PROFILE)
-    assert resources['gpu'] and resources['instance_type'] == 'g6e.xlarge' and resources['planning_cap_usd'] <= 15
-    assert resources['hours'] * resources['price']['usd_per_hour'] + 3 <= resources['planning_cap_usd']
+    candidates = resources['candidates']
+    assert resources['gpu'] and candidates[0]['instance_type'] == 'g6e.xlarge' and resources['planning_cap_usd'] <= 25
+    assert resources['hours'] * max(c['price']['usd_per_hour'] for c in candidates) + 3 <= resources['planning_cap_usd']
+    assert {c['gpu_name'] for c in candidates} == set(execution['gpus'])
+    assert execution['worker_seconds'] + resources['setup_seconds'] + 600 <= resources['hours'] * 3600
     assert cloud.remote_command(run.PROFILE)[1].endswith(run.SCRIPT)
     assert cloud.GRANITE_PROFILES[run.PROFILE] == ('assistant_experience_run', 'docs/assistant-experience-requirements.txt')
 
@@ -108,6 +111,62 @@ def test_gpu_placement_leaves_the_controller_zone_only_when_it_lacks_the_instanc
     assert cloud.placement_subnets(EC2({'us-east-1a', 'us-east-1c'}), source, 'g6e.xlarge') == ['subnet-a', 'subnet-c']
     with pytest.raises(ValueError, match='not offered'):
         cloud.placement_subnets(EC2({'us-west-2a'}), source, 'g6e.xlarge')
+
+
+def test_gpu_allocation_falls_back_through_declared_types_and_charges_the_placed_one(tmp_path, monkeypatch):
+    import importlib.util
+    from pathlib import Path
+    from botocore.exceptions import ClientError
+
+    spec = importlib.util.spec_from_file_location('fallback_cloud', ROOT / 'scripts/modular_reference_cloud.py')
+    cloud = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cloud)
+    limits = cloud.resources(run.PROFILE)
+    attempts = []
+
+    class EC2:
+        def describe_instances(self, **kw):
+            if 'InstanceIds' in kw:
+                return {'Reservations': [{'Instances': [{'VpcId': 'vpc-1', 'PrivateIpAddress': '10.0.0.2', 'KeyName': 'k',
+                                                          'SubnetId': 'subnet-f', 'Placement': {'AvailabilityZone': 'us-east-1f'}}]}]}
+            return {'Reservations': [{'Instances': [{'InstanceId': 'gpu', 'PrivateIpAddress': '10.0.1.3',
+                                                       'State': {'Name': 'running'}}]}]}
+
+        def describe_images(self, **kw):
+            return {'Images': [{**limits['image'], 'State': 'available'}]}
+
+        def describe_instance_type_offerings(self, **kw):
+            return {'InstanceTypeOfferings': [{'Location': 'us-east-1a'}, {'Location': 'us-east-1b'}]}
+
+        def describe_subnets(self, **kw):
+            return {'Subnets': [{'SubnetId': f'subnet-{z}', 'AvailabilityZone': f'us-east-1{z}', 'State': 'available'}
+                                for z in 'abf']}
+
+        def create_security_group(self, **kw):
+            return {'GroupId': 'sg-1'}
+
+        def authorize_security_group_ingress(self, **kw):
+            pass
+
+        def run_instances(self, **kw):
+            attempts.append((kw['InstanceType'], kw['NetworkInterfaces'][0]['SubnetId'], kw['ClientToken']))
+            if kw['InstanceType'].startswith('g6e'):
+                raise ClientError({'Error': {'Code': 'InsufficientInstanceCapacity', 'Message': 'none'}}, 'RunInstances')
+            return {'Instances': [{'InstanceId': 'gpu'}]}
+
+    monkeypatch.setattr(cloud.boto3, 'client', lambda *a, **kw: EC2())
+    monkeypatch.setattr(cloud.subprocess, 'run', lambda *a, **kw: None)
+    old_read = Path.read_text
+    monkeypatch.setattr(Path, 'read_text', lambda p, *a, **kw: 'ssh-ed25519 key' if p.name == 'id_ed25519.pub'
+                        else old_read(p, *a, **kw))
+    allocation = cloud.allocate(tmp_path, 'commit', run.PROFILE)
+    assert [a[:2] for a in attempts] == [('g6e.xlarge', 'subnet-a'), ('g6e.xlarge', 'subnet-b'),
+                                          ('g6e.2xlarge', 'subnet-a'), ('g6e.2xlarge', 'subnet-b'),
+                                          ('g5.2xlarge', 'subnet-a')]
+    assert len({a[2] for a in attempts}) == len(attempts)
+    assert allocation['resources']['instance_type'] == 'g5.2xlarge'
+    assert allocation['resources']['price']['usd_per_hour'] == 1.212
+    assert len(allocation['placement_refusals']) == 4 and allocation['subnet'] == 'subnet-a'
 
 
 def test_accelerator_phases_never_open_evaluation_goals():

@@ -246,11 +246,12 @@ def freeze():
         raise ValueError('accelerator runtime differs')
     if platform.system() != 'Linux' or platform.machine() != 'x86_64':
         raise ValueError('accelerator runtime requires Linux x86_64')
-    if gpu_names() != execution['gpus']:
-        raise ValueError('accelerator differs from the declared GPU')
+    gpus = gpu_names()
+    if len(gpus) != 1 or gpus[0] not in execution['gpus']:
+        raise ValueError('accelerator is not one declared GPU')
     if any(os.environ.get(key) != value for key, value in execution['environment'].items()):
         raise ValueError('accelerator environment differs')
-    return {**source, 'packages': packages, 'python': platform.python_version(), 'gpus': execution['gpus']}
+    return {**source, 'packages': packages, 'python': platform.python_version(), 'gpus': gpus}
 
 
 def worker(request_path):
@@ -263,11 +264,13 @@ def worker(request_path):
     from transformers import AutoModelForCausalLM
 
     execution = read(ROOT / EXECUTION)
-    parameters = execution['execution']
+    gpu = request['freeze']['gpus'][0]
+    parameters = {**execution['execution'], **execution['gpus'][gpu]}
     plan = read(ROOT / PLAN)
     policy = read(ROOT / plan['policy'])
     home = request_path.parent
-    reply = {'binding': request['binding'], 'execution_completed': False, 'phases': {}}
+    reply = {'binding': request['binding'], 'execution_completed': False, 'phases': {}, 'gpu': gpu,
+             'max_batch': parameters['max_batch']}
     started = time.monotonic()
     tokenizer = None
     try:

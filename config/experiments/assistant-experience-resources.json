@@ -2,9 +2,43 @@
   "format": "neuroshard-assistant-experience-resources/1",
   "region": "us-east-1",
   "instances": 1,
-  "instance_type": "g6e.xlarge",
-  "hours": 6,
-  "planning_cap_usd": 15,
+  "candidates": [
+    {
+      "instance_type": "g6e.xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "HEU7PA78QPB8SDYY",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.861
+      }
+    },
+    {
+      "instance_type": "g6e.2xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 2.2421,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    },
+    {
+      "instance_type": "g5.2xlarge",
+      "gpu_name": "NVIDIA A10G",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.212,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    }
+  ],
+  "placement": "Try candidates in order, each in every controller-VPC subnet whose zone offers it; the first placement is the only host.",
+  "hours": 8,
+  "planning_cap_usd": 21,
   "disk_gib": 120,
   "disk_type": "gp3",
   "setup_seconds": 1800,
@@ -15,12 +49,6 @@
     "CreationDate": "2026-09-11T14:09:30.000Z",
     "OwnerId": "898082745236",
     "RootDeviceName": "/dev/sda1"
-  },
-  "price": {
-    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
-    "sku": "HEU7PA78QPB8SDYY",
-    "effective_date": "2026-09-01",
-    "usd_per_hour": 1.861
   },
   "source_instance": "i-0d681a8ef83f72619",
   "gpu": true,
@@ -33,12 +61,17 @@
     "path": "config/experiments/assistant-workflow-canonical-report.json",
     "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
-  "budget_scope": "One L40S host for verified-experience collection, parent replay recording, training of both arms and integration gates; six-hour expiry and fifteen-dollar allowance within the $100 comparison ceiling. No development or confirmation goals.",
+  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for verified-experience collection, parent replay recording, training of both arms and integration gates; eight-hour expiry and $21 worst-case allowance within the $100 comparison ceiling. No development or confirmation goals.",
   "prior_attempts": [
     {
       "utc": "2026-09-27T14:20:28Z",
       "commit": "19877504f646aab1315f8cc3f8e403f0494dcca8",
       "outcome": "RunInstances refused g6e.xlarge in the controller subnet (us-east-1f) before any instance started; temporary security group retired; no compute spent. Placement now uses an offering subnet in the same VPC."
+    },
+    {
+      "utc": "2026-09-27T14:47:07Z",
+      "commit": "5877b4da6c9516f069753ad75518a850eb40f48b",
+      "outcome": "InsufficientInstanceCapacity for g6e.xlarge in us-east-1a through 1d; no instance started, nothing spent. Added equivalent-GPU and A10G fallbacks and an eight-hour deadline for the slower GPU."
     }
   ]
 }

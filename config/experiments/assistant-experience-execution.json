@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Authorized by the user on September 27, 2026 after the canonical re-baseline completed with conforming tokenization (9/24) and failed primitive qualification. One attempt on one L40S host; exact-commit CI first.",
+  "status": "Authorized by the user on September 27, 2026 after the canonical re-baseline completed with conforming tokenization (9/24) and failed primitive qualification. One placed host (L40S preferred, A10G fallback); generation batch size depends only on the GPU. Exact-commit CI first.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -56,9 +56,14 @@
     "typing_extensions": "4.16.0"
   },
   "python": "3.12.12",
-  "gpus": [
-    "NVIDIA L40S"
-  ],
+  "gpus": {
+    "NVIDIA L40S": {
+      "max_batch": 32
+    },
+    "NVIDIA A10G": {
+      "max_batch": 16
+    }
+  },
   "environment": {
     "CUDA_VISIBLE_DEVICES": "0",
     "OMP_NUM_THREADS": "4",
@@ -76,7 +81,7 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "e70dd664ce27073dcb5d9adfa78ed378fb32816b6cc347299d18843ddcf0fed6",
-    "config/experiments/assistant-experience-resources.json": "eb1237150a4f108e386fbfe8879007f6d9f967e455db27e00038907a34bf15c2",
+    "config/experiments/assistant-experience-resources.json": "3866f942ad00f786aa6613bf952c6b30767fa6745f14dfa5c07c187706a99c4a",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
@@ -116,12 +121,11 @@
     "scripts/run_assistant_experience.py",
     "scripts/modular_reference_cloud.py"
   ],
-  "worker_seconds": 16200,
+  "worker_seconds": 25200,
   "memory_bytes": 30064771072,
   "execution": {
     "device": "cuda",
     "attention": "sdpa",
-    "max_batch": 32,
     "workers": 48,
     "samples_per_case": 8,
     "temperature": 0.8,
