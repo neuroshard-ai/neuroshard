@@ -72,6 +72,22 @@
       "utc": "2026-09-27T14:47:07Z",
       "commit": "5877b4da6c9516f069753ad75518a850eb40f48b",
       "outcome": "InsufficientInstanceCapacity for g6e.xlarge in us-east-1a through 1d; no instance started, nothing spent. Added equivalent-GPU and A10G fallbacks and an eight-hour deadline for the slower GPU."
+    },
+    {
+      "utc": "2026-09-27T18:43:00Z",
+      "commit": "fc4e1923a631e0a548c366cde45bdc19221f5f54",
+      "outcome": "On g5.2xlarge: 2,640 rollouts, 722 selected verified trajectories and 256 replay answers written and pinned for retraining. The attempt's trainer draws adapter initial values with a CPU generator into CUDA tensors, which PyTorch rejects, so its addition arm and integration cannot complete."
     }
-  ]
+  ],
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927c-collection",
+    "files": [
+      "experience.json",
+      "rollouts.jsonl.gz",
+      "trajectories.jsonl.gz",
+      "replay.json",
+      "replay.jsonl.gz"
+    ],
+    "maximum_bytes": 67108864
+  }
 }

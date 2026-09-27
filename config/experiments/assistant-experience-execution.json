@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Authorized by the user on September 27, 2026 after the canonical re-baseline completed with conforming tokenization (9/24) and failed primitive qualification. One placed host (L40S preferred, A10G fallback); generation batch size depends only on the GPU. Exact-commit CI first.",
+  "status": "Retraining and integration from the pinned collection of an earlier attempt whose trainer failed at the addition arm; both arms retrain on identical sequences under the corrected trainer.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -81,7 +81,7 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "a21927380ad0b4152bcba4aa000ae80e4c6ea6ecf655bc95551781ddbcc0317a",
-    "config/experiments/assistant-experience-resources.json": "3866f942ad00f786aa6613bf952c6b30767fa6745f14dfa5c07c187706a99c4a",
+    "config/experiments/assistant-experience-resources.json": "70d4714740d7faee21504e59249d755cb9748872fbfed9df820bc86095fe59ce",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
@@ -139,5 +139,17 @@
   "training_authorized": true,
   "gpu_launch_authorized": true,
   "attempts": 1,
-  "interpretation": "Collection, parent replay recording, training of both arms and integration gates only. Development and confirmation are evaluated separately on the CPU parent runtime. No admission or checklist credit."
+  "interpretation": "Collection, parent replay recording, training of both arms and integration gates only. Development and confirmation are evaluated separately on the CPU parent runtime. No admission or checklist credit.",
+  "collection": {
+    "source_home": "/home/ubuntu",
+    "source_commit": "fc4e1923a631e0a548c366cde45bdc19221f5f54",
+    "files": {
+      "experience.json": "3b276b933a51016774ae08150ad93370e082eed63da788b926dbf787058c34be",
+      "rollouts.jsonl.gz": "669c49096d9f86856e8e9e5ac29569f579542d9a4b487a9a02ee117d75895629",
+      "trajectories.jsonl.gz": "210cfb4497ec527bb2567c91022717038888655719666550ada7ea68dd3efaec",
+      "replay.json": "b89cdc2cfcd797474f061880517c1c9e7fb0d634ba1b06c428c8372165b58de3",
+      "replay.jsonl.gz": "e977ff6086d63968d3b06557ab1609772cc0563d5b75c6c271aeee29550b5452"
+    },
+    "rule": "No new rollouts. Every trajectory is rebuilt from its recorded rollout through the frozen scorer; replay items must match the regenerated prompts."
+  }
 }
