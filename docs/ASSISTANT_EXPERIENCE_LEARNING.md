@@ -112,6 +112,52 @@ plus these pairs, with DPO against the round-2 arm. Gates are refitted on
 integration; the development gate under prefix-cache serving must pass before
 confirmation opens.
 
+## Second attempt: goal-guided repairs and fresh confirmation
+
+Declared on September 28, 2026 after the [confirmation](ASSISTANT_EXPERIENCE_CONFIRMATION_RESULTS.md)
+failed only the update-parity bound, and before any round-4 rollout or any look at
+new evaluation data. That confirmation stays failed, and its 96 episodes are now
+spent.
+
+On confirmation, the addition's difference failures read approved revision 2 and
+the draft instead of revision 1. Its latest follow-up failures re-read revision 2
+when asked for revision 1. Round-2 preferences had over-generalized into avoiding
+older revisions. Round 4 targets that error without looking at evaluation goals.
+The round-3 addition samples four rollouts per training case. In each failed
+rollout, the first read that opens a document outside its round's training goal
+is replaced by a goal source not yet read in that round. Earlier generations are
+replayed exactly, and the same model then continues by sampling. Only repaired
+rollouts that pass the frozen scorer in every round are kept. The repaired message
+is chosen and the original rejected (at most four pairs per case), and verified
+repaired rollouts (at most two per case) join the round-1 experience. Both round-3
+arms continue for 64 steps; gates are refitted on integration.
+
+Development then runs under prefix-cache serving with an A1 served-system check on
+the version that would be served:
+
+- It must pass at least 6 of the 8 primitive development episodes, with at least
+  one from each primitive family.
+- The original anchor gate must hold, with every protected anchor routed to the
+  parent.
+- Its p95 latency must be at most 180 seconds, including selection time.
+- Two development episodes are replayed in fresh processes, and each must match
+  its original episode exactly.
+
+If development and the A1 check pass, a fresh confirmation opens once. It has 192
+episodes (24 per family, from a new generator seed, with no overlap in project or
+ID). All three systems, the parent included, run under the prefix cache. It
+needs:
+
+- At least 154 successes, and at least 16 in each family.
+- At least 20 more successes than the parent, with no parent success lost.
+- Family-cluster bootstrap lower bounds (10,000 resamples) above 0 against the
+  parent and at least -0.05 against the update.
+- p95 latency of at most 180 seconds, and at most twice the update arm's p95.
+
+The [contract](../config/experiments/assistant-experience-learning.json) records
+these rules under `goal_guided_repairs`, `a1_served` and `confirmation2_gate`. The
+budget ceiling for this attempt is $1,000.
+
 ## Role in the network
 
 Rollouts are the parallel contributor workload. Anyone can replay a submitted

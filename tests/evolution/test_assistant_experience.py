@@ -286,6 +286,45 @@ def test_aligned_divergence_ignores_reply_wording_but_not_tool_decisions():
         {'role': 'assistant', 'content': 'All set.'})
 
 
+def documents(case):
+    project = case['turns'][0]['expected']['project']
+    own = [d for d in case['world']['documents'] if d['project'] == project]
+    return {(d['revision'], d['status']): d['id'] for d in own}
+
+
+def draft_failure(case):
+    """Difference failure seen on confirmation: reads approved revision 2 and the draft, never revision 1."""
+    docs = documents(case)
+    texts = reference_texts(case)
+    reads = [docs[(2, 'approved')], docs[(3, 'draft')]]
+    texts[1] = '\n'.join(envelope('read_document', {'document_id': d}) for d in reads)
+    texts[2] = envelope('save_draft', {**case['turns'][0]['expected'], 'source_ids': reads, 'total': 1})
+    return texts
+
+
+def test_wrong_read_locates_and_repairs_the_confirmation_failure_shapes():
+    difference = data.make_case('train', 'difference', 7)
+    found = experience.wrong_read(difference, scripted(difference, draft_failure(difference)))
+    docs = documents(difference)
+    assert found[0] == 4 and found[1] == 1
+    assert docs[(1, 'approved')] in found[2] and docs[(3, 'draft')] not in found[2] and docs[(2, 'approved')] in found[2]
+    latest = data.make_case('train', 'latest', 7)
+    texts = reference_texts(latest)
+    ldocs = documents(latest)
+    texts[5] = envelope('read_document', {'document_id': ldocs[(2, 'approved')]})
+    found = experience.wrong_read(latest, scripted(latest, texts))
+    assert found[1] == 5 and ldocs[(1, 'approved')] in found[2]
+    copy_case = data.make_case('train', 'copy', 7)
+    texts = reference_texts(copy_case)
+    cdocs = documents(copy_case)
+    texts[1] = envelope('read_document', {'document_id': cdocs[(1, 'approved')]})
+    texts[2] = envelope('save_draft', {**copy_case['turns'][0]['expected'], 'source_ids': [cdocs[(1, 'approved')]]})
+    assert cdocs[(2, 'approved')] in experience.wrong_read(copy_case, scripted(copy_case, texts))[2]
+    assert experience.wrong_read(copy_case, scripted(copy_case, reference_texts(copy_case))) is None
+    with pytest.raises(ValueError, match='training goals'):
+        experience.wrong_read(data.make_case('development', 'copy', 0), scripted(copy_case, texts))
+
+
 def test_preference_training_widens_the_verified_margin_and_keeps_round_one_schedules(tokenizer, tmp_path):
     experience_rows, replay_rows = sequences(tokenizer)
     assert trainer.schedule(experience_rows, replay_rows, SPEC) == trainer.schedule(experience_rows, replay_rows, SPEC, 0)

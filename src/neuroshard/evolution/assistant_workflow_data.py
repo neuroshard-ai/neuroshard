@@ -12,7 +12,9 @@ from neuroshard.evolution.modular_reference_execution import identity
 
 FAMILIES = ('copy', 'date', 'sum', 'difference', 'latest', 'recipient', 'reschedule', 'scope')
 SPLITS = {'train': (4100, 32), 'integration': (5200, 8),
-          'development': (6300, None), 'confirmation': (7400, 12)}
+          'development': (6300, None), 'confirmation': (7400, 12), 'confirmation2': (8500, 24)}
+# A fresh confirmation reuses the confirmation correction grammar with new values.
+CONFIRMATIONS = ('confirmation', 'confirmation2')
 
 
 def make_case(split, family, index):
@@ -92,12 +94,12 @@ def make_case(split, family, index):
                           total=quantity + 9 + addition, source_ids=[other['id']])
         # Development and confirmation hold out different conjunctions of learned
         # operations. They are not merely new names under identical corrections.
-        if split in ('development', 'confirmation'):
+        if split == 'development' or split in CONFIRMATIONS:
             correction = correction.replace('Keep the date, total and cited source unchanged.',
                                              'Keep the cited source unchanged.')
             correction = correction.replace('Keep the recipient, total and cited source unchanged.',
                                              'Keep the cited source unchanged.')
-        if split == 'confirmation':
+        if split in CONFIRMATIONS:
             correction = correction.replace('Keep the same recipient, review-interval rule, and extra quantity.',
                                              'Keep the same review-interval rule and extra quantity.')
             correction = correction.replace('and keep its recipient, but use', 'but use')
@@ -111,7 +113,7 @@ def make_case(split, family, index):
             else:
                 correction += f' Also address it to the {changed_recipient}.'
                 second['recipient'] = changed_recipient
-        elif split == 'confirmation':
+        elif split in CONFIRMATIONS:
             if family in ('latest', 'scope'):
                 correction += f' Also change the recipient to the {changed_recipient}.'
                 second['recipient'] = changed_recipient

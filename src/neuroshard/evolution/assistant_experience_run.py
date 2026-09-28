@@ -19,6 +19,7 @@ import time
 from neuroshard.evolution import assistant_experience as experience
 from neuroshard.evolution import assistant_replay as replay
 from neuroshard.evolution import assistant_rollout as rollout
+from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution import assistant_workspace as sandbox
 from neuroshard.evolution import granite_tokenizer
@@ -252,6 +253,95 @@ def collect_arm(model, tokenizer, plan, policy, execution, home):
     return rows
 
 
+def repair_responder(recorded, at, text, live):
+    """Replay the first ``at`` recorded generations, substitute the repaired call, then sample live."""
+    count = [0]
+
+    def respond(messages, tools):
+        index = count[0]
+        count[0] += 1
+        if index < at:
+            return {key: recorded[index][key] for key in
+                    ('text', 'terminated', 'executed', 'input_token_ids', 'token_ids', 'prompt_sha256')
+                    if key in recorded[index]}
+        if index == at:
+            return {'text': text, 'terminated': True, 'executed': False, 'input_token_ids': [], 'token_ids': [],
+                    'prompt_sha256': None, 'repaired': True}
+        return live(messages, tools)
+
+    return respond
+
+
+def collect_repairs(model, tokenizer, plan, policy, execution, home):
+    """Sampled training rollouts of an arm, then goal-guided repairs of wrong reads, continued live."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    spec = plan['goal_guided_repairs']
+    cases = split_cases(plan, 'train')
+    by_id = {case['id']: case for case in cases}
+    batcher = rollout.Batcher(model, tokenizer, sampling(policy, execution, spec['temperature']),
+                              max_batch=execution['max_batch'], device=execution['device'], seed=spec['seed'])
+    try:
+        natural = rollout.rollouts([(c, policy, s) for c in cases for s in range(spec['samples_per_case'])],
+                                   batcher.respond, workers=execution['workers'], progress=reporter(home, 'collect-round4'))
+        jobs = []
+        for row in natural:
+            if row['result']['score']['passed']:
+                continue
+            found = experience.wrong_read(by_id[row['case_id']], row['result'])
+            if found:
+                jobs += [(row, found, attempt) for attempt in range(spec['repairs_per_failure'])]
+        report = reporter(home, 'repair-round4')
+        done = [0]
+
+        def repair(job):
+            row, (index, at, text), attempt = job
+            result = workflow.execute(by_id[row['case_id']],
+                                      repair_responder(row['result']['generations'], at, text, batcher.respond), policy)
+            done[0] += 1
+            report(done[0], len(jobs))
+            return {'case_id': row['case_id'], 'sample': row['sample'], 'attempt': attempt, 'index': index,
+                    'policy_sha256': identity(policy), 'rejected': row['result']['messages'][index]['content'],
+                    'result': result}
+
+        with ThreadPoolExecutor(max_workers=execution['workers']) as pool:
+            repaired = list(pool.map(repair, jobs))
+    finally:
+        batcher.close()
+    save(home / 'rollouts-round4.json', {
+        'rollouts': len(natural), 'passed': sum(r['result']['score']['passed'] for r in natural),
+        'repairable_failures': len(jobs) // max(1, spec['repairs_per_failure']), 'repairs': len(repaired),
+        'verified_repairs': sum(r['result']['score']['passed'] for r in repaired),
+        'natural_sha256': write_rows(home / 'rollouts-round4.jsonl.gz', natural),
+        'repairs_sha256': write_rows(home / 'repairs-round4.jsonl.gz', repaired)}, exclusive=True)
+    return natural, repaired
+
+
+def repair_data(plan, policy, repaired):
+    """Preference pairs and trajectories from verified repairs; every repaired rollout is rescored."""
+    spec = plan['goal_guided_repairs']
+    by_id = {case['id']: case for case in split_cases(plan, 'train')}
+    pairs, trajectories = {}, []
+    for row in repaired:
+        case, result = by_id[row['case_id']], row['result']
+        if workflow.score(case, result, policy) != result['score']:
+            raise ValueError('repaired rollout does not re-verify')
+        if not result['score']['passed']:
+            continue
+        messages, index = result['messages'], row['index']
+        chosen = messages[index]['content']
+        if chosen == row['rejected']:
+            raise ValueError('repair did not change the decision')
+        key = identity([messages[:index], chosen, row['rejected']])
+        pairs.setdefault(row['case_id'], {}).setdefault(key, {
+            'case_id': row['case_id'], 'messages': messages[:index], 'chosen': chosen, 'rejected': row['rejected'],
+            'samples': [row['sample'], row['attempt']]})
+        trajectories.append(experience.trajectory(case, result, policy, policy,
+                                                  sample=row['sample'] * 100 + row['attempt']))
+    pair_list = [p for case_id in sorted(pairs) for p in list(pairs[case_id].values())[:spec['pairs_per_case']]]
+    return pair_list, experience.select(trajectories, spec['experience_per_case'])
+
+
 def build_divergence_pairs(tokenizer, plan, policy, rollouts):
     from neuroshard.evolution import assistant_experience_train as trainer
 
@@ -431,7 +521,36 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        if 'round3' in execution:
+        if 'round4' in execution:
+            trainer = trainer_module()
+            experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
+                                                           tokenizer, plan, policy, parameters, home)
+            prior = execution['round4']['prior']
+            sampler = load_parent()
+            manifest, _ = trainer.resume(sampler, 'addition', plan['training'], ROOT / UPLOADED / 'addition-checkpoint')
+            if manifest['trainable_sha256'] != prior['addition']:
+                raise ValueError('round-3 addition differs from its pinned digest')
+            sampler.eval()
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            _, repaired = collect_repairs(sampler, tokenizer, plan, policy, parameters, home)
+            del sampler
+            release_accelerator()
+            pairs, extra = repair_data(plan, policy, repaired)
+            if not pairs:
+                raise ValueError('no verified repairs')
+            save(home / 'pairs.json', {'pairs': len(pairs), 'cases': len({p['case_id'] for p in pairs}),
+                                       'repaired_trajectories': len(extra), 'pairs_sha256': identity(pairs),
+                                       'trajectories_sha256': write_rows(home / 'repaired-trajectories.jsonl.gz', extra)},
+                 exclusive=True)
+            experience_rows = experience_rows + [trainer.encode(tokenizer, t, sandbox.TOOLS) for t in extra]
+            pair_rows = [trainer.encode_pair(tokenizer, p, sandbox.TOOLS) for p in pairs]
+            reply['phases']['collect_round4'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = train_round2(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows,
+                                             ROOT / UPLOADED, prior, home, section='goal_guided_repairs')
+            reply['phases']['train'] = time.monotonic() - begun
+        elif 'round3' in execution:
             experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
                                                            tokenizer, plan, policy, parameters, home)
             prior = execution['round3']['prior']
@@ -478,7 +597,7 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        if 'round2' not in execution and 'round3' not in execution:
+        if not {'round2', 'round3', 'round4'} & set(execution):
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
             reply['phases']['train'] = time.monotonic() - begun

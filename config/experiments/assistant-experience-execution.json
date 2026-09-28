@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Round 3 (verified divergence preferences) after the cached round-2 development gate failed; user-authorized.",
+  "status": "Round 4 (goal-guided repairs) after confirmation failed on update parity; user-authorized with a $1,000 ceiling.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -80,14 +80,14 @@
   },
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
-    "config/experiments/assistant-experience-learning.json": "72b66f809079e95e40d0d7cb3cafd6d80f8992cee9d10f18968bb67602cc9440",
-    "config/experiments/assistant-experience-resources.json": "ca3a330051390ecbdb6d2f21f1f589a3a6ada89313fa4a61f0d95e5287468ee8",
+    "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
+    "config/experiments/assistant-experience-resources.json": "ace54229764ef822cfa58b4f5e312620d2e55de29c731543da389cb58ced7fd4",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2e692d26e329a0186cdc995d5ed6b36cb81fc4b27c965714b3d3296d81ae995c",
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
     "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
   "sources": [
@@ -152,12 +152,12 @@
     },
     "rule": "No new rollouts. Every trajectory is rebuilt from its recorded rollout through the frozen scorer; replay items must match the regenerated prompts."
   },
-  "round3": {
+  "round4": {
     "prior": {
-      "update": "aa5901abcc81800dcc77473fb73fe7b5053c6fb4f1221534049889c3f29c8746",
-      "addition": "47edb5989e4527f104eb6c71c2457064eeefc66dbbedc1fe3c961a6875c7d915"
+      "update": "b00b66b83e5a6277a6e85ea3436beb3b814933f05c5dde0dfe844851527d5db4",
+      "addition": "0dd1b5c7df01b4e91eebcd9932e186859c0e49f229119cef1827f62cfb72608d"
     },
-    "source_home": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927f/evidence",
-    "rule": "Sample the round-2 addition on training cases, build verified divergence pairs, continue both round-2 arms, refit gates."
+    "source_home": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928g/evidence",
+    "rule": "Sample the round-3 addition on training cases, repair wrong reads against training goals, keep verified continuations, continue both round-3 arms, refit gates."
   }
 }

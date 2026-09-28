@@ -200,5 +200,67 @@
     },
     "integration": "Refit each gate from fresh integration outcomes of the round-3 arms with the declared recipe.",
     "gates": "The same development gate under the declared prefix-cache serving; confirmation opens once, only after a complete development pass."
+  },
+  "a1_served": {
+    "status": "Declared on September 28, 2026 at the user's decision, before round 4.",
+    "rule": "A1's usable-foundation check judges the served version: the pinned parent plus its accepted, verified module under the declared serving runtime and selection. The bare parent's result is still reported. Required on development: at least 6/8 primitive workflows with one per primitive family, the original anchor gate with every protected anchor (routed to the parent), p95 at most 180 s, and two fresh-process replays matching exactly."
+  },
+  "goal_guided_repairs": {
+    "status": "Declared on September 28, 2026 after the confirmation failed on update parity, before any round-4 rollout.",
+    "diagnosis": "On confirmation the round-3 addition's difference failures read approved revision 2 and the draft revision 3 instead of approved revision 1, and its latest follow-up failures re-read revision 2 when asked for revision 1: round-2 preferences over-generalized into avoiding older revisions.",
+    "source": "Fresh sampled rollouts of the pinned round-3 addition on the 256 training cases.",
+    "samples_per_case": 4,
+    "temperature": 0.8,
+    "seed": 27092034,
+    "repair": "In a failed rollout, find the first read_document message that opens a document outside its round's goal sources (training goals only). Replace each such document with a goal source not yet read in that round, replay every earlier generation exactly, and let the same model continue by sampling.",
+    "repairs_per_failure": 2,
+    "verification": "Keep only repaired rollouts that the frozen scorer passes in every round. Goals locate the wrong document; they never enter a prompt.",
+    "pairs": "Chosen: the repaired message; rejected: the original message; shared prefix: all earlier messages. At most 4 per case.",
+    "experience": "Verified repaired rollouts (at most 2 per case) join the round-1 experience; the repaired message is trained with the rest of the conversation.",
+    "arms": "Both round-3 arms continue from their pinned checkpoints on identical experience, replay and pairs.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092035
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-4 arms.",
+    "gates": "Development under prefix-cache serving, with the A1 served-system checks; then the fresh confirmation2 split once.",
+    "pairs_per_case": 4,
+    "experience_per_case": 2
+  },
+  "confirmation2_gate": {
+    "data": "config/experiments/assistant-workflow-data-confirmation2.json",
+    "cases": 192,
+    "opens": "Once, only after a complete round-4 development pass.",
+    "serving": "All three systems, including the parent control, under the declared prefix-cache serving.",
+    "minimum_total": 154,
+    "minimum_per_family": 16,
+    "minimum_net_vs_parent": 20,
+    "maximum_lost_parent_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092036,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_vs_parent_strictly_above": 0,
+    "lower_95_gain_vs_update_at_least": -0.05,
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
   }
 }

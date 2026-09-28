@@ -203,6 +203,47 @@ def divergence_pairs(case, rollouts, policy, per_case, *, aligned=False):
     return sorted(pairs.values(), key=lambda p: (p['turn'], len(p['messages']), p['samples']))[:per_case]
 
 
+def envelope(calls):
+    return '\n'.join('<tool_call>\n' + json.dumps({'name': c['name'], 'arguments': c['arguments']}) + '\n</tool_call>'
+                     for c in calls)
+
+
+def wrong_read(case, result):
+    """First message that reads a document outside its round's goal sources, with a repaired call.
+
+    Returns (message index, generation index, repaired text) or None. Training goals
+    only locate the error; the repair reads goal sources not yet read in that round.
+    """
+    if case['split'] not in TRAINING_SPLITS:
+        raise ValueError('repairs may only use training goals')
+    turn, read, generation = -1, set(), 0
+    for index, message in enumerate(result['messages']):
+        if message['role'] == 'user':
+            turn, read = turn + 1, set()
+            continue
+        if message['role'] != 'assistant':
+            continue
+        generation += 1
+        try:
+            calls = sandbox.parse_calls(message['content'])
+        except (ValueError, TypeError):
+            continue
+        opened = [c['arguments']['document_id'] for c in calls if c['name'] == 'read_document']
+        goal = sorted(case['turns'][turn]['expected']['source_ids'])
+        if any(d not in goal for d in opened):
+            missing = [d for d in goal if d not in read and d not in opened]
+            repaired = []
+            for call in calls:
+                if call['name'] == 'read_document' and call['arguments']['document_id'] not in goal:
+                    if not missing:
+                        return None
+                    call = {'name': 'read_document', 'arguments': {'document_id': missing.pop(0)}}
+                repaired.append(call)
+            return index, generation - 1, envelope(repaired)
+        read.update(opened)
+    return None
+
+
 def summary(cases, attempts, accepted):
     by_family = {}
     for case in cases:

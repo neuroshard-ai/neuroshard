@@ -267,6 +267,48 @@ def test_round_three_collects_from_an_arm_and_continues_on_divergence_pairs(setu
     assert {arm: m['roots']['round1'] for arm, m in manifests.items()} == pinned
 
 
+def test_goal_guided_repairs_replay_the_prefix_and_keep_only_verified_continuations(tmp_path, monkeypatch):
+    from test_assistant_experience import draft_failure, documents
+
+    difference, copy_case = data.make_case('train', 'difference', 7), data.make_case('train', 'copy', 8)
+    cases = [difference, copy_case]
+    monkeypatch.setattr(run, 'split_cases', lambda plan, split: cases)
+
+    class Sampler:
+        """Makes the draft-read mistake on the difference case unless the read was repaired."""
+        def __init__(self, *args, **kwargs):
+            self.batches = [1]
+
+        def close(self):
+            pass
+
+        def respond(self, messages, tools):
+            first = next(m['content'] for m in messages if m['role'] == 'user')
+            case = next(c for c in cases if c['turns'][0]['user'] == first)
+            position = sum(m['role'] == 'assistant' for m in messages)
+            texts = draft_failure(case) if case is difference and position < 2 else reference_texts(case)
+            return reply(texts[position])
+
+    monkeypatch.setattr(run.rollout, 'Batcher', Sampler)
+    plan = {**read(ROOT / run.PLAN)}
+    plan['goal_guided_repairs'] = {**plan['goal_guided_repairs'], 'samples_per_case': 2}
+    home = tmp_path / 'home'
+    home.mkdir()
+    natural, repaired = run.collect_repairs(None, None, plan, policy(), EXECUTION, home)
+    summary = read(home / 'rollouts-round4.json')
+    assert summary['rollouts'] == 4 and summary['passed'] == 2 and summary['repairable_failures'] == 2
+    assert summary['repairs'] == 4 and summary['verified_repairs'] == 4
+    pairs, trajectories = run.repair_data(plan, policy(), repaired)
+    docs = documents(difference)
+    assert len(pairs) == 1 and docs[(1, 'approved')] in pairs[0]['chosen'] and docs[(3, 'draft')] in pairs[0]['rejected']
+    assert len(trajectories) == 1 and trajectories[0]['complete']
+    repaired_index = len(pairs[0]['messages'])
+    assert trajectories[0]['trainable'][repaired_index] and trajectories[0]['messages'][repaired_index]['content'] == pairs[0]['chosen']
+    forged = [dict(repaired[0], result={**repaired[0]['result'], 'score': {**repaired[0]['result']['score'], 'passed': False}})]
+    with pytest.raises(ValueError, match='re-verify'):
+        run.repair_data(plan, policy(), forged)
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64
