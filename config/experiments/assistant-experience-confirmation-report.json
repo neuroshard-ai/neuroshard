@@ -1,0 +1,214 @@
+{
+  "format": "neuroshard-assistant-experience-confirmation-report/1",
+  "source_commit": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
+  "result_sha256": {
+    "parent": "7de9e6ccfdff6732f0ceb2c2edf531a9c5fcacd0b6e02eb9476e4f76581a527d",
+    "update": "3496dc981227c41bbf183eb3423586498114a09c891f8492a465ba82ae3c7da6",
+    "addition": "f28aba883e342027544328ddab0067787ca4c8d44efa7b952c8faea6f460072e"
+  },
+  "confirmation_passed": false,
+  "confirmation_opened": true,
+  "opened_once": true,
+  "checklist_credit": false,
+  "native_promotion": false,
+  "report": {
+    "correct": {
+      "parent": 49,
+      "update": 86,
+      "addition": 88
+    },
+    "versus_parent": {
+      "gained": [
+        "workflow-057c731e20e5",
+        "workflow-167ee8a65b35",
+        "workflow-300d017c8c51",
+        "workflow-3203de3a3f9d",
+        "workflow-4528925daf1b",
+        "workflow-4c0d7be325c5",
+        "workflow-5c4ecd9f1dba",
+        "workflow-5ed92d12fee4",
+        "workflow-6410bbe218ed",
+        "workflow-67f343d5a3e5",
+        "workflow-68eeda0b0ceb",
+        "workflow-6dcc2f14e483",
+        "workflow-70822e1e5f63",
+        "workflow-71b98a987136",
+        "workflow-79b7aa63d4cc",
+        "workflow-79d94fcc7201",
+        "workflow-7b786f90f4be",
+        "workflow-80df6335aff8",
+        "workflow-89b0e5da6cdc",
+        "workflow-995ca2236cfe",
+        "workflow-9d72d7563934",
+        "workflow-9f5801c4ab3b",
+        "workflow-a0a6020266a6",
+        "workflow-ac09b9d83861",
+        "workflow-bad2445d925c",
+        "workflow-c06666ece6cc",
+        "workflow-c502cafb0668",
+        "workflow-cdb4cc96df15",
+        "workflow-cfb95c8c6d61",
+        "workflow-d58b1943dc0b",
+        "workflow-d6f349e5b5c6",
+        "workflow-d755c540b678",
+        "workflow-df83679a2aaf",
+        "workflow-ea01b8a96882",
+        "workflow-ed4adfa12b25",
+        "workflow-edf2d2363e16",
+        "workflow-f2ebd9bc4f26",
+        "workflow-f7d4db9c76c5",
+        "workflow-fa41f6a89566"
+      ],
+      "lost": [],
+      "net": 39
+    },
+    "versus_update": {
+      "gained": [
+        "workflow-167ee8a65b35",
+        "workflow-5ed92d12fee4",
+        "workflow-68eeda0b0ceb",
+        "workflow-7b786f90f4be",
+        "workflow-9d72d7563934",
+        "workflow-cdb4cc96df15"
+      ],
+      "lost": [
+        "workflow-5eb3b993612f",
+        "workflow-73a80c62246b",
+        "workflow-80b962ab7b05",
+        "workflow-840b6352cc73"
+      ],
+      "net": 2
+    },
+    "lost_protected": [],
+    "p95_seconds": {
+      "addition": 98.86793735600003,
+      "update": 95.23357878699971,
+      "parent": 177.8558632219997
+    },
+    "checks": {
+      "total": true,
+      "net_vs_parent": true,
+      "lost_parent_successes": true,
+      "protected": true,
+      "p95": true,
+      "p95_ratio": true,
+      "per_family": true,
+      "lower_vs_parent": true,
+      "lower_vs_update": false
+    },
+    "per_family": {
+      "copy": 12,
+      "date": 12,
+      "sum": 12,
+      "difference": 8,
+      "latest": 9,
+      "recipient": 12,
+      "reschedule": 11,
+      "scope": 12
+    },
+    "lower_95_gain_vs_parent": 0.3125,
+    "lower_95_gain_vs_update": -0.052083333333333336,
+    "passed": false,
+    "selected_arm_episodes": {
+      "update": 96,
+      "addition": 96
+    }
+  },
+  "serving": {
+    "parent": "recompute",
+    "update": "prefix-cache",
+    "addition": "prefix-cache"
+  },
+  "wall_seconds": {
+    "parent": 9319.435550324,
+    "update": 6067.22520834,
+    "addition": 6286.091097022
+  },
+  "ci": {
+    "parent": {
+      "id": 36407265220,
+      "head_sha": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
+      "conclusion": "success",
+      "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36407265220"
+    },
+    "update": {
+      "id": 36407265220,
+      "head_sha": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
+      "conclusion": "success",
+      "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36407265220"
+    },
+    "addition": {
+      "id": 36407265220,
+      "head_sha": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
+      "conclusion": "success",
+      "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36407265220"
+    }
+  },
+  "resources_finished": {
+    "parent": {
+      "finished_utc": "2026-09-28T13:18:35.311449+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-0942dc26be7a9c6d8"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 10277.871505,
+      "conservative_compute_usd": 3.02169422247,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    "update": {
+      "finished_utc": "2026-09-28T12:11:19.946837+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-0c0eb3f407d2162ff"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 6242.862762,
+      "conservative_compute_usd": 1.8354016520279999,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    "addition": {
+      "finished_utc": "2026-09-28T12:14:59.416787+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-00a96a42d2bce2782"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 6462.590163,
+      "conservative_compute_usd": 1.9000015079219998,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    }
+  },
+  "resource_verification": {
+    "checked_utc": "2026-09-28T13:18:44.014774+00:00",
+    "systems": {
+      "parent": {
+        "instances": [
+          {
+            "id": "i-0942dc26be7a9c6d8",
+            "state": "terminated"
+          }
+        ],
+        "security_group": "retired",
+        "volumes": []
+      },
+      "update": {
+        "instances": [],
+        "security_group": "retired",
+        "volumes": []
+      },
+      "addition": {
+        "instances": [],
+        "security_group": "retired",
+        "volumes": []
+      }
+    }
+  },
+  "conservative_compute_usd": 6.75709738242
+}
