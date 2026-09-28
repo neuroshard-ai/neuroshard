@@ -51,7 +51,7 @@ UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-exper
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (3, 7),
-                     **{f"assistant-experience-confirmation-{system}": (4, 8) for system in ("parent", "update", "addition")}}
+                     **{f"assistant-experience-confirmation-{system}": (5, 9) for system in ("parent", "update", "addition")}}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"

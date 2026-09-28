@@ -3,8 +3,8 @@
   "region": "us-east-1",
   "instances": 1,
   "instance_type": "r7i.4xlarge",
-  "hours": 4,
-  "planning_cap_usd": 8,
+  "hours": 5,
+  "planning_cap_usd": 9,
   "disk_gib": 80,
   "disk_type": "gp3",
   "setup_seconds": 1200,
@@ -30,7 +30,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927f/evidence/.study/attempts/baseline-experience",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928g/evidence/.study/attempts/baseline-experience",
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
@@ -41,8 +41,8 @@
     "maximum_bytes": 419430400
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-round2-report.json",
-    "sha256": "c25ec2f4d7643e724852f5bde64d86fa352b4ec731a54d947e0a8945d306e828"
+    "path": "config/experiments/assistant-experience-development-round3-report.json",
+    "sha256": "104711402da6e1fe5eb2f2e521248fe6963443cfee584e1b403cac7cec416a30"
   },
-  "budget_scope": "Confirmation of the update system on the 96 sealed episodes: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; four-hour expiry and eight-dollar allowance. Opens only behind a pinned complete development pass."
+  "budget_scope": "Confirmation of the update system on the 96 sealed episodes: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; five-hour expiry and nine-dollar allowance. Opens only behind a pinned complete development pass."
 }

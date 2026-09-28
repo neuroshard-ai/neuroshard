@@ -70,6 +70,29 @@ def test_confirmation_profiles_are_bounded_and_only_routed_systems_upload_arms()
         assert ('upload' in resources) == (system != 'parent') == (profile in cloud.UPLOAD_PROFILES)
 
 
+def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
+    execution = read(ROOT / confirm.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources'])
+    report = read(ROOT / execution['development_report']['path'])
+    assert report['development_passed'] and report['serving'] == execution['serving'] == 'prefix-cache'
+    assert execution['arms'] == read(ROOT / 'config/experiments/assistant-experience-development-execution.json')['arms']
+    baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
+    assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
+    probe = ('import os, sys; import neuroshard.evolution.assistant_experience_confirm; '
+             'import neuroshard.evolution.assistant_experience_run, neuroshard.evolution.assistant_experience_train, '
+             'neuroshard.evolution.assistant_selector, neuroshard.evolution.assistant_experience_gate, '
+             'neuroshard.evolution.assistant_serving; root = os.path.abspath("src"); '
+             'print("\\n".join(sorted(os.path.relpath(x.__file__) for x in list(sys.modules.values()) '
+             'if getattr(x, "__file__", None) and os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources'])
+    assert execution['prepare_seconds'] + execution['worker_seconds'] + 1800 <= 5 * 3600
+    assert len(confirm.opened(execution)) == 96
+
+
 def test_importing_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_experience_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
