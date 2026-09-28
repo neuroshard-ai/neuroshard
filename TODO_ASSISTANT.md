@@ -54,16 +54,20 @@ remain evidence, not readiness claims for this assistant.
 - [x] Run the declared decision-preference round. [Result](docs/ASSISTANT_EXPERIENCE_ROUND2_RESULTS.md):
   37 verified version-choice pairs raise integration to 55/64 for both arms (parent
   34, round 1 42); older-revision-first cases 22% to 76–79%.
-- [ ] Run development for the round-2 systems. Latency needs a separate declared
-  efficiency change.
+- [x] Run development for the round-2 systems. [Result](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_ROUND2_RESULTS.md):
+  failed on latency only. Addition 18/24 (parent 9/24, update 17/24), net +9 with
+  no lost success, +1 over the update; p95 192 s against 180 s (189.8 s without
+  routing). Confirmation stays sealed.
+- [ ] Declare a latency path (fewer or faster generations) and rerun development;
+  open confirmation only after a complete development pass.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
-primitive qualification, so A1 remains open. Both trained arms improve integration
-(34/64 to 42/64) and development (9/24 to 14–15/24), mostly in the call-budget
-family, but fail the development gate on total, one lost success and latency.
-The declared decision-preference round is running.
+primitive qualification, so A1 remains open. After verified experience and 37
+verified decision preferences, the added module completes 18/24 development
+workflows (parent 9/24) with every parent success preserved and beats the 60×
+larger update control; only the 180 s latency limit fails.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

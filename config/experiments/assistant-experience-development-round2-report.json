@@ -1,0 +1,124 @@
+{
+  "format": "neuroshard-assistant-experience-development-report/1",
+  "round": 2,
+  "source_commit": "aed806414d360fa362d01da0669bed30c389776d",
+  "result_sha256": "0594b4c01223d85c01c35585ab089d7ea272feb191e6c5021655672192f2cf32",
+  "execution_completed": true,
+  "development_passed": false,
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "decision": "Round-2 development gate failed only on absolute latency: addition 18/24 (update 17/24, parent 9/24), net +9 over the parent with no lost success, +1 over the update, but p95 192.0 s including routing against the 180 s limit. Confirmation stays sealed.",
+  "report": {
+    "correct": {
+      "parent": 9,
+      "update": 17,
+      "addition": 18
+    },
+    "versus_parent": {
+      "gained": [
+        "workflow-0a46caf718a9",
+        "workflow-13de433c562f",
+        "workflow-21c0be04a7be",
+        "workflow-22e0b95f5781",
+        "workflow-5b541f25dc67",
+        "workflow-9e59abaad961",
+        "workflow-c5a251cb9186",
+        "workflow-e47fa617df9c",
+        "workflow-f4f40d77e7cd"
+      ],
+      "lost": [],
+      "net": 9
+    },
+    "versus_update": {
+      "gained": [
+        "workflow-c6b1500447f3"
+      ],
+      "lost": [],
+      "net": 1
+    },
+    "lost_protected": [],
+    "p95_seconds": {
+      "addition": 192.00219233299958,
+      "update": 190.0111645920001,
+      "parent": 177.10837942299986
+    },
+    "checks": {
+      "total": true,
+      "net_vs_parent": true,
+      "lost_parent_successes": true,
+      "protected": true,
+      "p95": false,
+      "p95_ratio": true,
+      "net_vs_update": true
+    },
+    "passed": false,
+    "confirmation_may_open": false,
+    "forced_anchor_forgetting": {
+      "update": {
+        "correct": 18,
+        "lost_protected": [
+          "granite-instruction-counts"
+        ]
+      },
+      "addition": {
+        "correct": 18,
+        "lost_protected": [
+          "granite-instruction-counts"
+        ]
+      }
+    },
+    "selected_arm_episodes": {
+      "update": 24,
+      "addition": 24
+    }
+  },
+  "selection_seconds_mean": {
+    "update": 2.8027361966667037,
+    "addition": 2.815904296041689
+  },
+  "workers": {
+    "update": {
+      "wall_seconds": 3080.1225394939997,
+      "peak_rss_bytes": 18052177920,
+      "checked_encodes": 458,
+      "served_projections_converted": 16
+    },
+    "addition": {
+      "wall_seconds": 3074.0177346059995,
+      "peak_rss_bytes": 17782087680,
+      "checked_encodes": 460,
+      "served_projections_converted": 0
+    }
+  },
+  "ci": {
+    "id": 36366162623,
+    "head_sha": "aed806414d360fa362d01da0669bed30c389776d",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36366162623"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-28T03:38:54.392519+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0bfa0a68f3ea3a7d7"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 6343.790655,
+    "conservative_compute_usd": 1.86507445257,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-09-28T03:40:12.413640+00:00",
+    "instances": [
+      {
+        "id": "i-0bfa0a68f3ea3a7d7",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  }
+}
