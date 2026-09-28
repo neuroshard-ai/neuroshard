@@ -25,6 +25,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
                      "assistant-experience-gpu": "config/experiments/assistant-experience-resources.json",
                      "assistant-experience-development": "config/experiments/assistant-experience-development-resources.json",
+                     **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
+                        for system in ("parent", "update", "addition")},
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
@@ -36,6 +38,8 @@ GRANITE_PROFILES = {
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
     "assistant-experience-gpu": ("assistant_experience_run", "docs/assistant-experience-requirements.txt"),
     "assistant-experience-development": ("assistant_experience_eval", "docs/granite-reference-requirements.txt"),
+    **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
+       for system in ("parent", "update", "addition")},
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
@@ -43,9 +47,11 @@ GRANITE_PROFILES = {
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
-UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience"}
+UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",
+                   "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
-LONG_CPU_PROFILES = {"assistant-experience-development": (3, 7)}
+LONG_CPU_PROFILES = {"assistant-experience-development": (3, 7),
+                     **{f"assistant-experience-confirmation-{system}": (4, 8) for system in ("parent", "update", "addition")}}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -64,6 +70,9 @@ def source_freeze(profile):
     if profile == "assistant-experience-development":
         from neuroshard.evolution.assistant_experience_eval import committed_sources as evaluation_sources
         return evaluation_sources()
+    if profile.startswith("assistant-experience-confirmation-"):
+        from neuroshard.evolution.assistant_experience_confirm import committed_sources as confirmation_sources
+        return confirmation_sources()
     if profile == "granite-answerability-reference":
         from neuroshard.evolution.granite_answerability_reference import committed_sources as answerability_sources
         return answerability_sources()
@@ -468,6 +477,9 @@ def remote_command(profile):
     if profile == "assistant-experience-development":
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience_development.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile.startswith("assistant-experience-confirmation-"):
+        return [PYTHON, REMOTE + "/scripts/run_assistant_experience_confirmation.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models", "--system", profile.rsplit("-", 1)[1]]
     if profile == "granite-answerability-reference":
         return [PYTHON, REMOTE + "/scripts/run_granite_answerability_reference.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
