@@ -58,16 +58,20 @@ remain evidence, not readiness claims for this assistant.
   failed on latency only. Addition 18/24 (parent 9/24, update 17/24), net +9 with
   no lost success, +1 over the update; p95 192 s against 180 s (189.8 s without
   routing). Confirmation stays sealed.
-- [ ] Declare a latency path (fewer or faster generations) and rerun development;
-  open confirmation only after a complete development pass.
+- [x] Declare a latency path and rerun development. [Result](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_CACHED_RESULTS.md):
+  the prefix cache cuts p95 to 102.7 s, but the addition flips one fragile
+  follow-up (17/24, one lost success); gate failed.
+- [ ] Make follow-up date arithmetic robust, rerun development under the cache,
+  then open confirmation (prepared: three one-system hosts behind a pinned pass).
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37
-verified decision preferences, the added module completes 18/24 development
-workflows (parent 9/24) with every parent success preserved and beats the 60×
-larger update control; only the 180 s latency limit fails.
+verified decision preferences, the added module completes 17–18/24 development
+workflows (parent 9/24) and matches the 60× larger update control. Recompute
+serving fails latency; prefix-cache serving passes latency but flips one fragile
+follow-up, so the development gate is still not passed.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
