@@ -30,7 +30,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927f/evidence/.study/attempts/baseline-experience",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928g/evidence/.study/attempts/baseline-experience",
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
@@ -41,8 +41,8 @@
     "maximum_bytes": 419430400
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-round2-report.json",
-    "sha256": "c25ec2f4d7643e724852f5bde64d86fa352b4ec731a54d947e0a8945d306e828"
+    "path": "config/experiments/assistant-experience-round3-report.json",
+    "sha256": "98dcdb67cdf6d0fcb82f3e6b07dcc162a14eb388da4c770edc8a69bb7eaa1433"
   },
   "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline; three-hour expiry and seven-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation.",
   "prior_attempts": [
@@ -55,6 +55,11 @@
       "utc": "2026-09-28T03:39:24Z",
       "commit": "aed806414d360fa362d01da0669bed30c389776d",
       "outcome": "Round-2 development under recompute serving: 18/24, no lost success, p95 192.0 s; failed on latency only ($1.87)."
+    },
+    {
+      "utc": "2026-09-28T05:28:36Z",
+      "commit": "2df1e3a9baf425fbf60484d9b05e0ff0a82df078",
+      "outcome": "Round-2 development under prefix-cache serving: 17/24, one lost success, p95 102.7 s; failed ($1.12)."
     }
   ]
 }

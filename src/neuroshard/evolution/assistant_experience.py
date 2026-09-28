@@ -152,12 +152,25 @@ def decision_pairs(case, rollouts, policy, per_case):
     return pairs[:per_case]
 
 
-def divergence_pairs(case, rollouts, policy, per_case):
+def decision(message):
+    """What a message decides: free-text replies are equivalent, tool calls compare by their parsed calls."""
+    if message['role'] != 'assistant':
+        return message['role'], message['content']
+    try:
+        calls = sandbox.parse_calls(message['content'])
+    except (ValueError, TypeError):
+        return 'invalid', message['content']
+    return ('calls', identity(calls)) if calls else ('reply',)
+
+
+def divergence_pairs(case, rollouts, policy, per_case, *, aligned=False):
     """Verified preferences at the first message where a success and a failure of one case differ.
 
-    Both rollouts share every earlier message. The chosen message is a valid tool
-    call from a fully successful rollout; the rejected message comes from a rollout
-    whose round containing that message failed.
+    The chosen message is a valid tool call from a fully successful rollout; the
+    rejected message comes from a rollout whose round containing it failed. By
+    default both share every earlier message exactly. ``aligned`` compares
+    decisions instead, so differently worded replies do not end the shared
+    prefix; the success's messages then form the context for both continuations.
     """
     if case['split'] not in TRAINING_SPLITS:
         raise ValueError('preferences may only be built from training goals')
@@ -171,7 +184,8 @@ def divergence_pairs(case, rollouts, policy, per_case):
     for good in successes:
         for bad in failures:
             left, right = good['result']['messages'], bad['result']['messages']
-            index = next((i for i, (a, b) in enumerate(zip(left, right)) if a != b), None)
+            same = (lambda a, b: decision(a) == decision(b)) if aligned else (lambda a, b: a == b)
+            index = next((i for i, (a, b) in enumerate(zip(left, right)) if not same(a, b)), None)
             if index is None or left[index]['role'] != 'assistant' or right[index]['role'] != 'assistant':
                 continue
             try:

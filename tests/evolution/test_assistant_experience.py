@@ -267,6 +267,25 @@ def test_divergence_pairs_prefer_the_success_at_the_first_differing_tool_call():
         experience.divergence_pairs(data.make_case('development', 'recipient', 0), rows, policy(), per_case=4)
 
 
+def test_aligned_divergence_ignores_reply_wording_but_not_tool_decisions():
+    from neuroshard.evolution.modular_reference_execution import identity
+
+    case = data.make_case('train', 'recipient', 6)
+    good = reference_texts(case)
+    bad = list(good)
+    bad[3] = 'The draft is saved; tell me if anything else should change.'
+    bad[6] = envelope('save_draft', {**case['turns'][1]['expected'], 'due_date': '2030-01-01'})
+    rows = [{'case_id': case['id'], 'sample': sample, 'policy_sha256': identity(policy()),
+             'result': scripted(case, texts)} for sample, texts in enumerate([good, bad])]
+    assert experience.divergence_pairs(case, rows, policy(), per_case=4) == []
+    pairs = experience.divergence_pairs(case, rows, policy(), per_case=4, aligned=True)
+    assert len(pairs) == 1 and pairs[0]['turn'] == 1 and '2030-01-01' in pairs[0]['rejected']
+    contents = [m['content'] for m in pairs[0]['messages']]
+    assert good[3] in contents and bad[3] not in contents
+    assert experience.decision({'role': 'assistant', 'content': 'Done.'}) == experience.decision(
+        {'role': 'assistant', 'content': 'All set.'})
+
+
 def test_preference_training_widens_the_verified_margin_and_keeps_round_one_schedules(tokenizer, tmp_path):
     experience_rows, replay_rows = sequences(tokenizer)
     assert trainer.schedule(experience_rows, replay_rows, SPEC) == trainer.schedule(experience_rows, replay_rows, SPEC, 0)
