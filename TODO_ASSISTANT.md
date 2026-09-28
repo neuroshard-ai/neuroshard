@@ -51,8 +51,11 @@ remain evidence, not readiness claims for this assistant.
   failed. Addition 14/24, update 15/24, parent 9/24; net +5 and parity with the
   update pass, but the total, one lost protected success and p95 latency (189 s
   with routing) fail. Confirmation stays sealed.
-- [ ] Run the declared decision-preference round (37 verified version-choice pairs),
-  then development again. Latency needs a separate declared efficiency change.
+- [x] Run the declared decision-preference round. [Result](docs/ASSISTANT_EXPERIENCE_ROUND2_RESULTS.md):
+  37 verified version-choice pairs raise integration to 55/64 for both arms (parent
+  34, round 1 42); older-revision-first cases 22% to 76–79%.
+- [ ] Run development for the round-2 systems. Latency needs a separate declared
+  efficiency change.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
