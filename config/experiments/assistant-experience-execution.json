@@ -80,14 +80,14 @@
   },
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
-    "config/experiments/assistant-experience-learning.json": "a67315822e0a886ca9aa9848a3c70870b2c6a61d75f0695e7144fb93b9d44e4e",
+    "config/experiments/assistant-experience-learning.json": "76b949ab360ebc776abb1c69d2e6f1295a6c90733d2e8a923a7ed5863eb47ae7",
     "config/experiments/assistant-experience-resources.json": "aa8fba900d97e669c7cb384603231ceac59ead56706f49de1fb5eadb3d683bfa",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "97801a93b139c71ba9aaad24310daec50fd945a0a845947540c75d53ce82c044",
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "9a38a88e6821512256719c1444863c4dc09ce0f2f8df64b182dae41284ca3616",
     "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
   "sources": [

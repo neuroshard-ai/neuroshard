@@ -50,6 +50,11 @@
       "utc": "2026-09-27T22:49:54Z",
       "commit": "6eed482130201bd3d247d2575d4976685a86e1d7",
       "outcome": "Round-1 development evaluation completed and failed the gate ($1.82)."
+    },
+    {
+      "utc": "2026-09-28T03:39:24Z",
+      "commit": "aed806414d360fa362d01da0669bed30c389776d",
+      "outcome": "Round-2 development under recompute serving: 18/24, no lost success, p95 192.0 s; failed on latency only ($1.87)."
     }
   ]
 }

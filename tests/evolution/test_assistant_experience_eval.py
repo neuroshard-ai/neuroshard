@@ -139,7 +139,7 @@ def test_development_inventory_pins_arms_runtime_and_every_imported_source():
     assert sha256(ROOT / execution['canonical_result']['path']) == execution['canonical_result']['sha256']
     probe = ('import os, sys; import neuroshard.evolution.assistant_experience_eval as m; '
              'import neuroshard.evolution.assistant_experience_run, neuroshard.evolution.assistant_experience_train, '
-             'neuroshard.evolution.assistant_selector, neuroshard.evolution.assistant_experience_gate; '
+             'neuroshard.evolution.assistant_selector, neuroshard.evolution.assistant_experience_gate, neuroshard.evolution.assistant_serving; '
              'root = os.path.abspath("src"); '
              'print("\\n".join(sorted(os.path.relpath(x.__file__) for x in list(sys.modules.values()) '
              'if getattr(x, "__file__", None) and os.path.abspath(x.__file__).startswith(root))))')

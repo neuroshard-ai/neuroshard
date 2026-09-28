@@ -46,21 +46,23 @@ def verify_arms(directory, pinned):
     return read(directory / 'integration.json')
 
 
-def evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, anchor_plan):
+def evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, anchor_plan, make_responder=None):
     """Selected complete episodes for one system, plus its forced-arm anchor answers.
 
     ``feature`` runs the parent at the first request; its time is served latency.
+    ``make_responder`` builds a fresh responder per episode (default: uncached).
     """
     from neuroshard.evolution import assistant_selector as selector
 
-    respond = {'parent': first.native_responder(parent, tokenizer, policy),
-               'arm': first.native_responder(model, tokenizer, policy)}
+    make = make_responder or first.native_responder
+    models = {'parent': parent, 'arm': model}
     rows = []
     for case in cases:
         started = time.monotonic()
         chosen = 'arm' if selector.choose(gate, feature(case)) else 'parent'
         selection = time.monotonic() - started
-        rows.append({**workflow.execute(case, respond[chosen], policy), 'selected': chosen,
+        respond = make(models[chosen], tokenizer, policy)
+        rows.append({**workflow.execute(case, respond, policy), 'selected': chosen,
                      'selection_seconds': selection})
     anchors = [reference.generate(model, tokenizer, anchor_plan, task, 'baseline') for task in anchor_plan['tasks']]
     return {'episodes': rows, 'forced_anchors': anchors}
@@ -157,7 +159,12 @@ def worker(request_path):
         def feature(case):
             return accelerator.boundary_feature(parent, tokenizer, policy, case, 'cpu')
 
-        reply.update(evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, read(ROOT / reference.PLAN)))
+        make_responder = None
+        if execution.get('serving') == 'prefix-cache':
+            from neuroshard.evolution.assistant_serving import cached_responder as make_responder
+        reply['serving'] = execution.get('serving', 'recompute')
+        reply.update(evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, read(ROOT / reference.PLAN),
+                                  make_responder))
         if file_state(directory, inventory) != state:
             raise ValueError('parent checkpoint changed during evaluation')
         reply['execution_completed'] = True

@@ -156,5 +156,13 @@
     },
     "integration": "Refit each gate from fresh integration outcomes of the round-2 arms with the declared recipe.",
     "gates": "The same development and confirmation gates, comparing the round-2 update and addition systems with the canonical parent. The development split is reused; confirmation remains sealed until a development pass."
+  },
+  "serving": {
+    "runtime": "prefix-cache",
+    "status": "Declared on September 28, 2026 after the round-2 development gate failed only on p95 latency (192.0 s; 189.8 s without routing), and before any cached run.",
+    "rule": "Reuse the key/value cache of the longest unchanged token prefix between generations of one episode. Every request is still rendered and tokenized in full, at least one token is recomputed, and a new episode starts from an empty cache.",
+    "scope": "Both routed systems in development and confirmation. The parent control remains the canonical recompute baseline and its protected successes. The trained arms, gates and every other threshold are unchanged.",
+    "reason": "Prefill was 49% of generation time; compound workflows re-processed about 17,000 prompt tokens across twelve generations.",
+    "validation": "Rerun development with the round-2 arms under this runtime. The complete development gate, including zero lost parent successes, must pass under it before confirmation opens."
   }
 }

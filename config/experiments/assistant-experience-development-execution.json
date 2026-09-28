@@ -67,8 +67,8 @@
     "sha256": "de899e8bc1f21fddd6416460f68ab77843f19f686606df56e72973642c6c5d30"
   },
   "contracts": {
-    "config/experiments/assistant-experience-learning.json": "a67315822e0a886ca9aa9848a3c70870b2c6a61d75f0695e7144fb93b9d44e4e",
-    "config/experiments/assistant-experience-development-resources.json": "e0bbf74e7c2c05b798f74a9f56fc65af5c99e7cc5985966d30d5dd6cb433b81a",
+    "config/experiments/assistant-experience-learning.json": "76b949ab360ebc776abb1c69d2e6f1295a6c90733d2e8a923a7ed5863eb47ae7",
+    "config/experiments/assistant-experience-development-resources.json": "1ba10dbda48b569796520b2ccedf9081b803497045c8e2f058f1e9c1f1eee86d",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
@@ -78,7 +78,7 @@
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "97801a93b139c71ba9aaad24310daec50fd945a0a845947540c75d53ce82c044",
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "9a38a88e6821512256719c1444863c4dc09ce0f2f8df64b182dae41284ca3616",
     "config/experiments/assistant-experience-round2-report.json": "c25ec2f4d7643e724852f5bde64d86fa352b4ec731a54d947e0a8945d306e828"
   },
   "sources": [
@@ -118,13 +118,15 @@
     "src/neuroshard/evolution/modular_reference_execution.py",
     "src/neuroshard/evolution/modular_tools.py",
     "src/neuroshard/version.py",
+    "src/neuroshard/evolution/assistant_serving.py",
     "scripts/run_assistant_experience_development.py",
     "scripts/modular_reference_cloud.py"
   ],
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "attempts": 1,
-  "execution": "A preparation worker, then one fresh worker per trained arm in turn at the canonical eight threads: 24 selected development episodes of the round-2 systems, each timed with its selection pass, and 24 forced-arm anchors. Parent control is the pinned canonical result. Confirmation stays sealed.",
+  "execution": "A preparation worker, then one fresh worker per round-2 arm in turn at the canonical eight threads: 24 selected development episodes served with the declared prefix cache, each timed with its selection pass, and 24 forced-arm anchors. Parent control is the pinned canonical result. Confirmation stays sealed.",
   "interpretation": "Development gate only. A pass opens confirmation once; it is not admission, promotion or checklist credit, and A1 stays open.",
-  "round": 2
+  "round": 2,
+  "serving": "prefix-cache"
 }

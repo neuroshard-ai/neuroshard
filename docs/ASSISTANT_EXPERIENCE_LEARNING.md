@@ -86,6 +86,18 @@ the round-1 arm as reference. Gates are refitted on integration episodes, and th
 same development and confirmation gates apply. The development split is reused, so
 confirmation remains the decisive fresh test.
 
+## Serving runtime amendment: prefix cache
+
+Declared after the [round-2 development result](ASSISTANT_EXPERIENCE_DEVELOPMENT_ROUND2_RESULTS.md)
+failed only on p95 latency, and before any cached run. Prefill was 49% of generation
+time: compound workflows re-processed about 17,000 prompt tokens across twelve
+generations. The routed systems now reuse the key/value cache of the longest
+unchanged token prefix between generations of one episode. Every request is still
+rendered and tokenized in full, at least one token is recomputed, and each episode
+starts empty. Arms, gates and every threshold are unchanged, and the parent control
+remains the canonical recompute baseline. The complete development gate must pass
+under this runtime before confirmation opens.
+
 ## Role in the network
 
 Rollouts are the parallel contributor workload. Anyone can replay a submitted
