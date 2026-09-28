@@ -164,5 +164,41 @@
     "scope": "Both routed systems in development and confirmation. The parent control remains the canonical recompute baseline and its protected successes. The trained arms, gates and every other threshold are unchanged.",
     "reason": "Prefill was 49% of generation time; compound workflows re-processed about 17,000 prompt tokens across twelve generations.",
     "validation": "Rerun development with the round-2 arms under this runtime. The complete development gate, including zero lost parent successes, must pass under it before confirmation opens."
+  },
+  "divergence_preferences": {
+    "status": "Declared on September 28, 2026 after the cached round-2 development result and before any round-3 rollout. Authorized by the user.",
+    "motivation": "Round 2 fixed most version choices; the remaining brittle behavior (follow-up date arithmetic) flips with serving numerics and was never targeted.",
+    "source": "Fresh sampled rollouts of the pinned round-2 addition on the 256 training cases; every rollout is rescored through the frozen scorer. No integration, development or confirmation goals.",
+    "samples_per_case": 6,
+    "temperature": 0.8,
+    "seed": 27092032,
+    "decision": "The first message where a fully successful rollout and a failed rollout of the same case differ, given identical earlier messages. Chosen: that message from the success, which must be a valid tool call. Rejected: the failure's message, whose round must have failed.",
+    "per_case": 4,
+    "objective": "DPO on the divergent message and its end token with the round-2 arm as reference, mixed with the round-1 experience and replay sequences.",
+    "arms": "Both round-2 arms continue from their pinned checkpoints on identical sequences, pairs and schedule; pairs come from the addition's rollouts for both.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092033
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-3 arms with the declared recipe.",
+    "gates": "The same development gate under the declared prefix-cache serving; confirmation opens once, only after a complete development pass."
   }
 }

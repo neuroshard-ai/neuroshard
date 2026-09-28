@@ -152,6 +152,43 @@ def decision_pairs(case, rollouts, policy, per_case):
     return pairs[:per_case]
 
 
+def divergence_pairs(case, rollouts, policy, per_case):
+    """Verified preferences at the first message where a success and a failure of one case differ.
+
+    Both rollouts share every earlier message. The chosen message is a valid tool
+    call from a fully successful rollout; the rejected message comes from a rollout
+    whose round containing that message failed.
+    """
+    if case['split'] not in TRAINING_SPLITS:
+        raise ValueError('preferences may only be built from training goals')
+    rows = [r for r in rollouts if r['case_id'] == case['id'] and r['policy_sha256'] == identity(policy)]
+    for row in rows:
+        if workflow.score(case, row['result'], policy) != row['result']['score']:
+            raise ValueError('rollout outcome does not re-verify')
+    successes = [r for r in rows if r['result']['score']['passed']]
+    failures = [r for r in rows if not r['result']['score']['passed']]
+    pairs = {}
+    for good in successes:
+        for bad in failures:
+            left, right = good['result']['messages'], bad['result']['messages']
+            index = next((i for i, (a, b) in enumerate(zip(left, right)) if a != b), None)
+            if index is None or left[index]['role'] != 'assistant' or right[index]['role'] != 'assistant':
+                continue
+            try:
+                if not sandbox.parse_calls(left[index]['content']):
+                    continue
+            except (ValueError, TypeError):
+                continue
+            turn = sum(m['role'] == 'user' for m in left[:index]) - 1
+            if bad['result']['score']['round_successes'][turn:turn + 1] != [False]:
+                continue
+            key = identity([left[:index], left[index]['content'], right[index]['content']])
+            pairs.setdefault(key, {'case_id': case['id'], 'messages': copy.deepcopy(left[:index]), 'turn': turn,
+                                   'chosen': left[index]['content'], 'rejected': right[index]['content'],
+                                   'samples': [good['sample'], bad['sample']]})
+    return sorted(pairs.values(), key=lambda p: (p['turn'], len(p['messages']), p['samples']))[:per_case]
+
+
 def summary(cases, attempts, accepted):
     by_family = {}
     for case in cases:

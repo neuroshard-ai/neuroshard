@@ -235,6 +235,38 @@ def test_round_two_continues_both_pinned_arms_on_identical_verified_preferences(
         run.build_pairs(tokenizer, plan, policy(), [r for r in rollouts if r['sample'] == 0])
 
 
+def test_round_three_collects_from_an_arm_and_continues_on_divergence_pairs(setup, tmp_path):
+    from test_assistant_experience import followup_rollouts, sequences
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = {**plan, 'divergence_preferences': {**plan['divergence_preferences'], 'samples_per_case': 2, 'training': {
+        **plan['divergence_preferences']['training'], 'steps': 2, 'gradient_accumulation': 4, 'preference_per_update': 2}}}
+    rows = run.collect_arm(tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home)
+    assert len(rows) == 2 * len(CASES) and read(home / 'rollouts-round3.json')['rollouts'] == len(rows)
+    cases = [data.make_case('train', 'recipient', i) for i in range(4, 6)]
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(run, 'split_cases', lambda plan, split: cases)
+    try:
+        pairs, pair_rows = run.build_divergence_pairs(tokenizer, plan, policy(),
+                                                      [r for c in cases for r in followup_rollouts(c)])
+    finally:
+        monkey.undo()
+    assert len(pairs) == 4 and {p['turn'] for p in pairs} == {0, 1}
+    experience_rows, replay_rows = sequences(tokenizer)
+    prior, pinned = tmp_path / 'round2', {}
+    for arm in ('update', 'addition'):
+        trainable, receipt = trainer.train(tiny_model(tokenizer), arm, experience_rows, replay_rows, SPEC)
+        pinned[arm] = trainer.checkpoint(prior / f'{arm}-checkpoint', trainable, receipt, {})['trainable_sha256']
+    out = tmp_path / 'round3'
+    out.mkdir()
+    manifests = run.train_round2(lambda: tiny_model(tokenizer), plan, {'device': 'cpu'}, experience_rows, replay_rows,
+                                 pair_rows, prior, pinned, out, section='divergence_preferences')
+    assert manifests['update']['steps'] == manifests['addition']['steps'] == 2
+    assert {arm: m['roots']['round1'] for arm, m in manifests.items()} == pinned
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

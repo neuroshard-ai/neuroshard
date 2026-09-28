@@ -98,6 +98,20 @@ starts empty. Arms, gates and every threshold are unchanged, and the parent cont
 remains the canonical recompute baseline. The complete development gate must pass
 under this runtime before confirmation opens.
 
+## Third round: verified divergence preferences
+
+Declared after the [cached development result](ASSISTANT_EXPERIENCE_DEVELOPMENT_CACHED_RESULTS.md)
+and before any round-3 rollout. Round 2 fixed most version choices; the remaining
+brittle behavior, follow-up date arithmetic, was never targeted. The round-2
+addition samples six fresh rollouts per training case, each rescored. For every
+success and failure of the same case, the first message where they differ, after
+identical earlier messages, becomes a pair: the success's tool call is chosen, and
+the failure's message is rejected only if its round failed. At most four pairs per
+case. Both round-2 arms continue for 64 steps on the round-1 experience and replay
+plus these pairs, with DPO against the round-2 arm. Gates are refitted on
+integration; the development gate under prefix-cache serving must pass before
+confirmation opens.
+
 ## Role in the network
 
 Rollouts are the parallel contributor workload. Anyone can replay a submitted

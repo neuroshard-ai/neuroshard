@@ -52,6 +52,12 @@ def write_rows(path, rows):
     return identity(rows)
 
 
+def trainer_module():
+    from neuroshard.evolution import assistant_experience_train
+
+    return assistant_experience_train
+
+
 def release_accelerator():
     import gc
     import torch
@@ -230,19 +236,50 @@ def build_pairs(tokenizer, plan, policy, rollouts):
     return pairs, [trainer.encode_pair(tokenizer, pair, sandbox.TOOLS) for pair in pairs]
 
 
-def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, round1, pinned, home):
-    """Continue both round-1 arms on identical experience, replay and preference pairs."""
+def collect_arm(model, tokenizer, plan, policy, execution, home):
+    """Sampled training rollouts from a trained arm, for divergence preferences; every one is rescored."""
+    cases = split_cases(plan, 'train')
+    spec = plan['divergence_preferences']
+    batcher = rollout.Batcher(model, tokenizer, sampling(policy, execution, spec['temperature']),
+                              max_batch=execution['max_batch'], device=execution['device'], seed=spec['seed'])
+    try:
+        rows = rollout.rollouts([(c, policy, s) for c in cases for s in range(spec['samples_per_case'])],
+                                batcher.respond, workers=execution['workers'], progress=reporter(home, 'collect-round3'))
+    finally:
+        batcher.close()
+    save(home / 'rollouts-round3.json', {'rollouts': len(rows), 'passed': sum(r['result']['score']['passed'] for r in rows),
+                                         'rows_sha256': write_rows(home / 'rollouts-round3.jsonl.gz', rows)}, exclusive=True)
+    return rows
+
+
+def build_divergence_pairs(tokenizer, plan, policy, rollouts):
     from neuroshard.evolution import assistant_experience_train as trainer
 
-    spec = {**plan['training'], **plan['decision_preferences']['training']}
+    per_case = plan['divergence_preferences']['per_case']
+    grouped = {}
+    for row in rollouts:
+        grouped.setdefault(row['case_id'], []).append(row)
+    pairs = [pair for case in split_cases(plan, 'train')
+             for pair in experience.divergence_pairs(case, grouped.get(case['id'], []), policy, per_case)]
+    if not pairs:
+        raise ValueError('no verified divergence preferences in the arm rollouts')
+    return pairs, [trainer.encode_pair(tokenizer, pair, sandbox.TOOLS) for pair in pairs]
+
+
+def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, round1, pinned, home,
+                 section='decision_preferences'):
+    """Continue both prior arms on identical experience, replay and preference pairs."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    spec = {**plan['training'], **plan[section]['training']}
     manifests = {}
     for arm in ('update', 'addition'):
-        save(home / 'progress.json', {'phase': f'train-round2-{arm}', 'unix': time.time()})
+        save(home / 'progress.json', {'phase': f'train-{section}-{arm}', 'unix': time.time()})
         model = load_parent()
         started = time.monotonic()
         prior, trainable = trainer.resume(model, arm, plan['training'], Path(round1) / f'{arm}-checkpoint')
         if prior['trainable_sha256'] != pinned[arm]:
-            raise ValueError(f'round-1 {arm} checkpoint differs from its pinned digest')
+            raise ValueError(f'prior {arm} checkpoint differs from its pinned digest')
         trainable, receipt = trainer.train(model, arm, experience_rows, replay_rows, spec,
                                            device=execution['device'], trainable=trainable, pairs=pair_rows)
         roots = {'round1': prior['trainable_sha256'], 'experience': identity([r['sha256'] for r in experience_rows]),
@@ -394,7 +431,30 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        if 'round2' in execution:
+        if 'round3' in execution:
+            experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
+                                                           tokenizer, plan, policy, parameters, home)
+            prior = execution['round3']['prior']
+            sampler = load_parent()
+            manifest, _ = trainer_module().resume(sampler, 'addition', plan['training'], ROOT / UPLOADED / 'addition-checkpoint')
+            if manifest['trainable_sha256'] != prior['addition']:
+                raise ValueError('round-2 addition differs from its pinned digest')
+            sampler.eval()
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            rollouts = collect_arm(sampler, tokenizer, plan, policy, parameters, home)
+            del sampler
+            release_accelerator()
+            pairs, pair_rows = build_divergence_pairs(tokenizer, plan, policy, rollouts)
+            save(home / 'pairs.json', {'pairs': len(pairs), 'cases': len({p['case_id'] for p in pairs}),
+                                       'turns': sorted({p['turn'] for p in pairs}), 'pairs_sha256': identity(pairs)},
+                 exclusive=True)
+            reply['phases']['collect_round3'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = train_round2(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows,
+                                             ROOT / UPLOADED, prior, home, section='divergence_preferences')
+            reply['phases']['train'] = time.monotonic() - begun
+        elif 'round2' in execution:
             experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
                                                            tokenizer, plan, policy, parameters, home)
             pairs, pair_rows = build_pairs(tokenizer, plan, policy, read_rows(ROOT / UPLOADED / 'rollouts.jsonl.gz'))
@@ -418,7 +478,7 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        if 'round2' not in execution:
+        if 'round2' not in execution and 'round3' not in execution:
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
             reply['phases']['train'] = time.monotonic() - begun

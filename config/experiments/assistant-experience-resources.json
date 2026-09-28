@@ -92,10 +92,15 @@
       "utc": "2026-09-27T23:25:59Z",
       "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
       "outcome": "Round 2 re-verified the collection and built 37 pairs, then stopped with KeyError: 'round2' because the worker passed runtime parameters where the pinned round-1 digests were read; $0.22."
+    },
+    {
+      "utc": "2026-09-28T01:26:45Z",
+      "commit": "9cd1c70ce5d51a6f826a6a8244152d479d8ad8fb",
+      "outcome": "Round 2 continued both arms on 37 verified version-choice pairs and refitted gates ($1.84)."
     }
   ],
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-round2-inputs",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-round3-inputs",
     "files": [
       "experience.json",
       "rollouts.jsonl.gz",
@@ -107,6 +112,6 @@
       "addition-checkpoint/manifest.json",
       "addition-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 319893039
+    "maximum_bytes": 319893428
   }
 }

@@ -239,6 +239,34 @@ def test_decision_pairs_isolate_the_version_choice_from_verified_natural_rollout
         experience.decision_pairs(data.make_case('development', 'copy', 0), rows, policy(), per_case=8)
 
 
+def followup_rollouts(case):
+    """A full success and a failure that first differs at the follow-up save_draft."""
+    from neuroshard.evolution.modular_reference_execution import identity
+
+    good = reference_texts(case)
+    bad = list(good)
+    bad[6] = envelope('save_draft', {**case['turns'][1]['expected'], 'due_date': '2030-01-01'})
+    early = list(good)
+    early[2] = envelope('save_draft', {**case['turns'][0]['expected'], 'total': 0})
+    return [{'case_id': case['id'], 'sample': sample, 'policy_sha256': identity(policy()),
+             'result': scripted(case, texts)} for sample, texts in enumerate([good, bad, early, good])]
+
+
+def test_divergence_pairs_prefer_the_success_at_the_first_differing_tool_call():
+    case = data.make_case('train', 'recipient', 4)
+    rows = followup_rollouts(case)
+    pairs = experience.divergence_pairs(case, rows, policy(), per_case=4)
+    assert [(p['turn'], p['samples']) for p in pairs] == [(0, [0, 2]), (1, [0, 1])]
+    late = pairs[1]
+    assert late['messages'][-1]['role'] == 'user' or late['messages'][-1]['role'] == 'tool'
+    assert '2030-01-01' in late['rejected'] and case['turns'][1]['expected']['due_date'] in late['chosen']
+    assert sum(m['role'] == 'user' for m in late['messages']) == 2
+    assert len(experience.divergence_pairs(case, rows, policy(), per_case=1)) == 1
+    assert experience.divergence_pairs(case, rows[:1] + rows[3:], policy(), per_case=4) == []
+    with pytest.raises(ValueError, match='training goals'):
+        experience.divergence_pairs(data.make_case('development', 'recipient', 0), rows, policy(), per_case=4)
+
+
 def test_preference_training_widens_the_verified_margin_and_keeps_round_one_schedules(tokenizer, tmp_path):
     experience_rows, replay_rows = sequences(tokenizer)
     assert trainer.schedule(experience_rows, replay_rows, SPEC) == trainer.schedule(experience_rows, replay_rows, SPEC, 0)
