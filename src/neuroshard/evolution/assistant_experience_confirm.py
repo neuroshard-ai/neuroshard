@@ -1,9 +1,10 @@
-"""Confirmation of the verified-experience systems on the 96 sealed episodes, once.
+"""Confirmation of the verified-experience systems on a sealed split, once.
 
 It opens only when the pinned development report records a complete pass. Three
 hosts run one system each so latency conditions match the canonical baseline:
-the parent control under recompute serving, and each routed system under the
-declared serving runtime. The gate is assessed after all three finish.
+the parent control under its declared serving (recompute unless the execution
+says otherwise), and each routed system under the declared serving runtime. The
+gate is assessed after all three finish.
 """
 
 import importlib.metadata
@@ -33,13 +34,20 @@ PROFILES = {f'assistant-experience-confirmation-{system}': system for system in 
 
 
 def opened(execution):
-    """The confirmation split, only behind a pinned complete development pass."""
-    report_path = ROOT / execution['development_report']['path']
-    if sha256(report_path) != execution['development_report']['sha256'] or not read(report_path)['development_passed']:
+    """The declared confirmation split, only behind a pinned complete development pass."""
+    pinned = execution['development_report']
+    report_path = ROOT / pinned['path']
+    report = read(report_path)
+    if sha256(report_path) != pinned['sha256'] or not all(report[key] for key in pinned.get('requires', ['development_passed'])):
         raise ValueError('confirmation is sealed without a pinned complete development pass')
-    plan = read(ROOT / development.PLAN)
-    manifest = read(ROOT / plan['data'])['splits']['confirmation']
-    cases = data.cases('confirmation')
+    split = execution.get('split', 'confirmation')
+    if 'data' in execution:
+        manifest = read(ROOT / execution['data'])
+        if manifest['split'] != split:
+            raise ValueError('confirmation manifest is for another split')
+    else:
+        manifest = read(ROOT / read(ROOT / development.PLAN)['data'])['splits'][split]
+    cases = data.cases(split)
     if identity(cases) != manifest['sha256'] or [c['id'] for c in cases] != manifest['case_ids']:
         raise ValueError('confirmation data differs from the frozen split')
     return cases
@@ -122,7 +130,11 @@ def worker(request_path):
         tokenizer, report = granite_tokenizer.load(directory)
         reply['tokenizer'] = report
         parent, _ = reference.load_model(directory, 'baseline')
-        if system == 'parent':
+        if system == 'parent' and execution.get('parent_serving') == 'prefix-cache':
+            reply['episodes'] = [workflow.execute(case, cached_responder(parent, tokenizer, policy), policy)
+                                 for case in cases]
+            reply['serving'] = 'prefix-cache'
+        elif system == 'parent':
             respond = first.native_responder(parent, tokenizer, policy)
             reply['episodes'] = [workflow.execute(case, respond, policy) for case in cases]
             reply['serving'] = 'recompute'
@@ -185,7 +197,7 @@ def run(home, models, system):
     return result
 
 
-def assess(plan, cases, replies):
+def assess(plan, cases, replies, section='confirmation_gate'):
     """The declared confirmation gate from three completed systems, every episode rescored."""
     from neuroshard.evolution import assistant_experience_gate as gate
 
@@ -198,6 +210,6 @@ def assess(plan, cases, replies):
             if workflow.score(by_id[row['id']], row, policy) != row['score']:
                 raise ValueError('confirmation outcome rescore differs')
     protected = sorted(row['id'] for row in rows['parent'] if row['score']['passed'])
-    report = gate.confirmation(plan, cases, rows['parent'], rows['update'], rows['addition'], protected)
+    report = gate.confirmation(plan, cases, rows['parent'], rows['update'], rows['addition'], protected, section)
     report['selected_arm_episodes'] = {s: sum(r['selected'] == 'arm' for r in rows[s]) for s in ('update', 'addition')}
     return report

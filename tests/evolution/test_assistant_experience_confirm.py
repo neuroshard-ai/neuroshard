@@ -37,6 +37,40 @@ def test_confirmation_stays_sealed_without_a_pinned_development_pass(tmp_path):
         confirm.opened(execution)
 
 
+def test_second_confirmation_needs_development_and_a1_and_opens_its_own_frozen_split(tmp_path):
+    report = tmp_path / 'report.json'
+    save(report, {'development_passed': True, 'development_and_a1_passed': False})
+    execution = {'development_report': {'path': str(report), 'sha256': sha256(report),
+                                        'requires': ['development_passed', 'development_and_a1_passed']},
+                 'split': 'confirmation2', 'data': PLAN['confirmation2_gate']['data']}
+    with pytest.raises(ValueError, match='sealed'):
+        confirm.opened(execution)
+    save(report, {'development_passed': True, 'development_and_a1_passed': True}, exclusive=False)
+    execution['development_report']['sha256'] = sha256(report)
+    cases = confirm.opened(execution)
+    assert len(cases) == PLAN['confirmation2_gate']['cases'] == 192
+    assert not {c['id'] for c in cases} & {c['id'] for c in data.cases('confirmation')}
+    with pytest.raises(ValueError, match='another split'):
+        confirm.opened({**execution, 'split': 'confirmation'})
+
+
+def test_second_confirmation_gate_scales_to_192_episodes():
+    cases = data.cases('confirmation2')
+    by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}
+
+    def rows(successes, routed):
+        extra = {'selected': 'arm', 'selection_seconds': 1.0} if routed else {}
+        return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), **extra} for c in cases]
+
+    parent = {k for f in data.FAMILIES for k in by_family[f][:8]}
+    for per_family, expected in ((20, True), (19, False)):
+        trained = {k for f in data.FAMILIES for k in by_family[f][:per_family]}
+        replies = {'parent': {'episodes': rows(parent, False)}, 'update': {'episodes': rows(trained, True)},
+                   'addition': {'episodes': rows(trained, True)}}
+        report = confirm.assess(PLAN, cases, replies, 'confirmation2_gate')
+        assert report['passed'] is expected and report['correct']['addition'] == 8 * per_family
+
+
 def test_confirmation_gate_rescores_all_three_systems():
     cases = data.cases('confirmation')
     by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}

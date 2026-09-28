@@ -68,7 +68,7 @@
   },
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
-    "config/experiments/assistant-experience-development-resources.json": "0650c398e74b927a0ce95b6f607427bd65ed6bb95245813a8acab92f9b253fcc",
+    "config/experiments/assistant-experience-development-resources.json": "c0a51fade796a8e8b46c33bce502edfe67831b1bfbe37ff1a6b53cb536418a60",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",

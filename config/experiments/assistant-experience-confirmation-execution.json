@@ -77,9 +77,9 @@
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
     "config/experiments/assistant-experience-development-round3-report.json": "104711402da6e1fe5eb2f2e521248fe6963443cfee584e1b403cac7cec416a30",
-    "config/experiments/assistant-experience-confirmation-parent-resources.json": "f3777067d4bd160a99d9cf12c1f4089809e3d26a7237b2d07fe2ee2816a14d7f",
-    "config/experiments/assistant-experience-confirmation-update-resources.json": "005e744035b1334faca6af0bc6a43aef844045b74e874765174c018b1318de8d",
-    "config/experiments/assistant-experience-confirmation-addition-resources.json": "50a6dee7a38a67430371124cc0f2b70df492ae6e04b6958c1b17e69443d4a117"
+    "config/experiments/assistant-experience-confirmation-parent-resources.json": "4304a4945751a185bb2be3e921d428cf74a3f637207ae10db9f74e7a12926abd",
+    "config/experiments/assistant-experience-confirmation-update-resources.json": "68242a8609e89d088b1326191c13106fcf2bac6e071fef82fa94d54851162334",
+    "config/experiments/assistant-experience-confirmation-addition-resources.json": "996051c66402bfb7f72a1eac336f424e1a2a0ea899a614e2f2b58eab729b3bfc"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",

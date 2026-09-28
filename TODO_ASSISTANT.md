@@ -69,6 +69,11 @@ remain evidence, not readiness claims for this assistant.
   failed on one check. Addition 88/96 (parent 49/96, update 86/96), net +39 with
   no lost parent success, p95 98.9 s; the lower 95% gain versus the update is
   −5.2 points against the −5 margin. A2 remains open for this capability.
+- [ ] Second attempt ([declaration](docs/ASSISTANT_EXPERIENCE_LEARNING.md#second-attempt-goal-guided-repairs-and-fresh-confirmation)):
+  round 4 repairs the addition's wrong document reads on training cases and keeps
+  scorer-verified continuations; development under the prefix cache adds the A1
+  served-system check. If both pass, a fresh 192-episode confirmation opens once.
+  Budget ceiling: $1,000.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 

@@ -20,6 +20,7 @@ import time
 from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution import assistant_workflow_baseline as first
 from neuroshard.evolution import assistant_workflow_canonical as canonical
+from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution import granite_reference as reference
 from neuroshard.evolution import granite_tokenizer
 from neuroshard.evolution.modular_reference_execution import (
@@ -27,6 +28,7 @@ from neuroshard.evolution.modular_reference_execution import (
 )
 
 ARMS = ('update', 'addition')
+SERVED = 'addition'
 PLAN = 'config/experiments/assistant-experience-learning.json'
 EXECUTION = 'config/experiments/assistant-experience-development-execution.json'
 SCRIPT = 'scripts/run_assistant_experience_development.py'
@@ -129,7 +131,8 @@ def worker(request_path):
 
     execution = read(ROOT / EXECUTION)
     arm, phase = request['model'], request['phase']
-    if (phase, arm) != ('prepare', 'baseline') and (arm not in ARMS or phase != 'development'):
+    replay = (phase, arm) == ('replay', SERVED) and 'a1_served' in execution
+    if (phase, arm) != ('prepare', 'baseline') and not replay and (arm not in ARMS or phase != 'development'):
         raise ValueError('unsupported evaluation worker role')
     plan = read(ROOT / PLAN)
     policy = read(ROOT / plan['policy'])
@@ -152,6 +155,10 @@ def worker(request_path):
         reply['tokenizer'] = report
         parent, _ = reference.load_model(directory, 'baseline')
         cases = first.load_cases(read(ROOT / canonical.PLAN))
+        anchor_plan = read(ROOT / reference.PLAN)
+        if replay:
+            replay_ids = read(ROOT / canonical.PLAN)['replay_ids']
+            cases, anchor_plan = [c for c in cases if c['id'] in replay_ids], {**anchor_plan, 'tasks': []}
         model, _ = reference.load_model(directory, 'baseline')
         reply['checkpoint'] = trainer.load_trainable(model, arm, plan['training'], arms / f'{arm}-checkpoint')
         reply['served_projections_converted'] = trainer.serving(model, plan['training'])
@@ -163,8 +170,7 @@ def worker(request_path):
         if execution.get('serving') == 'prefix-cache':
             from neuroshard.evolution.assistant_serving import cached_responder as make_responder
         reply['serving'] = execution.get('serving', 'recompute')
-        reply.update(evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, read(ROOT / reference.PLAN),
-                                  make_responder))
+        reply.update(evaluate_arm(parent, model, tokenizer, gate, feature, cases, policy, anchor_plan, make_responder))
         if file_state(directory, inventory) != state:
             raise ValueError('parent checkpoint changed during evaluation')
         reply['execution_completed'] = True
@@ -177,7 +183,39 @@ def worker(request_path):
         save(request_path.parent / 'reply.json', reply, exclusive=True)
 
 
-def assess(plan, cases, canonical_result, replies):
+def served(canonical_plan, cases, rows, canonical_report, replay_rows):
+    """A1's usable-foundation check on the version that would be served.
+
+    Workspace episodes run through the routed addition; anchors are served by the
+    parent, so their outcomes are the canonical parent's.
+    """
+    from neuroshard.evolution import assistant_experience_gate as gate
+
+    q = canonical_plan['qualification']
+    primitive_families = data.FAMILIES[:4]
+    family = {case['id']: case['family'] for case in cases}
+    correct = {row['id'] for row in rows if row['score']['passed']}
+    by_family = {name: sum(family[i] == name for i in correct) for name in primitive_families}
+    originals = {row['id']: row for row in rows}
+    replay_ids = canonical_plan['replay_ids']
+    replayed = (replay_rows is not None and len(replay_rows) == len(replay_ids)
+                and {row['id'] for row in replay_rows} == set(replay_ids)
+                and all(workflow.replay_matches(originals[row['id']], row) for row in replay_rows))
+    p95 = gate.p95(rows, routed=True)
+    checks = {
+        'primitive': sum(by_family.values()) >= q['minimum_primitive_successes']
+        and all(count >= q['minimum_per_primitive_family'] for count in by_family.values()),
+        'anchors': bool(canonical_report['canonical_anchor_gate'] and not canonical_report['prior_anchor_successes_lost']),
+        'p95': p95 <= q['p95_episode_seconds'],
+        'fresh_process_replay': replayed,
+    }
+    return {'passed': all(checks.values()), 'checks': checks, 'primitive_by_family': by_family,
+            'primitive_correct': sum(by_family.values()), 'p95_episode_seconds': p95,
+            'anchor_routing': 'parent', 'anchor_correct': canonical_report['anchor_correct'],
+            'replayed_ids': sorted(replay_ids)}
+
+
+def assess(plan, cases, canonical_result, replies, replay_rows=None, canonical_plan=None):
     from neuroshard.evolution import assistant_experience_gate as gate
 
     policy = read(ROOT / plan['policy'])
@@ -194,6 +232,12 @@ def assess(plan, cases, canonical_result, replies):
     anchors = canonical_result['report']['protected_anchor_ids']
     report['forced_anchor_forgetting'] = {arm: forgetting(replies[arm]['forced_anchors'], anchors) for arm in ARMS}
     report['selected_arm_episodes'] = {arm: sum(r['selected'] == 'arm' for r in systems[arm]) for arm in ARMS}
+    if canonical_plan is not None:
+        for row in replay_rows or []:
+            if workflow.score(by_id[row['id']], row, policy) != row['score']:
+                raise ValueError('replay outcome rescore differs')
+        report['a1_served'] = served(canonical_plan, cases, systems[SERVED], canonical_result['report'], replay_rows)
+        report['development_and_a1_passed'] = bool(report['passed'] and report['a1_served']['passed'])
     return report
 
 
@@ -221,10 +265,18 @@ def run(home, models):
         failed = [arm for arm in ARMS if not replies[arm]['execution_completed']]
         if failed:
             raise ValueError(f'incomplete evaluation for {failed}')
+        replay_rows, canonical_plan = None, None
+        if 'a1_served' in execution:
+            canonical_plan = read(ROOT / canonical.PLAN)
+            result['replay'] = launch(home, models, binding, SERVED, 'replay', execution['replay_seconds'],
+                                      execution['memory_bytes'], worker_script=SCRIPT)
+            if result['replay']['execution_completed']:
+                replay_rows = result['replay']['episodes']
         canonical_result = read(ROOT / execution['canonical_result']['path'])
         if sha256(ROOT / execution['canonical_result']['path']) != execution['canonical_result']['sha256']:
             raise ValueError('canonical parent result changed')
-        result['report'] = assess(plan, first.load_cases(read(ROOT / canonical.PLAN)), canonical_result, replies)
+        result['report'] = assess(plan, first.load_cases(read(ROOT / canonical.PLAN)), canonical_result, replies,
+                                  replay_rows, canonical_plan)
         result['execution_completed'] = True
     except Exception as error:
         result['error'] = str(error)

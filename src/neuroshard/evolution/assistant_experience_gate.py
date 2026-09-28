@@ -73,8 +73,8 @@ def family_bootstrap(cases, system, control, samples, seed):
     return means[int(.025 * samples)]
 
 
-def confirmation(plan, cases, parent, update, addition, protected):
-    gate = plan['confirmation_gate']
+def confirmation(plan, cases, parent, update, addition, protected, section='confirmation_gate'):
+    gate = plan[section]
     report = common(gate, cases, parent, update, addition, protected)
     p, u, a = passed(parent), passed(update), passed(addition)
     per_family = {f: sum(a[c['id']] for c in cases if c['family'] == f) for f in data.FAMILIES}

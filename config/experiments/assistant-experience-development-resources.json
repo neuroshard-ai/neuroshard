@@ -3,8 +3,8 @@
   "region": "us-east-1",
   "instances": 1,
   "instance_type": "r7i.4xlarge",
-  "hours": 3,
-  "planning_cap_usd": 7,
+  "hours": 4,
+  "planning_cap_usd": 8,
   "disk_gib": 80,
   "disk_type": "gp3",
   "setup_seconds": 1200,
@@ -30,7 +30,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928g/evidence/.study/attempts/baseline-experience",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928h/evidence/.study/attempts/baseline-experience",
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
@@ -44,7 +44,7 @@
     "path": "config/experiments/assistant-experience-round3-report.json",
     "sha256": "98dcdb67cdf6d0fcb82f3e6b07dcc162a14eb388da4c770edc8a69bb7eaa1433"
   },
-  "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline; three-hour expiry and seven-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation.",
+  "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline, then a fresh-process replay worker for the served addition (A1 check); four-hour expiry and eight-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation.",
   "prior_attempts": [
     {
       "utc": "2026-09-27T22:49:54Z",
@@ -60,6 +60,11 @@
       "utc": "2026-09-28T05:28:36Z",
       "commit": "2df1e3a9baf425fbf60484d9b05e0ff0a82df078",
       "outcome": "Round-2 development under prefix-cache serving: 17/24, one lost success, p95 102.7 s; failed ($1.12)."
+    },
+    {
+      "utc": "2026-09-28T08:58:41Z",
+      "commit": "fdc41387411d43ee7bdd726b8da836f452377ba4",
+      "outcome": "Round-3 development under prefix-cache serving: addition 18/24, net +9, no lost success, p95 96.5 s; passed ($1.06)."
     }
   ]
 }

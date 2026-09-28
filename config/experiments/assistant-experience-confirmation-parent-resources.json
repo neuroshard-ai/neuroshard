@@ -3,8 +3,8 @@
   "region": "us-east-1",
   "instances": 1,
   "instance_type": "r7i.4xlarge",
-  "hours": 5,
-  "planning_cap_usd": 9,
+  "hours": 8,
+  "planning_cap_usd": 12,
   "disk_gib": 80,
   "disk_type": "gp3",
   "setup_seconds": 1200,
@@ -33,5 +33,12 @@
     "path": "config/experiments/assistant-experience-development-round3-report.json",
     "sha256": "104711402da6e1fe5eb2f2e521248fe6963443cfee584e1b403cac7cec416a30"
   },
-  "budget_scope": "Confirmation of the parent system on the 96 sealed episodes: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; five-hour expiry and nine-dollar allowance. Opens only behind a pinned complete development pass."
+  "budget_scope": "Second confirmation of the parent system on 192 fresh sealed episodes under the declared prefix cache: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. Opens only behind a pinned development and A1 served pass.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-28T10:27:17Z",
+      "commit": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
+      "outcome": "First confirmation of the parent system on the 96 sealed episodes; the three-system gate failed on update parity ($3.02)."
+    }
+  ]
 }

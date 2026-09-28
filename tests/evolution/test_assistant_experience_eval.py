@@ -84,6 +84,40 @@ def test_assessment_rescores_every_episode_and_reports_forced_anchor_forgetting(
         evaluation.assess(PLAN, cases, base, forged)
 
 
+def test_a1_served_check_judges_the_routed_addition_with_fresh_process_replays():
+    cases = data.cases('development')
+    ids = [c['id'] for c in cases]
+    base = canonical(cases, set(ids[:6]))
+    base['report'].update(canonical_anchor_gate=True, prior_anchor_successes_lost=[], anchor_correct=19)
+    canonical_plan = read(ROOT / 'config/experiments/assistant-workflow-canonical.json')
+    primitive = [c['id'] for c in cases if c['primitive']]
+    wins = set(primitive[:6]) | {c['id'] for c in cases if not c['primitive']}
+    by_family = {}
+    for c in cases:
+        if c['primitive'] and c['id'] in primitive[:6]:
+            by_family.setdefault(c['family'], 0)
+            by_family[c['family']] += 1
+    assert len(by_family) == 4
+    rows = system(cases, wins, 'arm')
+    replies = {'update': {'episodes': system(cases, wins, 'arm'), 'forced_anchors': []},
+               'addition': {'episodes': rows, 'forced_anchors': []}}
+    replays = [copy.deepcopy(r) for r in rows if r['id'] in canonical_plan['replay_ids']]
+    report = evaluation.assess(PLAN, cases, base, replies, replays, canonical_plan)
+    assert report['a1_served']['passed'] and report['development_and_a1_passed']
+    assert report['a1_served']['primitive_correct'] == 6 and report['a1_served']['anchor_routing'] == 'parent'
+    drifted = copy.deepcopy(replays)
+    drifted[0]['generations'][0]['input_token_ids'] = [7] * len(drifted[0]['generations'][0]['input_token_ids'])
+    missing = evaluation.assess(PLAN, cases, base, replies, drifted, canonical_plan)['a1_served']
+    assert not missing['passed'] and not missing['checks']['fresh_process_replay'] and missing['checks']['primitive']
+    assert not evaluation.assess(PLAN, cases, base, replies, None, canonical_plan)['a1_served']['passed']
+    one_family = next(f for f in by_family)
+    narrow = wins - {c['id'] for c in cases if c['family'] == one_family}
+    narrow_replies = {arm: {'episodes': system(cases, narrow, 'arm'), 'forced_anchors': []} for arm in evaluation.ARMS}
+    narrow_replays = [r for r in narrow_replies['addition']['episodes'] if r['id'] in canonical_plan['replay_ids']]
+    served = evaluation.assess(PLAN, cases, base, narrow_replies, copy.deepcopy(narrow_replays), canonical_plan)['a1_served']
+    assert not served['checks']['primitive']
+
+
 def test_uploaded_arms_must_match_pinned_digests(tmp_path):
     for arm in evaluation.ARMS:
         save(tmp_path / f'{arm}-checkpoint' / 'manifest.json', {'arm': arm, 'trainable_sha256': arm * 2})
@@ -146,7 +180,9 @@ def test_development_inventory_pins_arms_runtime_and_every_imported_source():
     imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
                                        env={'PYTHONPATH': str(ROOT / 'src')}).split()
     assert set(imported) <= set(execution['sources'])
-    assert execution['prepare_seconds'] + 2 * execution['worker_seconds'] + 1800 <= 3 * 3600
+    hours = read(ROOT / 'config/experiments/assistant-experience-development-resources.json')['hours']
+    replay = execution['replay_seconds'] if 'a1_served' in execution else 0
+    assert execution['prepare_seconds'] + 2 * execution['worker_seconds'] + replay + 1800 <= hours * 3600
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

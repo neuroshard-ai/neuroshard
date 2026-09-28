@@ -50,8 +50,8 @@ GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2x
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
-LONG_CPU_PROFILES = {"assistant-experience-development": (3, 7),
-                     **{f"assistant-experience-confirmation-{system}": (5, 9) for system in ("parent", "update", "addition")}}
+LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8),
+                     **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition")}}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
