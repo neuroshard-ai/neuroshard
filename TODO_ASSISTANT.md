@@ -61,17 +61,21 @@ remain evidence, not readiness claims for this assistant.
 - [x] Declare a latency path and rerun development. [Result](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_CACHED_RESULTS.md):
   the prefix cache cuts p95 to 102.7 s, but the addition flips one fragile
   follow-up (17/24, one lost success); gate failed.
-- [ ] Make follow-up date arithmetic robust, rerun development under the cache,
-  then open confirmation (prepared: three one-system hosts behind a pinned pass).
+- [x] Round 3 (verified divergence preferences; [result](docs/ASSISTANT_EXPERIENCE_ROUND3_RESULTS.md)):
+  only 2 pairs as declared, yet the addition reaches 58/64 integration episodes.
+  [Development passed](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_ROUND3_RESULTS.md) under
+  prefix-cache serving: 18/24, net +9, no lost success, p95 96.5 s.
+- [ ] Confirmation on the 96 sealed episodes (parent, update and addition on three
+  one-system hosts); running. Only this result can establish A2 for this capability.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37
-verified decision preferences, the added module completes 17–18/24 development
-workflows (parent 9/24) and matches the 60× larger update control. Recompute
-serving fails latency; prefix-cache serving passes latency but flips one fragile
-follow-up, so the development gate is still not passed.
+verified decision preferences and a third continued round, the added module
+passes the development gate under prefix-cache serving: 18/24 (parent 9/24), no
+lost parent success, within one of the 60× larger update control, p95 96.5 s.
+Confirmation on 96 sealed episodes is running.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
