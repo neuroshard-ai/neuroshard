@@ -76,6 +76,12 @@ remain evidence, not readiness claims for this assistant.
   Budget ceiling: $1,000.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
+  Port done: Granite owners hold only their layer ranges. On small checkpoints
+  they are bit-identical to the complete model and token-identical to
+  `generate`, and a killed owner resumes to the same tokens. The
+  [first shard execution](docs/GRANITE_SHARD_EXECUTION.md) is declared: three
+  owner hosts that fetch only their tensors must reproduce all 230 canonical
+  generations.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37

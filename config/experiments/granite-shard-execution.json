@@ -1,0 +1,96 @@
+{
+  "format": "neuroshard-granite-shard-execution/1",
+  "status": "Declared on September 28, 2026 before any sharded Granite run.",
+  "purpose": "A4 first execution: the pinned Granite 4.1 3B split across three owner hosts, none of which downloads, stores or loads the complete backbone, reproduces the canonical CPU runtime token for token; per-owner memory, traffic, fetch and outage recovery are measured.",
+  "model": {
+    "artifacts": "config/experiments/granite-reference-artifacts.json",
+    "tensor_inventory": "config/experiments/granite-tensor-inventory.json",
+    "inventory_sha256": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843"
+  },
+  "runtime": "The canonical parent runtime (config/experiments/assistant-workflow-canonical-execution.json): identical packages, Python, CPU instructions and numerical environment, eight threads, bf16 weights, eager attention.",
+  "boundaries": [
+    0,
+    12,
+    26,
+    40
+  ],
+  "ownership": "Owner 0 holds the tied embedding, final norm and layers 0-11; owner 1 layers 12-25; owner 2 layers 26-39.",
+  "fetch": "Each owner requests only its tensors' byte ranges from the pinned Hugging Face revision and checks every tensor against the committed inventory digest before writing its shard. config.json is checked against its pinned blob digest.",
+  "transport": "gloo over TCP between the owners' private addresses in one VPC; boundary tensors travel as exact bf16 bytes; the last owner returns only the last position to owner 0.",
+  "workload": {
+    "source": "config/experiments/assistant-workflow-canonical-result.json",
+    "sha256": "de899e8bc1f21fddd6416460f68ab77843f19f686606df56e72973642c6c5d30",
+    "generations": 230,
+    "max_new_tokens": 192,
+    "eos_ids": [
+      100257
+    ],
+    "rule": "Every recorded generation of the canonical re-baseline (206 workflow generations and 24 anchors): prefill its recorded input token IDs, then greedy decoding with the canonical cap and end token. No new evaluation data is opened."
+  },
+  "outage": {
+    "request": "workflow-1124e7a2f25c/11",
+    "owner": 2,
+    "at_step": 40,
+    "rule": "Owner 2 exits at its 40th forward step of the longest recorded generation. The whole group is relaunched; owner 0 replays the committed tokens step by step to rebuild every cache and continues."
+  },
+  "max_boundary_tokens": 6144,
+  "peer_timeout_seconds": 120,
+  "memory_limit_bytes": 8589934592,
+  "fetch_memory_limit_bytes": 17179869184,
+  "canonical_peak_rss_bytes": 11342200832,
+  "phase_seconds": {
+    "fetch": 1800,
+    "agreement": 7200,
+    "outage": 900,
+    "resume": 900
+  },
+  "gates": {
+    "complete": "Every owner completes the agreement phase and owner 0 returns all 230 generations.",
+    "agreement": "Every generation is token-identical to the canonical recording.",
+    "ownership": "Each owner fetched exactly its owned tensors and their bytes, and less than the whole checkpoint.",
+    "memory": "Every owner's serving peak RSS stays under its 8 GiB kernel limit and below the canonical single-host peak.",
+    "outage_injected": "Owner 2 is lost mid-generation, owner 0 reports the loss, and some but not all tokens are committed.",
+    "recovery": "The relaunched group finishes that generation with the canonical tokens."
+  },
+  "measured_not_gated": "Fetch time and requests, traffic per owner, generation time against the canonical single host.",
+  "not_claimed": "Single-request latency does not improve: the layer ranges run in sequence. Throughput with concurrent requests, backward and training across owners, and independently operated owners (A5) are later executions.",
+  "resources": "config/experiments/granite-shard-owner-resources.json",
+  "attempts": 1,
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "contracts": {
+    "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+    "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+    "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+    "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+    "config/experiments/assistant-workflow-canonical-result.json": "de899e8bc1f21fddd6416460f68ab77843f19f686606df56e72973642c6c5d30",
+    "config/experiments/granite-shard-owner-resources.json": "086eabec1371397c33fd740082db355745cefc7f70b270bbddea94803081053a",
+    "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
+    "docs/GRANITE_SHARD_EXECUTION.md": "59163fb5cb6a2a2875188b52d07b547ce260f92be466304e958f6894aa2420c3"
+  },
+  "sources": [
+    "config/experiments/granite-reference-artifacts.json",
+    "config/experiments/granite-tensor-inventory.json",
+    "config/experiments/assistant-workflow-canonical-execution.json",
+    "config/experiments/assistant-workflow-canonical.json",
+    "config/experiments/assistant-workflow-canonical-result.json",
+    "config/experiments/granite-shard-owner-resources.json",
+    "docs/granite-reference-requirements.txt",
+    "docs/GRANITE_SHARD_EXECUTION.md",
+    "config/experiments/granite-shard-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "src/neuroshard/evolution/granite_shard_execution.py",
+    "src/neuroshard/evolution/sharded/__init__.py",
+    "src/neuroshard/evolution/sharded/granite.py",
+    "src/neuroshard/evolution/sharded/granite_pipeline.py",
+    "scripts/run_granite_shards.py",
+    "scripts/granite_shard_cloud.py",
+    "scripts/modular_reference_cloud.py"
+  ]
+}
