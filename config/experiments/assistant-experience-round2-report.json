@@ -1,0 +1,399 @@
+{
+  "format": "neuroshard-assistant-experience-round2-report/1",
+  "execution_completed": true,
+  "error": null,
+  "attempts": [
+    {
+      "home": "assistant-experience-20260927e",
+      "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
+      "outcome": "Built 37 verified pairs, then KeyError: 'round2' (runtime parameters passed where pinned digests were read).",
+      "resources_finished": {
+        "finished_utc": "2026-09-27T23:25:39.498888+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0283cb9c3e5f05697"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 662.33032,
+        "conservative_compute_usd": 0.22298454106666668,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "home": "assistant-experience-20260927f",
+      "commit": "9cd1c70ce5d51a6f826a6a8244152d479d8ad8fb",
+      "outcome": "Continued both round-1 arms on experience, replay and 37 pairs; refitted gates.",
+      "gpu": "NVIDIA A10G",
+      "phases_seconds": {
+        "verify_collection": 30.594680124999996,
+        "train": 510.38592814000003,
+        "integrate": 4252.627031955
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-28T01:25:47.394421+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0c37c40c08f2e7d0a"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 5467.662632,
+        "conservative_compute_usd": 1.8407797527733332,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    }
+  ],
+  "pairs": {
+    "pairs": 37,
+    "cases": 37,
+    "pairs_sha256": "e7df0f2c8fd71de62f585e5713c413788067a2c4b0a8051cd8eb8b96a6b27c32"
+  },
+  "training": {
+    "update": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "update",
+      "trainable_sha256": "aa5901abcc81800dcc77473fb73fe7b5053c6fb4f1221534049889c3f29c8746",
+      "trainable_parameters": 62914560,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.weight": [
+          512,
+          2560
+        ]
+      },
+      "steps": 64,
+      "schedule_sha256": "b3eac9f00b7df83cb46f844c8ba87f900f4371049c4b2c3b677580aff45ede52",
+      "final_loss": 0.01739206393438053,
+      "roots": {
+        "round1": "878a6c80ee95950447d9ed594aa9889905ed11f76ae00ab1c133ee794dcc3902",
+        "experience": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "pairs": "bd5c1646de7b9f6bf6dd4aa1f6c559871bfa4a8c48f8c3c1de84ff977ded4c47",
+        "plan": "8dfde44ab192df9c9be58187a1196dd0a0b4f99b7c475291cc9d33e275840155"
+      },
+      "seconds": 252.91333372599996,
+      "tokens_processed": 1152396,
+      "first_margins": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.03999881446361542,
+        -0.020001119002699852,
+        0.060020871460437775,
+        1.1548399925231934e-06
+      ],
+      "last_margins": [
+        4.390003681182861,
+        5.969999313354492,
+        7.104886054992676,
+        6.020007610321045,
+        8.178743362426758,
+        5.389997482299805,
+        6.446267127990723,
+        6.600009441375732
+      ]
+    },
+    "addition": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "addition",
+      "trainable_sha256": "47edb5989e4527f104eb6c71c2457064eeefc66dbbedc1fe3c961a6875c7d915",
+      "trainable_parameters": 1048576,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.32.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.33.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.33.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.34.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.34.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.35.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.35.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.36.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.36.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.37.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.37.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.38.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.38.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.39.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.39.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ]
+      },
+      "steps": 64,
+      "schedule_sha256": "b3eac9f00b7df83cb46f844c8ba87f900f4371049c4b2c3b677580aff45ede52",
+      "final_loss": 0.016337024669041966,
+      "roots": {
+        "round1": "92c9aab2a263dcb06eb907fa3c47fdef0ac2496342322d60aeac9f9ddb169e17",
+        "experience": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "pairs": "bd5c1646de7b9f6bf6dd4aa1f6c559871bfa4a8c48f8c3c1de84ff977ded4c47",
+        "plan": "8dfde44ab192df9c9be58187a1196dd0a0b4f99b7c475291cc9d33e275840155"
+      },
+      "seconds": 251.97866508900006,
+      "tokens_processed": 1152396,
+      "first_margins": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -3.0990923960416694e-07,
+        2.008676574405399e-06,
+        0.020037079229950905,
+        0.039998847991228104
+      ],
+      "last_margins": [
+        3.4599997997283936,
+        5.615009784698486,
+        5.890588760375977,
+        5.460007667541504,
+        7.369991302490234,
+        5.119997501373291,
+        5.320008754730225,
+        5.929531097412109
+      ]
+    }
+  },
+  "integration": {
+    "parent_success_rates": {
+      "greedy": 0.53125,
+      "sampled": 0.5078125,
+      "episodes": 64
+    },
+    "round1_arms": {
+      "update": {
+        "greedy": 0.65625,
+        "sampled": 0.6484375,
+        "episodes": 64
+      },
+      "addition": {
+        "greedy": 0.65625,
+        "sampled": 0.65625,
+        "episodes": 64
+      }
+    },
+    "arms": {
+      "update": {
+        "gate": {
+          "rule": "logistic",
+          "bias": 0.07024575769901276,
+          "epsilon": 1e-06,
+          "threshold": 0.5,
+          "counts": {
+            "arm_better": 30,
+            "parent_better": 1,
+            "ties": 33
+          },
+          "sha256": "9239a7237774e57b395a5f84fe34368eaa7c14cf268c9832603ca7e0afba010c"
+        },
+        "success_rates": {
+          "greedy": 0.859375,
+          "sampled": 0.859375,
+          "episodes": 64
+        }
+      },
+      "addition": {
+        "gate": {
+          "rule": "constant-arm",
+          "counts": {
+            "arm_better": 32,
+            "parent_better": 0,
+            "ties": 32
+          }
+        },
+        "success_rates": {
+          "greedy": 0.859375,
+          "sampled": 0.87109375,
+          "episodes": 64
+        }
+      }
+    },
+    "integration_sha256": "3b4ca8e365312b8e0aa002ef502b70843620d17ed637b0f34417a961dcb7a865"
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0283cb9c3e5f05697",
+      "i-0c37c40c08f2e7d0a"
+    ],
+    "conservative_instance_seconds": 6129.992952,
+    "conservative_compute_usd": 2.06376429384,
+    "scope": "Round-2 attempts e and f combined."
+  },
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false
+}

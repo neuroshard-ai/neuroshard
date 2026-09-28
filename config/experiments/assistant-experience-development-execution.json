@@ -55,12 +55,12 @@
   "memory_bytes": 68719476736,
   "arms": {
     "update": {
-      "trainable_sha256": "878a6c80ee95950447d9ed594aa9889905ed11f76ae00ab1c133ee794dcc3902"
+      "trainable_sha256": "aa5901abcc81800dcc77473fb73fe7b5053c6fb4f1221534049889c3f29c8746"
     },
     "addition": {
-      "trainable_sha256": "92c9aab2a263dcb06eb907fa3c47fdef0ac2496342322d60aeac9f9ddb169e17"
+      "trainable_sha256": "47edb5989e4527f104eb6c71c2457064eeefc66dbbedc1fe3c961a6875c7d915"
     },
-    "integration_sha256": "d118c61994f7bcb95ffd55440e49e5ba08f53cb6dc47445a59598ae95b721b9c"
+    "integration_sha256": "3b4ca8e365312b8e0aa002ef502b70843620d17ed637b0f34417a961dcb7a865"
   },
   "canonical_result": {
     "path": "config/experiments/assistant-workflow-canonical-result.json",
@@ -68,7 +68,7 @@
   },
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "a67315822e0a886ca9aa9848a3c70870b2c6a61d75f0695e7144fb93b9d44e4e",
-    "config/experiments/assistant-experience-development-resources.json": "b639ae2f75ca78f7be8d2c9e0538798e68f9b7043f2430d5e650d5496e9a3e1e",
+    "config/experiments/assistant-experience-development-resources.json": "e0bbf74e7c2c05b798f74a9f56fc65af5c99e7cc5985966d30d5dd6cb433b81a",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
@@ -79,7 +79,7 @@
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "97801a93b139c71ba9aaad24310daec50fd945a0a845947540c75d53ce82c044",
-    "config/experiments/assistant-experience-gpu-report.json": "efa95efa422d875c9f36a321dc3eb10a68ec6c4cb7f7cf18a471b1b7fa172471"
+    "config/experiments/assistant-experience-round2-report.json": "c25ec2f4d7643e724852f5bde64d86fa352b4ec731a54d947e0a8945d306e828"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -94,7 +94,7 @@
     "config/experiments/granite-reference-artifacts.json",
     "docs/granite-reference-requirements.txt",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
-    "config/experiments/assistant-experience-gpu-report.json",
+    "config/experiments/assistant-experience-round2-report.json",
     "config/experiments/assistant-experience-development-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
@@ -124,6 +124,7 @@
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "attempts": 1,
-  "execution": "A preparation worker, then one fresh worker per trained arm in turn at the canonical eight threads: 24 selected development episodes, each timed with its selection pass, and 24 forced-arm anchors. Parent control is the pinned canonical result. Confirmation stays sealed.",
-  "interpretation": "Development gate only. A pass opens confirmation once; it is not admission, promotion or checklist credit, and A1 stays open."
+  "execution": "A preparation worker, then one fresh worker per trained arm in turn at the canonical eight threads: 24 selected development episodes of the round-2 systems, each timed with its selection pass, and 24 forced-arm anchors. Parent control is the pinned canonical result. Confirmation stays sealed.",
+  "interpretation": "Development gate only. A pass opens confirmation once; it is not admission, promotion or checklist credit, and A1 stays open.",
+  "round": 2
 }

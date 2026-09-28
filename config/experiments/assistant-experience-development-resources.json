@@ -30,7 +30,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927d/evidence/.study/attempts/baseline-experience",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260927f/evidence/.study/attempts/baseline-experience",
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
@@ -41,8 +41,15 @@
     "maximum_bytes": 419430400
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-gpu-report.json",
-    "sha256": "efa95efa422d875c9f36a321dc3eb10a68ec6c4cb7f7cf18a471b1b7fa172471"
+    "path": "config/experiments/assistant-experience-round2-report.json",
+    "sha256": "c25ec2f4d7643e724852f5bde64d86fa352b4ec731a54d947e0a8945d306e828"
   },
-  "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline; three-hour expiry and seven-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation."
+  "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline; three-hour expiry and seven-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-27T22:49:54Z",
+      "commit": "6eed482130201bd3d247d2575d4976685a86e1d7",
+      "outcome": "Round-1 development evaluation completed and failed the gate ($1.82)."
+    }
+  ]
 }
