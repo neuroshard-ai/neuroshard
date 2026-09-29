@@ -111,7 +111,9 @@ remain evidence, not readiness claims for this assistant.
   [The second attempt passed](docs/GRANITE_SHARD_THROUGHPUT_RESULTS.md) with one
   compute thread on owner 0. Three episodes in flight gave 2.25× the throughput
   of one at a time and 2.20× the single host, with every token identical and
-  owner busy time balanced within 3% ($2.20).
+  owner busy time balanced within 3% ($2.20). A [ring determinism diagnostic](docs/GRANITE_SHARD_DETERMINISM.md)
+  is declared: six fresh launches of the training job, tracing every sent
+  tensor, before training recovery is repeated.
 
 **Current status:** verified-experience learning lifts the assistant from about
 55% to 91–95% on fresh sealed episodes, but A2 is not established.

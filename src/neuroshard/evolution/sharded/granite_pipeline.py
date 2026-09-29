@@ -7,6 +7,7 @@ bytes. A failed owner breaks the group: the driver's committed tokens let a
 relaunched group rebuild every cache by replaying the same steps, so the
 continuation is the one an uninterrupted run would have produced.
 """
+import hashlib
 import json
 import os
 import time
@@ -26,12 +27,15 @@ class Ring:
             raise ValueError('a pipeline ring needs at least two owners')
         self.rank, self.world, self.hidden, self.max_tokens = rank, world, hidden_size, max_tokens
         self.sent_bytes = self.received_bytes = 0
+        self.trace = None
 
     def send(self, value, destination):
         if (value.dtype != torch.bfloat16 or value.ndim != 3 or value.shape[0] != 1
                 or value.shape[2] != self.hidden or not 0 < value.shape[1] <= self.max_tokens):
             raise ValueError('unsupported boundary tensor')
         payload = value.detach().contiguous().view(torch.uint8)
+        if self.trace is not None:
+            self.trace.append(hashlib.sha256(payload.numpy().tobytes()).hexdigest())
         dist.send(payload, dst=destination)
         self.sent_bytes += payload.numel()
 

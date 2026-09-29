@@ -132,6 +132,19 @@ def test_training_across_owners_reproduces_the_single_host_trainer(deployed, tmp
     assert results[0]['receipt']['preference_margins'] == receipt['preference_margins']
 
 
+def test_traced_launches_record_every_sent_tensor_identically(deployed, tmp_path):
+    _, config_dir, shards = deployed
+    experience, replay, pairs = data()
+    traces = []
+    for launch_index in range(2):
+        results = launch(config_dir, shards, [job('addition', experience, replay, pairs, tmp_path / f'arm-{launch_index}',
+                                                  trace=True)] * WORLD, tmp_path / f'trace-{launch_index}')
+        assert all(r and r['completed'] for r in results), results
+        traces.append([r['trace'] for r in results])
+    assert all(len(trace) > 0 for trace in traces[0])
+    assert traces[0] == traces[1]
+
+
 def test_a_lost_arm_owner_resumes_from_its_last_checkpoint(deployed, tmp_path):
     checkpoint, config_dir, shards = deployed
     experience, replay, pairs = data()

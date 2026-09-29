@@ -26,7 +26,11 @@ def unit(phase, index=None):
     return f"granite-owner-{phase}" + ("" if index is None else f"-{index}")
 
 
-EXECUTIONS = ("granite_shard_serving", "granite_shard_throughput")
+EXECUTIONS = ("granite_shard_serving", "granite_shard_throughput", "granite_shard_determinism")
+
+
+def seconds(plan, phase):
+    return plan["phase_seconds"].get(phase) or plan["phase_seconds"][phase.split("-")[0]]
 
 
 def start(execution, home, allocation, rank, phase, plan, address="", index=None):
@@ -35,13 +39,13 @@ def start(execution, home, allocation, rank, phase, plan, address="", index=None
                "--port", str(ring.PORT), "--phase", phase, "--home", ring.OWNER_HOME, "--store", ring.STORE,
                "--index", str(index or 0)]
     cloud.ssh(home, allocation, ["systemd-run", "--user", f"--unit={unit(phase, index)}",
-        "-p", f"RuntimeMaxSec={plan['phase_seconds'][phase]}", "-p", f"MemoryMax={memory}",
+        "-p", f"RuntimeMaxSec={seconds(plan, phase)}", "-p", f"MemoryMax={memory}",
         "-p", "MemorySwapMax=0", "-p", "TimeoutStopSec=0", "-p", "KillMode=control-group",
         "--working-directory=" + cloud.REMOTE, "--setenv=PYTHONPATH=" + cloud.REMOTE + "/src", *command])
 
 
 def wait(units, plan, phase):
-    deadline = time.monotonic() + plan["phase_seconds"][phase] + 120
+    deadline = time.monotonic() + seconds(plan, phase) + 120
     while time.monotonic() < deadline:
         states = [cloud.ssh(h, a, ["systemctl", "--user", "show", "--value", "-p", "ActiveState", name]).stdout.strip()
                   for h, a, name in units]
@@ -82,11 +86,12 @@ def run(home, name="granite_shard_serving"):
         save(home / "status.json", {"state": "setup"})
         with ThreadPoolExecutor(max_workers=world) as pool:
             list(pool.map(lambda pair: cloud.bootstrap(*pair, source, execution.PROFILE), owners))
-        for rank in (0, world - 1):
-            upload(execution, *owners[rank], plan)
+        if "upload" in plan:
+            for rank in (0, world - 1):
+                upload(execution, *owners[rank], plan)
         address = allocations[0]["private_ip"]
         phases, fetches = {}, None
-        for phase in execution.PHASES:
+        for phase in (execution.phases(plan) if hasattr(execution, "phases") else execution.PHASES):
             save(home / "status.json", {"state": "running", "phase": phase})
             if phase == "fetch":
                 for rank, (h, a) in enumerate(owners):

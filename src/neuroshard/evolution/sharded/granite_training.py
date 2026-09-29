@@ -184,6 +184,10 @@ class TrainingDriver:
         for leaf in self.leaves:
             command(BACKWARD, leaf.shape[1])
             payload = leaf.grad.detach().contiguous().view(torch.uint8)
+            if self.ring.trace is not None:
+                import hashlib
+
+                self.ring.trace.append(hashlib.sha256(payload.numpy().tobytes()).hexdigest())
             dist.send(payload, dst=self.holder)
             self.ring.sent_bytes += payload.numel()
         command(APPLY)
@@ -217,6 +221,8 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     dist.init_process_group('gloo', init_method=f'tcp://{address}:{port}', rank=rank, world_size=world,
                             timeout=timedelta(seconds=timeout))
     ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
+    if job.get('trace'):
+        ring.trace = []
     result = {'rank': rank, 'shard_sha256': manifest['sha256'], 'resident_bytes': partition.resident_bytes(),
               'trainable_parameters': sum(p.numel() for p in training.trainable.values()), 'start': start}
     began = time.monotonic()
@@ -245,6 +251,8 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     finally:
         result.update(seconds=time.monotonic() - began, sent_bytes=ring.sent_bytes, received_bytes=ring.received_bytes,
                       peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024)
+        if ring.trace is not None:
+            result['trace'] = ring.trace
         Path(result_path).write_text(json.dumps(result, indent=2) + '\n')
         if result.get('completed'):
             dist.destroy_process_group()
