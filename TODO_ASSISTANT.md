@@ -84,12 +84,16 @@ remain evidence, not readiness claims for this assistant.
   a lower bound of +24.5 points. It lost 2 parent successes and trails the update
   at −7.3 points against the −5 margin. A2 remains open for this capability, and
   A1's served-system condition needs an accepted module, so A1 stays open too.
-- [ ] [Methodology study](docs/ASSISTANT_EXPERIENCE_LEARNING.md#methodology-study-before-a-third-attempt)
+- [x] [Methodology study](docs/ASSISTANT_EXPERIENCE_LEARNING.md#methodology-study-before-a-third-attempt)
   on already-opened data. It compares a larger module (about 50M parameters)
   with a consensus of three small modules grown from disjoint verified
   experience, voting with the parent on every action, against the small module
   and the update. A declared rule picks the third attempt's method. Its fresh
   192-episode confirmation split is frozen before the study reports.
+  [Neither method was carried forward](docs/ASSISTANT_EXPERIENCE_STUDY_RESULTS.md)
+  ($5.18). Scores: update 74, small 71, large 69, committee 65. The committee
+  alone lost no parent success, but its members, each trained on a third of the
+  experience, solved only 47–56 of 64 integration cases (small 61).
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
