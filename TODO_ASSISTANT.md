@@ -134,7 +134,12 @@ remain evidence, not readiness claims for this assistant.
   one bit of one declared message. Its auditor must name that message, a fresh
   verifier must accept the fraud proof, and owner 2 must audit clean. The first
   attempt failed at fetch because the remote runtime lacked the signing package
-  ($0.32). A second attempt adds only that package.
+  ($0.32). [The second attempt passed all six checks](docs/GRANITE_SHARD_AUDIT_RESULTS.md).
+  Each auditor held only its owner's 2.2 GB and replayed all 8830 logged forward
+  passes exactly, at 0.85–0.89× the owner's busy time. The one-bit fault was
+  named at the declared message after 11.5 s, a fresh verifier accepted the
+  fraud proof, and owner 2 audited clean ($7.19). The raw logs and proof
+  exceeded the evidence cap and were not archived.
 
 **Current status:** verified-experience learning lifts the assistant from about
 55% to 91–95% on fresh sealed episodes, but A2 is not established.

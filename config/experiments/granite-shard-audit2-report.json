@@ -1,0 +1,153 @@
+{
+  "format": "neuroshard-granite-shard-audit-report/1",
+  "result": "config/experiments/granite-shard-audit2-result.json",
+  "result_sha256": "caf5b95310c68e198fa90e04cf3979d673ee110600dfa4b1cae9eddaf1c37ad8",
+  "commit": "ee323e4245d58a282a8445fd96af02e48e85654e",
+  "attempt": 2,
+  "passed": true,
+  "checks": {
+    "honest_agreement": true,
+    "honest_audits": true,
+    "fault_named": true,
+    "proof_accepted": true,
+    "no_false_blame": true,
+    "light_auditors": true
+  },
+  "report": {
+    "passed": true,
+    "checks": {
+      "honest_agreement": true,
+      "honest_audits": true,
+      "fault_named": true,
+      "proof_accepted": true,
+      "no_false_blame": true,
+      "light_auditors": true
+    },
+    "honest": {
+      "correct": 18,
+      "mismatches": [],
+      "p95_seconds": 102.36411791499995
+    },
+    "fault": {
+      "declared_forward": 200,
+      "named_entry": 203,
+      "named_forward": 200
+    },
+    "owner_busy_seconds": {
+      "0": 555.4984948760155,
+      "1": 567.520170101996,
+      "2": 558.4630935219981
+    },
+    "audit_replay_seconds": {
+      "1": 484.8573147069999,
+      "2": 499.48790966499996
+    },
+    "audit_cost_ratio": {
+      "1": 0.8543437577202944,
+      "2": 0.8943973477547714
+    },
+    "proof": {
+      "format": "neuroshard-granite-fraud-proof/1",
+      "rank": 1,
+      "mismatch": 203,
+      "public_key": "8cb50f5ac1b2a907655f6a03ba7f763a3073547f3e2ecbde1bc3ab211f1c3fe9",
+      "inputs_sha256": "02e3672e9a75574bfacca4ed6b63281cccf72b407a83979745e049190356c8e1"
+    },
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "measured": {
+    "fault_detection_seconds": 11.539655748999394,
+    "proof_inputs": 201,
+    "verifier_load_seconds": 5.803293903999474,
+    "log_entries": 8902,
+    "logged_forwards": 8830,
+    "transferred_bytes": {
+      "serve-honest-1": 242431374,
+      "serve-honest-2": 242280677,
+      "serve-cheat-1": 242431393,
+      "serve-cheat-2": 242280662
+    },
+    "auditor_fetched_bytes": {
+      "1": 2202152960,
+      "2": 2202152960
+    }
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 24458.967654,
+    "conservative_compute_usd": 7.190936490276,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T23:48:53.400601+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-05422a4f6d910372c"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4837.846567,
+        "conservative_compute_usd": 1.422326890698,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T23:49:35.164228+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-017e9206b6e66ac1d"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4872.375108,
+        "conservative_compute_usd": 1.432478281752,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T23:50:01.977600+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0b17cff64c4e09e65"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4891.963233,
+        "conservative_compute_usd": 1.4382371905020002,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T23:50:33.656738+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0124c11be55cc6575"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4916.263741,
+        "conservative_compute_usd": 1.445381539854,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T23:51:05.261572+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0c82d6633bff7b3ed"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4940.519005,
+        "conservative_compute_usd": 1.45251258747,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "evidence_gap": "Only owner 0 evidence was archived. The other four hosts each held more than the 96 MiB per-host evidence cap (two signed logs of about 242 MB compressed), so the controller refused to copy them and retired the hosts. Every phase result the checks use was read from the hosts during the run and is in the result file; the raw logs and the fraud proof files were not retained and cannot be re-verified offline."
+}
