@@ -35,7 +35,7 @@ class Links:
             dist.send(raw, dst=destination)
             self.sent_bytes += raw.numel()
 
-    def receive(self, source):
+    def receive(self, source, check=True):
         header = torch.empty(4, dtype=torch.int64)
         dist.recv(header, src=source)
         stream, op, length, arg = header.tolist()
@@ -47,16 +47,22 @@ class Links:
             dist.recv(raw, src=source)
             self.received_bytes += raw.numel()
             payload = raw.view(torch.bfloat16)
-            if not bool(torch.isfinite(payload).all()):
-                raise ValueError('nonfinite boundary tensor')
+            if check:
+                finite(payload)
         return [stream, op, length, arg], payload
+
+
+def finite(payload):
+    if not bool(torch.isfinite(payload).all()):
+        raise ValueError('nonfinite boundary tensor')
+    return payload
 
 
 def serve(partition, links, adapter=None):
     """Owner loop for ranks after 0: per-stream caches and arm settings, messages in arrival order."""
     from transformers import DynamicCache
 
-    streams, steps = {}, 0
+    streams, steps, busy = {}, 0, 0.0
     last = links.rank == links.world - 1
     destination = (links.rank + 1) % links.world
     while True:
@@ -64,7 +70,7 @@ def serve(partition, links, adapter=None):
         stream, op, length, arg = header
         if op == STOP:
             links.send(header, None, destination)
-            return steps
+            return {'steps': steps, 'busy_seconds': busy}
         if op == RESET:
             streams[stream] = {'cache': DynamicCache(), 'arm': bool(arg)}
             links.send(header, None, destination)
@@ -79,6 +85,7 @@ def serve(partition, links, adapter=None):
         state = streams[stream] if op == FORWARD else None
         if adapter is not None:
             adapter.set(bool(state and state['arm']))
+        began = time.monotonic()
         with torch.inference_mode():
             if op == FORWARD:
                 steps += 1
@@ -86,28 +93,59 @@ def serve(partition, links, adapter=None):
                 out = partition(payload, mask, state['cache'])
             else:
                 out = partition(payload, None, DynamicCache())
+        busy += time.monotonic() - began
         if last:
             out = out[:, -1:]
         links.send([stream, op, out.shape[1], arg], out, destination)
 
 
 class StreamDriver:
-    """Owner 0: episode threads submit steps; one receiver thread returns results in submission order."""
+    """Owner 0: episode threads submit steps; one receiver thread returns results in submission order.
+
+    Every tensor operation on owner 0 runs on one compute thread, so a single
+    OpenMP team does the work instead of one spinning team per episode thread.
+    """
 
     def __init__(self, partition, links):
         if partition.rank != 0 or links.rank != 0:
             raise ValueError('owner 0 drives the streams')
         self.partition, self.links = partition, links
-        self.compute, self.sending = threading.Lock(), threading.Lock()
+        self.sending, self.jobs = threading.Lock(), queue.Queue()
         self.pending, self.failure = queue.Queue(), None
         self.in_flight, self.peak_in_flight, self.counter = 0, 0, threading.Lock()
+        self.busy_seconds = 0.0
+        self.worker = threading.Thread(target=self._compute, daemon=True)
+        self.worker.start()
         self.receiver = threading.Thread(target=self._receive, daemon=True)
         self.receiver.start()
+
+    def _compute(self):
+        while True:
+            function, slot = self.jobs.get()
+            if function is None:
+                return
+            began = time.monotonic()
+            try:
+                with torch.inference_mode():
+                    slot['result'] = function()
+            except Exception as error:
+                slot['error'] = error
+            self.busy_seconds += time.monotonic() - began
+            slot['done'].set()
+
+    def run(self, function):
+        """Run ``function`` on the compute thread and return its result."""
+        slot = {'done': threading.Event()}
+        self.jobs.put((function, slot))
+        slot['done'].wait()
+        if 'error' in slot:
+            raise slot['error']
+        return slot['result']
 
     def _receive(self):
         try:
             while True:
-                header, payload = self.links.receive(self.links.world - 1)
+                header, payload = self.links.receive(self.links.world - 1, check=False)
                 slot = self.pending.get()
                 slot['result'] = (header, payload)
                 slot['done'].set()
@@ -142,6 +180,7 @@ class StreamDriver:
 
     def stop(self):
         self.submit([0, STOP, 0, 0])
+        self.jobs.put((None, None))
 
 
 class Stream:
@@ -154,12 +193,10 @@ class Stream:
         self.cache = DynamicCache()
 
     def feature(self, ids):
-        partition = self.driver.partition
-        with self.driver.compute, torch.inference_mode():
-            hidden = partition(partition.embed(torch.tensor([ids])), None, self.cache_type())
+        partition, run = self.driver.partition, self.driver.run
+        hidden = run(lambda: partition(partition.embed(torch.tensor([ids])), None, self.cache_type()))
         _, back = self.driver.submit([self.index, FEATURE, len(ids), 0], hidden)
-        with self.driver.compute, torch.inference_mode():
-            return partition.norm(back)[0, -1].float().tolist()
+        return run(lambda: partition.norm(finite(back))[0, -1].float().tolist())
 
     def episode(self, arm):
         self.driver.submit([self.index, RESET, 0, int(arm)])
@@ -172,13 +209,13 @@ class Stream:
         self.driver.submit([self.index, CROP, 0, length])
         self.cache.crop(length)
 
-    def step(self, tokens, mask):
-        partition = self.driver.partition
-        with self.driver.compute, torch.inference_mode():
-            hidden = partition(partition.embed(tokens), mask, self.cache)
+    def next_token(self, tokens, mask):
+        from .granite_serving import greedy
+
+        partition, run = self.driver.partition, self.driver.run
+        hidden = run(lambda: partition(partition.embed(tokens), mask, self.cache))
         _, back = self.driver.submit([self.index, FORWARD, tokens.shape[1], 0], hidden)
-        with self.driver.compute, torch.inference_mode():
-            return partition.logits(back)
+        return run(lambda: greedy(partition.logits(finite(back))))
 
 
 def serve_episodes(driver, streams, tokenizer, policy, cases, gate, feature_prompt, eos):

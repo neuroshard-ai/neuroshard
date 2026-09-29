@@ -62,11 +62,11 @@ def serve(partition, ring, adapter=None):
     """Owner loop for ranks after 0: episode caches, prefix crops, arm switching and parent features."""
     from transformers import DynamicCache
 
-    cache, steps = DynamicCache(), 0
+    cache, steps, busy = DynamicCache(), 0, 0.0
     while True:
         op, value = command(0)
         if op == STOP:
-            return steps
+            return {'steps': steps, 'busy_seconds': busy}
         if op == RESET:
             cache = DynamicCache()
         elif op == CROP:
@@ -77,12 +77,14 @@ def serve(partition, ring, adapter=None):
         elif op in (FORWARD, FEATURE):
             steps += op == FORWARD
             hidden = ring.receive(ring.rank - 1, value)
+            began = time.monotonic()
             with torch.inference_mode():
                 if op == FORWARD:
                     mask = torch.ones((1, cache.get_seq_length() + value), dtype=torch.long)
                     out = partition(hidden, mask, cache)
                 else:
                     out = partition(hidden, None, DynamicCache())
+            busy += time.monotonic() - began
             last = ring.rank == ring.world - 1
             ring.send(out[:, -1:] if last else out, (ring.rank + 1) % ring.world)
         else:
@@ -99,14 +101,17 @@ class ServingDriver:
             raise ValueError('owner 0 drives serving')
         self.partition, self.ring, self.cache_type = partition, ring, DynamicCache
         self.cache = DynamicCache()
+        self.busy_seconds = 0.0
 
     def feature(self, ids):
         """The frozen parent's final-layer state at the last prompt position, as ``boundary_feature`` computes it."""
         command(ADAPTER, 0)
         command(FEATURE, len(ids))
         tokens = torch.tensor([ids])
+        began = time.monotonic()
         with torch.inference_mode():
             hidden = self.partition(self.partition.embed(tokens), None, self.cache_type())
+        self.busy_seconds += time.monotonic() - began
         self.ring.send(hidden, 1)
         back = self.ring.receive(self.ring.world - 1, 1)
         with torch.inference_mode():
@@ -126,15 +131,31 @@ class ServingDriver:
 
     def step(self, tokens, mask):
         command(FORWARD, tokens.shape[1])
+        began = time.monotonic()
         with torch.inference_mode():
             hidden = self.partition(self.partition.embed(tokens), mask, self.cache)
+        self.busy_seconds += time.monotonic() - began
         self.ring.send(hidden, 1)
         back = self.ring.receive(self.ring.world - 1, 1)
+        began = time.monotonic()
         with torch.inference_mode():
-            return self.partition.logits(back)
+            logits = self.partition.logits(back)
+        self.busy_seconds += time.monotonic() - began
+        return logits
+
+    def next_token(self, tokens, mask):
+        return greedy(self.step(tokens, mask))
 
     def stop(self):
         command(STOP)
+
+
+def greedy(logits):
+    """The prefix-cache responder's check and choice on the last position's logits."""
+    logits = logits[0, -1].float()
+    if torch.isnan(logits).any() or torch.isposinf(logits).any() or not torch.isfinite(logits).any():
+        raise ValueError('nonfinite model logits')
+    return int(logits.argmax())
 
 
 def responder(driver, tokenizer, policy, eos):
@@ -161,12 +182,9 @@ def responder(driver, tokenizer, policy, eos):
         started, first_token = time.monotonic(), None
         tokens, current, length = [], torch.tensor([ids[common:]]), len(ids)
         for _ in range(generation['max_new_tokens']):
-            logits = driver.step(current, torch.ones((1, length), dtype=torch.long))[0, -1].float()
-            if torch.isnan(logits).any() or torch.isposinf(logits).any() or not torch.isfinite(logits).any():
-                raise ValueError('nonfinite model logits')
+            token = driver.next_token(current, torch.ones((1, length), dtype=torch.long))
             if first_token is None:
                 first_token = time.monotonic() - started
-            token = int(logits.argmax())
             tokens.append(token)
             if token in eos:
                 break
@@ -235,9 +253,10 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
                 result.setdefault('conversations', {})[name] = [respond(messages, conversation['tools'])
                                                                 for messages in conversation['requests']]
             result['checked_encodes'] = tokenizer.checked_encodes
+            result['busy_seconds'] = driver.busy_seconds
             driver.stop()
         else:
-            result['steps'] = (multi.serve if streams else serve)(partition, ring, adapter)
+            result.update((multi.serve if streams else serve)(partition, ring, adapter))
         result['completed'] = True
     except Exception as error:
         result.update(completed=False, error=f'{type(error).__name__}: {error}')

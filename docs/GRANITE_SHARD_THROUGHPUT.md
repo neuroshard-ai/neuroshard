@@ -45,6 +45,18 @@ The execution passes only if all four hold:
 The run also measures, without gating, concurrent throughput against the
 single-host development wall time, and traffic and memory per owner.
 
+## Second attempt
+
+Declared after the [first attempt](GRANITE_SHARD_THROUGHPUT_RESULTS.md) kept
+every token identical but failed the throughput check (0.97×). The first attempt
+stays failed.
+
+Owner 0 now runs every tensor operation on one compute thread: the embedding,
+its layers, the head, the logits check and argmax, and the parent feature.
+Episode threads only render prompts, run tools and wait. Every owner records its
+busy time in both passes. Owners, boundaries, target and all four checks are
+unchanged.
+
 ## Limits
 
 This makes no new quality claim, and independent operators remain A5. The run

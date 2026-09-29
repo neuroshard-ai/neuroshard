@@ -1,0 +1,96 @@
+{
+  "format": "neuroshard-granite-shard-throughput-report/1",
+  "result": "config/experiments/granite-shard-throughput-result.json",
+  "result_sha256": "1e09450e3e5cfa79b9bb99b771b1a07cbe9d23dbc976267abdd2eb0298cbbe27",
+  "commit": "d572cdfc31638763ce3a92ce8b6d1bdd2845ec86",
+  "passed": false,
+  "checks": {
+    "sequential_agreement": true,
+    "concurrent_agreement": true,
+    "overlap": true,
+    "throughput": false
+  },
+  "report": {
+    "passed": false,
+    "episodes_seconds": {
+      "sequential": 1617.050419464,
+      "concurrent": 1670.9317968829998
+    },
+    "throughput_ratio": 0.9677536943641197,
+    "single_host_episode_seconds": 1547.4260831889999,
+    "ratio_vs_single_host": 0.9260857241903047,
+    "peak_in_flight": 3,
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "diagnosis": {
+    "measured": {
+      "sequential": {
+        "wall_seconds": 1617.050419464,
+        "episode_seconds_sum": 1615.561344868998,
+        "mean_concurrency": 0.9990791415177422,
+        "milliseconds_per_generated_token": 176.10597426902092
+      },
+      "concurrent": {
+        "wall_seconds": 1670.9317968829998,
+        "episode_seconds_sum": 4873.239443254998,
+        "mean_concurrency": 2.916480165345867,
+        "milliseconds_per_generated_token": 544.7173160372472
+      }
+    },
+    "finding": "Three episodes stayed in flight (mean concurrency 2.92) but every step took 3.1 times longer, so throughput did not change.",
+    "local_check": "With a fixed 50 ms sleep standing in for compute on each owner, three streams finished 1.5 times faster than one on a local ring, so the protocol overlaps.",
+    "hypothesis": "Owner 0 ran tensor work from one Python thread per episode. Each calling thread gets its own OpenMP team of eight, so three or four teams competed for 16 vCPUs with spinning idle threads; owners 1 and 2 have one thread. Not yet confirmed on the owner hosts: no per-owner busy time was recorded."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 10495.220569,
+    "conservative_compute_usd": 3.0855948472860004,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T06:53:58.354916+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-090ef6bf59e09b7af"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 3470.66679,
+        "conservative_compute_usd": 1.02037603626,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T06:54:29.911267+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-06b349dc5c4a651ea"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 3494.967666,
+        "conservative_compute_usd": 1.0275204938040001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T06:55:11.724423+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-02e869cf9786f8a05"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 3529.586113,
+        "conservative_compute_usd": 1.037698317222,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

@@ -81,5 +81,7 @@ def assess_phases(plan, fetches, phases):
             'throughput_ratio': ratio, 'single_host_episode_seconds': single_host,
             'ratio_vs_single_host': single_host / seconds['concurrent'] if seconds['concurrent'] else None,
             'peak_in_flight': (phases['concurrent'][0] or {}).get('peak_in_flight'),
+            'owner_busy_seconds': {name: [(row or {}).get('busy_seconds') for row in phases[name]]
+                                   for name in ('sequential', 'concurrent')},
             'phases': {name: {k: v for k, v in report.items() if k != 'determinism'} for name, report in reports.items()},
             'checklist_credit': False, 'admission_evidence': False}

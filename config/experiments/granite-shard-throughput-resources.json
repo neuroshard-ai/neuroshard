@@ -30,8 +30,15 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "prior_resources": {
-    "path": "config/experiments/granite-shard-serving-report.json",
-    "sha256": "3f1d9942921f6b10eaa9206310e53df63e17915c26fd0e76937ef6a80a098cb1"
+    "path": "config/experiments/granite-shard-throughput-report.json",
+    "sha256": "e911f2d3b7cd71d2b058429ad60baa9d470ad2fd049505d6a1bf9bb9efc619c4"
   },
-  "budget_scope": "One owner host of three for the Granite shard throughput execution, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; sequential and concurrent serving 80 minutes each. No GPU or training."
+  "budget_scope": "One owner host of three for the Granite shard throughput execution, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; sequential and concurrent serving 80 minutes each. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-29T05:56:00Z",
+      "commit": "d572cdfc31638763ce3a92ce8b6d1bdd2845ec86",
+      "outcome": "Both passes token-identical; throughput 0.97x against 1.5x; failed ($3.09)."
+    }
+  ]
 }

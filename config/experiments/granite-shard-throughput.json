@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-throughput/1",
-  "status": "Declared on September 29, 2026 after the shard serving execution passed, before any concurrent serving.",
+  "status": "Second attempt, declared on September 29, 2026 after the first attempt kept every token identical but failed the throughput check (0.97x). Owner 0 now runs every tensor operation on one compute thread and every owner records its busy time. Owners, boundaries, target and gate are unchanged.",
   "purpose": "A4 fourth execution: the learned assistant served on the same three owner hosts one episode at a time and then three episodes in flight must reproduce the single-host development episodes token for token both times, and the concurrent pass must be at least 1.5 times faster.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -61,7 +61,7 @@
     "overlap": "At least two episodes are in flight at once during the concurrent pass.",
     "throughput": "The concurrent pass is at least 1.5 times faster than the sequential pass."
   },
-  "measured_not_gated": "Concurrent throughput against the single-host development wall time; traffic and memory per owner.",
+  "measured_not_gated": "Owner busy seconds in both passes, concurrent throughput against the single-host development wall time, traffic and memory per owner.",
   "not_claimed": "No new quality claim. A single host could also run faster by batching, but that changes the computation; this measures the gain that keeps every token and every intermediate identical.",
   "resources": "config/experiments/granite-shard-throughput-resources.json",
   "attempts": 1,
@@ -79,10 +79,12 @@
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/granite-shard-throughput-resources.json": "a0b79a6e33c4e1978dfc3b3849e550124ce47f0eace052719b31789fe74cde5b",
-    "docs/GRANITE_SHARD_THROUGHPUT.md": "15a16929249971c59f6ca0c4b52dcd2cab8b8bbda7dd30c675827be65fb75d60"
+    "config/experiments/granite-shard-throughput-resources.json": "dc32615bb0d769c20dea5f1b5b0a0297e05d73f5c641630630ea7f98a020e9ee",
+    "docs/GRANITE_SHARD_THROUGHPUT.md": "6edaac36e14b4c73f89d98e83185151ffe225f041e529b7c8ba1aba3dcbb2f6e",
+    "config/experiments/granite-shard-throughput-result.json": "1e09450e3e5cfa79b9bb99b771b1a07cbe9d23dbc976267abdd2eb0298cbbe27"
   },
   "sources": [
+    "config/experiments/granite-shard-throughput-result.json",
     "config/experiments/granite-reference-artifacts.json",
     "config/experiments/granite-tensor-inventory.json",
     "config/experiments/assistant-workflow-canonical-execution.json",
@@ -129,5 +131,15 @@
     "src/neuroshard/evolution/granite_shard_throughput.py",
     "src/neuroshard/evolution/sharded/granite_streams.py",
     "scripts/run_granite_shard_throughput.py"
-  ]
+  ],
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "d572cdfc31638763ce3a92ce8b6d1bdd2845ec86",
+      "result": "config/experiments/granite-shard-throughput-result.json",
+      "result_sha256": "1e09450e3e5cfa79b9bb99b771b1a07cbe9d23dbc976267abdd2eb0298cbbe27",
+      "outcome": "Both passes identical to the single host; concurrent 1,671 s against sequential 1,617 s (0.97x); failed."
+    }
+  ],
+  "owner_0_compute": "All tensor work on owner 0 (embedding, layers, head, logits check and argmax, parent feature) runs on one compute thread; episode threads only render prompts, run tools and wait."
 }
