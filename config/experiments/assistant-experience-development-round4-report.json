@@ -1,0 +1,136 @@
+{
+  "format": "neuroshard-assistant-experience-development-report/1",
+  "round": 4,
+  "serving": "prefix-cache",
+  "source_commit": "f299e0ffa1d656089350cca599874fd235174b05",
+  "result_sha256": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+  "execution_completed": true,
+  "development_passed": true,
+  "development_and_a1_passed": true,
+  "a1_served": {
+    "passed": true,
+    "checks": {
+      "primitive": true,
+      "anchors": true,
+      "p95": true,
+      "fresh_process_replay": true
+    },
+    "primitive_by_family": {
+      "copy": 2,
+      "date": 1,
+      "sum": 2,
+      "difference": 2
+    },
+    "primitive_correct": 7,
+    "p95_episode_seconds": 92.74499987199988,
+    "anchor_routing": "parent",
+    "anchor_correct": 19,
+    "replayed_ids": [
+      "workflow-5b59fbf07de4",
+      "workflow-bd845e98b603"
+    ]
+  },
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "decision": "Round-4 development gate passed under prefix-cache serving: addition 18/24 (update 19/24, parent 9/24), net +9 with no lost parent success, -1 against the update, p95 92.7 s including routing. A1 served-system check passed: 7/8 primitive workflows with every primitive family, the anchor gate with anchors routed to the parent, and two exact fresh-process replays. The fresh 192-episode confirmation opens once.",
+  "report": {
+    "correct": {
+      "parent": 9,
+      "update": 19,
+      "addition": 18
+    },
+    "versus_parent": {
+      "gained": [
+        "workflow-0a46caf718a9",
+        "workflow-13de433c562f",
+        "workflow-21c0be04a7be",
+        "workflow-22e0b95f5781",
+        "workflow-9e59abaad961",
+        "workflow-c5a251cb9186",
+        "workflow-cceb5a621834",
+        "workflow-e47fa617df9c",
+        "workflow-f4f40d77e7cd"
+      ],
+      "lost": [],
+      "net": 9
+    },
+    "versus_update": {
+      "gained": [],
+      "lost": [
+        "workflow-5b541f25dc67"
+      ],
+      "net": -1
+    },
+    "lost_protected": [],
+    "p95_seconds": {
+      "addition": 92.74499987199988,
+      "update": 93.1729150430001,
+      "parent": 177.10837942299986
+    },
+    "checks": {
+      "total": true,
+      "net_vs_parent": true,
+      "lost_parent_successes": true,
+      "protected": true,
+      "p95": true,
+      "p95_ratio": true,
+      "net_vs_update": true
+    },
+    "passed": true,
+    "confirmation_may_open": true,
+    "forced_anchor_forgetting": {
+      "update": {
+        "correct": 18,
+        "lost_protected": [
+          "granite-instruction-counts"
+        ]
+      },
+      "addition": {
+        "correct": 18,
+        "lost_protected": [
+          "granite-instruction-counts"
+        ]
+      }
+    },
+    "selected_arm_episodes": {
+      "update": 24,
+      "addition": 24
+    },
+    "development_and_a1_passed": true
+  },
+  "mean_episode_seconds": {
+    "update": 64.57567159600002,
+    "addition": 64.47608679954166
+  },
+  "ci": {
+    "id": 36510475568,
+    "head_sha": "f299e0ffa1d656089350cca599874fd235174b05",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36510475568"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-29T03:24:48.172397+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-050fab89d0c3353a2"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 3552.933825,
+    "conservative_compute_usd": 1.04456254455,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-09-29T03:36:46.227070+00:00",
+    "instances": [
+      {
+        "id": "i-050fab89d0c3353a2",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  }
+}

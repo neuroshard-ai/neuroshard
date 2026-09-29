@@ -51,21 +51,25 @@
   },
   "threads": 8,
   "prepare_seconds": 900,
-  "worker_seconds": 12600,
+  "worker_seconds": 25200,
   "memory_bytes": 68719476736,
   "arms": {
     "update": {
-      "trainable_sha256": "b00b66b83e5a6277a6e85ea3436beb3b814933f05c5dde0dfe844851527d5db4"
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
     },
     "addition": {
-      "trainable_sha256": "0dd1b5c7df01b4e91eebcd9932e186859c0e49f229119cef1827f62cfb72608d"
+      "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c"
     },
-    "integration_sha256": "ebc07c77c0ef25b6b2170ccb605fd629736925be43b25b285f85186b6f150600"
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
   },
   "serving": "prefix-cache",
   "development_report": {
-    "path": "config/experiments/assistant-experience-development-round3-report.json",
-    "sha256": "104711402da6e1fe5eb2f2e521248fe6963443cfee584e1b403cac7cec416a30"
+    "path": "config/experiments/assistant-experience-development-round4-report.json",
+    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
+    "requires": [
+      "development_passed",
+      "development_and_a1_passed"
+    ]
   },
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
@@ -76,21 +80,23 @@
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
-    "config/experiments/assistant-experience-development-round3-report.json": "104711402da6e1fe5eb2f2e521248fe6963443cfee584e1b403cac7cec416a30",
-    "config/experiments/assistant-experience-confirmation-parent-resources.json": "4304a4945751a185bb2be3e921d428cf74a3f637207ae10db9f74e7a12926abd",
-    "config/experiments/assistant-experience-confirmation-update-resources.json": "68242a8609e89d088b1326191c13106fcf2bac6e071fef82fa94d54851162334",
-    "config/experiments/assistant-experience-confirmation-addition-resources.json": "996051c66402bfb7f72a1eac336f424e1a2a0ea899a614e2f2b58eab729b3bfc"
+    "config/experiments/assistant-experience-development-round4-report.json": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
+    "config/experiments/assistant-experience-confirmation-parent-resources.json": "6794467de0cee9445cc2c2dbde8e0b2f4aa2d35669c3c82784268d6dbe74c2f7",
+    "config/experiments/assistant-experience-confirmation-update-resources.json": "0b60de4ec3e49ea9eb8b4248f0bbf41c88119d99acfdf925d33f96b61efc8a06",
+    "config/experiments/assistant-experience-confirmation-addition-resources.json": "da4a761d425b35900e2a4df288f323b56485ecf8080340ff1e338aa9e85280e9",
+    "config/experiments/assistant-workflow-data-confirmation2.json": "1b341dd20087389812dd0a3ed50dba17d3528a8a7b52aa4d815a3039a038c1f3"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
     "config/experiments/assistant-workflow-policy.json",
     "config/experiments/assistant-workflow-data.json",
+    "config/experiments/assistant-workflow-data-confirmation2.json",
     "config/experiments/assistant-workflow-canonical.json",
     "config/experiments/assistant-workflow-canonical-execution.json",
     "config/experiments/granite-reference-artifacts.json",
     "docs/granite-reference-requirements.txt",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
-    "config/experiments/assistant-experience-development-round3-report.json",
+    "config/experiments/assistant-experience-development-round4-report.json",
     "config/experiments/assistant-experience-confirmation-parent-resources.json",
     "config/experiments/assistant-experience-confirmation-update-resources.json",
     "config/experiments/assistant-experience-confirmation-addition-resources.json",
@@ -125,6 +131,11 @@
   "attempts": 1,
   "training_authorized": false,
   "gpu_launch_authorized": false,
-  "execution": "Three hosts, one system each: parent control under recompute serving, update and addition systems under the declared prefix cache with per-episode routing. 96 sealed confirmation episodes, once.",
-  "interpretation": "The decisive fresh test of A2 for this capability. A pass is not native promotion, checklist credit for A1, or evidence for other capabilities."
+  "execution": "Three hosts, one system each, all under the declared prefix cache: the parent control, and the update and addition systems with per-episode routing. 192 fresh sealed confirmation episodes, once.",
+  "interpretation": "The decisive fresh test of A2 for this capability, second attempt. The first confirmation stays failed. A pass is not native promotion or checklist credit for other capabilities.",
+  "split": "confirmation2",
+  "data": "config/experiments/assistant-workflow-data-confirmation2.json",
+  "gate": "confirmation2_gate",
+  "parent_serving": "prefix-cache",
+  "round": 4
 }

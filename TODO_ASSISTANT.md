@@ -75,7 +75,11 @@ remain evidence, not readiness claims for this assistant.
   served-system check. If both pass, a fresh 192-episode confirmation opens once.
   Budget ceiling: $1,000. [Round 4](docs/ASSISTANT_EXPERIENCE_ROUND4_RESULTS.md):
   49 verified repairs gave 15 pairs. On integration the update rose to 90.6%
-  while the addition fell to 89.1% greedy and 84.8% sampled; development is next.
+  while the addition fell to 89.1% greedy and 84.8% sampled.
+  [Development and the A1 served-system check passed](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_ROUND4_RESULTS.md):
+  the addition solved 18/24 (update 19, parent 9) with p95 92.7 s, and the
+  served system solved 7/8 primitive workflows with exact fresh-process replays.
+  The fresh 192-episode confirmation opens once.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
@@ -86,10 +90,13 @@ remain evidence, not readiness claims for this assistant.
   reproduced all 230 canonical generations token for token. Each stayed at
   6.1–6.2 GB peak RSS against 11.3 GB on one host, and a lost owner resumed to
   the canonical tokens; $4.93. Training across owners reproduces the
-  single-host trainer bit for bit on small checkpoints. The
-  [shard training execution](docs/GRANITE_SHARD_TRAINING.md) is declared: three
-  owners must train the addition arm on the real model to the same bits as a
-  single-host reference, uninterrupted and after its owner is lost.
+  single-host trainer bit for bit on small checkpoints.
+  [Shard training on the real model](docs/GRANITE_SHARD_TRAINING_RESULTS.md)
+  matched a single-host reference bit for bit: losses, margins and all 16 LoRA
+  tensors. The run still failed recovery, because the outage run's first forward
+  pass differed in the last place from the uninterrupted run on the same hosts
+  ($1.89). First-pass reproducibility needs a diagnostic before training
+  recovery is repeated.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37

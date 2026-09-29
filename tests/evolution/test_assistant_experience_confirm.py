@@ -126,8 +126,13 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
     imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
                                        env={'PYTHONPATH': str(ROOT / 'src')}).split()
     assert set(imported) <= set(execution['sources'])
-    assert execution['prepare_seconds'] + execution['worker_seconds'] + 1800 <= 5 * 3600
-    assert len(confirm.opened(execution)) == 96
+    hours = read(ROOT / 'config/experiments/assistant-experience-confirmation-parent-resources.json')['hours']
+    assert execution['prepare_seconds'] + execution['worker_seconds'] + 1800 <= hours * 3600
+    gate = read(ROOT / 'config/experiments/assistant-experience-learning.json')[execution.get('gate', 'confirmation_gate')]
+    assert len(confirm.opened(execution)) == gate['cases']
+    if execution.get('gate') == 'confirmation2_gate':
+        assert execution['parent_serving'] == 'prefix-cache' and execution['data'] == gate['data']
+        assert set(execution['development_report']['requires']) == {'development_passed', 'development_and_a1_passed'}
 
 
 def test_importing_confirmation_does_not_load_torch():
