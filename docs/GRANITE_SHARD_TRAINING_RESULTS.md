@@ -1,5 +1,30 @@
 # Granite shard training results (A4, second execution)
 
+## Second attempt: passed
+
+**All seven checks passed.** With the declared warm-up on every owner and on
+the reference host, the three owners trained the addition arm on the real model
+to the same bits as the unchanged single-host trainer: six losses, twelve
+preference margins and all 16 LoRA tensors (1,048,576 parameters).
+
+The arm's owner was lost when told to take step 3. The group was relaunched from
+its step-3 checkpoint and owner 0's saved references, and it again finished with
+the reference's exact tensors and the remaining three losses.
+
+Evidence: [result](../config/experiments/granite-shard-training2-result.json) and
+[report](../config/experiments/granite-shard-training2-report.json), commit `01fe9b0`.
+
+- **Memory.** Owner peaks were 5.30, 4.93 and 17.05 GB, against 22.43 GB for the
+  reference host holding the complete model.
+- **Time.** The owners took 599 s for six steps; the reference took 609 s.
+- **Cost.** Four r7i.4xlarge hosts, $1.94, all retired.
+
+Training across machines is now exact and recoverable. The learned module can be
+trained by owners who never hold the backbone, can survive the loss of the owner
+holding it, and ends where a single host would.
+
+## First attempt
+
 **Failed one of seven declared checks (recovery), so the execution fails.** The
 main question still got a clear answer. Training the assistant's addition arm
 across three owner hosts, with none holding the backbone, produced exactly what

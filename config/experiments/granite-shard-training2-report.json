@@ -1,0 +1,114 @@
+{
+  "format": "neuroshard-granite-shard-training-report/1",
+  "attempt": 2,
+  "result": "config/experiments/granite-shard-training2-result.json",
+  "result_sha256": "89517d6fe17ed62d699d6faa459a1c2635c7b16a738653d9fe5bae74a1821062",
+  "commit": "01fe9b097a52d297cb4abc0299f0d0470f2cd92b",
+  "passed": true,
+  "checks": {
+    "complete": true,
+    "fetched_only_owned": true,
+    "tensors": true,
+    "losses": true,
+    "outage_injected": true,
+    "recovery": true,
+    "memory": true
+  },
+  "report": {
+    "passed": true,
+    "steps": 6,
+    "outage_step": 3,
+    "owner_peak_rss_bytes": {
+      "0": 5299994624,
+      "1": 4931813376,
+      "2": 17051144192
+    },
+    "reference_peak_rss_bytes": 22432280576,
+    "owner_train_seconds": {
+      "0": 599.316715246,
+      "1": 599.263197492,
+      "2": 597.069228196
+    },
+    "reference_seconds": 609.191288841,
+    "sent_bytes": {
+      "0": 948101120,
+      "1": 499328000,
+      "2": 499328000
+    },
+    "trainable_parameters": 1048576,
+    "losses": [
+      0.1649729583024344,
+      0.1642564037839378,
+      0.15364409922620936,
+      0.14374034921832557,
+      0.10989284074651717,
+      0.1385217744291527
+    ],
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 6590.260697,
+    "conservative_compute_usd": 1.937536644918,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T19:46:55.377487+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a4c79ebd3497c43c"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1602.047372,
+        "conservative_compute_usd": 0.471001927368,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T19:47:32.124015+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01b7e00d559888db8"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1631.542024,
+        "conservative_compute_usd": 0.479673355056,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T19:48:13.908452+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-00f791f697d720566"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1666.075257,
+        "conservative_compute_usd": 0.489826125558,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T19:48:45.658200+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-062c0b14544de7ee2"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1690.596044,
+        "conservative_compute_usd": 0.497035236936,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}
