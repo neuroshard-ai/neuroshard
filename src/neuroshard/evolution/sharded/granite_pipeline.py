@@ -148,8 +148,10 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     dist.init_process_group('gloo', init_method=f'tcp://{address}:{port}', rank=rank, world_size=world,
                             timeout=timedelta(seconds=timeout))
     ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
+    if job.get('warm_up'):
+        partition.warm_up()
     result = {'rank': rank, 'shard_sha256': manifest['sha256'], 'resident_bytes': partition.resident_bytes(),
-              'load_seconds': loaded}
+              'load_seconds': loaded, 'warm_up': bool(job.get('warm_up'))}
     try:
         if rank == 0:
             driver = Driver(partition, ring)

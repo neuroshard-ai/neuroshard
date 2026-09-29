@@ -57,6 +57,15 @@ def test_partitioned_logits_equal_the_canonical_runtime_bit_for_bit(checkpoint):
         assert torch.equal(granite.forward(partitions, ids, last=True), model(ids, logits_to_keep=1).logits)
 
 
+def test_warm_up_changes_nothing_the_owners_compute_afterwards(checkpoint):
+    model, partitions = canonical(checkpoint), owners(checkpoint)
+    for partition in partitions:
+        partition.warm_up(lengths=(12, 1))
+    ids = prompt()
+    with torch.inference_mode():
+        assert torch.equal(granite.forward(partitions, ids), model(ids).logits)
+
+
 def test_cached_greedy_generation_matches_canonical_generate_token_for_token(checkpoint):
     model, partitions = canonical(checkpoint), owners(checkpoint)
     for seed in range(3):

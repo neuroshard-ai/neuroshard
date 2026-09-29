@@ -225,8 +225,16 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
         ring = multi.Links(rank, world, config.hidden_size, job['max_tokens'])
     else:
         ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
+    if job.get('warm_up'):
+        for enabled in ((True, False) if adapter else (None,)):
+            if adapter:
+                adapter.set(enabled)
+            partition.warm_up()
+        if adapter:
+            adapter.set(True)
     result = {'rank': rank, 'shard_sha256': manifest['sha256'], 'resident_bytes': partition.resident_bytes(),
-              'arm_sha256': adapter.manifest['trainable_sha256'] if adapter else None, 'streams': streams or 1}
+              'arm_sha256': adapter.manifest['trainable_sha256'] if adapter else None, 'streams': streams or 1,
+              'warm_up': bool(job.get('warm_up'))}
     began = time.monotonic()
     try:
         if rank == 0:

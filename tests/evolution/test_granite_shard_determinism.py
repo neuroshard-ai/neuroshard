@@ -16,7 +16,7 @@ def cloud_module():
     return module
 
 
-def launches(count=6):
+def launches(count=PLAN['launches']):
     def owner():
         return {'completed': True, 'trace': ['a', 'b', 'c']}
 
@@ -31,7 +31,7 @@ def test_divergence_is_located_at_its_first_owner_and_message():
     assert determinism.first_divergence([['a', 'b'], ['a', 'b', 'c']]) == 2
     collected = launches()
     report = determinism.assess_phases(PLAN, [], collected)
-    assert report['reproducible'] and report['launches'] == 6
+    assert report['reproducible'] and report['launches'] == PLAN['launches']
     collected['ring-4'][1]['trace'][2] = 'z'
     collected['ring-4'][0]['receipt']['references'][0] = [-0.2, -2.0]
     report = determinism.assess_phases(PLAN, [], collected)
@@ -43,7 +43,8 @@ def test_the_diagnostic_replays_the_declared_training_job():
     job = determinism.job(PLAN)
     training = read(ROOT / 'config/experiments/granite-shard-training.json')
     assert job['trace'] and job['spec'] == {**training['spec'], 'steps': 1} and job['arm'] == 'addition'
-    assert determinism.phases(PLAN) == ('fetch',) + tuple(f'ring-{i}' for i in range(6))
+    assert job['warm_up'] is PLAN.get('warm_up', False)
+    assert determinism.phases(PLAN) == ('fetch',) + tuple(f'ring-{i}' for i in range(PLAN['launches']))
     assert set(determinism.phases(PLAN)) <= set(determinism.PHASES)
 
 

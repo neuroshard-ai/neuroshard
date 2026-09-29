@@ -56,6 +56,17 @@ class OwnerTraining:
                                             weight_decay=spec['weight_decay']) if self.trainable else None)
         self.pending, self.gradients, self.norms = [], [], []
 
+    def warm_up(self, length=1024):
+        """The partition's discarded passes, plus one discarded backward through the arm; no state changes."""
+        self.partition.warm_up()
+        if not self.trainable:
+            return
+        dtype = self.partition.layers[0].input_layernorm.weight.dtype
+        with torch.enable_grad():
+            self.partition(torch.zeros((1, length, self.partition.config.hidden_size), dtype=dtype)).float().sum().backward()
+        for value in self.trainable.values():
+            value.grad = None
+
     def forward(self, hidden, train):
         if self.partition.rank < self.holder or not train:
             with torch.no_grad():
@@ -223,8 +234,11 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
     if job.get('trace'):
         ring.trace = []
+    if job.get('warm_up'):
+        training.warm_up()
     result = {'rank': rank, 'shard_sha256': manifest['sha256'], 'resident_bytes': partition.resident_bytes(),
-              'trainable_parameters': sum(p.numel() for p in training.trainable.values()), 'start': start}
+              'trainable_parameters': sum(p.numel() for p in training.trainable.values()), 'start': start,
+              'warm_up': bool(job.get('warm_up'))}
     began = time.monotonic()
     try:
         if rank == 0:

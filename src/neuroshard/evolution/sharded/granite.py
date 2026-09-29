@@ -109,6 +109,23 @@ class Partition(nn.Module):
     def resident_bytes(self):
         return sum(p.numel() * p.element_size() for p in self.parameters())
 
+    def warm_up(self, lengths=(1024, 1)):
+        """Discarded passes through every owned module before any declared work.
+
+        A fresh process's first pass can round differently from every later one;
+        the same pass later in the process is reproducible across processes.
+        """
+        from transformers import DynamicCache
+
+        dtype = self.layers[0].input_layernorm.weight.dtype
+        with torch.inference_mode():
+            for length in lengths:
+                if self.rank == 0:
+                    hidden = self(self.embed(torch.zeros((1, length), dtype=torch.long)), None, DynamicCache())
+                    self.logits(hidden[:, -1:])
+                else:
+                    self(torch.zeros((1, length, self.config.hidden_size), dtype=dtype), None, DynamicCache())
+
     def embed(self, ids):
         if self.rank != 0:
             raise ValueError('only owner 0 holds the embedding')

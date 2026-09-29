@@ -113,13 +113,15 @@ def trained(directory):
     return load_file(Path(directory) / 'trainable.safetensors')
 
 
-@pytest.mark.parametrize('arm', ['addition', 'update'])
-def test_training_across_owners_reproduces_the_single_host_trainer(deployed, tmp_path, arm):
+@pytest.mark.parametrize('arm,warm', [('addition', False), ('update', False), ('addition', True)])
+def test_training_across_owners_reproduces_the_single_host_trainer(deployed, tmp_path, arm, warm):
     checkpoint, config_dir, shards = deployed
     experience, replay, pairs = data()
     expected, receipt = single_host(checkpoint, arm, experience, replay, pairs)
     checkpoints = tmp_path / 'arm'
-    results = launch(config_dir, shards, [job(arm, experience, replay, pairs, checkpoints)] * WORLD, tmp_path / 'run')
+    results = launch(config_dir, shards, [job(arm, experience, replay, pairs, checkpoints, warm_up=warm)] * WORLD,
+                     tmp_path / 'run')
+    assert all(r and r['warm_up'] == warm for r in results)
     assert all(r and r['completed'] for r in results), results
     assert results[0]['receipt']['schedule_sha256'] == receipt['schedule_sha256']
     assert results[0]['trainable_parameters'] == 0 and results[1]['trainable_parameters'] == 0

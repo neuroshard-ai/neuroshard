@@ -24,7 +24,7 @@ def phases(plan):
     return ('fetch',) + tuple(f'ring-{index}' for index in range(plan['launches']))
 
 
-PHASES = ('fetch',) + tuple(f'ring-{index}' for index in range(8))
+PHASES = ('fetch',) + tuple(f'ring-{index}' for index in range(16))
 
 
 def committed_sources(root=ROOT):
@@ -44,7 +44,7 @@ def job(plan):
     experience, replay, pairs = training.sequences(source)
     return {'arm': source['arm'], 'spec': {**source['spec'], 'steps': plan['steps']}, 'experience': experience,
             'replay': replay, 'pairs': pairs, 'max_tokens': source['max_boundary_tokens'], 'trace': True,
-            'threads': read(ROOT / shard.CANONICAL)['resources']['threads']}
+            'warm_up': plan.get('warm_up', False), 'threads': read(ROOT / shard.CANONICAL)['resources']['threads']}
 
 
 def owner(rank, address, port, phase, home, store, index=0):

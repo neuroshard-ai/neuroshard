@@ -30,8 +30,14 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "prior_resources": {
-    "path": "config/experiments/granite-shard-throughput2-report.json",
-    "sha256": "2e45b0739aab111f109a17cab7c03148c7688f0280ea2bf626de8e9faf52e817"
+    "path": "config/experiments/granite-shard-determinism-report.json",
+    "sha256": "a31f1ba3d0b5d82ea23519ce4a5d7515004877da1f94edae4a5a8b84d094c64c"
   },
-  "budget_scope": "One owner host of three for the ring determinism diagnostic, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; six training-ring launches of at most 20 minutes. No GPU."
+  "budget_scope": "One owner host of three for the ring determinism diagnostic, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; twelve training-ring launches of at most 15 minutes. No GPU.",
+  "prior_attempts": [
+    {
+      "commit": "89731bbf228b7b8d84c6be64fb8caf92098702b2",
+      "outcome": "One launch of six differed at owner 0's first forward pass ($0.92)."
+    }
+  ]
 }
