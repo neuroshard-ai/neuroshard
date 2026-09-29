@@ -1,5 +1,37 @@
 # Granite shard throughput results (A4, fourth execution)
 
+## Second attempt: passed
+
+**All four checks passed, 2.25× throughput with every token identical.** With
+every tensor operation on owner 0 moved onto one compute thread, three episodes
+in flight finished the 24 development episodes in 705 s. One at a time on the
+same owners took 1,585 s, and the single host took 1,547 s: 2.25× the sequential
+ring and 2.20× the single host. Both passes reproduced the single-host episodes
+token for token (18/24 solved, same selections, prefixes and scores).
+
+Evidence: [result](../config/experiments/granite-shard-throughput2-result.json) and
+[report](../config/experiments/granite-shard-throughput2-report.json), commit `b143cf5`.
+
+| Check | Outcome |
+| --- | --- |
+| Sequential agreement | Pass: 24/24 identical, p95 92.7 s. |
+| Concurrent agreement | Pass: 24/24 identical, p95 115.9 s. |
+| Overlap | Pass: three episodes in flight. |
+| Throughput | Pass: 2.25× (needs ≥1.5×). |
+
+Owner busy time confirms the first attempt's diagnosis. Each owner computed for
+510–525 s in the sequential pass and 525–545 s in the concurrent pass, so the
+concurrent pass no longer inflates any owner's work, and the three stages are
+balanced within 3%. The remaining gap to 3× comes from owner 0's per-episode
+Python work and from the tail, where fewer than three episodes remain.
+
+This is the benefit extra machines give while keeping every result exactly
+reproducible. A single host could only serve faster by batching, which changes
+the computation and makes independent audit by recomputation harder. The run
+cost $2.20, and every host is retired.
+
+## First attempt: failed
+
 **Failed the throughput check. Every token stayed identical.** Both passes
 reproduced all 24 single-host development episodes token for token: one episode
 at a time, and three in flight. The concurrent protocol is therefore correct. It
