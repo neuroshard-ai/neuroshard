@@ -385,14 +385,19 @@ def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pai
     return manifests
 
 
+def feature_ids(tokenizer, policy, case):
+    """Token IDs of the first assistant-generation boundary, the selection feature's input."""
+    messages = [{'role': 'system', 'content': policy['system_instruction']},
+                {'role': 'user', 'content': data.public_case(case)['user_turns'][0]}]
+    prompt = tokenizer.apply_chat_template(messages, tools=sandbox.TOOLS, add_generation_prompt=True, tokenize=False)
+    return tokenizer(prompt, add_special_tokens=False)['input_ids']
+
+
 def boundary_feature(model, tokenizer, policy, case, device):
     """Frozen parent final-layer state at the first assistant-generation boundary."""
     import torch
 
-    messages = [{'role': 'system', 'content': policy['system_instruction']},
-                {'role': 'user', 'content': data.public_case(case)['user_turns'][0]}]
-    prompt = tokenizer.apply_chat_template(messages, tools=sandbox.TOOLS, add_generation_prompt=True, tokenize=False)
-    ids = torch.tensor([tokenizer(prompt, add_special_tokens=False)['input_ids']], device=device)
+    ids = torch.tensor([feature_ids(tokenizer, policy, case)], device=device)
     with torch.no_grad():
         return model.model(input_ids=ids).last_hidden_state[0, -1].float().cpu().tolist()
 

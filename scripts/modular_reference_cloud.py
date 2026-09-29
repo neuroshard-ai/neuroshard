@@ -34,7 +34,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "granite-evidence-diagnostic": "config/experiments/granite-evidence-diagnostic-resources.json",
                      "granite-adapter-audit": "config/experiments/granite-adapter-audit-recovery-resources.json",
                      "granite-shard-owner": "config/experiments/granite-shard-owner-resources.json",
-                     "granite-shard-training": "config/experiments/granite-shard-training-resources.json"}
+                     "granite-shard-training": "config/experiments/granite-shard-training-resources.json",
+                     "granite-shard-serving": "config/experiments/granite-shard-serving-resources.json"}
 GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
@@ -49,13 +50,14 @@ GRANITE_PROFILES = {
     "granite-adapter-audit": ("granite_adapter_audit", "docs/granite-adapter-audit-requirements.txt"),
     "granite-shard-owner": ("granite_shard_execution", "docs/granite-reference-requirements.txt"),
     "granite-shard-training": ("granite_shard_training", "docs/granite-reference-requirements.txt"),
+    "granite-shard-serving": ("granite_shard_serving", "docs/granite-reference-requirements.txt"),
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "granite-shard-owner": (4, 8),
-                     "granite-shard-training": (4, 8),
+                     "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8),
                      **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition")}}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"

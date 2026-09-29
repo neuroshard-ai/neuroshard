@@ -96,7 +96,10 @@ remain evidence, not readiness claims for this assistant.
   tensors. The run still failed recovery, because the outage run's first forward
   pass differed in the last place from the uninterrupted run on the same hosts
   ($1.89). First-pass reproducibility needs a diagnostic before training
-  recovery is repeated.
+  recovery is repeated. The [shard serving execution](docs/GRANITE_SHARD_SERVING.md)
+  is declared. The complete learned assistant (parent, round-4 addition on owner
+  2, gate, prefix cache) must reproduce the 24 single-host development episodes
+  token for token, with a first-pass determinism diagnostic.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37
