@@ -111,7 +111,10 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
     assert set(execution['contracts']) <= set(execution['sources'])
     report = read(ROOT / execution['development_report']['path'])
     assert report['development_passed'] and report['serving'] == execution['serving'] == 'prefix-cache'
-    assert execution['arms'] == read(ROOT / 'config/experiments/assistant-experience-development-execution.json')['arms']
+    trained = read(ROOT / f"config/experiments/assistant-experience-round{report['round']}-report.json")
+    assert execution['arms'] == {**{arm: {'trainable_sha256': trained['training'][arm]['trainable_sha256']}
+                                    for arm in ('update', 'addition')},
+                                 'integration_sha256': trained['integration']['integration_sha256']}
     baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
     probe = ('import os, sys; import neuroshard.evolution.assistant_experience_confirm; '
