@@ -58,15 +58,21 @@ class Adapter:
         self.enabled = enabled
 
 
-def serve(partition, ring, adapter=None):
-    """Owner loop for ranks after 0: episode caches, prefix crops, arm switching and parent features."""
+def serve(partition, ring, adapter=None, log=None, fault=None):
+    """Owner loop for ranks after 0: episode caches, prefix crops, arm switching and parent features.
+
+    ``log`` records every command for replay audits; ``fault`` (a forward-message
+    index) perturbs one sent tensor, standing in for a cheating owner in tests.
+    """
     from transformers import DynamicCache
 
-    cache, steps, busy = DynamicCache(), 0, 0.0
+    cache, steps, busy, forwards = DynamicCache(), 0, 0.0, 0
     while True:
         op, value = command(0)
         if op == STOP:
             return {'steps': steps, 'busy_seconds': busy}
+        if op in (RESET, CROP, ADAPTER) and log is not None:
+            log.command(op, value)
         if op == RESET:
             cache = DynamicCache()
         elif op == CROP:
@@ -86,7 +92,14 @@ def serve(partition, ring, adapter=None):
                     out = partition(hidden, None, DynamicCache())
             busy += time.monotonic() - began
             last = ring.rank == ring.world - 1
-            ring.send(out[:, -1:] if last else out, (ring.rank + 1) % ring.world)
+            sent = out[:, -1:] if last else out
+            if fault is not None and forwards == fault:
+                sent = sent.clone()
+                sent.view(torch.int16).view(-1)[0] ^= 1
+            forwards += 1
+            if log is not None:
+                log.forward(op, value, hidden, sent)
+            ring.send(sent, (ring.rank + 1) % ring.world)
         else:
             raise ValueError('unknown serving command')
 
@@ -263,8 +276,20 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
             result['checked_encodes'] = tokenizer.checked_encodes
             result['busy_seconds'] = driver.busy_seconds
             driver.stop()
+        elif streams:
+            result.update(multi.serve(partition, ring, adapter))
         else:
-            result.update((multi.serve if streams else serve)(partition, ring, adapter))
+            from .granite_audit import OwnerLog
+
+            log = OwnerLog(rank) if job.get('log') else None
+            fault = job.get('fault') or {}
+            result.update(serve(partition, ring, adapter, log, fault.get('at') if fault.get('rank') == rank else None))
+            if log is not None:
+                from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+                key = (Ed25519PrivateKey.from_private_bytes(bytes.fromhex(Path(job['keys'][str(rank)]).read_text().strip()))
+                       if job.get('keys') else Ed25519PrivateKey.generate())
+                result['log'] = log.save(Path(result_path).with_name(f'log-{rank}'), key)
         result['completed'] = True
     except Exception as error:
         result.update(completed=False, error=f'{type(error).__name__}: {error}')

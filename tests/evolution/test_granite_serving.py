@@ -117,7 +117,7 @@ Path(sys.argv[2]).write_text(json.dumps(rows))
     return json.loads((work / 'rows.json').read_text())
 
 
-def sharded(world, home, conversations=None, episodes=True, streams=None):
+def sharded(world, home, conversations=None, episodes=True, streams=None, log=False, fault=None):
     home.mkdir()
     reference = Path(world['directory']) / 'tokenizer.json'
     job = {'spec': SPEC, 'arm': str(world['arm']), 'gate': world['gate'], 'tokenizer': str(world['directory']),
@@ -129,6 +129,10 @@ def sharded(world, home, conversations=None, episodes=True, streams=None):
         job['conversations'] = conversations
     if streams:
         job['streams'] = streams
+    if log:
+        job['log'] = True
+    if fault:
+        job['fault'] = fault
     (home / 'job.json').write_text(json.dumps(job))
     port = free_port()
     code = ('import os, sys; from neuroshard.evolution.sharded import granite_serving as s; '
@@ -175,6 +179,65 @@ def test_concurrent_streams_serve_every_episode_exactly_as_alone(world, tmp_path
         for a, b in zip(got['generations'], want['generations']):
             for key in ('input_token_ids', 'token_ids', 'text', 'terminated', 'prompt_sha256', 'reused_prefix_tokens'):
                 assert a[key] == b[key], key
+
+
+def audit(world, logs, rank):
+    """An auditor holding only one owner's shard replays its log in the owners' runtime."""
+    code = '''
+import json, sys, torch
+from pathlib import Path
+from neuroshard.evolution.sharded import granite, granite_audit
+from neuroshard.evolution.sharded.granite_serving import Adapter
+torch.set_num_threads(1)
+config_dir, shards, log_dir, rank, arm, spec = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], json.loads(sys.argv[6])
+partition, _ = granite.load_partition(granite.load_config(config_dir), shards, rank)
+adapter = Adapter(partition, spec, arm) if rank == 2 else None
+partition.warm_up(lengths=(16, 1))
+record, payloads = granite_audit.load(log_dir)
+report = granite_audit.replay(partition, record, payloads, adapter)
+if report['valid']:
+    forwards = [i for i, e in enumerate(record['entries']) if 'output' in e]
+    forged = {'record': record, 'mismatch': forwards[0], 'inputs': {i: p for i, p in payloads.items() if i <= forwards[0]}}
+    report['forged_proof_accepted'] = granite_audit.check_fraud_proof(partition, forged, record['public_key'], adapter)
+else:
+    proof = granite_audit.fraud_proof(record, payloads, report)
+    report['proof_accepted'] = granite_audit.check_fraud_proof(partition, proof, record['public_key'], adapter)
+    report['proof_inputs'] = len(proof['inputs'])
+report['signed'] = granite_audit.signed_by(record, record['public_key'])
+print(json.dumps(report))
+'''
+    output = subprocess.check_output([sys.executable, '-c', code, str(world['config']), str(world['shards']),
+                                      str(logs / f'log-{rank}'), str(rank), str(world['arm']), json.dumps(SPEC)],
+                                     env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, text=True)
+    return json.loads(output.strip().splitlines()[-1])
+
+
+def test_replay_audits_confirm_honest_owners_and_catch_a_one_bit_fault(world, tmp_path):
+    from neuroshard.evolution.sharded import granite_audit
+
+    honest = sharded(world, tmp_path / 'honest', log=True)
+    assert all(r['completed'] for r in honest), [r.get('error') for r in honest]
+    logs = tmp_path / 'honest'
+    for rank in (1, 2):
+        report = audit(world, logs, rank)
+        assert report['valid'] and report['forwards_checked'] == honest[rank]['log']['forwards'] > 0
+        assert report['signed'] and not report['forged_proof_accepted']
+        record = granite_audit.load(logs / f'log-{rank}')[0]
+        assert record['public_key'] == honest[rank]['log']['public_key']
+        tampered = {**record, 'entries': record['entries'][:-1]}
+        assert not granite_audit.signed_by(tampered, record['public_key'])
+    assert granite_audit.continuity(granite_audit.load(logs / 'log-1')[0]['entries'],
+                                    granite_audit.load(logs / 'log-2')[0]['entries']) is None
+    cheated = sharded(world, tmp_path / 'cheated', log=True, fault={'rank': 1, 'at': 3})
+    assert all(r['completed'] for r in cheated), [r.get('error') for r in cheated]
+    report = audit(world, tmp_path / 'cheated', 1)
+    record, _ = granite_audit.load(tmp_path / 'cheated' / 'log-1')
+    forwards = [i for i, e in enumerate(record['entries']) if 'output' in e]
+    assert not report['valid'] and report['first_mismatch'] == forwards[3]
+    assert report['proof_accepted'] and report['proof_inputs'] == 4 and report['signed']
+    assert audit(world, tmp_path / 'cheated', 2)['valid']
+    upstream, downstream = granite_audit.load(tmp_path / 'cheated' / 'log-1')[0], granite_audit.load(tmp_path / 'cheated' / 'log-2')[0]
+    assert granite_audit.continuity(upstream['entries'], downstream['entries']) is None
 
 
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):
