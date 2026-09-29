@@ -15,9 +15,12 @@ from neuroshard.evolution.modular_reference_execution import identity
 
 
 class Batcher:
-    def __init__(self, model, tokenizer, generation, *, max_batch=16, wait_seconds=0.05, device='cpu', seed=0):
+    def __init__(self, model, tokenizer, generation, *, max_batch=16, wait_seconds=0.05, device='cpu', seed=0,
+                 context=None):
         self.model, self.tokenizer, self.generation = model, tokenizer, generation
         self.max_batch, self.wait_seconds, self.device = max_batch, wait_seconds, device
+        # Entered around every batched generate, e.g. to select one of several adapters.
+        self.context = context
         self.requests = queue.Queue()
         self.batches = []
         self._closed = threading.Event()
@@ -81,11 +84,13 @@ class Batcher:
         for row, slot in enumerate(batch):
             ids[row, width - len(slot['ids']):] = torch.tensor(slot['ids'])
             mask[row, width - len(slot['ids']):] = 1
-        torch.manual_seed(self._seed + len(self.batches))
         sampling = self.generation['temperature'] > 0
         options = ({'do_sample': True, 'temperature': self.generation['temperature'],
                     'top_p': self.generation['top_p'], 'top_k': 0} if sampling else {'do_sample': False})
-        with torch.inference_mode():
+        import contextlib
+
+        with (self.context() if self.context else contextlib.nullcontext()), torch.inference_mode():
+            torch.manual_seed(self._seed + len(self.batches))
             output = self.model.generate(input_ids=ids.to(self.device), attention_mask=mask.to(self.device),
                                          num_beams=1, use_cache=True, pad_token_id=pad,
                                          max_new_tokens=self.generation['max_new_tokens'], **options)

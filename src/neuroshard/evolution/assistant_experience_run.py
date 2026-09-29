@@ -385,6 +385,166 @@ def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pai
     return manifests
 
 
+def committee_member(case_id, members):
+    """A fixed, content-independent slice of the training cases for each committee member."""
+    import hashlib
+
+    return int(hashlib.sha256(case_id.encode()).hexdigest()[:8], 16) % members
+
+
+def study_data(tokenizer, plan, policy, execution, home):
+    """Every verified sequence and preference gathered in rounds 1-4, each tagged with its training case."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'], tokenizer,
+                                                   plan, policy, execution, home)
+    cases = [t['case_id'] for t in read_rows(ROOT / UPLOADED / 'trajectories.jsonl.gz')]
+    for name, digest in execution['study']['files'].items():
+        if sha256(ROOT / UPLOADED / name) != digest:
+            raise ValueError(f'study input differs from its pinned digest: {name}')
+    decisions, decision_rows = build_pairs(tokenizer, plan, policy, read_rows(ROOT / UPLOADED / 'rollouts.jsonl.gz'))
+    divergences, divergence_rows = build_divergence_pairs(tokenizer, plan, policy,
+                                                          read_rows(ROOT / UPLOADED / 'rollouts-round3.jsonl.gz'))
+    repairs, repaired = repair_data(plan, policy, read_rows(ROOT / UPLOADED / 'repairs-round4.jsonl.gz'))
+    counts = {'trajectories': len(experience_rows), 'repaired_trajectories': len(repaired), 'replay': len(replay_rows),
+              'decision_pairs': len(decisions), 'divergence_pairs': len(divergences), 'repair_pairs': len(repairs)}
+    if counts != plan['methodology_study']['counts']:
+        raise ValueError(f'study data differs from its declaration: {counts}')
+    experience_rows += [trainer.encode(tokenizer, t, sandbox.TOOLS) for t in repaired]
+    cases += [t['case_id'] for t in repaired]
+    pairs = decisions + divergences + repairs
+    pair_rows = decision_rows + divergence_rows + [trainer.encode_pair(tokenizer, p, sandbox.TOOLS) for p in repairs]
+    save(home / 'study-data.json', {**counts, 'experience_sha256': identity([r['sha256'] for r in experience_rows]),
+                                    'pairs_sha256': identity([r['sha256'] for r in pair_rows])}, exclusive=True)
+    return (list(zip(cases, experience_rows)), replay_rows, list(zip([p['case_id'] for p in pairs], pair_rows)))
+
+
+def study_spec(plan, arm):
+    """(first-phase spec, preference-phase spec) for one study arm; architecture keys come from the arm."""
+    first = {**plan['training'], **arm.get('spec', {})}
+    return first, {**first, **plan['goal_guided_repairs']['training'], 'seed': first['seed'] + 1}
+
+
+def study_train(load_parent, plan, execution, experience, replay, pairs, home):
+    """Every study arm with the same two phases: verified experience and replay, then all verified preferences."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    study, manifests = plan['methodology_study'], {}
+    for name, arm in study['arms'].items():
+        member = arm.get('member')
+        keep = (lambda case: True) if member is None else (lambda case: committee_member(case, study['members']) == member)
+        rows = [row for case, row in experience if keep(case)]
+        pair_rows = [row for case, row in pairs if keep(case)]
+        first, second = study_spec(plan, arm)
+        save(home / 'progress.json', {'phase': f'study-train-{name}', 'unix': time.time()})
+        model = load_parent()
+        started = time.monotonic()
+        trainable, receipt = trainer.train(model, arm['type'], rows, replay, first, device=execution['device'])
+        trainable, receipt = trainer.train(model, arm['type'], rows, replay, second, device=execution['device'],
+                                           trainable=trainable, pairs=pair_rows)
+        roots = {'experience': identity([r['sha256'] for r in rows]), 'replay': identity([r['sha256'] for r in replay]),
+                 'pairs': identity([p['sha256'] for p in pair_rows]), 'plan': identity(plan)}
+        manifests[name] = {**trainer.checkpoint(home / f'{name}-checkpoint', trainable, receipt, roots),
+                           'sequences': len(rows), 'pairs': len(pair_rows), 'seconds': time.monotonic() - started}
+        del model, trainable, receipt
+        release_accelerator()
+    save(home / 'training.json', manifests, exclusive=True)
+    return manifests
+
+
+def system_outcomes(make, cases, policy, execution, samples, seed, progress):
+    """One greedy and ``samples`` sampled episodes per case; ``make(temperature, seed)`` returns (respond, close)."""
+    results = {case['id']: [] for case in cases}
+    for temperature, count in ((0, 1), (execution['temperature'], samples)):
+        if not count:
+            continue
+        respond, close = make(temperature, seed)
+        try:
+            rows = rollout.rollouts([(c, policy, s) for c in cases for s in range(count)], respond,
+                                    workers=execution['workers'], progress=progress)
+        finally:
+            close()
+        for row in rows:
+            results[row['case_id']].append(row['result']['score']['passed'])
+    return results
+
+
+def study_evaluate(load_parent, tokenizer, plan, policy, execution, home):
+    """Integration and development outcomes of the parent, every arm and the committee of members."""
+    from neuroshard.evolution import assistant_committee as committee
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    study = plan['methodology_study']
+    splits = {'integration': (split_cases(plan, 'integration'), study['integration_samples']),
+              'development': (data.cases('development'), 0)}
+
+    def single(model):
+        def make(temperature, seed):
+            batcher = rollout.Batcher(model, tokenizer, sampling(policy, execution, temperature),
+                                      max_batch=execution['max_batch'], device=execution['device'], seed=seed)
+            return batcher.respond, batcher.close
+        return make
+
+    def evaluate(name, make):
+        return {split: system_outcomes(make, cases, policy, execution, samples, study['seed'],
+                                       reporter(home, f'study-{name}-{split}'))
+                for split, (cases, samples) in splits.items()}
+
+    systems = {}
+    parent = load_parent()
+    systems['parent'] = evaluate('parent', single(parent))
+    del parent
+    release_accelerator()
+    for name, arm in study['arms'].items():
+        model = load_parent()
+        trainer.load_trainable(model, arm['type'], study_spec(plan, arm)[0], home / f'{name}-checkpoint')
+        trainer.serving(model, study_spec(plan, arm)[0])
+        systems[name] = evaluate(name, single(model))
+        del model
+        release_accelerator()
+    members = sorted((arm['member'], name) for name, arm in study['arms'].items() if arm.get('member') is not None)
+    model, switch = load_parent(), committee.Switch()
+    committee.attach(model, study_spec(plan, study['arms'][members[0][1]])[0],
+                     [home / f'{name}-checkpoint' for _, name in members], switch)
+
+    def voted(temperature, seed):
+        batchers = [rollout.Batcher(model, tokenizer, sampling(policy, execution, temperature),
+                                    max_batch=execution['max_batch'], device=execution['device'], seed=seed + index,
+                                    context=lambda index=index: switch.using(index))
+                    for index in range(len(members))]
+        parent_batcher = rollout.Batcher(model, tokenizer, sampling(policy, execution, temperature),
+                                         max_batch=execution['max_batch'], device=execution['device'],
+                                         seed=seed + len(members), context=lambda: switch.using(None))
+        everyone = batchers + [parent_batcher]
+        return (committee.responder([b.respond for b in batchers], parent_batcher.respond),
+                lambda: [b.close() for b in everyone])
+
+    systems['committee'] = evaluate('committee', voted)
+    del model
+    release_accelerator()
+    report = study_report(systems)
+    save(home / 'study.json', {'systems': systems, 'report': report}, exclusive=True)
+    return report
+
+
+def study_report(systems):
+    """Success rates, parent successes lost and the difference from the update, per system and split."""
+    report = {}
+    for name, splits in systems.items():
+        report[name] = {}
+        for split, outcomes_by_case in splits.items():
+            greedy = {case: values[0] for case, values in outcomes_by_case.items()}
+            sampled = [v for values in outcomes_by_case.values() for v in values[1:]]
+            parent = {case: values[0] for case, values in systems['parent'][split].items()}
+            update = {case: values[0] for case, values in systems['update'][split].items()}
+            report[name][split] = {
+                'greedy_correct': sum(greedy.values()), 'cases': len(greedy),
+                'sampled_rate': sum(sampled) / len(sampled) if sampled else None,
+                'lost_parent_successes': sorted(c for c in greedy if parent[c] and not greedy[c]),
+                'versus_update': sum(greedy.values()) - sum(update.values())}
+    return report
+
+
 def feature_ids(tokenizer, policy, case):
     """Token IDs of the first assistant-generation boundary, the selection feature's input."""
     messages = [{'role': 'system', 'content': policy['system_instruction']},
@@ -526,7 +686,16 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        if 'round4' in execution:
+        if 'study' in execution:
+            experience_rows, replay_rows, pair_rows = study_data(tokenizer, plan, policy, parameters, home)
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = study_train(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows, home)
+            reply['phases']['train'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['study'] = study_evaluate(load_parent, tokenizer, plan, policy, parameters, home)
+            reply['phases']['evaluate'] = time.monotonic() - begun
+        elif 'round4' in execution:
             trainer = trainer_module()
             experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'],
                                                            tokenizer, plan, policy, parameters, home)
@@ -602,14 +771,15 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        if not {'round2', 'round3', 'round4'} & set(execution):
+        if not {'round2', 'round3', 'round4', 'study'} & set(execution):
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
             reply['phases']['train'] = time.monotonic() - begun
-        begun = time.monotonic()
-        gates = integrate(load_parent, tokenizer, plan, policy, parameters, home)
-        reply['gates'] = {arm: value['gate'] for arm, value in gates.items()}
-        reply['phases']['integrate'] = time.monotonic() - begun
+        if 'study' not in execution:
+            begun = time.monotonic()
+            gates = integrate(load_parent, tokenizer, plan, policy, parameters, home)
+            reply['gates'] = {arm: value['gate'] for arm, value in gates.items()}
+            reply['phases']['integrate'] = time.monotonic() - begun
         if file_state(directory, inventory) != state:
             raise ValueError('parent checkpoint changed during experience execution')
         reply['execution_completed'] = True

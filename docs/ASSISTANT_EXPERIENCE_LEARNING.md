@@ -158,6 +158,53 @@ The [contract](../config/experiments/assistant-experience-learning.json) records
 these rules under `goal_guided_repairs`, `a1_served` and `confirmation2_gate`. The
 budget ceiling for this attempt is $1,000.
 
+## Methodology study before a third attempt
+
+Declared on September 29, 2026, after the [second confirmation](ASSISTANT_EXPERIENCE_CONFIRMATION2_RESULTS.md)
+failed on preservation and update parity, and before any study training. Both
+confirmations stay failed.
+
+Twice, a 1M-parameter module came within 4–8 episodes of a 63M-parameter update
+without meeting the margin. Two methods could close that gap, and one GPU study
+on already-opened data compares them. The contract records it under
+`methodology_study`.
+
+- **Larger module.** Rank-64 LoRA on every attention and feed-forward projection
+  of layers 24–39, about 50M parameters or 1.5% of the model. That is close to
+  the update's size and still a small fraction of the backbone.
+- **Consensus of verified modules.** Three small modules, each grown only from a
+  fixed third of the training cases, as three independent contributors would
+  grow them. At every step the three members and the parent each propose the
+  next message, and the committee takes the action with the most votes. An
+  action is a canonical tool call, "finish", or an invalid output that agrees
+  with nothing. A tie that includes the parent goes to the parent. Overriding
+  the parent therefore needs modules to agree, not one confident module. No
+  single contributor controls behavior, and every vote can be recomputed bit for
+  bit, which is the property network consensus needs.
+
+Every arm trains from the parent with the same two phases. The first is the
+round-1 schedule on verified experience and replay. The second is one preference
+phase with the round-4 settings on every verified preference gathered so far:
+37 decision, 2 divergence and 15 repair pairs, plus 18 repaired trajectories.
+The arms are the update control, the small module, the large module and the
+three committee members.
+
+The parent, every arm and the committee are then measured on the 64 integration
+cases (one greedy and two sampled episodes) and the 24 opened development cases
+(greedy).
+
+**Decision rule, declared now.**
+
+- Score = greedy integration successes + greedy development successes − 2 × the
+  parent successes each method loses on those greedy episodes.
+- The third attempt uses whichever of the large module and the committee scores
+  higher, provided it also scores at least as high as the small module. A tie
+  goes to the committee.
+- Otherwise neither method is carried forward.
+
+The study earns no A2 credit. The third attempt needs a new declaration and
+fresh sealed confirmation data.
+
 ## Role in the network
 
 Rollouts are the parallel contributor workload. Anyone can replay a submitted

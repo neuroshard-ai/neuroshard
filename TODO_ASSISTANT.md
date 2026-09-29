@@ -84,6 +84,12 @@ remain evidence, not readiness claims for this assistant.
   a lower bound of +24.5 points. It lost 2 parent successes and trails the update
   at −7.3 points against the −5 margin. A2 remains open for this capability, and
   A1's served-system condition needs an accepted module, so A1 stays open too.
+- [ ] [Methodology study](docs/ASSISTANT_EXPERIENCE_LEARNING.md#methodology-study-before-a-third-attempt)
+  on already-opened data. It compares a larger module (about 50M parameters)
+  with a consensus of three small modules grown from disjoint verified
+  experience, voting with the parent on every action, against the small module
+  and the update. A declared rule picks the third attempt's method, which then
+  needs fresh confirmation data.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

@@ -78,11 +78,16 @@ class MasterLinear(torch.nn.Module):
         return torch.nn.functional.linear(x, self.weight.to(x.dtype))
 
 
-def projections(model, layers):
+PROJECTIONS = ('self_attn.q_proj', 'self_attn.v_proj')
+
+
+def projections(model, layers, paths=PROJECTIONS):
+    """(tensor name, owning module, attribute) for each declared projection, layer by layer."""
     for index in layers:
-        attention = model.model.layers[index].self_attn
-        for name in ('q_proj', 'v_proj'):
-            yield f'model.layers.{index}.self_attn.{name}', attention, name
+        layer = model.model.layers[index]
+        for path in paths:
+            owner, _, name = path.rpartition('.')
+            yield f'model.layers.{index}.{path}', layer.get_submodule(owner), name
 
 
 def prepare(model, arm, spec):
@@ -91,7 +96,7 @@ def prepare(model, arm, spec):
         parameter.requires_grad_(False)
     trainable = {}
     generator = torch.Generator(device='cpu').manual_seed(spec['seed'])
-    for name, attention, projection in projections(model, spec['layers']):
+    for name, attention, projection in projections(model, spec['layers'], spec.get('projections', PROJECTIONS)):
         base = getattr(attention, projection)
         if arm == 'addition':
             wrapped = LoRALinear(base, spec['rank'], spec['alpha'], generator)
@@ -258,7 +263,7 @@ def serving(model, spec):
     Adapters stay unmerged; they are the separately served module.
     """
     converted = 0
-    for _, attention, projection in projections(model, spec['layers']):
+    for _, attention, projection in projections(model, spec['layers'], spec.get('projections', PROJECTIONS)):
         module = getattr(attention, projection)
         if isinstance(module, MasterLinear):
             dtype = model.get_input_embeddings().weight.dtype

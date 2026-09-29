@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Round 4 (goal-guided repairs) after confirmation failed on update parity; user-authorized with a $1,000 ceiling.",
+  "status": "Methodology study after the second confirmation failed; user-authorized within the $1,000 ceiling.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -80,14 +80,14 @@
   },
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
-    "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
-    "config/experiments/assistant-experience-resources.json": "ace54229764ef822cfa58b4f5e312620d2e55de29c731543da389cb58ced7fd4",
+    "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+    "config/experiments/assistant-experience-resources.json": "a834c7dbc6412a8b7b0d5832767b0c2c43a6f7cafb88e21bdbd00e810a93eb74",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
     "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
   "sources": [
@@ -104,6 +104,7 @@
     "src/neuroshard/__init__.py",
     "src/neuroshard/version.py",
     "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/assistant_committee.py",
     "src/neuroshard/evolution/assistant_experience.py",
     "src/neuroshard/evolution/assistant_experience_run.py",
     "src/neuroshard/evolution/assistant_experience_train.py",
@@ -152,12 +153,11 @@
     },
     "rule": "No new rollouts. Every trajectory is rebuilt from its recorded rollout through the frozen scorer; replay items must match the regenerated prompts."
   },
-  "round4": {
-    "prior": {
-      "update": "b00b66b83e5a6277a6e85ea3436beb3b814933f05c5dde0dfe844851527d5db4",
-      "addition": "0dd1b5c7df01b4e91eebcd9932e186859c0e49f229119cef1827f62cfb72608d"
+  "study": {
+    "files": {
+      "rollouts-round3.jsonl.gz": "3e45b3b13a9d79ceef039d799f3af5f26757f31f1a382ee11602e662a67d50d8",
+      "repairs-round4.jsonl.gz": "608c3cbb1111021fd0599957e32b2fbf0175b426191925e3e06c32da1511d7c6"
     },
-    "source_home": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928g/evidence",
-    "rule": "Sample the round-3 addition on training cases, repair wrong reads against training goals, keep verified continuations, continue both round-3 arms, refit gates."
+    "rule": "Rebuild every verified sequence and preference of rounds 1-4 from pinned files, train the six declared arms from the parent, evaluate every system and the committee on integration and opened development cases."
   }
 }

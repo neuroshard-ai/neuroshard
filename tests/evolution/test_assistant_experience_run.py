@@ -309,6 +309,82 @@ def test_goal_guided_repairs_replay_the_prefix_and_keep_only_verified_continuati
         run.repair_data(plan, policy(), forged)
 
 
+def study_plan(plan):
+    study = {'members': 3, 'integration_samples': 1, 'seed': 11,
+             'counts': {'trajectories': 3, 'repaired_trajectories': 1, 'replay': 2, 'decision_pairs': 1,
+                        'divergence_pairs': 1, 'repair_pairs': 1},
+             'arms': {'update': {'type': 'update'}, 'small': {'type': 'addition'},
+                      'large': {'type': 'addition', 'spec': {'rank': 8, 'alpha': 16,
+                                                             'projections': ['self_attn.q_proj', 'self_attn.v_proj',
+                                                                             'mlp.up_proj']}},
+                      **{f'member-{k}': {'type': 'addition', 'member': k, 'spec': {'seed': 100 + k}} for k in range(3)}}}
+    return {**plan, 'methodology_study': study,
+            'goal_guided_repairs': {**plan['goal_guided_repairs'],
+                                    'training': {**plan['goal_guided_repairs']['training'], 'steps': 2,
+                                                 'preference_per_update': 1}}}
+
+
+def sequence(tokenizer, seed):
+    import random
+    rng = random.Random(seed)
+    ids = [rng.randrange(3, len(tokenizer.runtime)) for _ in range(12)]
+    return {'input_ids': ids, 'labels': [-100] * 6 + ids[6:], 'sha256': str(seed)}
+
+
+def test_study_data_tags_every_sequence_with_its_case_and_checks_declared_counts(setup, monkeypatch):
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = study_plan(plan)
+    monkeypatch.setattr(run, 'load_collection', lambda *a: ([sequence(tokenizer, i) for i in range(3)],
+                                                            [sequence(tokenizer, 9), sequence(tokenizer, 10)]))
+    monkeypatch.setattr(run, 'read_rows', lambda path: [{'case_id': c['id']} for c in CASES])
+    monkeypatch.setattr(run, 'sha256', lambda path: 'pinned')
+    pair = {'case_id': CASES[0]['id'], 'messages': [{'role': 'user', 'content': 'x'}], 'chosen': 'a', 'rejected': 'b'}
+    encoded = {'chosen': sequence(tokenizer, 20), 'rejected': sequence(tokenizer, 21), 'sha256': 'p'}
+    monkeypatch.setattr(run, 'build_pairs', lambda *a: ([pair], [encoded]))
+    monkeypatch.setattr(run, 'build_divergence_pairs', lambda *a: ([{**pair, 'case_id': CASES[1]['id']}], [encoded]))
+    trajectory = {'case_id': CASES[2]['id'], 'messages': [{'role': 'user', 'content': 'hello'},
+                                                          {'role': 'assistant', 'content': 'Okay.'}],
+                  'trainable': [False, True]}
+    monkeypatch.setattr(run, 'repair_data', lambda plan, policy, rows: ([{**pair, 'case_id': CASES[2]['id']}], [trajectory]))
+    execution = {**EXECUTION, 'collection': {'files': {}}, 'study': {'files': {'rollouts-round3.jsonl.gz': 'pinned'}}}
+    experience, replay, pairs = run.study_data(tokenizer, plan, policy(), execution, home)
+    assert [case for case, _ in experience] == [c['id'] for c in CASES] + [CASES[2]['id']]
+    assert [case for case, _ in pairs] == [c['id'] for c in CASES] and len(replay) == 2
+    with pytest.raises(ValueError, match='declaration'):
+        run.study_data(tokenizer, {**plan, 'methodology_study': {**plan['methodology_study'],
+                                                                 'counts': {'trajectories': 99}}}, policy(), execution,
+                       home.parent / 'other')
+
+
+def test_study_trains_every_arm_on_its_slice_and_evaluates_the_committee(setup, monkeypatch):
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = study_plan(plan)
+    monkeypatch.setattr(run.data, 'cases', lambda split: CASES[:2])
+    slices = {}
+    for index in range(100):
+        slices.setdefault(run.committee_member(f'case-{index}', 3), f'case-{index}')
+    owners = [slices[k] for k in range(3)]
+    experience = [(owners[i % 3], sequence(tokenizer, i)) for i in range(9)]
+    pairs = [(owners[i % 3], {'chosen': sequence(tokenizer, 40 + i), 'rejected': sequence(tokenizer, 50 + i),
+                              'sha256': str(i)}) for i in range(6)]
+    replay = [sequence(tokenizer, 90), sequence(tokenizer, 91)]
+    manifests = run.study_train(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, replay, pairs, home)
+    assert set(manifests) == {'update', 'small', 'large', 'member-0', 'member-1', 'member-2'}
+    assert manifests['small']['sequences'] == 9 and manifests['small']['pairs'] == 6
+    assert [manifests[f'member-{k}']['sequences'] for k in range(3)] == [3, 3, 3]
+    assert [manifests[f'member-{k}']['pairs'] for k in range(3)] == [2, 2, 2]
+    assert manifests['large']['trainable_parameters'] > manifests['small']['trainable_parameters']
+    report = run.study_evaluate(lambda: tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home)
+    assert set(report) == {'parent', 'update', 'small', 'large', 'member-0', 'member-1', 'member-2', 'committee'}
+    committee = report['committee']['integration']
+    assert committee['cases'] == 3 and committee['lost_parent_successes'] == [] and committee['versus_update'] == 0
+    assert report['committee']['development']['cases'] == 2
+    saved = read(home / 'study.json')
+    assert all(len(values) == 2 for values in saved['systems']['committee']['integration'].values())
+
+
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64

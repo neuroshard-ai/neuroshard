@@ -262,5 +262,90 @@
     "p95_seconds": 180,
     "p95_ratio_vs_update": 2.0,
     "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
+  },
+  "methodology_study": {
+    "status": "Declared on September 29, 2026 after the second confirmation failed, before any study rollout or training. Authorized by the user.",
+    "question": "Which method closes the gap to the update control: a larger module, or a consensus of small modules grown from disjoint verified experience?",
+    "data": "Every verified sequence and preference of rounds 1-4, rebuilt and re-verified from pinned files: 722 round-1 trajectories, 18 round-4 repaired trajectories, 256 parent replay items, 37 round-2 decision pairs, 2 round-3 divergence pairs and 15 round-4 repair pairs. No evaluation goals.",
+    "counts": {
+      "trajectories": 722,
+      "repaired_trajectories": 18,
+      "replay": 256,
+      "decision_pairs": 37,
+      "divergence_pairs": 2,
+      "repair_pairs": 15
+    },
+    "recipe": "Every arm from the parent in two phases: the round-1 training schedule on experience and replay, then one preference phase with the round-4 objective and settings on all preferences, experience and replay.",
+    "members": 3,
+    "membership": "A training case belongs to member int(sha256(case_id)[:8], 16) mod 3; each member trains on its cases' experience and preferences and on all replay.",
+    "arms": {
+      "update": {
+        "type": "update"
+      },
+      "small": {
+        "type": "addition"
+      },
+      "large": {
+        "type": "addition",
+        "spec": {
+          "layers": [
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39
+          ],
+          "rank": 64,
+          "alpha": 128,
+          "projections": [
+            "self_attn.q_proj",
+            "self_attn.k_proj",
+            "self_attn.v_proj",
+            "self_attn.o_proj",
+            "mlp.gate_proj",
+            "mlp.up_proj",
+            "mlp.down_proj"
+          ]
+        }
+      },
+      "member-0": {
+        "type": "addition",
+        "member": 0,
+        "spec": {
+          "seed": 27092036
+        }
+      },
+      "member-1": {
+        "type": "addition",
+        "member": 1,
+        "spec": {
+          "seed": 27092037
+        }
+      },
+      "member-2": {
+        "type": "addition",
+        "member": 2,
+        "spec": {
+          "seed": 27092038
+        }
+      }
+    },
+    "committee": "At every step the three members and the parent each propose the next message. The committee takes the action with the most votes (a canonical tool call, finish, or an invalid output that agrees with nothing); a tie that includes the parent goes to the parent.",
+    "evaluation": "Parent, every arm and the committee on the 64 integration cases (one greedy and two sampled episodes) and the 24 opened development cases (greedy), on the GPU.",
+    "integration_samples": 2,
+    "seed": 27092960,
+    "decision": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits). The third attempt uses whichever of large and committee scores higher, if it also scores at least as high as small; a tie goes to the committee. Otherwise neither method is carried forward.",
+    "credit": "None: already-opened data decides only the method of the third attempt, which needs fresh sealed confirmation data."
   }
 }

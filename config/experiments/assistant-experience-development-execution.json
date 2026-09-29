@@ -67,7 +67,7 @@
     "sha256": "de899e8bc1f21fddd6416460f68ab77843f19f686606df56e72973642c6c5d30"
   },
   "contracts": {
-    "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
+    "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
     "config/experiments/assistant-experience-development-resources.json": "b037c872baa6a528a548ec08459cac4906df89fb34f695a10a79da4a6d58014f",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
@@ -78,7 +78,7 @@
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
+    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
     "config/experiments/assistant-experience-round4-report.json": "774718973c65360b84c6057776912e6d836ea869c9717e3d40fc3c5982660ff5"
   },
   "sources": [

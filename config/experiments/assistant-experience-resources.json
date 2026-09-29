@@ -61,7 +61,7 @@
     "path": "config/experiments/assistant-workflow-canonical-report.json",
     "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
-  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for verified-experience collection, parent replay recording, training of both arms and integration gates; eight-hour expiry and $21 worst-case allowance within the $100 comparison ceiling. No development or confirmation goals.",
+  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for the methodology study: six arms trained from the parent and every system evaluated on integration and opened development cases; eight-hour expiry and $21 worst-case allowance within the $1,000 ceiling. No fresh evaluation data.",
   "prior_attempts": [
     {
       "utc": "2026-09-27T14:20:28Z",
@@ -102,21 +102,24 @@
       "utc": "2026-09-28T08:27:46Z",
       "commit": "d592c69ee60bb95d8aca5fac904134a2d1c88156",
       "outcome": "Round 3 sampled the round-2 addition, found 2 divergence pairs, continued both arms and refitted gates ($5.38)."
+    },
+    {
+      "utc": "2026-09-28T22:51:44Z",
+      "commit": "ec57db9da43e683823c9c61b59c1c711d7912b75",
+      "outcome": "Round 4 goal-guided repairs: 49 verified repairs, 15 pairs, both arms continued ($3.67)."
     }
   ],
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-round4-inputs",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-study-inputs",
     "files": [
       "experience.json",
       "rollouts.jsonl.gz",
       "trajectories.jsonl.gz",
       "replay.json",
       "replay.jsonl.gz",
-      "update-checkpoint/manifest.json",
-      "update-checkpoint/trainable.safetensors",
-      "addition-checkpoint/manifest.json",
-      "addition-checkpoint/trainable.safetensors"
+      "rollouts-round3.jsonl.gz",
+      "repairs-round4.jsonl.gz"
     ],
-    "maximum_bytes": 319893429
+    "maximum_bytes": 20572935
   }
 }
