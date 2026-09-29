@@ -101,7 +101,9 @@ remain evidence, not readiness claims for this assistant.
   prefix cache) reproduced all 24 single-host development episodes token for
   token, at p95 101.0 s against 92.7 s on one host and ≤5.2 GB per owner ($1.75).
   Fresh processes computed identical first passes, so the training-recovery
-  difference remains open.
+  difference remains open. The [throughput execution](docs/GRANITE_SHARD_THROUGHPUT.md)
+  is declared: three episodes in flight on the same owners must keep every token
+  identical and be at least 1.5× faster than one at a time.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37

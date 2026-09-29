@@ -117,7 +117,7 @@ Path(sys.argv[2]).write_text(json.dumps(rows))
     return json.loads((work / 'rows.json').read_text())
 
 
-def sharded(world, home, conversations=None, episodes=True):
+def sharded(world, home, conversations=None, episodes=True, streams=None):
     home.mkdir()
     reference = Path(world['directory']) / 'tokenizer.json'
     job = {'spec': SPEC, 'arm': str(world['arm']), 'gate': world['gate'], 'tokenizer': str(world['directory']),
@@ -127,6 +127,8 @@ def sharded(world, home, conversations=None, episodes=True):
         job.update(split='development', case_ids=[c['id'] for c in world['cases']])
     if conversations:
         job['conversations'] = conversations
+    if streams:
+        job['streams'] = streams
     (home / 'job.json').write_text(json.dumps(job))
     port = free_port()
     code = ('import os, sys; from neuroshard.evolution.sharded import granite_serving as s; '
@@ -158,6 +160,21 @@ def test_the_served_assistant_on_owners_reproduces_single_host_serving(world, tm
             for key in ('input_token_ids', 'token_ids', 'text', 'terminated', 'prompt_sha256', 'reused_prefix_tokens'):
                 assert a[key] == b[key], key
     assert results[2]['arm_sha256'] and results[0]['arm_sha256'] is None
+
+
+def test_concurrent_streams_serve_every_episode_exactly_as_alone(world, tmp_path):
+    expected = single_host(world)
+    results = sharded(world, tmp_path / 'streams', streams=3)
+    assert all(r['completed'] for r in results), [r.get('error') for r in results]
+    rows = results[0]['episodes']
+    assert results[0]['streams'] == 3 and results[0]['peak_in_flight'] >= 2
+    assert [row['id'] for row in rows] == [row['id'] for row in expected]
+    assert [row['selected'] for row in rows] == [row['selected'] for row in expected]
+    for got, want in zip(rows, expected):
+        assert got['score'] == want['score'] and len(got['generations']) == len(want['generations'])
+        for a, b in zip(got['generations'], want['generations']):
+            for key in ('input_token_ids', 'token_ids', 'text', 'terminated', 'prompt_sha256', 'reused_prefix_tokens'):
+                assert a[key] == b[key], key
 
 
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):

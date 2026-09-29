@@ -200,31 +200,44 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     adapter = Adapter(partition, job['spec'], job['arm']) if rank == world - 1 else None
     dist.init_process_group('gloo', init_method=f'tcp://{address}:{port}', rank=rank, world_size=world,
                             timeout=timedelta(seconds=timeout))
-    ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
+    streams = job.get('streams')
+    if streams:
+        from . import granite_streams as multi
+
+        ring = multi.Links(rank, world, config.hidden_size, job['max_tokens'])
+    else:
+        ring = Ring(rank, world, config.hidden_size, job['max_tokens'])
     result = {'rank': rank, 'shard_sha256': manifest['sha256'], 'resident_bytes': partition.resident_bytes(),
-              'arm_sha256': adapter.manifest['trainable_sha256'] if adapter else None}
+              'arm_sha256': adapter.manifest['trainable_sha256'] if adapter else None, 'streams': streams or 1}
     began = time.monotonic()
     try:
         if rank == 0:
             tokenizer, report = granite_tokenizer.load(job['tokenizer'], parent_digest=job.get('parent_tokenizer_digest'))
             result['tokenizer'] = report
-            driver = ServingDriver(partition, ring)
+            driver = multi.StreamDriver(partition, ring) if streams else ServingDriver(partition, ring)
             policy = job['policy']
             if 'case_ids' in job:
                 by_id = {case['id']: case for case in data.cases(job['split'])}
                 cases = [by_id[key] for key in job['case_ids']]
-                result['episodes'] = serve_episodes(driver, tokenizer, policy, cases, job['gate'],
-                                                    lambda case: accelerator.feature_ids(tokenizer, policy, case),
-                                                    set(job['eos_ids']))
+                arguments = (tokenizer, policy, cases, job['gate'],
+                             lambda case: accelerator.feature_ids(tokenizer, policy, case), set(job['eos_ids']))
+                if streams:
+                    result['episodes'], result['episodes_seconds'] = multi.serve_episodes(driver, streams, *arguments)
+                    result['peak_in_flight'] = driver.peak_in_flight
+                else:
+                    started = time.monotonic()
+                    result['episodes'] = serve_episodes(driver, *arguments)
+                    result['episodes_seconds'] = time.monotonic() - started
             for name, conversation in job.get('conversations', {}).items():
-                driver.episode(conversation['arm'])
-                respond = responder(driver, tokenizer, policy, set(job['eos_ids']))
+                target = driver.stream(0) if streams else driver
+                target.episode(conversation['arm'])
+                respond = responder(target, tokenizer, policy, set(job['eos_ids']))
                 result.setdefault('conversations', {})[name] = [respond(messages, conversation['tools'])
                                                                 for messages in conversation['requests']]
             result['checked_encodes'] = tokenizer.checked_encodes
             driver.stop()
         else:
-            result['steps'] = serve(partition, ring, adapter)
+            result['steps'] = (multi.serve if streams else serve)(partition, ring, adapter)
         result['completed'] = True
     except Exception as error:
         result.update(completed=False, error=f'{type(error).__name__}: {error}')

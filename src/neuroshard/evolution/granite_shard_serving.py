@@ -145,6 +145,10 @@ def owner(rank, address, port, phase, home, store, index=0):
                                      timeout=plan['peer_timeout_seconds'])
 
 
+def assess_phases(plan, fetches, phases):
+    return assess(plan, fetches, phases.get('determinism', []), phases['serve'])
+
+
 def assess(plan, fetches, determinism_rows, served):
     """Declared checks: every served generation and selection equals the single-host development result."""
     from neuroshard.evolution import assistant_experience_gate as gate
@@ -189,7 +193,7 @@ def assess(plan, fetches, determinism_rows, served):
             'p95_seconds': gate.p95(rows, routed=True) if rows else None,
             'single_host_p95_seconds': gate.p95(list(expected.values()), routed=True),
             'owner_peak_rss_bytes': peaks, 'sent_bytes': {r: (served[r] or {}).get('sent_bytes') for r in range(world)},
-            'determinism': {'processes_per_owner': plan['determinism']['processes'],
+            'determinism': {'processes_per_owner': plan.get('determinism', {}).get('processes', 0),
                             'distinct_first_pass_digests': {r: len(first[r]) for r in range(world)},
                             'distinct_later_pass_digests': {r: len(later[r]) for r in range(world)},
                             'first_equals_later': {r: first[r] == later[r] for r in range(world)}},
