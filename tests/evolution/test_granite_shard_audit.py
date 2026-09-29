@@ -1,4 +1,5 @@
 import copy
+import importlib.metadata
 import importlib.util
 import subprocess
 import sys
@@ -92,6 +93,38 @@ def test_audit_profile_is_bounded_and_the_freeze_covers_every_imported_source():
     controller = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(controller)
     assert controller.base.seconds(PLAN, 'serve-cheat') == seconds['serve']
+
+
+def test_the_audit_runtime_installs_every_package_its_host_code_imports():
+    import ast
+    import re
+
+    cloud = cloud_module()
+    module, requirements = cloud.GRANITE_PROFILES[audited.PROFILE]
+    assert module == 'granite_shard_audit'
+
+    def pins(path):
+        lines = [line.split('#')[0].strip() for line in (ROOT / path).read_text().splitlines()]
+        return {re.split('[=<>@ ]', line)[0].lower().replace('_', '-'): line for line in lines if line}
+
+    pinned, reference = pins(requirements), pins('docs/granite-reference-requirements.txt')
+    signing = {name: f'{name}=={version}' for name, version in PLAN['signing_packages'].items()}
+    assert pinned == {**reference, **signing}
+    for name, version in PLAN['signing_packages'].items():
+        assert importlib.metadata.version(name) == version
+    host_code = [name for name in PLAN['sources'] if name.startswith('src/') or name == audited.SCRIPT]
+    installed_by_bootstrap = {'granite_switch'}
+    imported = set()
+    for name in host_code:
+        for node in ast.walk(ast.parse((ROOT / name).read_text())):
+            if isinstance(node, ast.Import):
+                imported.update(alias.name.split('.')[0] for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                imported.add(node.module.split('.')[0])
+    third_party = imported - set(sys.stdlib_module_names) - {'neuroshard'} - installed_by_bootstrap
+    names = {'huggingface_hub': 'huggingface-hub'}
+    assert {names.get(top, top) for top in third_party} <= set(pinned), third_party
+    assert 'cryptography' in third_party
 
 
 def test_importing_the_audit_execution_does_not_load_torch():

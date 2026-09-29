@@ -60,3 +60,25 @@ Resources: five r7i.4xlarge allocations, each with its own expiry and a $10
 allowance (at most $50), under the
 [resource contract](../config/experiments/granite-shard-audit-resources.json).
 One attempt.
+
+## First attempt: failed at fetch
+
+The [first attempt](../config/experiments/granite-shard-audit-report.json)
+(commit `295b34f`) failed before any serving pass. Owner 0 and both auditors
+fetched their shards, but owners 1 and 2 wrote no fetch receipt. Those two
+create their signing keys at fetch with the `cryptography` package, which the
+pinned remote runtime did not install. The local tests had passed because the
+development environment has that package. All five hosts were retired with
+nothing left running ($0.32). The attempt produced no audit evidence and stays
+failed.
+
+## Amendment for the second attempt
+
+Declared on September 29, 2026, after the first attempt and before the second.
+The audit profile now installs a
+[runtime](granite-shard-audit-requirements.txt) that adds only `cffi` 2.0.0,
+`cryptography` 50.0.1 and `pycparser` 2.23 to the pinned reference runtime. The
+[contract](../config/experiments/granite-shard-audit.json) pins these versions,
+and every owner and auditor role checks them before doing any work. A role
+that fails now saves its error where the evidence copy collects it. The six
+checks, the fault, the phases and the resources are unchanged. One attempt.

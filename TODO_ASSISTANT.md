@@ -128,7 +128,9 @@ remain evidence, not readiness claims for this assistant.
   Owners 1 and 2 sign logs of their serving work, and two light auditors, each
   holding one owner's shard, replay those logs. In a second pass, owner 1 flips
   one bit of one declared message. Its auditor must name that message, a fresh
-  verifier must accept the fraud proof, and owner 2 must audit clean.
+  verifier must accept the fraud proof, and owner 2 must audit clean. The first
+  attempt failed at fetch because the remote runtime lacked the signing package
+  ($0.32). A second attempt adds only that package.
 
 **Current status:** verified-experience learning lifts the assistant from about
 55% to 91–95% on fresh sealed episodes, but A2 is not established.

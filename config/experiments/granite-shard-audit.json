@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-audit/1",
-  "status": "Declared on September 29, 2026, before any audited serving run.",
+  "status": "Declared on September 29, 2026, before any audited serving run. Amended the same day for a second attempt after the first failed at fetch: owners 1 and 2 could not create signing keys because the remote runtime lacked the cryptography package. The amendment adds only that package, pinned, and a check that every role has it before doing work; every gate and threshold is unchanged.",
   "purpose": "Optimistic verification on the real model: three owners serve the learned assistant with signed logs; two light auditors, each holding only one owner's shard, replay those logs; a declared one-bit fault by owner 1 must be named exactly, proven to a fresh verifier and attributed to owner 1 alone.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -83,9 +83,9 @@
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
-    "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/granite-shard-audit-resources.json": "6b41aaced488327c521cb2804d8525895ba0f19263a957811325e96be4a779d5",
-    "docs/GRANITE_SHARD_AUDIT.md": "30debaa14b7c803fc3c609c71271faa32d1d52f266d91085c45dbcc717ae1f41"
+    "docs/granite-shard-audit-requirements.txt": "af0d0901a9ad17e8ea5c519e736c14861a78395e3d2f9e38c2b96e49d14358ff",
+    "config/experiments/granite-shard-audit-resources.json": "850dcf892879843d5ad47e08ac2b1b3123717b711ce109b0de6dbd26448b3a34",
+    "docs/GRANITE_SHARD_AUDIT.md": "5cb2cd2d05e4bc8a394c543eb882d9d42d9ad422faeee3a37d645a382f22a1db"
   },
   "sources": [
     "config/experiments/granite-reference-artifacts.json",
@@ -96,7 +96,7 @@
     "config/experiments/assistant-workflow-policy.json",
     "config/experiments/assistant-workflow-data.json",
     "config/experiments/assistant-experience-development-round4-result.json",
-    "docs/granite-reference-requirements.txt",
+    "docs/granite-shard-audit-requirements.txt",
     "config/experiments/granite-shard-audit-resources.json",
     "docs/GRANITE_SHARD_AUDIT.md",
     "config/experiments/granite-shard-audit.json",
@@ -136,5 +136,21 @@
     "src/neuroshard/evolution/sharded/granite_streams.py",
     "scripts/run_granite_shard_audit.py",
     "scripts/granite_shard_audit_cloud.py"
-  ]
+  ],
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "295b34f10d8ee0bcf7904745e87c50498eecf781",
+      "result": "config/experiments/granite-shard-audit-result.json",
+      "result_sha256": "0984a39148f636740a03fee402f443a5da6d19ed7440ff289929d7a7cf51f6bd",
+      "report": "config/experiments/granite-shard-audit-report.json",
+      "report_sha256": "d1ce8404aabc9b6a9b05d343913a499052d78d96abef5aea9aa9ee1eec4b87e9",
+      "outcome": "Owner 0 and both auditors fetched; owners 1 and 2 could not import cryptography to create signing keys, so no serving pass or audit ran; failed at fetch ($0.32)."
+    }
+  ],
+  "signing_packages": {
+    "cffi": "2.0.0",
+    "cryptography": "50.0.1",
+    "pycparser": "2.23"
+  }
 }

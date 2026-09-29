@@ -33,5 +33,12 @@
     "path": "config/experiments/granite-shard-training2-report.json",
     "sha256": "482de6b75c56ef1b736f6c00b97a162c7547d30cffe51c267e9b62f27dcbbbed"
   },
-  "budget_scope": "One host of five for the audited serving execution (three owners, two light auditors), each its own allocation: r7i.4xlarge at the canonical eight threads, six-hour expiry and ten-dollar allowance (at most $50). Setup/copy 20/10 minutes; fetch 30 minutes; two serving passes of at most one hour; two audits of at most 40 minutes; one verification of at most 15 minutes. No GPU or training."
+  "budget_scope": "One host of five for the audited serving execution (three owners, two light auditors), each its own allocation: r7i.4xlarge at the canonical eight threads, six-hour expiry and ten-dollar allowance (at most $50). Setup/copy 20/10 minutes; fetch 30 minutes; two serving passes of at most one hour; two audits of at most 40 minutes; one verification of at most 15 minutes. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-29T20:50:00Z",
+      "commit": "295b34f10d8ee0bcf7904745e87c50498eecf781",
+      "outcome": "Five hosts allocated and retired after the fetch phase; no instance or volume remained ($0.32)."
+    }
+  ]
 }

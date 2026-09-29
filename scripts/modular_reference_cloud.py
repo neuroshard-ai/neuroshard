@@ -56,7 +56,7 @@ GRANITE_PROFILES = {
     "granite-shard-serving": ("granite_shard_serving", "docs/granite-reference-requirements.txt"),
     "granite-shard-throughput": ("granite_shard_throughput", "docs/granite-reference-requirements.txt"),
     "granite-shard-determinism": ("granite_shard_determinism", "docs/granite-reference-requirements.txt"),
-    "granite-shard-audit": ("granite_shard_audit", "docs/granite-reference-requirements.txt"),
+    "granite-shard-audit": ("granite_shard_audit", "docs/granite-shard-audit-requirements.txt"),
 }
 GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",

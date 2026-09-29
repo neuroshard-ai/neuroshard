@@ -1,0 +1,114 @@
+{
+  "format": "neuroshard-granite-shard-audit-report/1",
+  "result": "config/experiments/granite-shard-audit-result.json",
+  "result_sha256": "0984a39148f636740a03fee402f443a5da6d19ed7440ff289929d7a7cf51f6bd",
+  "commit": "295b34f10d8ee0bcf7904745e87c50498eecf781",
+  "attempt": 1,
+  "passed": false,
+  "execution_completed": false,
+  "failed_phase": "fetch",
+  "fetch_receipts": {
+    "owners": [
+      {
+        "rank": 0,
+        "completed": true,
+        "fetched_bytes": 2401367040
+      },
+      null,
+      null
+    ],
+    "auditors": {
+      "1": {
+        "rank": 1,
+        "completed": true,
+        "fetched_bytes": 2202152960
+      },
+      "2": {
+        "rank": 2,
+        "completed": true,
+        "fetched_bytes": 2202152960
+      }
+    }
+  },
+  "diagnosis": {
+    "finding": "Owner 0 and both auditors fetched their shards. Owners 1 and 2 wrote no fetch receipt and never created their result directories, so no serving pass, log or audit ran.",
+    "cause": "Owners 1 and 2 create their Ed25519 signing keys at fetch with the cryptography package, which the pinned remote runtime (docs/granite-reference-requirements.txt) does not install. Owner 0 signs nothing and the auditors do not import it at fetch. The local tests ran in an environment that has it.",
+    "confirmed_by": "The owner hosts had no .study directory at evidence copy; cryptography is absent from the pinned requirements; the host journals were lost at retirement."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 1083.988676,
+    "conservative_compute_usd": 0.318692670744,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T20:52:27.875807+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-09223d44ba13686fa"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 168.602512,
+        "conservative_compute_usd": 0.049569138528000004,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T20:52:59.501199+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-00eddf6c8107224d2"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 192.73662,
+        "conservative_compute_usd": 0.056664566279999995,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T20:53:31.098901+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-03d40458d76c42fa7"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 216.642121,
+        "conservative_compute_usd": 0.063692783574,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T20:54:02.797387+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07279b586e19ea2e4"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 240.716417,
+        "conservative_compute_usd": 0.070770626598,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T20:54:34.718571+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-09ae4191e5e34980e"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 265.291006,
+        "conservative_compute_usd": 0.077995555764,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

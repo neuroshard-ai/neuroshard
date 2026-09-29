@@ -31,7 +31,18 @@ def configure():
 
 
 def freeze():
-    return shard.freeze(PLAN)
+    """The canonical runtime plus the declared signing packages, checked before any role does work."""
+    import importlib.metadata
+
+    source = shard.freeze(PLAN)
+    declared = read(ROOT / PLAN)['signing_packages']
+    try:
+        signing = {name: importlib.metadata.version(name) for name in declared}
+    except importlib.metadata.PackageNotFoundError as error:
+        raise ValueError(f'signing package missing: {error}') from error
+    if signing != declared:
+        raise ValueError('signing packages differ from the declaration')
+    return {**source, 'signing_packages': signing}
 
 
 def owner_key(store):

@@ -1,0 +1,135 @@
+{
+  "binding": {
+    "freeze": {
+      "commit": "295b34f10d8ee0bcf7904745e87c50498eecf781",
+      "sources": {
+        "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+        "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+        "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+        "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+        "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+        "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+        "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+        "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+        "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
+        "config/experiments/granite-shard-audit-resources.json": "6b41aaced488327c521cb2804d8525895ba0f19263a957811325e96be4a779d5",
+        "docs/GRANITE_SHARD_AUDIT.md": "30debaa14b7c803fc3c609c71271faa32d1d52f266d91085c45dbcc717ae1f41",
+        "config/experiments/granite-shard-audit.json": "08e5fbba21330d41016a56183b8060b1d9087f77fb1e2d9d063eb69723327efb",
+        "config/experiments/granite-shard-serving.json": "1689b4788dbdbda3f80d5a7873cb2228fb3bb3fb61c74fbf5ff7d3abd6af28f7",
+        "config/experiments/granite-shard-execution.json": "460921b202d9cfe6a396a7c432c508495158b83787517f10a9b2f702f1fdf28f",
+        "src/neuroshard/__init__.py": "4ed35ca7a44e55cdd74e6a10b6e3cc3523258456a21aee45159b2dea3a0c0266",
+        "src/neuroshard/version.py": "e364931a8afff672985ee99f795e6d8b20ff33c55d71d757ec211ec6689b3c19",
+        "src/neuroshard/evolution/__init__.py": "01db1888cb7b1947c173c0fb401427b0339812f5b3aea68db97d09d60cb28b3d",
+        "src/neuroshard/evolution/modular_reference.py": "7201ff7fee2c651ec8a8831da884284a75bb9b09a4d8aecd4805e99a2629c065",
+        "src/neuroshard/evolution/modular_reference_execution.py": "7bed17d4fde0795845e222a00e8417d04adb42ea3127515b3212b434a91bc5ff",
+        "src/neuroshard/evolution/assistant_experience.py": "b76675b617effda8e6828779af062403cf33c81bf99f986ac00ed2d8bca94c67",
+        "src/neuroshard/evolution/assistant_experience_gate.py": "f6e610c9bffaded03dbc243649dadd5dba7933a8da6f6a73e005e0a37b6e279d",
+        "src/neuroshard/evolution/assistant_experience_run.py": "863fc873239b9d05c14d959001bef4ed2f61aa76b128c83086e1f2a902597a93",
+        "src/neuroshard/evolution/assistant_experience_train.py": "91a9970cf61172e65a711ae3a856b519f209d12949b25374e98de8514c1a2f56",
+        "src/neuroshard/evolution/assistant_replay.py": "ee09fd51dabee0762d1e0b20708bb641e8a9d8e24e6b78e8efcfd4912ee6f356",
+        "src/neuroshard/evolution/assistant_rollout.py": "7de41baf3f013338427262c9761ad9bc29fc4575750f03a15971fb9029d73c0c",
+        "src/neuroshard/evolution/assistant_selector.py": "2abeecbf0cc7e728026b3bc9aa97509a59c7e2e044fade8da78f73350a76d9fc",
+        "src/neuroshard/evolution/assistant_workflow.py": "5d4039030361c24abbead7562b7467259c0224abb9da0a7f0378cd54d6506fa4",
+        "src/neuroshard/evolution/assistant_workflow_data.py": "90606ee6fd6c95cd944137a46f3128fbe819fd410656e0b20f63e2bf8b8da661",
+        "src/neuroshard/evolution/assistant_workspace.py": "11df2c608e307882461a2ebe54c2c08186d55202455a45a4bce9edf62a094c97",
+        "src/neuroshard/evolution/granite_context_reference.py": "aea691915ffa6a99155d9b05478b0a74aa451cf765454a9d1f65ba2c760e8343",
+        "src/neuroshard/evolution/granite_reference.py": "7da36fdb7910e2e399808c462dec1c1b449ca860635eebe9674cb1e5eca58b3b",
+        "src/neuroshard/evolution/granite_tokenizer.py": "12617bb30d6916064fba499fce6755c894598ff25365f09fbd828a80a45c1580",
+        "src/neuroshard/evolution/modular_tools.py": "1083a97b45bdab3b1366d3a93c2f516de31c22833de31a5ee727de727c95212f",
+        "src/neuroshard/evolution/granite_shard_execution.py": "3da6ecd427f85c497f080eaccbf08b63a6a03a434daf0228ccb7fb2ac89e367c",
+        "src/neuroshard/evolution/granite_shard_serving.py": "514f2f6424f794eeb291f36c3085bf3f9cd2eea2a125e16df9fc46bada1847e5",
+        "src/neuroshard/evolution/sharded/__init__.py": "dd0d70f861ea483ad2d4279afc23d00ff0fe4a9289fb79ee2f9fd93a9928155c",
+        "src/neuroshard/evolution/sharded/granite.py": "59017093a252e99e0abb70dffeeea7ce5ebd7dedc51686ad9b0220aa179ebeac",
+        "src/neuroshard/evolution/sharded/granite_pipeline.py": "646bf960325bb037385456f4cbf67d9fadde9bbf0d3f6aad99d49e6fb83ab86a",
+        "src/neuroshard/evolution/sharded/granite_training.py": "a69f6eb9c1c25c9be40dc6803cc5da05d54e2eb7a027a49f11d626b7bc2dbc14",
+        "src/neuroshard/evolution/sharded/granite_serving.py": "79c537c13368d5439baf62504d44c6d34c8c1ae10b9743ac730b6d872626d9af",
+        "scripts/granite_shard_serving_cloud.py": "4c3aeb98b229524369068282eb21f2a70d7260bf106e5fc1a20956e0fa7b3a5b",
+        "scripts/granite_shard_cloud.py": "eec6ae3110f54374107f6a195d66f74f1d73b55db86d32c50d139b7b921d2581",
+        "scripts/modular_reference_cloud.py": "1f988d1e42725f2c2693f140edeecd9e6ec6abee1131f756c8fe57e6fb0dc237",
+        "src/neuroshard/evolution/granite_shard_audit.py": "93f7be98beac000cb3d926e4ee640fd8517804471744b2bfdb7c21441b56e232",
+        "src/neuroshard/evolution/sharded/granite_audit.py": "e1cd7e33576b2ab2875b2a1c6573929c8709fee54d1099e117cdf9694c13ef01",
+        "src/neuroshard/evolution/sharded/granite_streams.py": "3862076fe1b32b78bebb9f448253278233e23f38558387f8da989bd1170311af",
+        "scripts/run_granite_shard_audit.py": "bceef405b7c58aaeb61d8ac19e21d8ded57c410f1afb0354c0b26da00d5f4db5",
+        "scripts/granite_shard_audit_cloud.py": "f807a39ce078bed201592a7aef43b6b6addc1a19e1d14ca08527e146f161414c"
+      }
+    },
+    "plan_sha256": "08e5fbba21330d41016a56183b8060b1d9087f77fb1e2d9d063eb69723327efb"
+  },
+  "execution_completed": false,
+  "error": "an owner or auditor could not fetch its shard",
+  "resources_finished": [
+    {
+      "finished_utc": "2026-09-29T20:52:27.875807+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-09223d44ba13686fa"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 168.602512,
+      "conservative_compute_usd": 0.049569138528000004,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    {
+      "finished_utc": "2026-09-29T20:52:59.501199+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-00eddf6c8107224d2"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 192.73662,
+      "conservative_compute_usd": 0.056664566279999995,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    {
+      "finished_utc": "2026-09-29T20:53:31.098901+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-03d40458d76c42fa7"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 216.642121,
+      "conservative_compute_usd": 0.063692783574,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    {
+      "finished_utc": "2026-09-29T20:54:02.797387+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-07279b586e19ea2e4"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 240.716417,
+      "conservative_compute_usd": 0.070770626598,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    {
+      "finished_utc": "2026-09-29T20:54:34.718571+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-09ae4191e5e34980e"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 265.291006,
+      "conservative_compute_usd": 0.077995555764,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    }
+  ],
+  "retirement_errors": {},
+  "evidence_sha256": {
+    "owner-0": "95b953cfffe8e09d330a07a122ae8d3862699a6f49e0df9531df0faa7004fffb",
+    "owner-1": null,
+    "owner-2": null,
+    "auditor-1": "7363342c284d631432a8d63a4d3674f95114c74089ea8ba3df0edc6821d38206",
+    "auditor-2": "576183b6ca771d55926392c88a74ddbb1e29dd6431f9229e4bcf8b2df8e75192"
+  }
+}
