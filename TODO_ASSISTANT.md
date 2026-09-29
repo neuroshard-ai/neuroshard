@@ -79,7 +79,11 @@ remain evidence, not readiness claims for this assistant.
   [Development and the A1 served-system check passed](docs/ASSISTANT_EXPERIENCE_DEVELOPMENT_ROUND4_RESULTS.md):
   the addition solved 18/24 (update 19, parent 9) with p95 92.7 s, and the
   served system solved 7/8 primitive workflows with exact fresh-process replays.
-  The fresh 192-episode confirmation opens once.
+  [The fresh 192-episode confirmation failed on 2 of 9 checks](docs/ASSISTANT_EXPERIENCE_CONFIRMATION2_RESULTS.md).
+  The addition solved 174/192 (update 182, parent 106): +68 over the parent with
+  a lower bound of +24.5 points. It lost 2 parent successes and trails the update
+  at −7.3 points against the −5 margin. A2 remains open for this capability, and
+  A1's served-system condition needs an accepted module, so A1 stays open too.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
@@ -107,12 +111,18 @@ remain evidence, not readiness claims for this assistant.
   A second attempt with one compute thread on owner 0 and busy-time accounting
   is declared.
 
-**Current status:** the canonical parent completes 9/24 workflows but fails
-primitive qualification, so A1 remains open. After verified experience and 37
-verified decision preferences and a third continued round, the added module
-reaches 88/96 on sealed confirmation (parent 49/96) with every parent success
-preserved and p95 98.9 s, but misses the non-inferiority bound against the 60×
-larger update control by 0.2 points, so A2 is not established.
+**Current status:** verified-experience learning lifts the assistant from about
+55% to 91–95% on fresh sealed episodes, but A2 is not established.
+
+- **Confirmations.** On both, the 1M-parameter added module came within 4–8
+  episodes of the 63M-parameter update control without meeting the declared
+  parity margin. The second also lost two parent successes: 174/192, against 182
+  for the update and 106 for the parent.
+- **A1.** The served system passed A1's development checks, but A1 stays open
+  until a module is accepted.
+- **A4.** The pinned 3B assistant runs across owner machines that each fetch only
+  their own tensors. Generation and training match the complete model bit for
+  bit. The learned assistant is served across owners exactly as on one host.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
