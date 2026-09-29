@@ -1,0 +1,84 @@
+{
+  "format": "neuroshard-granite-shard-determinism-report/1",
+  "attempt": 2,
+  "result": "config/experiments/granite-shard-determinism2-result.json",
+  "result_sha256": "b79349a91c75ac1cea309ecb1c0c2519641a5b5decdade396bb7ca8a1f316785",
+  "commit": "8b986409d695c64bb34414de965e30ad68206c24",
+  "report": {
+    "complete": true,
+    "launches": 12,
+    "owners": {
+      "0": {
+        "messages": 32,
+        "distinct_traces": 1,
+        "first_divergence": null
+      },
+      "1": {
+        "messages": 20,
+        "distinct_traces": 1,
+        "first_divergence": null
+      },
+      "2": {
+        "messages": 20,
+        "distinct_traces": 1,
+        "first_divergence": null
+      }
+    },
+    "distinct_references": 1,
+    "distinct_trained_tensors": 1,
+    "reproducible": true,
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 5987.766238,
+    "conservative_compute_usd": 1.760403273972,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T16:22:06.167951+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-075b4875af1bb7263"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1968.205149,
+        "conservative_compute_usd": 0.578652313806,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T16:22:37.868343+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-088f351fb5ae87f60"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1992.565634,
+        "conservative_compute_usd": 0.585814296396,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T16:23:19.633429+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-00f3793b05b4f3873"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 2026.995455,
+        "conservative_compute_usd": 0.59593666377,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

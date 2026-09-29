@@ -392,14 +392,17 @@ def committee_member(case_id, members):
     return int(hashlib.sha256(case_id.encode()).hexdigest()[:8], 16) % members
 
 
-def study_data(tokenizer, plan, policy, execution, home):
-    """Every verified sequence and preference gathered in rounds 1-4, each tagged with its training case."""
+def study_data(tokenizer, plan, policy, runtime, home, inventory):
+    """Every verified sequence and preference gathered in rounds 1-4, each tagged with its training case.
+
+    ``inventory`` is the pinned execution file; ``runtime`` its merged runtime parameters.
+    """
     from neuroshard.evolution import assistant_experience_train as trainer
 
-    experience_rows, replay_rows = load_collection(ROOT / UPLOADED, execution['collection']['files'], tokenizer,
-                                                   plan, policy, execution, home)
+    experience_rows, replay_rows = load_collection(ROOT / UPLOADED, inventory['collection']['files'], tokenizer,
+                                                   plan, policy, runtime, home)
     cases = [t['case_id'] for t in read_rows(ROOT / UPLOADED / 'trajectories.jsonl.gz')]
-    for name, digest in execution['study']['files'].items():
+    for name, digest in inventory['study']['files'].items():
         if sha256(ROOT / UPLOADED / name) != digest:
             raise ValueError(f'study input differs from its pinned digest: {name}')
     decisions, decision_rows = build_pairs(tokenizer, plan, policy, read_rows(ROOT / UPLOADED / 'rollouts.jsonl.gz'))
@@ -687,7 +690,7 @@ def worker(request_path):
 
         begun = time.monotonic()
         if 'study' in execution:
-            experience_rows, replay_rows, pair_rows = study_data(tokenizer, plan, policy, parameters, home)
+            experience_rows, replay_rows, pair_rows = study_data(tokenizer, plan, policy, parameters, home, execution)
             reply['phases']['verify_collection'] = time.monotonic() - begun
             begun = time.monotonic()
             reply['training'] = study_train(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows, home)

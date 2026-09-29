@@ -41,7 +41,7 @@
     "config/experiments/granite-shard-training-sequences.json": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76",
     "config/experiments/granite-shard-determinism-resources.json": "e99fbc0faf320388e39fecf84f1ef80e0ed36d540545af4958403f89f9d917c8",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/GRANITE_SHARD_DETERMINISM.md": "a0a3b28afcfcef1c9d60cf1969b6a2dc3df0a1713bc35a296358881410cfdc8b",
+    "docs/GRANITE_SHARD_DETERMINISM.md": "a757688f133ac556abdc4120dae852b277c576efa3a7c72b0b3cfe0456c63711",
     "config/experiments/granite-shard-determinism-result.json": "9a176a5cf57ff3d946ca93f6d9087ca2eebb48d6a42caaae403c81eb8785114a"
   },
   "sources": [

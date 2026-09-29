@@ -70,6 +70,22 @@ Tests on small checkpoints show the warm-up changes no output and no trained
 tensor. Twelve launches replace six. If all twelve are identical, the shard
 training recovery is repeated with the warm-up as a new declared execution.
 
+## Second attempt result: reproducible
+
+Evidence: [result](../config/experiments/granite-shard-determinism2-result.json) and
+[report](../config/experiments/granite-shard-determinism2-report.json), commit `8b98640`. Cost $1.76.
+
+With the declared warm-up, all twelve fresh launches were identical:
+
+- every one of owner 0's 32 messages and every one of owners 1 and 2's 20
+  messages;
+- all preference references (the first is −0.155187 in every launch, the value
+  of the uninterrupted training run and the single-host reference);
+- the trained tensors.
+
+The fresh-process first-pass difference is resolved. Shard training recovery is
+repeated with the warm-up next.
+
 Resources: three r7i.4xlarge allocations, each with its own expiry and a $8
 allowance (at most $24), under the
 [resource contract](../config/experiments/granite-shard-determinism-resources.json).

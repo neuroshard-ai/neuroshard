@@ -81,7 +81,7 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
-    "config/experiments/assistant-experience-resources.json": "a834c7dbc6412a8b7b0d5832767b0c2c43a6f7cafb88e21bdbd00e810a93eb74",
+    "config/experiments/assistant-experience-resources.json": "c2b0caa3e5dac496811391e1afe4de7a1d46c6707cba7bdd1deffce9a57e3cfe",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",

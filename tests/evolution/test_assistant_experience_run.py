@@ -347,14 +347,15 @@ def test_study_data_tags_every_sequence_with_its_case_and_checks_declared_counts
                                                           {'role': 'assistant', 'content': 'Okay.'}],
                   'trainable': [False, True]}
     monkeypatch.setattr(run, 'repair_data', lambda plan, policy, rows: ([{**pair, 'case_id': CASES[2]['id']}], [trajectory]))
-    execution = {**EXECUTION, 'collection': {'files': {}}, 'study': {'files': {'rollouts-round3.jsonl.gz': 'pinned'}}}
-    experience, replay, pairs = run.study_data(tokenizer, plan, policy(), execution, home)
+    inventory = {'collection': {'files': {}}, 'study': {'files': {'rollouts-round3.jsonl.gz': 'pinned'}}}
+    assert 'collection' not in EXECUTION and 'study' not in EXECUTION
+    experience, replay, pairs = run.study_data(tokenizer, plan, policy(), EXECUTION, home, inventory)
     assert [case for case, _ in experience] == [c['id'] for c in CASES] + [CASES[2]['id']]
     assert [case for case, _ in pairs] == [c['id'] for c in CASES] and len(replay) == 2
     with pytest.raises(ValueError, match='declaration'):
         run.study_data(tokenizer, {**plan, 'methodology_study': {**plan['methodology_study'],
-                                                                 'counts': {'trajectories': 99}}}, policy(), execution,
-                       home.parent / 'other')
+                                                                 'counts': {'trajectories': 99}}}, policy(), EXECUTION,
+                       home.parent / 'other', inventory)
 
 
 def test_study_trains_every_arm_on_its_slice_and_evaluates_the_committee(setup, monkeypatch):

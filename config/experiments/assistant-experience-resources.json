@@ -107,6 +107,11 @@
       "utc": "2026-09-28T22:51:44Z",
       "commit": "ec57db9da43e683823c9c61b59c1c711d7912b75",
       "outcome": "Round 4 goal-guided repairs: 49 verified repairs, 15 pairs, both arms continued ($3.67)."
+    },
+    {
+      "utc": "2026-09-29T15:49:19Z",
+      "commit": "8b986409d695c64bb34414de965e30ad68206c24",
+      "outcome": "Methodology study stopped at startup: the worker passed runtime parameters instead of the pinned inventory (KeyError: collection) before reading any data ($0.22)."
     }
   ],
   "upload": {
