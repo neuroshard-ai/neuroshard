@@ -79,9 +79,12 @@ remain evidence, not readiness claims for this assistant.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
   they are bit-identical to the complete model and token-identical to
   `generate`, and a killed owner resumes to the same tokens. The
-  [first shard execution](docs/GRANITE_SHARD_EXECUTION.md) is declared: three
-  owner hosts that fetch only their tensors must reproduce all 230 canonical
-  generations.
+  [first shard execution passed](docs/GRANITE_SHARD_EXECUTION_RESULTS.md):
+  three owner hosts that each fetched only their own tensors (2.2–2.4 of 6.8 GB)
+  reproduced all 230 canonical generations token for token. Each stayed at
+  6.1–6.2 GB peak RSS against 11.3 GB on one host, and a lost owner resumed to
+  the canonical tokens; $4.93. Training across owners reproduces the
+  single-host trainer bit for bit on small checkpoints.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37

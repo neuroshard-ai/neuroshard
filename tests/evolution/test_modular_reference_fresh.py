@@ -194,6 +194,30 @@ def test_retirement_refuses_a_different_operator_or_protected_instance(tmp_path)
         cloud.retire(tmp_path, EC2())
 
 
+def test_retirement_waits_for_volumes_that_briefly_outlive_their_instance(tmp_path, monkeypatch):
+    cloud = cloud_module()
+    allocation = {"name": "ours", "commit": "our-source", "created": "2026-09-26T00:00:00+00:00",
+                  "resources": cloud.resources(), "security_group": "sg-ours", "instance_ids": ["i-ours"]}
+    execution.save(tmp_path / "allocation.json", allocation)
+    monkeypatch.setattr(cloud.time, "sleep", lambda seconds: None)
+
+    class EC2:
+        volume_checks = 0
+
+        def describe_instances(self, **kw):
+            return {"Reservations": []}
+
+        def delete_security_group(self, **kw):
+            pass
+
+        def describe_volumes(self, **kw):
+            EC2.volume_checks += 1
+            return {"Volumes": [{"VolumeId": "vol-ours"}] if EC2.volume_checks < 3 else []}
+
+    receipt = cloud.retire(tmp_path, EC2())
+    assert EC2.volume_checks == 3 and receipt["remaining_volumes"] == [] and receipt["security_group_retired"]
+
+
 def test_allocation_has_one_cpu_host_two_deadlines_and_no_surviving_disk(tmp_path, monkeypatch):
     cloud = cloud_module()
     limit = cloud.resources()

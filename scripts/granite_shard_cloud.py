@@ -121,8 +121,19 @@ def run(home):
                     cloud.collect(owner_home, allocation)
                 except Exception as copy_error:
                     save(owner_home / "copy-failure.json", {"error": str(copy_error)})
-        result["resources_finished"] = [cloud.retire(h) for h in homes if (h / "allocation.json").exists()]
         save(home / "result.json", result)
+        # Each owner is retired on its own, so one slow retirement never strands the others.
+        receipts, errors = [], {}
+        for owner_home in homes:
+            if (owner_home / "allocation.json").exists():
+                try:
+                    receipts.append(cloud.retire(owner_home))
+                except Exception as retire_error:
+                    errors[owner_home.name] = str(retire_error)
+        result.update(resources_finished=receipts, retirement_errors=errors)
+        save(home / "result.json", result)
+        if errors and not failure:
+            failure = f"retirement incomplete: {errors}"
         save(home / "status.json", {"state": "failed" if failure else "finished", "error": failure})
     if failure:
         raise RuntimeError(failure)

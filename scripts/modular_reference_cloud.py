@@ -177,9 +177,12 @@ def retire(home, ec2=None):
                 time.sleep(3)
         else:
             raise TimeoutError("security group retirement did not complete")
-    volumes = ec2.describe_volumes(Filters=[{"Name": "tag:Name", "Values": [allocation["name"]]}])["Volumes"]
-    if volumes:
-        raise RuntimeError("tagged volumes remain after instance retirement")
+    # Delete-on-termination volumes can outlive their instance by a few seconds.
+    stop = time.monotonic() + 300
+    while ec2.describe_volumes(Filters=[{"Name": "tag:Name", "Values": [allocation["name"]]}])["Volumes"]:
+        if time.monotonic() >= stop:
+            raise RuntimeError("tagged volumes remain after instance retirement")
+        time.sleep(5)
     elapsed = max(0, (datetime.now(timezone.utc) - datetime.fromisoformat(allocation["created"])).total_seconds())
     # Unplaced GPU allocations have no chosen type; charge the most expensive candidate.
     limits = allocation["resources"]
@@ -193,6 +196,7 @@ def retire(home, ec2=None):
         "conservative_instance_seconds": elapsed,
         "conservative_compute_usd": elapsed / 3600 * rate,
         "storage_and_transfer_invoice_not_in_compute_total": True})
+    return read(home / "resources-finished.json")
 
 
 def placement_subnets(ec2, source, instance_type):
