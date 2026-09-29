@@ -8,6 +8,28 @@ The read-only audit found 2,497,174 manifest rows but only 2,379,420 distinct sh
 
 A bounded recovery inspected eight selected current shard objects, checked actual bytes against all manifest rows for their IDs, and preserved matching objects under `recovered/v1/sha256/`. Four conflicting historical hashes among this sample were unavailable. Recovery root: `6c184905d0c956bf76d7fa4f6eb775b5c8898623adffe3a61b41c5711a802a71`. This is an integrity-preservation sample, not a full audit or repair of the old corpus. The raw recovered tensors are quarantined: legacy licensing, source provenance and suitability still require review. They are not active LLM training data.
 
+## Legacy corpus deleted
+
+On September 29, 2026 the project owner authorized deleting the quarantined
+legacy corpus. A lifecycle rule now expires every root-level key beginning with
+`shard_`: the pre-tokenized tensor shards, about 2.38 million objects and 47.7 TB
+of the bucket's 49.6 TB. They were deleted for three reasons:
+
+- They are tokenized for the earlier SmolLM2-era tokenizer, not Granite
+  (vocabulary 49,152 against 100,352).
+- The audit above found duplicate and overwritten objects.
+- Their provenance and licensing were never reviewed.
+
+Bucket versioning was never enabled, so the deletion is permanent. Kept:
+
+- `research/` (published evidence and the CDN's public research assets);
+- `datasets/` and `recovered/`;
+- the root `manifest.json`, `tokenizer.json` and `checkpoints.json` records.
+
+The v0.2 node client, which downloads `shard_*.pt` through the CloudFront CDN,
+can no longer fetch training shards. Receipt:
+[legacy-corpus-deletion.json](../config/experiments/legacy-corpus-deletion.json).
+
 ## Current collection
 
 The collector is pinned to Smol-SmolTalk revision `f73fe857d519ff6ac5af2ea67c4d3834da7b8bcc`, its training split, Apache-2.0 provenance and the exact model chat template. The deployed schedule collects at most 128 source records per day, up to 4,096 records in this collection home. The cap is deliberate; increasing it requires an explicit configuration change. `progress.json` records the cursor and most recent immutable snapshot. Reaching the cap produces `collection_budget_complete`; the timer cannot reset it.
