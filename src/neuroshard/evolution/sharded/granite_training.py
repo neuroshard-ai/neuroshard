@@ -224,9 +224,11 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
         if rank == 0:
             driver = TrainingDriver(partition, ring, holder)
             progress = Path(result_path).with_name('progress.json')
+            saved = Path(result_path).with_name('references.json')
             receipt = train(driver, job['arm'], job['experience'], job['replay'], job['spec'], job.get('pairs'),
                             job.get('references'), job.get('start', 0),
-                            lambda done, losses: progress.write_text(json.dumps({'completed_steps': done})))
+                            lambda done, losses: progress.write_text(json.dumps({'completed_steps': done})),
+                            lambda values: saved.write_text(json.dumps(values)))
             driver.stop()
             result['receipt'] = receipt
         else:
@@ -235,6 +237,8 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
                           fail['step'] if fail and rank == holder else None)
             result['norms'] = training.norms if rank == holder else None
             result['steps'] = steps
+            if rank == holder:
+                result['trainable_sha256'] = digests(training.trainable)
         result['completed'] = True
     except Exception as error:
         result.update(completed=False, error=f'{type(error).__name__}: {error}')
@@ -247,13 +251,24 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
     return result
 
 
-def train(driver, arm, experience, replay, spec, pairs=None, references=None, start=0, on_step=None):
+def digests(trainable):
+    """SHA-256 of each tensor's raw bytes, comparable across hosts without moving the tensors."""
+    import hashlib
+
+    return {name: hashlib.sha256(value.detach().contiguous().view(torch.uint8).numpy().tobytes()).hexdigest()
+            for name, value in sorted(trainable.items())}
+
+
+def train(driver, arm, experience, replay, spec, pairs=None, references=None, start=0, on_step=None,
+          on_references=None):
     """The single-host ``trainer.train`` schedule and objective, driven across owners."""
     pairs = pairs or []
     if pairs and references is None:
         with torch.no_grad():
             references = [(float(driver.logprob(p['chosen'], False)), float(driver.logprob(p['rejected'], False)))
                           for p in pairs]
+        if on_references:
+            on_references(references)
     updates = trainer.schedule(experience, replay, spec, len(pairs))
     sources = {'experience': experience, 'replay': replay}
     losses, margins = [], []

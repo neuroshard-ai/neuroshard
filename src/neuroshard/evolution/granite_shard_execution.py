@@ -28,8 +28,8 @@ PHASES = ('fetch', 'agreement', 'outage', 'resume')
 SERVING = PHASES[1:]
 
 
-def committed_sources(root=ROOT):
-    plan = read(root / PLAN)
+def committed_sources(root=ROOT, plan_path=PLAN):
+    plan = read(root / plan_path)
     for name, digest in plan['contracts'].items():
         if sha256(root / name) != digest:
             raise ValueError(f'changed shard contract: {name}')
@@ -52,9 +52,9 @@ def configure():
             os.environ[key] = value
 
 
-def freeze():
+def freeze(plan_path=PLAN):
     """The canonical parent's CPU runtime, byte for byte in packages and environment."""
-    source = committed_sources()
+    source = committed_sources(plan_path=plan_path)
     runtime = read(ROOT / RUNTIME)
     packages = {key: importlib.metadata.version(key) for key in runtime['packages']}
     if packages != runtime['packages'] or platform.python_version() != runtime['python']:

@@ -86,7 +86,10 @@ remain evidence, not readiness claims for this assistant.
   reproduced all 230 canonical generations token for token. Each stayed at
   6.1–6.2 GB peak RSS against 11.3 GB on one host, and a lost owner resumed to
   the canonical tokens; $4.93. Training across owners reproduces the
-  single-host trainer bit for bit on small checkpoints.
+  single-host trainer bit for bit on small checkpoints. The
+  [shard training execution](docs/GRANITE_SHARD_TRAINING.md) is declared: three
+  owners must train the addition arm on the real model to the same bits as a
+  single-host reference, uninterrupted and after its owner is lost.
 
 **Current status:** the canonical parent completes 9/24 workflows but fails
 primitive qualification, so A1 remains open. After verified experience and 37

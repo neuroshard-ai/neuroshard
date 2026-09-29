@@ -142,13 +142,7 @@ def test_a_lost_arm_owner_resumes_from_its_last_checkpoint(deployed, tmp_path):
     assert first[2] is None and not first[0]['completed']
     state = json.loads((checkpoints / 'state.json').read_text())
     assert state['completed_steps'] == 2
-    references = json.loads((tmp_path / 'outage' / 'references.json').read_text()) if (
-        tmp_path / 'outage' / 'references.json').exists() else None
-    if references is None:
-        with torch.no_grad():
-            model = canonical(checkpoint)
-            references = [(float(trainer.sequence_logprob(model, p['chosen'], 'cpu')),
-                           float(trainer.sequence_logprob(model, p['rejected'], 'cpu'))) for p in pairs]
+    references = json.loads((tmp_path / 'outage' / 'references.json').read_text())
     resumed = launch(config_dir, shards, [job('addition', experience, replay, pairs, checkpoints, start=2,
                                               references=references, resume_from=str(checkpoints))] * WORLD,
                      tmp_path / 'resume')
@@ -156,3 +150,5 @@ def test_a_lost_arm_owner_resumes_from_its_last_checkpoint(deployed, tmp_path):
     actual = trained(checkpoints)
     for name in expected:
         assert torch.equal(actual[name], expected[name]), name
+    from neuroshard.evolution.sharded.granite_training import digests
+    assert resumed[2]['trainable_sha256'] == digests(expected)
