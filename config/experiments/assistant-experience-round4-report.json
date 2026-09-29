@@ -1,0 +1,398 @@
+{
+  "format": "neuroshard-assistant-experience-round4-report/1",
+  "collection": {
+    "rollouts": 1024,
+    "passed": 969,
+    "repairable_failures": 37,
+    "repairs": 74,
+    "verified_repairs": 49,
+    "natural_sha256": "5419bf425623de53409e9746d32a61f6583cbbd05070c43e42c79b2dd9f0fcb8",
+    "repairs_sha256": "fd8b6764a6406a102650f0ccb6c414e86053bd90b17456013cae2986ece5d243"
+  },
+  "execution_completed": true,
+  "error": null,
+  "attempts": [
+    {
+      "home": "assistant-experience-20260928h",
+      "commit": "ec57db9da43e683823c9c61b59c1c711d7912b75",
+      "outcome": "Sampled the round-3 addition on training cases, repaired wrong reads against training goals, kept scorer-verified continuations, continued both arms, refitted gates.",
+      "gpu": "NVIDIA A10G",
+      "instance_type": "g5.2xlarge",
+      "phases_seconds": {
+        "verify_collection": 20.007058781000012,
+        "collect_round4": 5190.663422564,
+        "train": 587.2801101149998,
+        "integrate": 4302.1761665409995
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-29T01:53:18.099406+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01d199bf59e8caca5"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 10893.806968,
+        "conservative_compute_usd": 3.6675816792266667,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    }
+  ],
+  "pairs": {
+    "pairs": 15,
+    "cases": 9,
+    "repaired_trajectories": 18,
+    "pairs_sha256": "ee9bff2c00c5c2dd2e5a82898ba71df8985c066a071737165e2957991450b827",
+    "trajectories_sha256": "96507b65cd48d516a57d4d277ba7ade7c6c754b0897100cb4f87f1f282a85bec"
+  },
+  "training": {
+    "update": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "update",
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865",
+      "trainable_parameters": 62914560,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.weight": [
+          512,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.weight": [
+          2560,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.weight": [
+          512,
+          2560
+        ]
+      },
+      "steps": 64,
+      "schedule_sha256": "d3d7ddbb25722e82d65835c16e496bcf25d568671c484a200145f65255fc6359",
+      "final_loss": 0.019918645494158227,
+      "roots": {
+        "round1": "b00b66b83e5a6277a6e85ea3436beb3b814933f05c5dde0dfe844851527d5db4",
+        "experience": "1ef998477e10854d887a4f019479817b83549c9f748eded5557e19b7190487cc",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "pairs": "84714eb00e710ea85caecd9534d5bb7309e47704a3777ecd3b230f78c856a279",
+        "plan": "2d8b9b716b4a4e5b86f6d9653ded904644cd30b2bffc1d413dac144c188fa8b2"
+      },
+      "seconds": 291.68585458800044,
+      "tokens_processed": 1333832,
+      "first_margins": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -2.125688479281962e-05,
+        -0.15999916195869446,
+        0.31999826431274414,
+        0.15999820828437805
+      ],
+      "last_margins": [
+        6.9087090492248535,
+        10.03003215789795,
+        11.440016746520996,
+        9.842521667480469,
+        5.7300519943237305,
+        8.734878540039062,
+        7.29750919342041,
+        10.03001880645752
+      ]
+    },
+    "addition": {
+      "format": "neuroshard-assistant-experience-checkpoint/1",
+      "arm": "addition",
+      "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c",
+      "trainable_parameters": 1048576,
+      "tensors": {
+        "model.layers.32.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.32.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.32.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.33.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.33.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.33.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.34.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.34.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.34.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.35.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.35.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.35.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.36.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.36.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.36.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.37.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.37.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.37.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.38.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.38.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.38.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ],
+        "model.layers.39.self_attn.q_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.q_proj.lora_b": [
+          2560,
+          16
+        ],
+        "model.layers.39.self_attn.v_proj.lora_a": [
+          16,
+          2560
+        ],
+        "model.layers.39.self_attn.v_proj.lora_b": [
+          512,
+          16
+        ]
+      },
+      "steps": 64,
+      "schedule_sha256": "d3d7ddbb25722e82d65835c16e496bcf25d568671c484a200145f65255fc6359",
+      "final_loss": 0.019159604703958166,
+      "roots": {
+        "round1": "0dd1b5c7df01b4e91eebcd9932e186859c0e49f229119cef1827f62cfb72608d",
+        "experience": "1ef998477e10854d887a4f019479817b83549c9f748eded5557e19b7190487cc",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "pairs": "84714eb00e710ea85caecd9534d5bb7309e47704a3777ecd3b230f78c856a279",
+        "plan": "2d8b9b716b4a4e5b86f6d9653ded904644cd30b2bffc1d413dac144c188fa8b2"
+      },
+      "seconds": 291.52439923899965,
+      "tokens_processed": 1333832,
+      "first_margins": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.03998246416449547,
+        -0.03998928889632225,
+        0.18000300228595734,
+        0.2599956691265106
+      ],
+      "last_margins": [
+        5.809972286224365,
+        9.270013809204102,
+        8.819999694824219,
+        9.040016174316406,
+        4.5600504875183105,
+        4.539942741394043,
+        5.260026454925537,
+        9.340022087097168
+      ]
+    }
+  },
+  "integration": {
+    "parent_success_rates": {
+      "greedy": 0.53125,
+      "sampled": 0.52734375,
+      "episodes": 64
+    },
+    "round3_arms": {
+      "update": {
+        "greedy": 0.859375,
+        "sampled": 0.87109375,
+        "episodes": 64
+      },
+      "addition": {
+        "greedy": 0.90625,
+        "sampled": 0.9140625,
+        "episodes": 64
+      }
+    },
+    "arms": {
+      "update": {
+        "gate": {
+          "rule": "logistic",
+          "bias": 0.07406646758317947,
+          "epsilon": 1e-06,
+          "threshold": 0.5,
+          "counts": {
+            "arm_better": 33,
+            "parent_better": 1,
+            "ties": 30
+          },
+          "sha256": "006a87dd8afaa332ab0551a4ac8d877e59cd1bddf14fa75869235b657843abc4"
+        },
+        "success_rates": {
+          "greedy": 0.90625,
+          "sampled": 0.90625,
+          "episodes": 64
+        }
+      },
+      "addition": {
+        "gate": {
+          "rule": "logistic",
+          "bias": 0.06843557953834534,
+          "epsilon": 1e-06,
+          "threshold": 0.5,
+          "counts": {
+            "arm_better": 31,
+            "parent_better": 1,
+            "ties": 32
+          },
+          "sha256": "7b17b42a0890eec3034700c7fcdc7268c9d09c11c050a2e3dfccd9e230151a48"
+        },
+        "success_rates": {
+          "greedy": 0.890625,
+          "sampled": 0.84765625,
+          "episodes": 64
+        }
+      }
+    },
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-01d199bf59e8caca5"
+    ],
+    "conservative_instance_seconds": 10893.806968,
+    "conservative_compute_usd": 3.6675816792266667,
+    "scope": "Round-4 attempt h."
+  },
+  "evidence_sha256": "640885b3e646a69ce22244384c8306626eb053ac94e446cd1d0f3534169f8697",
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false
+}

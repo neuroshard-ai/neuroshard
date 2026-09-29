@@ -73,7 +73,9 @@ remain evidence, not readiness claims for this assistant.
   round 4 repairs the addition's wrong document reads on training cases and keeps
   scorer-verified continuations; development under the prefix cache adds the A1
   served-system check. If both pass, a fresh 192-episode confirmation opens once.
-  Budget ceiling: $1,000.
+  Budget ceiling: $1,000. [Round 4](docs/ASSISTANT_EXPERIENCE_ROUND4_RESULTS.md):
+  49 verified repairs gave 15 pairs. On integration the update rose to 90.6%
+  while the addition fell to 89.1% greedy and 84.8% sampled; development is next.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

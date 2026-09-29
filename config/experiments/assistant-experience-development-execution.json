@@ -55,12 +55,12 @@
   "memory_bytes": 68719476736,
   "arms": {
     "update": {
-      "trainable_sha256": "b00b66b83e5a6277a6e85ea3436beb3b814933f05c5dde0dfe844851527d5db4"
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
     },
     "addition": {
-      "trainable_sha256": "0dd1b5c7df01b4e91eebcd9932e186859c0e49f229119cef1827f62cfb72608d"
+      "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c"
     },
-    "integration_sha256": "ebc07c77c0ef25b6b2170ccb605fd629736925be43b25b285f85186b6f150600"
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
   },
   "canonical_result": {
     "path": "config/experiments/assistant-workflow-canonical-result.json",
@@ -68,7 +68,7 @@
   },
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "68a50f247508926947f5d306a5b1c3f8e3e5ff31a735a1dc04f56ed484a2061f",
-    "config/experiments/assistant-experience-development-resources.json": "c0a51fade796a8e8b46c33bce502edfe67831b1bfbe37ff1a6b53cb536418a60",
+    "config/experiments/assistant-experience-development-resources.json": "b037c872baa6a528a548ec08459cac4906df89fb34f695a10a79da4a6d58014f",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
@@ -79,7 +79,7 @@
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "2db61bb7f4d4c03638cdcff0f47fdd4ef02f6550be8ebdbde6d70cce421e823a",
-    "config/experiments/assistant-experience-round3-report.json": "98dcdb67cdf6d0fcb82f3e6b07dcc162a14eb388da4c770edc8a69bb7eaa1433"
+    "config/experiments/assistant-experience-round4-report.json": "774718973c65360b84c6057776912e6d836ea869c9717e3d40fc3c5982660ff5"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -94,7 +94,7 @@
     "config/experiments/granite-reference-artifacts.json",
     "docs/granite-reference-requirements.txt",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
-    "config/experiments/assistant-experience-round3-report.json",
+    "config/experiments/assistant-experience-round4-report.json",
     "config/experiments/assistant-experience-development-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
@@ -125,8 +125,10 @@
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "attempts": 1,
-  "execution": "A preparation worker, then one fresh worker per round-3 arm in turn at the canonical eight threads: 24 selected development episodes served with the declared prefix cache, each timed with its selection pass, and 24 forced-arm anchors. Parent control is the pinned canonical result. Confirmation stays sealed.",
-  "interpretation": "Development gate only. A pass opens confirmation once; it is not admission, promotion or checklist credit, and A1 stays open.",
-  "round": 3,
-  "serving": "prefix-cache"
+  "execution": "A preparation worker, then one fresh worker per round-4 arm in turn at the canonical eight threads: 24 selected development episodes served with the declared prefix cache, each timed with its selection pass, and 24 forced-arm anchors; then a fresh-process replay of the two declared episodes by the served addition for the A1 served-system check. Parent control is the pinned canonical result. Confirmation stays sealed.",
+  "interpretation": "Development gate and A1 served-system check. Both passing opens the fresh 192-episode confirmation once; neither is admission, promotion or checklist credit.",
+  "round": 4,
+  "serving": "prefix-cache",
+  "a1_served": "config/experiments/assistant-experience-learning.json#a1_served",
+  "replay_seconds": 1200
 }
