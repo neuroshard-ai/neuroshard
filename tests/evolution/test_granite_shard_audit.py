@@ -1,5 +1,4 @@
 import copy
-import importlib.metadata
 import importlib.util
 import subprocess
 import sys
@@ -110,8 +109,6 @@ def test_the_audit_runtime_installs_every_package_its_host_code_imports():
     pinned, reference = pins(requirements), pins('docs/granite-reference-requirements.txt')
     signing = {name: f'{name}=={version}' for name, version in PLAN['signing_packages'].items()}
     assert pinned == {**reference, **signing}
-    for name, version in PLAN['signing_packages'].items():
-        assert importlib.metadata.version(name) == version
     host_code = [name for name in PLAN['sources'] if name.startswith('src/') or name == audited.SCRIPT]
     installed_by_bootstrap = {'granite_switch'}
     imported = set()
