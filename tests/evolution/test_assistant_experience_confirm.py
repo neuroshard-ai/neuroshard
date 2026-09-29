@@ -54,6 +54,21 @@ def test_second_confirmation_needs_development_and_a1_and_opens_its_own_frozen_s
         confirm.opened({**execution, 'split': 'confirmation'})
 
 
+def test_third_confirmation_split_is_frozen_and_disjoint_from_every_earlier_split():
+    from neuroshard.evolution.modular_reference_execution import identity
+
+    manifest = read(ROOT / 'config/experiments/assistant-workflow-data-confirmation3.json')
+    cases = data.cases('confirmation3')
+    assert manifest['split'] == 'confirmation3' and manifest['count'] == len(cases) == 192
+    assert identity(cases) == manifest['sha256'] and [c['id'] for c in cases] == manifest['case_ids']
+    assert all(sum(c['family'] == f for c in cases) == 24 for f in data.FAMILIES)
+    projects = {t['expected']['project'] for c in cases for t in c['turns']}
+    for split in manifest['disjoint_from']:
+        earlier = data.cases(split)
+        assert not {c['id'] for c in cases} & {c['id'] for c in earlier}
+        assert not projects & {t['expected']['project'] for c in earlier for t in c['turns']}
+
+
 def test_second_confirmation_gate_scales_to_192_episodes():
     cases = data.cases('confirmation2')
     by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}

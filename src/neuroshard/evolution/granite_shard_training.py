@@ -49,7 +49,8 @@ def job(plan, phase, rank, home, store):
     experience, replay, pairs = sequences(plan)
     world = len(plan['boundaries']) - 1
     base = {'arm': plan['arm'], 'spec': plan['spec'], 'experience': experience, 'replay': replay, 'pairs': pairs,
-            'max_tokens': plan['max_boundary_tokens'], 'threads': read(ROOT / shard.CANONICAL)['resources']['threads']}
+            'max_tokens': plan['max_boundary_tokens'], 'threads': read(ROOT / shard.CANONICAL)['resources']['threads'],
+            'warm_up': plan.get('warm_up', False)}
     at = plan['outage']['at_step']
     if phase == 'train':
         return {**base, 'checkpoints': str(store / 'arm-train')}
@@ -91,6 +92,15 @@ def owner(rank, address, port, phase, home, store):
                                       timeout=plan['peer_timeout_seconds'])
 
 
+def warm_up(model, lengths=(1024, 1)):
+    """The owners' discarded passes on the complete model: a fresh process's first pass can round differently."""
+    import torch
+
+    with torch.inference_mode():
+        for length in lengths:
+            model(torch.zeros((1, length), dtype=torch.long))
+
+
 def reference(phase, home, store):
     """The control host: the complete pinned checkpoint and the unchanged single-host trainer."""
     configure()
@@ -124,6 +134,9 @@ def reference(phase, home, store):
                                                      local_files_only=True).eval()
         if sum(p.numel() for p in model.parameters()) != artifacts['parameters']:
             raise ValueError('reference checkpoint inventory differs')
+        if plan.get('warm_up'):
+            warm_up(model)
+            result['warm_up'] = True
         trainable, receipt = trainer.train(model, plan['arm'], experience, replay, plan['spec'], pairs=pairs)
         receipt.pop('optimizer_state')
         result.update(receipt=receipt, trainable_sha256=digests(trainable), completed=True)

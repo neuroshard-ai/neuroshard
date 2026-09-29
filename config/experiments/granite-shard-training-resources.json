@@ -30,8 +30,14 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "prior_resources": {
-    "path": "config/experiments/granite-shard-report.json",
-    "sha256": "b22bdfb7f2f1dc630345c5a36282bbe12f964cf306a74cd987999efcc7eeab9e"
+    "path": "config/experiments/granite-shard-determinism2-report.json",
+    "sha256": "d1ba61e8eb4cfc43d7cef5864a4e323801b19c8d43abd0fa222bc78535036cd7"
   },
-  "budget_scope": "One host of four for the Granite shard training execution (three owners and one reference), each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $32 for all four). Setup/copy 20/10 minutes; fetch or download 30 minutes; training one hour; outage and resume 40 minutes each. No GPU."
+  "budget_scope": "One host of four for the Granite shard training execution (three owners and one reference), each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $32 for all four). Setup/copy 20/10 minutes; fetch or download 30 minutes; training one hour; outage and resume 40 minutes each. No GPU.",
+  "prior_attempts": [
+    {
+      "commit": "b789206aa62df5a004ab31d4696908dc20c637f7",
+      "outcome": "Training across owners matched the single-host reference bit for bit; recovery failed on a first-pass rounding difference ($1.89)."
+    }
+  ]
 }

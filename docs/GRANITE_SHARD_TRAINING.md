@@ -69,6 +69,26 @@ This run does not claim:
 
 The run gives no checklist credit and is not admission evidence.
 
+## Second attempt
+
+Declared on September 29, 2026. The [first attempt](GRANITE_SHARD_TRAINING_RESULTS.md)
+passed six of seven checks and failed recovery, and it stays failed. The
+[ring determinism diagnostic](GRANITE_SHARD_DETERMINISM.md) traced that failure
+to one cause: a fresh process's first forward pass can round differently. With
+the declared warm-up, twelve fresh launches were identical.
+
+In this attempt, each owner runs the warm-up after joining the ring and before
+any work:
+
+- discarded 1,024-token and 1-token passes;
+- one discarded backward pass through the arm on its owner, with its gradients
+  cleared.
+
+The reference host warms up its complete model with the same discarded passes.
+Owners, arm, sequences, settings, the outage at step 3 and all seven checks are
+unchanged. Tests on small checkpoints show the warm-up leaves every trained
+tensor bit-identical.
+
 Resources: four r7i.4xlarge allocations, each with its own expiry and a $8
 allowance (at most $32), under the
 [resource contract](../config/experiments/granite-shard-training-resources.json).

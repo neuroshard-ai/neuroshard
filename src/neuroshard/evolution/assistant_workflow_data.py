@@ -12,9 +12,10 @@ from neuroshard.evolution.modular_reference_execution import identity
 
 FAMILIES = ('copy', 'date', 'sum', 'difference', 'latest', 'recipient', 'reschedule', 'scope')
 SPLITS = {'train': (4100, 32), 'integration': (5200, 8),
-          'development': (6300, None), 'confirmation': (7400, 12), 'confirmation2': (8500, 24)}
+          'development': (6300, None), 'confirmation': (7400, 12), 'confirmation2': (8500, 24),
+          'confirmation3': (9600, 24)}
 # A fresh confirmation reuses the confirmation correction grammar with new values.
-CONFIRMATIONS = ('confirmation', 'confirmation2')
+CONFIRMATIONS = ('confirmation', 'confirmation2', 'confirmation3')
 
 
 def make_case(split, family, index):

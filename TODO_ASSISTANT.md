@@ -88,8 +88,8 @@ remain evidence, not readiness claims for this assistant.
   on already-opened data. It compares a larger module (about 50M parameters)
   with a consensus of three small modules grown from disjoint verified
   experience, voting with the parent on every action, against the small module
-  and the update. A declared rule picks the third attempt's method, which then
-  needs fresh confirmation data.
+  and the update. A declared rule picks the third attempt's method. Its fresh
+  192-episode confirmation split is frozen before the study reports.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
@@ -120,8 +120,9 @@ remain evidence, not readiness claims for this assistant.
   owner busy time balanced within 3% ($2.20). The [ring determinism diagnostic](docs/GRANITE_SHARD_DETERMINISM.md)
   localized the recovery failure. In one launch of six, owner 0's first forward
   pass in a fresh process rounded differently, while every later pass matched
-  ($0.92). A second attempt with a declared warm-up pass runs twelve launches
-  before training recovery is repeated.
+  ($0.92). [With a declared warm-up, twelve fresh launches were identical](docs/GRANITE_SHARD_DETERMINISM.md)
+  ($1.76). The [shard training execution's second attempt](docs/GRANITE_SHARD_TRAINING.md)
+  repeats training recovery with the warm-up.
 
 **Current status:** verified-experience learning lifts the assistant from about
 55% to 91–95% on fresh sealed episodes, but A2 is not established.

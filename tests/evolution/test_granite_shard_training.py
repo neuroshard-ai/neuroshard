@@ -38,11 +38,27 @@ def test_phase_jobs_resume_from_the_arm_checkpoint_and_saved_references(tmp_path
     fresh = training.job(PLAN, 'train', 2, home, store)
     assert 'fail' not in fresh and 'start' not in fresh and fresh['checkpoints'].endswith('arm-train')
     assert training.job(PLAN, 'outage', 2, home, store)['fail'] == {'step': 3}
+    (home / 'outage').mkdir(parents=True, exist_ok=True)
     save(home / 'outage' / 'references.json', [[-1.0, -2.0]] * 4)
     driver = training.job(PLAN, 'resume', 0, home, store)
     holder = training.job(PLAN, 'resume', 2, home, store)
     assert driver['start'] == holder['start'] == 3 and driver['references'] == [[-1.0, -2.0]] * 4
     assert holder['resume_from'] == str(store / 'arm-outage') and 'resume_from' not in driver
+
+
+def test_the_second_attempt_warms_up_every_owner_and_the_reference(tmp_path):
+    torch = pytest.importorskip('torch')
+    from test_granite_partition import canonical, prompt, tiny_checkpoint
+
+    assert PLAN['warm_up'] and PLAN['attempt'] == 2
+    assert all(training.job(PLAN, phase, 0, tmp_path, tmp_path)['warm_up'] for phase in ('train', 'outage'))
+    model = canonical(tiny_checkpoint(tmp_path / 'granite'))
+    ids = prompt()
+    with torch.inference_mode():
+        before = model(ids).logits
+    training.warm_up(model, lengths=(12, 1))
+    with torch.inference_mode():
+        assert torch.equal(model(ids).logits, before)
 
 
 def passing_evidence():

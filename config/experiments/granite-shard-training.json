@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-training/1",
-  "status": "Declared on September 29, 2026 after the first shard execution passed, before any sharded training on the real model.",
+  "status": "Second attempt, declared on September 29, 2026 after the ring determinism diagnostic localized the first attempt's recovery failure to a fresh process's first forward pass and the declared warm-up made twelve launches identical. Owners run the warm-up after joining the ring; the reference host warms up its complete model. Owners, arm, sequences, spec, outage and all seven checks are unchanged.",
   "purpose": "A4 second execution: the addition arm of the assistant trained across three Granite owner hosts, none holding the complete backbone, must reproduce the unchanged single-host trainer bit for bit on a reference host, uninterrupted and after the arm's owner is lost mid-schedule.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -96,11 +96,15 @@
     "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
     "config/experiments/granite-shard-training-sequences.json": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76",
-    "config/experiments/granite-shard-training-resources.json": "6c2a39adedb880caee80e57fb60ea6d4d5b7bc5a88cdec7e8ae09ba213f12721",
+    "config/experiments/granite-shard-training-resources.json": "0fd9263e28a10fa95d796bb36848a59689df68e18476d6ef761fb538a1234235",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/GRANITE_SHARD_TRAINING.md": "e73b4fbd20c079e47a8139599f63803919001fee98e9f9736d6528f76b2d3a33"
+    "docs/GRANITE_SHARD_TRAINING.md": "eb4ce3540a2cedacb8741781855a74c04c118fb5521c5690ee1723eed3980f3f",
+    "config/experiments/granite-shard-training-result.json": "d4875c959bcff1c72807821bb71a628feab255459afe326dac1668994c0677e0",
+    "config/experiments/granite-shard-determinism2-result.json": "b79349a91c75ac1cea309ecb1c0c2519641a5b5decdade396bb7ca8a1f316785"
   },
   "sources": [
+    "config/experiments/granite-shard-determinism2-result.json",
+    "config/experiments/granite-shard-training-result.json",
     "config/experiments/granite-reference-artifacts.json",
     "config/experiments/granite-tensor-inventory.json",
     "config/experiments/assistant-workflow-canonical-execution.json",
@@ -127,5 +131,15 @@
     "scripts/granite_shard_training_cloud.py",
     "scripts/granite_shard_cloud.py",
     "scripts/modular_reference_cloud.py"
+  ],
+  "warm_up": true,
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "b789206aa62df5a004ab31d4696908dc20c637f7",
+      "result": "config/experiments/granite-shard-training-result.json",
+      "result_sha256": "d4875c959bcff1c72807821bb71a628feab255459afe326dac1668994c0677e0",
+      "outcome": "Six of seven checks passed; recovery failed on a first-pass rounding difference."
+    }
   ]
 }

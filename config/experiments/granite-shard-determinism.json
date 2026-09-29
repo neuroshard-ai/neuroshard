@@ -37,7 +37,7 @@
     "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
     "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
-    "config/experiments/granite-shard-training.json": "eea1b4adc47c6689f5e12ae4916f6e6feb70d86799f6f335929bf9b97e7d3c59",
+    "config/experiments/granite-shard-training.json": "38c1b8c0bcaa1ab013bd4c6556477759b697a0142ba84700be404025505a871c",
     "config/experiments/granite-shard-training-sequences.json": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76",
     "config/experiments/granite-shard-determinism-resources.json": "e99fbc0faf320388e39fecf84f1ef80e0ed36d540545af4958403f89f9d917c8",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
