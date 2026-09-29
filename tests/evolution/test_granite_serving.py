@@ -200,7 +200,8 @@ if report['valid']:
     forged = {'record': record, 'mismatch': forwards[0], 'inputs': {i: p for i, p in payloads.items() if i <= forwards[0]}}
     report['forged_proof_accepted'] = granite_audit.check_fraud_proof(partition, forged, record['public_key'], adapter)
 else:
-    proof = granite_audit.fraud_proof(record, payloads, report)
+    granite_audit.save_proof(granite_audit.fraud_proof(record, payloads, report), Path(log_dir) / 'proof')
+    proof, manifest = granite_audit.load_proof(Path(log_dir) / 'proof')
     report['proof_accepted'] = granite_audit.check_fraud_proof(partition, proof, record['public_key'], adapter)
     report['proof_inputs'] = len(proof['inputs'])
 report['signed'] = granite_audit.signed_by(record, record['public_key'])

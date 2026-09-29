@@ -124,7 +124,11 @@ remain evidence, not readiness claims for this assistant.
   ($1.76). [Shard training recovery then passed on its second attempt](docs/GRANITE_SHARD_TRAINING_RESULTS.md).
   After the arm's owner was lost at step 3 and relaunched from its checkpoint,
   training still finished bit-identical to the single-host reference, with all
-  seven checks passing ($1.94).
+  seven checks passing ($1.94). [Audited serving is declared](docs/GRANITE_SHARD_AUDIT.md).
+  Owners 1 and 2 sign logs of their serving work, and two light auditors, each
+  holding one owner's shard, replay those logs. In a second pass, owner 1 flips
+  one bit of one declared message. Its auditor must name that message, a fresh
+  verifier must accept the fraud proof, and owner 2 must audit clean.
 
 **Current status:** verified-experience learning lifts the assistant from about
 55% to 91–95% on fresh sealed episodes, but A2 is not established.

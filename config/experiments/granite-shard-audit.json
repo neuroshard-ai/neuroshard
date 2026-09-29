@@ -1,0 +1,140 @@
+{
+  "format": "neuroshard-granite-shard-audit/1",
+  "status": "Declared on September 29, 2026, before any audited serving run.",
+  "purpose": "Optimistic verification on the real model: three owners serve the learned assistant with signed logs; two light auditors, each holding only one owner's shard, replay those logs; a declared one-bit fault by owner 1 must be named exactly, proven to a fresh verifier and attributed to owner 1 alone.",
+  "model": {
+    "artifacts": "config/experiments/granite-reference-artifacts.json",
+    "tensor_inventory": "config/experiments/granite-tensor-inventory.json",
+    "inventory_sha256": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843"
+  },
+  "learning": "config/experiments/assistant-experience-learning.json",
+  "runtime": "The canonical parent CPU runtime on every owner: identical packages, Python, CPU instructions, numerical environment and eight threads; bf16 backbone, eager attention, FP32 LoRA.",
+  "boundaries": [
+    0,
+    12,
+    26,
+    40
+  ],
+  "arm": {
+    "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c",
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
+  },
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928h/evidence/.study/attempts/baseline-experience",
+    "files": [
+      "integration.json",
+      "addition-checkpoint/manifest.json",
+      "addition-checkpoint/trainable.safetensors"
+    ],
+    "maximum_bytes": 6577588
+  },
+  "target": {
+    "path": "config/experiments/assistant-experience-development-round4-result.json",
+    "sha256": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+    "system": "addition",
+    "episodes": 24,
+    "rule": "The 24 served development episodes of the round-4 addition system: selection, every generation's prompt and tokens, reused prefix length and score. No new evaluation data is opened."
+  },
+  "eos_ids": [
+    100257
+  ],
+  "max_boundary_tokens": 6144,
+  "peer_timeout_seconds": 300,
+  "memory_limit_bytes": 8589934592,
+  "fetch_memory_limit_bytes": 17179869184,
+  "roles": "Owners 0-2 as in the shard serving execution, all with the declared warm-up. Owners 1 and 2 sign their logs with keys created at fetch, publishing the public keys in their fetch receipts. Auditor 1 fetches only owner 1's byte ranges; auditor 2 only owner 2's, plus the uploaded arm.",
+  "audited_owners": [
+    1,
+    2
+  ],
+  "fault": {
+    "rank": 1,
+    "at": 200,
+    "rule": "In the second serving pass, owner 1 flips the lowest bit of the first element of its 201st sent tensor."
+  },
+  "phase_seconds": {
+    "fetch": 1800,
+    "serve": 3600,
+    "audit": 2400,
+    "verify": 900
+  },
+  "gates": {
+    "honest_agreement": "The honest pass passes every check of the shard serving execution against the single-host development result.",
+    "honest_audits": "Both auditors replay their owner's complete honest log without a mismatch, and each log is signed by the key its owner published.",
+    "fault_named": "Auditor 1 finds owner 1's first wrong output at exactly the declared forward message.",
+    "proof_accepted": "A fresh verifier process, given only the fraud proof and owner 1's published key, accepts it.",
+    "no_false_blame": "Auditor 2 replays owner 2's log from the faulty pass without a mismatch.",
+    "light_auditors": "Each auditor fetched exactly its owner's tensor bytes and less than the whole checkpoint."
+  },
+  "measured_not_gated": "Audit replay time against the audited owner's busy time, log and proof sizes, transfer bytes.",
+  "not_claimed": "Owners, auditors and the controller are run by one operator; bonds, slashing and challenge windows are not yet on-chain. Independent operation remains A5.",
+  "resources": "config/experiments/granite-shard-audit-resources.json",
+  "attempts": 1,
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "contracts": {
+    "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+    "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+    "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+    "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+    "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+    "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+    "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+    "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+    "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
+    "config/experiments/granite-shard-audit-resources.json": "6b41aaced488327c521cb2804d8525895ba0f19263a957811325e96be4a779d5",
+    "docs/GRANITE_SHARD_AUDIT.md": "30debaa14b7c803fc3c609c71271faa32d1d52f266d91085c45dbcc717ae1f41"
+  },
+  "sources": [
+    "config/experiments/granite-reference-artifacts.json",
+    "config/experiments/granite-tensor-inventory.json",
+    "config/experiments/assistant-workflow-canonical-execution.json",
+    "config/experiments/assistant-workflow-canonical.json",
+    "config/experiments/assistant-experience-learning.json",
+    "config/experiments/assistant-workflow-policy.json",
+    "config/experiments/assistant-workflow-data.json",
+    "config/experiments/assistant-experience-development-round4-result.json",
+    "docs/granite-reference-requirements.txt",
+    "config/experiments/granite-shard-audit-resources.json",
+    "docs/GRANITE_SHARD_AUDIT.md",
+    "config/experiments/granite-shard-audit.json",
+    "config/experiments/granite-shard-serving.json",
+    "config/experiments/granite-shard-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "src/neuroshard/evolution/assistant_experience.py",
+    "src/neuroshard/evolution/assistant_experience_gate.py",
+    "src/neuroshard/evolution/assistant_experience_run.py",
+    "src/neuroshard/evolution/assistant_experience_train.py",
+    "src/neuroshard/evolution/assistant_replay.py",
+    "src/neuroshard/evolution/assistant_rollout.py",
+    "src/neuroshard/evolution/assistant_selector.py",
+    "src/neuroshard/evolution/assistant_workflow.py",
+    "src/neuroshard/evolution/assistant_workflow_data.py",
+    "src/neuroshard/evolution/assistant_workspace.py",
+    "src/neuroshard/evolution/granite_context_reference.py",
+    "src/neuroshard/evolution/granite_reference.py",
+    "src/neuroshard/evolution/granite_tokenizer.py",
+    "src/neuroshard/evolution/modular_tools.py",
+    "src/neuroshard/evolution/granite_shard_execution.py",
+    "src/neuroshard/evolution/granite_shard_serving.py",
+    "src/neuroshard/evolution/sharded/__init__.py",
+    "src/neuroshard/evolution/sharded/granite.py",
+    "src/neuroshard/evolution/sharded/granite_pipeline.py",
+    "src/neuroshard/evolution/sharded/granite_training.py",
+    "src/neuroshard/evolution/sharded/granite_serving.py",
+    "scripts/granite_shard_serving_cloud.py",
+    "scripts/granite_shard_cloud.py",
+    "scripts/modular_reference_cloud.py",
+    "src/neuroshard/evolution/granite_shard_audit.py",
+    "src/neuroshard/evolution/sharded/granite_audit.py",
+    "src/neuroshard/evolution/sharded/granite_streams.py",
+    "scripts/run_granite_shard_audit.py",
+    "scripts/granite_shard_audit_cloud.py"
+  ]
+}

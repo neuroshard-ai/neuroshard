@@ -91,6 +91,34 @@ def fraud_proof(record, payloads, report):
     return {'record': record, 'mismatch': report['first_mismatch'], 'inputs': needed}
 
 
+def save_proof(proof, directory):
+    """The owner's unchanged signed log, the inputs up to the mismatch, and a manifest binding them."""
+    from safetensors.torch import save_file
+
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    save_file({f'p{i}': v.contiguous().view(torch.uint8) for i, v in proof['inputs'].items()},
+              str(directory / 'inputs.safetensors'))
+    (directory / 'record.json').write_text(json.dumps(proof['record']) + '\n')
+    manifest = {'format': 'neuroshard-granite-fraud-proof/1', 'rank': proof['record']['rank'],
+                'mismatch': proof['mismatch'], 'public_key': proof['record'].get('public_key'),
+                'inputs_sha256': hashlib.sha256((directory / 'inputs.safetensors').read_bytes()).hexdigest()}
+    (directory / 'proof.json').write_text(json.dumps(manifest) + '\n')
+    return manifest
+
+
+def load_proof(directory):
+    from safetensors.torch import load_file
+
+    directory = Path(directory)
+    manifest = json.loads((directory / 'proof.json').read_text())
+    if hashlib.sha256((directory / 'inputs.safetensors').read_bytes()).hexdigest() != manifest['inputs_sha256']:
+        raise ValueError('proof inputs differ from the proof manifest')
+    stored = load_file(str(directory / 'inputs.safetensors'))
+    return ({'record': json.loads((directory / 'record.json').read_text()), 'mismatch': manifest['mismatch'],
+             'inputs': {int(k[1:]): v.view(torch.bfloat16) for k, v in stored.items()}}, manifest)
+
+
 def check_fraud_proof(partition, proof, public_key, adapter=None):
     """True when the owner signed the log and its logged output at ``mismatch`` is not what its shard computes."""
     record = proof['record']
