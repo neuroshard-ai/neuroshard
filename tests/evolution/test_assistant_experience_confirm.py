@@ -150,6 +150,81 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
         assert set(execution['development_report']['requires']) == {'development_passed', 'development_and_a1_passed'}
 
 
+def test_opened_development_cases_need_no_pinned_report():
+    assert [c['id'] for c in confirm.opened({'split': 'development'})] == [c['id'] for c in data.cases('development')]
+
+
+def test_unrouted_growth_systems_serve_one_arm_or_the_committee_from_pinned_checkpoints(tmp_path):
+    pytest.importorskip('torch')
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    from test_assistant_experience import SPEC, TEMPLATE, tiny_model
+    from test_assistant_serving import bounded
+    from test_granite_tokenizer import granite_like, load_tiny
+
+    directory = granite_like(tmp_path / 'granite')
+    (directory / 'chat_template.jinja').write_text(TEMPLATE)
+    tokenizer = load_tiny(directory)[0]
+    plan = {**PLAN, 'training': SPEC}
+    growth = read(ROOT / confirm.GROWTH_PLAN)
+    arms, pinned = tmp_path / 'arms', {}
+    for name, arm in growth['arms'].items():
+        spec = confirm.growth_spec(plan, name)
+        assert spec['seed'] == arm.get('spec', {}).get('seed', SPEC['seed'])
+        trainable = trainer.prepare(tiny_model(tokenizer), arm['type'], spec)
+        manifest = trainer.checkpoint(arms / f'{name}-checkpoint', trainable,
+                                      {'arm': arm['type'], 'optimizer_state': {}, 'trainable_parameters': 1, 'steps': 0,
+                                       'schedule_sha256': '', 'losses': [0.0]}, {})
+        pinned[name] = {'trainable_sha256': manifest['trainable_sha256']}
+    confirm.verify_growth_arms(arms, pinned)
+    with pytest.raises(ValueError, match='pinned growth study'):
+        confirm.verify_growth_arms(arms, {**pinned, 'small': {'trainable_sha256': 'x'}})
+    cases = [data.make_case('development', 'copy', 0)]
+    for system in ('update', 'small', 'committee'):
+        episodes, loaded = confirm.unrouted_episodes(system, tiny_model(tokenizer), tokenizer, plan, bounded(), cases, arms)
+        assert [e['id'] for e in episodes] == [cases[0]['id']]
+        assert all(e['selected'] == 'arm' and e['selection_seconds'] == 0.0 for e in episodes)
+        if system == 'committee':
+            assert loaded['members'] == ['member-0', 'member-1', 'member-2'] and loaded['wrapped_projections'] == 4
+        else:
+            assert loaded['checkpoint']['trainable_sha256'] == pinned[system]['trainable_sha256']
+
+
+def test_latency_check_applies_the_gate_limits_before_a_sealed_split_opens():
+    cases = data.cases('development')
+    ids = [c['id'] for c in cases]
+
+    def rows(seconds, successes):
+        return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), 'seconds': seconds,
+                 'selected': 'arm', 'selection_seconds': 0.0} for c in cases]
+
+    parent = rows(10, set(ids[:9]))
+    replies = {'update': {'episodes': rows(60, set(ids[:19]))}, 'committee': {'episodes': rows(110, set(ids[:18]))}}
+    report = confirm.latency(PLAN, cases, replies, parent, 'confirmation2_gate', 'committee')
+    assert report['passed'] and report['outcomes_vs_canonical_parent']['committee']['lost'] == []
+    slow = {**replies, 'committee': {'episodes': rows(130, set(ids[:18]))}}
+    assert not confirm.latency(PLAN, cases, slow, parent, 'confirmation2_gate', 'committee')['checks']['p95_ratio']
+    capped = {'update': {'episodes': rows(100, set(ids))}, 'committee': {'episodes': rows(190, set(ids))}}
+    assert not confirm.latency(PLAN, cases, capped, parent, 'confirmation2_gate', 'committee')['checks']['p95']
+
+
+def test_a_growth_candidate_is_gated_in_the_addition_place():
+    cases = data.cases('confirmation2')
+    by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}
+
+    def rows(successes):
+        return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), 'selected': 'arm',
+                 'selection_seconds': 0.0} for c in cases]
+
+    parent = {k for f in data.FAMILIES for k in by_family[f][:8]}
+    trained = parent | {k for f in data.FAMILIES for k in by_family[f][:21]}
+    replies = {'parent': {'episodes': rows(parent)}, 'update': {'episodes': rows(trained)},
+               'committee': {'episodes': rows(trained)}}
+    report = confirm.assess(PLAN, cases, replies, 'confirmation2_gate', candidate='committee')
+    assert report['passed'] and report['candidate'] == 'committee' and report['correct']['addition'] == 168
+    assert report['selected_arm_episodes'] == {'update': 192, 'committee': 192}
+
+
 def test_importing_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_experience_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})

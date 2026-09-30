@@ -29,12 +29,15 @@ from neuroshard.evolution.modular_reference_execution import (
 
 EXECUTION = 'config/experiments/assistant-experience-confirmation-execution.json'
 SCRIPT = 'scripts/run_assistant_experience_confirmation.py'
-SYSTEMS = ('parent', 'update', 'addition')
+SYSTEMS = ('parent', 'update', 'addition', 'small', 'committee')
 PROFILES = {f'assistant-experience-confirmation-{system}': system for system in SYSTEMS}
+GROWTH_PLAN = 'config/experiments/assistant-experience-growth.json'
 
 
 def opened(execution):
-    """The declared confirmation split, only behind a pinned complete development pass."""
+    """The declared split: opened development cases, or a sealed split only behind a pinned complete pass."""
+    if execution.get('split') == 'development':
+        return data.cases('development')
     pinned = execution['development_report']
     report_path = ROOT / pinned['path']
     report = read(report_path)
@@ -51,6 +54,52 @@ def opened(execution):
     if identity(cases) != manifest['sha256'] or [c['id'] for c in cases] != manifest['case_ids']:
         raise ValueError('confirmation data differs from the frozen split')
     return cases
+
+
+def verify_growth_arms(directory, pinned):
+    """Every uploaded growth checkpoint must match the digest pinned from the growth study."""
+    for name, digest in pinned.items():
+        manifest = read(Path(directory) / f'{name}-checkpoint' / 'manifest.json')
+        if manifest['trainable_sha256'] != digest['trainable_sha256']:
+            raise ValueError(f'{name} checkpoint differs from the pinned growth study')
+
+
+def growth_spec(plan, name):
+    """The architecture a growth arm was trained with."""
+    from neuroshard.evolution import assistant_experience_run as accelerator
+
+    return accelerator.study_spec(plan, read(ROOT / GROWTH_PLAN)['arms'][name])[0]
+
+
+def unrouted_episodes(system, model, tokenizer, plan, policy, cases, arms):
+    """One growth system served without routing: a single arm, or the committee of members and the parent.
+
+    ``model`` is a freshly loaded parent; the arm or the members attach to it.
+    """
+    from neuroshard.evolution import assistant_committee as committee
+    from neuroshard.evolution import assistant_experience_train as trainer
+    from neuroshard.evolution.assistant_serving import cached_responder
+
+    if system == 'committee':
+        growth = read(ROOT / GROWTH_PLAN)
+        members = sorted((arm['member'], name) for name, arm in growth['arms'].items() if arm.get('member') is not None)
+        switch = committee.Switch()
+        wrapped = committee.attach(model, growth_spec(plan, members[0][1]), [arms / f'{name}-checkpoint' for _, name in members],
+                                   switch)
+
+        def make():
+            return committee.cached_committee(model, switch, tokenizer, policy, len(members))
+        loaded = {'members': [name for _, name in members], 'wrapped_projections': wrapped}
+    else:
+        spec = growth_spec(plan, system)
+        arm = read(ROOT / GROWTH_PLAN)['arms'][system]['type']
+        loaded = {'checkpoint': trainer.load_trainable(model, arm, spec, arms / f'{system}-checkpoint'),
+                  'served_projections_converted': trainer.serving(model, spec)}
+
+        def make():
+            return cached_responder(model, tokenizer, policy)
+    episodes = [{**workflow.execute(case, make(), policy), 'selected': 'arm', 'selection_seconds': 0.0} for case in cases]
+    return episodes, loaded
 
 
 def committed_sources(root=ROOT):
@@ -130,7 +179,12 @@ def worker(request_path):
         tokenizer, report = granite_tokenizer.load(directory)
         reply['tokenizer'] = report
         parent, _ = reference.load_model(directory, 'baseline')
-        if system == 'parent' and execution.get('parent_serving') == 'prefix-cache':
+        if system != 'parent' and execution.get('serving') == 'unrouted':
+            arms = ROOT / development.UPLOADED
+            verify_growth_arms(arms, execution['arms'])
+            reply['episodes'], loaded = unrouted_episodes(system, parent, tokenizer, plan, policy, cases, arms)
+            reply.update(loaded, serving='unrouted prefix-cache')
+        elif system == 'parent' and execution.get('parent_serving') == 'prefix-cache':
             reply['episodes'] = [workflow.execute(case, cached_responder(parent, tokenizer, policy), policy)
                                  for case in cases]
             reply['serving'] = 'prefix-cache'
@@ -179,7 +233,9 @@ def run(home, models, system):
               'admission_evidence': False}
     try:
         opened(execution)
-        if system != 'parent':
+        if system != 'parent' and execution.get('serving') == 'unrouted':
+            verify_growth_arms(ROOT / development.UPLOADED, execution['arms'])
+        elif system != 'parent':
             development.verify_arms(ROOT / development.UPLOADED, execution['arms'])
         prepared = launch(home, models, binding, 'baseline', 'prepare', execution['prepare_seconds'],
                           execution['memory_bytes'], worker_script=SCRIPT)
@@ -197,19 +253,47 @@ def run(home, models, system):
     return result
 
 
-def assess(plan, cases, replies, section='confirmation_gate'):
-    """The declared confirmation gate from three completed systems, every episode rescored."""
-    from neuroshard.evolution import assistant_experience_gate as gate
-
+def rescored(plan, cases, replies, systems):
     policy = read(ROOT / plan['policy'])
     by_id = {case['id']: case for case in cases}
     rows = {}
-    for system in SYSTEMS:
+    for system in systems:
         rows[system] = replies[system]['episodes']
         for row in rows[system]:
             if workflow.score(by_id[row['id']], row, policy) != row['score']:
                 raise ValueError('confirmation outcome rescore differs')
+    return rows
+
+
+def assess(plan, cases, replies, section='confirmation_gate', candidate='addition'):
+    """The declared confirmation gate from three completed systems, every episode rescored.
+
+    ``candidate`` is the system gated in the addition's place.
+    """
+    from neuroshard.evolution import assistant_experience_gate as gate
+
+    rows = rescored(plan, cases, replies, ('parent', 'update', candidate))
     protected = sorted(row['id'] for row in rows['parent'] if row['score']['passed'])
-    report = gate.confirmation(plan, cases, rows['parent'], rows['update'], rows['addition'], protected, section)
-    report['selected_arm_episodes'] = {s: sum(r['selected'] == 'arm' for r in rows[s]) for s in ('update', 'addition')}
+    report = gate.confirmation(plan, cases, rows['parent'], rows['update'], rows[candidate], protected, section)
+    report['candidate'] = candidate
+    report['selected_arm_episodes'] = {s: sum(r['selected'] == 'arm' for r in rows[s]) for s in ('update', candidate)}
     return report
+
+
+def latency(plan, cases, replies, parent_rows, section, candidate):
+    """The gate's latency limits on opened development cases, before a sealed split opens.
+
+    Outcomes against the canonical parent are reported, not gated.
+    """
+    from neuroshard.evolution import assistant_experience_gate as gate
+
+    rows = rescored(plan, cases, replies, ('update', candidate))
+    limits = plan[section]
+    p95 = {system: gate.p95(rows[system]) for system in ('update', candidate)}
+    checks = {'p95': p95[candidate] <= limits['p95_seconds'],
+              'p95_ratio': p95[candidate] <= limits['p95_ratio_vs_update'] * p95['update']}
+    parent = gate.passed(parent_rows)
+    outcomes = {system: {'correct': sum(gate.passed(rows[system]).values()),
+                         **gate.paired(gate.passed(rows[system]), parent)} for system in ('update', candidate)}
+    return {'passed': all(checks.values()), 'checks': checks, 'p95_seconds': p95, 'candidate': candidate,
+            'outcomes_vs_canonical_parent': outcomes, 'parent_correct': sum(parent.values())}

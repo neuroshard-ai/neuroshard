@@ -28,7 +28,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                         for split in ("train2", "train3")},
                      "assistant-experience-development": "config/experiments/assistant-experience-development-resources.json",
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
-                        for system in ("parent", "update", "addition")},
+                        for system in ("parent", "update", "addition", "small", "committee")},
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
                      "decoder-parity": "config/experiments/modular-decoder-parity-resources.json",
                      "granite-reference": "config/experiments/granite-reference-resources.json",
@@ -49,7 +49,7 @@ GRANITE_PROFILES = {
        for split in ("train2", "train3")},
     "assistant-experience-development": ("assistant_experience_eval", "docs/granite-reference-requirements.txt"),
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
-       for system in ("parent", "update", "addition")},
+       for system in ("parent", "update", "addition", "small", "committee")},
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
     "granite-evidence-diagnostic": ("granite_evidence_diagnostic", "docs/granite-reference-requirements.txt"),
     "granite-context-reference": ("granite_context_reference", "docs/granite-reference-requirements.txt"),
@@ -65,13 +65,14 @@ GRANITE_PROFILES = {
 GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile in (
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",
-                   "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
+                   "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
+                   "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
                      "granite-shard-audit": (6, 10),
-                     **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition")}}
+                     **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition", "small", "committee")}}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
