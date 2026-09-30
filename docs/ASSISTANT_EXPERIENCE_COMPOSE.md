@@ -79,3 +79,18 @@ Resources: two collection hosts and one study host, each with an eight-hour
 expiry and a $21 worst-case allowance, under the
 [resource contract](../config/experiments/assistant-experience-compose-resources.json).
 About $15 is expected in total. One attempt.
+
+## Collections
+
+Both collections completed on A10G hosts after one capacity refusal each
+([report](../config/experiments/assistant-experience-compose-collection-report.json)),
+and both hosts were retired with nothing remaining ($9.04).
+
+| Split | Rollouts | Verified trajectories | Complete | Coached | Cases without experience |
+|---|---|---|---|---|---|
+| `compose1` | 2664 | 596 | 545 | 18 | 78 of 240 |
+| `compose2` | 2640 | 592 | 547 | 14 | 81 of 240 |
+
+Every trajectory was rebuilt from its pinned rollout through the frozen scorer
+before the files were pinned. The pool now holds 3302 sequences, 36% of them
+compositional practice.

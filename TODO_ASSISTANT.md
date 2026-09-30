@@ -112,6 +112,8 @@ remain evidence, not readiness claims for this assistant.
   one extra operation per case, in family and operation pairs that neither the
   development nor any confirmation split holds out. The small module enters the
   third attempt only if it then loses no parent success on opened data.
+  [Both collections completed](docs/ASSISTANT_EXPERIENCE_COMPOSE.md#collections) with 596 and 592 verified
+  trajectories ($9.04); the pool holds 3302 sequences. The study is next.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

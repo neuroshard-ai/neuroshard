@@ -493,6 +493,8 @@ def test_growth_profiles_run_collection_hosts_with_their_declared_split():
     assert run.collection_plan(run.PROFILE) is None
     assert set(compose['collection']['seeds'].values()).isdisjoint(growth['collection']['seeds'].values())
     assert {run.COMPOSE_PLAN, compose['data']} <= set(execution['contracts'])
+    assert set(execution['compose']['collections']) == set(execution['compose']['counts']) == set(data.COMPOSE)
+    assert {f'{split}/{name}' for split in data.COMPOSE for name in run.GROWTH_FILES} <= set(upload)
 
 
 def test_compositional_collection_reverifies_real_practice_cases_and_the_pool_checks_counts(setup, monkeypatch):
