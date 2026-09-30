@@ -6,7 +6,7 @@ grpcio==1.83.1
 protobuf==6.33.6
 cryptography==50.0.1
 requests==2.34.2
-transformers==4.57.3
+transformers==5.16.1
 tokenizers==0.22.1
 safetensors==0.7.0
 huggingface-hub==0.36.0
