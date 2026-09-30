@@ -99,6 +99,8 @@ remain evidence, not readiness claims for this assistant.
   the round-1 recipe. Then compare a committee of members grown from disjoint
   thirds with one small module on the whole pool. The candidate enters the third
   attempt only if it loses no parent success on opened data.
+  The first collection attempt stopped at verification because growth splits
+  were not accepted as training goals ($7.01); a second attempt fixes only that.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

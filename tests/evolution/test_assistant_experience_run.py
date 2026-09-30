@@ -441,8 +441,18 @@ def test_growth_collection_reverifies_without_replay_and_the_pool_checks_pinned_
 
     tokenizer, plan, home = setup
     home.mkdir()
+    grown = [data.make_case('train2', 'copy', 0), data.make_case('train2', 'latest', 1)]
+
+    class Growth(ScriptedBatcher):
+        def respond(self, messages, tools):
+            first = next(m['content'] for m in messages if m['role'] == 'user')
+            case = next(c for c in grown if c['turns'][0]['user'] == first)
+            return reply(reference_texts(case)[sum(m['role'] == 'assistant' for m in messages)])
+
+    monkeypatch.setattr(run.rollout, 'Batcher', Growth)
+    monkeypatch.setattr(run, 'split_cases', lambda plan, split: grown if split == 'train2' else CASES)
     rows, report = run.collect(tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home, split='train2')
-    assert report['summary']['cases'] == len(CASES)
+    assert report['summary']['cases'] == len(grown) and len(rows) == len(grown) and not report['coached_cases']
     pinned = {name: sha256(home / name) for name in run.GROWTH_FILES}
     again = home / 'again'
     again.mkdir()

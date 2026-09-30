@@ -61,5 +61,14 @@
     "path": "config/experiments/assistant-experience-study-report.json",
     "sha256": "cb1f72802cac763330159f38b33491af47666f07aac297ac388fdd12842d3d4a"
   },
-  "budget_scope": "One GPU host per growth collection (L40S preferred, A10G fallback), two in parallel: parent rollouts on 256 fresh training cases each, verification and selection, no training. Eight-hour expiry and $21 worst-case allowance per host within the $1,000 ceiling. No evaluation data."
+  "budget_scope": "One GPU host per growth collection (L40S preferred, A10G fallback), two in parallel: parent rollouts on 256 fresh training cases each, verification and selection, no training. Eight-hour expiry and $21 worst-case allowance per host within the $1,000 ceiling. No evaluation data.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-30T03:57:42Z",
+      "commit": "8d6ee95fea7d66b71a4dc02f5432a21295c9c249",
+      "report": "config/experiments/assistant-experience-growth-collection-report.json",
+      "report_sha256": "a9ef3630510e50185fc39a8203bb2a6d02dda1a04482d0bc622d5e982912b03a",
+      "outcome": "Both collections stopped at verification after their uncoached rollouts: growth splits were not accepted as training goals; nothing kept. Three train3 launches found no GPU capacity first. All hosts retired ($7.01)."
+    }
+  ]
 }

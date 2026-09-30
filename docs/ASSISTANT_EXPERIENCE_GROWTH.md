@@ -73,3 +73,21 @@ Resources: two collection hosts and one study host, each with an eight-hour
 expiry and a $21 worst-case allowance, under the
 [resource contract](../config/experiments/assistant-experience-growth-resources.json).
 About $15 is expected in total. One attempt.
+
+## First collection attempt: stopped at verification
+
+Both collection hosts finished their 2,048 uncoached rollouts, then stopped at
+the first verification step
+([report](../config/experiments/assistant-experience-growth-collection-report.json)).
+The experience module accepted trajectories only from the split named `train`,
+and the declaration's tests had substituted `train` cases for the growth split.
+Rollouts are written only after verification, so nothing was kept. Three
+earlier `train3` launches found no GPU capacity and started no instance. All
+hosts were retired ($7.01).
+
+## Amendment for the second collection attempt
+
+Declared on September 30, 2026, after the first attempt and before the second.
+The experience module now accepts the two growth splits as training goals. A
+test runs real `train2` cases through collection and re-verification, and it
+fails without this change. Everything else is unchanged. One attempt.

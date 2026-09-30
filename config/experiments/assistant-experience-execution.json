@@ -89,10 +89,10 @@
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
     "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd",
-    "config/experiments/assistant-experience-growth.json": "d3f660e4eb82c47356cd555696ea90ee3c3bdecf7ee32ee7ef27bc816681aa3a",
+    "config/experiments/assistant-experience-growth.json": "28722973d9d33aa07a6452f5ec01b54e176b34c6c2c8346f83e82b467ace28e5",
     "config/experiments/assistant-workflow-data-growth.json": "23f57513919216e1a063f7f06f434cd6b4528f825d03ca68a876079ea13d8716",
-    "config/experiments/assistant-experience-growth-resources.json": "10c4b5365a5a8e0fca6cd9a56fa7d542d634ea5ce0e15659d9775b6c15dbf2c1",
-    "docs/ASSISTANT_EXPERIENCE_GROWTH.md": "b8455666191b0cef092a4e2e564b4602836c1f0346096bde5145fcce0c7e65dc"
+    "config/experiments/assistant-experience-growth-resources.json": "df396e0ac418f27502219be45054d0b52c2f6893ac27547bd6be46d24c058718",
+    "docs/ASSISTANT_EXPERIENCE_GROWTH.md": "9a63cf69936929bb56ed44e87ec717e2dca322c121fd9c9ff7d5fca67142bf1f"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",

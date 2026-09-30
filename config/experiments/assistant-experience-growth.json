@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-growth/1",
-  "status": "Declared on September 29, 2026, after the methodology study carried no method forward and before any growth rollout. Authorized by the project owner.",
+  "status": "Declared on September 29, 2026, after the methodology study carried no method forward and before any growth rollout. Authorized by the project owner. Amended on September 30, 2026 for a second collection attempt after the first stopped at verification: growth splits are now accepted as training goals, and nothing else changes.",
   "question": "With about three times the verified experience, does a consensus of modules grown from disjoint thirds score at least as high as one small module trained on the whole pool, and lose no parent success?",
   "data": "config/experiments/assistant-workflow-data-growth.json",
   "collection": {
@@ -17,7 +17,8 @@
       "train2": 27093010,
       "train3": 27093011
     },
-    "hosts": "One GPU host per split, in parallel. No training on these hosts."
+    "hosts": "One GPU host per split, in parallel. No training on these hosts.",
+    "attempt": 2
   },
   "pool": "Every verified sequence and preference of the methodology study (740 sequences, 256 replay items, 54 pairs) plus the trajectories of both growth collections, each re-verified from its pinned rollouts.",
   "members": 3,

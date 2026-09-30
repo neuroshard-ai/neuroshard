@@ -10,10 +10,11 @@ import copy
 import json
 
 from neuroshard.evolution import assistant_workflow as workflow
+from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution import assistant_workspace as sandbox
 from neuroshard.evolution.modular_reference_execution import identity
 
-TRAINING_SPLITS = ('train',)
+TRAINING_SPLITS = ('train', *data.GROWTH)
 
 
 def coached(policy, card):
