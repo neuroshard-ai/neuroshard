@@ -34,4 +34,4 @@ Sampled integration success rates: small 95.3%, update 93.8%, parent 52.3%.
 ## Resources
 
 One GPU allocation, retired with nothing remaining ($2.25). With the two
-collections ($9.04), compositional practice cost $11.29.
+collections ($9.04), compositional practice cost $11.28.
