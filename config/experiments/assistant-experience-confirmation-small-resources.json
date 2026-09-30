@@ -35,11 +35,11 @@
       "small-checkpoint/manifest.json",
       "small-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 67108864
+    "maximum_bytes": 3945922
   },
   "prior_resources": {
     "path": "config/experiments/assistant-experience-development-round4-report.json",
     "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6"
   },
-  "budget_scope": "A2 third-attempt candidate: the small module grown on the whole pool, served unrouted under the prefix cache from pinned growth-study checkpoints. One CPU host per run (the latency check on opened development cases, then the sealed third confirmation), a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance per run."
+  "budget_scope": "Development diagnostic of the compositional study's small arm: served unrouted under the prefix cache on the 24 opened development cases with full transcripts and episode latency. One CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. No sealed data."
 }

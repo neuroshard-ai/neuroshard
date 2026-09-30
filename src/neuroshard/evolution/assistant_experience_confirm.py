@@ -64,6 +64,14 @@ def verify_growth_arms(directory, pinned):
             raise ValueError(f'{name} checkpoint differs from the pinned growth study')
 
 
+def system_arms(system, execution):
+    """The pinned arms one unrouted system serves: its own arm, or every committee member."""
+    study = read(ROOT / execution.get('arms_plan', GROWTH_PLAN))
+    names = ([name for name, arm in study['arms'].items() if arm.get('member') is not None] if system == 'committee'
+             else [system])
+    return {name: execution['arms'][name] for name in names}
+
+
 def growth_spec(plan, name, arms_plan=GROWTH_PLAN):
     """The architecture an arm was trained with under the study contract ``arms_plan``."""
     from neuroshard.evolution import assistant_experience_run as accelerator
@@ -182,7 +190,7 @@ def worker(request_path):
         parent, _ = reference.load_model(directory, 'baseline')
         if system != 'parent' and execution.get('serving') == 'unrouted':
             arms = ROOT / development.UPLOADED
-            verify_growth_arms(arms, execution['arms'])
+            verify_growth_arms(arms, system_arms(system, execution))
             reply['episodes'], loaded = unrouted_episodes(system, parent, tokenizer, plan, policy, cases, arms,
                                                           execution.get('arms_plan', GROWTH_PLAN))
             reply.update(loaded, serving='unrouted prefix-cache')
@@ -236,7 +244,7 @@ def run(home, models, system):
     try:
         opened(execution)
         if system != 'parent' and execution.get('serving') == 'unrouted':
-            verify_growth_arms(ROOT / development.UPLOADED, execution['arms'])
+            verify_growth_arms(ROOT / development.UPLOADED, system_arms(system, execution))
         elif system != 'parent':
             development.verify_arms(ROOT / development.UPLOADED, execution['arms'])
         prepared = launch(home, models, binding, 'baseline', 'prepare', execution['prepare_seconds'],

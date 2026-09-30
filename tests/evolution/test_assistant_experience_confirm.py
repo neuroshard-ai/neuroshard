@@ -124,12 +124,23 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
     for name, digest in execution['contracts'].items():
         assert sha256(ROOT / name) == digest
     assert set(execution['contracts']) <= set(execution['sources'])
-    report = read(ROOT / execution['development_report']['path'])
-    assert report['development_passed'] and report['serving'] == execution['serving'] == 'prefix-cache'
-    trained = read(ROOT / f"config/experiments/assistant-experience-round{report['round']}-report.json")
-    assert execution['arms'] == {**{arm: {'trainable_sha256': trained['training'][arm]['trainable_sha256']}
-                                    for arm in ('update', 'addition')},
-                                 'integration_sha256': trained['integration']['integration_sha256']}
+    if execution.get('serving') == 'unrouted':
+        study = read(ROOT / execution['arms_plan'])
+        trained = read(ROOT / execution['arms_plan'].replace('.json', '-report.json'))
+        assert execution['candidate'] in study['arms'] and 'update' in execution['arms']
+        assert execution['arms'] == {arm: {'trainable_sha256': trained['training'][arm]['trainable_sha256']}
+                                     for arm in execution['arms']}
+        assert {execution['arms_plan'], execution['arms_plan'].replace('.json', '-report.json')} <= set(execution['contracts'])
+        for arm in execution['arms']:
+            resources = read(ROOT / f'config/experiments/assistant-experience-confirmation-{arm}-resources.json')
+            assert set(resources['upload']['files']) == {f'{arm}-checkpoint/manifest.json', f'{arm}-checkpoint/trainable.safetensors'}
+    else:
+        report = read(ROOT / execution['development_report']['path'])
+        assert report['development_passed'] and report['serving'] == execution['serving'] == 'prefix-cache'
+        trained = read(ROOT / f"config/experiments/assistant-experience-round{report['round']}-report.json")
+        assert execution['arms'] == {**{arm: {'trainable_sha256': trained['training'][arm]['trainable_sha256']}
+                                        for arm in ('update', 'addition')},
+                                     'integration_sha256': trained['integration']['integration_sha256']}
     baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
     probe = ('import os, sys; import neuroshard.evolution.assistant_experience_confirm; '
@@ -144,8 +155,8 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
     hours = read(ROOT / 'config/experiments/assistant-experience-confirmation-parent-resources.json')['hours']
     assert execution['prepare_seconds'] + execution['worker_seconds'] + 1800 <= hours * 3600
     gate = read(ROOT / 'config/experiments/assistant-experience-learning.json')[execution.get('gate', 'confirmation_gate')]
-    assert len(confirm.opened(execution)) == gate['cases']
-    if execution.get('gate') == 'confirmation2_gate':
+    assert len(confirm.opened(execution)) == (24 if execution['split'] == 'development' else gate['cases'])
+    if execution.get('gate') == 'confirmation2_gate' and execution['split'] != 'development':
         assert execution['parent_serving'] == 'prefix-cache' and execution['data'] == gate['data']
         assert set(execution['development_report']['requires']) == {'development_passed', 'development_and_a1_passed'}
 
@@ -177,6 +188,15 @@ def test_unrouted_growth_systems_serve_one_arm_or_the_committee_from_pinned_chec
                                        'schedule_sha256': '', 'losses': [0.0]}, {})
         pinned[name] = {'trainable_sha256': manifest['trainable_sha256']}
     confirm.verify_growth_arms(arms, pinned)
+    execution = {'arms': pinned}
+    assert confirm.system_arms('small', execution) == {'small': pinned['small']}
+    assert set(confirm.system_arms('committee', execution)) == {'member-0', 'member-1', 'member-2'}
+    only_small = tmp_path / 'only-small'
+    import shutil
+    shutil.copytree(arms / 'small-checkpoint', only_small / 'small-checkpoint')
+    confirm.verify_growth_arms(only_small, confirm.system_arms('small', execution))
+    with pytest.raises(FileNotFoundError):
+        confirm.verify_growth_arms(only_small, pinned)
     with pytest.raises(ValueError, match='pinned growth study'):
         confirm.verify_growth_arms(arms, {**pinned, 'small': {'trainable_sha256': 'x'}})
     cases = [data.make_case('development', 'copy', 0)]

@@ -55,14 +55,13 @@
   "memory_bytes": 68719476736,
   "arms": {
     "update": {
-      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
+      "trainable_sha256": "3738bd941147a4cf73f734782b646df4e317415c02f0d20b41a682fac00d84cb"
     },
-    "addition": {
-      "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c"
-    },
-    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
+    "small": {
+      "trainable_sha256": "43d9b2fd1d17f11f76420b73f6188e6d85b59a41e2325648e749495e705a8e41"
+    }
   },
-  "serving": "prefix-cache",
+  "serving": "unrouted",
   "development_report": {
     "path": "config/experiments/assistant-experience-development-round4-report.json",
     "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
@@ -82,9 +81,13 @@
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
     "config/experiments/assistant-experience-development-round4-report.json": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
     "config/experiments/assistant-experience-confirmation-parent-resources.json": "6794467de0cee9445cc2c2dbde8e0b2f4aa2d35669c3c82784268d6dbe74c2f7",
-    "config/experiments/assistant-experience-confirmation-update-resources.json": "0b60de4ec3e49ea9eb8b4248f0bbf41c88119d99acfdf925d33f96b61efc8a06",
+    "config/experiments/assistant-experience-confirmation-update-resources.json": "03a0ed58671a5dfd2c48486be56ded96533df766af63ca94a60145e91158736a",
     "config/experiments/assistant-experience-confirmation-addition-resources.json": "da4a761d425b35900e2a4df288f323b56485ecf8080340ff1e338aa9e85280e9",
-    "config/experiments/assistant-workflow-data-confirmation2.json": "1b341dd20087389812dd0a3ed50dba17d3528a8a7b52aa4d815a3039a038c1f3"
+    "config/experiments/assistant-workflow-data-confirmation2.json": "1b341dd20087389812dd0a3ed50dba17d3528a8a7b52aa4d815a3039a038c1f3",
+    "config/experiments/assistant-experience-compose.json": "1b2cd591e7d9ee6778e0d7eae1baca0af2ae34899ed88124bfefe914e625182f",
+    "config/experiments/assistant-experience-compose-report.json": "78c334ea8187781f9ea52b2dfa3c32239ea00381ba0e7570e7de81e05885a39d",
+    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md": "06d5316aebced8c8e9fc84133211fe765592e36c056d5d9c5f6743f3c784dcc5",
+    "config/experiments/assistant-experience-confirmation-small-resources.json": "b9088a3d3fe93266983ffcf25b6ec91fad80d7d1aff213404de3b9219ecc827f"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -125,17 +128,24 @@
     "src/neuroshard/evolution/modular_reference_execution.py",
     "src/neuroshard/evolution/modular_tools.py",
     "src/neuroshard/version.py",
+    "config/experiments/assistant-experience-compose.json",
+    "config/experiments/assistant-experience-compose-report.json",
+    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md",
+    "src/neuroshard/evolution/assistant_committee.py",
+    "config/experiments/assistant-experience-confirmation-small-resources.json",
     "scripts/run_assistant_experience_confirmation.py",
     "scripts/modular_reference_cloud.py"
   ],
   "attempts": 1,
   "training_authorized": false,
   "gpu_launch_authorized": false,
-  "execution": "Three hosts, one system each, all under the declared prefix cache: the parent control, and the update and addition systems with per-episode routing. 192 fresh sealed confirmation episodes, once.",
-  "interpretation": "The decisive fresh test of A2 for this capability, second attempt. The first confirmation stays failed. A pass is not native promotion or checklist credit for other capabilities.",
-  "split": "confirmation2",
-  "data": "config/experiments/assistant-workflow-data-confirmation2.json",
+  "execution": "Two hosts, one system each: the update control and the small module from the compositional study, served unrouted under the prefix cache on the 24 opened development cases, with full transcripts and episode latency. No parent host: the canonical parent result is the reference.",
+  "interpretation": "Development diagnostic before any third attempt: how the small module handles corrections with an added instruction it never saw combined that way, and the CPU latency of the unrouted serving path. No gate and no credit; the third confirmation split stays sealed.",
+  "split": "development",
   "gate": "confirmation2_gate",
   "parent_serving": "prefix-cache",
-  "round": 4
+  "round": "compose",
+  "phase": "diagnostic",
+  "arms_plan": "config/experiments/assistant-experience-compose.json",
+  "candidate": "small"
 }
