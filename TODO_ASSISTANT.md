@@ -117,11 +117,16 @@ remain evidence, not readiness claims for this assistant.
   attempt](docs/ASSISTANT_EXPERIENCE_COMPOSE_RESULTS.md) ($2.25): the small module scored 73 (update 77)
   and lost 3 parent successes, all development cases whose correction adds
   "move the resulting due date one calendar day later".
-- [ ] [Development diagnostic](docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md): serve the
+- [x] [Development diagnostic](docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md): serve the
   compositional study's update and small module unrouted on the 24 opened
   development cases on the canonical CPU hosts, keeping full transcripts, to see
   how the small module fails the added instruction and to measure the latency of
   the serving path a third attempt would use. No gate; the split stays sealed.
+  [Result](docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC_RESULTS.md) ($1.07): latency passes (p95 98.5 s,
+  1.02x the update). In every failed latest case the module applies the review
+  interval twice, starting from start plus interval; it does follow the added
+  instruction. A check for dates never seen in the conversation flags 3 of 8
+  failures and none of 35 successes.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

@@ -1,0 +1,532 @@
+{
+  "format": "neuroshard-assistant-experience-diagnostic-report/1",
+  "commit": "16d2bad65c5d5949d7cbd227e58d64600da2fd52",
+  "latency": {
+    "passed": true,
+    "checks": {
+      "p95": true,
+      "p95_ratio": true
+    },
+    "p95_seconds": {
+      "update": 96.61194640000008,
+      "small": 98.533073575
+    },
+    "candidate": "small",
+    "outcomes_vs_canonical_parent": {
+      "update": {
+        "correct": 19,
+        "gained": [
+          "workflow-0a46caf718a9",
+          "workflow-13de433c562f",
+          "workflow-21c0be04a7be",
+          "workflow-22e0b95f5781",
+          "workflow-5b541f25dc67",
+          "workflow-9e59abaad961",
+          "workflow-c5a251cb9186",
+          "workflow-cceb5a621834",
+          "workflow-e47fa617df9c",
+          "workflow-f4f40d77e7cd"
+        ],
+        "lost": [],
+        "net": 10
+      },
+      "small": {
+        "correct": 16,
+        "gained": [
+          "workflow-0a46caf718a9",
+          "workflow-13de433c562f",
+          "workflow-21c0be04a7be",
+          "workflow-22e0b95f5781",
+          "workflow-5b541f25dc67",
+          "workflow-9e59abaad961",
+          "workflow-c5a251cb9186",
+          "workflow-cceb5a621834",
+          "workflow-e47fa617df9c",
+          "workflow-f4f40d77e7cd"
+        ],
+        "lost": [
+          "workflow-1124e7a2f25c",
+          "workflow-c6b1500447f3",
+          "workflow-fddb97d8bc7d"
+        ],
+        "net": 7
+      }
+    },
+    "parent_correct": 9
+  },
+  "outcomes": {
+    "update": {
+      "workflow-842f73726ac2": false,
+      "workflow-e47fa617df9c": true,
+      "workflow-5512bfdcbf01": false,
+      "workflow-fddb97d8bc7d": true,
+      "workflow-bd845e98b603": true,
+      "workflow-cdda343cccd8": true,
+      "workflow-1124e7a2f25c": true,
+      "workflow-5b59fbf07de4": true,
+      "workflow-c6b1500447f3": true,
+      "workflow-c5a251cb9186": true,
+      "workflow-901496964dce": true,
+      "workflow-705b57ba50cb": false,
+      "workflow-614a08aecd66": true,
+      "workflow-9e59abaad961": true,
+      "workflow-13de433c562f": true,
+      "workflow-bf78a2b7a3ee": false,
+      "workflow-0a46caf718a9": true,
+      "workflow-22e0b95f5781": true,
+      "workflow-21c0be04a7be": true,
+      "workflow-f4f40d77e7cd": true,
+      "workflow-5b541f25dc67": true,
+      "workflow-cceb5a621834": true,
+      "workflow-e5a0d5c80f43": true,
+      "workflow-caf22532f0f4": false
+    },
+    "small": {
+      "workflow-842f73726ac2": false,
+      "workflow-e47fa617df9c": true,
+      "workflow-5512bfdcbf01": false,
+      "workflow-fddb97d8bc7d": false,
+      "workflow-bd845e98b603": true,
+      "workflow-cdda343cccd8": true,
+      "workflow-1124e7a2f25c": false,
+      "workflow-5b59fbf07de4": true,
+      "workflow-c6b1500447f3": false,
+      "workflow-c5a251cb9186": true,
+      "workflow-901496964dce": true,
+      "workflow-705b57ba50cb": false,
+      "workflow-614a08aecd66": true,
+      "workflow-9e59abaad961": true,
+      "workflow-13de433c562f": true,
+      "workflow-bf78a2b7a3ee": false,
+      "workflow-0a46caf718a9": true,
+      "workflow-22e0b95f5781": true,
+      "workflow-21c0be04a7be": true,
+      "workflow-f4f40d77e7cd": true,
+      "workflow-5b541f25dc67": true,
+      "workflow-cceb5a621834": true,
+      "workflow-e5a0d5c80f43": true,
+      "workflow-caf22532f0f4": false
+    },
+    "parent": {
+      "workflow-842f73726ac2": false,
+      "workflow-e47fa617df9c": false,
+      "workflow-5512bfdcbf01": false,
+      "workflow-fddb97d8bc7d": true,
+      "workflow-bd845e98b603": true,
+      "workflow-cdda343cccd8": true,
+      "workflow-1124e7a2f25c": true,
+      "workflow-5b59fbf07de4": true,
+      "workflow-c6b1500447f3": true,
+      "workflow-c5a251cb9186": false,
+      "workflow-901496964dce": true,
+      "workflow-705b57ba50cb": false,
+      "workflow-614a08aecd66": true,
+      "workflow-9e59abaad961": false,
+      "workflow-13de433c562f": false,
+      "workflow-bf78a2b7a3ee": false,
+      "workflow-0a46caf718a9": false,
+      "workflow-22e0b95f5781": false,
+      "workflow-21c0be04a7be": false,
+      "workflow-f4f40d77e7cd": false,
+      "workflow-5b541f25dc67": false,
+      "workflow-cceb5a621834": false,
+      "workflow-e5a0d5c80f43": true,
+      "workflow-caf22532f0f4": false
+    }
+  },
+  "small_failures": {
+    "workflow-842f73726ac2": {
+      "family": "scope",
+      "parent_passed": false,
+      "update_passed": false,
+      "correction": "Keep this draft under Cedar 6581 and keep its recipient, but use Cedar 6581 Annex's latest approved plan for the date and quantity instead. Apply the same review-interval and extra-unit rules. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-5512bfdcbf01": {
+      "family": "latest",
+      "parent_passed": false,
+      "update_passed": false,
+      "correction": "Actually use approved revision 1 for this draft instead. Keep the same recipient, review-interval rule, and extra quantity. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": null,
+          "wrong_fields": {
+            "due_date": {
+              "expected": "2027-06-08",
+              "saved": "2027-06-13"
+            }
+          }
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": null,
+          "wrong_fields": {
+            "due_date": {
+              "expected": "2027-06-08",
+              "saved": "2027-06-13"
+            }
+          }
+        }
+      ]
+    },
+    "workflow-fddb97d8bc7d": {
+      "family": "latest",
+      "parent_passed": true,
+      "update_passed": true,
+      "correction": "Actually use approved revision 1 for this draft instead. Keep the same recipient, review-interval rule, and extra quantity. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": null,
+          "wrong_fields": {
+            "due_date": {
+              "expected": "2027-01-21",
+              "saved": "2027-01-28"
+            }
+          }
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-1124e7a2f25c": {
+      "family": "latest",
+      "parent_passed": true,
+      "update_passed": true,
+      "correction": "Actually use approved revision 1 for this draft instead. Keep the same recipient, review-interval rule, and extra quantity. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": null,
+          "wrong_fields": {
+            "due_date": {
+              "expected": "2027-05-16",
+              "saved": "2027-05-20"
+            }
+          }
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-c6b1500447f3": {
+      "family": "latest",
+      "parent_passed": true,
+      "update_passed": true,
+      "correction": "Actually use approved revision 1 for this draft instead. Keep the same recipient, review-interval rule, and extra quantity. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": null,
+          "wrong_fields": {
+            "due_date": {
+              "expected": "2027-01-08",
+              "saved": "2027-01-11"
+            }
+          }
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-705b57ba50cb": {
+      "family": "scope",
+      "parent_passed": false,
+      "update_passed": false,
+      "correction": "Keep this draft under Cedar 6580 and keep its recipient, but use Cedar 6580 Annex's latest approved plan for the date and quantity instead. Apply the same review-interval and extra-unit rules. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-bf78a2b7a3ee": {
+      "family": "scope",
+      "parent_passed": false,
+      "update_passed": false,
+      "correction": "Keep this draft under Willow 6582 and keep its recipient, but use Willow 6582 Annex's latest approved plan for the date and quantity instead. Apply the same review-interval and extra-unit rules. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ]
+    },
+    "workflow-caf22532f0f4": {
+      "family": "scope",
+      "parent_passed": false,
+      "update_passed": false,
+      "correction": "Keep this draft under Meadow 6583 and keep its recipient, but use Meadow 6583 Annex's latest approved plan for the date and quantity instead. Apply the same review-interval and extra-unit rules. Also move the resulting due date one calendar day later.",
+      "small": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ],
+      "update": [
+        {
+          "round": 1,
+          "passed": true,
+          "failure": null,
+          "wrong_fields": {}
+        },
+        {
+          "round": 2,
+          "passed": false,
+          "failure": "model-turn budget exhausted",
+          "wrong_fields": {}
+        }
+      ]
+    }
+  },
+  "wall_seconds": {
+    "update": 1615.86978946,
+    "small": 1656.690915421
+  },
+  "resources_finished": {
+    "update": {
+      "finished_utc": "2026-09-30T22:43:00.690627+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-02f814b8f4353c7a5"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 1808.977193,
+      "conservative_compute_usd": 0.531839294742,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    },
+    "small": {
+      "finished_utc": "2026-09-30T22:43:13.927898+00:00",
+      "remaining_instances": [],
+      "remaining_volumes": [],
+      "security_group_retired": true,
+      "instance_ids": [
+        "i-0518e8ce36795cc2a"
+      ],
+      "instance_type": "r7i.4xlarge",
+      "conservative_instance_seconds": 1822.656556,
+      "conservative_compute_usd": 0.535861027464,
+      "storage_and_transfer_invoice_not_in_compute_total": true
+    }
+  },
+  "evidence_sha256": {
+    "update": "7f13525ea0e2c37a32eb68c8ad6f5094d2d8f94bff5b7a04c2a9f76675719fa2",
+    "small": "b33aab5c338de0ed2e3e802e2d0789a1f932b4477364914e759dfdab267c8ffd"
+  },
+  "checklist_credit": false,
+  "grounding_check": {
+    "rule": "A date argument of a tool call is ungrounded if that exact date appears nowhere earlier in the conversation.",
+    "flagged": {
+      "small": {
+        "workflow-5512bfdcbf01": {
+          "passed": false,
+          "ungrounded": [
+            [
+              "shift_date",
+              "start_date",
+              "2027-06-07"
+            ]
+          ]
+        },
+        "workflow-1124e7a2f25c": {
+          "passed": false,
+          "ungrounded": [
+            [
+              "shift_date",
+              "start_date",
+              "2027-05-15"
+            ]
+          ]
+        },
+        "workflow-c6b1500447f3": {
+          "passed": false,
+          "ungrounded": [
+            [
+              "shift_date",
+              "start_date",
+              "2027-01-07"
+            ]
+          ]
+        }
+      },
+      "update": {
+        "workflow-5512bfdcbf01": {
+          "passed": false,
+          "ungrounded": [
+            [
+              "shift_date",
+              "start_date",
+              "2027-06-07"
+            ]
+          ]
+        }
+      }
+    },
+    "finding": "Flags 3 of the small module's 8 failures and none of the 35 successful episodes of either system. It misses workflow-fddb97d8bc7d, where the miscomputed start date equals the other revision's start date."
+  },
+  "diagnosis": {
+    "latest": "In all four failed latest cases the small module reads revision 1, computes the total and applies the added day correctly, but starts the review-interval shift from start plus interval, applying the interval twice. The update control shifts from the start date.",
+    "scope": "The four failed scope cases exhaust the model-turn budget; the parent and the update fail them too.",
+    "lost_parent_successes": [
+      "workflow-1124e7a2f25c",
+      "workflow-c6b1500447f3",
+      "workflow-fddb97d8bc7d"
+    ]
+  }
+}
