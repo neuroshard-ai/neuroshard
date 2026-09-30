@@ -1,0 +1,64 @@
+{
+  "format": "neuroshard-assistant-experience-growth/1",
+  "status": "Declared on September 29, 2026, after the methodology study carried no method forward and before any growth rollout. Authorized by the project owner.",
+  "question": "With about three times the verified experience, does a consensus of modules grown from disjoint thirds score at least as high as one small module trained on the whole pool, and lose no parent success?",
+  "data": "config/experiments/assistant-workflow-data-growth.json",
+  "collection": {
+    "splits": [
+      "train2",
+      "train3"
+    ],
+    "profiles": {
+      "assistant-experience-growth-train2": "train2",
+      "assistant-experience-growth-train3": "train3"
+    },
+    "recipe": "The round-1 collection unchanged: 8 parent samples per case at temperature 0.8 and top-p 0.95, coached retries for cases without a verified trajectory, the near-policy ceiling of each collection, and at most 4 distinct trajectories per case.",
+    "seeds": {
+      "train2": 27093010,
+      "train3": 27093011
+    },
+    "hosts": "One GPU host per split, in parallel. No training on these hosts."
+  },
+  "pool": "Every verified sequence and preference of the methodology study (740 sequences, 256 replay items, 54 pairs) plus the trajectories of both growth collections, each re-verified from its pinned rollouts.",
+  "members": 3,
+  "membership": "A training case belongs to member int(sha256(case_id)[:8], 16) mod 3, over all three training splits.",
+  "arms": {
+    "update": {
+      "type": "update"
+    },
+    "small": {
+      "type": "addition"
+    },
+    "member-0": {
+      "type": "addition",
+      "member": 0,
+      "spec": {
+        "seed": 27093036
+      }
+    },
+    "member-1": {
+      "type": "addition",
+      "member": 1,
+      "spec": {
+        "seed": 27093037
+      }
+    },
+    "member-2": {
+      "type": "addition",
+      "member": 2,
+      "spec": {
+        "seed": 27093038
+      }
+    }
+  },
+  "first_phase_steps": "one-pass",
+  "first_phase_rule": "First-phase steps = ceil(experience sequences / 6): one pass over each arm's experience at six experience sequences per update. Learning rates, warm-up and every other setting as in round 1. The preference phase keeps the round-4 settings.",
+  "committee": "At every step the three members and the parent each propose the next message. The committee takes the action with the most votes (a canonical tool call, finish, or an invalid output that agrees with nothing); a tie that includes the parent goes to the parent.",
+  "evaluation": "Parent, every arm and the committee on the 64 integration cases (one greedy and two sampled episodes) and the 24 opened development cases (greedy), on the GPU.",
+  "integration_samples": 2,
+  "seed": 27093960,
+  "decision": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits). The candidate is the committee if it scores at least as high as the small module, otherwise the small module. The third attempt is declared with the candidate only if it lost no parent success on either split. Otherwise there is no third attempt and the result is reported.",
+  "third_attempt": "Needs its own declaration on the frozen confirmation3 split under the second confirmation's gate. Its serving must meet that gate's latency limits on the canonical CPU runtime, measured on opened development cases before the split opens.",
+  "credit": "None: already-opened data decides only whether, and with which method, the third attempt runs.",
+  "budget": "Two collection hosts and one study host, each at most 8 hours and $21 worst case; about $15 expected in total."
+}

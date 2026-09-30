@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Methodology study after the second confirmation failed; user-authorized within the $1,000 ceiling.",
+  "status": "Methodology study completed. Growth collection declared after it carried no method forward: two parallel GPU hosts collect verified experience on fresh training splits; user-authorized within the $1,000 ceiling.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -81,14 +81,18 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
-    "config/experiments/assistant-experience-resources.json": "c2b0caa3e5dac496811391e1afe4de7a1d46c6707cba7bdd1deffce9a57e3cfe",
+    "config/experiments/assistant-experience-resources.json": "5a71ae320b807dcb73a8f19a33043ca74f9ec8c4cee0d1f9beb891b892be49d2",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
-    "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
+    "config/experiments/assistant-workflow-canonical-report.json": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd",
+    "config/experiments/assistant-experience-growth.json": "d3f660e4eb82c47356cd555696ea90ee3c3bdecf7ee32ee7ef27bc816681aa3a",
+    "config/experiments/assistant-workflow-data-growth.json": "23f57513919216e1a063f7f06f434cd6b4528f825d03ca68a876079ea13d8716",
+    "config/experiments/assistant-experience-growth-resources.json": "10c4b5365a5a8e0fca6cd9a56fa7d542d634ea5ce0e15659d9775b6c15dbf2c1",
+    "docs/ASSISTANT_EXPERIENCE_GROWTH.md": "b8455666191b0cef092a4e2e564b4602836c1f0346096bde5145fcce0c7e65dc"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -100,6 +104,10 @@
     "docs/assistant-experience-requirements.txt",
     "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
     "config/experiments/assistant-workflow-canonical-report.json",
+    "config/experiments/assistant-experience-growth.json",
+    "config/experiments/assistant-workflow-data-growth.json",
+    "config/experiments/assistant-experience-growth-resources.json",
+    "docs/ASSISTANT_EXPERIENCE_GROWTH.md",
     "config/experiments/assistant-experience-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/version.py",
@@ -159,5 +167,8 @@
       "repairs-round4.jsonl.gz": "608c3cbb1111021fd0599957e32b2fbf0175b426191925e3e06c32da1511d7c6"
     },
     "rule": "Rebuild every verified sequence and preference of rounds 1-4 from pinned files, train the six declared arms from the parent, evaluate every system and the committee on integration and opened development cases."
+  },
+  "growth_collection": {
+    "rule": "A host whose profile the growth contract lists collects its split with the round-1 recipe and its declared seed, verifies and selects, and trains nothing."
   }
 }

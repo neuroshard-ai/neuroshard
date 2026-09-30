@@ -34,12 +34,15 @@ SCRIPT = 'scripts/run_assistant_experience.py'
 PROFILE = 'assistant-experience-gpu'
 UPLOADED = '.experience'
 COLLECTION_FILES = ('experience.json', 'rollouts.jsonl.gz', 'trajectories.jsonl.gz', 'replay.json', 'replay.jsonl.gz')
+GROWTH_FILES = COLLECTION_FILES[:3]
+GROWTH_PLAN = 'config/experiments/assistant-experience-growth.json'
 
 
 def split_cases(plan, split):
-    if split not in ('train', 'integration'):
+    if split not in ('train', 'integration', *data.GROWTH):
         raise ValueError('accelerator phases may not access development or confirmation goals')
-    manifest = read(ROOT / plan['data'])['splits'][split]
+    manifests = read(ROOT / (read(ROOT / GROWTH_PLAN)['data'] if split in data.GROWTH else plan['data']))['splits']
+    manifest = manifests[split]
     cases = data.cases(split)
     if identity(cases) != manifest['sha256'] or [c['id'] for c in cases] != manifest['case_ids']:
         raise ValueError('workflow data differs from frozen split')
@@ -79,11 +82,11 @@ def sampling(policy, execution, temperature):
     return {**policy['generation'], 'temperature': temperature, 'top_p': execution['top_p']}
 
 
-def collect(model, tokenizer, plan, policy, execution, home):
+def collect(model, tokenizer, plan, policy, execution, home, split='train'):
     """Uncoached rollouts, coached retries where needed, parent likelihood and selection."""
     from neuroshard.evolution import assistant_experience_train as trainer
 
-    cases = split_cases(plan, 'train')
+    cases = split_cases(plan, split)
     by_id = {case['id']: case for case in cases}
     samples = execution['samples_per_case']
     card_policy = experience.coached(policy, plan['coaching']['card'])
@@ -148,11 +151,12 @@ def read_rows(path):
         return [json.loads(line) for line in handle]
 
 
-def load_collection(directory, pinned, tokenizer, plan, policy, execution, home):
+def load_collection(directory, pinned, tokenizer, plan, policy, execution, home, split='train'):
     """Re-verify experience pinned from an earlier collection and encode it; no new rollouts.
 
     Every trajectory is rebuilt from its recorded rollout through the frozen scorer,
-    so the files are evidence to re-check, not trusted training data.
+    so the files are evidence to re-check, not trusted training data. A growth
+    collection has no replay files and returns no replay rows.
     """
     from neuroshard.evolution import assistant_experience_train as trainer
 
@@ -164,7 +168,7 @@ def load_collection(directory, pinned, tokenizer, plan, policy, execution, home)
     rollouts, chosen = read_rows(directory / 'rollouts.jsonl.gz'), read_rows(directory / 'trajectories.jsonl.gz')
     if identity(rollouts) != report['rollouts_sha256'] or identity(chosen) != report['trajectories_sha256']:
         raise ValueError('collected rows differ from the collection report')
-    cases = {case['id']: case for case in split_cases(plan, 'train')}
+    cases = {case['id']: case for case in split_cases(plan, split)}
     card_policy = experience.coached(policy, plan['coaching']['card'])
     sources = {(row['case_id'], row['sample'], row['policy_sha256']): row for row in rollouts}
     if len(sources) != len(rollouts):
@@ -185,6 +189,10 @@ def load_collection(directory, pinned, tokenizer, plan, policy, execution, home)
     if (max(per_case.values()) > plan['experience_selection_per_case']
             or len({identity([t['case_id'], experience.assistant_texts(t)]) for t in chosen}) != len(chosen)):
         raise ValueError('collected selection exceeds the per-case cap or repeats a trajectory')
+    if split in data.GROWTH:
+        save(home / f'collection-{split}.json', {'trajectories': len(chosen), 'rollouts': len(rollouts),
+                                                 'cases_with_experience': len(per_case), 'files': pinned}, exclusive=True)
+        return [trainer.encode(tokenizer, t, sandbox.TOOLS) for t in chosen], []
     items = read_rows(directory / 'replay.jsonl.gz')
     if identity(items) != read(directory / 'replay.json')['items_sha256']:
         raise ValueError('replay rows differ from the replay report')
@@ -422,23 +430,51 @@ def study_data(tokenizer, plan, policy, runtime, home, inventory):
     return (list(zip(cases, experience_rows)), replay_rows, list(zip([p['case_id'] for p in pairs], pair_rows)))
 
 
+def growth_data(tokenizer, plan, policy, runtime, home, inventory):
+    """The methodology study's pool plus both growth collections, each trajectory re-verified and tagged with its case."""
+    experience_rows, replay_rows, pairs = study_data(tokenizer, plan, policy, runtime, home, inventory)
+    counts = {}
+    for split in data.GROWTH:
+        directory = ROOT / UPLOADED / split
+        rows, _ = load_collection(directory, inventory['growth']['collections'][split], tokenizer, plan, policy,
+                                  runtime, home, split=split)
+        experience_rows += list(zip([t['case_id'] for t in read_rows(directory / 'trajectories.jsonl.gz')], rows))
+        counts[split] = len(rows)
+    if counts != inventory['growth']['counts']:
+        raise ValueError(f'growth collections differ from their pinned counts: {counts}')
+    return experience_rows, replay_rows, pairs
+
+
 def study_spec(plan, arm):
     """(first-phase spec, preference-phase spec) for one study arm; architecture keys come from the arm."""
     first = {**plan['training'], **arm.get('spec', {})}
     return first, {**first, **plan['goal_guided_repairs']['training'], 'seed': first['seed'] + 1}
 
 
-def study_train(load_parent, plan, execution, experience, replay, pairs, home):
-    """Every study arm with the same two phases: verified experience and replay, then all verified preferences."""
+def one_pass_steps(spec, sequences):
+    """Updates that draw each experience sequence once at the schedule's experience count per update."""
+    import math
+
+    per_update = spec['gradient_accumulation'] - spec['gradient_accumulation'] // (spec['experience_per_replay'] + 1)
+    return math.ceil(sequences / per_update)
+
+
+def study_train(load_parent, plan, execution, experience, replay, pairs, home, study=None):
+    """Every study arm with the same two phases: verified experience and replay, then all verified preferences.
+
+    ``study`` is the declared section, the methodology study by default.
+    """
     from neuroshard.evolution import assistant_experience_train as trainer
 
-    study, manifests = plan['methodology_study'], {}
+    study, manifests = study or plan['methodology_study'], {}
     for name, arm in study['arms'].items():
         member = arm.get('member')
         keep = (lambda case: True) if member is None else (lambda case: committee_member(case, study['members']) == member)
         rows = [row for case, row in experience if keep(case)]
         pair_rows = [row for case, row in pairs if keep(case)]
         first, second = study_spec(plan, arm)
+        if study.get('first_phase_steps') == 'one-pass':
+            first = {**first, 'steps': one_pass_steps(first, len(rows))}
         save(home / 'progress.json', {'phase': f'study-train-{name}', 'unix': time.time()})
         model = load_parent()
         started = time.monotonic()
@@ -448,7 +484,8 @@ def study_train(load_parent, plan, execution, experience, replay, pairs, home):
         roots = {'experience': identity([r['sha256'] for r in rows]), 'replay': identity([r['sha256'] for r in replay]),
                  'pairs': identity([p['sha256'] for p in pair_rows]), 'plan': identity(plan)}
         manifests[name] = {**trainer.checkpoint(home / f'{name}-checkpoint', trainable, receipt, roots),
-                           'sequences': len(rows), 'pairs': len(pair_rows), 'seconds': time.monotonic() - started}
+                           'sequences': len(rows), 'pairs': len(pair_rows), 'first_phase_steps': first['steps'],
+                           'seconds': time.monotonic() - started}
         del model, trainable, receipt
         release_accelerator()
     save(home / 'training.json', manifests, exclusive=True)
@@ -472,12 +509,12 @@ def system_outcomes(make, cases, policy, execution, samples, seed, progress):
     return results
 
 
-def study_evaluate(load_parent, tokenizer, plan, policy, execution, home):
+def study_evaluate(load_parent, tokenizer, plan, policy, execution, home, study=None):
     """Integration and development outcomes of the parent, every arm and the committee of members."""
     from neuroshard.evolution import assistant_committee as committee
     from neuroshard.evolution import assistant_experience_train as trainer
 
-    study = plan['methodology_study']
+    study = study or plan['methodology_study']
     splits = {'integration': (split_cases(plan, 'integration'), study['integration_samples']),
               'development': (data.cases('development'), 0)}
 
@@ -689,7 +726,29 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        if 'study' in execution:
+        growing = request['profile'] in read(ROOT / GROWTH_PLAN)['collection']['profiles']
+        if growing:
+            growth = read(ROOT / GROWTH_PLAN)
+            split = growth['collection']['profiles'][request['profile']]
+            parent = load_parent()
+            _, report = collect(parent, tokenizer, plan, policy, {**parameters, 'seed': growth['collection']['seeds'][split]},
+                                home, split=split)
+            reply['collection'] = {'split': split, **report['summary'], 'near_policy_ceiling': report['near_policy_ceiling']}
+            reply['phases']['collect'] = time.monotonic() - begun
+            del parent
+            release_accelerator()
+        elif 'growth' in execution:
+            growth = read(ROOT / GROWTH_PLAN)
+            experience_rows, replay_rows, pair_rows = growth_data(tokenizer, plan, policy, parameters, home, execution)
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = study_train(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows, home,
+                                            study=growth)
+            reply['phases']['train'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['study'] = study_evaluate(load_parent, tokenizer, plan, policy, parameters, home, study=growth)
+            reply['phases']['evaluate'] = time.monotonic() - begun
+        elif 'study' in execution:
             experience_rows, replay_rows, pair_rows = study_data(tokenizer, plan, policy, parameters, home, execution)
             reply['phases']['verify_collection'] = time.monotonic() - begun
             begun = time.monotonic()
@@ -774,11 +833,12 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        if not {'round2', 'round3', 'round4', 'study'} & set(execution):
+        studying = growing or bool({'growth', 'study'} & set(execution))
+        if not studying and not {'round2', 'round3', 'round4'} & set(execution):
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
             reply['phases']['train'] = time.monotonic() - begun
-        if 'study' not in execution:
+        if not studying:
             begun = time.monotonic()
             gates = integrate(load_parent, tokenizer, plan, policy, parameters, home)
             reply['gates'] = {arm: value['gate'] for arm, value in gates.items()}
@@ -796,13 +856,15 @@ def worker(request_path):
         save(request_path.parent / 'reply.json', reply, exclusive=True)
 
 
-def run(home, models):
+def run(home, models, profile=PROFILE):
     configure()
     source = freeze()
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
     execution = read(ROOT / EXECUTION)
-    binding = {'freeze': source, 'profile': PROFILE, 'plan_sha256': sha256(ROOT / PLAN)}
+    if profile != PROFILE and profile not in read(ROOT / GROWTH_PLAN)['collection']['profiles']:
+        raise ValueError('unknown experience profile')
+    binding = {'freeze': source, 'profile': profile, 'plan_sha256': sha256(ROOT / PLAN)}
     save(home / 'binding.json', binding, exclusive=True)
     result = {'binding': binding, 'execution_completed': False, 'checklist_credit': False,
               'admission_evidence': False, 'confirmation_opened': False}

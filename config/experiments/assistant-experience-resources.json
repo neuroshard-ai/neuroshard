@@ -112,6 +112,11 @@
       "utc": "2026-09-29T15:49:19Z",
       "commit": "8b986409d695c64bb34414de965e30ad68206c24",
       "outcome": "Methodology study stopped at startup: the worker passed runtime parameters instead of the pinned inventory (KeyError: collection) before reading any data ($0.22)."
+    },
+    {
+      "utc": "2026-09-29T23:09:00Z",
+      "commit": "304f97c8b4da9331ff4f5d035b3c5e21f8db6d4a",
+      "outcome": "Methodology study completed: update 74, small 71, large 69, committee 65; neither method carried forward ($5.18)."
     }
   ],
   "upload": {

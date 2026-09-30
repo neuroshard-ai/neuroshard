@@ -94,6 +94,11 @@ remain evidence, not readiness claims for this assistant.
   ($5.18). Scores: update 74, small 71, large 69, committee 65. The committee
   alone lost no parent success, but its members, each trained on a third of the
   experience, solved only 47–56 of 64 integration cases (small 61).
+- [ ] [Grow verified experience](docs/ASSISTANT_EXPERIENCE_GROWTH.md) about
+  threefold on two fresh 256-case training splits, collected in parallel with
+  the round-1 recipe. Then compare a committee of members grown from disjoint
+  thirds with one small module on the whole pool. The candidate enters the third
+  attempt only if it loses no parent success on opened data.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

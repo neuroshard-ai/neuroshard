@@ -24,6 +24,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
                      "assistant-experience-gpu": "config/experiments/assistant-experience-resources.json",
+                     **{f"assistant-experience-growth-{split}": "config/experiments/assistant-experience-growth-resources.json"
+                        for split in ("train2", "train3")},
                      "assistant-experience-development": "config/experiments/assistant-experience-development-resources.json",
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
                         for system in ("parent", "update", "addition")},
@@ -43,6 +45,8 @@ GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
     "assistant-experience-gpu": ("assistant_experience_run", "docs/assistant-experience-requirements.txt"),
+    **{f"assistant-experience-growth-{split}": ("assistant_experience_run", "docs/assistant-experience-requirements.txt")
+       for split in ("train2", "train3")},
     "assistant-experience-development": ("assistant_experience_eval", "docs/granite-reference-requirements.txt"),
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
        for system in ("parent", "update", "addition")},
@@ -58,7 +62,8 @@ GRANITE_PROFILES = {
     "granite-shard-determinism": ("granite_shard_determinism", "docs/granite-reference-requirements.txt"),
     "granite-shard-audit": ("granite_shard_audit", "docs/granite-shard-audit-requirements.txt"),
 }
-GPU_PROFILES = {"assistant-experience-gpu": ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge")}
+GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile in (
+    "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
@@ -79,7 +84,7 @@ def source_freeze(profile):
     if profile == "assistant-workflow-canonical":
         from neuroshard.evolution.assistant_workflow_canonical import committed_sources as canonical_sources
         return canonical_sources()
-    if profile == "assistant-experience-gpu":
+    if profile == "assistant-experience-gpu" or profile.startswith("assistant-experience-growth-"):
         from neuroshard.evolution.assistant_experience_run import committed_sources as experience_sources
         return experience_sources()
     if profile == "assistant-experience-development":
@@ -490,9 +495,9 @@ def remote_command(profile):
     if profile == "assistant-workflow-canonical":
         return [PYTHON, REMOTE + "/scripts/run_assistant_workflow_canonical.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
-    if profile == "assistant-experience-gpu":
+    if profile == "assistant-experience-gpu" or profile.startswith("assistant-experience-growth-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience.py", "run",
-                "--home", STUDY, "--models", REMOTE + "/.models"]
+                "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile == "assistant-experience-development":
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience_development.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]

@@ -389,9 +389,95 @@ def test_study_trains_every_arm_on_its_slice_and_evaluates_the_committee(setup, 
 def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64
-    for split in ('development', 'confirmation'):
+    assert [len(run.split_cases(plan, split)) for split in data.GROWTH] == [256, 256]
+    for split in ('development', 'confirmation', 'confirmation3'):
         with pytest.raises(ValueError, match='may not access'):
             run.split_cases(plan, split)
+
+
+def test_growth_splits_are_frozen_training_cases_disjoint_from_every_other_split():
+    from neuroshard.evolution.modular_reference_execution import identity
+
+    growth = read(ROOT / run.GROWTH_PLAN)
+    manifest = read(ROOT / growth['data'])
+    assert list(manifest['splits']) == list(data.GROWTH) == growth['collection']['splits']
+    assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.GROWTH)
+    for split, frozen in manifest['splits'].items():
+        cases = data.cases(split)
+        assert identity(cases) == frozen['sha256'] and [c['id'] for c in cases] == frozen['case_ids']
+        assert all(sum(c['family'] == f for c in cases) == 32 for f in data.FAMILIES)
+        projects = {t['expected']['project'] for c in cases for t in c['turns']}
+        for other in manifest['disjoint_from'] + [s for s in data.GROWTH if s != split]:
+            earlier = data.cases(other)
+            assert not {c['id'] for c in cases} & {c['id'] for c in earlier}
+            assert not projects & {t['expected']['project'] for c in earlier for t in c['turns']}
+        # Training grammar: the second turn keeps the unchanged fields named, unlike held-out splits.
+        assert any('Keep the date, total and cited source unchanged.' in c['turns'][1]['user']
+                   for c in cases if c['family'] == 'recipient')
+
+
+def test_growth_profiles_run_collection_hosts_with_their_declared_split():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location('growth_cloud', ROOT / 'scripts/modular_reference_cloud.py')
+    cloud = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cloud)
+    growth = read(ROOT / run.GROWTH_PLAN)
+    assert set(growth['collection']['profiles'].values()) == set(data.GROWTH)
+    for profile in growth['collection']['profiles']:
+        assert profile in cloud.GPU_PROFILES and profile not in cloud.UPLOAD_PROFILES
+        assert cloud.remote_command(profile)[-2:] == ['--profile', profile]
+        assert cloud.GRANITE_PROFILES[profile] == cloud.GRANITE_PROFILES[run.PROFILE]
+        resources = cloud.resources(profile)
+        assert resources['purpose'] == 'assistant-experience-growth' and 'upload' not in resources
+    assert len(set(growth['collection']['seeds'].values())) == len(data.GROWTH)
+    execution = read(ROOT / run.EXECUTION)
+    assert 'growth' not in execution
+    assert {run.GROWTH_PLAN, growth['data']} <= set(execution['contracts'])
+
+
+def test_growth_collection_reverifies_without_replay_and_the_pool_checks_pinned_counts(setup, monkeypatch):
+    from neuroshard.evolution.modular_reference_execution import sha256
+
+    tokenizer, plan, home = setup
+    home.mkdir()
+    rows, report = run.collect(tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home, split='train2')
+    assert report['summary']['cases'] == len(CASES)
+    pinned = {name: sha256(home / name) for name in run.GROWTH_FILES}
+    again = home / 'again'
+    again.mkdir()
+    reloaded, replay = run.load_collection(home, pinned, tokenizer, plan, policy(), EXECUTION, again, split='train2')
+    assert reloaded == rows and replay == []
+    assert read(again / 'collection-train2.json')['trajectories'] == len(rows)
+
+    base = ([('old', sequence(tokenizer, 1))], [sequence(tokenizer, 2)], [])
+    monkeypatch.setattr(run, 'study_data', lambda *a: (list(base[0]), base[1], base[2]))
+    monkeypatch.setattr(run, 'load_collection', lambda *a, **k: ([sequence(tokenizer, 3)], []))
+    monkeypatch.setattr(run, 'read_rows', lambda path: [{'case_id': 'grown'}])
+    inventory = {'growth': {'collections': {s: {} for s in data.GROWTH}, 'counts': {s: 1 for s in data.GROWTH}}}
+    experience, replay, pairs = run.growth_data(tokenizer, plan, policy(), EXECUTION, home, inventory)
+    assert [case for case, _ in experience] == ['old', 'grown', 'grown'] and len(replay) == 1
+    with pytest.raises(ValueError, match='pinned counts'):
+        run.growth_data(tokenizer, plan, policy(), EXECUTION, home,
+                        {'growth': {**inventory['growth'], 'counts': {s: 2 for s in data.GROWTH}}})
+
+
+def test_one_pass_first_phase_draws_each_experience_sequence_once(setup):
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = study_plan(plan)
+    growth = {**plan['methodology_study'], 'first_phase_steps': 'one-pass',
+              'arms': {'small': {'type': 'addition'}, 'member-0': {'type': 'addition', 'member': 0}}}
+    slices = {}
+    for index in range(100):
+        slices.setdefault(run.committee_member(f'case-{index}', 3), f'case-{index}')
+    experience = [(slices[i % 3], sequence(tokenizer, i)) for i in range(13)]
+    replay = [sequence(tokenizer, 90)]
+    manifests = run.study_train(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, replay, [], home, study=growth)
+    per_update = SPEC['gradient_accumulation'] - SPEC['gradient_accumulation'] // (SPEC['experience_per_replay'] + 1)
+    assert manifests['small']['first_phase_steps'] == -(-13 // per_update)
+    assert manifests['member-0']['first_phase_steps'] == -(-5 // per_update) and manifests['member-0']['sequences'] == 5
+    assert run.one_pass_steps(read(ROOT / run.PLAN)['training'], 740) == 124
 
 
 def test_collection_coaches_only_unsolved_cases_then_trains_and_fits_gates(setup):
