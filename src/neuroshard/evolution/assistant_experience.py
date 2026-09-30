@@ -14,7 +14,7 @@ from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution import assistant_workspace as sandbox
 from neuroshard.evolution.modular_reference_execution import identity
 
-TRAINING_SPLITS = ('train', *data.GROWTH)
+TRAINING_SPLITS = data.TRAINING
 
 
 def coached(policy, card):

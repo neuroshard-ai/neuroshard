@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Growth collections completed and pinned. The growth study trains the declared arms on the methodology study pool plus both collections and evaluates every system and the committee; user-authorized within the $1,000 ceiling.",
+  "status": "Growth study completed without a qualifying candidate. Compositional collection declared: two parallel GPU hosts collect verified experience on practice splits whose instructions carry one extra operation; user-authorized within the $1,000 ceiling.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -92,7 +92,12 @@
     "config/experiments/assistant-experience-growth.json": "28722973d9d33aa07a6452f5ec01b54e176b34c6c2c8346f83e82b467ace28e5",
     "config/experiments/assistant-workflow-data-growth.json": "23f57513919216e1a063f7f06f434cd6b4528f825d03ca68a876079ea13d8716",
     "config/experiments/assistant-experience-growth-resources.json": "df396e0ac418f27502219be45054d0b52c2f6893ac27547bd6be46d24c058718",
-    "docs/ASSISTANT_EXPERIENCE_GROWTH.md": "a51ef64e5ae0c81f54f4765ea2db682589ca7bc7a8a7dd820a94350534f31d32"
+    "docs/ASSISTANT_EXPERIENCE_GROWTH.md": "a51ef64e5ae0c81f54f4765ea2db682589ca7bc7a8a7dd820a94350534f31d32",
+    "config/experiments/assistant-experience-compose.json": "1b2cd591e7d9ee6778e0d7eae1baca0af2ae34899ed88124bfefe914e625182f",
+    "config/experiments/assistant-workflow-data-compose.json": "f3d175f896bd71fc6b9a23f14b6a7e8d40d4090e0ccbc0f77a30a01d0f38d6e9",
+    "config/experiments/assistant-experience-compose-resources.json": "a54c5b081e268c10bef8bb4b6ec9f8112083354929f2b2d2aacd7a2ce37176df",
+    "docs/ASSISTANT_EXPERIENCE_COMPOSE.md": "caae312b9fb204e02e83974bb898b0910d726879aefbe545803d8460e480d737",
+    "config/experiments/assistant-experience-growth-report.json": "77fe38bf04ea91dd713e5b7288e9734717b6caaced8fd94cda2892673f1b73be"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -108,6 +113,11 @@
     "config/experiments/assistant-workflow-data-growth.json",
     "config/experiments/assistant-experience-growth-resources.json",
     "docs/ASSISTANT_EXPERIENCE_GROWTH.md",
+    "config/experiments/assistant-experience-compose.json",
+    "config/experiments/assistant-workflow-data-compose.json",
+    "config/experiments/assistant-experience-compose-resources.json",
+    "docs/ASSISTANT_EXPERIENCE_COMPOSE.md",
+    "config/experiments/assistant-experience-growth-report.json",
     "config/experiments/assistant-experience-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/version.py",
@@ -190,5 +200,8 @@
       "train3": 672
     },
     "rule": "Re-verify the methodology study pool and both growth collections from pinned files, train the declared growth arms from the parent, and evaluate every system and the committee on integration and opened development cases."
+  },
+  "compose_collection": {
+    "rule": "A host whose profile the compositional contract lists collects its split with the round-1 recipe and its declared seed, verifies and selects, and trains nothing."
   }
 }

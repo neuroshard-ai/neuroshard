@@ -390,6 +390,7 @@ def test_accelerator_phases_never_open_evaluation_goals():
     plan = read(ROOT / run.PLAN)
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64
     assert [len(run.split_cases(plan, split)) for split in data.GROWTH] == [256, 256]
+    assert [len(run.split_cases(plan, split)) for split in data.COMPOSE] == [240, 240]
     for split in ('development', 'confirmation', 'confirmation3'):
         with pytest.raises(ValueError, match='may not access'):
             run.split_cases(plan, split)
@@ -401,19 +402,61 @@ def test_growth_splits_are_frozen_training_cases_disjoint_from_every_other_split
     growth = read(ROOT / run.GROWTH_PLAN)
     manifest = read(ROOT / growth['data'])
     assert list(manifest['splits']) == list(data.GROWTH) == growth['collection']['splits']
-    assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.GROWTH)
+    assert set(manifest['disjoint_from']) <= set(data.SPLITS) - set(data.GROWTH)
     for split, frozen in manifest['splits'].items():
         cases = data.cases(split)
         assert identity(cases) == frozen['sha256'] and [c['id'] for c in cases] == frozen['case_ids']
         assert all(sum(c['family'] == f for c in cases) == 32 for f in data.FAMILIES)
         projects = {t['expected']['project'] for c in cases for t in c['turns']}
-        for other in manifest['disjoint_from'] + [s for s in data.GROWTH if s != split]:
+        for other in [s for s in data.SPLITS if s != split]:
             earlier = data.cases(other)
             assert not {c['id'] for c in cases} & {c['id'] for c in earlier}
             assert not projects & {t['expected']['project'] for c in earlier for t in c['turns']}
         # Training grammar: the second turn keeps the unchanged fields named, unlike held-out splits.
         assert any('Keep the date, total and cited source unchanged.' in c['turns'][1]['user']
                    for c in cases if c['family'] == 'recipient')
+
+
+def extra_kind(case):
+    """The extra operation a case's instructions carry, read from the generated text."""
+    text = ' '.join(turn['user'] for turn in case['turns'])
+    kinds = {'date': ('push the due date', 'due date one calendar day later', 'existing due date two calendar days later'),
+             'total': ('more units to the total', 'increase the total by two units', 'double the current total'),
+             'recipient': ('finance team instead', 'Also address it to the review board',
+                           'Also change the recipient to the review board')}
+    found = [kind for kind, phrases in kinds.items() if any(phrase in text for phrase in phrases)]
+    assert len(found) <= 1, (case['id'], found)
+    return found[0] if found else None
+
+
+def test_compositional_practice_holds_out_every_development_and_confirmation_pair():
+    from neuroshard.evolution.modular_reference_execution import identity
+    from test_assistant_workflow import execute_fixture
+
+    compose = read(ROOT / run.COMPOSE_PLAN)
+    manifest = read(ROOT / compose['data'])
+    assert list(manifest['splits']) == list(data.COMPOSE) == compose['collection']['splits']
+    assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.COMPOSE)
+    for held, splits in (('development', ['development']), ('confirmation', list(data.CONFIRMATIONS))):
+        for split in splits:
+            for case in data.cases(split):
+                if case['family'] in manifest['held_out_pairs'][held]:
+                    assert extra_kind(case) == manifest['held_out_pairs'][held][case['family']], case['id']
+    held_out = {(f, k) for pairs in manifest['held_out_pairs'].values() for f, k in pairs.items()}
+    for split, frozen in manifest['splits'].items():
+        cases = data.cases(split)
+        assert identity(cases) == frozen['sha256'] and [c['id'] for c in cases] == frozen['case_ids']
+        assert {c['family'] for c in cases} == set(data.COMPOSE_FAMILIES) == set(manifest['practice_pairs'])
+        pairs = {(c['family'], extra_kind(c)) for c in cases}
+        assert not pairs & held_out
+        assert pairs == {(f, k) for f, kinds in manifest['practice_pairs'].items() for k in kinds}
+        projects = {t['expected']['project'] for c in cases for t in c['turns']}
+        for other in manifest['disjoint_from'] + [s for s in data.COMPOSE if s != split]:
+            earlier = data.cases(other)
+            assert not {c['id'] for c in cases} & {c['id'] for c in earlier}
+            assert not projects & {t['expected']['project'] for c in earlier for t in c['turns']}
+        assert all(execute_fixture(c)['score']['passed'] for c in cases[:24])
+    assert len(run.split_cases(read(ROOT / run.PLAN), 'compose1')) == 240
 
 
 def test_growth_profiles_run_collection_hosts_with_their_declared_split():
@@ -438,6 +481,68 @@ def test_growth_profiles_run_collection_hosts_with_their_declared_split():
     assert all(set(files) == set(run.GROWTH_FILES) for files in pinned['collections'].values())
     upload = read(ROOT / 'config/experiments/assistant-experience-resources.json')['upload']['files']
     assert {f'{split}/{name}' for split in data.GROWTH for name in run.GROWTH_FILES} <= set(upload)
+    compose = read(ROOT / run.COMPOSE_PLAN)
+    assert set(compose['collection']['profiles'].values()) == set(data.COMPOSE)
+    for profile, split in compose['collection']['profiles'].items():
+        assert run.collection_plan(profile) == compose
+        assert profile in cloud.GPU_PROFILES and profile not in cloud.UPLOAD_PROFILES
+        assert cloud.remote_command(profile)[-2:] == ['--profile', profile]
+        assert cloud.GRANITE_PROFILES[profile] == cloud.GRANITE_PROFILES[run.PROFILE]
+        resources = cloud.resources(profile)
+        assert resources['purpose'] == 'assistant-experience-compose' and 'upload' not in resources
+    assert run.collection_plan(run.PROFILE) is None
+    assert set(compose['collection']['seeds'].values()).isdisjoint(growth['collection']['seeds'].values())
+    assert {run.COMPOSE_PLAN, compose['data']} <= set(execution['contracts'])
+
+
+def test_compositional_collection_reverifies_real_practice_cases_and_the_pool_checks_counts(setup, monkeypatch):
+    from neuroshard.evolution.modular_reference_execution import sha256
+
+    tokenizer, plan, home = setup
+    home.mkdir()
+    practice = [data.make_case('compose1', 'copy', 0), data.make_case('compose1', 'latest', 4)]
+
+    class Practice(ScriptedBatcher):
+        def respond(self, messages, tools):
+            first = next(m['content'] for m in messages if m['role'] == 'user')
+            case = next(c for c in practice if c['turns'][0]['user'] == first)
+            return reply(reference_texts(case)[sum(m['role'] == 'assistant' for m in messages)])
+
+    monkeypatch.setattr(run.rollout, 'Batcher', Practice)
+    monkeypatch.setattr(run, 'split_cases', lambda plan, split: practice if split == 'compose1' else CASES)
+    rows, report = run.collect(tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home, split='compose1')
+    assert len(rows) == len(practice) and not report['coached_cases']
+    pinned = {name: sha256(home / name) for name in run.GROWTH_FILES}
+    again = home / 'again'
+    again.mkdir()
+    reloaded, replay = run.load_collection(home, pinned, tokenizer, plan, policy(), EXECUTION, again, split='compose1')
+    assert reloaded == rows and replay == [] and read(again / 'collection-compose1.json')['trajectories'] == len(rows)
+
+    monkeypatch.setattr(run, 'growth_data', lambda *a: ([('grown', sequence(tokenizer, 1))], [sequence(tokenizer, 2)], []))
+    monkeypatch.setattr(run, 'load_collection', lambda *a, **k: ([sequence(tokenizer, 3)], []))
+    monkeypatch.setattr(run, 'read_rows', lambda path: [{'case_id': 'practiced'}])
+    inventory = {'compose': {'collections': {s: {} for s in data.COMPOSE}, 'counts': {s: 1 for s in data.COMPOSE}}}
+    experience, replay, pairs = run.compose_data(tokenizer, plan, policy(), EXECUTION, home, inventory)
+    assert [case for case, _ in experience] == ['grown', 'practiced', 'practiced']
+    with pytest.raises(ValueError, match='pinned counts'):
+        run.compose_data(tokenizer, plan, policy(), EXECUTION, home,
+                         {'compose': {**inventory['compose'], 'counts': {s: 2 for s in data.COMPOSE}}})
+
+
+def test_compositional_study_trains_both_arms_one_pass_and_evaluates_without_a_committee(setup, monkeypatch):
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = study_plan(plan)
+    compose = {**read(ROOT / run.COMPOSE_PLAN), 'integration_samples': 1}
+    monkeypatch.setattr(run.data, 'cases', lambda split: CASES[:2])
+    experience = [(f'case-{i}', sequence(tokenizer, i)) for i in range(7)]
+    pairs = [('case-0', {'chosen': sequence(tokenizer, 40), 'rejected': sequence(tokenizer, 50), 'sha256': '0'})]
+    manifests = run.study_train(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, [sequence(tokenizer, 90)],
+                                pairs, home, study=compose)
+    assert set(manifests) == {'update', 'small'} and manifests['small']['sequences'] == 7
+    report = run.study_evaluate(lambda: tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home, study=compose)
+    assert set(report) == {'parent', 'update', 'small'}
+    assert set(read(home / 'study.json')['systems']) == {'parent', 'update', 'small'}
 
 
 def test_growth_collection_reverifies_without_replay_and_the_pool_checks_pinned_counts(setup, monkeypatch):

@@ -13,11 +13,19 @@ from neuroshard.evolution.modular_reference_execution import identity
 FAMILIES = ('copy', 'date', 'sum', 'difference', 'latest', 'recipient', 'reschedule', 'scope')
 SPLITS = {'train': (4100, 32), 'integration': (5200, 8),
           'development': (6300, None), 'confirmation': (7400, 12), 'confirmation2': (8500, 24),
-          'confirmation3': (9600, 24), 'train2': (10700, 32), 'train3': (11800, 32)}
+          'confirmation3': (9600, 24), 'train2': (10700, 32), 'train3': (11800, 32),
+          'compose1': (12900, 40), 'compose2': (14000, 40)}
 # A fresh confirmation reuses the confirmation correction grammar with new values.
 CONFIRMATIONS = ('confirmation', 'confirmation2', 'confirmation3')
 # Further training cases for growing verified experience; the training grammar with new values.
 GROWTH = ('train2', 'train3')
+# Compositional practice: training cases whose instructions carry one extra operation. Development and
+# confirmation hold out (family, extra-operation kind) pairs, so only pairs neither holds out appear here:
+# the single-turn families take any kind in their first turn; latest and scope take a total change in
+# their correction; recipient and reschedule are left out, since every kind is held out for them.
+COMPOSE = ('compose1', 'compose2')
+COMPOSE_FAMILIES = FAMILIES[:4] + ('latest', 'scope')
+TRAINING = ('train', *GROWTH, *COMPOSE)
 
 
 def make_case(split, family, index):
@@ -76,8 +84,21 @@ def make_case(split, family, index):
         'reschedule': f'The due date is one review interval after the start; the total is the baseline quantity plus {addition} units.',
         'scope': f'Use a due date one review interval after the start and a total {addition} units above the baseline quantity.',
     }
-    turns = [{'user': base + instructions[family] + ' Save a draft only, cite the documents used, and do not send anything.',
-              'expected': first}]
+    extra = ''
+    amount = 3 + (index // 3) % 3
+    if split in COMPOSE and family in FAMILIES[:4]:
+        kind = ('date', 'total', 'recipient')[index % 3]
+        if kind == 'date':
+            extra = f' Also push the due date {amount} calendar days later.'
+            first['due_date'] = (date.fromisoformat(first['due_date']) + timedelta(days=amount)).isoformat()
+        elif kind == 'total':
+            extra = f' Also add {amount} more units to the total.'
+            first['total'] += amount
+        else:
+            extra = f' Also address it to the finance team instead of the {recipient}.'
+            first['recipient'] = 'finance team'
+    turns = [{'user': base + instructions[family] + extra
+              + ' Save a draft only, cite the documents used, and do not send anything.', 'expected': first}]
     if family in ('latest', 'recipient', 'reschedule', 'scope'):
         second = dict(first)
         if family == 'latest':
@@ -95,6 +116,9 @@ def make_case(split, family, index):
             correction = f'Keep this draft under {project} and keep its recipient, but use {sibling}\'s latest approved plan for the date and quantity instead. Apply the same review-interval and extra-unit rules.'
             second.update(due_date=(start + timedelta(days=2 + duration)).isoformat(),
                           total=quantity + 9 + addition, source_ids=[other['id']])
+        if split in COMPOSE:
+            correction += f' Also add {amount} more units to the total.'
+            second['total'] += amount
         # Development and confirmation hold out different conjunctions of learned
         # operations. They are not merely new names under identical corrections.
         if split == 'development' or split in CONFIRMATIONS:
@@ -135,7 +159,7 @@ def make_case(split, family, index):
 def cases(split):
     per_family = SPLITS[split][1]
     result = []
-    for family in FAMILIES:
+    for family in (COMPOSE_FAMILIES if split in COMPOSE else FAMILIES):
         count = per_family if per_family else (2 if family in FAMILIES[:4] else 4)
         result.extend(make_case(split, family, i) for i in range(count))
     random.Random(SPLITS[split][0]).shuffle(result)

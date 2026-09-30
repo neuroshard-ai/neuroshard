@@ -36,13 +36,25 @@ UPLOADED = '.experience'
 COLLECTION_FILES = ('experience.json', 'rollouts.jsonl.gz', 'trajectories.jsonl.gz', 'replay.json', 'replay.jsonl.gz')
 GROWTH_FILES = COLLECTION_FILES[:3]
 GROWTH_PLAN = 'config/experiments/assistant-experience-growth.json'
+COMPOSE_PLAN = 'config/experiments/assistant-experience-compose.json'
+COLLECTION_PLANS = {split: path for path, splits in ((GROWTH_PLAN, data.GROWTH), (COMPOSE_PLAN, data.COMPOSE))
+                    for split in splits}
+
+
+def collection_plan(profile):
+    """The contract that declares a collection host for ``profile``, or None."""
+    for path in dict.fromkeys(COLLECTION_PLANS.values()):
+        declared = read(ROOT / path)
+        if profile in declared['collection']['profiles']:
+            return declared
+    return None
 
 
 def split_cases(plan, split):
-    if split not in ('train', 'integration', *data.GROWTH):
+    if split not in ('train', 'integration', *COLLECTION_PLANS):
         raise ValueError('accelerator phases may not access development or confirmation goals')
-    manifests = read(ROOT / (read(ROOT / GROWTH_PLAN)['data'] if split in data.GROWTH else plan['data']))['splits']
-    manifest = manifests[split]
+    manifests = read(ROOT / (read(ROOT / COLLECTION_PLANS[split])['data'] if split in COLLECTION_PLANS else plan['data']))
+    manifest = manifests['splits'][split]
     cases = data.cases(split)
     if identity(cases) != manifest['sha256'] or [c['id'] for c in cases] != manifest['case_ids']:
         raise ValueError('workflow data differs from frozen split')
@@ -189,7 +201,7 @@ def load_collection(directory, pinned, tokenizer, plan, policy, execution, home,
     if (max(per_case.values()) > plan['experience_selection_per_case']
             or len({identity([t['case_id'], experience.assistant_texts(t)]) for t in chosen}) != len(chosen)):
         raise ValueError('collected selection exceeds the per-case cap or repeats a trajectory')
-    if split in data.GROWTH:
+    if split in COLLECTION_PLANS:
         save(home / f'collection-{split}.json', {'trajectories': len(chosen), 'rollouts': len(rollouts),
                                                  'cases_with_experience': len(per_case), 'files': pinned}, exclusive=True)
         return [trainer.encode(tokenizer, t, sandbox.TOOLS) for t in chosen], []
@@ -445,6 +457,21 @@ def growth_data(tokenizer, plan, policy, runtime, home, inventory):
     return experience_rows, replay_rows, pairs
 
 
+def compose_data(tokenizer, plan, policy, runtime, home, inventory):
+    """The growth pool plus both compositional collections, each trajectory re-verified and tagged with its case."""
+    experience_rows, replay_rows, pairs = growth_data(tokenizer, plan, policy, runtime, home, inventory)
+    counts = {}
+    for split in data.COMPOSE:
+        directory = ROOT / UPLOADED / split
+        rows, _ = load_collection(directory, inventory['compose']['collections'][split], tokenizer, plan, policy,
+                                  runtime, home, split=split)
+        experience_rows += list(zip([t['case_id'] for t in read_rows(directory / 'trajectories.jsonl.gz')], rows))
+        counts[split] = len(rows)
+    if counts != inventory['compose']['counts']:
+        raise ValueError(f'compositional collections differ from their pinned counts: {counts}')
+    return experience_rows, replay_rows, pairs
+
+
 def study_spec(plan, arm):
     """(first-phase spec, preference-phase spec) for one study arm; architecture keys come from the arm."""
     first = {**plan['training'], **arm.get('spec', {})}
@@ -543,6 +570,10 @@ def study_evaluate(load_parent, tokenizer, plan, policy, execution, home, study=
         del model
         release_accelerator()
     members = sorted((arm['member'], name) for name, arm in study['arms'].items() if arm.get('member') is not None)
+    if not members:
+        report = study_report(systems)
+        save(home / 'study.json', {'systems': systems, 'report': report}, exclusive=True)
+        return report
     model, switch = load_parent(), committee.Switch()
     committee.attach(model, study_spec(plan, study['arms'][members[0][1]])[0],
                      [home / f'{name}-checkpoint' for _, name in members], switch)
@@ -726,17 +757,28 @@ def worker(request_path):
             return model.to(parameters['device']).eval()
 
         begun = time.monotonic()
-        growing = request['profile'] in read(ROOT / GROWTH_PLAN)['collection']['profiles']
+        declared = collection_plan(request['profile'])
+        growing = declared is not None
         if growing:
-            growth = read(ROOT / GROWTH_PLAN)
-            split = growth['collection']['profiles'][request['profile']]
+            split = declared['collection']['profiles'][request['profile']]
             parent = load_parent()
-            _, report = collect(parent, tokenizer, plan, policy, {**parameters, 'seed': growth['collection']['seeds'][split]},
+            _, report = collect(parent, tokenizer, plan, policy, {**parameters, 'seed': declared['collection']['seeds'][split]},
                                 home, split=split)
             reply['collection'] = {'split': split, **report['summary'], 'near_policy_ceiling': report['near_policy_ceiling']}
             reply['phases']['collect'] = time.monotonic() - begun
             del parent
             release_accelerator()
+        elif 'compose' in execution:
+            compose = read(ROOT / COMPOSE_PLAN)
+            experience_rows, replay_rows, pair_rows = compose_data(tokenizer, plan, policy, parameters, home, execution)
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = study_train(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows, home,
+                                            study=compose)
+            reply['phases']['train'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['study'] = study_evaluate(load_parent, tokenizer, plan, policy, parameters, home, study=compose)
+            reply['phases']['evaluate'] = time.monotonic() - begun
         elif 'growth' in execution:
             growth = read(ROOT / GROWTH_PLAN)
             experience_rows, replay_rows, pair_rows = growth_data(tokenizer, plan, policy, parameters, home, execution)
@@ -833,7 +875,7 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        studying = growing or bool({'growth', 'study'} & set(execution))
+        studying = growing or bool({'compose', 'growth', 'study'} & set(execution))
         if not studying and not {'round2', 'round3', 'round4'} & set(execution):
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)
@@ -862,7 +904,7 @@ def run(home, models, profile=PROFILE):
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
     execution = read(ROOT / EXECUTION)
-    if profile != PROFILE and profile not in read(ROOT / GROWTH_PLAN)['collection']['profiles']:
+    if profile != PROFILE and collection_plan(profile) is None:
         raise ValueError('unknown experience profile')
     binding = {'freeze': source, 'profile': profile, 'plan_sha256': sha256(ROOT / PLAN)}
     save(home / 'binding.json', binding, exclusive=True)
