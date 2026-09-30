@@ -472,22 +472,30 @@ def test_growth_collection_reverifies_without_replay_and_the_pool_checks_pinned_
                         {'growth': {**inventory['growth'], 'counts': {s: 2 for s in data.GROWTH}}})
 
 
-def test_one_pass_first_phase_draws_each_experience_sequence_once(setup):
+def test_growth_study_trains_the_declared_arms_one_pass_and_evaluates_their_committee(setup, monkeypatch):
     tokenizer, plan, home = setup
     home.mkdir()
     plan = study_plan(plan)
-    growth = {**plan['methodology_study'], 'first_phase_steps': 'one-pass',
-              'arms': {'small': {'type': 'addition'}, 'member-0': {'type': 'addition', 'member': 0}}}
+    growth = {**read(ROOT / run.GROWTH_PLAN), 'integration_samples': 1}
+    assert set(growth['arms']) == {'update', 'small', 'member-0', 'member-1', 'member-2'}
+    monkeypatch.setattr(run.data, 'cases', lambda split: CASES[:2])
     slices = {}
     for index in range(100):
         slices.setdefault(run.committee_member(f'case-{index}', 3), f'case-{index}')
     experience = [(slices[i % 3], sequence(tokenizer, i)) for i in range(13)]
+    pairs = [(slices[i % 3], {'chosen': sequence(tokenizer, 40 + i), 'rejected': sequence(tokenizer, 50 + i),
+                              'sha256': str(i)}) for i in range(3)]
     replay = [sequence(tokenizer, 90)]
-    manifests = run.study_train(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, replay, [], home, study=growth)
+    manifests = run.study_train(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, replay, pairs, home,
+                                study=growth)
     per_update = SPEC['gradient_accumulation'] - SPEC['gradient_accumulation'] // (SPEC['experience_per_replay'] + 1)
-    assert manifests['small']['first_phase_steps'] == -(-13 // per_update)
+    assert manifests['small']['first_phase_steps'] == manifests['update']['first_phase_steps'] == -(-13 // per_update)
     assert manifests['member-0']['first_phase_steps'] == -(-5 // per_update) and manifests['member-0']['sequences'] == 5
+    assert [manifests[f'member-{k}']['pairs'] for k in range(3)] == [1, 1, 1]
     assert run.one_pass_steps(read(ROOT / run.PLAN)['training'], 740) == 124
+    report = run.study_evaluate(lambda: tiny_model(tokenizer), tokenizer, plan, policy(), EXECUTION, home, study=growth)
+    assert set(report) == {'parent', 'update', 'small', 'member-0', 'member-1', 'member-2', 'committee'}
+    assert report['committee']['integration']['cases'] == 3 and report['committee']['development']['cases'] == 2
 
 
 def test_collection_coaches_only_unsolved_cases_then_trains_and_fits_gates(setup):
