@@ -432,8 +432,12 @@ def test_growth_profiles_run_collection_hosts_with_their_declared_split():
         assert resources['purpose'] == 'assistant-experience-growth' and 'upload' not in resources
     assert len(set(growth['collection']['seeds'].values())) == len(data.GROWTH)
     execution = read(ROOT / run.EXECUTION)
-    assert 'growth' not in execution
     assert {run.GROWTH_PLAN, growth['data']} <= set(execution['contracts'])
+    pinned = execution['growth']
+    assert set(pinned['collections']) == set(pinned['counts']) == set(data.GROWTH)
+    assert all(set(files) == set(run.GROWTH_FILES) for files in pinned['collections'].values())
+    upload = read(ROOT / 'config/experiments/assistant-experience-resources.json')['upload']['files']
+    assert {f'{split}/{name}' for split in data.GROWTH for name in run.GROWTH_FILES} <= set(upload)
 
 
 def test_growth_collection_reverifies_without_replay_and_the_pool_checks_pinned_counts(setup, monkeypatch):

@@ -101,6 +101,8 @@ remain evidence, not readiness claims for this assistant.
   attempt only if it loses no parent success on opened data.
   The first collection attempt stopped at verification because growth splits
   were not accepted as training goals ($7.01); a second attempt fixes only that.
+  [The second attempt collected 702 and 672 verified trajectories](docs/ASSISTANT_EXPERIENCE_GROWTH.md#collections)
+  ($9.88), growing the pool from 740 to 2114 sequences. The growth study is next.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

@@ -91,3 +91,18 @@ Declared on September 30, 2026, after the first attempt and before the second.
 The experience module now accepts the two growth splits as training goals. A
 test runs real `train2` cases through collection and re-verification, and it
 fails without this change. Everything else is unchanged. One attempt.
+
+## Collections
+
+The second attempt completed on both hosts
+([report](../config/experiments/assistant-experience-growth-collection2-report.json)),
+and both were retired with nothing remaining ($9.88).
+
+| Split | GPU | Rollouts | Verified trajectories | Coached | Cases without experience |
+|---|---|---|---|---|---|
+| `train2` | A10G | 2720 | 702 | 36 | 68 of 256 |
+| `train3` | L40S | 2728 | 672 | 45 | 66 of 256 |
+
+Every trajectory was rebuilt from its pinned rollout through the frozen scorer
+before the files were pinned. With round 1's 722 trajectories and the 18 repaired
+ones, the pool holds 2114 sequences, 2.9 times the study's 740.
