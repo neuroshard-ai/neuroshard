@@ -188,6 +188,12 @@ def test_unrouted_growth_systems_serve_one_arm_or_the_committee_from_pinned_chec
             assert loaded['members'] == ['member-0', 'member-1', 'member-2'] and loaded['wrapped_projections'] == 4
         else:
             assert loaded['checkpoint']['trainable_sha256'] == pinned[system]['trainable_sha256']
+    compose_plan = 'config/experiments/assistant-experience-compose.json'
+    for system in read(ROOT / compose_plan)['arms']:
+        assert confirm.growth_spec(plan, system, compose_plan) == confirm.growth_spec(plan, system)
+        episodes, loaded = confirm.unrouted_episodes(system, tiny_model(tokenizer), tokenizer, plan, bounded(), cases, arms,
+                                                     compose_plan)
+        assert loaded['checkpoint']['trainable_sha256'] == pinned[system]['trainable_sha256']
 
 
 def test_latency_check_applies_the_gate_limits_before_a_sealed_split_opens():

@@ -64,35 +64,36 @@ def verify_growth_arms(directory, pinned):
             raise ValueError(f'{name} checkpoint differs from the pinned growth study')
 
 
-def growth_spec(plan, name):
-    """The architecture a growth arm was trained with."""
+def growth_spec(plan, name, arms_plan=GROWTH_PLAN):
+    """The architecture an arm was trained with under the study contract ``arms_plan``."""
     from neuroshard.evolution import assistant_experience_run as accelerator
 
-    return accelerator.study_spec(plan, read(ROOT / GROWTH_PLAN)['arms'][name])[0]
+    return accelerator.study_spec(plan, read(ROOT / arms_plan)['arms'][name])[0]
 
 
-def unrouted_episodes(system, model, tokenizer, plan, policy, cases, arms):
-    """One growth system served without routing: a single arm, or the committee of members and the parent.
+def unrouted_episodes(system, model, tokenizer, plan, policy, cases, arms, arms_plan=GROWTH_PLAN):
+    """One study system served without routing: a single arm, or the committee of members and the parent.
 
     ``model`` is a freshly loaded parent; the arm or the members attach to it.
+    ``arms_plan`` is the study contract that trained the pinned arms.
     """
     from neuroshard.evolution import assistant_committee as committee
     from neuroshard.evolution import assistant_experience_train as trainer
     from neuroshard.evolution.assistant_serving import cached_responder
 
     if system == 'committee':
-        growth = read(ROOT / GROWTH_PLAN)
-        members = sorted((arm['member'], name) for name, arm in growth['arms'].items() if arm.get('member') is not None)
+        study = read(ROOT / arms_plan)
+        members = sorted((arm['member'], name) for name, arm in study['arms'].items() if arm.get('member') is not None)
         switch = committee.Switch()
-        wrapped = committee.attach(model, growth_spec(plan, members[0][1]), [arms / f'{name}-checkpoint' for _, name in members],
-                                   switch)
+        wrapped = committee.attach(model, growth_spec(plan, members[0][1], arms_plan),
+                                   [arms / f'{name}-checkpoint' for _, name in members], switch)
 
         def make():
             return committee.cached_committee(model, switch, tokenizer, policy, len(members))
         loaded = {'members': [name for _, name in members], 'wrapped_projections': wrapped}
     else:
-        spec = growth_spec(plan, system)
-        arm = read(ROOT / GROWTH_PLAN)['arms'][system]['type']
+        spec = growth_spec(plan, system, arms_plan)
+        arm = read(ROOT / arms_plan)['arms'][system]['type']
         loaded = {'checkpoint': trainer.load_trainable(model, arm, spec, arms / f'{system}-checkpoint'),
                   'served_projections_converted': trainer.serving(model, spec)}
 
@@ -182,7 +183,8 @@ def worker(request_path):
         if system != 'parent' and execution.get('serving') == 'unrouted':
             arms = ROOT / development.UPLOADED
             verify_growth_arms(arms, execution['arms'])
-            reply['episodes'], loaded = unrouted_episodes(system, parent, tokenizer, plan, policy, cases, arms)
+            reply['episodes'], loaded = unrouted_episodes(system, parent, tokenizer, plan, policy, cases, arms,
+                                                          execution.get('arms_plan', GROWTH_PLAN))
             reply.update(loaded, serving='unrouted prefix-cache')
         elif system == 'parent' and execution.get('parent_serving') == 'prefix-cache':
             reply['episodes'] = [workflow.execute(case, cached_responder(parent, tokenizer, policy), policy)
