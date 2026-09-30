@@ -106,14 +106,17 @@ remain evidence, not readiness claims for this assistant.
   qualifying candidate](docs/ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md) ($4.15). The update control rose to
   80 with no parent success lost; the small module scored 74 but lost 2 parent
   successes on development cases; the committee scored 59. No third attempt.
-- [ ] [Compositional practice](docs/ASSISTANT_EXPERIENCE_COMPOSE.md): the small
+- [x] [Compositional practice](docs/ASSISTANT_EXPERIENCE_COMPOSE.md): the small
   module lost parent successes only on development cases whose correction adds
   an instruction it never saw combined that way. Two 240-case practice splits add
   one extra operation per case, in family and operation pairs that neither the
   development nor any confirmation split holds out. The small module enters the
   third attempt only if it then loses no parent success on opened data.
   [Both collections completed](docs/ASSISTANT_EXPERIENCE_COMPOSE.md#collections) with 596 and 592 verified
-  trajectories ($9.04); the pool holds 3302 sequences. The study is next.
+  trajectories ($9.04); the pool holds 3302 sequences. [The study found no third
+  attempt](docs/ASSISTANT_EXPERIENCE_COMPOSE_RESULTS.md) ($2.25): the small module scored 73 (update 77)
+  and lost 3 parent successes, all development cases whose correction adds
+  "move the resulting due date one calendar day later".
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
