@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-settlement/1",
-  "status": "Declared on October 1, 2026, before any settlement run. Authorized by the project owner.",
+  "status": "Declared on October 1, 2026, before any settlement run. Authorized by the project owner. Amended the same day for a second attempt after the first failed at bootstrap: the execution module now exports the configure and freeze functions bootstrap calls; every check, phase and resource is unchanged.",
   "purpose": "Settle audited sharded serving of the real assistant on the bonded optimistic serving ledger: an honest job is paid after its challenge window, a framing challenge is rejected, and a cheating owner is slashed by a real fraud proof, with two validators replaying the same blocks to the same state.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -183,7 +183,16 @@
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
     "docs/granite-shard-audit-requirements.txt": "af0d0901a9ad17e8ea5c519e736c14861a78395e3d2f9e38c2b96e49d14358ff",
-    "config/experiments/granite-shard-settlement-resources.json": "8a5ec9f63a0d17a878608c1d800d44ba58873cfaffbc4da39c085332e0275cc4",
-    "docs/GRANITE_SHARD_SETTLEMENT.md": "b8f8c57bed6985daad2e625609cbe32af6de573c9ae90b6d3c4a4e1e4c1dcdef"
-  }
+    "config/experiments/granite-shard-settlement-resources.json": "62469c322c964dc9a0e27a8d2fdef551048c9485d3dd3c0bfcada0c15ccf711b",
+    "docs/GRANITE_SHARD_SETTLEMENT.md": "27842089e698c22a8c6a678e97e957f269fb0b799419e79ed440be1ae85ceace"
+  },
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "d76425458d58e03273d582912dc5f3f0d98412ec",
+      "report": "config/experiments/granite-shard-settlement-report.json",
+      "report_sha256": "e1b39799fb89740e0dc58858faf390aeb8e9ba631099623076247d33af4aab60",
+      "outcome": "Failed at bootstrap on every host: the execution module did not export configure and freeze ($0.33)."
+    }
+  ]
 }

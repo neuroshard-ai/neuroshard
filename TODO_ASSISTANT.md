@@ -204,7 +204,9 @@ remain evidence, not readiness claims for this assistant.
   proof. Two validator processes agree on small checkpoints; it is not yet on a
   chain or run by independent operators. [Settlement on the real assistant is
   declared](docs/GRANITE_SHARD_SETTLEMENT.md): six hosts, each party signing its own
-  transactions, two validators replaying the same blocks with real proof checks.
+  transactions, two validators replaying the same blocks with real proof checks. The
+  first attempt failed at bootstrap: the module lacked the functions bootstrap calls
+  ($0.33). A second attempt adds only those.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

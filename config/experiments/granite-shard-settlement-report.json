@@ -1,0 +1,102 @@
+{
+  "format": "neuroshard-granite-shard-settlement-report/1",
+  "result": "config/experiments/granite-shard-settlement-result.json",
+  "result_sha256": "da5dd1617c53f7149370f36db5f0e600bf87d1132ad3bcd6d08d04c139d9a799",
+  "commit": "d76425458d58e03273d582912dc5f3f0d98412ec",
+  "attempt": 1,
+  "passed": false,
+  "execution_completed": false,
+  "failed_phase": "bootstrap",
+  "diagnosis": {
+    "finding": "All six hosts installed the pinned runtime, then the bootstrap conformance check failed on every host.",
+    "cause": "Bootstrap imports configure and freeze from the profile's execution module; granite_shard_settlement defined neither. No role ran, so no serving, signing or validation happened."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_compute_usd": 0.33104328558000007,
+    "hosts": [
+      {
+        "finished_utc": "2026-10-01T23:14:13.560941+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ddce24e6e57aa35f"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 120.085483,
+        "conservative_compute_usd": 0.035305132002,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:14:55.294397+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-03b8eba7bef07f3ae"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 154.596197,
+        "conservative_compute_usd": 0.045451281918,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:15:26.952559+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-019b6bdc39d51ae00"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 179.023435,
+        "conservative_compute_usd": 0.05263288989,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:15:53.509959+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a24dfb1f6eddd941"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 198.043641,
+        "conservative_compute_usd": 0.058224830454,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:16:25.047064+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ef958c75d9a1b756"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 222.3417,
+        "conservative_compute_usd": 0.0653684598,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:17:01.854827+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0e06832978f05e2dd"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 251.907114,
+        "conservative_compute_usd": 0.074060691516,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

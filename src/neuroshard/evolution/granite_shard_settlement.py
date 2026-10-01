@@ -30,6 +30,14 @@ def committed_sources(root=ROOT):
     return shard.committed_sources(root, PLAN)
 
 
+def configure():
+    shard.configure()
+
+
+def freeze():
+    return audited.freeze(PLAN)
+
+
 def account(store, name='account'):
     """A ledger account from a secp256k1 seed created once in this host's store; returns (key, public hex)."""
     import secrets

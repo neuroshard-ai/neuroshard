@@ -162,6 +162,14 @@ def test_the_settlement_profile_is_bounded_and_the_freeze_covers_every_imported_
         assert controller.base.seconds(PLAN, phase) == seconds[phase.split('-')[0]]
 
 
+def test_every_registered_execution_module_exports_what_bootstrap_calls():
+    import importlib
+
+    for profile, (module, _) in cloud_module().GRANITE_PROFILES.items():
+        loaded = importlib.import_module(f'neuroshard.evolution.{module}')
+        assert callable(getattr(loaded, 'configure', None)) and callable(getattr(loaded, 'freeze', None)), profile
+
+
 def test_importing_the_settlement_execution_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.granite_shard_settlement; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})

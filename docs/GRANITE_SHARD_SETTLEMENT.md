@@ -82,3 +82,18 @@ Resources: six r7i.4xlarge allocations, each with its own expiry and a $10
 allowance (at most $60), under the
 [resource contract](../config/experiments/granite-shard-settlement-resources.json).
 About $10 is expected. One attempt.
+
+## First attempt: failed at bootstrap
+
+The [first attempt](../config/experiments/granite-shard-settlement-report.json)
+(commit `d764254`) installed the pinned runtime on all six hosts, then failed the
+bootstrap conformance check. Bootstrap imports `configure` and `freeze` from the
+execution module, and the settlement module defined neither. No role ran. All
+hosts were retired with nothing remaining ($0.33). The attempt stays failed.
+
+## Amendment for the second attempt
+
+Declared on October 1, 2026, after the first attempt and before the second. The
+settlement module now exports `configure` and `freeze`. A new test checks that
+every registered execution module exports both, and it fails without this
+change. Every check, phase and resource is unchanged. One attempt.
