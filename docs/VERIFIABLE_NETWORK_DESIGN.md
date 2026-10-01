@@ -75,8 +75,10 @@ replication.
      low-quality modules cannot change behavior.
    - Modules could earn a share of inference fees whenever their vote is in the
      accepted majority on audited episodes, rewarding useful growth.
-   - The [methodology study](ASSISTANT_EXPERIENCE_LEARNING.md#methodology-study-before-a-third-attempt)
-     is measuring whether the committee reaches the quality bar.
+   - Measured twice ([methodology study](ASSISTANT_EXPERIENCE_STUDY_RESULTS.md),
+     [growth study](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)): the committee lost no
+     parent success, but scored below one small module trained on all the data,
+     because split member votes leave the parent's tie-break in charge.
 7. **Execution classes.** Bit-exactness holds within a pinned runtime and CPU
    instruction class. Owners and auditors of a shard declare the same class.
    Integer-exact inference (deterministic integer kernels) would remove the
@@ -100,8 +102,8 @@ replication.
 | --- | --- |
 | Exact sharded serving, training, recovery, concurrency | Measured on the real 3B assistant |
 | Signed owner logs, replay audit, fraud proofs | Tested on small checkpoints: honest owners verified; a one-bit fault caught, blamed and proven; forged accusations rejected |
-| Audited serving on the real model with light auditors | Next declared execution |
-| Committee-of-modules growth | Under study (A2) |
-| Chain integration (Granite profile, bonded audits, fee split) | After A2 closes |
+| Audited serving on the real model with light auditors | [Passed](GRANITE_SHARD_AUDIT_RESULTS.md): all 8830 forwards replayed exactly; a one-bit fault named and proven; no false blame |
+| Committee-of-modules growth | Measured: no parent success lost, but below one small module; A2 paused ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
+| Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [State machine](OPTIMISTIC_SERVING.md) tested with real fraud proofs on small checkpoints; not yet on chain |
 | User-held first stage | Design |
 | Independent operators (A5) | Not started |

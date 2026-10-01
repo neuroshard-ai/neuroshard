@@ -119,6 +119,37 @@ def load_proof(directory):
              'inputs': {int(k[1:]): v.view(torch.bfloat16) for k, v in stored.items()}}, manifest)
 
 
+PROOF_FILES = ('inputs.safetensors', 'proof.json', 'record.json')
+
+
+def bundle_root(directory):
+    """Content address of a saved fraud proof: its files by digest."""
+    directory = Path(directory)
+    files = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest() for name in PROOF_FILES}
+    return hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def challenge_checker(store, partitions, adapters=None):
+    """A ledger executor: true only if the bundle at ``proof_root`` proves fraud against the committed log.
+
+    ``store`` holds bundles in directories named by their content address. The validator
+    must hold every audited shard: a missing one raises rather than deciding.
+    """
+    def check(state, request):
+        directory = Path(store) / request['proof_root']
+        if not directory.is_dir() or bundle_root(directory) != request['proof_root']:
+            return False
+        proof, _ = load_proof(directory)
+        record = proof['record']
+        if statement(record).hex() != request['statement_root'] or record.get('public_key') != request['log_key']:
+            return False
+        if request['shard'] not in partitions:
+            raise ValueError('validator does not hold the challenged shard')
+        return check_fraud_proof(partitions[request['shard']], proof, request['log_key'],
+                                 (adapters or {}).get(request['shard']))
+    return check
+
+
 def check_fraud_proof(partition, proof, public_key, adapter=None):
     """True when the owner signed the log and its logged output at ``mismatch`` is not what its shard computes."""
     record = proof['record']

@@ -117,7 +117,7 @@ Path(sys.argv[2]).write_text(json.dumps(rows))
     return json.loads((work / 'rows.json').read_text())
 
 
-def sharded(world, home, conversations=None, episodes=True, streams=None, log=False, fault=None):
+def sharded(world, home, conversations=None, episodes=True, streams=None, log=False, fault=None, keys=None):
     home.mkdir()
     reference = Path(world['directory']) / 'tokenizer.json'
     job = {'spec': SPEC, 'arm': str(world['arm']), 'gate': world['gate'], 'tokenizer': str(world['directory']),
@@ -133,6 +133,8 @@ def sharded(world, home, conversations=None, episodes=True, streams=None, log=Fa
         job['log'] = True
     if fault:
         job['fault'] = fault
+    if keys:
+        job['keys'] = {str(rank): str(path) for rank, path in keys.items()}
     (home / 'job.json').write_text(json.dumps(job))
     port = free_port()
     code = ('import os, sys; from neuroshard.evolution.sharded import granite_serving as s; '
@@ -239,6 +241,110 @@ def test_replay_audits_confirm_honest_owners_and_catch_a_one_bit_fault(world, tm
     assert audit(world, tmp_path / 'cheated', 2)['valid']
     upstream, downstream = granite_audit.load(tmp_path / 'cheated' / 'log-1')[0], granite_audit.load(tmp_path / 'cheated' / 'log-2')[0]
     assert granite_audit.continuity(upstream['entries'], downstream['entries']) is None
+
+
+VALIDATOR = '''
+import json, sys, torch
+from pathlib import Path
+from neuroshard.evolution.sharded import granite, granite_audit
+from neuroshard.inference import optimistic as ledger
+torch.set_num_threads(1)
+config_dir, shards, store, plan_path = sys.argv[1:5]
+plan = json.loads(Path(plan_path).read_text())
+partition, _ = granite.load_partition(granite.load_config(config_dir), shards, 1)
+partition.warm_up(lengths=(16, 1))
+check = granite_audit.challenge_checker(store, {1: partition})
+state, outcomes = plan["genesis"], []
+for block in plan["blocks"]:
+    state = ledger.advance(state, state["height"] + 1)
+    for envelope in block:
+        try:
+            state = ledger.transition(state, envelope, check)
+            outcomes.append("accepted")
+        except ValueError as error:
+            outcomes.append("rejected: " + str(error))
+print(json.dumps({"root": ledger.root(state), "outcomes": outcomes, "state": state}))
+'''
+
+
+def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(world, tmp_path):
+    import hashlib
+    import shutil
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from neuroshard.evolution.sharded import granite_audit
+    from neuroshard.inference import optimistic as ledger
+
+    from test_optimistic_serving import CHAIN, PARAMS, Account
+
+    keys, public = {}, {}
+    for rank in (1, 2):
+        private = Ed25519PrivateKey.generate()
+        path = tmp_path / f'owner-{rank}.key'
+        path.write_text(private.private_bytes_raw().hex() + '\n')
+        keys[rank], public[rank] = path, private.public_key().public_bytes_raw().hex()
+    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
+    model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
+    genesis = ledger.genesis(CHAIN, model, 3, {p.public: 20_000_000 for p in people.values()}, PARAMS)
+
+    honest = sharded(world, tmp_path / 'honest', log=True, keys=keys)
+    cheated = sharded(world, tmp_path / 'cheated', log=True, fault={'rank': 1, 'at': 3}, keys=keys)
+    assert all(r['completed'] for r in honest + cheated)
+    assert audit(world, tmp_path / 'cheated', 1)['proof_accepted']
+    store = tmp_path / 'store'
+    proof = tmp_path / 'cheated' / 'log-1' / 'proof'
+    real = granite_audit.bundle_root(proof)
+    shutil.copytree(proof, store / real)
+    record, payloads = granite_audit.load(tmp_path / 'honest' / 'log-1')
+    first = next(i for i, e in enumerate(record['entries']) if 'output' in e)
+    granite_audit.save_proof({'record': record, 'mismatch': first,
+                              'inputs': {i: p for i, p in payloads.items() if i <= first}}, tmp_path / 'forged')
+    forged = granite_audit.bundle_root(tmp_path / 'forged')
+    shutil.copytree(tmp_path / 'forged', store / forged)
+
+    def bond(rank):
+        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
+        account, amount = people[f'owner-{rank}'], PARAMS['owner_bond_minimum']
+        possession = private.sign(ledger.possession_message(CHAIN, account.public, public[rank], rank, amount,
+                                                            account.nonce)).hex()
+        return account.sign('owner_bond', model_root=model, shard=rank, log_key=public[rank], amount=amount,
+                            possession=possession)
+
+    def commit(rank, job_id, pass_name):
+        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
+        statement = granite_audit.statement(granite_audit.load(tmp_path / pass_name / f'log-{rank}')[0]).hex()
+        return people[f'owner-{rank}'].sign('log_commit', job_id=job_id, statement_root=statement,
+                                            log_signature=private.sign(ledger.commitment_message(CHAIN, job_id, statement)).hex())
+
+    def open_job(request):
+        envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
+                                       request_root=hashlib.sha256(request.encode()).hexdigest(), price=1_000_000)
+        return envelope, ledger.transaction_id(envelope)
+
+    open_honest, honest_job = open_job('honest pass')
+    open_cheated, cheated_job = open_job('cheated pass')
+    blocks = [[bond(1), bond(2)], [open_honest], [commit(1, honest_job, 'honest'), commit(2, honest_job, 'honest')],
+              [open_cheated], [commit(1, cheated_job, 'cheated'), commit(2, cheated_job, 'cheated')],
+              [people['accuser'].sign('challenge', job_id=honest_job, log_key=public[1], proof_root=forged)],
+              [people['auditor'].sign('challenge', job_id=cheated_job, log_key=public[1], proof_root=real)],
+              [], [], []]
+    (tmp_path / 'plan.json').write_text(json.dumps({'genesis': genesis, 'blocks': blocks}))
+    replicas = []
+    for _ in range(2):
+        output = subprocess.check_output([sys.executable, '-c', VALIDATOR, str(world['config']), str(world['shards']),
+                                          str(store), str(tmp_path / 'plan.json')],
+                                         env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, text=True)
+        replicas.append(json.loads(output.strip().splitlines()[-1]))
+    assert replicas[0]['root'] == replicas[1]['root']
+    outcomes, state = replicas[0]['outcomes'], replicas[0]['state']
+    assert outcomes == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
+    assert state['results'][honest_job]['status'] == 'settled' and state['results'][cheated_job]['status'] == 'fraud'
+    assert state['owners'][public[1]]['status'] == 'slashed' and state['owners'][public[2]]['status'] == 'active'
+    reward = PARAMS['owner_bond_minimum'] * PARAMS['auditor_share_ppm'] // 1_000_000
+    assert state['accounts'][people['auditor'].public]['balance'] == 20_000_000 - PARAMS['fee'] + reward
+    assert state['accounts'][people['owner-2'].public]['balance'] == (20_000_000 - 3 * PARAMS['fee']
+                                                                     - PARAMS['owner_bond_minimum'] + 500_000)
 
 
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):

@@ -189,11 +189,20 @@ remain evidence, not readiness claims for this assistant.
   episodes of the 63M-parameter update control without meeting the declared
   parity margin. The second also lost two parent successes: 174/192, against 182
   for the update and 106 for the parent.
+- **A2 paused.** After the methodology, growth, compositional and repair studies,
+  no small module kept every parent success: it applies the review interval twice
+  on one held-out correction that the update control handles. The third
+  confirmation split stays sealed for a future method.
 - **A1.** The served system passed A1's development checks, but A1 stays open
   until a module is accepted.
 - **A4.** The pinned 3B assistant runs across owner machines that each fetch only
   their own tensors. Generation and training match the complete model bit for
   bit. The learned assistant is served across owners exactly as on one host.
+- **Toward A5.** Light auditors verified real-model serving and proved a one-bit
+  fault. A [bonded optimistic serving ledger](docs/OPTIMISTIC_SERVING.md) now settles
+  honest jobs after a challenge window and slashes an owner on a verified fraud
+  proof. Two validator processes agree on small checkpoints; it is not yet on a
+  chain or run by independent operators.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
