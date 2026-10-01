@@ -61,7 +61,7 @@
     "path": "config/experiments/assistant-workflow-canonical-report.json",
     "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
   },
-  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for the compositional study: the update and the small module trained from the parent on the growth pool plus both compositional collections, and both evaluated with the parent on integration and opened development cases; eight-hour expiry and $21 worst-case allowance within the $1,000 ceiling. No fresh evaluation data.",
+  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for the date-base repairs: the pinned compositional small module sampled on training cases, verified repairs, both compositional arms continued through one preference phase, and both evaluated with the parent on integration and opened development cases; eight-hour expiry and $21 worst-case allowance within the $1,000 ceiling. No fresh evaluation data.",
   "prior_attempts": [
     {
       "utc": "2026-09-27T14:20:28Z",
@@ -122,10 +122,15 @@
       "utc": "2026-09-30T11:15:00Z",
       "commit": "94f378b",
       "outcome": "Growth study completed: update 80, small 74 (2 lost parent successes), committee 59; no third attempt ($4.15 including a capacity refusal)."
+    },
+    {
+      "utc": "2026-09-30T19:26:00Z",
+      "commit": "1b8a7f4",
+      "outcome": "Compositional study completed: small 73 with 3 lost parent successes, update 77; no third attempt ($2.25)."
     }
   ],
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-compose-inputs",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-repairs-inputs",
     "files": [
       "experience.json",
       "rollouts.jsonl.gz",
@@ -145,8 +150,12 @@
       "compose1/trajectories.jsonl.gz",
       "compose2/experience.json",
       "compose2/rollouts.jsonl.gz",
-      "compose2/trajectories.jsonl.gz"
+      "compose2/trajectories.jsonl.gz",
+      "update-checkpoint/manifest.json",
+      "update-checkpoint/trainable.safetensors",
+      "small-checkpoint/manifest.json",
+      "small-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 50595148
+    "maximum_bytes": 288105865
   }
 }

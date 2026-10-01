@@ -127,6 +127,11 @@ remain evidence, not readiness claims for this assistant.
   interval twice, starting from start plus interval; it does follow the added
   instruction. A check for dates never seen in the conversation flags 3 of 8
   failures and none of 35 successes.
+- [ ] [Verified date-base repairs](docs/ASSISTANT_EXPERIENCE_REPAIRS.md): sample the
+  compositional small module on 528 training cases, repair date shifts that start
+  from a base the round cannot justify, keep only verified continuations, and
+  continue both arms on them. The third attempt runs only if the small module
+  then loses no parent success on opened data.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints

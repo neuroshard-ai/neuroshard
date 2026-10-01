@@ -309,6 +309,121 @@ def test_goal_guided_repairs_replay_the_prefix_and_keep_only_verified_continuati
         run.repair_data(plan, policy(), forged)
 
 
+def shift(start, days):
+    from neuroshard.evolution.assistant_experience import envelope as calls_envelope
+    return calls_envelope([{'name': 'shift_date', 'arguments': {'start_date': start, 'days': days}}])
+
+
+def test_wrong_date_base_locates_shifts_from_unjustified_starts_and_repairs_to_the_goal_source():
+    import datetime
+
+    from neuroshard.evolution import assistant_experience as experience
+
+    case = data.make_case('train', 'latest', 0)
+    documents = {d['id']: d for d in case['world']['documents']}
+    current = experience.plan_start(documents[case['turns'][0]['expected']['source_ids'][0]])
+    old = experience.plan_start(documents[case['turns'][1]['expected']['source_ids'][0]])
+    days = 4
+    later = (datetime.date.fromisoformat(old) + datetime.timedelta(days=days)).isoformat()
+
+    def result(second_start):
+        tool = lambda date: {'role': 'tool', 'content': json.dumps({'date': date})}
+        return {'messages': [{'role': 'system', 'content': 's'}, {'role': 'user', 'content': case['turns'][0]['user']},
+                             {'role': 'assistant', 'content': shift(current, days)}, tool('first'),
+                             {'role': 'assistant', 'content': shift('first', 1)}, tool('chained'),
+                             {'role': 'user', 'content': case['turns'][1]['user']},
+                             {'role': 'assistant', 'content': shift(second_start, days)}, tool('x')]}
+
+    assert experience.wrong_date_base(case, result(old)) is None
+    assert experience.wrong_date_base(case, result(case['turns'][0]['expected']['due_date'])) is None
+    found = experience.wrong_date_base(case, result(later))
+    assert found[:2] == (7, 2) and json.loads(found[2].split('\n')[1])['arguments'] == {'start_date': old, 'days': days}
+    # The other revision's start appears in the conversation, but it is not this round's goal source.
+    assert experience.wrong_date_base(case, result(current))[2] == found[2]
+    with pytest.raises(ValueError, match='training goals'):
+        experience.wrong_date_base(data.make_case('development', 'latest', 0), result(later))
+
+
+def test_date_repairs_continue_from_the_goal_source_start_and_keep_only_verified_rollouts(tmp_path, monkeypatch):
+    import datetime
+
+    from neuroshard.evolution import assistant_experience as experience
+
+    cases = [data.make_case('compose1', 'date', 1), data.make_case('train2', 'copy', 2)]
+    monkeypatch.setattr(run, 'split_cases', lambda plan, split: [c for c in cases if c['split'] == split])
+
+    class Sampler:
+        """Shifts the date family from start plus interval unless that call was repaired."""
+        def __init__(self, *args, **kwargs):
+            self.batches = [1]
+
+        def close(self):
+            pass
+
+        def respond(self, messages, tools):
+            first = next(m['content'] for m in messages if m['role'] == 'user')
+            case = next(c for c in cases if c['turns'][0]['user'] == first)
+            position = sum(m['role'] == 'assistant' for m in messages)
+            if case['family'] != 'date':
+                return reply(reference_texts(case)[position])
+            goal = case['turns'][0]['expected']
+            document = next(d for d in case['world']['documents'] if d['id'] == goal['source_ids'][0])
+            start = datetime.date.fromisoformat(experience.plan_start(document))
+            interval = int(document['content'].split('review interval is ')[1].split()[0])
+            wrong = (start + datetime.timedelta(days=interval)).isoformat()
+            texts = reference_texts(case)
+            if position == 2:
+                return reply(shift(wrong, interval))
+            if position == 3:
+                dates = [json.loads(m['content'])['date'] for m in messages if m['role'] == 'tool' and '"date"' in m['content']]
+                pushed = datetime.date.fromisoformat(dates[-1])
+                extra = (datetime.date.fromisoformat(goal['due_date']) - start).days - interval
+                return reply(envelope('save_draft', {**goal, 'due_date': (pushed + datetime.timedelta(days=extra)).isoformat()}))
+            return reply(texts[min(position, 3)] if position < 2 else texts[-1])
+
+    monkeypatch.setattr(run.rollout, 'Batcher', Sampler)
+    repairs = {**read(ROOT / run.REPAIRS_PLAN), 'samples_per_case': 2, 'splits': ['compose1', 'train2'],
+               'families': ['date', 'copy']}
+    home = tmp_path / 'home'
+    home.mkdir()
+    natural, repaired = run.collect_date_repairs(None, None, read(ROOT / run.PLAN), repairs, policy(), EXECUTION, home)
+    summary = read(home / 'rollouts-repairs.json')
+    assert summary['cases'] == 2 and summary['rollouts'] == 4 and summary['passed'] == 2
+    assert summary['repairable_failures'] == 2 and summary['verified_repairs'] == summary['repairs'] == 4
+    pairs, trajectories = run.repair_data(read(ROOT / run.PLAN), policy(), repaired, run.repair_cases(read(ROOT / run.PLAN), repairs),
+                                          repairs)
+    assert len(pairs) == 1 and pairs[0]['case_id'] == cases[0]['id'] and pairs[0]['chosen'] != pairs[0]['rejected']
+    assert len(trajectories) == 1 and trajectories[0]['complete']
+
+
+def test_continuing_pinned_arms_refuses_a_changed_checkpoint(setup):
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    tokenizer, plan, home = setup
+    home.mkdir()
+    plan = study_plan(plan)
+    arms = {'update': {'type': 'update'}, 'small': {'type': 'addition'}}
+    prior, pinned = home / 'prior', {}
+    for name, arm in arms.items():
+        trainable = trainer.prepare(tiny_model(tokenizer), arm['type'], run.study_spec(plan, arm)[0])
+        manifest = trainer.checkpoint(prior / f'{name}-checkpoint', trainable,
+                                      {'arm': arm['type'], 'optimizer_state': {}, 'trainable_parameters': 1, 'steps': 0,
+                                       'schedule_sha256': '', 'losses': [0.0]}, {})
+        pinned[name] = {'trainable_sha256': manifest['trainable_sha256']}
+    experience = [sequence(tokenizer, i) for i in range(4)]
+    pairs = [{'chosen': sequence(tokenizer, 40), 'rejected': sequence(tokenizer, 50), 'sha256': '0'}]
+    out = home / 'continued'
+    out.mkdir()
+    manifests = run.continue_arms(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, [sequence(tokenizer, 90)],
+                                  pairs, prior, pinned, out, arms)
+    assert set(manifests) == {'update', 'small'}
+    assert all(m['roots']['prior'] == pinned[name]['trainable_sha256'] for name, m in manifests.items())
+    assert manifests['update']['schedule_sha256'] == manifests['small']['schedule_sha256']
+    with pytest.raises(ValueError, match='pinned digest'):
+        run.continue_arms(lambda: tiny_model(tokenizer), plan, EXECUTION, experience, [sequence(tokenizer, 90)], pairs,
+                          prior, {**pinned, 'small': {'trainable_sha256': 'x'}}, home / 'other', arms)
+
+
 def study_plan(plan):
     study = {'members': 3, 'integration_samples': 1, 'seed': 11,
              'counts': {'trajectories': 3, 'repaired_trajectories': 1, 'replay': 2, 'decision_pairs': 1,
@@ -495,6 +610,13 @@ def test_growth_profiles_run_collection_hosts_with_their_declared_split():
     assert {run.COMPOSE_PLAN, compose['data']} <= set(execution['contracts'])
     assert set(execution['compose']['collections']) == set(execution['compose']['counts']) == set(data.COMPOSE)
     assert {f'{split}/{name}' for split in data.COMPOSE for name in run.GROWTH_FILES} <= set(upload)
+    repairs = read(ROOT / run.REPAIRS_PLAN)
+    trained = read(ROOT / 'config/experiments/assistant-experience-compose-report.json')['training']
+    assert execution['repairs']['prior'] == {arm: {'trainable_sha256': trained[arm]['trainable_sha256']} for arm in repairs['arms']}
+    assert repairs['splits'] == list(data.TRAINING) and set(repairs['families']) <= set(data.FAMILIES)
+    assert repairs['sampler'] in repairs['arms'] and run.REPAIRS_PLAN in execution['contracts']
+    assert {f'{arm}-checkpoint/{name}' for arm in repairs['arms'] for name in ('manifest.json', 'trainable.safetensors')} <= set(upload)
+    assert len(run.repair_cases(read(ROOT / run.PLAN), repairs)) == 528
 
 
 def test_compositional_collection_reverifies_real_practice_cases_and_the_pool_checks_counts(setup, monkeypatch):

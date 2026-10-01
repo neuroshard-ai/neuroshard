@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-assistant-experience-execution/1",
-  "status": "Compositional collections completed and pinned. The compositional study trains the update and the small module on the growth pool plus both collections and evaluates them with the parent; user-authorized within the $1,000 ceiling.",
+  "status": "Compositional study completed without a third attempt; development diagnostic found a date-base error. Date-base repairs declared: sample the pinned compositional small module on training cases, keep verified repairs, continue both arms and evaluate; user-authorized within the $1,000 ceiling.",
   "packages": {
     "annotated-doc": "0.0.5",
     "anyio": "4.15.1",
@@ -81,7 +81,7 @@
   "tokenizer_pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
-    "config/experiments/assistant-experience-resources.json": "ac0d079915911b95de44cb4c108918fb08aa52b528eae141400cf05c9d56c825",
+    "config/experiments/assistant-experience-resources.json": "2f8264987e4bcdcad6adff4277b4c95121bfd73cc3e464550c678f1eae8d8411",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
@@ -97,7 +97,11 @@
     "config/experiments/assistant-workflow-data-compose.json": "f3d175f896bd71fc6b9a23f14b6a7e8d40d4090e0ccbc0f77a30a01d0f38d6e9",
     "config/experiments/assistant-experience-compose-resources.json": "a54c5b081e268c10bef8bb4b6ec9f8112083354929f2b2d2aacd7a2ce37176df",
     "docs/ASSISTANT_EXPERIENCE_COMPOSE.md": "85020e652e13fa8dd36ad9b2cb250cf039965ad2dd69b3b7ed8190549e457709",
-    "config/experiments/assistant-experience-growth-report.json": "77fe38bf04ea91dd713e5b7288e9734717b6caaced8fd94cda2892673f1b73be"
+    "config/experiments/assistant-experience-growth-report.json": "77fe38bf04ea91dd713e5b7288e9734717b6caaced8fd94cda2892673f1b73be",
+    "config/experiments/assistant-experience-repairs.json": "98d0e7e52c8076c14052cc6b31036a88b356c18ac919eabc500b21f626e7e2e2",
+    "docs/ASSISTANT_EXPERIENCE_REPAIRS.md": "2873dd124b19b73e73d2c48d3b558dd2d725a4898852e87e76f536644d62017c",
+    "config/experiments/assistant-experience-compose-report.json": "78c334ea8187781f9ea52b2dfa3c32239ea00381ba0e7570e7de81e05885a39d",
+    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC_RESULTS.md": "6929c7f1059ff7245ef0aae365a763a25768cf7191ecbad6992abdf3f2c1fbba"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
@@ -118,6 +122,10 @@
     "config/experiments/assistant-experience-compose-resources.json",
     "docs/ASSISTANT_EXPERIENCE_COMPOSE.md",
     "config/experiments/assistant-experience-growth-report.json",
+    "config/experiments/assistant-experience-repairs.json",
+    "docs/ASSISTANT_EXPERIENCE_REPAIRS.md",
+    "config/experiments/assistant-experience-compose-report.json",
+    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC_RESULTS.md",
     "config/experiments/assistant-experience-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/version.py",
@@ -223,5 +231,16 @@
       "compose2": 592
     },
     "rule": "Re-verify the growth pool and both compositional collections from pinned files, train the declared arms from the parent, and evaluate them and the parent on integration and opened development cases."
+  },
+  "repairs": {
+    "prior": {
+      "update": {
+        "trainable_sha256": "3738bd941147a4cf73f734782b646df4e317415c02f0d20b41a682fac00d84cb"
+      },
+      "small": {
+        "trainable_sha256": "43d9b2fd1d17f11f76420b73f6188e6d85b59a41e2325648e749495e705a8e41"
+      }
+    },
+    "rule": "Re-verify the compositional pool, sample the pinned small module on the declared training cases, repair date shifts from unjustified bases and keep only verified continuations, continue both arms, and evaluate them with the parent on integration and opened development cases."
   }
 }

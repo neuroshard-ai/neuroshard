@@ -37,6 +37,7 @@ COLLECTION_FILES = ('experience.json', 'rollouts.jsonl.gz', 'trajectories.jsonl.
 GROWTH_FILES = COLLECTION_FILES[:3]
 GROWTH_PLAN = 'config/experiments/assistant-experience-growth.json'
 COMPOSE_PLAN = 'config/experiments/assistant-experience-compose.json'
+REPAIRS_PLAN = 'config/experiments/assistant-experience-repairs.json'
 COLLECTION_PLANS = {split: path for path, splits in ((GROWTH_PLAN, data.GROWTH), (COMPOSE_PLAN, data.COMPOSE))
                     for split in splits}
 
@@ -292,10 +293,28 @@ def repair_responder(recorded, at, text, live):
     return respond
 
 
-def collect_repairs(model, tokenizer, plan, policy, execution, home):
-    """Sampled training rollouts of an arm, then goal-guided repairs of wrong reads, continued live."""
+def run_repairs(jobs, by_id, policy, live, workers, report):
+    """Replay each failed rollout up to its located error, substitute the repair, and continue live."""
     from concurrent.futures import ThreadPoolExecutor
 
+    done = [0]
+
+    def repair(job):
+        row, (index, at, text), attempt = job
+        result = workflow.execute(by_id[row['case_id']], repair_responder(row['result']['generations'], at, text, live),
+                                  policy)
+        done[0] += 1
+        report(done[0], len(jobs))
+        return {'case_id': row['case_id'], 'sample': row['sample'], 'attempt': attempt, 'index': index,
+                'policy_sha256': identity(policy), 'rejected': row['result']['messages'][index]['content'],
+                'result': result}
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        return list(pool.map(repair, jobs))
+
+
+def collect_repairs(model, tokenizer, plan, policy, execution, home):
+    """Sampled training rollouts of an arm, then goal-guided repairs of wrong reads, continued live."""
     spec = plan['goal_guided_repairs']
     cases = split_cases(plan, 'train')
     by_id = {case['id']: case for case in cases}
@@ -311,21 +330,7 @@ def collect_repairs(model, tokenizer, plan, policy, execution, home):
             found = experience.wrong_read(by_id[row['case_id']], row['result'])
             if found:
                 jobs += [(row, found, attempt) for attempt in range(spec['repairs_per_failure'])]
-        report = reporter(home, 'repair-round4')
-        done = [0]
-
-        def repair(job):
-            row, (index, at, text), attempt = job
-            result = workflow.execute(by_id[row['case_id']],
-                                      repair_responder(row['result']['generations'], at, text, batcher.respond), policy)
-            done[0] += 1
-            report(done[0], len(jobs))
-            return {'case_id': row['case_id'], 'sample': row['sample'], 'attempt': attempt, 'index': index,
-                    'policy_sha256': identity(policy), 'rejected': row['result']['messages'][index]['content'],
-                    'result': result}
-
-        with ThreadPoolExecutor(max_workers=execution['workers']) as pool:
-            repaired = list(pool.map(repair, jobs))
+        repaired = run_repairs(jobs, by_id, policy, batcher.respond, execution['workers'], reporter(home, 'repair-round4'))
     finally:
         batcher.close()
     save(home / 'rollouts-round4.json', {
@@ -337,10 +342,46 @@ def collect_repairs(model, tokenizer, plan, policy, execution, home):
     return natural, repaired
 
 
-def repair_data(plan, policy, repaired):
-    """Preference pairs and trajectories from verified repairs; every repaired rollout is rescored."""
-    spec = plan['goal_guided_repairs']
-    by_id = {case['id']: case for case in split_cases(plan, 'train')}
+def repair_cases(plan, repairs):
+    """Every training case of the declared families, from every declared training split."""
+    return [case for split in repairs['splits'] for case in split_cases(plan, split) if case['family'] in repairs['families']]
+
+
+def collect_date_repairs(model, tokenizer, plan, repairs, policy, execution, home):
+    """Sampled training rollouts of an arm, then repairs of date shifts from unjustified bases, continued live."""
+    cases = repair_cases(plan, repairs)
+    by_id = {case['id']: case for case in cases}
+    batcher = rollout.Batcher(model, tokenizer, sampling(policy, execution, repairs['temperature']),
+                              max_batch=execution['max_batch'], device=execution['device'], seed=repairs['collection_seed'])
+    try:
+        natural = rollout.rollouts([(c, policy, s) for c in cases for s in range(repairs['samples_per_case'])],
+                                   batcher.respond, workers=execution['workers'], progress=reporter(home, 'collect-repairs'))
+        jobs = []
+        for row in natural:
+            if row['result']['score']['passed']:
+                continue
+            found = experience.wrong_date_base(by_id[row['case_id']], row['result'])
+            if found:
+                jobs += [(row, found, attempt) for attempt in range(repairs['repairs_per_failure'])]
+        repaired = run_repairs(jobs, by_id, policy, batcher.respond, execution['workers'], reporter(home, 'repair-dates'))
+    finally:
+        batcher.close()
+    save(home / 'rollouts-repairs.json', {
+        'cases': len(cases), 'rollouts': len(natural), 'passed': sum(r['result']['score']['passed'] for r in natural),
+        'repairable_failures': len(jobs) // max(1, repairs['repairs_per_failure']), 'repairs': len(repaired),
+        'verified_repairs': sum(r['result']['score']['passed'] for r in repaired),
+        'natural_sha256': write_rows(home / 'rollouts-repairs.jsonl.gz', natural),
+        'repairs_sha256': write_rows(home / 'repairs.jsonl.gz', repaired)}, exclusive=True)
+    return natural, repaired
+
+
+def repair_data(plan, policy, repaired, cases=None, spec=None):
+    """Preference pairs and trajectories from verified repairs; every repaired rollout is rescored.
+
+    ``cases`` and ``spec`` default to round 4's training cases and settings.
+    """
+    spec = spec or plan['goal_guided_repairs']
+    by_id = {case['id']: case for case in (cases if cases is not None else split_cases(plan, 'train'))}
     pairs, trajectories = {}, []
     for row in repaired:
         case, result = by_id[row['case_id']], row['result']
@@ -399,6 +440,34 @@ def train_round2(load_parent, plan, execution, experience_rows, replay_rows, pai
                           'seconds': time.monotonic() - started, 'tokens_processed': receipt['tokens_processed'],
                           'first_margins': receipt['preference_margins'][:8],
                           'last_margins': receipt['preference_margins'][-8:]}
+        del model, trainable, receipt
+        release_accelerator()
+    save(home / 'training.json', manifests, exclusive=True)
+    return manifests
+
+
+def continue_arms(load_parent, plan, execution, experience_rows, replay_rows, pair_rows, prior, pinned, home, arms):
+    """Continue each pinned study arm through one preference phase on identical experience, replay and pairs."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    manifests = {}
+    for name, arm in arms.items():
+        save(home / 'progress.json', {'phase': f'continue-{name}', 'unix': time.time()})
+        model = load_parent()
+        started = time.monotonic()
+        base = study_spec(plan, arm)[0]
+        manifest, trainable = trainer.resume(model, arm['type'], base, Path(prior) / f'{name}-checkpoint')
+        if manifest['trainable_sha256'] != pinned[name]['trainable_sha256']:
+            raise ValueError(f'prior {name} checkpoint differs from its pinned digest')
+        trainable, receipt = trainer.train(model, arm['type'], experience_rows, replay_rows,
+                                           {**base, **plan['goal_guided_repairs']['training']}, device=execution['device'],
+                                           trainable=trainable, pairs=pair_rows)
+        roots = {'prior': manifest['trainable_sha256'], 'experience': identity([r['sha256'] for r in experience_rows]),
+                 'replay': identity([r['sha256'] for r in replay_rows]),
+                 'pairs': identity([p['sha256'] for p in pair_rows]), 'plan': identity(plan)}
+        manifests[name] = {**trainer.checkpoint(home / f'{name}-checkpoint', trainable, receipt, roots),
+                           'seconds': time.monotonic() - started, 'first_margins': receipt['preference_margins'][:8],
+                           'last_margins': receipt['preference_margins'][-8:]}
         del model, trainable, receipt
         release_accelerator()
     save(home / 'training.json', manifests, exclusive=True)
@@ -768,6 +837,41 @@ def worker(request_path):
             reply['phases']['collect'] = time.monotonic() - begun
             del parent
             release_accelerator()
+        elif 'repairs' in execution:
+            repairs = read(ROOT / REPAIRS_PLAN)
+            trainer = trainer_module()
+            tagged, replay_rows, tagged_pairs = compose_data(tokenizer, plan, policy, parameters, home, execution)
+            experience_rows, pair_rows = [row for _, row in tagged], [row for _, row in tagged_pairs]
+            prior = execution['repairs']['prior']
+            name = repairs['sampler']
+            sampler = load_parent()
+            manifest, _ = trainer.resume(sampler, repairs['arms'][name]['type'], study_spec(plan, repairs['arms'][name])[0],
+                                         ROOT / UPLOADED / f'{name}-checkpoint')
+            if manifest['trainable_sha256'] != prior[name]['trainable_sha256']:
+                raise ValueError('sampled arm differs from its pinned digest')
+            sampler.eval()
+            reply['phases']['verify_collection'] = time.monotonic() - begun
+            begun = time.monotonic()
+            _, repaired = collect_date_repairs(sampler, tokenizer, plan, repairs, policy, parameters, home)
+            del sampler
+            release_accelerator()
+            pairs, extra = repair_data(plan, policy, repaired, repair_cases(plan, repairs), repairs)
+            if not pairs:
+                raise ValueError('no verified repairs')
+            save(home / 'pairs.json', {'pairs': len(pairs), 'cases': len({p['case_id'] for p in pairs}),
+                                       'repaired_trajectories': len(extra), 'pairs_sha256': identity(pairs),
+                                       'trajectories_sha256': write_rows(home / 'repaired-trajectories.jsonl.gz', extra)},
+                 exclusive=True)
+            experience_rows += [trainer.encode(tokenizer, t, sandbox.TOOLS) for t in extra]
+            pair_rows += [trainer.encode_pair(tokenizer, p, sandbox.TOOLS) for p in pairs]
+            reply['phases']['collect_repairs'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['training'] = continue_arms(load_parent, plan, parameters, experience_rows, replay_rows, pair_rows,
+                                              ROOT / UPLOADED, prior, home, repairs['arms'])
+            reply['phases']['train'] = time.monotonic() - begun
+            begun = time.monotonic()
+            reply['study'] = study_evaluate(load_parent, tokenizer, plan, policy, parameters, home, study=repairs)
+            reply['phases']['evaluate'] = time.monotonic() - begun
         elif 'compose' in execution:
             compose = read(ROOT / COMPOSE_PLAN)
             experience_rows, replay_rows, pair_rows = compose_data(tokenizer, plan, policy, parameters, home, execution)
@@ -875,7 +979,7 @@ def worker(request_path):
             reply['phases']['replay'] = time.monotonic() - begun
             del parent
             release_accelerator()
-        studying = growing or bool({'compose', 'growth', 'study'} & set(execution))
+        studying = growing or bool({'repairs', 'compose', 'growth', 'study'} & set(execution))
         if not studying and not {'round2', 'round3', 'round4'} & set(execution):
             begun = time.monotonic()
             reply['training'] = train_arms(load_parent, plan, parameters, experience_rows, replay_rows, home)

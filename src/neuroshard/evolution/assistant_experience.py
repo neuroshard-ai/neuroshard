@@ -8,6 +8,7 @@ Coached rollouts are stored without their card. Only training goals are read.
 
 import copy
 import json
+import re
 
 from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution import assistant_workflow_data as data
@@ -242,6 +243,58 @@ def wrong_read(case, result):
                 repaired.append(call)
             return index, generation - 1, envelope(repaired)
         read.update(opened)
+    return None
+
+
+def plan_start(document):
+    """The start date a delivery-plan document states."""
+    found = re.search(r'starts on (\d{4}-\d{2}-\d{2})', document['content'])
+    return found.group(1) if found else None
+
+
+def wrong_date_base(case, result):
+    """First shift_date call that starts from a date its round cannot justify, with a repaired call.
+
+    Returns (message index, generation index, repaired text) or None. A base is
+    justified if it is the start date of one of the round's goal sources, a date an
+    earlier shift_date returned, or the goal due date of an earlier round. The repair
+    starts the same shift from the round's goal-source start date. Training goals only
+    locate the error.
+    """
+    if case['split'] not in TRAINING_SPLITS:
+        raise ValueError('repairs may only use training goals')
+    documents = {d['id']: d for d in case['world']['documents']}
+    turn, generation, returned, earlier = -1, 0, set(), set()
+    for index, message in enumerate(result['messages']):
+        if message['role'] == 'user':
+            turn += 1
+            if turn:
+                earlier.add(case['turns'][turn - 1]['expected']['due_date'])
+            continue
+        if message['role'] == 'tool':
+            try:
+                value = json.loads(message['content'])
+            except (ValueError, TypeError):
+                continue
+            if isinstance(value, dict) and isinstance(value.get('date'), str):
+                returned.add(value['date'])
+            continue
+        if message['role'] != 'assistant':
+            continue
+        generation += 1
+        try:
+            calls = sandbox.parse_calls(message['content'])
+        except (ValueError, TypeError):
+            continue
+        starts = {plan_start(documents[d]) for d in case['turns'][turn]['expected']['source_ids'] if d in documents}
+        allowed = starts | returned | earlier
+        for position, call in enumerate(calls):
+            if call['name'] == 'shift_date' and call['arguments'].get('start_date') not in allowed:
+                if len(starts) != 1 or None in starts:
+                    return None
+                repaired = [dict(c, arguments={**c['arguments'], 'start_date': next(iter(starts))}) if i == position else c
+                            for i, c in enumerate(calls)]
+                return index, generation - 1, envelope(repaired)
     return None
 
 
