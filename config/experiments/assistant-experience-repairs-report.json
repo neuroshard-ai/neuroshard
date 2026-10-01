@@ -1,0 +1,42 @@
+{
+  "format": "neuroshard-assistant-experience-repairs-report/1",
+  "source_commit": "2c741aa242c4694cc09d225056b84f251e7812bb",
+  "execution_completed": false,
+  "error": "ValueError: no verified repairs",
+  "gpu": "NVIDIA A10G",
+  "collection": {
+    "cases": 528,
+    "rollouts": 2112,
+    "passed": 1922,
+    "repairable_failures": 9,
+    "repairs": 18,
+    "verified_repairs": 0,
+    "natural_sha256": "42926b2e4741c9ed05ca1c9700042c8390eb7a0487245090665ab022bcac748e",
+    "repairs_sha256": "1938efc9f85d1febe42300a772fcd0efdc29a06d6a597a2635b3298735cc66cf"
+  },
+  "decision": {
+    "third_attempt": false,
+    "outcome": "The study failed as declared: no repaired rollout passed the scorer, so no repair pair was found."
+  },
+  "findings": {
+    "training_failures": "2112 sampled training rollouts, 1922 passed. Of the 190 failures, 178 are compositional cases (mostly wrong drafts in the latest and scope corrections and in date first rounds); 5 are growth cases.",
+    "located": "Only 9 failures started a date shift from an unjustified base. In every one, the module had already read a different revision than the goal source and computed the total from it, so repairing the shift alone could not pass.",
+    "interpretation": "The development error, applying the review interval twice, does not appear on training cases; it arises with the held-out added-day correction, so training-case repairs carry no signal for it."
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-01T08:22:49.703362+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-046c040c657be7bf9"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 14568.434838,
+    "conservative_compute_usd": 4.904706395459999,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "evidence_sha256": "c6f11fdce1897063d9a4333f6412a390d9722353f22430f56bf6080f52c2e0f9",
+  "confirmation_opened": false,
+  "checklist_credit": false
+}
