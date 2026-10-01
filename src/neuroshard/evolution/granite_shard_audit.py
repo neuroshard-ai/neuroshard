@@ -30,12 +30,12 @@ def configure():
     shard.configure()
 
 
-def freeze():
+def freeze(plan_path=PLAN):
     """The canonical runtime plus the declared signing packages, checked before any role does work."""
     import importlib.metadata
 
-    source = shard.freeze(PLAN)
-    declared = read(ROOT / PLAN)['signing_packages']
+    source = shard.freeze(plan_path)
+    declared = read(ROOT / plan_path)['signing_packages']
     try:
         signing = {name: importlib.metadata.version(name) for name in declared}
     except importlib.metadata.PackageNotFoundError as error:
@@ -61,10 +61,11 @@ def owner_key(store):
     return path, public
 
 
-def owner(rank, address, port, phase, home, store):
+def owner(rank, address, port, phase, home, store, plan_path=PLAN):
+    """One owner phase under the contract at ``plan_path``."""
     configure()
-    source = freeze()
-    plan = read(ROOT / PLAN)
+    source = freeze(plan_path)
+    plan = read(ROOT / plan_path)
     home, store = Path(home), Path(store)
     world = len(plan['boundaries']) - 1
     if not 0 <= rank < world or phase not in OWNER_PHASES:
@@ -91,18 +92,18 @@ def owner(rank, address, port, phase, home, store):
     if rank == 0:
         value['tokenizer'] = str(store / 'config')
     save(directory / 'job.json', value, exclusive=True)
-    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / PLAN), 'rank': rank,
+    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / plan_path), 'rank': rank,
                                       'phase': phase}, exclusive=True)
     return granite_serving.run_owner(store / 'config', store / 'shard', rank, world, address, port,
                                      directory / 'job.json', directory / 'result.json',
                                      timeout=plan['peer_timeout_seconds'])
 
 
-def auditor(rank, phase, home, store):
+def auditor(rank, phase, home, store, plan_path=PLAN):
     """A light auditor holding only owner ``rank``'s shard: fetch, replay a transferred log, or verify a proof."""
     configure()
-    source = freeze()
-    plan = read(ROOT / PLAN)
+    source = freeze(plan_path)
+    plan = read(ROOT / plan_path)
     home, store = Path(home), Path(store)
     if rank not in plan['audited_owners'] or phase not in AUDITOR_PHASES:
         raise ValueError('unsupported auditor role')

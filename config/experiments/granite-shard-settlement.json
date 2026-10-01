@@ -1,0 +1,189 @@
+{
+  "format": "neuroshard-granite-shard-settlement/1",
+  "status": "Declared on October 1, 2026, before any settlement run. Authorized by the project owner.",
+  "purpose": "Settle audited sharded serving of the real assistant on the bonded optimistic serving ledger: an honest job is paid after its challenge window, a framing challenge is rejected, and a cheating owner is slashed by a real fraud proof, with two validators replaying the same blocks to the same state.",
+  "model": {
+    "artifacts": "config/experiments/granite-reference-artifacts.json",
+    "tensor_inventory": "config/experiments/granite-tensor-inventory.json",
+    "inventory_sha256": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843"
+  },
+  "learning": "config/experiments/assistant-experience-learning.json",
+  "runtime": "The canonical parent CPU runtime on every owner: identical packages, Python, CPU instructions, numerical environment and eight threads; bf16 backbone, eager attention, FP32 LoRA.",
+  "boundaries": [
+    0,
+    12,
+    26,
+    40
+  ],
+  "arm": {
+    "trainable_sha256": "0becd8b6e91f88ed8421dc9a0077d23d9119d7635535fcf38fc5979383bf7e5c",
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
+  },
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928h/evidence/.study/attempts/baseline-experience",
+    "files": [
+      "integration.json",
+      "addition-checkpoint/manifest.json",
+      "addition-checkpoint/trainable.safetensors"
+    ],
+    "maximum_bytes": 6577588
+  },
+  "target": {
+    "path": "config/experiments/assistant-experience-development-round4-result.json",
+    "sha256": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+    "system": "addition",
+    "episodes": 24,
+    "rule": "The 24 served development episodes of the round-4 addition system: selection, every generation's prompt and tokens, reused prefix length and score. No new evaluation data is opened."
+  },
+  "eos_ids": [
+    100257
+  ],
+  "max_boundary_tokens": 6144,
+  "peer_timeout_seconds": 300,
+  "memory_limit_bytes": 8589934592,
+  "fetch_memory_limit_bytes": 17179869184,
+  "signing_packages": {
+    "cffi": "2.0.0",
+    "cryptography": "50.0.1",
+    "pycparser": "2.23"
+  },
+  "fault": {
+    "rank": 1,
+    "at": 200,
+    "rule": "In the second serving pass, owner 1 flips the lowest bit of the first element of its 201st sent tensor."
+  },
+  "roles": {
+    "owners": "Owner hosts 0-2 serve; owners 1 and 2 bond log keys and sign their bonds and log commitments.",
+    "auditor": "Holds only shard 1, replays owner 1's logs, proves the fault and signs the challenge; a separate accuser account on the same host signs a framing challenge built from the honest log.",
+    "validators": "Two hosts, each holding only shard 1, replay every block with real fraud-proof checks.",
+    "user": "The controller holds the user account, opens both jobs and orders transactions into blocks."
+  },
+  "audited_owners": [
+    1
+  ],
+  "ledger": {
+    "module": "src/neuroshard/inference/optimistic.py",
+    "chain_id": "neuroshard-settlement-1",
+    "shards": 3,
+    "allocation": 20000000,
+    "owner_bond": 5000000,
+    "price": 1000000,
+    "params": {
+      "fee": 1000,
+      "owner_bond_minimum": 5000000,
+      "minimum_price": 100000,
+      "challenge_blocks": 4,
+      "job_blocks": 12,
+      "auditor_share_ppm": 500000,
+      "max_jobs": 32,
+      "max_results": 128
+    },
+    "blocks": "1: both owner bonds; 2: honest job opened; 3: both honest commitments; 4: cheating job opened; 5: both cheating-pass commitments; 6: the framing challenge; 7-8: empty, the honest job settling at 8; 9: the auditor's challenge, the last block of the cheating job's window; 10-11: empty."
+  },
+  "phase_seconds": {
+    "fetch": 1800,
+    "sign": 600,
+    "serve": 3600,
+    "commit": 600,
+    "audit": 2400,
+    "challenge": 900,
+    "validate": 1800
+  },
+  "gates": [
+    "The honest pass matches the single-host development result under every check of the shard serving execution.",
+    "Both validators complete and reach the same state root and the same transaction outcomes.",
+    "Both bonds, both job openings and all four log commitments are accepted.",
+    "The framing challenge against the honest owner is rejected because its proof does not verify.",
+    "The auditor names owner 1's fault at the declared message.",
+    "The auditor's challenge is accepted: the cheating job is recorded as fraud by owner 1, and owner 1 is slashed.",
+    "The honest job settles after its window, paying each owner half the price, and owner 2 stays bonded.",
+    "Every final balance equals the declared expectation exactly."
+  ],
+  "measured_not_gated": [
+    "Validator proof-replay time and shard load time.",
+    "Log, proof and transaction sizes."
+  ],
+  "not_claimed": [
+    "Independent operators: one operator runs every host and orders the blocks.",
+    "CometBFT consensus: the controller sequences blocks; validators only replay them.",
+    "Proof data availability, challenge deposits and audit fees for clean audits."
+  ],
+  "resources": "config/experiments/granite-shard-settlement-resources.json",
+  "attempts": 1,
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "sources": [
+    "config/experiments/granite-reference-artifacts.json",
+    "config/experiments/granite-tensor-inventory.json",
+    "config/experiments/assistant-workflow-canonical-execution.json",
+    "config/experiments/assistant-workflow-canonical.json",
+    "config/experiments/assistant-experience-learning.json",
+    "config/experiments/assistant-workflow-policy.json",
+    "config/experiments/assistant-workflow-data.json",
+    "config/experiments/assistant-experience-development-round4-result.json",
+    "docs/granite-shard-audit-requirements.txt",
+    "config/experiments/granite-shard-audit.json",
+    "config/experiments/granite-shard-serving.json",
+    "config/experiments/granite-shard-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "src/neuroshard/evolution/assistant_experience.py",
+    "src/neuroshard/evolution/assistant_experience_gate.py",
+    "src/neuroshard/evolution/assistant_experience_run.py",
+    "src/neuroshard/evolution/assistant_experience_train.py",
+    "src/neuroshard/evolution/assistant_replay.py",
+    "src/neuroshard/evolution/assistant_rollout.py",
+    "src/neuroshard/evolution/assistant_selector.py",
+    "src/neuroshard/evolution/assistant_workflow.py",
+    "src/neuroshard/evolution/assistant_workflow_data.py",
+    "src/neuroshard/evolution/assistant_workspace.py",
+    "src/neuroshard/evolution/granite_context_reference.py",
+    "src/neuroshard/evolution/granite_reference.py",
+    "src/neuroshard/evolution/granite_tokenizer.py",
+    "src/neuroshard/evolution/modular_tools.py",
+    "src/neuroshard/evolution/granite_shard_execution.py",
+    "src/neuroshard/evolution/granite_shard_serving.py",
+    "src/neuroshard/evolution/sharded/__init__.py",
+    "src/neuroshard/evolution/sharded/granite.py",
+    "src/neuroshard/evolution/sharded/granite_pipeline.py",
+    "src/neuroshard/evolution/sharded/granite_training.py",
+    "src/neuroshard/evolution/sharded/granite_serving.py",
+    "scripts/granite_shard_serving_cloud.py",
+    "scripts/granite_shard_cloud.py",
+    "scripts/modular_reference_cloud.py",
+    "src/neuroshard/evolution/granite_shard_audit.py",
+    "src/neuroshard/evolution/sharded/granite_audit.py",
+    "src/neuroshard/evolution/sharded/granite_streams.py",
+    "scripts/run_granite_shard_audit.py",
+    "scripts/granite_shard_audit_cloud.py",
+    "src/neuroshard/core/__init__.py",
+    "src/neuroshard/core/crypto/__init__.py",
+    "src/neuroshard/core/crypto/ecdsa.py",
+    "src/neuroshard/inference/__init__.py",
+    "src/neuroshard/inference/optimistic.py",
+    "src/neuroshard/evolution/granite_shard_settlement.py",
+    "scripts/run_granite_shard_settlement.py",
+    "scripts/granite_shard_settlement_cloud.py",
+    "docs/GRANITE_SHARD_SETTLEMENT.md",
+    "config/experiments/granite-shard-settlement.json",
+    "config/experiments/granite-shard-settlement-resources.json"
+  ],
+  "contracts": {
+    "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+    "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+    "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+    "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+    "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+    "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+    "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+    "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
+    "docs/granite-shard-audit-requirements.txt": "af0d0901a9ad17e8ea5c519e736c14861a78395e3d2f9e38c2b96e49d14358ff",
+    "config/experiments/granite-shard-settlement-resources.json": "8a5ec9f63a0d17a878608c1d800d44ba58873cfaffbc4da39c085332e0275cc4",
+    "docs/GRANITE_SHARD_SETTLEMENT.md": "b8f8c57bed6985daad2e625609cbe32af6de573c9ae90b6d3c4a4e1e4c1dcdef"
+  }
+}
