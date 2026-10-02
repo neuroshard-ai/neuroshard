@@ -1,0 +1,102 @@
+{
+  "format": "neuroshard-granite-shard-settlement-report/1",
+  "result": "config/experiments/granite-shard-settlement2-result.json",
+  "result_sha256": "4b06fabb39693cc599a0180c8d6cba2938d20da9b00021c404e8de5a502f1598",
+  "commit": "e51496ef75fd2b9272beac909ff3d057d36cb275",
+  "attempt": 2,
+  "passed": false,
+  "execution_completed": false,
+  "failed_phase": "sign-bond",
+  "diagnosis": {
+    "finding": "All six hosts fetched their shards; both owners then failed to sign their bonds.",
+    "cause": "The owner signing and auditor challenge phases imported granite_audit, which loads torch, before configuring the shard runtime, which refuses to run once torch is loaded. The saved host tracebacks show the refusal."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_compute_usd": 0.435425953746,
+    "hosts": [
+      {
+        "finished_utc": "2026-10-01T23:56:23.140796+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07977ff7a3d873eff"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 184.304249,
+        "conservative_compute_usd": 0.054185449206,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:56:54.768453+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-041fc4ea1e29a4fe8"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 208.606916,
+        "conservative_compute_usd": 0.061330433304,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:57:26.386815+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0668f75a765ed152d"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 232.94659,
+        "conservative_compute_usd": 0.06848629746,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:57:57.996559+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01bc7ff17cd225cd1"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 257.212632,
+        "conservative_compute_usd": 0.075620513808,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:58:34.825521+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-033f4322bd9e44805"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 286.800501,
+        "conservative_compute_usd": 0.084319347294,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-01T23:59:06.563108+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-08ec7519ad4e06cb7"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 311.169771,
+        "conservative_compute_usd": 0.09148391267400001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

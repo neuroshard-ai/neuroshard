@@ -86,11 +86,11 @@ def owner(rank, address, port, phase, home, store):
             save(home / 'account.json', {'account': account(store)[1], 'log_key': audited.owner_key(store)[1]},
                  exclusive=True)
         return result
+    shard.configure()
+    source = audited.freeze(PLAN)
     from neuroshard.evolution.sharded import granite_audit
     from neuroshard.inference import optimistic as ledger
 
-    shard.configure()
-    source = audited.freeze(PLAN)
     if rank < 1:
         raise ValueError('only bonded owners sign ledger transactions')
     request = read(home / f'{phase}-request.json')
@@ -125,10 +125,10 @@ def auditor(phase, home, store):
             save(home / 'accounts.json', {'auditor': account(store)[1], 'accuser': account(store, 'accuser')[1]},
                  exclusive=True)
         return result
-    from neuroshard.evolution.sharded import granite_audit
-
     shard.configure()
     source = audited.freeze(PLAN)
+    from neuroshard.evolution.sharded import granite_audit
+
     request = read(home / 'challenge-request.json')
     bundles = home / 'bundles'
     bundles.mkdir(exist_ok=True)

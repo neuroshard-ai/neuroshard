@@ -39,6 +39,11 @@
       "utc": "2026-10-01T23:17:01Z",
       "commit": "d76425458d58e03273d582912dc5f3f0d98412ec",
       "outcome": "Six hosts allocated and retired after a bootstrap failure; nothing remained ($0.33)."
+    },
+    {
+      "utc": "2026-10-01T23:59:00Z",
+      "commit": "e51496ef75fd2b9272beac909ff3d057d36cb275",
+      "outcome": "Six hosts fetched and were retired after the bond-signing failure; nothing remained ($0.44)."
     }
   ]
 }

@@ -347,6 +347,91 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
                                                                      - PARAMS['owner_bond_minimum'] + 500_000)
 
 
+ROLE = '''
+import json, sys
+from neuroshard.evolution import granite_shard_audit as audited, granite_shard_settlement as settlement
+audited.freeze = lambda plan_path=None: {"commit": "rehearsal"}
+role, phase, home, store = sys.argv[1:5]
+if role.startswith("owner-"):
+    result = settlement.owner(int(role.split("-")[1]), "", 0, phase, home, store)
+else:
+    result = settlement.auditor(phase, home, store)
+print(json.dumps({"completed": result["completed"]}))
+'''
+
+
+def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_them(world, tmp_path):
+    import hashlib
+    import shutil
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from neuroshard.evolution import granite_shard_settlement as settlement
+    from neuroshard.evolution.modular_reference_execution import read, sha256
+    from neuroshard.inference import optimistic as ledger
+
+    plan = read(ROOT / settlement.PLAN)
+    terms = plan['ledger']
+    homes = {name: tmp_path / name / 'home' for name in ('owner-1', 'owner-2', 'auditor')}
+    stores = {name: tmp_path / name / 'store' for name in homes}
+    for name in homes:
+        homes[name].mkdir(parents=True)
+        stores[name].mkdir(parents=True)
+    for rank in (1, 2):
+        (stores[f'owner-{rank}'] / 'owner.key').write_text(Ed25519PrivateKey.generate().private_bytes_raw().hex() + '\n')
+    keys = {rank: stores[f'owner-{rank}'] / 'owner.key' for rank in (1, 2)}
+    for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
+        results = sharded(world, tmp_path / label, log=True, fault=fault, keys=keys)
+        assert all(r['completed'] for r in results)
+        for rank in (1, 2):
+            shutil.copytree(tmp_path / label / f'log-{rank}', homes[f'owner-{rank}'] / f'serve-{label}' / f'log-{rank}')
+        shutil.copytree(tmp_path / label / 'log-1', homes['auditor'] / f'serve-{label}' / 'log-1')
+    assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
+    shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', homes['auditor'] / 'audit-cheat' / 'proof')
+
+    def role(name, phase, **request):
+        if request:
+            (homes[name] / f'{phase}-request.json').write_text(json.dumps({'chain_id': terms['chain_id'], **request}))
+        output = subprocess.check_output([sys.executable, '-c', ROLE, name, phase, str(homes[name]), str(stores[name])],
+                                         env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, text=True)
+        assert json.loads(output.strip().splitlines()[-1])['completed']
+        return read(homes[name] / phase / 'result.json')
+
+    model = sha256(ROOT / settlement.MODEL_INVENTORY)
+    bonds = [role(f'owner-{r}', 'sign-bond', nonce=0, model_root=model, amount=terms['owner_bond'])['envelope'] for r in (1, 2)]
+    log_keys = [envelope['body']['log_key'] for envelope in bonds]
+    user_key, user = settlement.account(tmp_path, 'user')
+    jobs, opened = {}, {}
+    for nonce, label in enumerate(('honest', 'cheat')):
+        opened[label] = settlement.signed(user_key, {'kind': 'serve_open', 'chain_id': terms['chain_id'], 'nonce': nonce,
+                                                     'model_root': model, 'owners': log_keys,
+                                                     'request_root': hashlib.sha256(label.encode()).hexdigest(),
+                                                     'price': terms['price']})
+        jobs[label] = ledger.transaction_id(opened[label])
+    commits = {label: [role(f'owner-{r}', f'commit-{label}', nonce=nonce, job_id=jobs[label])['envelope'] for r in (1, 2)]
+               for nonce, label in ((1, 'honest'), (2, 'cheat'))}
+    challenge = role('auditor', 'challenge', honest_job=jobs['honest'], cheated_job=jobs['cheat'], log_key=log_keys[0])
+    for rank in (1, 2):
+        for label in ('honest', 'cheat'):
+            assert not (homes[f'owner-{rank}'] / f'serve-{label}' / f'log-{rank}' / 'inputs.safetensors').exists()
+    assert not (homes['auditor'] / 'serve-honest' / 'log-1' / 'inputs.safetensors').exists()
+    parties = {'user': user, 'owner-1': bonds[0]['public_key'], 'owner-2': bonds[1]['public_key'],
+               'auditor': challenge['proven']['public_key'], 'accuser': challenge['framing']['public_key']}
+    genesis = ledger.genesis(terms['chain_id'], model, terms['shards'],
+                             {account: terms['allocation'] for account in parties.values()}, terms['params'])
+    blocks = [bonds, [opened['honest']], commits['honest'], [opened['cheat']], commits['cheat'],
+              [challenge['framing']], [], [], [challenge['proven']], [], []]
+    (tmp_path / 'plan.json').write_text(json.dumps({'genesis': genesis, 'blocks': blocks}))
+    output = subprocess.check_output([sys.executable, '-c', VALIDATOR, str(world['config']), str(world['shards']),
+                                      str(homes['auditor'] / 'bundles'), str(tmp_path / 'plan.json')],
+                                     env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, text=True)
+    replica = json.loads(output.strip().splitlines()[-1])
+    assert replica['outcomes'] == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
+    state = replica['state']
+    assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(plan, parties)
+    assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheat']]['status'] == 'fraud'
+
+
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):
     from neuroshard.evolution import assistant_workspace as workspace
 

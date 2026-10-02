@@ -97,3 +97,23 @@ Declared on October 1, 2026, after the first attempt and before the second. The
 settlement module now exports `configure` and `freeze`. A new test checks that
 every registered execution module exports both, and it fails without this
 change. Every check, phase and resource is unchanged. One attempt.
+
+## Second attempt: failed at bond signing
+
+The [second attempt](../config/experiments/granite-shard-settlement2-report.json)
+(commit `e51496e`) passed bootstrap and fetched every shard. Then both owners
+failed to sign their bonds. The signing phase imported the audit module, which
+loads torch, before configuring the shard runtime, and that configuration
+refuses to run once torch is loaded. The tracebacks saved in the evidence show
+the refusal. All hosts were retired with nothing remaining ($0.44). The attempt
+stays failed.
+
+## Amendment for the third attempt
+
+Declared on October 1, 2026, after the second attempt and before the third. The
+owner signing and auditor challenge phases now configure the runtime before
+importing torch. A local rehearsal runs every signing role in its own process,
+as a host would, on real logs and a real fraud proof from small checkpoints. It
+assembles the declared blocks and replays them in a validator process, which
+must reach the declared outcomes and balances. It fails without this change.
+Every check, phase and resource is unchanged. One attempt.

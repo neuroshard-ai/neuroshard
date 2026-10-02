@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-settlement/1",
-  "status": "Declared on October 1, 2026, before any settlement run. Authorized by the project owner. Amended the same day for a second attempt after the first failed at bootstrap: the execution module now exports the configure and freeze functions bootstrap calls; every check, phase and resource is unchanged.",
+  "status": "Declared on October 1, 2026, before any settlement run. Authorized by the project owner. Amended the same day for a second attempt after the first failed at bootstrap: the execution module now exports the configure and freeze functions bootstrap calls; every check, phase and resource is unchanged. Amended again for a third attempt after the second failed at bond signing: the signing and challenge phases now configure the runtime before importing torch, and a local rehearsal runs every signing role. Every check, phase and resource is unchanged.",
   "purpose": "Settle audited sharded serving of the real assistant on the bonded optimistic serving ledger: an honest job is paid after its challenge window, a framing challenge is rejected, and a cheating owner is slashed by a real fraud proof, with two validators replaying the same blocks to the same state.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -183,16 +183,22 @@
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
     "docs/granite-shard-audit-requirements.txt": "af0d0901a9ad17e8ea5c519e736c14861a78395e3d2f9e38c2b96e49d14358ff",
-    "config/experiments/granite-shard-settlement-resources.json": "62469c322c964dc9a0e27a8d2fdef551048c9485d3dd3c0bfcada0c15ccf711b",
-    "docs/GRANITE_SHARD_SETTLEMENT.md": "27842089e698c22a8c6a678e97e957f269fb0b799419e79ed440be1ae85ceace"
+    "config/experiments/granite-shard-settlement-resources.json": "11801523f20dba84531345b2382124d5ae35c10e60376099a3b87376d98b7463",
+    "docs/GRANITE_SHARD_SETTLEMENT.md": "4922aee9984b67d07339cce5c6acaf75f8b3151080100493a1982a9fdb3de27f"
   },
-  "attempt": 2,
+  "attempt": 3,
   "prior_attempts": [
     {
       "commit": "d76425458d58e03273d582912dc5f3f0d98412ec",
       "report": "config/experiments/granite-shard-settlement-report.json",
       "report_sha256": "e1b39799fb89740e0dc58858faf390aeb8e9ba631099623076247d33af4aab60",
       "outcome": "Failed at bootstrap on every host: the execution module did not export configure and freeze ($0.33)."
+    },
+    {
+      "commit": "e51496ef75fd2b9272beac909ff3d057d36cb275",
+      "report": "config/experiments/granite-shard-settlement2-report.json",
+      "report_sha256": "85c2229a3773d68d5072ac656e9cd7308950c29307331e693205bc2285569aa1",
+      "outcome": "Failed at bond signing: torch was imported before the runtime was configured ($0.44)."
     }
   ]
 }

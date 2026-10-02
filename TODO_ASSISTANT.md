@@ -206,7 +206,8 @@ remain evidence, not readiness claims for this assistant.
   declared](docs/GRANITE_SHARD_SETTLEMENT.md): six hosts, each party signing its own
   transactions, two validators replaying the same blocks with real proof checks. The
   first attempt failed at bootstrap: the module lacked the functions bootstrap calls
-  ($0.33). A second attempt adds only those.
+  ($0.33). The second failed at bond signing: torch loaded before the runtime was
+  configured ($0.44). A third attempt fixes the order and rehearses every signing role.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
