@@ -432,6 +432,112 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
     assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheat']]['status'] == 'fraud'
 
 
+def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(world, tmp_path):
+    import hashlib
+    import shutil
+    import time
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from neuroshard.evolution.sharded import granite_audit
+    from neuroshard.inference import optimistic as ledger
+    from neuroshard.inference import optimistic_network as network
+
+    from test_optimistic_serving import CHAIN, Account
+
+    try:
+        network.engine_path()
+    except ValueError:
+        pytest.skip('CometBFT v0.38.26 is not installed')
+    keys, public = {}, {}
+    for rank in (1, 2):
+        private = Ed25519PrivateKey.generate()
+        keys[rank] = tmp_path / f'owner-{rank}.key'
+        keys[rank].write_text(private.private_bytes_raw().hex() + '\n')
+        public[rank] = private.public_key().public_bytes_raw().hex()
+    for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
+        assert all(r['completed'] for r in sharded(world, tmp_path / label, log=True, fault=fault, keys=keys))
+    assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
+    store = tmp_path / 'store'
+    proven = granite_audit.bundle_root(tmp_path / 'cheat' / 'log-1' / 'proof')
+    shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', store / proven)
+    record, payloads = granite_audit.load(tmp_path / 'honest' / 'log-1')
+    first = next(i for i, e in enumerate(record['entries']) if 'output' in e)
+    granite_audit.save_proof({'record': record, 'mismatch': first, 'inputs': {i: p for i, p in payloads.items() if i <= first}},
+                             tmp_path / 'forged')
+    forged = granite_audit.bundle_root(tmp_path / 'forged')
+    shutil.copytree(tmp_path / 'forged', store / forged)
+
+    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
+    model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
+    params = {**ledger.PARAMS, 'challenge_blocks': 12, 'job_blocks': 400}
+    terms = {'chain_id': CHAIN, 'model_root': model, 'shards': 3, 'params': params,
+             'allocations': {p.public: 20_000_000 for p in people.values()}}
+    node = {'shards': {'1': {'config': str(world['config']), 'shard': str(world['shards'])}}, 'bundles': str(store),
+            'threads': 1, 'warm_up_lengths': [16, 1]}
+    config = network.initialize(tmp_path / 'chain', terms, [node] * 4, base_port=29650, block_seconds=0.5)
+
+    def submit(envelope, validator=0):
+        admission = network.broadcast(network.url(config, validator), envelope)
+        if admission['code'] == 0:
+            return network.wait_included(config, envelope)
+        return admission
+
+    def bond(rank):
+        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
+        account, amount = people[f'owner-{rank}'], params['owner_bond_minimum']
+        possession = private.sign(ledger.possession_message(CHAIN, account.public, public[rank], rank, amount, account.nonce))
+        return account.sign('owner_bond', model_root=model, shard=rank, log_key=public[rank], amount=amount,
+                            possession=possession.hex())
+
+    def commit(rank, job, label):
+        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
+        statement = granite_audit.statement(granite_audit.load(tmp_path / label / f'log-{rank}')[0]).hex()
+        return people[f'owner-{rank}'].sign('log_commit', job_id=job, statement_root=statement,
+                                            log_signature=private.sign(ledger.commitment_message(CHAIN, job, statement)).hex())
+
+    def open_job(label):
+        envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
+                                       request_root=hashlib.sha256(label.encode()).hexdigest(), price=1_000_000)
+        return envelope, ledger.transaction_id(envelope)
+
+    def agreed():
+        while True:
+            states = [network.state(network.url(config, i)) for i in range(4)]
+            if len({s['height'] for s in states}) == 1:
+                return states
+            time.sleep(0.1)
+
+    try:
+        network.start(config, timeout=300)
+        for rank in (1, 2):
+            submit(bond(rank), rank)
+        opened, honest = open_job('honest')
+        submit(opened)
+        committed = max(submit(commit(rank, honest, 'honest'), rank) for rank in (1, 2))
+        framing = submit(people['accuser'].sign('challenge', job_id=honest, log_key=public[1], proof_root=forged), 3)
+        assert framing == {**framing, 'code': 1, 'log': 'Fraud proof does not verify'}
+        people['accuser'].nonce -= 1
+        network.wait_height(config, committed + params['challenge_blocks'] + 1)
+        assert agreed()[0]['results'][honest]['status'] == 'settled'
+        opened, cheated = open_job('cheat')
+        submit(opened)
+        for rank in (1, 2):
+            submit(commit(rank, cheated, 'cheat'), rank)
+        submit(people['auditor'].sign('challenge', job_id=cheated, log_key=public[1], proof_root=proven), 2)
+        states = agreed()
+    finally:
+        network.stop(config)
+    assert len({s['root'] for s in states}) == 1
+    state = states[0]
+    assert state['results'][cheated]['status'] == 'fraud' and state['owners'][public[1]]['status'] == 'slashed'
+    fee, bond_amount = params['fee'], params['owner_bond_minimum']
+    assert {name: state['accounts'][p.public]['balance'] for name, p in people.items()} == {
+        'user': 20_000_000 - 2 * fee - 1_000_000, 'owner-1': 20_000_000 - 3 * fee - bond_amount + 500_000,
+        'owner-2': 20_000_000 - 3 * fee - bond_amount + 500_000, 'auditor': 20_000_000 - fee + bond_amount // 2,
+        'accuser': 20_000_000}
+
+
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):
     from neuroshard.evolution import assistant_workspace as workspace
 

@@ -211,3 +211,62 @@ def test_the_ledger_never_loads_torch():
     root = Path(__file__).resolve().parents[2]
     probe = 'import sys, neuroshard.inference.optimistic; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=root, env={'PYTHONPATH': str(root / 'src')})
+
+
+def test_the_abci_application_admits_proposes_and_finalizes_only_transactions_that_apply(tmp_path):
+    import json
+
+    from neuroshard.demo import abci_pb2 as pb
+    from neuroshard.inference import optimistic_app as app
+
+    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor')}
+    terms = {'model_root': MODEL, 'shards': 3, 'allocations': {p.public: 20_000_000 for p in people.values()},
+             'params': PARAMS}
+    replays = []
+
+    def check(state, request):
+        replays.append(request['proof_root'])
+        return request['proof_root'] == 'aa' * 32
+
+    application = app.Application(tmp_path / 'settlement.sqlite', check)
+    application.InitChain(pb.RequestInitChain(chain_id=CHAIN, app_state_bytes=json.dumps(terms).encode(),
+                                              initial_height=1), None)
+    raw = lambda envelope: ledger.canonical(envelope)
+
+    def block(txs):
+        height = application.state['height'] + 1
+        assert application.ProcessProposal(pb.RequestProcessProposal(txs=txs, height=height), None).status == 1
+        results = application.FinalizeBlock(pb.RequestFinalizeBlock(txs=txs, height=height), None).tx_results
+        application.Commit(pb.RequestCommit(), None)
+        return results
+
+    keys = {}
+    for shard, name in ((1, 'owner-1'), (2, 'owner-2')):
+        keys[shard], envelope = bond(people[name], shard, f'log-{shard}')
+        assert application.CheckTx(pb.RequestCheckTx(tx=raw(envelope)), None).code == 0
+        block([raw(envelope)])
+    opened = people['user'].sign('serve_open', model_root=MODEL, owners=[keys[1], keys[2]], request_root='cd' * 32,
+                                 price=1_000_000)
+    job_id = ledger.transaction_id(opened)
+    commits = [raw(commit(people[f'owner-{s}'], f'log-{s}', job_id, f'{s}{s}' * 32)) for s in (1, 2)]
+    # A proposal keeps only transactions that apply in order; one that does not apply is dropped.
+    proposed = application.PrepareProposal(pb.RequestPrepareProposal(txs=commits + [raw(opened)] + commits,
+                                                                     height=application.state['height'] + 1,
+                                                                     max_tx_bytes=app.MAX_TX_BYTES), None).txs
+    assert list(proposed) == [raw(opened)] + commits
+    assert application.ProcessProposal(pb.RequestProcessProposal(txs=commits, height=application.state['height'] + 1),
+                                       None).status == 2
+    block(list(proposed))
+    bad = people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='ee' * 32)
+    rejected = application.CheckTx(pb.RequestCheckTx(tx=raw(bad)), None)
+    assert rejected.code == 1 and rejected.log == 'Fraud proof does not verify'
+    application.CheckTx(pb.RequestCheckTx(tx=raw(bad)), None)
+    assert replays == ['ee' * 32]
+    while job_id in application.state['jobs']:
+        block([])
+    assert application.state['results'][job_id]['status'] == 'settled'
+    reloaded = app.Application(tmp_path / 'settlement.sqlite', check)
+    assert ledger.root(reloaded.state) == ledger.root(application.state)
+    queried = json.loads(application.Query(pb.RequestQuery(path='/state'), None).value)
+    assert queried['root'] == ledger.root(application.state)
+    assert application.Info(pb.RequestInfo(), None).last_block_app_hash == bytes.fromhex(queried['root'])

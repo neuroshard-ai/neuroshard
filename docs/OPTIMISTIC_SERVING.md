@@ -11,6 +11,22 @@ The state machine is [`neuroshard.inference.optimistic`](../src/neuroshard/infer
 It imports no model code. The validator's proof checker is
 `granite_audit.challenge_checker`.
 
+## On CometBFT
+
+[`neuroshard.inference.optimistic_app`](../src/neuroshard/inference/optimistic_app.py)
+runs the ledger as an ABCI application behind native CometBFT 0.38.26
+validators, and [`optimistic_network`](../src/neuroshard/inference/optimistic_network.py)
+launches a local validator set.
+
+- Each block first advances the ledger, settling jobs whose window closed, then
+  applies its transactions.
+- Mempool admission and proposals evaluate a transaction against the next block's
+  state, so only transactions that apply reach a block. A challenge whose proof
+  does not verify is refused at admission and never enters a block.
+- Each validator replays a challenged proof once, with the shard it holds, and
+  caches the verdict. A bundle that cannot be read or replayed counts as not
+  verifying, on every validator alike.
+
 ## Roles
 
 - **Users** escrow payment for a serving job. Owner 0 (embedding, first layers
@@ -71,6 +87,10 @@ Tests on the small Granite-shaped checkpoints
 - Unit tests cover possession proofs, bond exposure while named or within the
   window, commitment signatures, voiding, late and failed challenges, expiry,
   conservation, and deterministic replay.
+- Four local CometBFT validators, each holding shard 1 of the small checkpoint,
+  settled the same scenario through consensus. The framing challenge was refused
+  at admission, the honest job settled, and the real proof slashed owner 1. All
+  four reached the same state root with exactly the expected balances.
 - [On the real 3B assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md), with every
   party signing on its own host, the same sequence passed all eight declared
   checks. Two validators reached the same state root, and the final balances
@@ -91,5 +111,5 @@ Tests on the small Granite-shaped checkpoints
   done.
 - **Execution class.** Bit-exact replay requires validators and owners to share
   the pinned runtime and CPU instruction class.
-- **Not yet on a chain.** The state machine is not yet wired into the CometBFT
-  application, and no independent operator has run it.
+- **Not yet on a public chain.** It runs on local CometBFT validators under one
+  operator, and no independent operator has run it.

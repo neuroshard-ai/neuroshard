@@ -210,7 +210,9 @@ remain evidence, not readiness claims for this assistant.
   configured ($0.44). [The third attempt passed all eight checks](docs/GRANITE_SHARD_SETTLEMENT_RESULTS.md)
   ($7.57): the honest job settled after its window, the framing was rejected, owner
   1 was slashed by the real proof, and both validators reached the same state root
-  with exactly the declared balances.
+  with exactly the declared balances. The ledger now runs as an ABCI application
+  behind CometBFT: four local validators holding shard 1 of the small checkpoint
+  settled the same scenario through consensus and agreed exactly.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
