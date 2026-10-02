@@ -85,10 +85,14 @@ def submit(validators, envelope, via=0, timeout=900):
     from neuroshard.inference import optimistic as ledger
 
     raw = ledger.canonical(envelope)
-    admitted = rpc(validators[via], "broadcast_tx_sync", {"tx": base64.b64encode(raw).decode()})
-    receipt = {"code": admitted.get("code", 0), "log": admitted.get("log", ""), "height": None}
-    if receipt["code"]:
-        return receipt
+    try:
+        admitted = rpc(validators[via], "broadcast_tx_sync", {"tx": base64.b64encode(raw).decode()})
+        receipt = {"code": admitted.get("code", 0), "log": admitted.get("log", ""), "height": None}
+        if receipt["code"]:
+            return receipt
+    except Exception as error:
+        # A reply can be lost after the transaction was admitted; inclusion decides.
+        receipt = {"code": None, "log": f"admission reply lost: {type(error).__name__}", "height": None}
     digest = base64.b64encode(hashlib.sha256(raw).digest()).decode()
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:

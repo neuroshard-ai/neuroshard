@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-chain/1",
-  "status": "Declared on October 2, 2026, before any chain run. Authorized by the project owner.",
+  "status": "Declared on October 2, 2026, before any chain run. Authorized by the project owner. Amended the same day for a second attempt after the first lost the reply to the auditor's challenge: nodes allow 120 s for an admission reply, the application replays proofs outside its state lock on one dedicated thread and never fails a handler, logs are kept, and the controller treats a lost reply as unknown. Every check, phase and resource is unchanged.",
   "purpose": "Settle audited sharded serving of the real assistant through CometBFT consensus: four validators on separate hosts, each holding only shard 1, admit transactions to their mempools and agree on every block.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -202,7 +202,16 @@
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
     "docs/granite-shard-chain-requirements.txt": "81032bfc974cfef246fe0b9fc87d5db81dc9101ae66b2b06f1be8e0970090867",
-    "config/experiments/granite-shard-chain-resources.json": "2f455187fcf473e90a61c69273d88fb31d06046f8ec5e0a5d883989306daef07",
-    "docs/GRANITE_SHARD_CHAIN.md": "590d76d62791c85108fb49eede8805fbced64bbb35515d982a0e237602fbc071"
-  }
+    "config/experiments/granite-shard-chain-resources.json": "9e6e7336014d90b9292edf0b01c5a925711ae8ca2906c809c2fc06c2acc453b4",
+    "docs/GRANITE_SHARD_CHAIN.md": "525856089fbb186dc198f37374c700b5307e6b267cdaa759e5da14cae766593c"
+  },
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "69d5b474cac22557ee2ecf4d3264e9df8d99c375",
+      "report": "config/experiments/granite-shard-chain-report.json",
+      "report_sha256": "4bb44631cb81587f71d5da9f72da299732798df616ced5240e7af78726c744f6",
+      "outcome": "All steps through the honest settlement passed by consensus; the reply to the auditor's challenge was lost to the RPC write timeout and the controller stopped the validators ($10.72)."
+    }
+  ]
 }

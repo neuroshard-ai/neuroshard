@@ -214,7 +214,10 @@ remain evidence, not readiness claims for this assistant.
   behind CometBFT: four local validators holding shard 1 of the small checkpoint
   settled the same scenario through consensus and agreed exactly. [Settlement of
   real-model serving through CometBFT is declared](docs/GRANITE_SHARD_CHAIN.md): four
-  validators on separate hosts, each holding only shard 1, agreeing on every block.
+  validators on separate hosts, each holding only shard 1, agreeing on every block. The
+  first attempt passed by consensus through the honest settlement, then lost the
+  reply to the auditor's challenge to CometBFT's 11 s RPC write timeout ($10.72).
+  A second attempt raises the timeout and replays proofs outside the state lock.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

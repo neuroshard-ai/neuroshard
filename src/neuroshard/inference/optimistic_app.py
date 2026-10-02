@@ -7,10 +7,13 @@ challenge's proof is replayed once per validator and its verdict cached.
 """
 
 import argparse
+import faulthandler
 import json
+import logging
 import signal
 import sqlite3
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -20,6 +23,7 @@ from neuroshard.demo import abci_pb2 as pb, abci_pb2_grpc as rpc
 from neuroshard.inference import optimistic as ledger
 
 INVALID = (ValueError, KeyError, TypeError, OverflowError, RecursionError)
+LOG = logging.getLogger('neuroshard.settlement')
 MAX_TX_BYTES = 16_384
 MAX_BLOCK_TXS = 16
 
@@ -43,19 +47,29 @@ def parse_json(raw):
 
 
 def cached(check):
-    """One replay per proof: the verdict depends only on the request, which binds the proof and commitment."""
-    verdicts, lock = {}, threading.Lock()
+    """One replay per proof on one dedicated thread: the verdict depends only on the request, which binds the proof.
+
+    A single worker gives every replay the same thread and so the same parallel arithmetic.
+    """
+    verdicts, lock, worker = {}, threading.Lock(), ThreadPoolExecutor(max_workers=1)
+
+    def replay(state, request):
+        started = time.monotonic()
+        try:
+            verdict = check(state, request) is True
+        except Exception:
+            # A bundle that cannot be read or replayed proves nothing, on every validator alike.
+            LOG.exception('proof replay failed for %s', request['proof_root'])
+            verdict = False
+        LOG.info('proof %s verdict %s in %.1f s', request['proof_root'], verdict, time.monotonic() - started)
+        return verdict
 
     def verify(state, request):
         key = ledger.digest(request)
         with lock:
             if key in verdicts:
                 return verdicts[key]
-        try:
-            verdict = check(state, request) is True
-        except Exception:
-            # A bundle that cannot be read or replayed proves nothing, on every validator alike.
-            verdict = False
+        verdict = worker.submit(replay, state, request).result()
         with lock:
             verdicts[key] = verdict
         return verdict
@@ -135,13 +149,39 @@ class Application(rpc.ABCIServicer):
             except INVALID as exc:
                 return pb.ResponseQuery(code=1, log=str(exc))
 
-    def CheckTx(self, request, context):
+    def preverify(self, raw):
+        """Replay a challenge's proof before taking the state lock, so consensus never waits behind a replay."""
+        try:
+            body = parse_json(raw).get('body') or {}
+        except (INVALID, AttributeError):
+            return
+        if not isinstance(body, dict) or body.get('kind') != 'challenge':
+            return
         with self.lock:
-            try:
+            state = self.state
+            job = (state or {}).get('jobs', {}).get(body.get('job_id'))
+            key = body.get('log_key')
+            if not job or key not in job['commits']:
+                return
+            request = {'job_id': body['job_id'], 'shard': state['owners'][key]['shard'], 'log_key': key,
+                       'statement_root': job['commits'][key], 'proof_root': body.get('proof_root')}
+        try:
+            ledger.hex_digest(request['proof_root'])
+        except ValueError:
+            return
+        self.check(state, request)
+
+    def CheckTx(self, request, context):
+        try:
+            self.preverify(request.tx)
+            with self.lock:
                 self.block(self.state['height'] + 1 if self.state else 1, [request.tx])
-                return pb.ResponseCheckTx(gas_wanted=1)
-            except INVALID as exc:
-                return pb.ResponseCheckTx(code=1, log=str(exc))
+            return pb.ResponseCheckTx(gas_wanted=1)
+        except INVALID as exc:
+            return pb.ResponseCheckTx(code=1, log=str(exc))
+        except Exception as exc:
+            LOG.exception('CheckTx failed unexpectedly')
+            return pb.ResponseCheckTx(code=2, log=f'internal error: {type(exc).__name__}')
 
     def PrepareProposal(self, request, context):
         with self.lock:
@@ -154,6 +194,8 @@ class Application(rpc.ABCIServicer):
                     chosen.append(raw)
                 except INVALID:
                     continue
+                except Exception:
+                    LOG.exception('PrepareProposal skipped a transaction that failed unexpectedly')
             return pb.ResponsePrepareProposal(txs=chosen)
 
     def ProcessProposal(self, request, context):
@@ -164,6 +206,9 @@ class Application(rpc.ABCIServicer):
                 self.block(request.height, list(request.txs))
                 return pb.ResponseProcessProposal(status=1)
             except INVALID:
+                return pb.ResponseProcessProposal(status=2)
+            except Exception:
+                LOG.exception('ProcessProposal rejected a block that failed unexpectedly')
                 return pb.ResponseProcessProposal(status=2)
 
     def FinalizeBlock(self, request, context):
@@ -177,6 +222,9 @@ class Application(rpc.ABCIServicer):
                     results.append(pb.ExecTxResult())
                 except INVALID as exc:
                     results.append(pb.ExecTxResult(code=1, log=str(exc)))
+                except Exception as exc:
+                    LOG.exception('FinalizeBlock recorded a transaction that failed unexpectedly')
+                    results.append(pb.ExecTxResult(code=2, log=f'internal error: {type(exc).__name__}'))
             self.pending = state
             return pb.ResponseFinalizeBlock(tx_results=results, app_hash=self.app_hash(state))
 
@@ -220,12 +268,21 @@ def shard_checker(node):
     from neuroshard.evolution.sharded import granite, granite_audit
 
     torch.set_num_threads(node['threads'])
+    configured = threading.local()
     partitions = {}
     for rank, paths in node['shards'].items():
         partition, _ = granite.load_partition(granite.load_config(paths['config']), paths['shard'], int(rank))
         partition.warm_up(**({'lengths': tuple(node['warm_up_lengths'])} if node.get('warm_up_lengths') else {}))
         partitions[int(rank)] = partition
-    return granite_audit.challenge_checker(node['bundles'], partitions)
+    check = granite_audit.challenge_checker(node['bundles'], partitions)
+
+    def replay(state, request):
+        # Thread counts are per thread; the replay thread uses the same count as the loading thread.
+        if not getattr(configured, 'threads', False):
+            torch.set_num_threads(node['threads'])
+            configured.threads = True
+        return check(state, request)
+    return replay
 
 
 def main():
@@ -233,6 +290,8 @@ def main():
     parser.add_argument('--home', type=Path, required=True)
     parser.add_argument('--port', type=int, required=True)
     args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
+    faulthandler.enable()
     node = json.loads((args.home / 'settlement.json').read_text())
     app = Application(args.home / 'settlement.sqlite', shard_checker(node))
     server = grpc.server(ThreadPoolExecutor(max_workers=8))

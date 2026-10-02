@@ -270,3 +270,47 @@ def test_the_abci_application_admits_proposes_and_finalizes_only_transactions_th
     queried = json.loads(application.Query(pb.RequestQuery(path='/state'), None).value)
     assert queried['root'] == ledger.root(application.state)
     assert application.Info(pb.RequestInfo(), None).last_block_app_hash == bytes.fromhex(queried['root'])
+
+
+def test_a_slow_proof_replay_runs_outside_the_state_lock(tmp_path):
+    import json
+    import threading
+
+    from neuroshard.demo import abci_pb2 as pb
+    from neuroshard.inference import optimistic_app as app
+
+    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor')}
+    terms = {'model_root': MODEL, 'shards': 3, 'allocations': {p.public: 20_000_000 for p in people.values()},
+             'params': PARAMS}
+    free, threads = [], []
+
+    def check(state, request):
+        probe = threading.Thread(target=lambda: free.append(application.lock.acquire(timeout=2) and
+                                                            (application.lock.release() or True)))
+        probe.start()
+        probe.join()
+        threads.append(threading.current_thread().name)
+        return True
+
+    application = app.Application(tmp_path / 'settlement.sqlite', check)
+    application.InitChain(pb.RequestInitChain(chain_id=CHAIN, app_state_bytes=json.dumps(terms).encode()), None)
+
+    def block(txs):
+        height = application.state['height'] + 1
+        application.FinalizeBlock(pb.RequestFinalizeBlock(txs=txs, height=height), None)
+        application.Commit(pb.RequestCommit(), None)
+
+    keys = {}
+    for shard, name in ((1, 'owner-1'), (2, 'owner-2')):
+        keys[shard], envelope = bond(people[name], shard, f'log-{shard}')
+        block([ledger.canonical(envelope)])
+    opened = people['user'].sign('serve_open', model_root=MODEL, owners=[keys[1], keys[2]], request_root='cd' * 32,
+                                 price=1_000_000)
+    job_id = ledger.transaction_id(opened)
+    block([ledger.canonical(opened)] + [ledger.canonical(commit(people[f'owner-{s}'], f'log-{s}', job_id, f'{s}{s}' * 32))
+                                        for s in (1, 2)])
+    challenge = ledger.canonical(people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='aa' * 32))
+    assert application.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == 0
+    assert free == [True]
+    block([challenge])
+    assert application.state['results'][job_id]['status'] == 'fraud' and len(threads) == 1

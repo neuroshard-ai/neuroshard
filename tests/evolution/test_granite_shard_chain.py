@@ -160,6 +160,7 @@ def test_validators_create_identities_and_configure_nodes_that_reach_consensus(t
         (homes[index] / 'chain-configure-request.json').write_text(json.dumps(
             {'genesis': genesis, 'peers': peers, 'ports': ports[index], 'p2p_host': '127.0.0.1'}))
         role(index, 'chain-configure')
+        assert 'timeout_broadcast_tx_commit = "120s"' in (homes[index] / 'chain' / 'config' / 'config.toml').read_text()
         # Proof checks are covered elsewhere; this rehearsal checks the consensus setup alone.
         (homes[index] / 'chain' / 'settlement.json').write_text('{}')
     try:

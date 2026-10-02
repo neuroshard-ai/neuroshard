@@ -33,5 +33,12 @@
     "path": "config/experiments/granite-shard-settlement3-report.json",
     "sha256": "95f5b82f75f0741824486b335a2d569a3f9b01ad4f8f3265ebac03771ff86110"
   },
-  "budget_scope": "One host of eight for the chain settlement execution (three owners, one light auditor, four CometBFT validators), each its own allocation: r7i.4xlarge at the canonical eight threads, eight-hour expiry and twelve-dollar allowance (at most $96). About two hours and $17 are expected. No GPU or training."
+  "budget_scope": "One host of eight for the chain settlement execution (three owners, one light auditor, four CometBFT validators), each its own allocation: r7i.4xlarge at the canonical eight threads, eight-hour expiry and twelve-dollar allowance (at most $96). About two hours and $17 are expected. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-10-02T04:58:00Z",
+      "commit": "69d5b474cac22557ee2ecf4d3264e9df8d99c375",
+      "outcome": "Eight hosts ran through the honest settlement, then were retired after the lost challenge reply; nothing remained ($10.72)."
+    }
+  ]
 }

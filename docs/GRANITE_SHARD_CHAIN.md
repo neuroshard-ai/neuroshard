@@ -79,3 +79,40 @@ Resources: eight r7i.4xlarge allocations, each with its own expiry and a $12
 allowance (at most $96), under the
 [resource contract](../config/experiments/granite-shard-chain-resources.json).
 About two hours and $17 are expected. One attempt.
+
+## First attempt: the challenge reply was lost
+
+The [first attempt](../config/experiments/granite-shard-chain-report.json)
+(commit `69d5b47`) went through consensus as declared up to the last step. Both
+bonds, both job openings and all four log commitments were committed. The
+framing challenge was refused at admission with "Fraud proof does not verify",
+and the honest job settled by consensus at height 3109.
+
+Submitting the auditor's challenge then failed. Admitting it replays the proof,
+about 12 s on the real model. CometBFT's RPC server closes a response after its
+write timeout, about 11 s by default, so the admission reply was lost. The
+controller treated that as fatal, and its cleanup stopped every validator. The
+application had also replayed under its state lock, which left one validator
+four blocks behind.
+
+Locally, four validators with a 15-second stand-in proof check reproduced the
+lost reply. All hosts were retired with nothing remaining ($10.72). The attempt
+stays failed.
+
+## Amendment for the second attempt
+
+Declared on October 2, 2026, after the first attempt and before the second.
+
+- Each node allows 120 s for an admission reply.
+- The application replays proofs outside its state lock, on one dedicated thread
+  with a fixed thread count, and caches each verdict. Its handlers log and answer
+  safely rather than fail.
+- Nodes keep info-level logs, and the application keeps Python tracebacks and
+  crash dumps, all in the evidence.
+- The controller treats a lost admission reply as unknown and waits for
+  inclusion.
+
+With these changes, the local experiment admitted the slow challenge after 15 s
+and committed it, and all four validators advanced together. A unit test checks
+that a replay runs while the state lock is free. Every check, phase and
+resource is unchanged. One attempt.
