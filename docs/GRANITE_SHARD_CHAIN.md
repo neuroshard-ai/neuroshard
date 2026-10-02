@@ -116,3 +116,12 @@ With these changes, the local experiment admitted the slow challenge after 15 s
 and committed it, and all four validators advanced together. A unit test checks
 that a replay runs while the state lock is free. Every check, phase and
 resource is unchanged. One attempt.
+
+## Second attempt: passed
+
+The [second attempt](GRANITE_SHARD_CHAIN_RESULTS.md) (commit `2ff26b6`)
+**passed all eight declared checks**. The honest job settled by consensus at
+height 3130; the auditor's challenge was admitted after a 12–13 s proof replay
+and committed at height 3154. All four validators reported the same state root
+at height 3157. All hosts were retired with nothing remaining ($10.81). The
+first attempt stays failed.

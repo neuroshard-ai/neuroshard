@@ -1,7 +1,8 @@
 # Bonded optimistic serving ledger
 
-Status: implemented, tested on small checkpoints, and run once on the real
-assistant, October 2, 2026. Not deployed on any chain. This is the settlement layer of the
+Status: implemented, tested on small checkpoints, settled once on the real
+assistant through four CometBFT validator hosts, October 2, 2026. Not a public
+chain and not independent operation. This is the settlement layer of the
 [verifiable network design](VERIFIABLE_NETWORK_DESIGN.md): serving work is
 accepted unless an auditor proves fraud within a challenge window. Validators
 replay a fraud proof only when a challenge arrives, so honest serving costs them
@@ -95,6 +96,10 @@ Tests on the small Granite-shaped checkpoints
   party signing on its own host, the same sequence passed all eight declared
   checks. Two validators reached the same state root, and the final balances
   matched the declared expectation exactly.
+- [Through CometBFT consensus](GRANITE_SHARD_CHAIN_RESULTS.md), four validator
+  hosts holding only shard 1 admitted the same transactions to their mempools
+  and agreed on every block. The honest job settled at height 3130, the framing
+  was refused at admission, and the real proof slashed owner 1 at height 3154.
 
 ## Limits
 
@@ -111,5 +116,5 @@ Tests on the small Granite-shaped checkpoints
   done.
 - **Execution class.** Bit-exact replay requires validators and owners to share
   the pinned runtime and CPU instruction class.
-- **Not yet on a public chain.** It runs on local CometBFT validators under one
+- **Not yet on a public chain.** It has run on four CometBFT hosts under one
   operator, and no independent operator has run it.

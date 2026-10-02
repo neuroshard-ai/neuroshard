@@ -1,0 +1,325 @@
+{
+  "format": "neuroshard-granite-shard-chain-report/1",
+  "result": "config/experiments/granite-shard-chain2-result.json",
+  "result_sha256": "0f565083e2344a7b7ca054f9df7aa754d78290cc983307b15fa924886de2def9",
+  "commit": "2ff26b6fcbcdf4c2221b85dd3d6c67c0be97b25c",
+  "attempt": 2,
+  "passed": true,
+  "execution_completed": true,
+  "checks": {
+    "honest_agreement": true,
+    "validators_agree": true,
+    "honest_work_committed": true,
+    "framing_refused": true,
+    "fault_named": true,
+    "fault_proven": true,
+    "honest_settled_first": true,
+    "balances_exact": true
+  },
+  "report": {
+    "passed": true,
+    "checks": {
+      "honest_agreement": true,
+      "validators_agree": true,
+      "honest_work_committed": true,
+      "framing_refused": true,
+      "fault_named": true,
+      "fault_proven": true,
+      "honest_settled_first": true,
+      "balances_exact": true
+    },
+    "honest": {
+      "correct": 18,
+      "mismatches": [],
+      "p95_seconds": 97.83292927900015
+    },
+    "admissions": {
+      "bond-1": {
+        "code": 0,
+        "log": "",
+        "height": 18
+      },
+      "bond-2": {
+        "code": 0,
+        "log": "",
+        "height": 21
+      },
+      "open-honest": {
+        "code": 0,
+        "log": "",
+        "height": 24
+      },
+      "commit-honest-1": {
+        "code": 0,
+        "log": "",
+        "height": 1326
+      },
+      "commit-honest-2": {
+        "code": 0,
+        "log": "",
+        "height": 1329
+      },
+      "framing": {
+        "code": 1,
+        "log": "Fraud proof does not verify",
+        "height": null
+      },
+      "open-cheat": {
+        "code": 0,
+        "log": "",
+        "height": 1727
+      },
+      "commit-cheat-1": {
+        "code": 0,
+        "log": "",
+        "height": 3042
+      },
+      "commit-cheat-2": {
+        "code": 0,
+        "log": "",
+        "height": 3046
+      },
+      "proven": {
+        "code": 0,
+        "log": "",
+        "height": 3154
+      }
+    },
+    "roots": [
+      "4f99cd0e8cfed8cb893efc06f19532f96fbd856b353500b8a77ed2d9bdc4c1ed",
+      "4f99cd0e8cfed8cb893efc06f19532f96fbd856b353500b8a77ed2d9bdc4c1ed",
+      "4f99cd0e8cfed8cb893efc06f19532f96fbd856b353500b8a77ed2d9bdc4c1ed",
+      "4f99cd0e8cfed8cb893efc06f19532f96fbd856b353500b8a77ed2d9bdc4c1ed"
+    ],
+    "heights": [
+      3157,
+      3157,
+      3157,
+      3157
+    ],
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "final_balances": {
+    "user": 18998000,
+    "owner-1": 15497000,
+    "owner-2": 15497000,
+    "auditor": 22499000,
+    "accuser": 20000000
+  },
+  "burned": 2509000,
+  "state_root": "4f99cd0e8cfed8cb893efc06f19532f96fbd856b353500b8a77ed2d9bdc4c1ed",
+  "heights": [
+    3157,
+    3157,
+    3157,
+    3157
+  ],
+  "admissions": {
+    "bond-1": {
+      "code": 0,
+      "log": "",
+      "height": 18
+    },
+    "bond-2": {
+      "code": 0,
+      "log": "",
+      "height": 21
+    },
+    "open-honest": {
+      "code": 0,
+      "log": "",
+      "height": 24
+    },
+    "commit-honest-1": {
+      "code": 0,
+      "log": "",
+      "height": 1326
+    },
+    "commit-honest-2": {
+      "code": 0,
+      "log": "",
+      "height": 1329
+    },
+    "framing": {
+      "code": 1,
+      "log": "Fraud proof does not verify",
+      "height": null
+    },
+    "open-cheat": {
+      "code": 0,
+      "log": "",
+      "height": 1727
+    },
+    "commit-cheat-1": {
+      "code": 0,
+      "log": "",
+      "height": 3042
+    },
+    "commit-cheat-2": {
+      "code": 0,
+      "log": "",
+      "height": 3046
+    },
+    "proven": {
+      "code": 0,
+      "log": "",
+      "height": 3154
+    }
+  },
+  "jobs": {
+    "honest": "7c1bda914565549aba2bea97b5195a7781b6f308f801d6c0ac64ec7d3929ebea",
+    "cheat": "7d477990452f6927bc1483f156783a7b0806ae43fda6173787a9e188b547fcb3"
+  },
+  "genesis_sha256": "1f089fec8413265d50d3165009d9e47bb259cb24aac6c298f7e41ed33deac59b",
+  "measured": {
+    "honest_audit_forwards": 8830,
+    "honest_audit_seconds": 494.598883916,
+    "fault_forward": 200,
+    "fault_detection_seconds": 11.761534136000591,
+    "honest_episodes_seconds": 1659.825641936,
+    "honest_p95_seconds": 97.83292927900015,
+    "validator_proof_seconds": {
+      "framing": {
+        "validator-4": 1.0
+      },
+      "proven": {
+        "validator-1": 12.3,
+        "validator-2": 13.1,
+        "validator-3": 12.5,
+        "validator-4": 12.9
+      }
+    },
+    "bundle_bytes": {
+      "75c68e8a64824465001e551baa2301846d002bc220a2c4bbf1c9be3913ecacb0": 5598825,
+      "d4160a897aca0b70b32027383c7fdbe83d8368940b8410e9c2e65a2e71b68aa1": 12658787
+    },
+    "evidence_bytes": {
+      "owner-0": 573181,
+      "owner-1": 1406367,
+      "owner-2": 1460777,
+      "auditor": 28191756,
+      "validator-1": 22568708,
+      "validator-2": 22570187,
+      "validator-3": 22525124,
+      "validator-4": 22574708
+    }
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 36783.738876999996,
+    "conservative_compute_usd": 10.814419229838,
+    "hosts": [
+      {
+        "finished_utc": "2026-10-02T07:09:39.121905+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0f4a4bf17a41a966c"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4489.114831,
+        "conservative_compute_usd": 1.319799760314,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:10:20.982796+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-029deec2d1a36d3ee"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4523.693525,
+        "conservative_compute_usd": 1.32996589635,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:11:02.827438+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0f7ae6de96de4ed61"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4558.275008,
+        "conservative_compute_usd": 1.340132852352,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:11:39.551128+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0c59f278903e1a600"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4587.654994,
+        "conservative_compute_usd": 1.348770568236,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:12:16.227791+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01717517ea9fb4e7e"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4617.062339,
+        "conservative_compute_usd": 1.357416327666,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:12:47.955150+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0fa9d6ffc6573a9ee"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4641.504575,
+        "conservative_compute_usd": 1.36460234505,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:13:24.585707+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a2994812fce2e83e"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4670.974902,
+        "conservative_compute_usd": 1.3732666211879998,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T07:13:56.325220+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-09225f52d55d93b02"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4695.458703,
+        "conservative_compute_usd": 1.380464858682,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "prior_attempt_usd": 10.724330043756,
+  "all_attempts_usd": 21.538749273594,
+  "checklist_credit": false,
+  "admission_evidence": false
+}

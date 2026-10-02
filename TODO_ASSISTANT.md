@@ -217,7 +217,12 @@ remain evidence, not readiness claims for this assistant.
   validators on separate hosts, each holding only shard 1, agreeing on every block. The
   first attempt passed by consensus through the honest settlement, then lost the
   reply to the auditor's challenge to CometBFT's 11 s RPC write timeout ($10.72).
-  A second attempt raises the timeout and replays proofs outside the state lock.
+  [The second attempt passed all eight checks](docs/GRANITE_SHARD_CHAIN_RESULTS.md)
+  ($10.81): the honest job settled by consensus, the framing was refused at
+  admission, owner 1 was slashed by the real proof, and all four validators
+  reached the same state root with exactly the declared balances. One operator
+  still ran every host; this is not independent operation and gives no checklist
+  credit.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

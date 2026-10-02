@@ -1,6 +1,6 @@
 {
   "format": "neuroshard-granite-shard-chain/1",
-  "status": "Declared on October 2, 2026, before any chain run. Authorized by the project owner. Amended the same day for a second attempt after the first lost the reply to the auditor's challenge: nodes allow 120 s for an admission reply, the application replays proofs outside its state lock on one dedicated thread and never fails a handler, logs are kept, and the controller treats a lost reply as unknown. Every check, phase and resource is unchanged.",
+  "status": "Declared on October 2, 2026, before any chain run. Authorized by the project owner. Amended the same day for a second attempt after the first lost the reply to the auditor's challenge: nodes allow 120 s for an admission reply, the application replays proofs outside its state lock on one dedicated thread and never fails a handler, logs are kept, and the controller treats a lost reply as unknown. Every check, phase and resource is unchanged. The second attempt passed all eight checks.",
   "purpose": "Settle audited sharded serving of the real assistant through CometBFT consensus: four validators on separate hosts, each holding only shard 1, admit transactions to their mempools and agree on every block.",
   "model": {
     "artifacts": "config/experiments/granite-reference-artifacts.json",
@@ -203,7 +203,7 @@
     "config/experiments/assistant-experience-development-round4-result.json": "3eff9b69fa6978148b7b015a5505179a73d67a9b35ffcf402f13ecaa24838497",
     "docs/granite-shard-chain-requirements.txt": "81032bfc974cfef246fe0b9fc87d5db81dc9101ae66b2b06f1be8e0970090867",
     "config/experiments/granite-shard-chain-resources.json": "9e6e7336014d90b9292edf0b01c5a925711ae8ca2906c809c2fc06c2acc453b4",
-    "docs/GRANITE_SHARD_CHAIN.md": "525856089fbb186dc198f37374c700b5307e6b267cdaa759e5da14cae766593c"
+    "docs/GRANITE_SHARD_CHAIN.md": "153553ecc7d5932334a3e372756e7bbc599875299743995d78aad2a216019315"
   },
   "attempt": 2,
   "prior_attempts": [
