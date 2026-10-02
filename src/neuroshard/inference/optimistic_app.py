@@ -210,6 +210,11 @@ def shard_checker(node):
     """The validator's real proof checker from its node configuration: shard holdings and the bundle store."""
     if not node.get('shards'):
         return lambda state, request: False
+    if node.get('runtime') == 'granite-shard':
+        # Replays must run in the owners' numerical environment, set before torch loads.
+        from neuroshard.evolution import granite_shard_execution as shard
+
+        shard.configure()
     import torch
 
     from neuroshard.evolution.sharded import granite, granite_audit

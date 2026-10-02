@@ -212,7 +212,9 @@ remain evidence, not readiness claims for this assistant.
   1 was slashed by the real proof, and both validators reached the same state root
   with exactly the declared balances. The ledger now runs as an ABCI application
   behind CometBFT: four local validators holding shard 1 of the small checkpoint
-  settled the same scenario through consensus and agreed exactly.
+  settled the same scenario through consensus and agreed exactly. [Settlement of
+  real-model serving through CometBFT is declared](docs/GRANITE_SHARD_CHAIN.md): four
+  validators on separate hosts, each holding only shard 1, agreeing on every block.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

@@ -76,18 +76,19 @@ def stash(log_dir, store):
         shutil.move(str(inputs), str(target))
 
 
-def owner(rank, address, port, phase, home, store):
+def owner(rank, address, port, phase, home, store, plan_path=PLAN):
+    """One owner phase under the contract at ``plan_path``; owners 1 and 2 sign their own ledger transactions."""
     home, store = Path(home), Path(store)
     if phase not in OWNER_PHASES:
         raise ValueError('unsupported settlement owner role')
     if phase in ('fetch', 'serve-honest', 'serve-cheat'):
-        result = audited.owner(rank, address, port, phase, home, store, plan_path=PLAN)
+        result = audited.owner(rank, address, port, phase, home, store, plan_path=plan_path)
         if phase == 'fetch' and rank > 0:
             save(home / 'account.json', {'account': account(store)[1], 'log_key': audited.owner_key(store)[1]},
                  exclusive=True)
         return result
     shard.configure()
-    source = audited.freeze(PLAN)
+    source = audited.freeze(plan_path)
     from neuroshard.evolution.sharded import granite_audit
     from neuroshard.inference import optimistic as ledger
 
@@ -114,6 +115,32 @@ def owner(rank, address, port, phase, home, store):
     return result
 
 
+def framing_challenge(home, store, request):
+    """A forged bundle claiming the honest log's first output was wrong, and the accuser's signed challenge."""
+    from neuroshard.evolution.sharded import granite_audit
+
+    record, payloads = granite_audit.load(home / 'serve-honest' / 'log-1')
+    first = next(i for i, entry in enumerate(record['entries']) if 'output' in entry)
+    granite_audit.save_proof({'record': record, 'mismatch': first,
+                              'inputs': {i: p for i, p in payloads.items() if i <= first}}, home / 'forged')
+    forged = granite_audit.bundle_root(home / 'forged')
+    shutil.copytree(home / 'forged', home / 'bundles' / forged)
+    body = {'kind': 'challenge', 'chain_id': request['chain_id'], 'nonce': 0, 'log_key': request['log_key'],
+            'job_id': request['honest_job'], 'proof_root': forged}
+    return {'forged_root': forged, 'forged_mismatch': first, 'framing': signed(account(store, 'accuser')[0], body)}
+
+
+def proven_challenge(home, store, request):
+    """The auditor's own fraud proof as a content-addressed bundle, and its signed challenge."""
+    from neuroshard.evolution.sharded import granite_audit
+
+    proven = granite_audit.bundle_root(home / 'audit-cheat' / 'proof')
+    shutil.copytree(home / 'audit-cheat' / 'proof', home / 'bundles' / proven)
+    body = {'kind': 'challenge', 'chain_id': request['chain_id'], 'nonce': 0, 'log_key': request['log_key'],
+            'job_id': request['cheated_job'], 'proof_root': proven}
+    return {'proven_root': proven, 'proven': signed(account(store)[0], body)}
+
+
 def auditor(phase, home, store):
     """The light auditor of shard 1, which also holds a separate accuser account for the framing attempt."""
     home, store = Path(home), Path(store)
@@ -127,25 +154,9 @@ def auditor(phase, home, store):
         return result
     shard.configure()
     source = audited.freeze(PLAN)
-    from neuroshard.evolution.sharded import granite_audit
-
     request = read(home / 'challenge-request.json')
-    bundles = home / 'bundles'
-    bundles.mkdir(exist_ok=True)
-    proven = granite_audit.bundle_root(home / 'audit-cheat' / 'proof')
-    shutil.copytree(home / 'audit-cheat' / 'proof', bundles / proven)
-    record, payloads = granite_audit.load(home / 'serve-honest' / 'log-1')
-    first = next(i for i, entry in enumerate(record['entries']) if 'output' in entry)
-    granite_audit.save_proof({'record': record, 'mismatch': first,
-                              'inputs': {i: p for i, p in payloads.items() if i <= first}}, home / 'forged')
-    forged = granite_audit.bundle_root(home / 'forged')
-    shutil.copytree(home / 'forged', bundles / forged)
-    auditor_key, _ = account(store)
-    accuser_key, _ = account(store, 'accuser')
-    challenge = {'kind': 'challenge', 'chain_id': request['chain_id'], 'nonce': 0, 'log_key': request['log_key']}
-    result = {'freeze': source, 'proven_root': proven, 'forged_root': forged, 'forged_mismatch': first,
-              'proven': signed(auditor_key, {**challenge, 'job_id': request['cheated_job'], 'proof_root': proven}),
-              'framing': signed(accuser_key, {**challenge, 'job_id': request['honest_job'], 'proof_root': forged}),
+    (home / 'bundles').mkdir(exist_ok=True)
+    result = {'freeze': source, **proven_challenge(home, store, request), **framing_challenge(home, store, request),
               'completed': True}
     for served in ('serve-honest', 'serve-cheat'):
         stash(home / served / 'log-1', store)
