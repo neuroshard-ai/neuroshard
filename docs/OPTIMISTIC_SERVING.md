@@ -1,7 +1,7 @@
 # Bonded optimistic serving ledger
 
-Status: implemented and tested on small checkpoints, October 1, 2026. Not
-deployed on any chain. This is the settlement layer of the
+Status: implemented, tested on small checkpoints, and run once on the real
+assistant, October 2, 2026. Not deployed on any chain. This is the settlement layer of the
 [verifiable network design](VERIFIABLE_NETWORK_DESIGN.md): serving work is
 accepted unless an auditor proves fraud within a challenge window. Validators
 replay a fraud proof only when a challenge arrives, so honest serving costs them
@@ -71,6 +71,10 @@ Tests on the small Granite-shaped checkpoints
 - Unit tests cover possession proofs, bond exposure while named or within the
   window, commitment signatures, voiding, late and failed challenges, expiry,
   conservation, and deterministic replay.
+- [On the real 3B assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md), with every
+  party signing on its own host, the same sequence passed all eight declared
+  checks. Two validators reached the same state root, and the final balances
+  matched the declared expectation exactly.
 
 ## Limits
 

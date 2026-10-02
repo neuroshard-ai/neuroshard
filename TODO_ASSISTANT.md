@@ -207,7 +207,10 @@ remain evidence, not readiness claims for this assistant.
   transactions, two validators replaying the same blocks with real proof checks. The
   first attempt failed at bootstrap: the module lacked the functions bootstrap calls
   ($0.33). The second failed at bond signing: torch loaded before the runtime was
-  configured ($0.44). A third attempt fixes the order and rehearses every signing role.
+  configured ($0.44). [The third attempt passed all eight checks](docs/GRANITE_SHARD_SETTLEMENT_RESULTS.md)
+  ($7.57): the honest job settled after its window, the framing was rejected, owner
+  1 was slashed by the real proof, and both validators reached the same state root
+  with exactly the declared balances.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

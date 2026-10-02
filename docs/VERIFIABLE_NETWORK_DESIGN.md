@@ -104,6 +104,6 @@ replication.
 | Signed owner logs, replay audit, fraud proofs | Tested on small checkpoints: honest owners verified; a one-bit fault caught, blamed and proven; forged accusations rejected |
 | Audited serving on the real model with light auditors | [Passed](GRANITE_SHARD_AUDIT_RESULTS.md): all 8830 forwards replayed exactly; a one-bit fault named and proven; no false blame |
 | Committee-of-modules growth | Measured: no parent success lost, but below one small module; A2 paused ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
-| Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [State machine](OPTIMISTIC_SERVING.md) tested with real fraud proofs on small checkpoints; not yet on chain |
+| Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; blocks ordered by one operator, not yet on CometBFT |
 | User-held first stage | Design |
 | Independent operators (A5) | Not started |
