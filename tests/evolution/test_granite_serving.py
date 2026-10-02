@@ -117,7 +117,8 @@ Path(sys.argv[2]).write_text(json.dumps(rows))
     return json.loads((work / 'rows.json').read_text())
 
 
-def sharded(world, home, conversations=None, episodes=True, streams=None, log=False, fault=None, keys=None):
+def sharded(world, home, conversations=None, episodes=True, streams=None, log=False, fault=None, keys=None,
+            session=None):
     home.mkdir()
     reference = Path(world['directory']) / 'tokenizer.json'
     job = {'spec': SPEC, 'arm': str(world['arm']), 'gate': world['gate'], 'tokenizer': str(world['directory']),
@@ -135,6 +136,8 @@ def sharded(world, home, conversations=None, episodes=True, streams=None, log=Fa
         job['fault'] = fault
     if keys:
         job['keys'] = {str(rank): str(path) for rank, path in keys.items()}
+    if session:
+        job['session'] = session
     (home / 'job.json').write_text(json.dumps(job))
     port = free_port()
     code = ('import os, sys; from neuroshard.evolution.sharded import granite_serving as s; '
@@ -267,6 +270,41 @@ print(json.dumps({"root": ledger.root(state), "outcomes": outcomes, "state": sta
 '''
 
 
+def signing_keys(directory, ranks=(0, 1, 2)):
+    """Ed25519 key files and public keys: rank 0 holds the user's session key, ranks 1 and 2 owner log keys."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    paths, public = {}, {}
+    for rank in ranks:
+        private = Ed25519PrivateKey.generate()
+        paths[rank] = Path(directory) / f'signing-{rank}.key'
+        paths[rank].write_text(private.private_bytes_raw().hex() + '\n')
+        public[rank] = private.public_key().public_bytes_raw().hex()
+    return paths, public
+
+
+def session(envelope, chain):
+    """The serving session of an opened job, as every owner receives it before serving."""
+    from neuroshard.inference import optimistic as ledger
+
+    body = envelope['body']
+    return {'chain_id': chain, 'job_id': ledger.transaction_id(envelope), 'request_root': body['request_root'],
+            'session_key': body['session_key'], 'log_keys': body['owners']}
+
+
+def log_commit(account, key_path, chain, job_id, log_dir):
+    """An owner's commitment, to ``job_id``, of the bound log in ``log_dir``."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from neuroshard.evolution.sharded import granite_audit
+    from neuroshard.inference import optimistic as ledger
+
+    private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(Path(key_path).read_text().strip()))
+    commitment = granite_audit.commitment(granite_audit.load(log_dir)[0])
+    signature = private.sign(ledger.commitment_message(chain, job_id, commitment['statement_root'])).hex()
+    return account.sign('log_commit', job_id=job_id, log_signature=signature, **commitment)
+
+
 def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(world, tmp_path):
     import hashlib
     import shutil
@@ -278,19 +316,35 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
 
     from test_optimistic_serving import CHAIN, PARAMS, Account
 
-    keys, public = {}, {}
-    for rank in (1, 2):
-        private = Ed25519PrivateKey.generate()
-        path = tmp_path / f'owner-{rank}.key'
-        path.write_text(private.private_bytes_raw().hex() + '\n')
-        keys[rank], public[rank] = path, private.public_key().public_bytes_raw().hex()
+    keys, public = signing_keys(tmp_path)
     people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
     model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
     genesis = ledger.genesis(CHAIN, model, 3, {p.public: 20_000_000 for p in people.values()}, PARAMS)
 
-    honest = sharded(world, tmp_path / 'honest', log=True, keys=keys)
-    cheated = sharded(world, tmp_path / 'cheated', log=True, fault={'rank': 1, 'at': 3}, keys=keys)
+    def open_job(request):
+        return people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
+                                   request_root=hashlib.sha256(request.encode()).hexdigest(), session_key=public[0],
+                                   price=1_000_000)
+
+    # Jobs open before serving, so every message of a pass is signed for its job.
+    open_honest, open_cheated = open_job('honest pass'), open_job('cheated pass')
+    honest_job, cheated_job = ledger.transaction_id(open_honest), ledger.transaction_id(open_cheated)
+    honest = sharded(world, tmp_path / 'honest', log=True, keys=keys, session=session(open_honest, CHAIN))
+    cheated = sharded(world, tmp_path / 'cheated', log=True, fault={'rank': 1, 'at': 3}, keys=keys,
+                      session=session(open_cheated, CHAIN))
     assert all(r['completed'] for r in honest + cheated)
+    # Signing every link changes no served token.
+    expected = single_host(world)
+    assert len(honest[0]['episodes']) == len(expected)
+    for got, want in zip(honest[0]['episodes'], expected):
+        assert [g['token_ids'] for g in got['generations']] == [g['token_ids'] for g in want['generations']]
+    for rank in (1, 2):
+        record = granite_audit.load(tmp_path / 'honest' / f'log-{rank}')[0]
+        assert record['session']['job_id'] == honest_job and not granite_audit.unattested(record)
+    # The user's device keeps the last owner's signature over everything it sent back.
+    held = honest[0]['attestation']
+    assert held['key'] == public[2] and not granite_audit.equivocates(
+        granite_audit.load(tmp_path / 'honest' / 'log-2')[0], held)
     assert audit(world, tmp_path / 'cheated', 1)['proof_accepted']
     store = tmp_path / 'store'
     proof = tmp_path / 'cheated' / 'log-1' / 'proof'
@@ -312,23 +366,17 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
                             possession=possession)
 
     def commit(rank, job_id, pass_name):
-        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
-        statement = granite_audit.statement(granite_audit.load(tmp_path / pass_name / f'log-{rank}')[0]).hex()
-        return people[f'owner-{rank}'].sign('log_commit', job_id=job_id, statement_root=statement,
-                                            log_signature=private.sign(ledger.commitment_message(CHAIN, job_id, statement)).hex())
+        return log_commit(people[f'owner-{rank}'], keys[rank], CHAIN, job_id, tmp_path / pass_name / f'log-{rank}')
 
-    def open_job(request):
-        envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
-                                       request_root=hashlib.sha256(request.encode()).hexdigest(), price=1_000_000)
-        return envelope, ledger.transaction_id(envelope)
-
-    open_honest, honest_job = open_job('honest pass')
-    open_cheated, cheated_job = open_job('cheated pass')
     blocks = [[bond(1), bond(2)], [open_honest], [commit(1, honest_job, 'honest'), commit(2, honest_job, 'honest')],
-              [open_cheated], [commit(1, cheated_job, 'cheated'), commit(2, cheated_job, 'cheated')],
-              [people['accuser'].sign('challenge', job_id=honest_job, log_key=public[1], proof_root=forged)],
-              [people['auditor'].sign('challenge', job_id=cheated_job, log_key=public[1], proof_root=real)],
-              [], [], []]
+              [open_cheated]]
+    # Owner 1 first offers its honest job's log, internally correct, for the cheated job.
+    reused = commit(1, cheated_job, 'honest')
+    people['owner-1'].nonce -= 1
+    blocks += [[reused, commit(1, cheated_job, 'cheated'), commit(2, cheated_job, 'cheated')],
+               [people['accuser'].sign('challenge', job_id=honest_job, log_key=public[1], proof_root=forged)],
+               [people['auditor'].sign('challenge', job_id=cheated_job, log_key=public[1], proof_root=real)],
+               [], [], []]
     (tmp_path / 'plan.json').write_text(json.dumps({'genesis': genesis, 'blocks': blocks}))
     replicas = []
     for _ in range(2):
@@ -338,7 +386,8 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
         replicas.append(json.loads(output.strip().splitlines()[-1]))
     assert replicas[0]['root'] == replicas[1]['root']
     outcomes, state = replicas[0]['outcomes'], replicas[0]['state']
-    assert outcomes == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
+    assert outcomes == (['accepted'] * 6 + ['rejected: Log is not bound to this job request'] + ['accepted'] * 2
+                        + ['rejected: Fraud proof does not verify', 'accepted'])
     assert state['results'][honest_job]['status'] == 'settled' and state['results'][cheated_job]['status'] == 'fraud'
     assert state['owners'][public[1]]['status'] == 'slashed' and state['owners'][public[2]]['status'] == 'active'
     reward = PARAMS['owner_bond_minimum'] * PARAMS['auditor_share_ppm'] // 1_000_000
@@ -380,14 +429,9 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
     for rank in (1, 2):
         (stores[f'owner-{rank}'] / 'owner.key').write_text(Ed25519PrivateKey.generate().private_bytes_raw().hex() + '\n')
     keys = {rank: stores[f'owner-{rank}'] / 'owner.key' for rank in (1, 2)}
-    for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
-        results = sharded(world, tmp_path / label, log=True, fault=fault, keys=keys)
-        assert all(r['completed'] for r in results)
-        for rank in (1, 2):
-            shutil.copytree(tmp_path / label / f'log-{rank}', homes[f'owner-{rank}'] / f'serve-{label}' / f'log-{rank}')
-        shutil.copytree(tmp_path / label / 'log-1', homes['auditor'] / f'serve-{label}' / 'log-1')
-    assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
-    shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', homes['auditor'] / 'audit-cheat' / 'proof')
+    # Owner 0 holds the user's session key, as the user's own device would.
+    session_keys, session_public = signing_keys(tmp_path, ranks=(0,))
+    keys[0] = session_keys[0]
 
     def role(name, phase, **request):
         if request:
@@ -406,8 +450,17 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
         opened[label] = settlement.signed(user_key, {'kind': 'serve_open', 'chain_id': terms['chain_id'], 'nonce': nonce,
                                                      'model_root': model, 'owners': log_keys,
                                                      'request_root': hashlib.sha256(label.encode()).hexdigest(),
-                                                     'price': terms['price']})
+                                                     'session_key': session_public[0], 'price': terms['price']})
         jobs[label] = ledger.transaction_id(opened[label])
+    for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
+        results = sharded(world, tmp_path / label, log=True, fault=fault, keys=keys,
+                          session=session(opened[label], terms['chain_id']))
+        assert all(r['completed'] for r in results)
+        for rank in (1, 2):
+            shutil.copytree(tmp_path / label / f'log-{rank}', homes[f'owner-{rank}'] / f'serve-{label}' / f'log-{rank}')
+        shutil.copytree(tmp_path / label / 'log-1', homes['auditor'] / f'serve-{label}' / 'log-1')
+    assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
+    shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', homes['auditor'] / 'audit-cheat' / 'proof')
     commits = {label: [role(f'owner-{r}', f'commit-{label}', nonce=nonce, job_id=jobs[label])['envelope'] for r in (1, 2)]
                for nonce, label in ((1, 'honest'), (2, 'cheat'))}
     challenge = role('auditor', 'challenge', honest_job=jobs['honest'], cheated_job=jobs['cheat'], log_key=log_keys[0])
@@ -441,6 +494,7 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
 
     from neuroshard.evolution.sharded import granite_audit
     from neuroshard.inference import optimistic as ledger
+    from neuroshard.inference import optimistic_app as app
     from neuroshard.inference import optimistic_network as network
 
     from test_optimistic_serving import CHAIN, Account
@@ -449,33 +503,38 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
         network.engine_path()
     except ValueError:
         pytest.skip('CometBFT v0.38.26 is not installed')
-    keys, public = {}, {}
-    for rank in (1, 2):
-        private = Ed25519PrivateKey.generate()
-        keys[rank] = tmp_path / f'owner-{rank}.key'
-        keys[rank].write_text(private.private_bytes_raw().hex() + '\n')
-        public[rank] = private.public_key().public_bytes_raw().hex()
+    keys, public = signing_keys(tmp_path)
+    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
+    model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
+
+    def open_job(label):
+        envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
+                                       request_root=hashlib.sha256(label.encode()).hexdigest(), session_key=public[0],
+                                       price=1_000_000)
+        return envelope, ledger.transaction_id(envelope)
+
+    jobs = {label: open_job(label) for label in ('honest', 'cheat')}
     for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
-        assert all(r['completed'] for r in sharded(world, tmp_path / label, log=True, fault=fault, keys=keys))
+        assert all(r['completed'] for r in sharded(world, tmp_path / label, log=True, fault=fault, keys=keys,
+                                                   session=session(jobs[label][0], CHAIN)))
     assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
-    store = tmp_path / 'store'
     proven = granite_audit.bundle_root(tmp_path / 'cheat' / 'log-1' / 'proof')
-    shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', store / proven)
     record, payloads = granite_audit.load(tmp_path / 'honest' / 'log-1')
     first = next(i for i, e in enumerate(record['entries']) if 'output' in e)
     granite_audit.save_proof({'record': record, 'mismatch': first, 'inputs': {i: p for i, p in payloads.items() if i <= first}},
                              tmp_path / 'forged')
     forged = granite_audit.bundle_root(tmp_path / 'forged')
-    shutil.copytree(tmp_path / 'forged', store / forged)
+    # Each validator keeps its own bundle store, so a bundle can reach some validators before others.
+    stores = [tmp_path / f'store-{i}' for i in range(4)]
+    for store in stores:
+        shutil.copytree(tmp_path / 'forged', store / forged)
 
-    people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
-    model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
     params = {**ledger.PARAMS, 'challenge_blocks': 12, 'job_blocks': 400}
     terms = {'chain_id': CHAIN, 'model_root': model, 'shards': 3, 'params': params,
              'allocations': {p.public: 20_000_000 for p in people.values()}}
-    node = {'shards': {'1': {'config': str(world['config']), 'shard': str(world['shards'])}}, 'bundles': str(store),
-            'threads': 1, 'warm_up_lengths': [16, 1]}
-    config = network.initialize(tmp_path / 'chain', terms, [node] * 4, base_port=29650, block_seconds=0.5)
+    nodes = [{'shards': {'1': {'config': str(world['config']), 'shard': str(world['shards'])}}, 'bundles': str(store),
+              'threads': 1, 'warm_up_lengths': [16, 1]} for store in stores]
+    config = network.initialize(tmp_path / 'chain', terms, nodes, base_port=29650, block_seconds=0.5)
 
     def submit(envelope, validator=0):
         admission = network.broadcast(network.url(config, validator), envelope)
@@ -491,15 +550,7 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
                             possession=possession.hex())
 
     def commit(rank, job, label):
-        private = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(keys[rank].read_text().strip()))
-        statement = granite_audit.statement(granite_audit.load(tmp_path / label / f'log-{rank}')[0]).hex()
-        return people[f'owner-{rank}'].sign('log_commit', job_id=job, statement_root=statement,
-                                            log_signature=private.sign(ledger.commitment_message(CHAIN, job, statement)).hex())
-
-    def open_job(label):
-        envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
-                                       request_root=hashlib.sha256(label.encode()).hexdigest(), price=1_000_000)
-        return envelope, ledger.transaction_id(envelope)
+        return log_commit(people[f'owner-{rank}'], keys[rank], CHAIN, job, tmp_path / label / f'log-{rank}')
 
     def agreed():
         while True:
@@ -512,7 +563,7 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
         network.start(config, timeout=300)
         for rank in (1, 2):
             submit(bond(rank), rank)
-        opened, honest = open_job('honest')
+        opened, honest = jobs['honest']
         submit(opened)
         committed = max(submit(commit(rank, honest, 'honest'), rank) for rank in (1, 2))
         framing = submit(people['accuser'].sign('challenge', job_id=honest, log_key=public[1], proof_root=forged), 3)
@@ -520,14 +571,24 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
         people['accuser'].nonce -= 1
         network.wait_height(config, committed + params['challenge_blocks'] + 1)
         assert agreed()[0]['results'][honest]['status'] == 'settled'
-        opened, cheated = open_job('cheat')
+        opened, cheated = jobs['cheat']
         submit(opened)
         for rank in (1, 2):
             submit(commit(rank, cheated, 'cheat'), rank)
-        submit(people['auditor'].sign('challenge', job_id=cheated, log_key=public[1], proof_root=proven), 2)
+        # The proof reaches three of the four validators: more than two thirds of the voting power.
+        for store in stores[:3]:
+            shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', store / proven)
+        challenge = people['auditor'].sign('challenge', job_id=cheated, log_key=public[1], proof_root=proven)
+        lacking = submit(challenge, 3)
+        assert lacking['code'] == app.NO_VERDICT and 'not held here' in lacking['log']
+        submit(challenge, 2)
         states = agreed()
     finally:
         network.stop(config)
+    # The fourth validator gave no verdict, so it voted for no block holding the challenge; it executed the
+    # committed block all the same, reaching the others' state without the bundle.
+    assert 'has no verdict on this validator' in (Path(config['home']) / 'logs' / 'app3.log').read_text()
+    assert not (stores[3] / proven).exists()
     assert len({s['root'] for s in states}) == 1
     state = states[0]
     assert state['results'][cheated]['status'] == 'fraud' and state['owners'][public[1]]['status'] == 'slashed'

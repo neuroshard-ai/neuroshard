@@ -217,12 +217,21 @@ def run(home):
                 raise RuntimeError(f"an owner could not complete {phase}")
             return {r: replies[f"owner-{r}"]["envelope"] for r in (1, 2)}
 
+        session_key = fetched["owner-0"]["session_key"]
+
         def open_job(nonce, label):
             body = {"kind": "serve_open", "chain_id": terms["chain_id"], "nonce": nonce, "model_root": model_root,
                     "owners": log_keys, "request_root": hashlib.sha256(f"{plan['target']}:{label}".encode()).hexdigest(),
-                    "price": terms["price"]}
+                    "session_key": session_key, "price": terms["price"]}
             envelope = settlement.signed(user_key, body)
             return envelope, ledger.transaction_id(envelope)
+
+        def bind_serving(serve, envelope, job_id):
+            """Every owner serves the opened job: owner 0 signs under the session key, owners under their log keys."""
+            session = {"chain_id": terms["chain_id"], "job_id": job_id, "request_root": envelope["body"]["request_root"],
+                       "session_key": session_key, "log_keys": log_keys}
+            for r in range(world):
+                helpers.put(owners[r], f"{serve}-request.json", {"session": session})
 
         save(home / "status.json", {"state": "running", "phase": "sign-bond"})
         for r, envelope in owner_envelopes("sign-bond", 0, model_root=model_root, amount=terms["owner_bond"]).items():
@@ -233,6 +242,7 @@ def run(home):
             opened, jobs[label] = open_job(nonce - 1, label)
             admissions[f"open-{label}"] = submit(validators, opened)
             serve = f"serve-{label}"
+            bind_serving(serve, opened, jobs[label])
             save(home / "status.json", {"state": "running", "phase": serve})
             served = run_phase([(owners[r], f"owner-{r}") for r in range(world)], plan, serve, address)
             phases[serve] = [served[f"owner-{r}"] for r in range(world)]

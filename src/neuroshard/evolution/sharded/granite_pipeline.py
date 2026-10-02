@@ -50,6 +50,20 @@ class Ring:
             raise ValueError('nonfinite boundary tensor')
         return value
 
+    def send_signature(self, signature, destination):
+        """A sender's 64-byte signature over its link transcript, sent right after the message it covers."""
+        if not isinstance(signature, bytes) or len(signature) != 64:
+            raise ValueError('unsupported link signature')
+        payload = torch.frombuffer(bytearray(signature), dtype=torch.uint8)
+        dist.send(payload, dst=destination)
+        self.sent_bytes += payload.numel()
+
+    def receive_signature(self, source):
+        payload = torch.empty(64, dtype=torch.uint8)
+        dist.recv(payload, src=source)
+        self.received_bytes += payload.numel()
+        return bytes(payload.numpy())
+
 
 def command(op, length=0):
     header = torch.tensor([op, length], dtype=torch.int64)

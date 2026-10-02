@@ -31,8 +31,9 @@ def declared_chain():
     for person in people.values():
         person.sign = (lambda account: lambda kind, **fields: settlement.signed(
             account.key, {'kind': kind, 'chain_id': chain_id, 'nonce': fields.pop('nonce'), **fields}))(person)
-    logs = {r: Ed25519PrivateKey.generate() for r in (1, 2)}
-    keys = {r: logs[r].public_key().public_bytes_raw().hex() for r in (1, 2)}
+    # Key 0 is the user's session key; keys 1 and 2 are the owners' log keys.
+    logs = {r: Ed25519PrivateKey.generate() for r in (0, 1, 2)}
+    keys = {r: logs[r].public_key().public_bytes_raw().hex() for r in (0, 1, 2)}
     model = sha256(ROOT / settlement.MODEL_INVENTORY)
     genesis = ledger.genesis(chain_id, model, TERMS['shards'], {p.public: TERMS['allocation'] for p in people.values()},
                              TERMS['params'])
@@ -44,13 +45,20 @@ def declared_chain():
                             possession=possession.hex())
 
     def commit(r, job, nonce):
-        statement = hashlib.sha256(f'{job}:{r}'.encode()).hexdigest()
+        # Each log is bound to its job: its upstream sender (the user, then owner 1) signed its inputs' transcript.
+        head, entries_root = (hashlib.sha256(f'{job}:{r}:{part}'.encode()).hexdigest() for part in ('head', 'entries'))
+        upstream = {'key': keys[r - 1], 'entries': 1, 'head': head,
+                    'signature': logs[r - 1].sign(ledger.link_message(chain_id, job, r - 1, 1, head)).hex()}
+        header = {'format': ledger.OWNER_LOG_FORMAT, 'rank': r, 'public_key': keys[r], 'upstream': upstream,
+                  'session': {'chain_id': chain_id, 'job_id': job, 'request_root': 'cd' * 32}}
+        statement = ledger.log_statement(header, entries_root)
         return people[f'owner-{r}'].sign('log_commit', nonce=nonce, job_id=job, statement_root=statement,
+                                         entries_root=entries_root, header=header,
                                          log_signature=logs[r].sign(ledger.commitment_message(chain_id, job, statement)).hex())
 
     def open_job(nonce):
         envelope = people['user'].sign('serve_open', nonce=nonce, model_root=model, owners=[keys[1], keys[2]],
-                                       request_root='cd' * 32, price=TERMS['price'])
+                                       request_root='cd' * 32, session_key=keys[0], price=TERMS['price'])
         return envelope, ledger.transaction_id(envelope)
 
     honest_open, honest = open_job(0)

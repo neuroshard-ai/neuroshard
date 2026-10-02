@@ -1,10 +1,10 @@
 """Bonded settlement of audited sharded serving on the real assistant.
 
 Owners 1 and 2 bond their log keys on the optimistic serving ledger, serve an honest
-pass and a pass in which owner 1 flips one declared bit, and commit their signed logs
-to each job. The auditor of shard 1 proves the fault, and a separate accuser tries to
-frame the honest owner. Two validators, each holding shard 1, replay the same blocks.
-Every party signs its own transactions on its own host.
+pass and a pass in which owner 1 flips one declared bit, and commit to each job a log
+bound to it by signed serving links. The auditor of shard 1 proves the fault, and a
+separate accuser tries to frame the honest owner. Two validators, each holding shard 1,
+replay the same blocks. Every party signs its own transactions on its own host.
 """
 
 import json
@@ -104,11 +104,12 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
         body = {'kind': 'owner_bond', **base, 'model_root': request['model_root'], 'shard': rank, 'log_key': log_key,
                 'amount': request['amount'], 'possession': possession}
     else:
+        # The log is bound to the job it served: its header, entries digest and statement are what the ledger checks.
         log_dir = home / phase.replace('commit', 'serve') / f'log-{rank}'
-        statement = granite_audit.statement(json.loads((log_dir / 'log.json').read_text())).hex()
-        body = {'kind': 'log_commit', **base, 'job_id': request['job_id'], 'statement_root': statement,
+        commitment = granite_audit.commitment(json.loads((log_dir / 'log.json').read_text()))
+        body = {'kind': 'log_commit', **base, 'job_id': request['job_id'], **commitment,
                 'log_signature': log.sign(ledger.commitment_message(request['chain_id'], request['job_id'],
-                                                                    statement)).hex()}
+                                                                    commitment['statement_root'])).hex()}
         stash(log_dir, store)
     result = {'freeze': source, 'rank': rank, 'envelope': signed(key, body), 'completed': True}
     save(home / phase / 'result.json', result, exclusive=True)

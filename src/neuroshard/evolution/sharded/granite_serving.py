@@ -58,11 +58,14 @@ class Adapter:
         self.enabled = enabled
 
 
-def serve(partition, ring, adapter=None, log=None, fault=None):
+def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
     """Owner loop for ranks after 0: episode caches, prefix crops, arm switching and parent features.
 
     ``log`` records every command for replay audits; ``fault`` (a forward-message
     index) perturbs one sent tensor, standing in for a cheating owner in tests.
+    With a job's ``link`` (``granite_audit.Link``) a received message is used only
+    with its sender's signature over the link transcript, and every sent message
+    carries this owner's.
     """
     from transformers import DynamicCache
 
@@ -71,8 +74,11 @@ def serve(partition, ring, adapter=None, log=None, fault=None):
         op, value = command(0)
         if op == STOP:
             return {'steps': steps, 'busy_seconds': busy}
-        if op in (RESET, CROP, ADAPTER) and log is not None:
-            log.command(op, value)
+        if op in (RESET, CROP, ADAPTER):
+            if log is not None:
+                log.command(op, value)
+            if link is not None:
+                link.command(op, value)
         if op == RESET:
             cache = DynamicCache()
         elif op == CROP:
@@ -83,6 +89,7 @@ def serve(partition, ring, adapter=None, log=None, fault=None):
         elif op in (FORWARD, FEATURE):
             steps += op == FORWARD
             hidden = ring.receive(ring.rank - 1, value)
+            attested = link.receive(op, value, hidden, ring.receive_signature(ring.rank - 1)) if link else None
             began = time.monotonic()
             with torch.inference_mode():
                 if op == FORWARD:
@@ -98,48 +105,73 @@ def serve(partition, ring, adapter=None, log=None, fault=None):
                 sent.view(torch.int16).view(-1)[0] ^= 1
             forwards += 1
             if log is not None:
-                log.forward(op, value, hidden, sent)
+                log.forward(op, value, hidden, sent, attested)
             ring.send(sent, (ring.rank + 1) % ring.world)
+            if link is not None:
+                ring.send_signature(link.send(op, value, sent), (ring.rank + 1) % ring.world)
         else:
             raise ValueError('unknown serving command')
 
 
 class ServingDriver:
-    """Owner 0: episode control, the parent feature and cached decoding steps."""
+    """Owner 0: episode control, the parent feature and cached decoding steps.
 
-    def __init__(self, partition, ring):
+    With a job's ``link`` the driver signs everything it sends under the job's session key
+    and accepts results only with the last owner's signature; ``evidence`` is the latest one.
+    """
+
+    def __init__(self, partition, ring, link=None):
         from transformers import DynamicCache
 
         if partition.rank != 0 or ring.rank != 0:
             raise ValueError('owner 0 drives serving')
-        self.partition, self.ring, self.cache_type = partition, ring, DynamicCache
+        self.partition, self.ring, self.cache_type, self.link = partition, ring, DynamicCache, link
         self.cache = DynamicCache()
         self.busy_seconds = 0.0
 
+    def control(self, op, value=0):
+        """A command that changes owner state: one step of every link transcript."""
+        command(op, value)
+        if self.link is not None:
+            self.link.command(op, value)
+
+    def exchange(self, op, value, hidden):
+        """Send one message around the ring; returns what the last owner sends back."""
+        self.ring.send(hidden, 1)
+        if self.link is not None:
+            self.ring.send_signature(self.link.send(op, value, hidden), 1)
+        back = self.ring.receive(self.ring.world - 1, 1)
+        if self.link is not None:
+            self.link.receive(op, value, back, self.ring.receive_signature(self.ring.world - 1))
+        return back
+
+    def evidence(self):
+        """The last owner's latest signature over what it sent back: the user's evidence against it."""
+        return self.link.received if self.link is not None else None
+
     def feature(self, ids):
         """The frozen parent's final-layer state at the last prompt position, as ``boundary_feature`` computes it."""
-        command(ADAPTER, 0)
+        self.control(ADAPTER, 0)
         command(FEATURE, len(ids))
         tokens = torch.tensor([ids])
         began = time.monotonic()
         with torch.inference_mode():
             hidden = self.partition(self.partition.embed(tokens), None, self.cache_type())
         self.busy_seconds += time.monotonic() - began
-        self.ring.send(hidden, 1)
-        back = self.ring.receive(self.ring.world - 1, 1)
+        back = self.exchange(FEATURE, len(ids), hidden)
         with torch.inference_mode():
             return self.partition.norm(back)[0, -1].float().tolist()
 
     def episode(self, arm):
-        command(RESET)
-        command(ADAPTER, int(arm))
+        self.control(RESET)
+        self.control(ADAPTER, int(arm))
         self.cache = self.cache_type()
 
     def cached_tokens(self):
         return self.cache.get_seq_length()
 
     def crop(self, length):
-        command(CROP, length)
+        self.control(CROP, length)
         self.cache.crop(length)
 
     def step(self, tokens, mask):
@@ -148,8 +180,7 @@ class ServingDriver:
         with torch.inference_mode():
             hidden = self.partition(self.partition.embed(tokens), mask, self.cache)
         self.busy_seconds += time.monotonic() - began
-        self.ring.send(hidden, 1)
-        back = self.ring.receive(self.ring.world - 1, 1)
+        back = self.exchange(FORWARD, tokens.shape[1], hidden)
         began = time.monotonic()
         with torch.inference_mode():
             logits = self.partition.logits(back)
@@ -212,8 +243,35 @@ def responder(driver, tokenizer, policy, eos):
     return respond
 
 
+def owner_key(job, rank):
+    """This owner's Ed25519 key from the job's ``keys`` (rank to key file), or None if the job names none."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    path = (job.get('keys') or {}).get(str(rank))
+    return Ed25519PrivateKey.from_private_bytes(bytes.fromhex(Path(path).read_text().strip())) if path else None
+
+
+def job_link(job, rank, world):
+    """This owner's signed links for the job's ``session``.
+
+    The session names the chain, job and request, the user's session key (owner 0) and the
+    bonded owners' log keys in shard order; the owner's own key must be the one it names.
+    """
+    from .granite_audit import Link, public_hex
+
+    session, key = job['session'], owner_key(job, rank)
+    senders = [session['session_key'], *session['log_keys']]
+    if len(senders) != world or key is None or public_hex(key) != senders[rank]:
+        raise ValueError('this owner key is not the one the job names')
+    return Link(session, rank, world, key, senders[(rank - 1) % world])
+
+
 def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, result_path, *, timeout=60):
-    """One serving owner process: the arm's owner loads it; owner 0 serves the declared episodes."""
+    """One serving owner process: the arm's owner loads it; owner 0 serves the declared episodes.
+
+    With a ``session`` every serving link is signed (see ``serve``), and owners' logs are bound
+    to that job; owner 0's result keeps the last owner's latest signature as ``attestation``.
+    """
     from datetime import timedelta
     import torch.distributed as dist
 
@@ -226,12 +284,15 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
 
     job = json.loads(Path(job_path).read_text())
     torch.set_num_threads(job.get('threads', 1))
+    streams = job.get('streams')
+    if streams and job.get('session'):
+        raise ValueError('signed serving links support one stream')
+    link = job_link(job, rank, world) if job.get('session') else None
     config = granite.load_config(config_dir)
     partition, manifest = granite.load_partition(config, shards_dir, rank)
     adapter = Adapter(partition, job['spec'], job['arm']) if rank == world - 1 else None
     dist.init_process_group('gloo', init_method=f'tcp://{address}:{port}', rank=rank, world_size=world,
                             timeout=timedelta(seconds=timeout))
-    streams = job.get('streams')
     if streams:
         from . import granite_streams as multi
 
@@ -253,7 +314,7 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
         if rank == 0:
             tokenizer, report = granite_tokenizer.load(job['tokenizer'], parent_digest=job.get('parent_tokenizer_digest'))
             result['tokenizer'] = report
-            driver = multi.StreamDriver(partition, ring) if streams else ServingDriver(partition, ring)
+            driver = multi.StreamDriver(partition, ring) if streams else ServingDriver(partition, ring, link)
             policy = job['policy']
             if 'case_ids' in job:
                 by_id = {case['id']: case for case in data.cases(job['split'])}
@@ -282,18 +343,26 @@ def run_owner(config_dir, shards_dir, rank, world, address, port, job_path, resu
             from .granite_audit import OwnerLog
 
             log = OwnerLog(rank) if job.get('log') else None
-            fault = job.get('fault') or {}
-            result.update(serve(partition, ring, adapter, log, fault.get('at') if fault.get('rank') == rank else None))
-            if log is not None:
+            fault, failure = job.get('fault') or {}, None
+            try:
+                result.update(serve(partition, ring, adapter, log, fault.get('at') if fault.get('rank') == rank else None,
+                                    link))
+            except Exception as error:
+                failure = error
+            # A bound log is kept even when serving stops early: its signed prefix is the work done.
+            if log is not None and (failure is None or link is not None):
                 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-                key = (Ed25519PrivateKey.from_private_bytes(bytes.fromhex(Path(job['keys'][str(rank)]).read_text().strip()))
-                       if job.get('keys') else Ed25519PrivateKey.generate())
-                result['log'] = log.save(Path(result_path).with_name(f'log-{rank}'), key)
+                key = owner_key(job, rank) or Ed25519PrivateKey.generate()
+                result['log'] = log.save(Path(result_path).with_name(f'log-{rank}'), key, job.get('session'))
+            if failure is not None:
+                raise failure
         result['completed'] = True
     except Exception as error:
         result.update(completed=False, error=f'{type(error).__name__}: {error}')
     finally:
+        if link is not None and rank == 0:
+            result['attestation'] = link.received
         result.update(seconds=time.monotonic() - began, sent_bytes=ring.sent_bytes, received_bytes=ring.received_bytes,
                       peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024)
         Path(result_path).write_text(json.dumps(result, indent=2) + '\n')

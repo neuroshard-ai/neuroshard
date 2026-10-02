@@ -2,8 +2,19 @@
 
 Every block first advances the ledger, settling jobs whose challenge window closed,
 then applies its transactions. Mempool admission and proposals evaluate a transaction
-against the next block's state, so only transactions that apply reach a block. A
-challenge's proof is replayed once per validator and its verdict cached.
+against the next block's state, so only transactions that apply reach a block.
+Admission checks a transaction's signature, schema, nonce, fee and target before any
+proof replay; a challenge's proof is then replayed once per validator, outside the
+state lock, and its verdict cached.
+
+Holding a challenged bundle is local to each validator and never a ledger outcome. A
+validator that cannot judge a proof (it does not hold the bundle, or cannot replay it)
+refuses the challenge at admission with a retryable code, leaves it out of its own
+proposals and rejects proposals containing it; it caches nothing, so it judges the
+proof once the bundle arrives. A committed block was accepted by validators with more
+than two thirds of the voting power, and an honest validator accepts a block only after
+judging every challenge in it, so execution applies committed challenges without
+replaying them and needs no bundle.
 """
 
 import argparse
@@ -26,6 +37,7 @@ INVALID = (ValueError, KeyError, TypeError, OverflowError, RecursionError)
 LOG = logging.getLogger('neuroshard.settlement')
 MAX_TX_BYTES = 16_384
 MAX_BLOCK_TXS = 16
+NO_VERDICT = 3
 
 
 def parse_json(raw):
@@ -46,34 +58,46 @@ def parse_json(raw):
     return json.loads(raw, object_pairs_hook=pairs, parse_constant=bad_constant)
 
 
-def cached(check):
+class cached:
     """One replay per proof on one dedicated thread: the verdict depends only on the request, which binds the proof.
 
     A single worker gives every replay the same thread and so the same parallel arithmetic.
+    Only verdicts are kept. ``NoVerdict`` (the bundle is not held here, or this validator
+    cannot run the replay) propagates and the proof is judged afresh when asked again; so
+    does a failure of the checker itself, which says nothing about the proof.
     """
-    verdicts, lock, worker = {}, threading.Lock(), ThreadPoolExecutor(max_workers=1)
 
-    def replay(state, request):
+    def __init__(self, check):
+        self.check, self.verdicts = check, {}
+        self.lock, self.worker = threading.Lock(), ThreadPoolExecutor(max_workers=1)
+
+    def replay(self, state, request):
         started = time.monotonic()
         try:
-            verdict = check(state, request) is True
-        except Exception:
-            # A bundle that cannot be read or replayed proves nothing, on every validator alike.
-            LOG.exception('proof replay failed for %s', request['proof_root'])
-            verdict = False
+            verdict = self.check(state, request) is True
+        except ledger.NoVerdict as reason:
+            LOG.info('proof %s has no verdict on this validator: %s', request['proof_root'], reason)
+            raise
+        except Exception as error:
+            LOG.exception('proof check failed for %s', request['proof_root'])
+            raise ledger.NoVerdict(f'the proof check failed on this validator ({type(error).__name__})') from error
         LOG.info('proof %s verdict %s in %.1f s', request['proof_root'], verdict, time.monotonic() - started)
         return verdict
 
-    def verify(state, request):
+    def known(self, request):
+        """The cached verdict for ``request``, or None if this validator has not judged it."""
+        with self.lock:
+            return self.verdicts.get(ledger.digest(request))
+
+    def __call__(self, state, request):
         key = ledger.digest(request)
-        with lock:
-            if key in verdicts:
-                return verdicts[key]
-        verdict = worker.submit(replay, state, request).result()
-        with lock:
-            verdicts[key] = verdict
+        with self.lock:
+            if key in self.verdicts:
+                return self.verdicts[key]
+        verdict = self.worker.submit(self.replay, state, request).result()
+        with self.lock:
+            self.verdicts[key] = verdict
         return verdict
-    return verify
 
 
 class Application(rpc.ABCIServicer):
@@ -96,17 +120,28 @@ class Application(rpc.ABCIServicer):
         value = self.state if state is None else state
         return bytes.fromhex(ledger.root(value)) if value else b''
 
-    def apply(self, state, raw):
-        return ledger.transition(state, parse_json(raw), self.check)
+    def apply(self, state, raw, execute=None):
+        return ledger.transition(state, parse_json(raw), execute or self.check)
 
-    def block(self, height, txs):
+    def block(self, height, txs, execute=None):
         """The state after advancing to ``height`` and applying ``txs``; raises on the first that does not apply."""
         if not self.state:
             raise ValueError('Chain has not initialized')
         state = ledger.advance(self.state, height)
         for raw in txs:
-            state = self.apply(state, raw)
+            state = self.apply(state, raw, execute)
         return state
+
+    def committed(self, previous, request):
+        """The verdict execution applies to a challenge in a committed block: it verified.
+
+        Validators with more than two thirds of the voting power accepted the block, and an
+        honest validator accepts a block only after judging every challenge in it.
+        """
+        if self.check.known(request) is False:
+            LOG.error('committed challenge of %s contradicts this validator\'s replay of %s', request['log_key'],
+                      request['proof_root'])
+        return True
 
     def Echo(self, request, context):
         return pb.ResponseEcho(message=request.message)
@@ -149,34 +184,27 @@ class Application(rpc.ABCIServicer):
             except INVALID as exc:
                 return pb.ResponseQuery(code=1, log=str(exc))
 
-    def preverify(self, raw):
-        """Replay a challenge's proof before taking the state lock, so consensus never waits behind a replay."""
-        try:
-            body = parse_json(raw).get('body') or {}
-        except (INVALID, AttributeError):
-            return
-        if not isinstance(body, dict) or body.get('kind') != 'challenge':
-            return
+    def admit(self, raw):
+        """Admission's cheap stage, under the state lock: the next block's state and a challenge's request, if any."""
+        envelope = parse_json(raw)
         with self.lock:
-            state = self.state
-            job = (state or {}).get('jobs', {}).get(body.get('job_id'))
-            key = body.get('log_key')
-            if not job or key not in job['commits']:
-                return
-            request = {'job_id': body['job_id'], 'shard': state['owners'][key]['shard'], 'log_key': key,
-                       'statement_root': job['commits'][key], 'proof_root': body.get('proof_root')}
-        try:
-            ledger.hex_digest(request['proof_root'])
-        except ValueError:
-            return
-        self.check(state, request)
+            if not self.state:
+                raise ValueError('Chain has not initialized')
+            state = ledger.advance(self.state, self.state['height'] + 1)
+            return state, ledger.admit(state, envelope)[2]
 
     def CheckTx(self, request, context):
         try:
-            self.preverify(request.tx)
+            state, challenge = self.admit(request.tx)
+            if challenge is not None:
+                # Only an authenticated, funded challenge of a committed log in an open window reaches a replay,
+                # which runs outside the state lock so consensus never waits behind it.
+                self.check(state, challenge)
             with self.lock:
-                self.block(self.state['height'] + 1 if self.state else 1, [request.tx])
+                self.block(self.state['height'] + 1, [request.tx])
             return pb.ResponseCheckTx(gas_wanted=1)
+        except ledger.NoVerdict as reason:
+            return pb.ResponseCheckTx(code=NO_VERDICT, log=f'No verdict on this validator yet: {reason}')
         except INVALID as exc:
             return pb.ResponseCheckTx(code=1, log=str(exc))
         except Exception as exc:
@@ -194,6 +222,8 @@ class Application(rpc.ABCIServicer):
                     chosen.append(raw)
                 except INVALID:
                     continue
+                except ledger.NoVerdict as reason:
+                    LOG.info('PrepareProposal left out a challenge this validator cannot judge: %s', reason)
                 except Exception:
                     LOG.exception('PrepareProposal skipped a transaction that failed unexpectedly')
             return pb.ResponsePrepareProposal(txs=chosen)
@@ -207,6 +237,10 @@ class Application(rpc.ABCIServicer):
                 return pb.ResponseProcessProposal(status=1)
             except INVALID:
                 return pb.ResponseProcessProposal(status=2)
+            except ledger.NoVerdict as reason:
+                # Never vote for a challenge this validator has not judged itself.
+                LOG.warning('ProcessProposal rejected a block at height %s it cannot judge: %s', request.height, reason)
+                return pb.ResponseProcessProposal(status=2)
             except Exception:
                 LOG.exception('ProcessProposal rejected a block that failed unexpectedly')
                 return pb.ResponseProcessProposal(status=2)
@@ -218,7 +252,7 @@ class Application(rpc.ABCIServicer):
             state, results = ledger.advance(self.state, request.height), []
             for raw in request.txs:
                 try:
-                    state = self.apply(state, raw)
+                    state = self.apply(state, raw, self.committed)
                     results.append(pb.ExecTxResult())
                 except INVALID as exc:
                     results.append(pb.ExecTxResult(code=1, log=str(exc)))
@@ -255,9 +289,14 @@ class Application(rpc.ABCIServicer):
 
 
 def shard_checker(node):
-    """The validator's real proof checker from its node configuration: shard holdings and the bundle store."""
+    """The validator's real proof checker from its node configuration: shard holdings and the bundle store.
+
+    A validator holding no shard judges no proof: every challenge gets no verdict from it.
+    """
     if not node.get('shards'):
-        return lambda state, request: False
+        def judge_nothing(state, request):
+            raise ledger.NoVerdict('this validator holds no shard')
+        return judge_nothing
     if node.get('runtime') == 'granite-shard':
         # Replays must run in the owners' numerical environment, set before torch loads.
         from neuroshard.evolution import granite_shard_execution as shard
@@ -274,7 +313,7 @@ def shard_checker(node):
         partition, _ = granite.load_partition(granite.load_config(paths['config']), paths['shard'], int(rank))
         partition.warm_up(**({'lengths': tuple(node['warm_up_lengths'])} if node.get('warm_up_lengths') else {}))
         partitions[int(rank)] = partition
-    check = granite_audit.challenge_checker(node['bundles'], partitions)
+    check = granite_audit.challenge_checker(node.get('bundles'), partitions)
 
     def replay(state, request):
         # Thread counts are per thread; the replay thread uses the same count as the loading thread.

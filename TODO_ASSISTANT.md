@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated September 27, 2026. Status: 0/6 milestones complete.**
+**Updated October 2, 2026. Status: 0/6 milestones complete.**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -222,7 +222,13 @@ remain evidence, not readiness claims for this assistant.
   admission, owner 1 was slashed by the real proof, and all four validators
   reached the same state root with exactly the declared balances. One operator
   still ran every host; this is not independent operation and gives no checklist
-  credit.
+  credit. Before untrusted participants join, [the protocol was revised](docs/OPTIMISTIC_SERVING.md).
+  Each owner log is now bound to its paid request through signed serving links,
+  so a reused or relabelled log is refused or provably fraud. A proof bundle a
+  validator lacks gives no verdict rather than a cached rejection, and challenges
+  pass every cheap admission check before any replay. Small-checkpoint and
+  four-validator tests pass. The real-model runs above used the earlier protocol,
+  and a failed challenge still costs its sender nothing.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 

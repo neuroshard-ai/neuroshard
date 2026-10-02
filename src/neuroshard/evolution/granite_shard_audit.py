@@ -45,12 +45,12 @@ def freeze(plan_path=PLAN):
     return {**source, 'signing_packages': signing}
 
 
-def owner_key(store):
+def owner_key(store, name='owner.key'):
     """This owner's Ed25519 signing key, created once in its store; returns (path, public key hex)."""
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-    path = Path(store) / 'owner.key'
+    path = Path(store) / name
     if not path.exists():
         key = Ed25519PrivateKey.generate()
         raw = key.private_bytes(serialization.Encoding.Raw, serialization.PrivateFormat.Raw, serialization.NoEncryption())
@@ -61,8 +61,18 @@ def owner_key(store):
     return path, public
 
 
+def session_key(store):
+    """Owner 0's Ed25519 session key, standing in for the user's device; returns (path, public key hex)."""
+    return owner_key(store, 'session.key')
+
+
 def owner(rank, address, port, phase, home, store, plan_path=PLAN):
-    """One owner phase under the contract at ``plan_path``."""
+    """One owner phase under the contract at ``plan_path``.
+
+    Under a settlement plan (one with a ledger) owner 0 also holds the user's session key,
+    and a serve phase with a ``{phase}-request.json`` session signs every serving link and
+    binds the owners' logs to that job.
+    """
     configure()
     source = freeze(plan_path)
     plan = read(ROOT / plan_path)
@@ -74,6 +84,8 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
         receipt = {'freeze': source, 'rank': rank, **serving.prepare(plan, rank, store), 'completed': True}
         if rank > 0:
             receipt['public_key'] = owner_key(store)[1]
+        elif 'ledger' in plan:
+            receipt['session_key'] = session_key(store)[1]
         save(home / 'fetch.json', receipt, exclusive=True)
         return receipt
     from neuroshard.evolution.sharded import granite_serving
@@ -87,6 +99,10 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
     value.update(warm_up=True, log=rank > 0)
     if rank > 0:
         value['keys'] = {str(rank): str(owner_key(store)[0])}
+    if (home / f'{phase}-request.json').exists():
+        value['session'] = read(home / f'{phase}-request.json')['session']
+        if rank == 0:
+            value['keys'] = {'0': str(session_key(store)[0])}
     if phase == 'serve-cheat':
         value['fault'] = plan['fault']
     if rank == 0:
@@ -144,11 +160,16 @@ def auditor(rank, phase, home, store, plan_path=PLAN):
     report = granite_audit.replay(partition, record, payloads, adapter)
     report.update(rank=rank, signed=granite_audit.signed_by(record, record.get('public_key')),
                   public_key=record.get('public_key'), load_seconds=loaded, completed=True)
+    if granite_audit.bound(record):
+        # A bound log must also be exactly the transcript its upstream sender signed.
+        report['attested'] = not granite_audit.unattested(record)
     if not report['valid'] and report['first_mismatch'] is not None:
         forwards = [i for i, entry in enumerate(record['entries']) if 'output' in entry]
         report['fault_forward'] = forwards.index(report['first_mismatch'])
         proof = granite_audit.fraud_proof(record, payloads, report)
         report['proof'] = granite_audit.save_proof(proof, home / phase / 'proof')
+    elif report.get('attested') is False:
+        report['proof'] = granite_audit.save_proof(granite_audit.claim_proof(record, 'unattested'), home / phase / 'proof')
     save(home / phase / 'result.json', report, exclusive=True)
     return report
 

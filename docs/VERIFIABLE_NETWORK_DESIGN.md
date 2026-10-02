@@ -58,9 +58,12 @@ replication.
      always reproduce.
    - Audit cost is one owner's share of one episode. Audit frequency and bond
      sizes set how expensive cheating is.
-4. **Hop continuity.** Owner *k*'s logged inputs must equal owner *k−1*'s logged
-   outputs, so transport tampering is detected and blame lands on exactly one
-   owner.
+4. **Hop continuity.** Every message carries its sender's signature over the
+   link's running transcript; the user's device signs under the job's session key.
+   An owner's log keeps the latest signature over its inputs, which binds it to the
+   paid request. A log that departs from what its owner was sent, or from what it
+   signed passing results on, is provable fraud, so blame lands on exactly one
+   owner ([request-bound logs](OPTIMISTIC_SERVING.md#request-bound-logs)).
 5. **User-held first stage (privacy).** The user's own device can run owner 0:
    the embedding, first layers and output head, about 2.4 GB. Prompt and answer
    tokens then never leave the user. The network sees only intermediate
@@ -104,6 +107,7 @@ replication.
 | Signed owner logs, replay audit, fraud proofs | Tested on small checkpoints: honest owners verified; a one-bit fault caught, blamed and proven; forged accusations rejected |
 | Audited serving on the real model with light auditors | [Passed](GRANITE_SHARD_AUDIT_RESULTS.md): all 8830 forwards replayed exactly; a one-bit fault named and proven; no false blame |
 | Committee-of-modules growth | Measured: no parent success lost, but below one small module; A2 paused ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
-| Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; blocks ordered by one operator, not yet on CometBFT |
+| Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; then [through four CometBFT validators](GRANITE_SHARD_CHAIN_RESULTS.md) under one operator |
+| Request-bound logs, proof availability, cheap admission before replay | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; not yet run on the real model |
 | User-held first stage | Design |
 | Independent operators (A5) | Not started |
