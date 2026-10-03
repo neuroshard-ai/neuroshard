@@ -1,10 +1,10 @@
 """Confirmation of the verified-experience systems on a sealed split, once.
 
-It opens only when the pinned development report records a complete pass. Three
-hosts run one system each so latency conditions match the canonical baseline:
-the parent control under its declared serving (recompute unless the execution
-says otherwise), and each routed system under the declared serving runtime. The
-gate is assessed after all three finish.
+It opens only when the pinned development report records a complete pass. Each
+host runs one system so latency conditions match the canonical baseline: the
+parent control under its declared serving (recompute unless the execution says
+otherwise), and each routed system under the declared serving runtime. The gate
+is assessed after every system finishes.
 """
 
 import importlib.metadata
@@ -275,18 +275,23 @@ def rescored(plan, cases, replies, systems):
     return rows
 
 
-def assess(plan, cases, replies, section='confirmation_gate', candidate='addition'):
-    """The declared confirmation gate from three completed systems, every episode rescored.
+def assess(plan, cases, replies, section='confirmation_gate', candidate='addition', control='update'):
+    """The declared confirmation gate from the completed systems, every episode rescored.
 
-    ``candidate`` is the system gated in the addition's place.
+    ``candidate`` is the system gated in the addition's place, against the parent and the
+    update ``control``; with no control, the gate in ``plan`` must declare no update comparison.
     """
     from neuroshard.evolution import assistant_experience_gate as gate
 
-    rows = rescored(plan, cases, replies, ('parent', 'update', candidate))
+    routed = (candidate,) if control is None else (control, candidate)
+    rows = rescored(plan, cases, replies, ('parent', *routed))
     protected = sorted(row['id'] for row in rows['parent'] if row['score']['passed'])
-    report = gate.confirmation(plan, cases, rows['parent'], rows['update'], rows[candidate], protected, section)
+    if control is None:
+        report = gate.confirmation(plan, cases, rows['parent'], None, rows[candidate], protected, section, name=candidate)
+    else:
+        report = gate.confirmation(plan, cases, rows['parent'], rows[control], rows[candidate], protected, section)
     report['candidate'] = candidate
-    report['selected_arm_episodes'] = {s: sum(r['selected'] == 'arm' for r in rows[s]) for s in ('update', candidate)}
+    report['selected_arm_episodes'] = {s: sum(r['selected'] == 'arm' for r in rows[s]) for s in routed}
     return report
 
 

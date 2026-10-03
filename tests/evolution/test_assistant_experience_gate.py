@@ -5,6 +5,7 @@ from neuroshard.evolution import assistant_workflow_data as data
 from neuroshard.evolution.modular_reference_execution import ROOT, read
 
 PLAN = read(ROOT / 'config/experiments/assistant-experience-learning.json')
+THIRD = read(ROOT / 'config/experiments/assistant-experience-third.json')
 
 
 def rows(cases, successes, seconds=60, selection=None):
@@ -66,3 +67,32 @@ def test_confirmation_bootstraps_over_families_and_requires_each_family():
     weak = gate.confirmation(PLAN, cases, rows(cases, parent), routed(cases, update), routed(cases, thin), parent)
     assert not weak['checks']['per_family'] and not weak['passed']
     assert len(ids) == 96
+
+
+def test_an_update_gated_alone_is_judged_against_the_parent_with_no_update_comparison():
+    cases = data.cases('development')
+    ids = [c['id'] for c in cases]
+    parent = set(ids[:9])
+    report = gate.development(THIRD, cases, rows(cases, parent), None, routed(cases, set(ids[:19])), parent, name='update')
+    assert report['passed'] and report['correct'] == {'parent': 9, 'update': 19}
+    assert set(report['checks']) == {'total', 'net_vs_parent', 'lost_parent_successes', 'protected', 'p95'}
+    assert 'versus_update' not in report and set(report['p95_seconds']) == {'update', 'parent'}
+    lost = gate.development(THIRD, cases, rows(cases, parent), None, routed(cases, set(ids[1:20])), parent, name='update')
+    assert not lost['passed'] and lost['lost_protected'] == [ids[0]]
+    # A gate that declares an update comparison cannot run without the control, and one that declares none cannot use it.
+    with pytest.raises(ValueError, match='update control'):
+        gate.development(PLAN, cases, rows(cases, parent), None, routed(cases, set(ids[:19])), parent)
+    with pytest.raises(ValueError, match='update control'):
+        gate.development(THIRD, cases, rows(cases, parent), routed(cases, set(ids[:19])), routed(cases, set(ids[:19])),
+                         parent)
+
+    cases = data.cases('confirmation3')
+    by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}
+    parent = {k for f in data.FAMILIES for k in by_family[f][:13]}
+    for per_family, expected in ((20, True), (15, False)):
+        update = {k for f in data.FAMILIES for k in by_family[f][:per_family]}
+        report = gate.confirmation(THIRD, cases, rows(cases, parent), None, routed(cases, update), parent, name='update')
+        assert report['passed'] is expected and report['correct']['update'] == 8 * per_family
+        assert 'lower_vs_update' not in report['checks'] and 'lower_95_gain_vs_update' not in report
+    with pytest.raises(ValueError, match='update control'):
+        gate.confirmation(PLAN, cases, rows(cases, parent), None, routed(cases, update), parent)

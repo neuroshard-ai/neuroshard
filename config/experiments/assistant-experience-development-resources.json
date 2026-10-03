@@ -34,17 +34,15 @@
     "files": [
       "integration.json",
       "update-checkpoint/manifest.json",
-      "update-checkpoint/trainable.safetensors",
-      "addition-checkpoint/manifest.json",
-      "addition-checkpoint/trainable.safetensors"
+      "update-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 419430400
+    "maximum_bytes": 268435456
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-round4-report.json",
-    "sha256": "774718973c65360b84c6057776912e6d836ea869c9717e3d40fc3c5982660ff5"
+    "path": "config/experiments/assistant-experience-development-round4-report.json",
+    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6"
   },
-  "budget_scope": "Development evaluation of the update and addition systems on one CPU host: a preparation worker, then one fresh worker per arm at the canonical eight threads, so latency conditions match the parent baseline, then a fresh-process replay worker for the served addition (A1 check); four-hour expiry and eight-dollar allowance. Uploads only trained tensors, manifests and gates. No GPU, training or confirmation.",
+  "budget_scope": "Third-attempt development of the update's served version on one CPU host: a preparation worker, one fresh worker for the update at the canonical eight threads, then a fresh-process replay worker for the A1 served-system check; four-hour expiry and eight-dollar allowance. Uploads only the update's trained tensors and manifest and the round-4 gates. No GPU, training or confirmation.",
   "prior_attempts": [
     {
       "utc": "2026-09-27T22:49:54Z",
@@ -65,6 +63,11 @@
       "utc": "2026-09-28T08:58:41Z",
       "commit": "fdc41387411d43ee7bdd726b8da836f452377ba4",
       "outcome": "Round-3 development under prefix-cache serving: addition 18/24, net +9, no lost success, p95 96.5 s; passed ($1.06)."
+    },
+    {
+      "utc": "2026-09-29T02:25:35Z",
+      "commit": "f299e0ffa1d656089350cca599874fd235174b05",
+      "outcome": "Round-4 development and A1 served-system check under prefix-cache serving: addition 18/24, update 19/24, 7/8 primitive; passed ($1.04)."
     }
   ]
 }

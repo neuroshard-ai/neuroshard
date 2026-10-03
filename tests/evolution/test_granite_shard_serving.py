@@ -24,9 +24,9 @@ def test_target_is_the_pinned_round4_served_addition_episodes():
     episodes = serving.target(PLAN)
     assert len(episodes) == 24 and all(row['selected'] in ('arm', 'parent') for row in episodes)
     assert sum(row['score']['passed'] for row in episodes) == 18
-    development = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
-    assert PLAN['arm'] == {'trainable_sha256': development['arms']['addition']['trainable_sha256'],
-                           'integration_sha256': development['arms']['integration_sha256']}
+    trained = read(ROOT / 'config/experiments/assistant-experience-round4-report.json')
+    assert PLAN['arm'] == {'trainable_sha256': trained['training']['addition']['trainable_sha256'],
+                           'integration_sha256': trained['integration']['integration_sha256']}
     with pytest.raises(ValueError, match='development result changed'):
         serving.target({**PLAN, 'target': {**PLAN['target'], 'sha256': '0' * 64}})
 

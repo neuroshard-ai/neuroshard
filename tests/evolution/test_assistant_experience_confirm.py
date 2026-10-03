@@ -251,6 +251,27 @@ def test_a_growth_candidate_is_gated_in_the_addition_place():
     assert report['selected_arm_episodes'] == {'update': 192, 'committee': 192}
 
 
+def test_the_third_confirmation_gates_the_update_alone_against_the_parent():
+    third = read(ROOT / 'config/experiments/assistant-experience-third.json')
+    cases = data.cases('confirmation3')
+    by_family = {f: [c['id'] for c in cases if c['family'] == f] for f in data.FAMILIES}
+
+    def rows(successes, routed):
+        extra = {'selected': 'arm', 'selection_seconds': 1.0} if routed else {}
+        return [{**(execute_fixture(c) if c['id'] in successes else failing(c)), **extra} for c in cases]
+
+    parent = {k for f in data.FAMILIES for k in by_family[f][:13]}
+    update = parent | {k for f in data.FAMILIES for k in by_family[f][:20]}
+    replies = {'parent': {'episodes': rows(parent, False)}, 'update': {'episodes': rows(update, True)}}
+    report = confirm.assess(third, cases, replies, 'confirmation_gate', candidate='update', control=None)
+    assert report['passed'] and report['candidate'] == 'update' and report['correct'] == {'parent': 104, 'update': 160}
+    assert report['selected_arm_episodes'] == {'update': 192} and 'lower_vs_update' not in report['checks']
+    lost = {**replies, 'update': {'episodes': rows(update - {by_family['copy'][0]}, True)}}
+    assert not confirm.assess(third, cases, lost, 'confirmation_gate', candidate='update', control=None)['passed']
+    with pytest.raises(ValueError, match='update control'):
+        confirm.assess(PLAN, cases, replies, 'confirmation2_gate', candidate='update', control=None)
+
+
 def test_importing_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_experience_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})

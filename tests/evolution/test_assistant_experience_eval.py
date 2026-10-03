@@ -118,6 +118,35 @@ def test_a1_served_check_judges_the_routed_addition_with_fresh_process_replays()
     assert not served['checks']['primitive']
 
 
+def test_a1_served_check_can_judge_the_update_gated_alone():
+    third = read(ROOT / 'config/experiments/assistant-experience-third.json')
+    cases = data.cases('development')
+    ids = [c['id'] for c in cases]
+    base = canonical(cases, set(ids[:6]))
+    base['report'].update(canonical_anchor_gate=True, prior_anchor_successes_lost=[], anchor_correct=19)
+    canonical_plan = read(ROOT / 'config/experiments/assistant-workflow-canonical.json')
+    unsolved = [c['id'] for c in cases if not c['primitive'] and c['id'] not in ids[:6]][:4]
+    wins = set(ids) - set(unsolved)
+    rows = system(cases, wins, 'arm')
+    replies = {'update': {'episodes': rows, 'forced_anchors': []}}
+    replays = [copy.deepcopy(r) for r in rows if r['id'] in canonical_plan['replay_ids']]
+    report = evaluation.assess(third, cases, base, replies, replays, canonical_plan, served_arm='update')
+    assert report['passed'] and report['development_and_a1_passed'] and report['a1_served']['served'] == 'update'
+    assert set(report['correct']) == {'parent', 'update'} and 'net_vs_update' not in report['checks']
+    assert set(report['forced_anchor_forgetting']) == set(report['selected_arm_episodes']) == {'update'}
+    # The learning contract's gate compares with the update control, so it cannot judge the update alone.
+    with pytest.raises(ValueError, match='update control'):
+        evaluation.assess(PLAN, cases, base, replies, replays, canonical_plan, served_arm='update')
+
+
+def test_an_execution_serves_one_of_the_arms_it_evaluates():
+    assert evaluation.systems({}) == (('update', 'addition'), 'addition')
+    assert evaluation.systems({'systems': ['update'], 'served': 'update'}) == (('update',), 'update')
+    for bad in ({'systems': ['update']}, {'systems': ['committee'], 'served': 'committee'}, {'systems': []}):
+        with pytest.raises(ValueError, match='known arms'):
+            evaluation.systems(bad)
+
+
 def test_uploaded_arms_must_match_pinned_digests(tmp_path):
     for arm in evaluation.ARMS:
         save(tmp_path / f'{arm}-checkpoint' / 'manifest.json', {'arm': arm, 'trainable_sha256': arm * 2})
@@ -129,6 +158,11 @@ def test_uploaded_arms_must_match_pinned_digests(tmp_path):
         evaluation.verify_arms(tmp_path, {**pinned, 'addition': {'trainable_sha256': 'other'}})
     with pytest.raises(ValueError, match='integration gates'):
         evaluation.verify_arms(tmp_path, {**pinned, 'integration_sha256': 'other'})
+    alone = {'update': pinned['update'], 'integration_sha256': pinned['integration_sha256']}
+    (tmp_path / 'addition-checkpoint' / 'manifest.json').unlink()
+    assert evaluation.verify_arms(tmp_path, alone) == {'arms': {}}
+    with pytest.raises(ValueError, match='no arm'):
+        evaluation.verify_arms(tmp_path, {'integration_sha256': pinned['integration_sha256']})
 
 
 def test_cpu_profile_uploads_only_declared_regular_files_within_its_allowance(tmp_path):
@@ -169,7 +203,16 @@ def test_development_inventory_pins_arms_runtime_and_every_imported_source():
     baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
     assert execution['threads'] == read(ROOT / 'config/experiments/assistant-workflow-canonical.json')['resources']['threads']
-    assert set(execution['arms']) == {'update', 'addition', 'integration_sha256'}
+    evaluated, served = evaluation.systems(execution)
+    assert set(execution['arms']) == {*evaluated, 'integration_sha256'}
+    trained = read(ROOT / f"config/experiments/assistant-experience-round{execution['round']}-report.json")
+    assert all(execution['arms'][arm] == {'trainable_sha256': trained['training'][arm]['trainable_sha256']} for arm in evaluated)
+    assert execution['arms']['integration_sha256'] == trained['integration']['integration_sha256']
+    upload = read(ROOT / 'config/experiments/assistant-experience-development-resources.json')['upload']['files']
+    assert set(upload) == {'integration.json'} | {f'{arm}-checkpoint/{name}' for arm in evaluated
+                                                  for name in ('manifest.json', 'trainable.safetensors')}
+    if 'gate_plan' in execution:
+        assert execution['a1_served'] == execution['gate_plan'] + '#a1_served' and execution['gate_plan'] in execution['contracts']
     assert sha256(ROOT / execution['canonical_result']['path']) == execution['canonical_result']['sha256']
     probe = ('import os, sys; import neuroshard.evolution.assistant_experience_eval as m; '
              'import neuroshard.evolution.assistant_experience_run, neuroshard.evolution.assistant_experience_train, '
@@ -182,7 +225,7 @@ def test_development_inventory_pins_arms_runtime_and_every_imported_source():
     assert set(imported) <= set(execution['sources'])
     hours = read(ROOT / 'config/experiments/assistant-experience-development-resources.json')['hours']
     replay = execution['replay_seconds'] if 'a1_served' in execution else 0
-    assert execution['prepare_seconds'] + 2 * execution['worker_seconds'] + replay + 1800 <= hours * 3600
+    assert execution['prepare_seconds'] + len(evaluated) * execution['worker_seconds'] + replay + 1800 <= hours * 3600
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

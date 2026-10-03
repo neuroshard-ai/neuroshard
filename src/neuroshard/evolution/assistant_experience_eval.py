@@ -6,6 +6,10 @@ re-baseline, pinned by its result digest; protected successes come from it.
 Each arm also answers every original anchor with selection forced on, which
 measures forgetting directly; the routed system serves anchors with the parent.
 Each arm runs alone in a fresh worker at the baseline's thread count, so numerics and latency match it.
+
+An execution may evaluate only some arms (``systems``), name the arm that would be
+served (``served``) and take its gate from a separate contract (``gate_plan``); a
+gated arm with no separate control is judged against the parent alone.
 """
 
 import importlib.metadata
@@ -36,10 +40,22 @@ PROFILE = 'assistant-experience-development'
 UPLOADED = '.arms'
 
 
+def systems(execution):
+    """The arms an execution evaluates, and the one whose served version A1 judges."""
+    arms = tuple(execution.get('systems', ARMS))
+    served = execution.get('served', SERVED)
+    if not arms or not set(arms) <= set(ARMS) or served not in arms:
+        raise ValueError('an execution evaluates known arms, including the one it serves')
+    return arms, served
+
+
 def verify_arms(directory, pinned):
     """Uploaded checkpoints and gates must match the digests pinned before evaluation."""
     directory = Path(directory)
-    for arm in ARMS:
+    arms = [name for name in ARMS if name in pinned]
+    if not arms:
+        raise ValueError('no arm is pinned')
+    for arm in arms:
         manifest = read(directory / f'{arm}-checkpoint' / 'manifest.json')
         if manifest['trainable_sha256'] != pinned[arm]['trainable_sha256'] or manifest['arm'] != arm:
             raise ValueError(f'{arm} checkpoint differs from the pinned training result')
@@ -130,9 +146,10 @@ def worker(request_path):
     from neuroshard.evolution import assistant_experience_train as trainer
 
     execution = read(ROOT / EXECUTION)
+    evaluated, served_arm = systems(execution)
     arm, phase = request['model'], request['phase']
-    replay = (phase, arm) == ('replay', SERVED) and 'a1_served' in execution
-    if (phase, arm) != ('prepare', 'baseline') and not replay and (arm not in ARMS or phase != 'development'):
+    replay = (phase, arm) == ('replay', served_arm) and 'a1_served' in execution
+    if (phase, arm) != ('prepare', 'baseline') and not replay and (arm not in evaluated or phase != 'development'):
         raise ValueError('unsupported evaluation worker role')
     plan = read(ROOT / PLAN)
     policy = read(ROOT / plan['policy'])
@@ -186,7 +203,7 @@ def worker(request_path):
 def served(canonical_plan, cases, rows, canonical_report, replay_rows):
     """A1's usable-foundation check on the version that would be served.
 
-    Workspace episodes run through the routed addition; anchors are served by the
+    Workspace episodes run through the routed arm; anchors are served by the
     parent, so their outcomes are the canonical parent's.
     """
     from neuroshard.evolution import assistant_experience_gate as gate
@@ -215,28 +232,38 @@ def served(canonical_plan, cases, rows, canonical_report, replay_rows):
             'replayed_ids': sorted(replay_ids)}
 
 
-def assess(plan, cases, canonical_result, replies, replay_rows=None, canonical_plan=None):
+def assess(plan, cases, canonical_result, replies, replay_rows=None, canonical_plan=None, served_arm=SERVED):
+    """The development gate in ``plan`` over every evaluated arm in ``replies``, each episode rescored.
+
+    With both arms, the addition is gated against the update control. With one arm,
+    ``plan`` must declare a gate with no update comparison, and that arm is gated alone.
+    """
     from neuroshard.evolution import assistant_experience_gate as gate
 
     policy = read(ROOT / plan['policy'])
     by_id = {case['id']: case for case in cases}
-    systems = {}
-    for arm in ARMS:
-        rows = replies[arm]['episodes']
-        for row in rows:
+    arms = [arm for arm in ARMS if arm in replies]
+    rows = {}
+    for arm in arms:
+        rows[arm] = replies[arm]['episodes']
+        for row in rows[arm]:
             if workflow.score(by_id[row['id']], row, policy) != row['score']:
                 raise ValueError('evaluation outcome rescore differs')
-        systems[arm] = rows
-    report = gate.development(plan, cases, canonical_result['primary']['episodes'], systems['update'],
-                              systems['addition'], canonical_result['report']['protected_workflow_ids'])
+    parent, protected = canonical_result['primary']['episodes'], canonical_result['report']['protected_workflow_ids']
+    if len(arms) == len(ARMS):
+        report = gate.development(plan, cases, parent, rows['update'], rows['addition'], protected)
+    else:
+        (arm,) = arms
+        report = gate.development(plan, cases, parent, None, rows[arm], protected, name=arm)
     anchors = canonical_result['report']['protected_anchor_ids']
-    report['forced_anchor_forgetting'] = {arm: forgetting(replies[arm]['forced_anchors'], anchors) for arm in ARMS}
-    report['selected_arm_episodes'] = {arm: sum(r['selected'] == 'arm' for r in systems[arm]) for arm in ARMS}
+    report['forced_anchor_forgetting'] = {arm: forgetting(replies[arm]['forced_anchors'], anchors) for arm in arms}
+    report['selected_arm_episodes'] = {arm: sum(r['selected'] == 'arm' for r in rows[arm]) for arm in arms}
     if canonical_plan is not None:
         for row in replay_rows or []:
             if workflow.score(by_id[row['id']], row, policy) != row['score']:
                 raise ValueError('replay outcome rescore differs')
-        report['a1_served'] = served(canonical_plan, cases, systems[SERVED], canonical_result['report'], replay_rows)
+        report['a1_served'] = served(canonical_plan, cases, rows[served_arm], canonical_result['report'], replay_rows)
+        report['a1_served']['served'] = served_arm
         report['development_and_a1_passed'] = bool(report['passed'] and report['a1_served']['passed'])
     return report
 
@@ -253,6 +280,7 @@ def run(home, models):
     result = {'binding': binding, 'execution_completed': False, 'checklist_credit': False,
               'admission_evidence': False, 'confirmation_opened': False}
     try:
+        evaluated, served_arm = systems(execution)
         verify_arms(ROOT / UPLOADED, execution['arms'])
         prepared = launch(home, models, binding, 'baseline', 'prepare', execution['prepare_seconds'],
                           execution['memory_bytes'], worker_script=SCRIPT)
@@ -260,23 +288,24 @@ def run(home, models):
             raise ValueError(prepared.get('error', 'parent artifacts were not prepared'))
         # One fresh worker at a time, as in the canonical baseline, so latency is comparable.
         replies = {arm: launch(home, models, binding, arm, 'development', execution['worker_seconds'],
-                               execution['memory_bytes'], worker_script=SCRIPT) for arm in ARMS}
+                               execution['memory_bytes'], worker_script=SCRIPT) for arm in evaluated}
         result['replies'] = replies
-        failed = [arm for arm in ARMS if not replies[arm]['execution_completed']]
+        failed = [arm for arm in evaluated if not replies[arm]['execution_completed']]
         if failed:
             raise ValueError(f'incomplete evaluation for {failed}')
         replay_rows, canonical_plan = None, None
         if 'a1_served' in execution:
             canonical_plan = read(ROOT / canonical.PLAN)
-            result['replay'] = launch(home, models, binding, SERVED, 'replay', execution['replay_seconds'],
+            result['replay'] = launch(home, models, binding, served_arm, 'replay', execution['replay_seconds'],
                                       execution['memory_bytes'], worker_script=SCRIPT)
             if result['replay']['execution_completed']:
                 replay_rows = result['replay']['episodes']
         canonical_result = read(ROOT / execution['canonical_result']['path'])
         if sha256(ROOT / execution['canonical_result']['path']) != execution['canonical_result']['sha256']:
             raise ValueError('canonical parent result changed')
-        result['report'] = assess(plan, first.load_cases(read(ROOT / canonical.PLAN)), canonical_result, replies,
-                                  replay_rows, canonical_plan)
+        gated = read(ROOT / execution['gate_plan']) if 'gate_plan' in execution else plan
+        result['report'] = assess(gated, first.load_cases(read(ROOT / canonical.PLAN)), canonical_result, replies,
+                                  replay_rows, canonical_plan, served_arm)
         result['execution_completed'] = True
     except Exception as error:
         result['error'] = str(error)
