@@ -12,7 +12,7 @@ from neuroshard.evolution.modular_reference_execution import ROOT, read, save, s
 
 from test_assistant_calendar import schedule_texts
 from test_assistant_routing import POLICIES, scripted
-from test_assistant_workflow import reference_texts
+from test_assistant_workflow import reference_texts, reply
 
 PLAN = read(ROOT / development.PLAN)
 SETS = baseline.opened(read(ROOT / PLAN['plan']))
@@ -95,6 +95,40 @@ def test_the_development_gate_picks_the_candidate_and_checks_drafting_case_by_ca
     shuffled['shared']['episodes']['drafting'].reverse()
     with pytest.raises(ValueError, match='in order'):
         development.assess(PLAN, SETS, shuffled, accepted(19))
+
+
+def test_each_turn_is_served_by_its_routes_unit_and_drafting_by_the_a2_choice(monkeypatch):
+    from neuroshard.evolution import assistant_experience_run as accelerator
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution import assistant_serving as serving
+    from neuroshard.evolution.assistant_workflow_data import public_case
+
+    meeting = next(c for c in SETS['scheduling'] if len(c['turns']) == 2)
+    draft = SETS['drafting'][0]
+    scripts = {public_case(c)['user_turns'][0]: iter(texts)
+               for c, texts in ((meeting, schedule_texts(meeting)), (draft, reference_texts(draft)))}
+    served = []
+
+    def responder(model, tokenizer, policy):
+        def respond(messages, tools):
+            served.append((model, messages[0]['content'] == policy['system_instruction']))
+            return reply(next(scripts[messages[1]['content']]))
+        return respond
+
+    meeting_turns = set(public_case(meeting)['user_turns'])
+    monkeypatch.setattr(serving, 'cached_responder', responder)
+    monkeypatch.setattr(accelerator, 'boundary_feature', lambda model, tokenizer, policy, case, device: case['id'])
+    monkeypatch.setattr(routing, 'turn_feature', lambda model, tokenizer, policy, user, device: user)
+    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate == 'turns'
+                        else feature == draft['id'])
+    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', 'turns',
+                                       [meeting, draft])
+    assert [row['score']['passed'] for row in rows] == [True, True]
+    assert rows[0]['score']['routes'] == ['scheduling', 'scheduling'] and rows[0]['a2_selected'] == 'parent'
+    assert rows[1]['score']['routes'] == ['drafting'] * len(draft['turns']) and rows[1]['a2_selected'] == 'arm'
+    calls = rows[0]['model_attempts']
+    assert {model for model, _ in served[:calls]} == {'l2'} and {model for model, _ in served[calls:]} == {'u1'}
+    assert all(instructed for _, instructed in served)
 
 
 def test_latency_counts_each_selection_pass_once():

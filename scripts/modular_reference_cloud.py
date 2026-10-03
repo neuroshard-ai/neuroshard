@@ -22,6 +22,8 @@ PROFILE = "fresh-reference-recovery"
 RESOURCES = "config/experiments/modular-reference-fresh-recovery-resources.json"
 GROWTH_DEVELOPMENT = tuple(f"assistant-growth-development-{version}"
                            for version in ("separate-update", "separate-module", "shared"))
+GROWTH_CONFIRMATION = tuple(f"assistant-growth-confirmation-{system}" for system in (
+    "candidate-calendar", "candidate-drafting", "shared-drafting", "accepted-drafting", "accepted-calendar"))
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
@@ -34,7 +36,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-baseline": "config/experiments/assistant-growth-baseline-resources.json",
                      "assistant-growth-gpu": "config/experiments/assistant-growth-resources.json",
                      "assistant-growth-resume-gpu": "config/experiments/assistant-growth-resume-resources.json",
-                     **{profile: f"config/experiments/{profile}-resources.json" for profile in GROWTH_DEVELOPMENT},
+                     **{profile: f"config/experiments/{profile}-resources.json"
+                        for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
                         for system in ("parent", "update", "addition", "small", "committee")},
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
@@ -62,6 +65,7 @@ GRANITE_PROFILES = {
     "assistant-growth-gpu": ("assistant_growth_run", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-resume-gpu": ("assistant_growth_resume", "docs/assistant-experience-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
+    **{profile: ("assistant_growth_confirm", "docs/granite-reference-requirements.txt") for profile in GROWTH_CONFIRMATION},
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
        for system in ("parent", "update", "addition", "small", "committee")},
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
@@ -84,13 +88,14 @@ GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile
     "assistant-growth-resume-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
                    "assistant-growth-gpu": ".growth", "assistant-growth-resume-gpu": ".growth",
-                   **{profile: ".units" for profile in GROWTH_DEVELOPMENT},
+                   **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
                    "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-growth-baseline": (4, 8),
                      **{profile: (3, 6) for profile in GROWTH_DEVELOPMENT},
+                     **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION},
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
@@ -126,6 +131,9 @@ def source_freeze(profile):
     if profile in GROWTH_DEVELOPMENT:
         from neuroshard.evolution.assistant_growth_eval import committed_sources as development_sources
         return development_sources()
+    if profile in GROWTH_CONFIRMATION:
+        from neuroshard.evolution.assistant_growth_confirm import committed_sources as sealed_sources
+        return sealed_sources()
     if profile.startswith("assistant-experience-confirmation-"):
         from neuroshard.evolution.assistant_experience_confirm import committed_sources as confirmation_sources
         return confirmation_sources()
@@ -550,6 +558,10 @@ def remote_command(profile):
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_development.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models",
                 "--version", profile.removeprefix("assistant-growth-development-").replace("-", "_")]
+    if profile in GROWTH_CONFIRMATION:
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_confirmation.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models",
+                "--system", profile.removeprefix("assistant-growth-confirmation-")]
     if profile.startswith("assistant-experience-confirmation-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience_confirmation.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--system", profile.rsplit("-", 1)[1]]

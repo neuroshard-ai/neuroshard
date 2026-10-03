@@ -105,6 +105,51 @@ def verify_units(directory, execution, version):
     return gates['a2']['arms']['update']['gate'], gates['stage1']['gates'][version]
 
 
+def load_units(load_parent, spec, directory, execution, units):
+    """Each unit on a fresh parent: U1 and U2 served as plain projections, L2 attached on top of U1."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+
+    def load(unit):
+        model = load_parent()
+        if unit in ('U1', 'L2'):
+            trainer.load_trainable(model, 'update', spec, Path(directory) / execution['units']['U1']['checkpoint'])
+            trainer.serving(model, spec)
+        if unit == 'U2':
+            trainer.load_trainable(model, 'update', spec, Path(directory) / execution['units']['U2']['checkpoint'])
+            trainer.serving(model, spec)
+        if unit == 'L2':
+            trainer.load_trainable(model, 'addition', spec, Path(directory) / execution['units']['L2']['checkpoint'])
+        return model.eval()
+
+    return {unit: load(unit) for unit in sorted(set(units))}
+
+
+def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases):
+    """One version served turn by turn. The A2 gate chooses, once per episode, the drafting route's model."""
+    from neuroshard.evolution import assistant_experience_run as accelerator
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution.assistant_serving import cached_responder
+
+    drafting_unit, scheduling_unit = VERSIONS[version]
+    route_policies = policies()
+    drafting, scheduling = route_policies['drafting'], route_policies['scheduling']
+
+    def select(turn, user):
+        feature = routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
+        return 'scheduling' if selector.choose(turn_gate, feature) else 'drafting'
+
+    rows = []
+    for case in cases:
+        chosen = time.monotonic()
+        arm = selector.choose(a2_gate, accelerator.boundary_feature(parent, tokenizer, drafting, case, 'cpu'))
+        a2_seconds = time.monotonic() - chosen
+        routes = {'drafting': (cached_responder(models[drafting_unit] if arm else parent, tokenizer, drafting), drafting),
+                  'scheduling': (cached_responder(models[scheduling_unit], tokenizer, scheduling), scheduling)}
+        rows.append({**routing.execute(case, routes, select), 'a2_selected': 'arm' if arm else 'parent',
+                     'a2_selection_seconds': a2_seconds})
+    return rows
+
+
 def worker(request_path):
     configure()
     request_path = Path(request_path)
@@ -112,18 +157,13 @@ def worker(request_path):
     if freeze() != request['freeze']:
         raise ValueError('development worker differs from freeze')
     import torch
-    from neuroshard.evolution import assistant_experience_run as accelerator
-    from neuroshard.evolution import assistant_experience_train as trainer
     from neuroshard.evolution import assistant_growth_run as growth
-    from neuroshard.evolution import assistant_selector as selector
-    from neuroshard.evolution.assistant_serving import cached_responder
 
     execution = read(ROOT / EXECUTION)
     plan = read(ROOT / PLAN)
     version, phase = request['model'], request['phase']
     if (phase, version) != ('prepare', 'baseline') and (version not in VERSIONS or phase != 'development'):
         raise ValueError('unsupported development worker role')
-    routes_policy = policies()
     spec = growth.stage_spec(plan, read(ROOT / read(ROOT / plan['plan'])['cohort1']['learning']))
     torch.set_num_threads(execution['threads'])
     torch.set_num_interop_threads(1)
@@ -144,42 +184,11 @@ def worker(request_path):
         units = ROOT / UPLOADED
         a2_gate, turn_gate = verify_units(units, execution, version)
         parent, _ = reference.load_model(directory, 'baseline')
-
-        def load(unit):
-            model, _ = reference.load_model(directory, 'baseline')
-            if unit in ('U1', 'L2'):
-                trainer.load_trainable(model, 'update', spec, units / execution['units']['U1']['checkpoint'])
-                trainer.serving(model, spec)
-            if unit == 'U2':
-                trainer.load_trainable(model, 'update', spec, units / execution['units']['U2']['checkpoint'])
-                trainer.serving(model, spec)
-            if unit == 'L2':
-                trainer.load_trainable(model, 'addition', spec, units / execution['units']['L2']['checkpoint'])
-            return model.eval()
-
-        drafting_unit, scheduling_unit = VERSIONS[version]
-        models = {unit: load(unit) for unit in sorted(set(VERSIONS[version]))}
+        models = load_units(lambda: reference.load_model(directory, 'baseline')[0], spec, units, execution,
+                            VERSIONS[version])
         reply['units'] = {unit: execution['units'][unit]['trainable_sha256'] for unit in needed(version)}
-        drafting, scheduling = routes_policy['drafting'], routes_policy['scheduling']
-
-        def select(turn, user):
-            feature = routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
-            return 'scheduling' if selector.choose(turn_gate, feature) else 'drafting'
-
-        episodes = {}
-        for name, cases in sets.items():
-            rows = []
-            for case in cases:
-                chosen = time.monotonic()
-                arm = selector.choose(a2_gate, accelerator.boundary_feature(parent, tokenizer, drafting, case, 'cpu'))
-                a2_seconds = time.monotonic() - chosen
-                routes = {'drafting': (cached_responder(models[drafting_unit] if arm else parent, tokenizer, drafting),
-                                       drafting),
-                          'scheduling': (cached_responder(models[scheduling_unit], tokenizer, scheduling), scheduling)}
-                row = routing.execute(case, routes, select)
-                rows.append({**row, 'a2_selected': 'arm' if arm else 'parent', 'a2_selection_seconds': a2_seconds})
-            episodes[name] = rows
-        reply['episodes'] = episodes
+        reply['episodes'] = {name: routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases)
+                             for name, cases in sets.items()}
         reply['serving'] = 'prefix-cache'
         if file_state(directory, inventory) != state:
             raise ValueError('parent checkpoint changed during development')
