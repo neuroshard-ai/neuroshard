@@ -147,6 +147,13 @@ remain evidence, not readiness claims for this assistant.
   [The sealed confirmation passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) ($7.10):
   183/192 against the parent's 119, no parent success lost, a lower 95% gain of
   +22.4 points and p95 103.0 s. A2 is established for this capability.
+- [ ] [Repeated growth (A3)](docs/ASSISTANT_REPEATED_GROWTH.md): drafting is cohort 1;
+  cohort 2 adds meeting scheduling in a calendar workspace that keeps every drafting
+  tool, and cohort 3 will be an upgrade. Cohort 2 trains a separate update, a
+  separate low-rank module and the shared update under one budget; the separate
+  units must retain drafting better. Stage 0 first serves the opened development
+  cases under the new interface on CPU, to confirm room to learn and to measure
+  what the larger tool list does to drafting. Stage 1 is declared after it.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
@@ -197,8 +204,8 @@ remain evidence, not readiness claims for this assistant.
 
 **Current status:** the assistant has learned its first useful capability.
 On fresh sealed workspace episodes, the learned update lifts it from 62% to 95%
-with no parent success lost. A1, A2 and A4 are complete; A3, repeated growth,
-is next.
+with no parent success lost. A1, A2 and A4 are complete. A3, repeated growth, has
+[begun](docs/ASSISTANT_REPEATED_GROWTH.md) with scheduling as its second cohort.
 
 - **A2 complete.** The 1M-parameter added module twice came within 4–8 episodes
   of the 63M-parameter update without meeting the declared parity margin, and

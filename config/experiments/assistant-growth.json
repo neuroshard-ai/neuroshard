@@ -1,0 +1,55 @@
+{
+  "format": "neuroshard-assistant-growth/1",
+  "status": "Declared on October 3, 2026, after A2 was established and before any scheduling measurement. Authorized by the project owner, who chose meeting scheduling as the second cohort and counted A2's capability as the first.",
+  "criterion": "A3: three successive accepted cohorts, cumulative retention and cross-capability tasks; at least one new capability and one upgrade. Separate modules must retain earlier cohorts better than repeated shared-weight updates under the same budget. Demonstrate a beneficial update or consolidation against keeping the previous system under a declared resource budget.",
+  "interpretation": {
+    "cohorts": "Cohort 1 is the drafting capability accepted in A2. Cohorts 2 and 3 must each be accepted under A3, by a sealed confirmation that also re-checks every earlier cohort.",
+    "new_capability": "Cohort 2: meeting scheduling in the calendar workspace.",
+    "upgrade": "Cohort 3 upgrades an existing capability; it is declared after cohort 2 is decided.",
+    "units": "A learning unit is a bounded, separable learned update, as amended for A2."
+  },
+  "cohort1": {
+    "learning": "config/experiments/assistant-experience-learning.json",
+    "acceptance": "config/experiments/assistant-experience-third.json",
+    "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865",
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7",
+    "retention_data": "config/experiments/assistant-workflow-data-confirmation4.json"
+  },
+  "cohort2": {
+    "capability": "Meeting scheduling: find the earliest time every attendee is free from their calendars, book a meeting draft, and apply follow-ups, alone or together with drafting.",
+    "interface": "workspace-calendar/1",
+    "policy": "config/experiments/assistant-workflow-policy-calendar.json",
+    "data": "config/experiments/assistant-schedule-data.json",
+    "families": "Eight scheduling families (four single-turn, four with a follow-up) and two cross families that also need drafting: a meeting on a plan's due date, and a meeting after a saved draft."
+  },
+  "comparison": {
+    "separate_update": "A new update of the cohort-1 projections, trained on top of the frozen accepted version and kept apart from it, so selection can fall back to the accepted version.",
+    "separate_module": "A new rank-16 low-rank module on the same projections, trained on top of the frozen accepted version.",
+    "shared": "The cohort-1 update itself trained further on the cohort-2 experience with replay of verified cohort-1 experience, replacing it.",
+    "budget": "The same experience, replay and optimizer steps for every arm.",
+    "requirement": "The separate units must retain cohort 1 better than the shared update. Whether the low-rank module matches the separate update is reported."
+  },
+  "acceptance": "Declared with stage 1, before any training: a sealed confirmation on the scheduling, cross and drafting retention splits, opened once. The new version must beat the accepted version on scheduling and cross tasks and lose none of its drafting successes.",
+  "stage0": {
+    "purpose": "Before any cohort-2 training is declared: confirm that scheduling leaves room to learn, and measure what the calendar interface alone does to drafting.",
+    "systems": {
+      "parent": "The unchanged pinned parent.",
+      "update": "The accepted A2 version: the parent plus the round-4 update, selected once per episode by its round-4 gate from the parent's feature under the calendar interface."
+    },
+    "sets": {
+      "scheduling": "The 24 opened scheduling development cases.",
+      "cross": "The 8 opened cross-capability development cases.",
+      "drafting": "The 24 opened drafting development cases, unchanged, under the calendar interface."
+    },
+    "serving": "prefix-cache",
+    "headroom_maximum": 20,
+    "headroom": "Both systems solve at most 20 of the 24 scheduling development cases; otherwise the grammar leaves too little room and a harder one is declared.",
+    "interface_effect": "Drafting outcomes are compared case by case with the pinned results of the same systems under the drafting interface. Any drafting success lost to the interface must be regained before cohort 2 can be accepted.",
+    "decision": "Stage 1 (collection, training, integration and the sealed confirmation) is declared after this report, only with headroom. No sealed split opens in stage 0.",
+    "budget_usd": 8
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false,
+  "checklist_credit": "None for stage 0. A3 is complete only when cohorts 2 and 3 are accepted, the comparison requirement holds, and a beneficial update or consolidation is shown."
+}

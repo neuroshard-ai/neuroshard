@@ -39,7 +39,7 @@ TOOLS = [
 REGISTRY = {item['function']['name']: item['function']['parameters'] for item in TOOLS}
 
 
-def parse_calls(text):
+def parse_calls(text, registry=REGISTRY):
     """Native Granite tool envelope; never evaluate generated code or repair JSON."""
     if not isinstance(text, str) or len(text.encode()) > 16384:
         raise ValueError('invalid response size')
@@ -52,9 +52,9 @@ def parse_calls(text):
     for match in matches:
         call = strict_json(match[1])
         if (not isinstance(call, dict) or set(call) != {'name', 'arguments'}
-                or not isinstance(call['name'], str) or call['name'] not in REGISTRY):
+                or not isinstance(call['name'], str) or call['name'] not in registry):
             raise ValueError('unknown tool or call fields')
-        _check_value(call['arguments'], REGISTRY[call['name']])
+        _check_value(call['arguments'], registry[call['name']])
         calls.append(call)
     return calls
 
@@ -66,6 +66,8 @@ def iso_date(value):
 
 
 class Workspace:
+    registry = REGISTRY
+
     def __init__(self, public_world):
         if set(public_world) != {'documents'}:
             raise ValueError('workspace accepts public documents only, not scoring metadata')
@@ -92,9 +94,9 @@ class Workspace:
     def execute(self, call):
         before = identity(self.snapshot())
         try:
-            if set(call) != {'name', 'arguments'} or call['name'] not in REGISTRY:
+            if set(call) != {'name', 'arguments'} or call['name'] not in self.registry:
                 raise ValueError('unknown tool')
-            _check_value(call['arguments'], REGISTRY[call['name']])
+            _check_value(call['arguments'], self.registry[call['name']])
             result = self._apply(call['name'], call['arguments'])
         except (ValueError, KeyError, OverflowError, TypeError):
             result = {'error': 'invalid tool arguments or unavailable workspace object'}
