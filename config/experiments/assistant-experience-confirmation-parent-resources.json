@@ -30,15 +30,20 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-development-round4-report.json",
-    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6"
+    "path": "config/experiments/assistant-experience-development-third-report.json",
+    "sha256": "ef2187e1b6ed8362d16a7fd53dab27cba6f3444dcc392b70c011df2e26f62eaf"
   },
-  "budget_scope": "Second confirmation of the parent system on 192 fresh sealed episodes under the declared prefix cache: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. Opens only behind a pinned development and A1 served pass.",
+  "budget_scope": "Third confirmation of the parent control on the 192 sealed confirmation3 episodes under the declared prefix cache: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. Opens only behind the pinned third-attempt development and A1 served pass.",
   "prior_attempts": [
     {
       "utc": "2026-09-28T10:27:17Z",
       "commit": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
       "outcome": "First confirmation of the parent system on the 96 sealed episodes; the three-system gate failed on update parity ($3.02)."
+    },
+    {
+      "utc": "2026-09-29T04:00:40Z",
+      "commit": "0c31b3e804dcc94dbb5565bc11dd633344a4a640",
+      "outcome": "Second confirmation of the parent system on 192 fresh sealed episodes under the prefix cache: 106/192, p95 94.4 s; the three-system gate failed for the addition ($3.31)."
     }
   ]
 }

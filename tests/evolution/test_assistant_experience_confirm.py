@@ -138,9 +138,14 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
         report = read(ROOT / execution['development_report']['path'])
         assert report['development_passed'] and report['serving'] == execution['serving'] == 'prefix-cache'
         trained = read(ROOT / f"config/experiments/assistant-experience-round{report['round']}-report.json")
+        control = execution.get('control', 'update')
+        routed = {execution.get('candidate', 'addition')} | ({control} if control else set())
         assert execution['arms'] == {**{arm: {'trainable_sha256': trained['training'][arm]['trainable_sha256']}
-                                        for arm in ('update', 'addition')},
+                                        for arm in routed},
                                      'integration_sha256': trained['integration']['integration_sha256']}
+        for arm in routed:
+            resources = read(ROOT / f'config/experiments/assistant-experience-confirmation-{arm}-resources.json')
+            assert {'integration.json', f'{arm}-checkpoint/trainable.safetensors'} <= set(resources['upload']['files'])
     baseline = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[k] == baseline[k] for k in ('packages', 'python', 'required_cpu_flags', 'environment'))
     probe = ('import os, sys; import neuroshard.evolution.assistant_experience_confirm; '
@@ -154,11 +159,14 @@ def test_confirmation_inventory_pins_the_passing_development_arms_and_runtime():
     assert set(imported) <= set(execution['sources'])
     hours = read(ROOT / 'config/experiments/assistant-experience-confirmation-parent-resources.json')['hours']
     assert execution['prepare_seconds'] + execution['worker_seconds'] + 1800 <= hours * 3600
-    gate = read(ROOT / 'config/experiments/assistant-experience-learning.json')[execution.get('gate', 'confirmation_gate')]
+    plan = read(ROOT / execution.get('gate_plan', 'config/experiments/assistant-experience-learning.json'))
+    gate = plan[execution.get('gate', 'confirmation_gate')]
     assert len(confirm.opened(execution)) == (24 if execution['split'] == 'development' else gate['cases'])
-    if execution.get('gate') == 'confirmation2_gate' and execution['split'] != 'development':
+    if 'data' in gate and execution['split'] != 'development':
         assert execution['parent_serving'] == 'prefix-cache' and execution['data'] == gate['data']
         assert set(execution['development_report']['requires']) == {'development_passed', 'development_and_a1_passed'}
+    if 'gate_plan' in execution:
+        assert execution['gate_plan'] in execution['contracts'] and execution['candidate'] == plan['candidate']['system']
 
 
 def test_opened_development_cases_need_no_pinned_report():

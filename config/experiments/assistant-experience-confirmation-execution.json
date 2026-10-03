@@ -55,16 +55,13 @@
   "memory_bytes": 68719476736,
   "arms": {
     "update": {
-      "trainable_sha256": "3738bd941147a4cf73f734782b646df4e317415c02f0d20b41a682fac00d84cb"
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
     },
-    "small": {
-      "trainable_sha256": "43d9b2fd1d17f11f76420b73f6188e6d85b59a41e2325648e749495e705a8e41"
-    }
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
   },
-  "serving": "unrouted",
   "development_report": {
-    "path": "config/experiments/assistant-experience-development-round4-report.json",
-    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
+    "path": "config/experiments/assistant-experience-development-third-report.json",
+    "sha256": "ef2187e1b6ed8362d16a7fd53dab27cba6f3444dcc392b70c011df2e26f62eaf",
     "requires": [
       "development_passed",
       "development_and_a1_passed"
@@ -72,37 +69,35 @@
   },
   "contracts": {
     "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+    "config/experiments/assistant-experience-third.json": "b37852172019ac8fbf047aeca95b9e4f41a5d04a72b6991929d74a3e6f4bae9b",
+    "docs/ASSISTANT_EXPERIENCE_THIRD.md": "47cec21af315eb874fc7d7ae3e6f0b35f4e4779dcddd077d2f30a812769427e8",
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+    "config/experiments/assistant-workflow-data-confirmation3.json": "37e2dd7550f302a7eb580fc7c5dc1530c2abe5116f4b098aeb774feb608b615d",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
     "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md": "4cfa0b3247c30b9d00ae527dc098068d5e92a49f33557d0954a31ce130a7c939",
-    "config/experiments/assistant-experience-development-round4-report.json": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6",
-    "config/experiments/assistant-experience-confirmation-parent-resources.json": "6794467de0cee9445cc2c2dbde8e0b2f4aa2d35669c3c82784268d6dbe74c2f7",
-    "config/experiments/assistant-experience-confirmation-update-resources.json": "03a0ed58671a5dfd2c48486be56ded96533df766af63ca94a60145e91158736a",
-    "config/experiments/assistant-experience-confirmation-addition-resources.json": "da4a761d425b35900e2a4df288f323b56485ecf8080340ff1e338aa9e85280e9",
-    "config/experiments/assistant-workflow-data-confirmation2.json": "1b341dd20087389812dd0a3ed50dba17d3528a8a7b52aa4d815a3039a038c1f3",
-    "config/experiments/assistant-experience-compose.json": "1b2cd591e7d9ee6778e0d7eae1baca0af2ae34899ed88124bfefe914e625182f",
-    "config/experiments/assistant-experience-compose-report.json": "78c334ea8187781f9ea52b2dfa3c32239ea00381ba0e7570e7de81e05885a39d",
-    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md": "06d5316aebced8c8e9fc84133211fe765592e36c056d5d9c5f6743f3c784dcc5",
-    "config/experiments/assistant-experience-confirmation-small-resources.json": "b9088a3d3fe93266983ffcf25b6ec91fad80d7d1aff213404de3b9219ecc827f"
+    "config/experiments/assistant-experience-round4-report.json": "774718973c65360b84c6057776912e6d836ea869c9717e3d40fc3c5982660ff5",
+    "config/experiments/assistant-experience-development-third-report.json": "ef2187e1b6ed8362d16a7fd53dab27cba6f3444dcc392b70c011df2e26f62eaf",
+    "config/experiments/assistant-experience-confirmation-parent-resources.json": "730d05ca33dc557bec572dd6ce99e294d894495cc665099e73c828e22a4b32f1",
+    "config/experiments/assistant-experience-confirmation-update-resources.json": "76c3199c391aaeaced6c877c2d988b2cc72d3ae335516bc2fd745e6dc1f71b8e"
   },
   "sources": [
     "config/experiments/assistant-experience-learning.json",
+    "config/experiments/assistant-experience-third.json",
+    "docs/ASSISTANT_EXPERIENCE_THIRD.md",
     "config/experiments/assistant-workflow-policy.json",
     "config/experiments/assistant-workflow-data.json",
-    "config/experiments/assistant-workflow-data-confirmation2.json",
+    "config/experiments/assistant-workflow-data-confirmation3.json",
     "config/experiments/assistant-workflow-canonical.json",
     "config/experiments/assistant-workflow-canonical-execution.json",
     "config/experiments/granite-reference-artifacts.json",
     "docs/granite-reference-requirements.txt",
-    "docs/ASSISTANT_EXPERIENCE_LEARNING.md",
-    "config/experiments/assistant-experience-development-round4-report.json",
+    "config/experiments/assistant-experience-round4-report.json",
+    "config/experiments/assistant-experience-development-third-report.json",
     "config/experiments/assistant-experience-confirmation-parent-resources.json",
     "config/experiments/assistant-experience-confirmation-update-resources.json",
-    "config/experiments/assistant-experience-confirmation-addition-resources.json",
     "config/experiments/assistant-experience-confirmation-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
@@ -127,25 +122,23 @@
     "src/neuroshard/evolution/modular_reference.py",
     "src/neuroshard/evolution/modular_reference_execution.py",
     "src/neuroshard/evolution/modular_tools.py",
-    "src/neuroshard/version.py",
-    "config/experiments/assistant-experience-compose.json",
-    "config/experiments/assistant-experience-compose-report.json",
-    "docs/ASSISTANT_EXPERIENCE_DIAGNOSTIC.md",
     "src/neuroshard/evolution/assistant_committee.py",
-    "config/experiments/assistant-experience-confirmation-small-resources.json",
+    "src/neuroshard/version.py",
     "scripts/run_assistant_experience_confirmation.py",
     "scripts/modular_reference_cloud.py"
   ],
   "attempts": 1,
   "training_authorized": false,
   "gpu_launch_authorized": false,
-  "execution": "Two hosts, one system each: the update control and the small module from the compositional study, served unrouted under the prefix cache on the 24 opened development cases, with full transcripts and episode latency. No parent host: the canonical parent result is the reference.",
-  "interpretation": "Development diagnostic before any third attempt: how the small module handles corrections with an added instruction it never saw combined that way, and the CPU latency of the unrouted serving path. No gate and no credit; the third confirmation split stays sealed.",
-  "split": "development",
-  "gate": "confirmation2_gate",
+  "execution": "Two hosts, one system each, on the sealed 192-episode confirmation3 split: the parent control and the round-4 update system, both under the declared prefix-cache serving. The update selects once per episode with its round-4 gate. Each host runs a preparation worker and one evaluation worker at the canonical eight threads.",
+  "interpretation": "Third-attempt confirmation, opened once behind the pinned development and A1 served pass. The third contract's gate, with no update comparison, decides A2 for this capability.",
+  "serving": "prefix-cache",
+  "split": "confirmation3",
+  "data": "config/experiments/assistant-workflow-data-confirmation3.json",
+  "gate": "confirmation_gate",
+  "gate_plan": "config/experiments/assistant-experience-third.json",
   "parent_serving": "prefix-cache",
-  "round": "compose",
-  "phase": "diagnostic",
-  "arms_plan": "config/experiments/assistant-experience-compose.json",
-  "candidate": "small"
+  "round": 4,
+  "candidate": "update",
+  "control": null
 }

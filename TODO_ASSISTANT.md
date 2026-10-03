@@ -141,6 +141,10 @@ remain evidence, not readiness claims for this assistant.
   success lost, is the candidate, unchanged. Its served version must pass the
   development gate and the A1 served-system check on CPU. Only then does the
   sealed 192-episode `confirmation3` split open, once. Budget ceiling: $40.
+  [Development and the A1 served-system check passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md)
+  ($0.58): 19/24 against the parent's 9, no parent success lost, 8/8 primitive
+  workflows, p95 94.8 s, and every episode identical to the round-4 run. The
+  sealed split now opens once.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

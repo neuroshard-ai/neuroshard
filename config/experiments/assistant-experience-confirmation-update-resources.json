@@ -30,23 +30,34 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 100663296,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-attempt3-arms",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-20260928h/evidence/.study/attempts/baseline-experience",
     "files": [
+      "integration.json",
       "update-checkpoint/manifest.json",
       "update-checkpoint/trainable.safetensors"
     ],
-    "maximum_bytes": 233696471
+    "maximum_bytes": 268435456
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-experience-development-round4-report.json",
-    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6"
+    "path": "config/experiments/assistant-experience-development-third-report.json",
+    "sha256": "ef2187e1b6ed8362d16a7fd53dab27cba6f3444dcc392b70c011df2e26f62eaf"
   },
-  "budget_scope": "Development diagnostic of the compositional study's update arm: served unrouted under the prefix cache on the 24 opened development cases with full transcripts and episode latency. One CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. No sealed data.",
+  "budget_scope": "Third confirmation of the round-4 update system, gated alone, on the 192 sealed confirmation3 episodes under the declared prefix cache with per-episode selection: one CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. Uploads only the update's trained tensors and manifest and the round-4 gates. Opens only behind the pinned third-attempt development and A1 served pass.",
   "prior_attempts": [
     {
       "utc": "2026-09-28T10:27:17Z",
       "commit": "cd7fb626a0d8568b84123a173b89b359b5dcf44e",
       "outcome": "First confirmation of the update system on the 96 sealed episodes; the three-system gate failed on update parity ($1.84)."
+    },
+    {
+      "utc": "2026-09-29T04:00:40Z",
+      "commit": "0c31b3e804dcc94dbb5565bc11dd633344a4a640",
+      "outcome": "Second confirmation of the round-4 update system on 192 fresh sealed episodes: 182/192, p95 106.1 s; the three-system gate failed for the addition ($3.79)."
+    },
+    {
+      "utc": "2026-09-30T22:12:51Z",
+      "commit": "16d2bad65c5d5949d7cbd227e58d64600da2fd52",
+      "outcome": "Development diagnostic of the compositional update arm, unrouted on the 24 opened development cases; no gate ($0.53)."
     }
   ]
 }
