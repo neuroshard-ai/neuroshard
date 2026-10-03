@@ -1,7 +1,7 @@
 # Operated GPU research environment; never install over a released node runtime.
 # PyTorch CUDA 12.8 wheels require a compatible NVIDIA driver.
 --extra-index-url https://download.pytorch.org/whl/cu128
-torch==2.9.1+cu128
+torch==2.14.1+cpu
 numpy==2.2.6
 transformers==4.57.3
 tokenizers==0.22.1
