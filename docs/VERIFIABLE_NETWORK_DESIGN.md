@@ -111,7 +111,8 @@ replication.
 | Exact sharded serving, training, recovery, concurrency | Measured on the real 3B assistant |
 | Signed owner logs, replay audit, fraud proofs | Tested on small checkpoints: honest owners verified; a one-bit fault caught, blamed and proven; forged accusations rejected |
 | Audited serving on the real model with light auditors | [Passed](GRANITE_SHARD_AUDIT_RESULTS.md): all 8830 forwards replayed exactly; a one-bit fault named and proven; no false blame |
-| Committee-of-modules growth | Measured: no parent success lost, but below one small module; A2 paused ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
+| Committee-of-modules growth | Measured: no parent success lost, but below one small module ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
+| One learned capability (A2) | [Passed](ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) on 192 fresh sealed episodes: a separable 62.9M-parameter update solved 183 against the parent's 119, with no parent success lost |
 | Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; then [through four CometBFT validators](GRANITE_SHARD_CHAIN_RESULTS.md) under one operator |
 | Request-bound logs, proof availability, cheap admission before replay | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; not yet run on the real model |
 | Metered settlement (signed position counts, payment for positions served, refund of the rest) | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; a committed prefix is paid as a prefix |

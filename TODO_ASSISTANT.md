@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 2, 2026. Status: 1/6 milestones complete (A4).**
+**Updated October 3, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -135,7 +135,7 @@ remain evidence, not readiness claims for this assistant.
   [Failed as declared](docs/ASSISTANT_EXPERIENCE_REPAIRS_RESULTS.md) ($4.90): only 9 of 190 training
   failures matched the error, each after an earlier wrong read, and no repair
   verified. The double-interval error appears only with the held-out correction.
-- [ ] [Third attempt](docs/ASSISTANT_EXPERIENCE_THIRD.md): A2 is amended so that a
+- [x] [Third attempt](docs/ASSISTANT_EXPERIENCE_THIRD.md): A2 is amended so that a
   bounded, separable update is the learning unit. The round-4 update system, the
   control that solved 182/192 on the spent second confirmation with no parent
   success lost, is the candidate, unchanged. Its served version must pass the
@@ -143,8 +143,10 @@ remain evidence, not readiness claims for this assistant.
   sealed 192-episode `confirmation3` split open, once. Budget ceiling: $40.
   [Development and the A1 served-system check passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md)
   ($0.58): 19/24 against the parent's 9, no parent success lost, 8/8 primitive
-  workflows, p95 94.8 s, and every episode identical to the round-4 run. The
-  sealed split now opens once.
+  workflows, p95 94.8 s, and every episode identical to the round-4 run.
+  [The sealed confirmation passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) ($7.10):
+  183/192 against the parent's 119, no parent success lost, a lower 95% gain of
+  +22.4 points and p95 103.0 s. A2 is established for this capability.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
@@ -193,21 +195,21 @@ remain evidence, not readiness claims for this assistant.
   fraud proof, and owner 2 audited clean ($7.19). The raw logs and proof
   exceeded the evidence cap and were not archived.
 
-**Current status:** verified-experience learning lifts the assistant from about
-55% to 91–95% on fresh sealed episodes, but A2 is not established.
+**Current status:** the assistant has learned its first useful capability.
+On fresh sealed workspace episodes, the learned update lifts it from 62% to 95%
+with no parent success lost. A1, A2 and A4 are complete; A3, repeated growth,
+is next.
 
-- **Confirmations.** On both, the 1M-parameter added module came within 4–8
-  episodes of the 63M-parameter update control without meeting the declared
-  parity margin. The second also lost two parent successes: 174/192, against 182
-  for the update and 106 for the parent.
-- **A2 amended.** After the methodology, growth, compositional and repair studies,
-  no small module kept every parent success: it applies the review interval twice
-  on one held-out correction that the update control handles. A2's learning unit
-  is now any bounded, separable update, and the
-  [third attempt](docs/ASSISTANT_EXPERIENCE_THIRD.md) puts the round-4 update
-  before the still-sealed third confirmation split.
-- **A1.** The served system passed A1's development checks, but A1 stays open
-  until a module is accepted.
+- **A2 complete.** The 1M-parameter added module twice came within 4–8 episodes
+  of the 63M-parameter update without meeting the declared parity margin, and
+  four studies found no low-rank candidate that kept every parent success. A2 was
+  [amended](docs/ASSISTANT_EXPERIENCE_THIRD.md) so that any bounded, separable
+  update is the learning unit. The unchanged round-4 update then
+  [passed the sealed third confirmation](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md):
+  183/192 against the parent's 119, every family at least 21/24, p95 103.0 s.
+- **A1 complete.** The served version passed A1's development checks, and its
+  learned unit is now accepted. A [review](docs/A1_FOUNDATION_REVIEW.md) maps every
+  clause to published evidence.
 - **A4 complete.** The pinned 3B assistant runs across owner machines that each
   fetch only their own tensors. Generation and training match the complete model
   bit for bit, and the learned assistant is served across owners exactly as on
@@ -260,13 +262,14 @@ No automatic training or admission follows a baseline. This is not a public assi
 
 ## Six completion criteria
 
-- [ ] **A1 — Usable foundation and reproducible execution.** Pin weights,
+- [x] **A1 — Usable foundation and reproducible execution.** [Complete](docs/A1_FOUNDATION_REVIEW.md). Pin weights,
   tokenizer, runtime and licenses; retain successful conversation, instruction
   and tool-use anchors; complete the workspace primitive baseline and process
   replay; publish feasible shard estimates. A1 no longer requires a third-party
   adapter to pass an unrelated quality benchmark. This is a prospective change:
   every failed reference remains failed, and no existing box is marked complete.
-- [ ] **A2 — One useful learned capability in the complete assistant.** A bounded,
+- [x] **A2 — One useful learned capability in the complete assistant.** [Established](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md)
+  for the workspace capability. A bounded,
   separable learned update and automatic selection beat the unchanged parent on
   frozen development and fresh confirmation gates, while training a small fraction
   of the backbone's parameters. The update's tensors are stored apart from the
@@ -301,11 +304,12 @@ No automatic training or admission follows a baseline. This is not a public assi
   resource limits, funding, rollback and a public operating soak. Requires A1–A5;
   neither a research pass nor a token transaction substitutes for usability.
 
-A1 baseline and A4 port preparation proceed together. A2 implementation proceeds
-alongside the re-baseline; its execution follows a usable baseline. A3 follows a
-passing learned capability. Recruitment for A5 can
-proceed now. Native 0.4.0 stays separate until a complete candidate passes its
-activation contract.
+A1, A2 and A4 are complete. A3 follows the passing learned capability and can
+begin now: it needs new capability cohorts, cumulative retention, and the
+comparison of separate units with repeated shared-weight updates, now including
+whether low-rank modules can match updates. Recruitment for A5 can proceed now.
+Native 0.4.0 stays separate until a complete candidate passes its activation
+contract.
 
 ## Evidence carried forward
 

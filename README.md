@@ -52,10 +52,11 @@ at 9/64. It is not a deployable assistant. The subsequent
 failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
 no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
 uses a capable pretrained foundation, bounded learned modules and actual hardware
-shards. Its sharding milestone, A4, is [complete](docs/A4_SHARDING_REVIEW.md); the other five
-remain open. The next step is the
-[complete workspace assistant](docs/ASSISTANT_WORKFLOW_LEARNING.md), comparing
-useful conversations rather than isolated checker scores. The research serving baseline remains
+shards. Three of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
+a [first learned capability](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) that lifts fresh workspace
+conversations from 62% to 95% with no earlier success lost (A2), and [actual sharding](docs/A4_SHARDING_REVIEW.md)
+(A4). Repeated growth, independent operation and a public assistant remain open; the next step
+is repeated growth (A3), new capability cohorts with cumulative retention. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
