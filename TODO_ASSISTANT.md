@@ -226,7 +226,11 @@ remain evidence, not readiness claims for this assistant.
   Each owner log is now bound to its paid request through signed serving links,
   so a reused or relabelled log is refused or provably fraud. A proof bundle a
   validator lacks gives no verdict rather than a cached rejection, and challenges
-  pass every cheap admission check before any replay. Small-checkpoint and
+  pass every cheap admission check before any replay. A review then found that
+  owners committing one message of a session were paid the whole price, so
+  settlement is now [metered](docs/OPTIMISTIC_SERVING.md#metered-settlement): a job
+  buys a budget of token positions, each owner is paid for the positions its
+  upstream signatures attest, and the user gets the rest back. Small-checkpoint and
   four-validator tests pass. The real-model runs above used the earlier protocol,
   and a failed challenge still costs its sender nothing.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations

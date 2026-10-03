@@ -26,6 +26,8 @@ from test_granite_tokenizer import granite_like, load_tiny
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDARIES = (0, 1, 3, 4)
 SPEC = {'layers': [3], 'rank': 4, 'alpha': 8, 'seed': 27092026}
+# The token positions each test job buys; serving the tiny world's episodes uses about half, and the rest is refunded.
+BUDGET = 32768
 
 
 def bounded():
@@ -305,6 +307,22 @@ def log_commit(account, key_path, chain, job_id, log_dir):
     return account.sign('log_commit', job_id=job_id, log_signature=signature, **commitment)
 
 
+def served(home):
+    """The token positions owners 1 and 2's logs in ``home`` cover, as each upstream sender signed them.
+
+    Both owners carried the same messages, so each is paid for the same share of the budget.
+    """
+    from neuroshard.evolution.sharded import granite_audit
+
+    counts = set()
+    for rank in (1, 2):
+        record = granite_audit.load(Path(home) / f'log-{rank}')[0]
+        assert record['upstream']['positions'] == granite_audit.positions(record)
+        counts.add(record['upstream']['positions'])
+    assert len(counts) == 1 and 0 < min(counts) < BUDGET
+    return counts.pop()
+
+
 def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(world, tmp_path):
     import hashlib
     import shutil
@@ -324,7 +342,7 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
     def open_job(request):
         return people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
                                    request_root=hashlib.sha256(request.encode()).hexdigest(), session_key=public[0],
-                                   price=1_000_000)
+                                   price=1_000_000, positions=BUDGET)
 
     # Jobs open before serving, so every message of a pass is signed for its job.
     open_honest, open_cheated = open_job('honest pass'), open_job('cheated pass')
@@ -392,8 +410,13 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
     assert state['owners'][public[1]]['status'] == 'slashed' and state['owners'][public[2]]['status'] == 'active'
     reward = PARAMS['owner_bond_minimum'] * PARAMS['auditor_share_ppm'] // 1_000_000
     assert state['accounts'][people['auditor'].public]['balance'] == 20_000_000 - PARAMS['fee'] + reward
+    # The honest job pays for the positions served out of the budget bought, and refunds the rest.
+    paid = 1_000_000 * served(tmp_path / 'honest') // (2 * BUDGET)
+    assert state['results'][honest_job] == {**state['results'][honest_job], 'paid': [paid, paid],
+                                            'refunded': 1_000_000 - 2 * paid}
     assert state['accounts'][people['owner-2'].public]['balance'] == (20_000_000 - 3 * PARAMS['fee']
-                                                                     - PARAMS['owner_bond_minimum'] + 500_000)
+                                                                     - PARAMS['owner_bond_minimum'] + paid)
+    assert state['accounts'][people['user'].public]['balance'] == 20_000_000 - 2 * PARAMS['fee'] - 2 * paid
 
 
 ROLE = '''
@@ -419,7 +442,8 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
     from neuroshard.evolution.modular_reference_execution import read, sha256
     from neuroshard.inference import optimistic as ledger
 
-    plan = read(ROOT / settlement.PLAN)
+    frozen = read(ROOT / settlement.PLAN)
+    plan = {**frozen, 'ledger': {**frozen['ledger'], 'positions': BUDGET}}
     terms = plan['ledger']
     homes = {name: tmp_path / name / 'home' for name in ('owner-1', 'owner-2', 'auditor')}
     stores = {name: tmp_path / name / 'store' for name in homes}
@@ -450,7 +474,8 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
         opened[label] = settlement.signed(user_key, {'kind': 'serve_open', 'chain_id': terms['chain_id'], 'nonce': nonce,
                                                      'model_root': model, 'owners': log_keys,
                                                      'request_root': hashlib.sha256(label.encode()).hexdigest(),
-                                                     'session_key': session_public[0], 'price': terms['price']})
+                                                     'session_key': session_public[0], 'price': terms['price'],
+                                                     'positions': terms['positions']})
         jobs[label] = ledger.transaction_id(opened[label])
     for label, fault in (('honest', None), ('cheat', {'rank': 1, 'at': 3})):
         results = sharded(world, tmp_path / label, log=True, fault=fault, keys=keys,
@@ -461,8 +486,12 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
         shutil.copytree(tmp_path / label / 'log-1', homes['auditor'] / f'serve-{label}' / 'log-1')
     assert audit(world, tmp_path / 'cheat', 1)['proof_accepted']
     shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', homes['auditor'] / 'audit-cheat' / 'proof')
-    commits = {label: [role(f'owner-{r}', f'commit-{label}', nonce=nonce, job_id=jobs[label])['envelope'] for r in (1, 2)]
-               for nonce, label in ((1, 'honest'), (2, 'cheat'))}
+    committed = {label: [role(f'owner-{r}', f'commit-{label}', nonce=nonce, job_id=jobs[label]) for r in (1, 2)]
+                 for nonce, label in ((1, 'honest'), (2, 'cheat'))}
+    commits = {label: [result['envelope'] for result in results] for label, results in committed.items()}
+    # Each owner reports the positions its honest log covers, which the assessment expects to be paid.
+    positions = {r: committed['honest'][r - 1]['positions'] for r in (1, 2)}
+    assert positions == {1: served(tmp_path / 'honest'), 2: served(tmp_path / 'honest')}
     challenge = role('auditor', 'challenge', honest_job=jobs['honest'], cheated_job=jobs['cheat'], log_key=log_keys[0])
     for rank in (1, 2):
         for label in ('honest', 'cheat'):
@@ -481,8 +510,10 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
     replica = json.loads(output.strip().splitlines()[-1])
     assert replica['outcomes'] == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
     state = replica['state']
-    assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(plan, parties)
+    assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(
+        plan, parties, positions)
     assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheat']]['status'] == 'fraud'
+    assert 0 < state['results'][jobs['honest']]['refunded'] < terms['price']
 
 
 def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(world, tmp_path):
@@ -510,7 +541,7 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
     def open_job(label):
         envelope = people['user'].sign('serve_open', model_root=model, owners=[public[1], public[2]],
                                        request_root=hashlib.sha256(label.encode()).hexdigest(), session_key=public[0],
-                                       price=1_000_000)
+                                       price=1_000_000, positions=BUDGET)
         return envelope, ledger.transaction_id(envelope)
 
     jobs = {label: open_job(label) for label in ('honest', 'cheat')}
@@ -593,9 +624,10 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
     state = states[0]
     assert state['results'][cheated]['status'] == 'fraud' and state['owners'][public[1]]['status'] == 'slashed'
     fee, bond_amount = params['fee'], params['owner_bond_minimum']
+    paid = 1_000_000 * served(tmp_path / 'honest') // (2 * BUDGET)
     assert {name: state['accounts'][p.public]['balance'] for name, p in people.items()} == {
-        'user': 20_000_000 - 2 * fee - 1_000_000, 'owner-1': 20_000_000 - 3 * fee - bond_amount + 500_000,
-        'owner-2': 20_000_000 - 3 * fee - bond_amount + 500_000, 'auditor': 20_000_000 - fee + bond_amount // 2,
+        'user': 20_000_000 - 2 * fee - 2 * paid, 'owner-1': 20_000_000 - 3 * fee - bond_amount + paid,
+        'owner-2': 20_000_000 - 3 * fee - bond_amount + paid, 'auditor': 20_000_000 - fee + bond_amount // 2,
         'accuser': 20_000_000}
 
 

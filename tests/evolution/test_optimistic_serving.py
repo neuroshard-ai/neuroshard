@@ -13,6 +13,8 @@ MODEL = 'ab' * 32
 PARAMS = {**ledger.PARAMS, 'challenge_blocks': 3, 'job_blocks': 6}
 # Who sends each shard its inputs: the user's device under its session key, then owner 1.
 UPSTREAM = {1: 'session', 2: 'log-1'}
+# The token positions a test job buys; the default logs cover all of them.
+POSITIONS = 8
 
 
 class Account:
@@ -41,18 +43,20 @@ def bond(account, shard, name, amount=PARAMS['owner_bond_minimum']):
                                 possession=possession)
 
 
-def open_job(account, keys, request='cd' * 32, price=1_000_000):
+def open_job(account, keys, request='cd' * 32, price=1_000_000, positions=POSITIONS):
     return account.sign('serve_open', model_root=MODEL, owners=[keys[1], keys[2]], request_root=request,
-                        session_key=log_identity('session')[1], price=price)
+                        session_key=log_identity('session')[1], price=price, positions=positions)
 
 
-def header(job_id, shard, request='cd' * 32, entries=4, head='77' * 32, signer=None, hop=None, chain=CHAIN):
+def header(job_id, shard, request='cd' * 32, entries=4, head='77' * 32, signer=None, hop=None, chain=CHAIN,
+           positions=POSITIONS):
     """A bound log's header: its owner, its job and request, and the upstream signature over its inputs."""
     key, public = log_identity(signer or UPSTREAM[shard])
-    message = ledger.link_message(chain, job_id, shard - 1 if hop is None else hop, entries, head)
+    message = ledger.link_message(chain, job_id, shard - 1 if hop is None else hop, entries, head, positions)
     return {'format': ledger.OWNER_LOG_FORMAT, 'rank': shard, 'public_key': log_identity(f'log-{shard}')[1],
             'session': {'chain_id': chain, 'job_id': job_id, 'request_root': request},
-            'upstream': {'key': public, 'entries': entries, 'head': head, 'signature': key.sign(message).hex()}}
+            'upstream': {'key': public, 'entries': entries, 'head': head, 'positions': positions,
+                         'signature': key.sign(message).hex()}}
 
 
 def statement(job_id, shard, entries_root, **binding):
@@ -84,9 +88,15 @@ def refuse(state, envelope, match, execute=None):
         ledger.transition(state, envelope, execute)
 
 
-def opened(state, people, keys, price=1_000_000, request='cd' * 32):
-    envelope = open_job(people['user'], keys, request, price)
+def opened(state, people, keys, price=1_000_000, request='cd' * 32, positions=POSITIONS):
+    envelope = open_job(people['user'], keys, request, price, positions)
     return ledger.transition(state, envelope, None), ledger.transaction_id(envelope)
+
+
+def settle(state, job_id):
+    while job_id in state['jobs']:
+        state = ledger.advance(state, state['height'] + 1)
+    return state
 
 
 def committed(state, people, job_id, request='cd' * 32):
@@ -106,10 +116,51 @@ def test_an_honest_job_settles_after_the_challenge_window_and_conserves_money(ma
     while state['height'] <= deadline:
         state = ledger.advance(state, state['height'] + 1)
         assert (job_id in state['jobs']) == (state['height'] <= deadline)
-    assert state['results'][job_id]['status'] == 'settled' and state['results'][job_id]['paid_each'] == 500_000
+    assert state['results'][job_id] == {**state['results'][job_id], 'status': 'settled', 'positions': [8, 8],
+                                        'paid': [500_000, 500_000], 'refunded': 0}
     for shard in (1, 2):
         assert state['accounts'][people[f'owner-{shard}'].public]['balance'] == before[f'owner-{shard}'] + 500_000
     assert state['accounts'][people['user'].public]['balance'] == before['user']
+
+
+def test_a_settled_job_pays_for_the_positions_its_logs_cover_and_refunds_the_rest(market):
+    state, people, keys = market
+    for budget, served, billed, paid in (
+            # Both owners commit a one-message prefix of the session.
+            (8, (1, 1), [1, 1], [62_500, 62_500]),
+            # Owner 2's log covers less than owner 1's.
+            (8, (8, 3), [8, 3], [500_000, 187_500]),
+            # Owner 2 is paid for no more than the user's device sent to owner 1,
+            (8, (2, 6), [2, 2], [125_000, 125_000]),
+            # and no owner for more than the job bought.
+            (8, (20, 20), [8, 8], [500_000, 500_000]),
+            # What rounding leaves unpaid goes back to the user.
+            (3, (1, 1), [1, 1], [166_666, 166_666])):
+        state, job_id = opened(state, people, keys, positions=budget)
+        for shard in (1, 2):
+            state = ledger.transition(state, commit(people[f'owner-{shard}'], shard, job_id,
+                                                    header(job_id, shard, positions=served[shard - 1])), None)
+        names = ('user', 'owner-1', 'owner-2')
+        before = [state['accounts'][people[name].public]['balance'] for name in names]
+        state = settle(state, job_id)
+        refunded = 1_000_000 - sum(paid)
+        assert state['results'][job_id] == {**state['results'][job_id], 'status': 'settled', 'positions': billed,
+                                            'paid': paid, 'refunded': refunded}
+        assert [state['accounts'][people[name].public]['balance'] for name in names] == [
+            before[0] + refunded, before[1] + paid[0], before[2] + paid[1]]
+
+
+def test_a_job_buys_a_positive_number_of_positions(market):
+    state, people, keys = market
+    for bad in (0, -1, 1.5, True, None):
+        refuse(state, open_job(people['user'], keys, positions=bad), 'outside protocol bounds')
+        people['user'].nonce -= 1
+    unpriced = people['user'].sign('serve_open', model_root=MODEL, owners=[keys[1], keys[2]], request_root='cd' * 32,
+                                   session_key=log_identity('session')[1], price=1_000_000)
+    refuse(state, unpriced, 'Invalid transaction schema')
+    people['user'].nonce -= 1
+    state, job_id = opened(state, people, keys, positions=5)
+    assert state['jobs'][job_id]['positions'] == 5 and state['jobs'][job_id]['served'] == {}
 
 
 def test_owner_bonds_need_their_log_key_and_stay_exposed_while_named_or_within_the_window(market):
@@ -145,7 +196,7 @@ def test_a_job_registers_a_valid_session_key(market):
     state, people, keys = market
     for bad in ('cd' * 31, 'AB' * 32, 7, None):
         envelope = people['user'].sign('serve_open', model_root=MODEL, owners=[keys[1], keys[2]], request_root='cd' * 32,
-                                       session_key=bad, price=1_000_000)
+                                       session_key=bad, price=1_000_000, positions=POSITIONS)
         people['user'].nonce -= 1
         with pytest.raises(ValueError):
             ledger.transition(state, envelope, None)
@@ -187,6 +238,10 @@ def test_a_log_that_does_not_answer_this_jobs_request_is_refused_at_commitment(m
             ({**header(job_id, 1, 'ef' * 32), 'rank': 2}, 'does not describe this owner'),
             ({**header(job_id, 1, 'ef' * 32), 'format': 'neuroshard-granite-owner-log/1'}, 'does not describe this owner'),
             ({**header(job_id, 1, 'ef' * 32), 'upstream': None}, 'not signed by their upstream sender'),
+            # A count of positions the upstream sender did not sign, or none at all.
+            ({**header(job_id, 1, 'ef' * 32), 'upstream': {**header(job_id, 1, 'ef' * 32)['upstream'], 'positions': 9}},
+             'not signed by their upstream sender'),
+            (header(job_id, 1, 'ef' * 32, positions=0), 'outside protocol bounds'),
             ({**header(job_id, 1, 'ef' * 32), 'extra': 1}, 'Invalid log header')):
         refuse(state, commit(people['owner-1'], 1, job_id, head), match)
         people['owner-1'].nonce -= 1
@@ -205,6 +260,7 @@ def test_a_log_that_does_not_answer_this_jobs_request_is_refused_at_commitment(m
     people['owner-1'].nonce -= 1
     state = committed(state, people, job_id, 'ef' * 32)
     assert set(state['jobs'][job_id]['commits']) == {keys[1], keys[2]}
+    assert state['jobs'][job_id]['served'] == {keys[1]: POSITIONS, keys[2]: POSITIONS}
 
 
 def test_a_verified_fraud_proof_slashes_the_owner_pays_the_auditor_and_refunds_every_affected_user(market):

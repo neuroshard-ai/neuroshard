@@ -11,6 +11,12 @@ each owner signs the transcript of every message it passes on. An owner commits 
 whose header names the job and carries its upstream sender's signature over the log's
 inputs, so a log from any other session is refused, and a log whose entries depart
 from what was signed is provable fraud.
+
+A job buys a budget of token positions at its price. Every link signature also covers
+the positions the link has carried, so each commitment states, under the upstream
+sender's signature, how much work the log covers. Settlement pays each owner for those
+positions, never more than the user's device sent or the job bought, and returns the
+rest of the escrow to the user.
 """
 
 import copy
@@ -26,7 +32,7 @@ PARAMS = {'fee': 1000, 'owner_bond_minimum': 5_000_000, 'minimum_price': 100_000
           'job_blocks': 60, 'auditor_share_ppm': 500_000, 'max_jobs': 32, 'max_results': 128}
 FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession'},
           'owner_unbond': {'log_key'}, 'owner_withdraw': {'log_key'},
-          'serve_open': {'model_root', 'owners', 'request_root', 'session_key', 'price'},
+          'serve_open': {'model_root', 'owners', 'request_root', 'session_key', 'price', 'positions'},
           'log_commit': {'job_id', 'statement_root', 'entries_root', 'header', 'log_signature'},
           'challenge': {'job_id', 'log_key', 'proof_root'}}
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
@@ -123,10 +129,11 @@ def link_step(head, op, value, tensor=None):
     return digest({'head': head, 'op': op, 'value': value, 'tensor': tensor})
 
 
-def link_message(chain_id, job_id, hop, entries, head):
-    """What a sender signs with every message: the link's transcript head after ``entries`` steps."""
+def link_message(chain_id, job_id, hop, entries, head, positions):
+    """What a sender signs with every message: the link's transcript head after ``entries`` steps,
+    whose messages carried ``positions`` token positions in all."""
     return canonical({'domain': LINK_DOMAIN, 'chain_id': chain_id, 'job_id': job_id, 'hop': hop,
-                      'entries': entries, 'head': head})
+                      'entries': entries, 'head': head, 'positions': positions})
 
 
 def log_statement(header, entries_root):
@@ -172,8 +179,23 @@ def account(state, owner):
     return state['accounts'].setdefault(owner, {'balance': 0, 'nonce': 0})
 
 
+def billable(job):
+    """The token positions each owner of a fully committed job is paid for.
+
+    An owner's are those its committed log covers, as its upstream sender signed them, but
+    never more than the user's device sent (owner 1's count, signed by the session key) or
+    the positions the job bought.
+    """
+    sent = min(job['served'][job['owners'][0]], job['positions'])
+    return [min(job['served'][key], sent) for key in job['owners']]
+
+
 def advance(previous, height):
-    """Block boundary: settle every job whose challenge window has closed; refund jobs never fully committed."""
+    """Block boundary: settle every job whose challenge window has closed; refund jobs never fully committed.
+
+    A settled job pays each owner its equal share of the price for every position it served;
+    whatever is not paid out returns to the user.
+    """
     if height != previous['height'] + 1:
         raise ValueError('Nonmonotonic block height')
     state = copy.deepcopy(previous)
@@ -181,12 +203,14 @@ def advance(previous, height):
     for job_id in sorted(state['jobs']):
         job = state['jobs'][job_id]
         if job['deadline'] is not None and height > job['deadline']:
-            share = job['price'] // len(job['owners'])
-            for key in job['owners']:
-                account(state, state['owners'][key]['account'])['balance'] += share
-            state['burned'] += job['price'] - share * len(job['owners'])
+            served = billable(job)
+            paid = [job['price'] * positions // (job['positions'] * len(job['owners'])) for positions in served]
+            for key, amount in zip(job['owners'], paid):
+                account(state, state['owners'][key]['account'])['balance'] += amount
+            refunded = job['price'] - sum(paid)
+            account(state, job['user'])['balance'] += refunded
             remember(state, job_id, {'status': 'settled', 'user': job['user'], 'owners': job['owners'],
-                                     'paid_each': share})
+                                     'positions': served, 'paid': paid, 'refunded': refunded})
             del state['jobs'][job_id]
         elif job['deadline'] is None and height > job['expires']:
             account(state, job['user'])['balance'] += job['price']
@@ -242,7 +266,8 @@ def bound(state, job, job_id, key, header):
     """Refuse a log that does not answer this job.
 
     Its header must describe the committing owner, name this chain, job and request, and
-    carry the upstream sender's signature over the transcript of the log's inputs.
+    carry the upstream sender's signature over the transcript of the log's inputs. Returns
+    the token positions that signature says the inputs carried.
     """
     if not isinstance(header, dict) or set(header) != HEADER_FIELDS:
         raise ValueError('Invalid log header')
@@ -252,13 +277,15 @@ def bound(state, job, job_id, key, header):
     if header['session'] != {'chain_id': state['chain_id'], 'job_id': job_id, 'request_root': job['request_root']}:
         raise ValueError('Log is not bound to this job request')
     upstream, sender = header['upstream'], upstream_key(job, shard)
-    if not isinstance(upstream, dict) or set(upstream) != {'key', 'entries', 'head', 'signature'}:
+    if not isinstance(upstream, dict) or set(upstream) != {'key', 'entries', 'head', 'positions', 'signature'}:
         raise ValueError('Log inputs are not signed by their upstream sender')
+    positions = integer(upstream['positions'], 1)
     message = link_message(state['chain_id'], job_id, shard - 1, integer(upstream['entries'], 1),
-                           hex_digest(upstream['head']))
+                           hex_digest(upstream['head']), positions)
     if upstream['key'] != sender or not isinstance(upstream['signature'], str) or not ed25519_valid(
             sender, message, upstream['signature']):
         raise ValueError('Log inputs are not signed by their upstream sender')
+    return positions
 
 
 def transition(previous, envelope, execute):
@@ -316,14 +343,14 @@ def transition(previous, envelope, execute):
                 raise ValueError('Job owners must be active and bonded for their shards in order')
         hex_digest(body['request_root'])
         session_key = ed25519_key(body['session_key'])
-        price = integer(body['price'], params['minimum_price'])
+        price, positions = integer(body['price'], params['minimum_price']), integer(body['positions'], 1)
         if len(state['jobs']) >= params['max_jobs']:
             raise ValueError('Job queue is full')
         debit(price)
         state['jobs'][transaction_id(envelope)] = {
             'user': sender, 'owners': list(owners), 'request_root': body['request_root'], 'session_key': session_key,
-            'price': price, 'opened': state['height'], 'expires': state['height'] + params['job_blocks'],
-            'commits': {}, 'deadline': None}
+            'price': price, 'positions': positions, 'opened': state['height'],
+            'expires': state['height'] + params['job_blocks'], 'commits': {}, 'served': {}, 'deadline': None}
     elif kind == 'log_commit':
         job = state['jobs'].get(body['job_id'])
         if job is None or job['deadline'] is not None:
@@ -338,11 +365,12 @@ def transition(previous, envelope, execute):
         statement_root = hex_digest(body['statement_root'])
         if log_statement(header, hex_digest(body['entries_root'])) != statement_root:
             raise ValueError('Log statement does not match its header')
-        bound(state, job, body['job_id'], key, header)
+        served = bound(state, job, body['job_id'], key, header)
         if not isinstance(body['log_signature'], str) or not ed25519_valid(
                 key, commitment_message(state['chain_id'], body['job_id'], statement_root), body['log_signature']):
             raise ValueError('Log commitment is not signed by the owner log key')
         job['commits'][key] = statement_root
+        job['served'][key] = served
         if len(job['commits']) == len(job['owners']):
             job['deadline'] = state['height'] + params['challenge_blocks']
     else:

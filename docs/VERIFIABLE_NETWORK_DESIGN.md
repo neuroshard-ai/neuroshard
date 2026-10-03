@@ -89,9 +89,12 @@ replication.
 
 ## Economics sketch
 
-- **Users.** Pay per requested token.
-- **Owners.** Earn per computed hop, in proportion to the bytes their layers
-  stream, and post bonds.
+- **Users.** Pay per token position served, out of a budget escrowed when the
+  job opens; the unused part is refunded
+  ([metered settlement](OPTIMISTIC_SERVING.md#metered-settlement)).
+- **Owners.** Earn per position carried, and post bonds. The ledger splits the
+  price equally per shard; weighting shares by the bytes each owner's layers
+  stream is future work.
 - **Auditors.** Earn a small fee per clean audit and the slashed bond on fraud.
 - **Module contributors.** Earn the fee share described above.
 - **Training rewards.** Paid only for work that replays: the exact sharded
@@ -109,5 +112,6 @@ replication.
 | Committee-of-modules growth | Measured: no parent success lost, but below one small module; A2 paused ([results](ASSISTANT_EXPERIENCE_GROWTH_RESULTS.md)) |
 | Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; then [through four CometBFT validators](GRANITE_SHARD_CHAIN_RESULTS.md) under one operator |
 | Request-bound logs, proof availability, cheap admission before replay | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; not yet run on the real model |
+| Metered settlement (signed position counts, payment for positions served, refund of the rest) | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; a committed prefix is paid as a prefix |
 | User-held first stage | Design |
 | Independent operators (A5) | Not started |

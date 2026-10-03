@@ -14,12 +14,13 @@ from neuroshard.evolution.sharded.granite_pipeline import FORWARD, RESET
 from neuroshard.evolution.sharded.granite_serving import ADAPTER, CROP, FEATURE
 from neuroshard.inference import optimistic as ledger
 
-from test_optimistic_serving import CHAIN, PARAMS, Account
+from test_optimistic_serving import CHAIN, PARAMS, Account, settle
 
 BOUNDARIES = (0, 1, 3, 4)
 # Two episodes: a feature pass, a prefill, decoding, a crop to a shared prefix, and a trailing arm switch.
 PLAN = [(ADAPTER, 0), (FEATURE, 4), (RESET, 0), (ADAPTER, 1), (FORWARD, 5), (FORWARD, 1), (FORWARD, 1), (CROP, 4),
         (FORWARD, 2), (FORWARD, 1), (ADAPTER, 0)]
+SERVED = sum(value for op, value in PLAN if op in (FORWARD, FEATURE))
 
 
 @pytest.fixture(scope='module')
@@ -51,9 +52,9 @@ def market():
                                                     amount=PARAMS['owner_bond_minimum'], possession=possession), None)
     value = {'keys': keys, 'public': public, 'people': people, 'state': state}
 
-    def open_job(request):
+    def open_job(request, positions=SERVED):
         envelope = people['user'].sign('serve_open', model_root='ab' * 32, owners=public[1:], request_root=request,
-                                       session_key=public[0], price=1_000_000)
+                                       session_key=public[0], price=1_000_000, positions=positions)
         value['state'] = ledger.transition(value['state'], envelope, None)
         return {'chain_id': CHAIN, 'job_id': ledger.transaction_id(envelope), 'request_root': request}
 
@@ -61,8 +62,11 @@ def market():
     return value
 
 
-def serve(partitions, session, keys, fault=None, seed=5):
-    """Owners 1 and 2 serve ``PLAN`` for one job through signed links; random states stand in for owner 0's layers."""
+def serve(partitions, session, keys, fault=None, seed=5, history=None):
+    """Owners 1 and 2 serve ``PLAN`` for one job through signed links; random states stand in for owner 0's layers.
+
+    ``history``, if given, collects every upstream signature each owner received, in order.
+    """
     from transformers import DynamicCache
 
     public = [granite_audit.public_hex(key) for key in keys]
@@ -83,6 +87,8 @@ def serve(partitions, session, keys, fault=None, seed=5):
         signature = links[0].send(op, value, message)
         for rank in (1, 2):
             attested = links[rank].receive(op, value, message, signature)
+            if history is not None:
+                history.setdefault(rank, []).append(attested)
             with torch.inference_mode():
                 if op == FORWARD:
                     mask = torch.ones((1, caches[rank].get_seq_length() + value), dtype=torch.long)
@@ -161,6 +167,40 @@ def test_honest_bound_logs_commit_and_no_claim_against_them_verifies(partitions,
         assert not granite_audit.equivocates(records[rank][0], held)
         assert verdict(state, store, partitions, auditor, session, market['public'][rank],
                        granite_audit.claim_proof(records[rank][0], 'equivocation', held)) is False
+
+
+def test_settlement_pays_each_owner_for_the_positions_its_signed_log_covers(partitions, market, tmp_path):
+    whole = market['open']('cd' * 32)
+    records = saved(serve(partitions, whole, market['keys'])[0], market['keys'], whole, tmp_path / 'whole')
+    for record, _ in records.values():
+        assert granite_audit.positions(record) == record['upstream']['positions'] == SERVED
+    state = market['state'] = settle(committed(market, whole, records), whole['job_id'])
+    assert state['results'][whole['job_id']] == {**state['results'][whole['job_id']], 'positions': [SERVED, SERVED],
+                                                 'paid': [500_000, 500_000], 'refunded': 0}
+    # Another job served in full, but each owner commits only the prefix its first upstream signature covers.
+    prefix, history = market['open']('ef' * 32), {}
+    logs, _ = serve(partitions, prefix, market['keys'], history=history)
+    for rank in (1, 2):
+        logs[rank].attested = history[rank][0]
+    records = saved(logs, market['keys'], prefix, tmp_path / 'prefix')
+    first = PLAN[1][1]
+    for record, _ in records.values():
+        assert granite_audit.positions(record) == record['upstream']['positions'] == first
+        assert not granite_audit.unattested(record)
+    state = settle(committed(market, prefix, records), prefix['job_id'])
+    paid = 1_000_000 * first // (SERVED * 2)
+    assert state['results'][prefix['job_id']] == {**state['results'][prefix['job_id']], 'positions': [first, first],
+                                                  'paid': [paid, paid], 'refunded': 1_000_000 - 2 * paid}
+
+
+def test_an_owner_that_signs_a_count_its_log_contradicts_is_proven_by_its_own_signature(partitions, market, tmp_path):
+    session = market['open']('cd' * 32)
+    records = saved(serve(partitions, session, market['keys'])[0], market['keys'], session, tmp_path)
+    record, held = records[1][0], records[2][0]['upstream']
+    assert held['positions'] == SERVED and not granite_audit.equivocates(record, held)
+    inflated = {**held, 'positions': SERVED + 1, 'signature': market['keys'][1].sign(ledger.link_message(
+        CHAIN, session['job_id'], 1, held['entries'], held['head'], SERVED + 1)).hex()}
+    assert granite_audit.equivocates(record, inflated)
 
 
 def test_a_wrong_output_is_proven_by_replay_even_with_a_broken_record_signature(partitions, market, tmp_path):
@@ -274,9 +314,11 @@ def test_an_upstream_signature_is_checked_before_a_message_is_used(market):
     receiver = granite_audit.Link(session, 1, 3, keys[1], public[0])
     message = torch.ones((1, 2, 32), dtype=torch.bfloat16)
     signature = sender.send(FORWARD, 2, message)
+    head = ledger.link_step(ledger.link_seed(CHAIN, session['job_id'], 0), FORWARD, 2, granite_audit.digest(message))
+    miscounted = keys[0].sign(ledger.link_message(CHAIN, session['job_id'], 0, 1, head, 3))
     for tensor, signed in ((message * 2, signature), (message, keys[2].sign(b'x')),
                            (message, granite_audit.Link({**session, 'job_id': '22' * 32}, 0, 3, keys[0], public[2])
-                            .send(FORWARD, 2, message))):
+                            .send(FORWARD, 2, message)), (message, miscounted)):
         with pytest.raises(ValueError, match='did not sign'):
             receiver.receive(FORWARD, 2, tensor, signed)
     assert receiver.receive(FORWARD, 2, message, signature)['entries'] == 1

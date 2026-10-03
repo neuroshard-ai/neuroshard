@@ -77,6 +77,8 @@ def run(home):
     home.mkdir(parents=True, exist_ok=True)
     plan = read(ROOT / settlement.PLAN)
     terms = plan["ledger"]
+    if "positions" not in terms:
+        raise ValueError("the plan declares no position budget, which metered settlement needs")
     source = settlement.committed_sources()
     wait_for_ci(home, source["commit"])
     if settlement.committed_sources() != source:
@@ -133,7 +135,7 @@ def run(home):
         def open_job(nonce, label):
             body = {"kind": "serve_open", "chain_id": terms["chain_id"], "nonce": nonce, "model_root": model_root,
                     "owners": log_keys, "request_root": hashlib.sha256(f"{plan['target']}:{label}".encode()).hexdigest(),
-                    "session_key": session_key, "price": terms["price"]}
+                    "session_key": session_key, "price": terms["price"], "positions": terms["positions"]}
             envelope = settlement.signed(user_key, body)
             return envelope, ledger.transaction_id(envelope)
 

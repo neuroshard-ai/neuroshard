@@ -97,7 +97,7 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
     request = read(home / f'{phase}-request.json')
     key, public = account(store)
     log, log_key = log_signer(store)
-    base = {'chain_id': request['chain_id'], 'nonce': request['nonce']}
+    base, served = {'chain_id': request['chain_id'], 'nonce': request['nonce']}, {}
     if phase == 'sign-bond':
         possession = log.sign(ledger.possession_message(request['chain_id'], public, log_key, rank, request['amount'],
                                                         request['nonce'])).hex()
@@ -106,12 +106,14 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
     else:
         # The log is bound to the job it served: its header, entries digest and statement are what the ledger checks.
         log_dir = home / phase.replace('commit', 'serve') / f'log-{rank}'
-        commitment = granite_audit.commitment(json.loads((log_dir / 'log.json').read_text()))
+        record = json.loads((log_dir / 'log.json').read_text())
+        commitment = granite_audit.commitment(record)
         body = {'kind': 'log_commit', **base, 'job_id': request['job_id'], **commitment,
                 'log_signature': log.sign(ledger.commitment_message(request['chain_id'], request['job_id'],
                                                                     commitment['statement_root'])).hex()}
+        served = {'positions': granite_audit.positions(record)}
         stash(log_dir, store)
-    result = {'freeze': source, 'rank': rank, 'envelope': signed(key, body), 'completed': True}
+    result = {'freeze': source, 'rank': rank, 'envelope': signed(key, body), **served, 'completed': True}
     save(home / phase / 'result.json', result, exclusive=True)
     return result
 
@@ -217,15 +219,33 @@ def validator(index, phase, home, store):
     return result
 
 
-def expected_balances(plan, parties):
-    """Final balances the declared sequence must leave: one honest job settled, one cheating owner slashed."""
+def honest_payments(plan, served):
+    """What owners 1 and 2 earn for the honest job, whose logs cover ``served[rank]`` token positions.
+
+    Each is paid its half of the price per position of the declared budget, for no more
+    positions than owner 1 received from the user or the budget allows.
+    """
+    price, budget = plan['ledger']['price'], plan['ledger']['positions']
+    sent = min(served[1], budget)
+    return [price * min(served[rank], sent) // (budget * 2) for rank in (1, 2)]
+
+
+def honest_positions(phases):
+    """The positions each owner's honest log covers, as the owner counted them from its entries; None if unreported."""
+    served = {rank: ((phases.get('commit-honest') or {}).get(f'owner-{rank}') or {}).get('positions') for rank in (1, 2)}
+    return served if all(type(value) is int for value in served.values()) else None
+
+
+def expected_balances(plan, parties, served):
+    """Final balances the declared sequence must leave: the honest job settled for the positions
+    its logs cover (``served`` by owner rank), one cheating owner slashed."""
     ledger = plan['ledger']
-    fee, start, bond, price = ledger['params']['fee'], ledger['allocation'], ledger['owner_bond'], ledger['price']
+    fee, start, bond = ledger['params']['fee'], ledger['allocation'], ledger['owner_bond']
     reward = bond * ledger['params']['auditor_share_ppm'] // 1_000_000
-    share = price // 2
-    return {parties['user']: start - 2 * fee - price,
-            parties['owner-1']: start - 3 * fee - bond + share,
-            parties['owner-2']: start - 3 * fee - bond + share,
+    paid = honest_payments(plan, served)
+    return {parties['user']: start - 2 * fee - sum(paid),
+            parties['owner-1']: start - 3 * fee - bond + paid[0],
+            parties['owner-2']: start - 3 * fee - bond + paid[1],
             parties['auditor']: start - fee + reward,
             parties['accuser']: start}
 
@@ -240,7 +260,8 @@ def assess(plan, fetches, phases, parties, jobs):
     results, owners = state['results'], state['owners']
     keys = {r: fetches['owners'][r].get('log_key') for r in (1, 2)}
     outcomes = first.get('outcomes') or []
-    expected = expected_balances(plan, parties)
+    served = honest_positions(phases)
+    expected = expected_balances(plan, parties, served) if served else None
     audit = phases['audit-cheat'] or {}
     checks = {
         'honest_agreement': agreement['passed'],
@@ -251,10 +272,11 @@ def assess(plan, fetches, phases, parties, jobs):
         'fault_named': audit.get('fault_forward') == plan['fault']['at'],
         'fault_proven': outcomes[9:10] == ['accepted'] and (results.get(jobs['cheated']) or {}).get('status') == 'fraud'
         and results[jobs['cheated']].get('guilty') == keys[1] and (owners.get(keys[1]) or {}).get('status') == 'slashed',
-        'honest_settled': (results.get(jobs['honest']) or {}).get('status') == 'settled'
-        and results[jobs['honest']].get('paid_each') == plan['ledger']['price'] // 2
+        'honest_settled': served is not None and (results.get(jobs['honest']) or {}).get('status') == 'settled'
+        and results[jobs['honest']].get('paid') == honest_payments(plan, served)
         and (owners.get(keys[2]) or {}).get('status') == 'active',
-        'balances_exact': {a: state['accounts'].get(a, {}).get('balance') for a in expected} == expected,
+        'balances_exact': expected is not None
+        and {a: state['accounts'].get(a, {}).get('balance') for a in expected} == expected,
     }
     return {'passed': all(checks.values()), 'checks': checks,
             'honest': {k: agreement[k] for k in ('correct', 'mismatches', 'p95_seconds')},

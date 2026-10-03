@@ -4,6 +4,7 @@ import importlib.util
 import subprocess
 import sys
 
+import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from neuroshard.evolution import granite_shard_settlement as settlement
@@ -13,7 +14,10 @@ from neuroshard.inference import optimistic as ledger
 from test_granite_shard_serving import passing_evidence
 from test_optimistic_serving import Account
 
-PLAN = read(ROOT / settlement.PLAN)
+FROZEN = read(ROOT / settlement.PLAN)
+# The published plan predates metered settlement; these tests give its ledger a position budget.
+BUDGET, SERVED = 64, 40
+PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET}}
 TERMS = PLAN['ledger']
 
 
@@ -47,8 +51,8 @@ def declared_chain():
     def commit(r, job, nonce):
         # Each log is bound to its job: its upstream sender (the user, then owner 1) signed its inputs' transcript.
         head, entries_root = (hashlib.sha256(f'{job}:{r}:{part}'.encode()).hexdigest() for part in ('head', 'entries'))
-        upstream = {'key': keys[r - 1], 'entries': 1, 'head': head,
-                    'signature': logs[r - 1].sign(ledger.link_message(chain_id, job, r - 1, 1, head)).hex()}
+        upstream = {'key': keys[r - 1], 'entries': 1, 'head': head, 'positions': SERVED,
+                    'signature': logs[r - 1].sign(ledger.link_message(chain_id, job, r - 1, 1, head, SERVED)).hex()}
         header = {'format': ledger.OWNER_LOG_FORMAT, 'rank': r, 'public_key': keys[r], 'upstream': upstream,
                   'session': {'chain_id': chain_id, 'job_id': job, 'request_root': 'cd' * 32}}
         statement = ledger.log_statement(header, entries_root)
@@ -58,7 +62,8 @@ def declared_chain():
 
     def open_job(nonce):
         envelope = people['user'].sign('serve_open', nonce=nonce, model_root=model, owners=[keys[1], keys[2]],
-                                       request_root='cd' * 32, session_key=keys[0], price=TERMS['price'])
+                                       request_root='cd' * 32, session_key=keys[0], price=TERMS['price'],
+                                       positions=BUDGET)
         return envelope, ledger.transaction_id(envelope)
 
     honest_open, honest = open_job(0)
@@ -76,10 +81,23 @@ def test_the_declared_sequence_leaves_exactly_the_declared_balances():
     genesis, blocks, parties, keys, jobs = declared_chain()
     report = settlement.replay_blocks(genesis, blocks, lambda state, request: request['proof_root'] == 'aa' * 32)
     assert report['outcomes'] == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
-    state = report['state']
-    assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(PLAN, parties)
+    state, served = report['state'], {1: SERVED, 2: SERVED}
+    assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(
+        PLAN, parties, served)
     assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheated']]['status'] == 'fraud'
+    paid = TERMS['price'] * SERVED // (BUDGET * 2)
+    assert state['results'][jobs['honest']]['paid'] == settlement.honest_payments(PLAN, served) == [paid, paid]
+    assert state['results'][jobs['honest']]['refunded'] == TERMS['price'] - 2 * paid > 0
     assert len(report['challenge_seconds']) == 2
+
+
+def test_honest_payments_never_exceed_what_the_user_sent_or_the_budget_bought():
+    price = TERMS['price']
+    assert settlement.honest_payments(PLAN, {1: BUDGET, 2: BUDGET}) == [price // 2, price // 2]
+    assert settlement.honest_payments(PLAN, {1: 10, 2: 30}) == [price * 10 // (BUDGET * 2)] * 2
+    assert settlement.honest_payments(PLAN, {1: 3 * BUDGET, 2: 2 * BUDGET}) == [price // 2, price // 2]
+    with pytest.raises(KeyError):
+        settlement.honest_payments(FROZEN, {1: 1, 2: 1})
 
 
 def evidence():
@@ -89,6 +107,7 @@ def evidence():
     fetches = {'owners': [owner_fetches[0], {**owner_fetches[1], 'log_key': keys[1]}, {**owner_fetches[2], 'log_key': keys[2]}]}
     validator = {**report, 'completed': True, 'load_seconds': 9.0}
     phases = {'serve-honest': served, 'audit-cheat': {'fault_forward': PLAN['fault']['at']},
+              'commit-honest': {f'owner-{r}': {'positions': SERVED, 'completed': True} for r in (1, 2)},
               'validate': {'validator-1': validator, 'validator-2': copy.deepcopy(validator)}}
     return fetches, phases, parties, jobs
 
@@ -115,6 +134,13 @@ def test_assessment_requires_agreeing_validators_a_rejected_framing_a_proven_fau
     for name in ('validator-1', 'validator-2'):
         unsettled['validate'][name]['state']['results'][jobs['honest']]['status'] = 'expired'
     assert not settlement.assess(PLAN, fetches, unsettled, parties, jobs)['checks']['honest_settled']
+    # Owners that report covering other positions than the ledger paid them for, or report none.
+    for rank, miscounted in ((1, {'positions': SERVED + 1}), (2, {'positions': SERVED - 1}), (2, {}),
+                             (1, {'positions': str(SERVED)})):
+        claimed = copy.deepcopy(phases)
+        claimed['commit-honest'][f'owner-{rank}'] = miscounted
+        checks = settlement.assess(PLAN, fetches, claimed, parties, jobs)['checks']
+        assert not checks['honest_settled'] and not checks['balances_exact']
 
 
 def test_the_settlement_plan_reuses_the_audited_serving_target_and_fault():

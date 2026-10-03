@@ -9,12 +9,12 @@ digests; because execution is bit-exact, the first differing digest is a fraud
 proof that any other holder of the shard can check the same way.
 
 For settlement a log is bound to one job. Every message on every serving link
-carries its sender's signature over that link's running transcript; the user's
-device signs under the job's session key. An owner's log keeps the latest
-signature it received, so its inputs are what its upstream sender sent for that
-job. A log whose entries depart from the transcript it was sent, or from the
-transcript its owner signed when passing results on, is provable fraud without
-any replay.
+carries its sender's signature over that link's running transcript and the token
+positions it has carried; the user's device signs under the job's session key. An
+owner's log keeps the latest signature it received, so its inputs are what its
+upstream sender sent for that job, and the ledger pays for the positions it states.
+A log whose entries depart from the transcript it was sent, or from the transcript
+its owner signed when passing results on, is provable fraud without any replay.
 """
 import hashlib
 import json
@@ -50,9 +50,10 @@ def digest(tensor):
 class Link:
     """One owner's two serving links in a job: the link it receives on and the link it sends on.
 
-    Each link's transcript steps once per command and once per message. A receiver checks
-    the sender's signature over its own copy of the transcript before using a message and
-    keeps the latest one; that signature binds its log to the job.
+    Each link's transcript steps once per command and once per message, and counts the token
+    positions its messages carry. A receiver checks the sender's signature over its own copy
+    of the transcript and count before using a message and keeps the latest one; that
+    signature binds its log to the job and states how much work the log covers.
     """
 
     def __init__(self, session, rank, world, key, upstream):
@@ -61,11 +62,12 @@ class Link:
         self.key, self.upstream = key, upstream
         self.hops = ((rank - 1) % world, rank)
         self.heads = [self.ledger.link_seed(self.session['chain_id'], self.session['job_id'], hop) for hop in self.hops]
-        self.counts = [0, 0]
+        self.counts, self.positions = [0, 0], [0, 0]
         self.received = None
 
-    def message(self, side, head, count):
-        return self.ledger.link_message(self.session['chain_id'], self.session['job_id'], self.hops[side], count, head)
+    def message(self, side, head, count, positions):
+        return self.ledger.link_message(self.session['chain_id'], self.session['job_id'], self.hops[side], count, head,
+                                        positions)
 
     def command(self, op, value):
         self.heads = [self.ledger.link_step(head, op, value) for head in self.heads]
@@ -77,17 +79,20 @@ class Link:
         Returns that signature as an attestation: the evidence of everything sent on this link so far.
         """
         head, count = self.ledger.link_step(self.heads[0], op, value, digest(tensor)), self.counts[0] + 1
-        if not self.ledger.ed25519_valid(self.upstream, self.message(0, head, count), signature.hex()):
+        positions = self.positions[0] + value
+        if not self.ledger.ed25519_valid(self.upstream, self.message(0, head, count, positions), signature.hex()):
             raise ValueError('the upstream sender did not sign this message')
-        self.heads[0], self.counts[0] = head, count
-        self.received = {'key': self.upstream, 'entries': count, 'head': head, 'signature': signature.hex()}
+        self.heads[0], self.counts[0], self.positions[0] = head, count, positions
+        self.received = {'key': self.upstream, 'entries': count, 'head': head, 'positions': positions,
+                         'signature': signature.hex()}
         return self.received
 
     def send(self, op, value, tensor):
         """This owner's signature over its outgoing transcript, including the message it is about to send."""
         self.heads[1] = self.ledger.link_step(self.heads[1], op, value, digest(tensor))
         self.counts[1] += 1
-        return self.key.sign(self.message(1, self.heads[1], self.counts[1]))
+        self.positions[1] += value
+        return self.key.sign(self.message(1, self.heads[1], self.counts[1], self.positions[1]))
 
 
 class OwnerLog:
@@ -133,8 +138,8 @@ class OwnerLog:
         else:
             record = bind(self.rank, entries, inputs_sha256, key, session, self.attested)
         (directory / 'log.json').write_text(json.dumps(record) + '\n')
-        return {'entries': len(entries), 'forwards': len(payloads), 'directory': str(directory),
-                'public_key': record.get('public_key')}
+        return {'entries': len(entries), 'forwards': len(payloads), 'positions': positions(record),
+                'directory': str(directory), 'public_key': record.get('public_key')}
 
 
 def header(record):
@@ -210,27 +215,36 @@ def transcript(record, side, count=None):
     return head
 
 
+def positions(record, count=None):
+    """The token positions carried by the messages among a log's first ``count`` entries."""
+    return sum(entry['value'] for entry in record['entries'][:count] if 'input' in entry)
+
+
 def unattested(record):
-    """True when a bound log's entries are not exactly the transcript its upstream sender signed."""
+    """True when a bound log's entries, or the positions they carry, are not what its upstream sender signed."""
     upstream = record['upstream']
     return not (isinstance(upstream, dict) and upstream['entries'] == len(record['entries'])
-                and transcript(record, 'input') == upstream['head'])
+                and transcript(record, 'input') == upstream['head'] and upstream['positions'] == positions(record))
 
 
 def equivocates(record, attestation):
-    """True when the log's owner signed ``attestation``, an outgoing transcript head, that its log contradicts."""
+    """True when the log's owner signed ``attestation``, an outgoing transcript head and the positions it
+    carried, that its log contradicts."""
     ledger = protocol()
-    if not isinstance(attestation, dict) or not {'entries', 'head', 'signature'} <= set(attestation) <= {
-            'key', 'entries', 'head', 'signature'} or attestation.get('key', record['public_key']) != record['public_key']:
+    fields = {'entries', 'head', 'positions', 'signature'}
+    if not isinstance(attestation, dict) or not fields <= set(attestation) <= fields | {'key'} or attestation.get(
+            'key', record['public_key']) != record['public_key']:
         return False
-    entries, head, signature = attestation['entries'], attestation['head'], attestation['signature']
-    if type(entries) is not int or entries < 1 or not isinstance(head, str) or not isinstance(signature, str):
+    entries, head, carried, signature = (attestation[name] for name in ('entries', 'head', 'positions', 'signature'))
+    if (type(entries) is not int or entries < 1 or type(carried) is not int or not isinstance(head, str)
+            or not isinstance(signature, str)):
         return False
     session = record['session']
-    message = ledger.link_message(session['chain_id'], session['job_id'], record['rank'], entries, head)
+    message = ledger.link_message(session['chain_id'], session['job_id'], record['rank'], entries, head, carried)
     if not ledger.ed25519_valid(record['public_key'], message, signature):
         return False
-    return entries > len(record['entries']) or transcript(record, 'output', entries) != head
+    return (entries > len(record['entries']) or transcript(record, 'output', entries) != head
+            or positions(record, entries) != carried)
 
 
 def fraud_proof(record, payloads, report):

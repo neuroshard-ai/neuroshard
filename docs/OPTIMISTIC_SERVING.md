@@ -4,7 +4,9 @@ Status: implemented, tested on small checkpoints, settled once on the real
 assistant through four CometBFT validator hosts, October 2, 2026. Revised the same
 day, before any untrusted participant joins: owner logs are bound to the paid
 request, a proof bundle a validator lacks gives no verdict instead of a rejection,
-and every cheap admission check runs before any proof replay. The revision is
+and every cheap admission check runs before any proof replay. A job then buys a
+budget of token positions and pays only for the
+[positions its logs cover](#metered-settlement). The revisions are
 tested on small checkpoints and four local CometBFT validators. The published
 real-model runs used the earlier protocol (commit `fc53411`). Not a public chain and
 not independent operation.
@@ -57,8 +59,8 @@ and each burns the fee.
 | `owner_bond` | Locks at least the minimum bond for one shard of the current model and registers a log key. Requires a possession signature by that key over the account, shard, amount and nonce. A key can bond once. |
 | `owner_unbond` | Starts withdrawal. Refused while the owner is named in an unsettled job. |
 | `owner_withdraw` | Returns the bond once the challenge window has passed since unbonding. |
-| `serve_open` | Escrows the price and names one active owner per bonded shard, in order, the request digest and the user's Ed25519 session key. The job's ID is the digest of the transaction. |
-| `log_commit` | A named owner commits a log bound to the job: its header, the digest of its entries and the statement they produce, signed by its log key over the chain, job and statement. The header must name this chain, job and request and carry its upstream sender's signature over the log's inputs. When every owner has committed, the challenge window opens. |
+| `serve_open` | Escrows the price for a budget of token positions and names one active owner per bonded shard, in order, the request digest and the user's Ed25519 session key. The job's ID is the digest of the transaction. |
+| `log_commit` | A named owner commits a log bound to the job: its header, the digest of its entries and the statement they produce, signed by its log key over the chain, job and statement. The header must name this chain, job and request and carry its upstream sender's signature over the log's inputs and the positions they carried. When every owner has committed, the challenge window opens. |
 | `challenge` | Names a committed owner and the content address of a fraud-proof bundle. Validators accept it only if the bundle's log is the committed one and proves one of the claims below. |
 
 ## Request-bound logs
@@ -66,9 +68,10 @@ and each burns the fee.
 Every serving link carries a running transcript: one step per command (reset,
 crop, arm switch) and one per message, with the digest of the sent tensor. The
 transcript starts from the chain, the job and the link. With every message the
-sender signs the transcript's head: the user's device under the job's session key,
-each owner under its log key. A receiver checks that signature before using the
-message and keeps the latest one.
+sender signs the transcript's head and the number of token positions the link has
+carried so far: the user's device under the job's session key, each owner under
+its log key. A receiver checks that signature against the transcript and count it
+computed itself before using the message, and keeps the latest one.
 
 An owner's log ends at the last message it was sent; commands after it change no
 output. Its header names the chain, job and request and carries that latest
@@ -82,19 +85,51 @@ A challenge's bundle holds the committed log and one claim. Each slashes:
 
 - **Replay.** The output at the claimed message is not what the shard computes from
   the logged inputs. Checking it needs the shard and a replay up to that message.
-- **Unattested.** The log's entries are not exactly the transcript its upstream
-  sender signed. An owner that commits other entries under this session's
-  signature is caught by hashing alone.
-- **Equivocation.** While passing results on, the owner signed a transcript its log
-  contradicts. The evidence is the owner's own signature, held in the next owner's
-  committed header or, for the last owner, by the user's device. This catches an
-  owner that sent wrong outputs but commits a log of correct computation.
+- **Unattested.** The log's entries are not exactly the transcript, and the
+  positions, its upstream sender signed. An owner that commits other entries under
+  this session's signature is caught by hashing alone.
+- **Equivocation.** While passing results on, the owner signed a transcript or a
+  position count its log contradicts. The evidence is the owner's own signature,
+  held in the next owner's committed header or, for the last owner, by the user's
+  device. This catches an owner that sent wrong outputs but commits a log of
+  correct computation, and one that signed more positions than it sent.
 
 Honest owners cannot be framed: their logs are exactly what they were sent and
 what they signed. A proof does not need the log record's own signature, because
 the commitment already signs its statement. An owner therefore cannot escape a
 proof by publishing its log with a broken signature, which the earlier checker
 allowed.
+
+## Metered settlement
+
+Committed logs show that work was done correctly, not that the request was
+finished: the earlier ledger paid the full price to owners who committed only the
+first message of a session. A job therefore buys a budget of token positions, the
+way a transaction buys gas, and pays for the positions served out of it.
+
+- A position is one token row of a forward or feature message. Commands carry
+  none.
+- Every link signature covers the positions the link has carried, so each
+  commitment states, under its upstream sender's signature, how much work its log
+  covers. The ledger records that count when it accepts the commitment.
+- At settlement, each owner is paid for its own count, but never for more than the
+  user's device sent to owner 1 under the session key, nor more than the budget.
+  An owner's share of the price is `price × positions ÷ (budget × owners)`. What is
+  not paid, including rounding, returns to the user.
+
+Neither side can take much from the other.
+
+- **Owners are paid for what they received.** A receiver holds its sender's
+  signature over every position it was sent, whether or not the session goes on.
+  A user that stops sending or withholds a final receipt cannot unpay work already
+  sent.
+- **Users pay only for what was sent.** An owner that commits a prefix is paid for
+  the prefix. An owner cannot claim positions it was not sent: its count must carry
+  its upstream sender's signature. An inflated count it signed downstream is
+  provable as equivocation, and the ledger caps payment at what the user sent.
+- **The bounded loss is what is in flight.** A user's device sends a stream's next
+  message only after the previous result returns, so if an owner stops, the user
+  has paid for at most one message per stream whose result never returned.
 
 ## Proof availability
 
@@ -129,8 +164,9 @@ At admission the replay runs outside the state lock, on one dedicated thread.
 
 ## Settlement rules
 
-- **Settled.** At the first block after the challenge window closes, the price is
-  split equally among the job's owners; any remainder is burned.
+- **Settled.** At the first block after the challenge window closes, each owner
+  is paid for the positions its log covers ([metered](#metered-settlement)) and
+  the rest of the price is refunded to the user.
 - **Fraud.** A verified challenge slashes the owner's whole bond: half goes to the
   challenger and half is burned. The user is refunded, and every other unsettled
   job naming that owner is voided and refunded too.
@@ -162,7 +198,14 @@ Tests on the small Granite-shaped checkpoints
   job is refused at commitment.
 - A forged proof claiming the honest owner's first output was wrong is rejected.
 - The real proof is accepted: owner 1 is slashed, the auditor receives half the
-  bond, and the user is refunded. The honest job settles and pays both owners.
+  bond, and the user is refunded. The honest job settles and pays both owners for
+  the positions served, refunding the rest of the budget.
+- Owners that serve a whole session but commit only the prefix their first
+  upstream signature covers (4 of 14 positions) are paid 4/14 of their share, and
+  the user gets the rest back. An owner that signed a count its log contradicts
+  is proven by its own signature, and a receiver refuses a message whose signed
+  count is not what it was sent. Ledger tests cover the caps at the user's count
+  and the budget, and refund of rounding.
 - Old entries committed under a new session's signature are proven unattested
   without the shard. An owner that sent a wrong output and committed a corrected
   log is proven by its own signature, for a middle owner and for the last owner.
@@ -213,6 +256,13 @@ Tests on the small Granite-shaped checkpoints
 - **Job checks before serving.** An owner should confirm that the job is open,
   names it and registers the session key it was given. The serving code takes the
   session from its job file.
+- **Positions, not answers.** Metering pays for work carried, not for a finished
+  or useful answer, and prices a prefill position like a decoded one. A session's
+  positions are not known when the job opens, so the user sets the budget and
+  receives the unused part back.
+- **Withheld commitments.** An owner that never commits leaves its job to expire
+  and refund the user. It goes unpaid but unpunished, since no challenge can name a
+  log that was never committed, and the owners that did commit go unpaid too.
 - **Clean audits earn nothing.** Auditors are paid only for proven fraud. A fee
   for audits that find nothing would need a way to show the replay was actually
   done.
@@ -220,4 +270,5 @@ Tests on the small Granite-shaped checkpoints
   the pinned runtime and CPU instruction class.
 - **Not yet on a public chain.** It has run on four CometBFT hosts under one
   operator, and no independent operator has run it. The revised protocol has not
-  run on the real model.
+  run on the real model. The published plans declare no position budget, so a new
+  run needs a new plan.

@@ -123,7 +123,8 @@ def assess(plan, fetches, phases, parties, jobs, admissions, states):
     keys = {r: fetches['owners'][r].get('log_key') for r in (1, 2)}
     state = states[0] if states else {'results': {}, 'owners': {}, 'accounts': {}}
     results, owners = state.get('results', {}), state.get('owners', {})
-    expected = settlement.expected_balances(plan, parties)
+    served = settlement.honest_positions(phases)
+    expected = settlement.expected_balances(plan, parties, served) if served else None
     audit = phases.get('audit-cheat') or {}
     committed = [admissions.get(name) or {} for name in
                  ('bond-1', 'bond-2', 'open-honest', 'commit-honest-1', 'commit-honest-2', 'open-cheat',
@@ -140,11 +141,12 @@ def assess(plan, fetches, phases, parties, jobs, admissions, states):
         'fault_proven': committed[8].get('code') == 0 and bool(committed[8].get('height'))
         and (results.get(jobs['cheated']) or {}).get('status') == 'fraud'
         and results[jobs['cheated']].get('guilty') == keys[1] and (owners.get(keys[1]) or {}).get('status') == 'slashed',
-        'honest_settled_first': (results.get(jobs['honest']) or {}).get('status') == 'settled'
-        and results[jobs['honest']].get('paid_each') == plan['ledger']['price'] // 2
+        'honest_settled_first': served is not None and (results.get(jobs['honest']) or {}).get('status') == 'settled'
+        and results[jobs['honest']].get('paid') == settlement.honest_payments(plan, served)
         and results[jobs['honest']]['height'] < committed[8].get('height', 0)
         and (owners.get(keys[2]) or {}).get('status') == 'active',
-        'balances_exact': {a: state.get('accounts', {}).get(a, {}).get('balance') for a in expected} == expected,
+        'balances_exact': expected is not None
+        and {a: state.get('accounts', {}).get(a, {}).get('balance') for a in expected} == expected,
     }
     return {'passed': all(checks.values()), 'checks': checks,
             'honest': {k: agreement[k] for k in ('correct', 'mismatches', 'p95_seconds')},

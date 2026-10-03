@@ -13,9 +13,11 @@ from neuroshard.evolution import granite_shard_chain as chain
 from neuroshard.evolution import granite_shard_settlement as settlement
 from neuroshard.evolution.modular_reference_execution import ROOT, read, sha256
 
-from test_granite_shard_settlement import declared_chain, evidence
+from test_granite_shard_settlement import BUDGET, declared_chain, evidence
 
-PLAN = read(ROOT / chain.PLAN)
+FROZEN = read(ROOT / chain.PLAN)
+# The published plan predates metered settlement; these tests give its ledger a position budget.
+PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET}}
 
 
 def cloud_module():
@@ -50,6 +52,10 @@ def test_assessment_requires_four_agreeing_validators_a_refused_framing_and_sett
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, early, states)['checks']['honest_settled_first']
     dropped = {**admissions, 'commit-cheat-2': {'code': 1, 'log': 'x', 'height': None}}
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, dropped, states)['checks']['honest_work_committed']
+    overcounted = copy.deepcopy(phases)
+    overcounted['commit-honest']['owner-1']['positions'] += 1
+    checks = chain.assess(PLAN, fetches, overcounted, parties, jobs, admissions, states)['checks']
+    assert not checks['honest_settled_first'] and not checks['balances_exact']
 
 
 def test_the_chain_plan_reuses_settlement_and_pins_its_consensus_binary():
