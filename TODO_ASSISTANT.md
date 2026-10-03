@@ -154,6 +154,10 @@ remain evidence, not readiness claims for this assistant.
   units must retain drafting better. Stage 0 first serves the opened development
   cases under the new interface on CPU, to confirm room to learn and to measure
   what the larger tool list does to drafting. Stage 1 is declared after it.
+  [Stage 0](docs/ASSISTANT_REPEATED_GROWTH_STAGE0_RESULTS.md) ($2.15): scheduling is
+  new, with the parent at 1/24 and the accepted version at 0/24, so there is room to
+  learn. The larger tool list alone lowered drafting from 19 to 15 for the accepted
+  version (parent 9 to 5); those four must be regained before cohort 2 is accepted.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
