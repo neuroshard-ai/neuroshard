@@ -165,6 +165,11 @@ remain evidence, not readiness claims for this assistant.
   the same mixture. Per-turn selectors are fitted from integration success rates.
   The development gate is 18/24 scheduling and 6/8 cross with no drafting success
   lost; the sealed confirmation decides acceptance and A3's comparison. Ceiling $100.
+  Measured during the run, scheduling rollouts take about 4.2 s each, so the worker's
+  seven hours may end during integration. A [resumption](config/experiments/assistant-growth-stage1-resume.json)
+  was declared before any outcome was read. If both units are saved and integration
+  is not, a second GPU host runs only the declared integration from the saved units.
+  It is allowed at most $12, within the ceiling.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
