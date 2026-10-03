@@ -158,6 +158,13 @@ remain evidence, not readiness claims for this assistant.
   new, with the parent at 1/24 and the accepted version at 0/24, so there is room to
   learn. The larger tool list alone lowered drafting from 19 to 15 for the accepted
   version (parent 9 to 5); those four must be regained before cohort 2 is accepted.
+  [Stage 1 is declared](docs/ASSISTANT_REPEATED_GROWTH_STAGE1.md): each user turn is
+  routed to a unit with its own tool set, so drafting keeps the tools it was accepted
+  with. The accepted version collects coached scheduling experience. One continued
+  update serves the separate-update and shared versions; a low-rank module trains on
+  the same mixture. Per-turn selectors are fitted from integration success rates.
+  The development gate is 18/24 scheduling and 6/8 cross with no drafting success
+  lost; the sealed confirmation decides acceptance and A3's comparison. Ceiling $100.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

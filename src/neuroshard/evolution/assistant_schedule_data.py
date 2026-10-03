@@ -21,6 +21,7 @@ SPLITS = {'train': (21000, 32), 'integration': (22000, 8), 'development': (23000
           'cross-train': (25000, 16), 'cross-integration': (26000, 4), 'cross-development': (27000, 4),
           'cross-confirmation': (28000, 24)}
 SEALED = ('confirmation', 'cross-confirmation')
+TRAINING = ('train', 'cross-train')
 WINDOW = 14
 DURATIONS = (30, 45, 60, 90)
 BOUNDS = (11 * 60, 12 * 60 + 30, 13 * 60, 14 * 60)

@@ -175,16 +175,40 @@ def schedule(experience, replay, spec, preferences=0):
     return updates
 
 
+def mixture_schedule(sources, spec):
+    """Deterministic microbatch order for a declared mixture: per update, fixed counts from each named source."""
+    rng = random.Random(spec['seed'])
+    counts = spec['mixture']
+    if sum(counts.values()) != spec['gradient_accumulation'] or any(count and not sources.get(name)
+                                                                    for name, count in counts.items()):
+        raise ValueError('mixture does not fill the update or names an empty source')
+
+    def stream(rows):
+        while True:
+            order = list(range(rows))
+            rng.shuffle(order)
+            yield from order
+
+    streams = {name: stream(len(sources[name])) for name in sorted(counts) if counts[name]}
+    updates = []
+    for _ in range(spec['steps']):
+        batch = [(name, next(streams[name])) for name in sorted(streams) for _ in range(counts[name])]
+        rng.shuffle(batch)
+        updates.append(batch)
+    return updates
+
+
 def learning_rate(step, spec, arm):
     base = spec['learning_rates'][arm]
     return base * min(1.0, (step + 1) / spec['warmup_steps']) if spec['warmup_steps'] else base
 
 
-def train(model, arm, experience, replay, spec, *, device='cpu', progress=None, trainable=None, pairs=None):
+def train(model, arm, experience, replay, spec, *, device='cpu', progress=None, trainable=None, pairs=None, extra=None):
     """Run the declared schedule once; returns trainable tensors and a work receipt.
 
     ``trainable`` continues already attached tensors. ``pairs`` adds a DPO term whose
-    reference is the model as it stands before this schedule's first update.
+    reference is the model as it stands before this schedule's first update. ``extra``
+    names further sequence sources for a declared ``mixture`` in ``spec``.
     """
     torch.manual_seed(spec['seed'])
     trainable = trainable if trainable is not None else prepare(model, arm, spec)
@@ -200,8 +224,13 @@ def train(model, arm, experience, replay, spec, *, device='cpu', progress=None, 
     optimizer = torch.optim.AdamW(list(trainable.values()), lr=learning_rate(0, spec, arm),
                                   betas=tuple(spec['betas']), eps=spec['epsilon'],
                                   weight_decay=spec['weight_decay'])
-    updates = schedule(experience, replay, spec, len(pairs))
-    sources = {'experience': experience, 'replay': replay}
+    sources = {'experience': experience, 'replay': replay, **(extra or {})}
+    if 'mixture' in spec:
+        if pairs:
+            raise ValueError('a declared mixture takes no preference pairs')
+        updates = mixture_schedule(sources, spec)
+    else:
+        updates = schedule(experience, replay, spec, len(pairs))
     losses, margins, tokens = [], [], 0
     for step, batch in enumerate(updates):
         for group in optimizer.param_groups:

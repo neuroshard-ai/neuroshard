@@ -30,6 +30,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                         for split in ("compose1", "compose2")},
                      "assistant-experience-development": "config/experiments/assistant-experience-development-resources.json",
                      "assistant-growth-baseline": "config/experiments/assistant-growth-baseline-resources.json",
+                     "assistant-growth-gpu": "config/experiments/assistant-growth-resources.json",
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
                         for system in ("parent", "update", "addition", "small", "committee")},
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
@@ -54,6 +55,7 @@ GRANITE_PROFILES = {
        for kind, split in (("growth", "train2"), ("growth", "train3"), ("compose", "compose1"), ("compose", "compose2"))},
     "assistant-experience-development": ("assistant_experience_eval", "docs/granite-reference-requirements.txt"),
     "assistant-growth-baseline": ("assistant_growth_baseline", "docs/granite-reference-requirements.txt"),
+    "assistant-growth-gpu": ("assistant_growth_run", "docs/assistant-experience-requirements.txt"),
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
        for system in ("parent", "update", "addition", "small", "committee")},
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
@@ -72,8 +74,9 @@ GRANITE_PROFILES = {
 }
 GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile in (
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3",
-    "assistant-experience-compose-compose1", "assistant-experience-compose-compose2")}
+    "assistant-experience-compose-compose1", "assistant-experience-compose-compose2", "assistant-growth-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
+                   "assistant-growth-gpu": ".growth",
                    "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
                    "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms"}
@@ -105,6 +108,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-baseline":
         from neuroshard.evolution.assistant_growth_baseline import committed_sources as growth_sources
         return growth_sources()
+    if profile == "assistant-growth-gpu":
+        from neuroshard.evolution.assistant_growth_run import committed_sources as stage_sources
+        return stage_sources()
     if profile.startswith("assistant-experience-confirmation-"):
         from neuroshard.evolution.assistant_experience_confirm import committed_sources as confirmation_sources
         return confirmation_sources()
@@ -518,6 +524,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-growth-baseline":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_baseline.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-growth-gpu":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile.startswith("assistant-experience-confirmation-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience_confirmation.py", "run",
