@@ -20,7 +20,7 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "cryptography==50.0.1", "requests==2.34.2", "urllib3==2.7.0", "idna==3.19",
+  "cryptography==50.0.1", "requests==2.34.2", "urllib3==2.8.0", "idna==3.19",
 ]
 
 [project.optional-dependencies]
