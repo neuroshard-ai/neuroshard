@@ -52,7 +52,8 @@ at 9/64. It is not a deployable assistant. The subsequent
 failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
 no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
 uses a capable pretrained foundation, bounded learned modules and actual hardware
-shards; its six milestones remain open. The next step is the
+shards. Its sharding milestone, A4, is [complete](docs/A4_SHARDING_REVIEW.md); the other five
+remain open. The next step is the
 [complete workspace assistant](docs/ASSISTANT_WORKFLOW_LEARNING.md), comparing
 useful conversations rather than isolated checker scores. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)

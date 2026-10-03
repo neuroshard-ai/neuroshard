@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 2, 2026. Status: 0/6 milestones complete.**
+**Updated October 2, 2026. Status: 1/6 milestones complete (A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -141,8 +141,9 @@ remain evidence, not readiness claims for this assistant.
   success lost, is the candidate, unchanged. Its served version must pass the
   development gate and the A1 served-system check on CPU. Only then does the
   sealed 192-episode `confirmation3` split open, once. Budget ceiling: $40.
-- [ ] Port Granite execution to the shard runtime and validate numerical/cache
+- [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
+  [Closed with A4](docs/A4_SHARDING_REVIEW.md).
   Port done: Granite owners hold only their layer ranges. On small checkpoints
   they are bit-identical to the complete model and token-identical to
   `generate`, and a killed owner resumes to the same tokens. The
@@ -203,9 +204,12 @@ remain evidence, not readiness claims for this assistant.
   before the still-sealed third confirmation split.
 - **A1.** The served system passed A1's development checks, but A1 stays open
   until a module is accepted.
-- **A4.** The pinned 3B assistant runs across owner machines that each fetch only
-  their own tensors. Generation and training match the complete model bit for
-  bit. The learned assistant is served across owners exactly as on one host.
+- **A4 complete.** The pinned 3B assistant runs across owner machines that each
+  fetch only their own tensors. Generation and training match the complete model
+  bit for bit, and the learned assistant is served across owners exactly as on
+  one host. Extra machines add pooled memory, recovery and 2.25× throughput. A
+  [review](docs/A4_SHARDING_REVIEW.md) maps every clause to published evidence;
+  all owners ran in one availability zone under one operator.
 - **Toward A5.** Light auditors verified real-model serving and proved a one-bit
   fault. A [bonded optimistic serving ledger](docs/OPTIMISTIC_SERVING.md) now settles
   honest jobs after a challenge window and slashes an owner on a verified fraud
@@ -278,7 +282,7 @@ No automatic training or admission follows a baseline. This is not a public assi
   beneficial update or consolidation against keeping the previous system under a
   declared resource budget. This establishes bounded growth, not unlimited
   intelligence or a no-forgetting theorem.
-- [ ] **A4 — Actual sharding and value from additional peers.** No execution worker
+- [x] **A4 — Actual sharding and value from additional peers.** [Complete](docs/A4_SHARDING_REVIEW.md). No execution worker
   holds the complete backbone. Measure forward/backward/generation agreement,
   per-owner memory and traffic, outage recovery and a benefit from extra machines
   (pooled memory, throughput, training capacity or availability). Include placement,
