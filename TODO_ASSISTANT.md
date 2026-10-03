@@ -135,6 +135,12 @@ remain evidence, not readiness claims for this assistant.
   [Failed as declared](docs/ASSISTANT_EXPERIENCE_REPAIRS_RESULTS.md) ($4.90): only 9 of 190 training
   failures matched the error, each after an earlier wrong read, and no repair
   verified. The double-interval error appears only with the held-out correction.
+- [ ] [Third attempt](docs/ASSISTANT_EXPERIENCE_THIRD.md): A2 is amended so that a
+  bounded, separable update is the learning unit. The round-4 update system, the
+  control that solved 182/192 on the spent second confirmation with no parent
+  success lost, is the candidate, unchanged. Its served version must pass the
+  development gate and the A1 served-system check on CPU. Only then does the
+  sealed 192-episode `confirmation3` split open, once. Budget ceiling: $40.
 - [ ] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   Port done: Granite owners hold only their layer ranges. On small checkpoints
@@ -189,10 +195,12 @@ remain evidence, not readiness claims for this assistant.
   episodes of the 63M-parameter update control without meeting the declared
   parity margin. The second also lost two parent successes: 174/192, against 182
   for the update and 106 for the parent.
-- **A2 paused.** After the methodology, growth, compositional and repair studies,
+- **A2 amended.** After the methodology, growth, compositional and repair studies,
   no small module kept every parent success: it applies the review interval twice
-  on one held-out correction that the update control handles. The third
-  confirmation split stays sealed for a future method.
+  on one held-out correction that the update control handles. A2's learning unit
+  is now any bounded, separable update, and the
+  [third attempt](docs/ASSISTANT_EXPERIENCE_THIRD.md) puts the round-4 update
+  before the still-sealed third confirmation split.
 - **A1.** The served system passed A1's development checks, but A1 stays open
   until a module is accepted.
 - **A4.** The pinned 3B assistant runs across owner machines that each fetch only
@@ -250,13 +258,19 @@ No automatic training or admission follows a baseline. This is not a public assi
   replay; publish feasible shard estimates. A1 no longer requires a third-party
   adapter to pass an unrelated quality benchmark. This is a prospective change:
   every failed reference remains failed, and no existing box is marked complete.
-- [ ] **A2 — One useful learned capability in the complete assistant.** New module
-  and automatic selection beat the unchanged parent and match the equal-data
-  no-growth update on frozen development and fresh confirmation gates, while
-  training a small fraction of its parameters. Per-answer preservation, actual
-  training/serving costs and bounded latency are required. Tools supply execution,
-  not hidden answers. Forced routing and retrieval-only gains do not satisfy this.
-  Amended before any training; the previous "beat the update" margin moves to A3.
+- [ ] **A2 — One useful learned capability in the complete assistant.** A bounded,
+  separable learned update and automatic selection beat the unchanged parent on
+  frozen development and fresh confirmation gates, while training a small fraction
+  of the backbone's parameters. The update's tensors are stored apart from the
+  frozen backbone and applied only when selected; serving the parent rolls it
+  back. A low-rank module qualifies, and so does an update of declared
+  projections. Per-answer preservation, actual training/serving costs and bounded
+  latency are required. Tools supply execution, not hidden answers. Forced routing
+  and retrieval-only gains do not satisfy this. Amended before any training; the
+  previous "beat the update" margin moves to A3. [Amended again on October 2, 2026](docs/ASSISTANT_EXPERIENCE_THIRD.md),
+  after both confirmations and before the third sealed split opened: the unit was
+  "a new module" that had to match the equal-data update. Whether low-rank modules
+  can match updates now joins A3's retention comparison.
 - [ ] **A3 — Repeated useful growth and an upgrade/consolidation.** Three successive
   accepted cohorts, cumulative retention and cross-capability tasks; at least one
   new capability and one upgrade. Separate modules must retain earlier cohorts
