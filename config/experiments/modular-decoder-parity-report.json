@@ -1,0 +1,131 @@
+{
+  "format": "neuroshard-modular-decoder-parity-report/1",
+  "source_commit": "d78895529ef4749733696ace3614d61b8b19adb5",
+  "result_sha256": "0f752c9a53e42b72f077176743ee185bbb8b2834bbae7a59bcbc4ab54c38f25a",
+  "decision": "Decoder agreement confirmed within the declared scope. Retain the failed 11/24 baseline; reconsider the foundation/interface before growth training.",
+  "execution_completed": true,
+  "decoder_agreement": true,
+  "logit_comparisons": 65,
+  "logit_comparisons_by_task": {
+    "fresh-inventory": 2,
+    "fresh-tool-documents": 25,
+    "fresh-tool-reschedule": 38
+  },
+  "maximum_absolute_logit_difference": 0.0,
+  "generation_comparisons": 24,
+  "all_generation_tokens_text_termination_prompt_hashes_and_scores_matched": true,
+  "baseline_correct": 11,
+  "category_correct": {
+    "conversation": 4,
+    "tool-use": 3,
+    "instruction": 4
+  },
+  "conditional_same_host_control_used": false,
+  "admission_evidence": false,
+  "quality_ready": false,
+  "milestone_complete": false,
+  "ci": {
+    "id": 36256122570,
+    "head_sha": "d78895529ef4749733696ace3614d61b8b19adb5",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36256122570"
+  },
+  "accounting": {
+    "historical_baseline_evaluation_seconds": 12306.291761946834,
+    "new_parity_worker_seconds": 231.45806627399998,
+    "new_preparation_seconds": 151.167905884
+  },
+  "worker_outcomes": [
+    {
+      "name": "baseline-parity",
+      "outcome": {
+        "seconds": 231.45806627399998,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-dd81fa774be24436",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    },
+    {
+      "name": "baseline-prepare",
+      "outcome": {
+        "seconds": 151.167905884,
+        "returncode": 0,
+        "reason": "completed",
+        "completed": true,
+        "unit": "neuroshard-a1-b54edec133564ede",
+        "cpu_seconds": null,
+        "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+      }
+    }
+  ],
+  "allocation": {
+    "name": "neuroshard-reference-4de6b7b2e7e7",
+    "commit": "d78895529ef4749733696ace3614d61b8b19adb5",
+    "created": "2026-09-26T16:58:24.922519+00:00",
+    "deadline": "2026-09-26T18:58:24.922519+00:00",
+    "resources": {
+      "format": "neuroshard-modular-decoder-parity-resources/1",
+      "region": "us-east-1",
+      "instances": 1,
+      "instance_type": "r7i.4xlarge",
+      "hours": 2,
+      "planning_cap_usd": 6,
+      "disk_gib": 80,
+      "disk_type": "gp3",
+      "setup_seconds": 1800,
+      "copy_seconds": 600,
+      "image": {
+        "ImageId": "ami-05a3e9423ae4d7a19",
+        "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+        "CreationDate": "2026-09-04T08:02:48.000Z",
+        "OwnerId": "099720109477",
+        "RootDeviceName": "/dev/sda1"
+      },
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "QN6NV26MDYTYVNSE",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.0584
+      },
+      "source_instance": "i-0d681a8ef83f72619",
+      "gpu": false,
+      "purpose": "modular-decoder-parity",
+      "shutdown_terminates": true,
+      "terminate_after_evidence_copy": true,
+      "attempts": 1,
+      "outbound_upload_cap_bytes": 33554432,
+      "prior_resources": {
+        "path": "config/experiments/modular-reference-fresh-report.json",
+        "sha256": "cd8af0b459d83aa351c989a64d586177fb68571e1d982757e71b36e6703db3cd"
+      },
+      "budget_scope": "Separate incremental decoder audit; older study costs remain published. One CPU allocation, no automatic retry."
+    },
+    "instance_ids": [
+      "i-0bcf334ef4455650e"
+    ],
+    "security_group": "sg-0bfc04f3744820979",
+    "private_ip": "172.31.78.114",
+    "public_ip": "98.92.120.66"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-26T17:06:40.304867+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0bcf334ef4455650e"
+    ],
+    "conservative_instance_seconds": 495.382317,
+    "conservative_compute_usd": 0.145642401198,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "combined_fresh_and_parity_resources": {
+    "conservative_instance_seconds": 2009.4714900000001,
+    "conservative_compute_usd": 0.59078461806,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "limits": "Opened-case implementation audit on one CPU numerical profile. No claim of global decoder equivalence, usefulness, modular growth, distributed serving or quality admission."
+}

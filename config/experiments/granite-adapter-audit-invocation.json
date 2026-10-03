@@ -1,0 +1,184 @@
+{
+  "scope": "Tokenizer/recorded-route audit only; no model generation",
+  "rows": [
+    {
+      "id": "granite-reference-words-yes",
+      "effective_input_sha256": "274c44895d0ecfddb59d77ed347fa6607471457d09daa91336517978102ab473",
+      "prompt_tokens": 91,
+      "activation_start": 24,
+      "alora_offset": 67,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-words-no",
+      "effective_input_sha256": "a2e2a4e00ea12d5d66242f2f702ff0b71f86ba51ffb04702b4359c86e8b3a550",
+      "prompt_tokens": 92,
+      "activation_start": 25,
+      "alora_offset": 67,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-case-yes",
+      "effective_input_sha256": "4086850e0d2b6858aaea310702fa6c986f527f86c4d856907baf19da86de9a75",
+      "prompt_tokens": 94,
+      "activation_start": 24,
+      "alora_offset": 70,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-case-no",
+      "effective_input_sha256": "13a284fe9775b8141b8427c7fcd40ce280cf9e2dcb9ccaf7880e7babf9dac156",
+      "prompt_tokens": 94,
+      "activation_start": 24,
+      "alora_offset": 70,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-json-yes",
+      "effective_input_sha256": "08be1e1b3063e217c51a3a6da9a3fe5c664e33277ef3e8c7b9d8912d57efe51f",
+      "prompt_tokens": 104,
+      "activation_start": 28,
+      "alora_offset": 76,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-json-no",
+      "effective_input_sha256": "58524ef4ae8f50cb76d7b6df1fd73e15255ee9537fa1cfb60209d8cb3f7fef6d",
+      "prompt_tokens": 108,
+      "activation_start": 32,
+      "alora_offset": 76,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-lines-yes",
+      "effective_input_sha256": "5cd5f9952ffa0af451acf0d8b923dabc9be0248c23fd97456a945c386f205fff",
+      "prompt_tokens": 97,
+      "activation_start": 24,
+      "alora_offset": 73,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-lines-no",
+      "effective_input_sha256": "b220ad2deccf130ac164c01be0a33880e9a294a1a64d80d238e3c727242adafb",
+      "prompt_tokens": 100,
+      "activation_start": 27,
+      "alora_offset": 73,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-exclude-yes",
+      "effective_input_sha256": "3b3d5e0a4cfb8294d605795fb07b2541ca9620de06e16e77bfb8b94ea0721679",
+      "prompt_tokens": 102,
+      "activation_start": 30,
+      "alora_offset": 72,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-exclude-no",
+      "effective_input_sha256": "f7f051731dd5446cefb374e578f56173cb8f1309d23a2d950c957554fa756e3d",
+      "prompt_tokens": 101,
+      "activation_start": 29,
+      "alora_offset": 72,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-sort-yes",
+      "effective_input_sha256": "db0330915cec7e8610fc5c8b992fdba5a363abb71a9c34eeda0fe9f78f1bcb7f",
+      "prompt_tokens": 114,
+      "activation_start": 36,
+      "alora_offset": 78,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-sort-no",
+      "effective_input_sha256": "aab560840ce5666f83a5177147401ca5d631102aa377bc503c75c02c126ec729",
+      "prompt_tokens": 114,
+      "activation_start": 36,
+      "alora_offset": 78,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-both-yes",
+      "effective_input_sha256": "a415e4435cfc0f67d9056468db579f3740304e6493c8ad381711d501f767f686",
+      "prompt_tokens": 98,
+      "activation_start": 28,
+      "alora_offset": 70,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-both-no",
+      "effective_input_sha256": "c8eef50bc5578537c8e966dc7630d733f06202a7f80a901114830f8c34f75348",
+      "prompt_tokens": 98,
+      "activation_start": 28,
+      "alora_offset": 70,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-ending-yes",
+      "effective_input_sha256": "3dbaf5841b6fa092878e16b365f33a5343a450b258f9e940de7b0b44afaa6692",
+      "prompt_tokens": 94,
+      "activation_start": 25,
+      "alora_offset": 69,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    },
+    {
+      "id": "granite-reference-ending-no",
+      "effective_input_sha256": "edb5913a4dcfe75074089776429bf4aeb6c2bbae73506b80e128c146539a97f1",
+      "prompt_tokens": 95,
+      "activation_start": 26,
+      "alora_offset": 69,
+      "peft_default_offset": null,
+      "peft_default_activation_matches": false,
+      "effective_input_exact": true,
+      "recorded_activation_exact": true
+    }
+  ],
+  "effective_inputs_exact": 16,
+  "default_peft_activation_matches": 0,
+  "default_peft_inactive": 16
+}

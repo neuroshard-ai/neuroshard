@@ -1,0 +1,73 @@
+{
+  "format": "neuroshard-granite-adapter-audit-recovery/1",
+  "reason": "Whole embedding hashes cannot match across the published 12-row control-token expansion. Compare every original row exactly and audit added rows explicitly.",
+  "original_execution_commit": "302c254e8b81ad41ea4f1f0116e788a1d5f49cb8",
+  "original_plan": "config/experiments/granite-adapter-audit.json",
+  "original_plan_sha256": "f705f8a52906e983964a3e0fe5a6953bec9b2e84acdeac05ac89cbba4c25d4ff",
+  "prior_result": "config/experiments/granite-adapter-audit-result.json",
+  "prior_result_sha256": "8ecb97937158ed1aacc2cf00f893e86f949ed8d43d3ccae31393bdc3967383ec",
+  "prior_report": "config/experiments/granite-adapter-audit-report.json",
+  "prior_report_sha256": "b41dc371a7fb0365a4146bf3614e344912dd1ea0113d61fed28d73e2b35a2d3a",
+  "prior_accounting": {
+    "wall_seconds": 192.142323855,
+    "process_cpu_seconds": 282.843759051,
+    "cumulative_process_peak_rss_bytes": 9152724992
+  },
+  "prior_resources_finished": {
+    "finished_utc": "2026-09-26T19:03:09.241802+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0afbe69174fd7e0fc"
+    ],
+    "conservative_instance_seconds": 293.483177,
+    "conservative_compute_usd": 0.086284054038,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "vocabulary": {
+    "parent_rows": 100352,
+    "switch_rows": 100364,
+    "hidden_size": 2560,
+    "added_rows": 12,
+    "control_token_ids": [
+      100352,
+      100353,
+      100354,
+      100355,
+      100356,
+      100357,
+      100358,
+      100359,
+      100360,
+      100361,
+      100362,
+      100363
+    ]
+  },
+  "structural_rule": [
+    "Input embeddings and tied output head must have exactly the declared shapes. All 100352 parent rows match their frozen BF16 hashes exactly.",
+    "The 12 added rows must be finite. Record their hashes, shapes, range and nonzero counts; do not require zeros or alter them. Full embedding/output-head values and storage must remain tied.",
+    "Control IDs are precisely 100352 through 100363; every substitution targets a parent-vocabulary ID.",
+    "All other backbone tensors retain exact shape, dtype and value comparisons; adapter scaling, padding and non-target checks are unchanged."
+  ],
+  "execution_changes": [
+    "Perform the vocabulary/backbone/embedded-adapter checks before generating any answer.",
+    "Generate the 16 Switch calls, then independently reload the parent with standalone aLoRA and repeat all 16 standalone calls. This avoids repeating generations before a structural stop; no prior answer is substituted for a fresh call.",
+    "Record tensor shapes and hashes in the receipt, including partial receipts on any failure.",
+    "Preserve and charge the original worker and instance time, plus all new loading, checking and repeated generation."
+  ],
+  "unchanged": [
+    "Published model, adapter, tokenizer and upstream revisions; all artifact digests.",
+    "The same 16 opened cases, exact prompt tokens, explicitly aligned aLoRA activation, BF16 eager CPU, eight threads, seed zero and 32-token cap.",
+    "Pairwise output and original Switch replay comparisons, strict scoring, all old quality outcomes and stop rules."
+  ],
+  "training_authorized": false,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "checklist_credit": false,
+  "attempts": 1,
+  "cpu_launch_authorized_after_commit_and_ci": true,
+  "resource_scope": "One additional CPU allocation, at most two hours. Combined compute allowance with the previous attempt plus $3 reserve stays within $6. All original accounting remains recorded.",
+  "stop_rule": "Any structural discrepancy stops generation; any output discrepancy is reported. One amended attempt only, then copy evidence and retire. No automatic retry, input change, quality-gate change, training or checklist credit."
+}

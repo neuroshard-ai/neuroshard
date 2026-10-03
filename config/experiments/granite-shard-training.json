@@ -1,0 +1,145 @@
+{
+  "format": "neuroshard-granite-shard-training/1",
+  "status": "Second attempt, declared on September 29, 2026 after the ring determinism diagnostic localized the first attempt's recovery failure to a fresh process's first forward pass and the declared warm-up made twelve launches identical. Owners run the warm-up after joining the ring; the reference host warms up its complete model. Owners, arm, sequences, spec, outage and all seven checks are unchanged.",
+  "purpose": "A4 second execution: the addition arm of the assistant trained across three Granite owner hosts, none holding the complete backbone, must reproduce the unchanged single-host trainer bit for bit on a reference host, uninterrupted and after the arm's owner is lost mid-schedule.",
+  "model": {
+    "artifacts": "config/experiments/granite-reference-artifacts.json",
+    "tensor_inventory": "config/experiments/granite-tensor-inventory.json",
+    "inventory_sha256": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843"
+  },
+  "runtime": "The canonical parent CPU runtime on every host: identical packages, Python, CPU instructions, numerical environment and eight threads; bf16 backbone, eager attention, FP32 LoRA tensors.",
+  "boundaries": [
+    0,
+    12,
+    26,
+    40
+  ],
+  "arm": "addition",
+  "holder": "Owner 2 holds layers 26-39 and therefore every LoRA tensor (layers 32-39), their AdamW state and checkpoints; owners 0 and 1 never compute a backward pass.",
+  "spec": {
+    "layers": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "rank": 16,
+    "alpha": 32,
+    "experience_per_replay": 3,
+    "microbatch": 1,
+    "gradient_accumulation": 8,
+    "gradient_clip": 1.0,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "steps": 6,
+    "preference_per_update": 2,
+    "beta": 0.1,
+    "preference_weight": 1.0,
+    "learning_rates": {
+      "update": 5e-06,
+      "addition": 0.0001
+    },
+    "warmup_steps": 2,
+    "seed": 27092940
+  },
+  "spec_rule": "The declared round-1 architecture (layers 32-39, rank 16, alpha 32) and optimizer with the round-4 objective and learning rates, shortened to 6 steps with 2 preference pairs per step and a fresh seed.",
+  "sequences": {
+    "path": "config/experiments/granite-shard-training-sequences.json",
+    "sha256": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76"
+  },
+  "protocol": "Owner 0 embeds each sequence, receives the full final hidden state, computes the trainer's loss or preference margin through its norm and tied head, and returns each boundary gradient as exact bf16 bytes. The arm's owner runs one backward over the microbatch's graphs, then clips and steps on command.",
+  "reference": "A fourth host downloads the complete pinned checkpoint and runs assistant_experience_train.train on the same sequences and spec.",
+  "outage": {
+    "at_step": 3,
+    "rule": "The arm's owner exits when told to take step 3; the group is relaunched from its step-3 checkpoint and owner 0's saved preference references, and continues the same schedule."
+  },
+  "max_boundary_tokens": 6144,
+  "peer_timeout_seconds": 300,
+  "memory_limit_bytes": 25769803776,
+  "fetch_memory_limit_bytes": 17179869184,
+  "reference_memory_limit_bytes": 51539607552,
+  "phase_seconds": {
+    "fetch": 1800,
+    "download": 1800,
+    "train": 3600,
+    "reference": 3600,
+    "outage": 2400,
+    "resume": 2400
+  },
+  "gates": {
+    "complete": "The reference and all three owners complete the uninterrupted schedule.",
+    "fetched_only_owned": "Every owner fetched only its verified byte ranges.",
+    "tensors": "Every final LoRA tensor on the arm's owner has the same SHA-256 as the reference's.",
+    "losses": "Every step loss and every preference margin equals the reference's exactly.",
+    "outage_injected": "The arm's owner is lost mid-schedule and owner 0 reports the loss.",
+    "recovery": "After relaunch from the step-3 checkpoint, the final tensors equal the reference's and the remaining step losses match.",
+    "memory": "Every owner's peak RSS stays below the reference host's."
+  },
+  "not_claimed": "No quality claim: the six-step arm is not evaluated or served. Throughput, serving the learned module on shards and independently operated owners are later executions.",
+  "resources": "config/experiments/granite-shard-training-resources.json",
+  "attempts": 1,
+  "training_authorized": true,
+  "gpu_launch_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "contracts": {
+    "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+    "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+    "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+    "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+    "config/experiments/granite-shard-training-sequences.json": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76",
+    "config/experiments/granite-shard-training-resources.json": "0fd9263e28a10fa95d796bb36848a59689df68e18476d6ef761fb538a1234235",
+    "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
+    "docs/GRANITE_SHARD_TRAINING.md": "eb4ce3540a2cedacb8741781855a74c04c118fb5521c5690ee1723eed3980f3f",
+    "config/experiments/granite-shard-training-result.json": "d4875c959bcff1c72807821bb71a628feab255459afe326dac1668994c0677e0",
+    "config/experiments/granite-shard-determinism2-result.json": "b79349a91c75ac1cea309ecb1c0c2519641a5b5decdade396bb7ca8a1f316785"
+  },
+  "sources": [
+    "config/experiments/granite-shard-determinism2-result.json",
+    "config/experiments/granite-shard-training-result.json",
+    "config/experiments/granite-reference-artifacts.json",
+    "config/experiments/granite-tensor-inventory.json",
+    "config/experiments/assistant-workflow-canonical-execution.json",
+    "config/experiments/assistant-workflow-canonical.json",
+    "config/experiments/granite-shard-training-sequences.json",
+    "config/experiments/granite-shard-training-resources.json",
+    "docs/granite-reference-requirements.txt",
+    "docs/GRANITE_SHARD_TRAINING.md",
+    "config/experiments/granite-shard-training.json",
+    "config/experiments/granite-shard-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "src/neuroshard/evolution/assistant_experience_train.py",
+    "src/neuroshard/evolution/granite_shard_execution.py",
+    "src/neuroshard/evolution/granite_shard_training.py",
+    "src/neuroshard/evolution/sharded/__init__.py",
+    "src/neuroshard/evolution/sharded/granite.py",
+    "src/neuroshard/evolution/sharded/granite_pipeline.py",
+    "src/neuroshard/evolution/sharded/granite_training.py",
+    "scripts/run_granite_shard_training.py",
+    "scripts/granite_shard_training_cloud.py",
+    "scripts/granite_shard_cloud.py",
+    "scripts/modular_reference_cloud.py"
+  ],
+  "warm_up": true,
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "b789206aa62df5a004ab31d4696908dc20c637f7",
+      "result": "config/experiments/granite-shard-training-result.json",
+      "result_sha256": "d4875c959bcff1c72807821bb71a628feab255459afe326dac1668994c0677e0",
+      "outcome": "Six of seven checks passed; recovery failed on a first-pass rounding difference."
+    }
+  ]
+}

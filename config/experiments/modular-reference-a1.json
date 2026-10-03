@@ -1,0 +1,167 @@
+{
+  "format": "neuroshard-modular-reference-a1/1",
+  "status": "execution-plan",
+  "decision": "BAR",
+  "rejected_reference": "FlexOlmo",
+  "models": {
+    "baseline": {
+      "repo": "allenai/BAR-7B",
+      "revision": "bee49db02284e88308e85c352e8d9a01b2b48ff5",
+      "architecture": "Olmo2ForCausalLM",
+      "parameters": 7298011136,
+      "storage_bytes": 14596063712,
+      "license": "apache-2.0",
+      "files": {
+        "config.json": "f24aa8066b70f75a4d5d521b5fb27c38f6d535bd48594d8ac0943d94390cf0c8",
+        "generation_config.json": "496161edfb3e55e5879516705fa2f0ec0b89d99a5131124020e9b54d936840f8",
+        "chat_template.jinja": "1fd2eac6d6f73da1f9e30d9b0511f91a70cc8455ffffe48d20f48e77357f5029",
+        "tokenizer_config.json": "91c69c665697785ace4ec7dbd159e1839bc9bb5033ab05a56bb0547521dc9ab0"
+      }
+    },
+    "modular": {
+      "repo": "allenai/BAR-5x7B",
+      "revision": "2e1b57d2e22fbf9c1a08a71298b53abcfdf827ad",
+      "architecture": "FlexOlmoForCausalLM",
+      "parameters": 24612753408,
+      "experts": 5,
+      "experts_per_token": 5,
+      "storage_bytes": 49225600720,
+      "license": "apache-2.0",
+      "files": {
+        "config.json": "c8626a748f4725fcc92f70653b18309cc06ad36a95eec7ff6baa88e943376be2",
+        "generation_config.json": "98e184d7f8432c9fc3c1993508bacf016f456abcb205b072576148bc2c793330",
+        "chat_template.jinja": "1fd2eac6d6f73da1f9e30d9b0511f91a70cc8455ffffe48d20f48e77357f5029",
+        "tokenizer_config.json": "f7a2753a4ff30657e452c8fef02b9a99a3b900ceb4c65a1e3fbea6a3bfab07a6"
+      }
+    }
+  },
+  "limits": {
+    "threads": 1,
+    "device": "cpu",
+    "dtype": "bfloat16",
+    "attention": "eager",
+    "decode": "greedy",
+    "cache": true,
+    "gpu": false,
+    "new_instances": false,
+    "max_new_tokens": 32,
+    "per_task_seconds": 2400,
+    "evaluate_seconds": 28800,
+    "fetch_seconds": 10800,
+    "max_rss_bytes": 12884901888
+  },
+  "scoring": {
+    "whitespace": "Strip the ends and normalize CR/LF. Do not search for an answer inside a longer reply.",
+    "unterminated_fails": true,
+    "tool_positional_arguments_fail": true,
+    "prose_outside_function_tags_ignored": true,
+    "minimum_baseline_successes_per_category": 1,
+    "categories": ["conversation", "instruction", "tool-use"]
+  },
+  "tolerance": {
+    "paper_scores_are_pass_thresholds": false,
+    "quantization": false,
+    "cpu_eager_may_differ_from_gpu_generation": true,
+    "rerun_must_match_decoded_text": true
+  },
+  "tasks": [
+    {
+      "id": "conversation-code",
+      "category": "conversation",
+      "kind": "exact",
+      "accept": ["cedar-47"],
+      "messages": [
+        {"role": "user", "content": "Please remember this code: cedar-47."},
+        {"role": "assistant", "content": "I will remember cedar-47."},
+        {"role": "user", "content": "What code did I ask you to remember? Reply with only the code."}
+      ]
+    },
+    {
+      "id": "conversation-apples",
+      "category": "conversation",
+      "kind": "exact",
+      "accept": ["3"],
+      "messages": [
+        {"role": "user", "content": "I have five apples. I ate two of them. How many apples do I have left? Reply with only the number."}
+      ]
+    },
+    {
+      "id": "conversation-capital",
+      "category": "conversation",
+      "kind": "exact",
+      "accept": ["Paris"],
+      "messages": [
+        {"role": "user", "content": "What is the capital of France? Reply with only the city name."}
+      ]
+    },
+    {
+      "id": "instruction-three-words",
+      "category": "instruction",
+      "kind": "exact",
+      "accept": ["blue glass river"],
+      "messages": [
+        {"role": "user", "content": "Reply with exactly these three words and nothing else: blue glass river."}
+      ]
+    },
+    {
+      "id": "instruction-prime",
+      "category": "instruction",
+      "kind": "exact",
+      "accept": ["yes"],
+      "messages": [
+        {"role": "user", "content": "Is 17 a prime number? Reply with yes or no in lowercase and nothing else."}
+      ]
+    },
+    {
+      "id": "instruction-two-lines",
+      "category": "instruction",
+      "kind": "exact",
+      "accept": ["copper\nzinc"],
+      "messages": [
+        {"role": "user", "content": "Write exactly two lines and nothing else. The first line is copper. The second line is zinc."}
+      ]
+    },
+    {
+      "id": "tool-weather",
+      "category": "tool-use",
+      "kind": "tool",
+      "expect": [{"name": "get_weather", "arguments": {"city": "Paris"}}],
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are OLMo, a helpful function-calling AI assistant built by Ai2. When one function can answer the user, call that function instead of answering yourself.",
+          "functions": "[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"description\":\"Get the current weather for a city.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"get_time\",\"description\":\"Get the local time in a city.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}}]"
+        },
+        {"role": "user", "content": "What is the weather in Paris?"}
+      ]
+    },
+    {
+      "id": "tool-add",
+      "category": "tool-use",
+      "kind": "tool",
+      "expect": [{"name": "add", "arguments": {"a": 12, "b": 30}}],
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are OLMo, a helpful function-calling AI assistant built by Ai2. When one function can answer the user, call that function instead of answering yourself.",
+          "functions": "[{\"type\":\"function\",\"function\":{\"name\":\"add\",\"description\":\"Add two integers.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"a\":{\"type\":\"integer\"},\"b\":{\"type\":\"integer\"}},\"required\":[\"a\",\"b\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"multiply\",\"description\":\"Multiply two integers.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"a\":{\"type\":\"integer\"},\"b\":{\"type\":\"integer\"}},\"required\":[\"a\",\"b\"]}}}]"
+        },
+        {"role": "user", "content": "Use the add function on 12 and 30. Do not compute the sum yourself."}
+      ]
+    },
+    {
+      "id": "tool-balance",
+      "category": "tool-use",
+      "kind": "tool",
+      "expect": [{"name": "lookup_balance", "arguments": {"account": "cedar-47", "currency": "USD"}}],
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are OLMo, a helpful function-calling AI assistant built by Ai2. When one function can answer the user, call that function instead of answering yourself.",
+          "functions": "[{\"type\":\"function\",\"function\":{\"name\":\"lookup_balance\",\"description\":\"Look up an account balance.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"account\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\"}},\"required\":[\"account\",\"currency\"]}}},{\"type\":\"function\",\"function\":{\"name\":\"list_accounts\",\"description\":\"List account identifiers.\",\"parameters\":{\"type\":\"object\",\"properties\":{},\"required\":[]}}}]"
+        },
+        {"role": "user", "content": "Look up the balance of account cedar-47 in USD."}
+      ]
+    }
+  ]
+}

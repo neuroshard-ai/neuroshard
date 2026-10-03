@@ -1,0 +1,180 @@
+{
+  "format": "neuroshard-assistant-experience-confirmation3-report/1",
+  "round": 4,
+  "attempt": "third",
+  "split": "confirmation3",
+  "episodes": 192,
+  "results": {
+    "parent": {
+      "path": "config/experiments/assistant-experience-confirmation3-parent-result.json",
+      "sha256": "9c8c0b97736c5900e7a36e7826bad6c953c5f96a858c63d8b0f78b0b4b0b246e"
+    },
+    "update": {
+      "path": "config/experiments/assistant-experience-confirmation3-update-result.json",
+      "sha256": "97c737e4910e51146dc04df2ae65c50983fa1b2f8408118ead058701ca6a6c04"
+    }
+  },
+  "source_commit": "fa18eeffebce34bc0df64a140d29433239abff14",
+  "confirmation_passed": true,
+  "report": {
+    "correct": {
+      "parent": 119,
+      "update": 183
+    },
+    "versus_parent": {
+      "gained": [
+        "workflow-12d09a1e9ceb",
+        "workflow-1300d171e146",
+        "workflow-134ca18fbbec",
+        "workflow-14d306b70084",
+        "workflow-1622ae274120",
+        "workflow-1d6f492d7a57",
+        "workflow-1d8e03e89c25",
+        "workflow-25aa8bd9c733",
+        "workflow-2a598360b93c",
+        "workflow-2bd96a6537b7",
+        "workflow-2e6ad7fa6ddc",
+        "workflow-33b110054bcb",
+        "workflow-3468c8376784",
+        "workflow-427df67bb3b9",
+        "workflow-4413c292856f",
+        "workflow-45ec66558f5d",
+        "workflow-4c2a9badd797",
+        "workflow-4fc3f264fd95",
+        "workflow-4ffa09e25efc",
+        "workflow-5664c5f96c19",
+        "workflow-5b9d297607ec",
+        "workflow-5fc1579b93d3",
+        "workflow-67327690553e",
+        "workflow-694a080934ef",
+        "workflow-6ae9196c348b",
+        "workflow-7157bf04006b",
+        "workflow-725dd7742bdc",
+        "workflow-739c4a0c0bf3",
+        "workflow-78c725e0d978",
+        "workflow-7ac8adb20834",
+        "workflow-7fb0e286ba9f",
+        "workflow-80c5a15a42f6",
+        "workflow-85534de988b2",
+        "workflow-8b86a89f5f86",
+        "workflow-98c9d6ca70de",
+        "workflow-99a11a68ce6f",
+        "workflow-a00cb1445a71",
+        "workflow-a2a4e94d1929",
+        "workflow-a9126c9d56bb",
+        "workflow-ae71fd67b3c6",
+        "workflow-af975cd96fe6",
+        "workflow-b1148d0a1d46",
+        "workflow-b3af627bd1f9",
+        "workflow-b4b7b9ee3b50",
+        "workflow-b4d5a5405340",
+        "workflow-b9101def4c60",
+        "workflow-bb62e2f031b3",
+        "workflow-bc3ed259f25f",
+        "workflow-bcd8cf5aa5db",
+        "workflow-c20f39df887d",
+        "workflow-c247b3404795",
+        "workflow-c8ac7a503f32",
+        "workflow-cca00b4065a0",
+        "workflow-cdc2d1bcd0ac",
+        "workflow-d3f5cdff0b48",
+        "workflow-d5b8fd6087da",
+        "workflow-e341895e3c37",
+        "workflow-e44e765b5c2a",
+        "workflow-e6feacb6ea6a",
+        "workflow-e7fffaacb96a",
+        "workflow-ef36e6eea9e2",
+        "workflow-f053a466d64c",
+        "workflow-f5e94f8cabeb",
+        "workflow-fd7d943b3e0f"
+      ],
+      "lost": [],
+      "net": 64
+    },
+    "lost_protected": [],
+    "p95_seconds": {
+      "update": 102.98494118800045,
+      "parent": 88.82795036100106
+    },
+    "checks": {
+      "total": true,
+      "net_vs_parent": true,
+      "lost_parent_successes": true,
+      "protected": true,
+      "p95": true,
+      "per_family": true,
+      "lower_vs_parent": true
+    },
+    "per_family": {
+      "copy": 24,
+      "date": 23,
+      "sum": 24,
+      "difference": 21,
+      "latest": 22,
+      "recipient": 24,
+      "reschedule": 23,
+      "scope": 22
+    },
+    "lower_95_gain_vs_parent": 0.22395833333333334,
+    "passed": true,
+    "candidate": "update",
+    "selected_arm_episodes": {
+      "update": 192
+    }
+  },
+  "decision": "Third confirmation passed: the round-4 update, gated alone, solved 183/192 (parent 119), net +64 with 0 lost parent successes, lower 95% gain vs parent +22.4 points, p95 103.0 s. A2 is established for this capability.",
+  "resources_finished": {
+    "hosts": {
+      "parent": {
+        "finished_utc": "2026-10-03T08:48:57.810535+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-036f29e3e06b8576b"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 10998.019149,
+        "conservative_compute_usd": 3.2334176298059996,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "update": {
+        "finished_utc": "2026-10-03T09:24:42.223263+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0284db91cd5682944"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13142.87561,
+        "conservative_compute_usd": 3.8640054293399997,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    "conservative_compute_usd": 7.097423059145999,
+    "storage_and_transfer_invoice_not_in_compute_total": true,
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-03T09:25:40.865895+00:00",
+    "hosts": [
+      {
+        "system": "parent",
+        "instance": "i-036f29e3e06b8576b",
+        "state": "terminated",
+        "volumes": []
+      },
+      {
+        "system": "update",
+        "instance": "i-0284db91cd5682944",
+        "state": "terminated",
+        "volumes": []
+      }
+    ]
+  },
+  "checklist_credit": true,
+  "admission_evidence": false
+}

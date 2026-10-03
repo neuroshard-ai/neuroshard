@@ -1,0 +1,127 @@
+{
+  "format": "neuroshard-granite-shard-determinism-report/1",
+  "result": "config/experiments/granite-shard-determinism-result.json",
+  "result_sha256": "9a176a5cf57ff3d946ca93f6d9087ca2eebb48d6a42caaae403c81eb8785114a",
+  "commit": "89731bbf228b7b8d84c6be64fb8caf92098702b2",
+  "report": {
+    "complete": true,
+    "launches": 6,
+    "owners": {
+      "0": {
+        "messages": 32,
+        "distinct_traces": 2,
+        "first_divergence": 0
+      },
+      "1": {
+        "messages": 20,
+        "distinct_traces": 2,
+        "first_divergence": 0
+      },
+      "2": {
+        "messages": 20,
+        "distinct_traces": 2,
+        "first_divergence": 0
+      }
+    },
+    "distinct_references": 2,
+    "distinct_trained_tensors": 2,
+    "reproducible": false,
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "localization": {
+    "differing_launches": {
+      "ring-5": {
+        "0": [
+          0,
+          22,
+          23
+        ],
+        "1": [
+          0
+        ],
+        "2": [
+          0
+        ]
+      }
+    },
+    "finding": "In one launch of six (ring-5) owner 0 sent a different first tensor (message 0: its first forward pass in the process); every later forward pass, including new shapes, matched the other launches. Owners 1 and 2 differ only on the message computed from that tensor, and owner 0 again only on the two boundary gradients of the preference pair that uses the first reference. Five launches reproduce the uninterrupted training run and the reference host exactly.",
+    "references": {
+      "ring-0": [
+        -0.15518701076507568,
+        -1.9555541276931763
+      ],
+      "ring-1": [
+        -0.15518701076507568,
+        -1.9555541276931763
+      ],
+      "ring-2": [
+        -0.15518701076507568,
+        -1.9555541276931763
+      ],
+      "ring-3": [
+        -0.15518701076507568,
+        -1.9555541276931763
+      ],
+      "ring-4": [
+        -0.15518701076507568,
+        -1.9555541276931763
+      ],
+      "ring-5": [
+        -0.1545446664094925,
+        -1.9555541276931763
+      ]
+    }
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 3125.147326,
+    "conservative_compute_usd": 0.9187933138440001,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T13:41:43.218319+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ad4a2478cdcc616e"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1015.673952,
+        "conservative_compute_usd": 0.298608141888,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T13:42:15.177171+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ac088bc61ef050f6"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1040.185299,
+        "conservative_compute_usd": 0.305814477906,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T13:42:51.918971+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-066dea04dfafbb411"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1069.288075,
+        "conservative_compute_usd": 0.31437069405,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

@@ -1,0 +1,53 @@
+{
+  "format": "neuroshard-assistant-workflow-baseline/1",
+  "purpose": "Run a complete conversational tool assistant before training: actual document reads, computations, draft state and follow-up corrections. No published checker qualification.",
+  "learning_contract": "config/experiments/assistant-workflow-learning.json",
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "data": "config/experiments/assistant-workflow-data.json",
+  "split": "development",
+  "model": "baseline",
+  "protected_anchor_ids": [
+    "granite-chat-booking",
+    "granite-chat-allergy",
+    "granite-chat-document",
+    "granite-chat-expense",
+    "granite-chat-quoted-data",
+    "granite-chat-handoff",
+    "granite-chat-packing",
+    "granite-instruction-extract",
+    "granite-instruction-filter",
+    "granite-instruction-negation",
+    "granite-instruction-counts",
+    "granite-instruction-typed",
+    "granite-tool-calendar",
+    "granite-tool-notes",
+    "granite-tool-document",
+    "granite-tool-ticket",
+    "granite-tool-archive",
+    "granite-tool-timer"
+  ],
+  "qualification": {
+    "minimum_primitive_successes": 6,
+    "minimum_per_primitive_family": 1,
+    "original_anchor_gate_required": true,
+    "all_18_original_successes_required": true,
+    "p95_episode_seconds": 180,
+    "maximum_rss_bytes": 68719476736
+  },
+  "headroom": "Record whether parent exceeds 20/24; that would leave insufficient space for the fixed development gain. Do not respond by weakening the parent or retraining on this evaluation.",
+  "replay_ids": [
+    "workflow-bd845e98b603",
+    "workflow-5b59fbf07de4"
+  ],
+  "resources": {
+    "threads": 8,
+    "primary_worker_seconds": 4200,
+    "replay_worker_seconds": 600,
+    "memory_bytes": 68719476736
+  },
+  "gpu_launch_authorized": false,
+  "training_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "stop_rule": "One exact-commit CI-green CPU allocation. Original assistant retention failure stops workflow execution. Evaluate all 24 workflow episodes without tuning. Conditional two fresh-process replays after baseline qualification. Copy evidence and retire. No training or confirmation evaluation follows automatically."
+}

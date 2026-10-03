@@ -1,0 +1,75 @@
+{
+  "format": "neuroshard-granite-adapter-audit-report/1",
+  "source_commit": "302c254e8b81ad41ea4f1f0116e788a1d5f49cb8",
+  "result_sha256": "8ecb97937158ed1aacc2cf00f893e86f949ed8d43d3ccae31393bdc3967383ec",
+  "decision": "Stopped at the first backbone tensor comparison. The whole embedding hash is invalid across the declared 100352-to-100364 vocabulary expansion. Sixteen standalone outputs reproduce the older Switch outputs exactly, including its two regressions; fresh Switch replay and full tensor equivalence remain unverified. No retry under this freeze.",
+  "execution_completed": false,
+  "milestone_complete": false,
+  "admission_evidence": false,
+  "checklist_credit": false,
+  "independent_rescore": true,
+  "source_task_receipt_and_activation_bindings_verified": true,
+  "completed_standalone_calls": 16,
+  "standalone_correct": 12,
+  "standalone_matches_previous_switch_text_and_tokens": 16,
+  "standalone_wrong_ids": [
+    "granite-reference-words-yes",
+    "granite-reference-case-yes",
+    "granite-reference-exclude-no",
+    "granite-reference-ending-no"
+  ],
+  "same_two_previous_regressions": [
+    "granite-reference-words-yes",
+    "granite-reference-case-yes"
+  ],
+  "fresh_switch_calls": 0,
+  "backbone_comparison_completed": false,
+  "adapter_tensor_comparison_completed": false,
+  "stop_error": "composed backbone differs: model.embed_tokens.weight",
+  "declared_vocabulary": {
+    "parent_rows": 100352,
+    "switch_rows": 100364,
+    "added_control_token_rows": 12
+  },
+  "known_harness_error": "Whole-tensor digest comparison did not account for the published embedding and tied output-head expansion. Matching base-vocabulary rows and added-row contents were not inspected in the stopped receipt; do not assert that expansion is the only difference.",
+  "worker_outcome": {
+    "seconds": 199.41355122099998,
+    "returncode": 0,
+    "reason": "completed",
+    "completed": true,
+    "unit": "neuroshard-a1-f01f1145997d4d05",
+    "cpu_seconds": null,
+    "cpu_accounting": "see worker receipt if completed; unknown on external kill"
+  },
+  "accounting": {
+    "wall_seconds": 192.142323855,
+    "process_cpu_seconds": 282.843759051,
+    "cumulative_process_peak_rss_bytes": 9152724992
+  },
+  "ci": {
+    "id": 36263183266,
+    "head_sha": "302c254e8b81ad41ea4f1f0116e788a1d5f49cb8",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36263183266"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-26T19:03:09.241802+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0afbe69174fd7e0fc"
+    ],
+    "conservative_instance_seconds": 293.483177,
+    "conservative_compute_usd": 0.086284054038,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "cleanup_confirmation": {
+    "checked_utc": "2026-09-26T19:17:21.756321+00:00",
+    "instance_states": {
+      "i-0afbe69174fd7e0fc": "terminated"
+    },
+    "remaining_tagged_volumes": [],
+    "security_group_absent": true
+  }
+}

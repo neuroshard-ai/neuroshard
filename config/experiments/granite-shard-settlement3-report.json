@@ -1,0 +1,200 @@
+{
+  "format": "neuroshard-granite-shard-settlement-report/1",
+  "result": "config/experiments/granite-shard-settlement3-result.json",
+  "result_sha256": "78c95dba9e9f4cb267d54cb3231d04916ce7b003e4258058bec886ec2c2f65ad",
+  "commit": "4c2c2eaf3c2ce132eea1b1832c79913e8e65c30b",
+  "attempt": 3,
+  "passed": true,
+  "checks": {
+    "honest_agreement": true,
+    "replicas_agree": true,
+    "honest_work_accepted": true,
+    "framing_rejected": true,
+    "fault_named": true,
+    "fault_proven": true,
+    "honest_settled": true,
+    "balances_exact": true
+  },
+  "report": {
+    "passed": true,
+    "checks": {
+      "honest_agreement": true,
+      "replicas_agree": true,
+      "honest_work_accepted": true,
+      "framing_rejected": true,
+      "fault_named": true,
+      "fault_proven": true,
+      "honest_settled": true,
+      "balances_exact": true
+    },
+    "honest": {
+      "correct": 18,
+      "mismatches": [],
+      "p95_seconds": 97.4776609160001
+    },
+    "outcomes": [
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "accepted",
+      "rejected: Fraud proof does not verify",
+      "accepted"
+    ],
+    "roots": [
+      "15bdd0bb5c184074bf4d456986231b368a7d1a8477b2c85e0e681d440b2aa2d7",
+      "15bdd0bb5c184074bf4d456986231b368a7d1a8477b2c85e0e681d440b2aa2d7"
+    ],
+    "challenge_seconds": [
+      [
+        0.884608618999664,
+        11.297841319000327
+      ],
+      [
+        1.0588252220004506,
+        12.427310402999865
+      ]
+    ],
+    "validator_load_seconds": [
+      8.265193711000393,
+      9.17406264200008
+    ],
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "final_balances": {
+    "user": 18998000,
+    "owner-1": 15497000,
+    "owner-2": 15497000,
+    "auditor": 22499000,
+    "accuser": 20000000
+  },
+  "burned": 2509000,
+  "state_root": "15bdd0bb5c184074bf4d456986231b368a7d1a8477b2c85e0e681d440b2aa2d7",
+  "measured": {
+    "honest_audit_forwards": 8830,
+    "honest_audit_seconds": 525.7052840249999,
+    "fault_forward": 200,
+    "fault_detection_seconds": 12.55340357499972,
+    "challenge_seconds": [
+      [
+        0.884608618999664,
+        11.297841319000327
+      ],
+      [
+        1.0588252220004506,
+        12.427310402999865
+      ]
+    ],
+    "validator_load_seconds": [
+      8.265193711000393,
+      9.17406264200008
+    ],
+    "transferred_bytes": {
+      "serve-honest": 242431384,
+      "serve-cheat": 242431379,
+      "bundles": 13390376
+    },
+    "evidence_bytes": {
+      "owner-0": 571865,
+      "owner-1": 1405013,
+      "owner-2": 1459220,
+      "auditor": 28188745,
+      "validator-1": 13398062,
+      "validator-2": 13398057
+    }
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 25750.414933,
+    "conservative_compute_usd": 7.5706219903020004,
+    "hosts": [
+      {
+        "finished_utc": "2026-10-02T01:59:41.507352+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0c48580e4abb030f2"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4221.553605,
+        "conservative_compute_usd": 1.24113675987,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T02:00:13.160094+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a536e860cfbb7f34"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4245.911526,
+        "conservative_compute_usd": 1.248297988644,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T02:00:49.821949+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01973d5b399b267d0"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4275.316332,
+        "conservative_compute_usd": 1.256943001608,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T02:01:31.909487+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0343497e047ce7f92"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4310.085296,
+        "conservative_compute_usd": 1.2671650770240002,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T02:02:03.453371+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-094e811f23bc5e28d"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4334.217952,
+        "conservative_compute_usd": 1.274260077888,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T02:02:40.172562+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-09b17a7df03394440"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4363.330222,
+        "conservative_compute_usd": 1.282819085268,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "all_attempts_usd": 8.337091229628001,
+  "checklist_credit": false,
+  "admission_evidence": false
+}

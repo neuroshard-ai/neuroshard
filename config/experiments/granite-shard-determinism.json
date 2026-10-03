@@ -1,0 +1,88 @@
+{
+  "format": "neuroshard-granite-shard-determinism/1",
+  "status": "Second attempt, declared on September 29, 2026 after the first attempt found owner 0's first forward pass irreproducible in one launch of six. Every owner now runs the declared warm-up (discarded 1,024-token and 1-token passes, and one discarded backward on the arm's owner) after joining the ring and before any work.",
+  "purpose": "Find why the shard training outage run computed its first preference reference differently from the uninterrupted run on the same owners: launch the same training job six times in fresh processes and record a digest of every tensor each owner sends.",
+  "model": {
+    "artifacts": "config/experiments/granite-reference-artifacts.json",
+    "tensor_inventory": "config/experiments/granite-tensor-inventory.json",
+    "inventory_sha256": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843"
+  },
+  "boundaries": [
+    0,
+    12,
+    26,
+    40
+  ],
+  "job": "The shard training job of config/experiments/granite-shard-training.json (same sequences, arm and spec) shortened to one step: 8 preference references, then 12 forward passes and one update.",
+  "steps": 1,
+  "launches": 12,
+  "max_boundary_tokens": 6144,
+  "peer_timeout_seconds": 300,
+  "memory_limit_bytes": 25769803776,
+  "fetch_memory_limit_bytes": 17179869184,
+  "phase_seconds": {
+    "fetch": 1800,
+    "ring": 900
+  },
+  "reported": "Per owner: distinct traces across launches and the first differing message. Distinct preference references and distinct trained tensors across launches. Reproducible only if all are single.",
+  "follow_up": "If all twelve launches are identical, the shard training recovery is repeated with the warm-up as a new declared execution.",
+  "resources": "config/experiments/granite-shard-determinism-resources.json",
+  "attempts": 1,
+  "training_authorized": true,
+  "gpu_launch_authorized": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "contracts": {
+    "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+    "config/experiments/granite-tensor-inventory.json": "25d54e1aaa36ccaedb24ef080b1fd125bd3c00ee94f7ebcf9c6589813f0e3843",
+    "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
+    "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
+    "config/experiments/granite-shard-training.json": "38c1b8c0bcaa1ab013bd4c6556477759b697a0142ba84700be404025505a871c",
+    "config/experiments/granite-shard-training-sequences.json": "40a6a6a0b9e04e57c36e44833d910278292630575d4725dcd6dccc20f98e9a76",
+    "config/experiments/granite-shard-determinism-resources.json": "e99fbc0faf320388e39fecf84f1ef80e0ed36d540545af4958403f89f9d917c8",
+    "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
+    "docs/GRANITE_SHARD_DETERMINISM.md": "a757688f133ac556abdc4120dae852b277c576efa3a7c72b0b3cfe0456c63711",
+    "config/experiments/granite-shard-determinism-result.json": "9a176a5cf57ff3d946ca93f6d9087ca2eebb48d6a42caaae403c81eb8785114a"
+  },
+  "sources": [
+    "config/experiments/granite-shard-determinism-result.json",
+    "config/experiments/granite-reference-artifacts.json",
+    "config/experiments/granite-tensor-inventory.json",
+    "config/experiments/assistant-workflow-canonical-execution.json",
+    "config/experiments/assistant-workflow-canonical.json",
+    "config/experiments/granite-shard-training.json",
+    "config/experiments/granite-shard-training-sequences.json",
+    "config/experiments/granite-shard-determinism-resources.json",
+    "docs/granite-reference-requirements.txt",
+    "docs/GRANITE_SHARD_DETERMINISM.md",
+    "config/experiments/granite-shard-determinism.json",
+    "config/experiments/granite-shard-execution.json",
+    "src/neuroshard/__init__.py",
+    "src/neuroshard/version.py",
+    "src/neuroshard/evolution/__init__.py",
+    "src/neuroshard/evolution/modular_reference.py",
+    "src/neuroshard/evolution/modular_reference_execution.py",
+    "src/neuroshard/evolution/assistant_experience_train.py",
+    "src/neuroshard/evolution/granite_shard_execution.py",
+    "src/neuroshard/evolution/granite_shard_training.py",
+    "src/neuroshard/evolution/granite_shard_determinism.py",
+    "src/neuroshard/evolution/sharded/__init__.py",
+    "src/neuroshard/evolution/sharded/granite.py",
+    "src/neuroshard/evolution/sharded/granite_pipeline.py",
+    "src/neuroshard/evolution/sharded/granite_training.py",
+    "scripts/run_granite_shard_determinism.py",
+    "scripts/granite_shard_serving_cloud.py",
+    "scripts/granite_shard_cloud.py",
+    "scripts/modular_reference_cloud.py"
+  ],
+  "warm_up": true,
+  "attempt": 2,
+  "prior_attempts": [
+    {
+      "commit": "89731bbf228b7b8d84c6be64fb8caf92098702b2",
+      "result": "config/experiments/granite-shard-determinism-result.json",
+      "result_sha256": "9a176a5cf57ff3d946ca93f6d9087ca2eebb48d6a42caaae403c81eb8785114a",
+      "outcome": "Not reproducible: ring-5 differed at owner 0's first forward pass only."
+    }
+  ]
+}

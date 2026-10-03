@@ -1,0 +1,81 @@
+{
+  "format": "neuroshard-granite-evidence-diagnostic-report/1",
+  "source_commit": "01feddc41e5bc6204268017796932a0a1ba64690",
+  "result_sha256": "8d1af0cb6423c4d349fb605ad1cd51cea642c2a41f23548fad871a31f4fed713",
+  "execution_completed": true,
+  "diagnostic_passed": true,
+  "admission_evidence": false,
+  "checklist_credit": false,
+  "new_capability_proven": false,
+  "decision": "Interface diagnostic passed on 64 opened cases. Direct control 59/64, selection 64/64; 18 protected assistant answers retained, six exact reload replays. Publish as engineering evidence only; a fresh published-module comparison must establish neural benefit. No training authorized.",
+  "report": {
+    "complete": true,
+    "retention": true,
+    "diagnostic_gate": true,
+    "admission_evidence": false,
+    "checklist_credit": false,
+    "new_capability_proven": false,
+    "correct": {
+      "direct": 59,
+      "selection": 64
+    },
+    "selected_by_category": {
+      "contextual": 32,
+      "standalone": 16,
+      "unanswerable": 16
+    },
+    "lost_direct_ids": [],
+    "p95_seconds": {
+      "direct": 4.711489835999998,
+      "selection": 0.9451497449999806
+    },
+    "work": {
+      "direct": {
+        "input_tokens": 26996,
+        "output_tokens": 1445,
+        "generation_calls": 64
+      },
+      "selection": {
+        "input_tokens": 23988,
+        "output_tokens": 64,
+        "generation_calls": 64
+      }
+    }
+  },
+  "replays_verified": 6,
+  "resources_finished": {
+    "finished_utc": "2026-09-26T22:27:14.856656+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-097b0c541eff9b587"
+    ],
+    "conservative_instance_seconds": 512.76023,
+    "conservative_compute_usd": 0.15075150762,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "independent_verification": {
+    "checked_utc": "2026-09-26T22:33:45.832799+00:00",
+    "result_sha256": "8d1af0cb6423c4d349fb605ad1cd51cea642c2a41f23548fad871a31f4fed713",
+    "independent_rescore_matches": true,
+    "replays_verified": 6,
+    "exact_commit_ci_and_execution_binding_verified": true,
+    "instance_state": "terminated",
+    "remaining_tagged_volumes": [],
+    "security_group_retired": true,
+    "new_run_queued": false
+  },
+  "ci": {
+    "id": 36274670262,
+    "head_sha": "01feddc41e5bc6204268017796932a0a1ba64690",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/36274670262"
+  },
+  "accounting": {
+    "wall_seconds": 415.516546492,
+    "process_cpu_seconds": 2767.048273494,
+    "cumulative_process_peak_rss_bytes": 8483983360
+  }
+}

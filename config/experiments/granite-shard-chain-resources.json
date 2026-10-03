@@ -1,0 +1,44 @@
+{
+  "format": "neuroshard-granite-shard-chain-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 8,
+  "planning_cap_usd": 12,
+  "disk_gib": 40,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "granite-shard-chain",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "prior_resources": {
+    "path": "config/experiments/granite-shard-settlement3-report.json",
+    "sha256": "95f5b82f75f0741824486b335a2d569a3f9b01ad4f8f3265ebac03771ff86110"
+  },
+  "budget_scope": "One host of eight for the chain settlement execution (three owners, one light auditor, four CometBFT validators), each its own allocation: r7i.4xlarge at the canonical eight threads, eight-hour expiry and twelve-dollar allowance (at most $96). About two hours and $17 are expected. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-10-02T04:58:00Z",
+      "commit": "69d5b474cac22557ee2ecf4d3264e9df8d99c375",
+      "outcome": "Eight hosts ran through the honest settlement, then were retired after the lost challenge reply; nothing remained ($10.72)."
+    }
+  ]
+}

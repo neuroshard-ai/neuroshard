@@ -1,0 +1,103 @@
+{
+  "format": "neuroshard-assistant-experience-growth-collection-report/1",
+  "attempt": 1,
+  "commit": "8d6ee95fea7d66b71a4dc02f5432a21295c9c249",
+  "execution_completed": false,
+  "finding": "Both collection hosts finished their 2,048 uncoached rollouts, then stopped at the first verification: the experience module accepted trajectories only from the split named \"train\". Rollouts are written only after verification, so none were kept. Three earlier train3 launches found no GPU capacity and started no instance.",
+  "cause": "assistant_experience.TRAINING_SPLITS listed only \"train\". The declaration tests substituted \"train\" cases for the growth split, so no test ran real growth cases through verification.",
+  "launches": [
+    {
+      "home": "assistant-experience-growth-train2-20260930",
+      "profile": "assistant-experience-growth-train2",
+      "error": "ValueError: experience may only be collected on training goals",
+      "resources_finished": {
+        "finished_utc": "2026-09-30T03:39:57.423729+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0abc981a4c382711c"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 10230.846967,
+        "conservative_compute_usd": 3.4443851455566663,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "6f68d634719133eed60174908c5fb4d1641922606db26cb11816bbd228c03e09"
+    },
+    {
+      "home": "assistant-experience-growth-train3-20260930",
+      "profile": "assistant-experience-growth-train3",
+      "error": "no declared instance type could be placed: [{'instance_type': 'g6e.xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g5.2xlarge', 'subnet': 'subnet-06a30cbe7b35238a9', 'code': 'InsufficientInstanceCapacity'}]",
+      "resources_finished": {
+        "finished_utc": "2026-09-30T00:51:11.823944+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "instance_type": null,
+        "conservative_instance_seconds": 105.615456,
+        "conservative_compute_usd": 0.06577789274933334,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": null
+    },
+    {
+      "home": "assistant-experience-growth-train3-20260930b",
+      "profile": "assistant-experience-growth-train3",
+      "error": "no declared instance type could be placed: [{'instance_type': 'g6e.xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g5.2xlarge', 'subnet': 'subnet-06a30cbe7b35238a9', 'code': 'InsufficientInstanceCapacity'}]",
+      "resources_finished": {
+        "finished_utc": "2026-09-30T00:53:24.908784+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "instance_type": null,
+        "conservative_instance_seconds": 100.286559,
+        "conservative_compute_usd": 0.06245902609275,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": null
+    },
+    {
+      "home": "assistant-experience-growth-train3-20260930c",
+      "profile": "assistant-experience-growth-train3",
+      "error": "no declared instance type could be placed: [{'instance_type': 'g6e.xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-00dfcbd0622107071', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-07341e1686bf30bda', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-08eb6f9b5f1b0cead', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g6e.2xlarge', 'subnet': 'subnet-05ec95f647959efc1', 'code': 'InsufficientInstanceCapacity'}, {'instance_type': 'g5.2xlarge', 'subnet': 'subnet-06a30cbe7b35238a9', 'code': 'InsufficientInstanceCapacity'}]",
+      "resources_finished": {
+        "finished_utc": "2026-09-30T00:56:22.590603+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "instance_type": null,
+        "conservative_instance_seconds": 117.571646,
+        "conservative_compute_usd": 0.0732242743046111,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": null
+    },
+    {
+      "home": "assistant-experience-growth-train3-20260930d",
+      "profile": "assistant-experience-growth-train3",
+      "error": "ValueError: experience may only be collected on training goals",
+      "resources_finished": {
+        "finished_utc": "2026-09-30T03:57:42.697597+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-08d9608e9595bde10"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 9978.904267,
+        "conservative_compute_usd": 3.3595644365566666,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "a3cd2f3e6d9c3cdd4c8d2c589f3a6c71605d764f922a341d5cadb20a4aa4aacb"
+    }
+  ],
+  "conservative_compute_usd": 7.005410775260027,
+  "remaining_instances": [],
+  "remaining_volumes": [],
+  "checklist_credit": false
+}

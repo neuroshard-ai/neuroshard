@@ -1,0 +1,41 @@
+{
+  "format": "neuroshard-assistant-experience-compose/1",
+  "status": "Declared on September 30, 2026, after the growth study found no qualifying candidate and before any compositional rollout. Authorized by the project owner.",
+  "motivation": "In both studies the small module lost parent successes only on development cases whose correction adds an instruction never combined with it in training, while the update control solved them.",
+  "question": "Does verified experience on instructions that carry one extra operation teach the small module to apply every instruction, so that it loses no parent success?",
+  "data": "config/experiments/assistant-workflow-data-compose.json",
+  "collection": {
+    "splits": [
+      "compose1",
+      "compose2"
+    ],
+    "profiles": {
+      "assistant-experience-compose-compose1": "compose1",
+      "assistant-experience-compose-compose2": "compose2"
+    },
+    "recipe": "The round-1 collection unchanged: 8 parent samples per case at temperature 0.8 and top-p 0.95, coached retries for cases without a verified trajectory, the near-policy ceiling of each collection, and at most 4 distinct trajectories per case.",
+    "seeds": {
+      "compose1": 27094010,
+      "compose2": 27094011
+    },
+    "hosts": "One GPU host per split, in parallel. No training on these hosts."
+  },
+  "pool": "The growth study pool (2114 sequences, 256 replay items, 54 pairs) plus the trajectories of both compositional collections, each re-verified from its pinned rollouts.",
+  "arms": {
+    "update": {
+      "type": "update"
+    },
+    "small": {
+      "type": "addition"
+    }
+  },
+  "first_phase_steps": "one-pass",
+  "first_phase_rule": "First-phase steps = ceil(experience sequences / 6): one pass over each arm's experience at six experience sequences per update. Learning rates, warm-up and every other setting as in round 1. The preference phase keeps the round-4 settings.",
+  "evaluation": "Parent, update and small module on the 64 integration cases (one greedy and two sampled episodes) and the 24 opened development cases (greedy), on the GPU.",
+  "integration_samples": 2,
+  "seed": 27094960,
+  "decision": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits), reported for both arms. The third attempt is declared with the small module only if it lost no parent success on either split. Otherwise there is no third attempt and the result is reported.",
+  "third_attempt": "Needs its own declaration on the frozen confirmation3 split under the second confirmation's gate. Its serving must meet that gate's latency limits on the canonical CPU runtime, measured on opened development cases before the split opens.",
+  "credit": "None: already-opened data decides only whether the third attempt runs.",
+  "budget": "Two collection hosts and one study host, each at most 8 hours and $21 worst case; about $15 expected in total."
+}

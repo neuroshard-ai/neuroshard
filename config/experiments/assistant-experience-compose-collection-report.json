@@ -1,0 +1,318 @@
+{
+  "format": "neuroshard-assistant-experience-compose-collection-report/1",
+  "attempt": 1,
+  "commit": "cd9b6bc34447aec97b8999d25d3b02a6c24f360a",
+  "execution_completed": true,
+  "pinned": {
+    "collections": {
+      "compose1": {
+        "experience.json": "5cba0d8fb3c5b9dfcf3502b1eda9584f4809ca4f3026b344ddfc89dd5f66b991",
+        "rollouts.jsonl.gz": "2ea95ff753869c3fdf2acb5ea092e49aed6373d0f16435d2b72f0e7915bd50b2",
+        "trajectories.jsonl.gz": "e7beebe2a832aeea71ee2506eadafd7b1a19c201c48128148ec4c597b3e2bace"
+      },
+      "compose2": {
+        "experience.json": "bb256869a76136c95e168b2a350f06d6a3bb7f1db654a1b05ab9cb2090fa75b1",
+        "rollouts.jsonl.gz": "06fa4a8092abb7cacb070962ef1e32359107bb583158472aaae4b6b39abeb365",
+        "trajectories.jsonl.gz": "b093ef5aeff126bcd055e380933092d8ed67fedeaab2ffd837655d035406050c"
+      }
+    },
+    "counts": {
+      "compose1": 596,
+      "compose2": 592
+    }
+  },
+  "local_reverification": "Every trajectory of both collections was rebuilt from its pinned rollout through the frozen scorer before pinning.",
+  "launches": [
+    {
+      "home": "assistant-experience-compose1-20260930b",
+      "split": "compose1",
+      "gpu": "NVIDIA A10G",
+      "collect_seconds": 12702.960561384,
+      "collection": {
+        "split": "compose1",
+        "cases": 240,
+        "rollouts": 2664,
+        "accepted": 596,
+        "complete": 545,
+        "coached": 18,
+        "cases_without_experience": [
+          "workflow-057c93551966",
+          "workflow-06ad6acc6f6a",
+          "workflow-07591d438da7",
+          "workflow-08fa896c4473",
+          "workflow-12320cadc915",
+          "workflow-1641d472ce76",
+          "workflow-16fdda84975a",
+          "workflow-19b4f2b1ac98",
+          "workflow-203be2a84ec9",
+          "workflow-29941ec7d32b",
+          "workflow-2a41ac699f24",
+          "workflow-2ace07f69cec",
+          "workflow-2bccf8a94dd5",
+          "workflow-2ce9ab22806d",
+          "workflow-2f3257631287",
+          "workflow-375a04ecfdcd",
+          "workflow-3e0c8c5119aa",
+          "workflow-3f4fd03ffd87",
+          "workflow-404a08db2502",
+          "workflow-409cc55b6a1a",
+          "workflow-45afaecfd216",
+          "workflow-4bbb3cf85864",
+          "workflow-4bdb5dbceafa",
+          "workflow-500d1a824bd6",
+          "workflow-51231b8454cd",
+          "workflow-57ef52ffc974",
+          "workflow-642020f494f4",
+          "workflow-6472095f801d",
+          "workflow-66728bdfe1e5",
+          "workflow-66fd59b13205",
+          "workflow-68131f116c00",
+          "workflow-6978ad61289e",
+          "workflow-6cd4744248e9",
+          "workflow-72b3cb64b8f5",
+          "workflow-7ab6c83f95f6",
+          "workflow-7b2f4c16be6a",
+          "workflow-7e6e13f421ff",
+          "workflow-7fcbe0e5f876",
+          "workflow-89f73da7ad1a",
+          "workflow-8e8238817cdf",
+          "workflow-90c599934843",
+          "workflow-9152312412f0",
+          "workflow-923f99473755",
+          "workflow-945e1d59e3b1",
+          "workflow-99d7265e42a1",
+          "workflow-9a6a35254f69",
+          "workflow-9a847a6eae81",
+          "workflow-9af69fbdcbdc",
+          "workflow-9bcd4497a447",
+          "workflow-9f4b4027ac63",
+          "workflow-9f8aeb613d48",
+          "workflow-9fa6c6f71591",
+          "workflow-a2af2f755088",
+          "workflow-a4971bd0bc36",
+          "workflow-a5e31b814be9",
+          "workflow-a9a6b1260ab6",
+          "workflow-ac8875767788",
+          "workflow-acc67c9ceaff",
+          "workflow-b0f6782a74b2",
+          "workflow-b58d0bd23d4d",
+          "workflow-b82139846f56",
+          "workflow-b8fc10f7c758",
+          "workflow-c59b9d81282b",
+          "workflow-c76309b289fd",
+          "workflow-cb62b09f00d8",
+          "workflow-cda78a1cb3cb",
+          "workflow-cde81f86f2fb",
+          "workflow-d41413240bbc",
+          "workflow-d42b1caff7cb",
+          "workflow-d55ed6cfc374",
+          "workflow-d6a784113a16",
+          "workflow-d7b537c2ab50",
+          "workflow-dde19c5dd103",
+          "workflow-de3d1e44edf0",
+          "workflow-de9ff5a13c57",
+          "workflow-e18f4aedf74d",
+          "workflow-e99f14aa47d3",
+          "workflow-fb631f72e266"
+        ],
+        "by_family": {
+          "copy": {
+            "cases": 40,
+            "complete": 29,
+            "coached_only": 0
+          },
+          "date": {
+            "cases": 40,
+            "complete": 29,
+            "coached_only": 3
+          },
+          "latest": {
+            "cases": 40,
+            "complete": 31,
+            "coached_only": 1
+          },
+          "scope": {
+            "cases": 40,
+            "complete": 27,
+            "coached_only": 2
+          },
+          "sum": {
+            "cases": 40,
+            "complete": 28,
+            "coached_only": 2
+          },
+          "difference": {
+            "cases": 40,
+            "complete": 12,
+            "coached_only": 0
+          }
+        },
+        "near_policy_ceiling": 0.10501737147569656
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-30T16:54:30.938610+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0df31d35d7eba893f"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 13331.241328,
+        "conservative_compute_usd": 4.488184580426666,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "28750d11e4dcbe30ce94bb38df2fdb249d7ba6c666fe83519b4c14ea1b2e7a2b"
+    },
+    {
+      "home": "assistant-experience-compose2-20260930b",
+      "split": "compose2",
+      "gpu": "NVIDIA A10G",
+      "collect_seconds": 12478.079878601,
+      "collection": {
+        "split": "compose2",
+        "cases": 240,
+        "rollouts": 2640,
+        "accepted": 592,
+        "complete": 547,
+        "coached": 14,
+        "cases_without_experience": [
+          "workflow-0060234c0deb",
+          "workflow-02adbba4f030",
+          "workflow-05b501892181",
+          "workflow-08596651b1a4",
+          "workflow-09765e453352",
+          "workflow-1051c974df63",
+          "workflow-1485014e4daf",
+          "workflow-1824267185fc",
+          "workflow-1a054fabc2cc",
+          "workflow-1a76b0e34c81",
+          "workflow-227e39010d0a",
+          "workflow-2bea406ab9fc",
+          "workflow-2d4a7b8d98a5",
+          "workflow-2dd0323946d3",
+          "workflow-30d5b46606a0",
+          "workflow-32497b7a4b39",
+          "workflow-32a465870ad0",
+          "workflow-35bf27b06fdd",
+          "workflow-3a3c23c3722d",
+          "workflow-422d84c7cf5a",
+          "workflow-4687c7637051",
+          "workflow-47fbd6e6c1b2",
+          "workflow-495ed024c11c",
+          "workflow-4f5f142f8a7d",
+          "workflow-5b4b24e08bb3",
+          "workflow-5c54c3a19998",
+          "workflow-5ea3ac6a9ac1",
+          "workflow-62e66297b76a",
+          "workflow-63473f0ef66c",
+          "workflow-67c35366fe0b",
+          "workflow-69675d24f34e",
+          "workflow-69c090b2e31b",
+          "workflow-6d5b9a40f58f",
+          "workflow-73c021fdda93",
+          "workflow-7b3f60718255",
+          "workflow-7c0475139fd1",
+          "workflow-7d7d6cd7133a",
+          "workflow-7e25d6d6657b",
+          "workflow-7ee86527f8e4",
+          "workflow-80b90eba65b0",
+          "workflow-8161f1026e62",
+          "workflow-81e795ebd8bc",
+          "workflow-824a3d3344b6",
+          "workflow-82e6d4c37a73",
+          "workflow-84139949af1b",
+          "workflow-85c9db17846e",
+          "workflow-87710c778d90",
+          "workflow-8addfd1b5a31",
+          "workflow-8af592114138",
+          "workflow-954086ede4a8",
+          "workflow-963341483228",
+          "workflow-97469efe38fb",
+          "workflow-9859aeb42a31",
+          "workflow-9911ade3b038",
+          "workflow-99b19e64d4bc",
+          "workflow-99bea31a9852",
+          "workflow-99ff0e788a00",
+          "workflow-a0337fdf2be0",
+          "workflow-ab6ba1bf4db6",
+          "workflow-acf5fa076b24",
+          "workflow-ad6890fa124c",
+          "workflow-b4c96a36ed2c",
+          "workflow-b57401e09c7d",
+          "workflow-b6450f95634e",
+          "workflow-b9c1bbc64bd5",
+          "workflow-bf47e844d5cb",
+          "workflow-c8cde149859e",
+          "workflow-c904606eebb9",
+          "workflow-ccfc25fd118f",
+          "workflow-cdfa8d2b9aa6",
+          "workflow-cf687dc098fa",
+          "workflow-d59e91d34d46",
+          "workflow-d81be32c87e0",
+          "workflow-dac223f6eb89",
+          "workflow-de1a51e07a0f",
+          "workflow-e41bf47dda69",
+          "workflow-f2600e3aaf5f",
+          "workflow-f296a3effee9",
+          "workflow-fc9c2faa6b20",
+          "workflow-ffb82bdd2368",
+          "workflow-fffc43a367eb"
+        ],
+        "by_family": {
+          "date": {
+            "cases": 40,
+            "complete": 24,
+            "coached_only": 1
+          },
+          "copy": {
+            "cases": 40,
+            "complete": 30,
+            "coached_only": 0
+          },
+          "sum": {
+            "cases": 40,
+            "complete": 30,
+            "coached_only": 1
+          },
+          "difference": {
+            "cases": 40,
+            "complete": 14,
+            "coached_only": 1
+          },
+          "latest": {
+            "cases": 40,
+            "complete": 26,
+            "coached_only": 0
+          },
+          "scope": {
+            "cases": 40,
+            "complete": 32,
+            "coached_only": 1
+          }
+        },
+        "near_policy_ceiling": 0.09459300339221954
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-30T16:51:06.499593+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-04de3f255701610a8"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 13136.324609,
+        "conservative_compute_usd": 4.422562618363333,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "6c77908ee4b72fe4160d285eed0a2d3191a45d04be14326b680ae11a5ffa818e"
+    }
+  ],
+  "capacity_refusals_usd": 0.12561667061572224,
+  "pool_sequences": 3302,
+  "conservative_compute_usd": 9.03636386940572,
+  "remaining_instances": [],
+  "remaining_volumes": [],
+  "checklist_credit": false
+}

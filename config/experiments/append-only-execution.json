@@ -1,0 +1,102 @@
+{
+  "format": "neuroshard-append-only-execution-v1",
+  "purpose": "CPU execution of append-only serving: train an added shard, keep every protected parent answer, and use the shard only where the parent missed.",
+  "host": "cpu",
+  "train": true,
+  "gpu_launch_authorized": false,
+  "selector_training_authorized": false,
+  "admission_evidence": false,
+  "item4_complete": false,
+  "upgrade_public_0_4_0": false,
+  "reuses_opened_measurement": false,
+  "rule": "fbc5b5a90694f6b20d4754959d5c9eab1df2fcba20be6cf8737e5b8c77975834",
+  "parent_measurement": "4dd616028de2fd6019677a5634c754bbcf6535db400ac74e70bcc937aa4e1ecf",
+  "model": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "files": {
+      "config.json": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "generation_config.json": "87b916edaaab66b3899b9d0dd0752727dff6666686da0504d89ae0a6e055a013",
+      "merges.txt": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+      "model.safetensors": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "special_tokens_map.json": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+      "tokenizer.json": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "tokenizer_config.json": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "vocab.json": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79"
+    }
+  },
+  "architecture": {
+    "blocks": 2,
+    "expert": "append copies of the final two blocks; zero attention o_proj and MLP down_proj; freeze original model",
+    "control": "recorded in-place training of the original final two blocks; not the pass gate",
+    "selection": "append-only: parent by default; added shard only where the parent missed and the shard is correct",
+    "head": "frozen",
+    "initialization": "expert must reproduce parent logits exactly before training",
+    "training_execution": "cache frozen prefixes for training only; verify cached versus full logits before training",
+    "distributed_execution": false
+  },
+  "data": {
+    "seed": 20260925,
+    "operand_limit_exclusive": 128,
+    "counts": {"train_new": 768, "train_replay": 384, "development": 64, "retention": 64},
+    "system": "Answer arithmetic questions with only the final integer. Do not repeat the question or write an equation.",
+    "prompts": {
+      "modular-addition": [
+        "What is the remainder when {a} + {b} is divided by 7? Reply with only the number.",
+        "Add {a} and {b}, then give the remainder after division by 7. Give only the integer.",
+        "Compute ({a} + {b}) mod 7. Return only the final integer.",
+        "If I divide the sum of {a} and {b} by 7, what remainder do I get? Only the number, please."
+      ],
+      "addition": [
+        "What is {a} + {b}? Reply with only the number.",
+        "Add {a} and {b}. Give only the integer.",
+        "Compute the sum of {a} and {b}. Return only the final integer.",
+        "How much is {a} plus {b}? Only the number, please."
+      ]
+    },
+    "split": "fresh unordered pairs excluding every opened staged, calibration, block-expert, and measurement pair",
+    "confirmation": null,
+    "mbpp_access": false
+  },
+  "training": {
+    "seed": 20260925,
+    "steps": 576,
+    "batch_documents": 8,
+    "learning_rate": 0.0003,
+    "warmup_steps": 16,
+    "weight_decay": 0.01,
+    "clip_norm": 1.0,
+    "max_length": 96,
+    "generation_tokens": 32,
+    "maximum_control_steps": 1152,
+    "cache_logit_atol": 2e-05
+  },
+  "budget": {
+    "threads": 1,
+    "maximum_peak_rss_bytes": 4294967296,
+    "total_wall_seconds": 7200,
+    "arms": {
+      "baseline": 900,
+      "prepare": 1200,
+      "expert-train": 1800,
+      "control-train": 2400,
+      "expert-evaluate": 900,
+      "control-evaluate": 900
+    }
+  },
+  "gates": {
+    "minimum_protected": 1,
+    "minimum_served_gain": 4,
+    "maximum_latency_ratio": 1.5,
+    "maximum_p95_seconds": 10.0,
+    "maximum_memory_ratio": 1.5
+  },
+  "runtime": {
+    "packages": {
+      "torch": "2.9.1+cpu",
+      "transformers": "4.57.3",
+      "tokenizers": "0.22.1",
+      "safetensors": "0.7.0"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "format": "neuroshard-granite-shard-audit-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 6,
+  "planning_cap_usd": 10,
+  "disk_gib": 40,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "granite-shard-audit",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "prior_resources": {
+    "path": "config/experiments/granite-shard-training2-report.json",
+    "sha256": "482de6b75c56ef1b736f6c00b97a162c7547d30cffe51c267e9b62f27dcbbbed"
+  },
+  "budget_scope": "One host of five for the audited serving execution (three owners, two light auditors), each its own allocation: r7i.4xlarge at the canonical eight threads, six-hour expiry and ten-dollar allowance (at most $50). Setup/copy 20/10 minutes; fetch 30 minutes; two serving passes of at most one hour; two audits of at most 40 minutes; one verification of at most 15 minutes. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-29T20:50:00Z",
+      "commit": "295b34f10d8ee0bcf7904745e87c50498eecf781",
+      "outcome": "Five hosts allocated and retired after the fetch phase; no instance or volume remained ($0.32)."
+    }
+  ]
+}

@@ -1,0 +1,4566 @@
+{
+  "format": "neuroshard-answerability-cases/1",
+  "provenance": "New fictional, authored controlled records. No model outputs inspected. Public span inventories are part of each document adapter, not generated from a question or expected answer. Not an external benchmark or secret evaluation. Eight template families, five paired entities each; inference uses no task IDs, category, pair, block or expected answer.",
+  "tasks": [
+    {
+      "id": "support-18f420af447d",
+      "block": "missing-context",
+      "pair": "missing-context-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Cobalt Ferry West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I do not know whether my agreement says Enhanced or Standard. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "fca3215d7af9d919",
+          "text": "Cobalt Ferry West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-FCA321. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 120,
+              "end": 129
+            }
+          ]
+        },
+        {
+          "id": "03f352c9007935dd",
+          "text": "The service desk for Harbor Instrument 17 is MD-03F352. This record concerns only Harbor Instrument 17.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "a6ff66d9f275d593",
+          "text": "The inspection calendar label for Cobalt Ferry West is VB-8A4355. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-44ccb27e5183",
+      "block": "metric",
+      "pair": "metric-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Ember Observatory Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies water consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "15b0b24ed139b4d7",
+          "text": "The reporting label for Harbor Instrument 39 is MD-15B0B2. This record concerns only Harbor Instrument 39.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        },
+        {
+          "id": "22d1d66561edba9a",
+          "text": "The inspection calendar label for Ember Observatory Coastal is VB-3C5724. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 63,
+              "end": 72
+            }
+          ]
+        },
+        {
+          "id": "f3ab77fd947e3d8a",
+          "text": "Ember Observatory Coastal records two separate measures. The reporting label for electricity consumption is NX-F3AB77. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 108,
+              "end": 117
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-65021a0bab6f",
+      "block": "condition",
+      "pair": "condition-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Aster Relay South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 81 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "0212892a3c4e4f87",
+          "text": "The routing label for Harbor Instrument 10 is MD-021289. This record concerns only Harbor Instrument 10.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "98f9de3d2f2851c2",
+          "text": "The inspection calendar label for Aster Relay South is VB-D3336D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "951107677cfa2f33",
+          "text": "Aster Relay South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-951107. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 113,
+              "end": 122
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-7f3d54e9ccf9",
+      "block": "missing-context",
+      "pair": "missing-context-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Aster Relay West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I do not know whether my agreement says Enhanced or Standard. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ac9a3a68a17fc695",
+          "text": "The service desk for Harbor Instrument 15 is MD-AC9A3A. This record concerns only Harbor Instrument 15.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "900e3796b6eddea4",
+          "text": "The inspection calendar label for Aster Relay West is VB-927B06. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 54,
+              "end": 63
+            }
+          ]
+        },
+        {
+          "id": "6a4be0f418557922",
+          "text": "Aster Relay West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-6A4BE0. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 119,
+              "end": 128
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-1955f0bcd5a5",
+      "block": "subject-correction",
+      "pair": "subject-correction-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Aster Relay Annex 6, but my latest booking is for Aster Relay Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What recovery channel is listed for my latest booking?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "1b01658140ae76fc",
+          "text": "The recovery channel for Harbor Instrument 25 is MD-1B0165. This record concerns only Harbor Instrument 25.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "e95ee0c6e771e587",
+          "text": "The recovery channel for Aster Relay Upper is NX-E95EE0. No recovery channel for the separate Aster Relay Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "a756263f9505fadc",
+          "text": "The inspection calendar label for Aster Relay Upper is VB-A94EDF. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-E95EE0",
+        "sources": [
+          "e95ee0c6e771e587"
+        ]
+      }
+    },
+    {
+      "id": "support-137f28022a98",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Ember Observatory Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code has been approved?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ef4928eccfa74f2c",
+          "text": "The migration code for Harbor Instrument 24 is MD-EF4928. This record concerns only Harbor Instrument 24.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "443581c6e112b355",
+          "text": "The inspection calendar label for Ember Observatory Central is VB-170DA0. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 63,
+              "end": 72
+            }
+          ]
+        },
+        {
+          "id": "d2fa514cc5c90973",
+          "text": "Ember Observatory Central has a draft migration plan. The proposed migration code is NX-D2FA51. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 85,
+              "end": 94
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-008159f98f2e",
+      "block": "condition",
+      "pair": "condition-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Cobalt Ferry South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 63 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7a68d560ade392de",
+          "text": "The routing label for Harbor Instrument 12 is MD-7A68D5. This record concerns only Harbor Instrument 12.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "7b0653be1b2c574a",
+          "text": "Cobalt Ferry South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-7B0653. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 114,
+              "end": 123
+            }
+          ]
+        },
+        {
+          "id": "aafbc011be87c500",
+          "text": "The inspection calendar label for Cobalt Ferry South is VB-6DE6F3. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-7B0653",
+        "sources": [
+          "7b0653be1b2c574a"
+        ]
+      }
+    },
+    {
+      "id": "support-cc2e3c8fad6f",
+      "block": "scope",
+      "pair": "scope-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Cobalt Ferry Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a passenger arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2efa64985dea3833",
+          "text": "The dispatch code for Harbor Instrument 32 is MD-2EFA64. This record concerns only Harbor Instrument 32.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "4c9d9f242943d66a",
+          "text": "The inspection calendar label for Cobalt Ferry Lower is VB-40ED9D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        },
+        {
+          "id": "f1fd96f73de33c55",
+          "text": "Cobalt Ferry Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-F1FD96. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 138,
+              "end": 147
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-dc489d5160aa",
+      "block": "version",
+      "pair": "version-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Dunlin Foundry East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.3. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "20d812529fe4158c",
+          "text": "Dunlin Foundry East maintains a device family. For firmware release 4.2 only, the support channel is NX-20D812. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 101,
+              "end": 110
+            }
+          ]
+        },
+        {
+          "id": "a002f4e21df5deb8",
+          "text": "The inspection calendar label for Dunlin Foundry East is VB-F68CC2. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "2655b9ec6f746c27",
+          "text": "The support channel for Harbor Instrument 8 is MD-2655B9. This record concerns only Harbor Instrument 8.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-7d4f79d47a22",
+      "block": "condition",
+      "pair": "condition-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Dunlin Foundry South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 63 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "f8e01cdf874cbb44",
+          "text": "The inspection calendar label for Dunlin Foundry South is VB-68089B. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "4457a8c65f2f15e8",
+          "text": "The routing label for Harbor Instrument 13 is MD-4457A8. This record concerns only Harbor Instrument 13.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "620ca259eac6aa0f",
+          "text": "Dunlin Foundry South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-620CA2. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 116,
+              "end": 125
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-620CA2",
+        "sources": [
+          "620ca259eac6aa0f"
+        ]
+      }
+    },
+    {
+      "id": "support-11b1a5b2effc",
+      "block": "metric",
+      "pair": "metric-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Aster Relay Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies water consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "0dcbcd817e65637e",
+          "text": "Aster Relay Coastal records two separate measures. The reporting label for electricity consumption is NX-0DCBCD. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 102,
+              "end": 111
+            }
+          ]
+        },
+        {
+          "id": "80409d75cc8cd994",
+          "text": "The inspection calendar label for Aster Relay Coastal is VB-4CAA49. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "5b64f819361b409f",
+          "text": "The reporting label for Harbor Instrument 35 is MD-5B64F8. This record concerns only Harbor Instrument 35.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-1f92d0dbce08",
+      "block": "scope",
+      "pair": "scope-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Aster Relay Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a cargo arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "8ae2ccc539492518",
+          "text": "Aster Relay Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-8AE2CC. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 137,
+              "end": 146
+            }
+          ]
+        },
+        {
+          "id": "5f497ae9e4ff87c5",
+          "text": "The inspection calendar label for Aster Relay Lower is VB-A43428. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "65ec405108994630",
+          "text": "The dispatch code for Harbor Instrument 30 is MD-65EC40. This record concerns only Harbor Instrument 30.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-8AE2CC",
+        "sources": [
+          "8ae2ccc539492518"
+        ]
+      }
+    },
+    {
+      "id": "support-b9ce0292f163",
+      "block": "subject-correction",
+      "pair": "subject-correction-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Cobalt Ferry Annex 6, but my latest booking is for Cobalt Ferry Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What recovery channel is listed for my latest booking?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "8f2cb352fd6cbe1d",
+          "text": "The recovery channel for Cobalt Ferry Upper is NX-8F2CB3. No recovery channel for the separate Cobalt Ferry Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "0c2aacf84aa61957",
+          "text": "The recovery channel for Harbor Instrument 27 is MD-0C2AAC. This record concerns only Harbor Instrument 27.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "429cddbe57cc7a2b",
+          "text": "The inspection calendar label for Cobalt Ferry Upper is VB-0F0E08. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-8F2CB3",
+        "sources": [
+          "8f2cb352fd6cbe1d"
+        ]
+      }
+    },
+    {
+      "id": "support-ce93681cab70",
+      "block": "version",
+      "pair": "version-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Aster Relay East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.2. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "21e38884e7c616fb",
+          "text": "Aster Relay East maintains a device family. For firmware release 4.2 only, the support channel is NX-21E388. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 98,
+              "end": 107
+            }
+          ]
+        },
+        {
+          "id": "31d41b177a611ba7",
+          "text": "The inspection calendar label for Aster Relay East is VB-601681. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 54,
+              "end": 63
+            }
+          ]
+        },
+        {
+          "id": "e3dd289b583595b5",
+          "text": "The support channel for Harbor Instrument 5 is MD-E3DD28. This record concerns only Harbor Instrument 5.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-21E388",
+        "sources": [
+          "21e38884e7c616fb"
+        ]
+      }
+    },
+    {
+      "id": "support-ba1969383d54",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Aster Relay Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code has been approved?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "15c5f7cd54a28a16",
+          "text": "The inspection calendar label for Aster Relay Central is VB-70BD5D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "7e54e506117784ec",
+          "text": "The migration code for Harbor Instrument 20 is MD-7E54E5. This record concerns only Harbor Instrument 20.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "b98d46862e465258",
+          "text": "Aster Relay Central has a draft migration plan. The proposed migration code is NX-B98D46. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 79,
+              "end": 88
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-7e2aeefbfabb",
+      "block": "condition",
+      "pair": "condition-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Ember Observatory South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 63 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "c11570d9c2ba840a",
+          "text": "The inspection calendar label for Ember Observatory South is VB-3C1156. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "8a003b992b9b291b",
+          "text": "Ember Observatory South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-8A003B. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 119,
+              "end": 128
+            }
+          ]
+        },
+        {
+          "id": "fb8e61d596f5a49c",
+          "text": "The routing label for Harbor Instrument 14 is MD-FB8E61. This record concerns only Harbor Instrument 14.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-8A003B",
+        "sources": [
+          "8a003b992b9b291b"
+        ]
+      }
+    },
+    {
+      "id": "support-8acd35396097",
+      "block": "version",
+      "pair": "version-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Cobalt Ferry East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.2. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "57275fb4bd0b15bf",
+          "text": "The inspection calendar label for Cobalt Ferry East is VB-64703C. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "2bbf044f62ac6400",
+          "text": "Cobalt Ferry East maintains a device family. For firmware release 4.2 only, the support channel is NX-2BBF04. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 99,
+              "end": 108
+            }
+          ]
+        },
+        {
+          "id": "a7314dfeeacd5569",
+          "text": "The support channel for Harbor Instrument 7 is MD-A7314D. This record concerns only Harbor Instrument 7.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-2BBF04",
+        "sources": [
+          "2bbf044f62ac6400"
+        ]
+      }
+    },
+    {
+      "id": "support-fbfe1093a243",
+      "block": "scope",
+      "pair": "scope-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Aster Relay Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a passenger arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "8ae2ccc539492518",
+          "text": "Aster Relay Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-8AE2CC. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 137,
+              "end": 146
+            }
+          ]
+        },
+        {
+          "id": "5f497ae9e4ff87c5",
+          "text": "The inspection calendar label for Aster Relay Lower is VB-A43428. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "65ec405108994630",
+          "text": "The dispatch code for Harbor Instrument 30 is MD-65EC40. This record concerns only Harbor Instrument 30.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-9fd0dde12b08",
+      "block": "missing-context",
+      "pair": "missing-context-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Dunlin Foundry West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "My signed agreement says Enhanced. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2fd822ecc13a28e2",
+          "text": "The inspection calendar label for Dunlin Foundry West is VB-3BF60A. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "92911ada753223fa",
+          "text": "The service desk for Harbor Instrument 18 is MD-92911A. This record concerns only Harbor Instrument 18.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "126cabdbb6a2afe2",
+          "text": "Dunlin Foundry West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-126CAB. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 122,
+              "end": 131
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-126CAB",
+        "sources": [
+          "126cabdbb6a2afe2"
+        ]
+      }
+    },
+    {
+      "id": "support-54d8656f9826",
+      "block": "scope",
+      "pair": "scope-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Dunlin Foundry Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a cargo arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "db6697798eae2231",
+          "text": "The inspection calendar label for Dunlin Foundry Lower is VB-F00FA7. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "9678aaa011d5abe2",
+          "text": "The dispatch code for Harbor Instrument 33 is MD-9678AA. This record concerns only Harbor Instrument 33.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "c0d7deebd5b3e9c3",
+          "text": "Dunlin Foundry Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-C0D7DE. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 140,
+              "end": 149
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-C0D7DE",
+        "sources": [
+          "c0d7deebd5b3e9c3"
+        ]
+      }
+    },
+    {
+      "id": "support-0ee418069839",
+      "block": "version",
+      "pair": "version-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Ember Observatory East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.3. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "179f13e4d7562912",
+          "text": "The inspection calendar label for Ember Observatory East is VB-761519. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "894111211156acf8",
+          "text": "The support channel for Harbor Instrument 9 is MD-894111. This record concerns only Harbor Instrument 9.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "5d7bc1b089135ae5",
+          "text": "Ember Observatory East maintains a device family. For firmware release 4.2 only, the support channel is NX-5D7BC1. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 104,
+              "end": 113
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-28d382a7b2f4",
+      "block": "date",
+      "pair": "date-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Cobalt Ferry North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 July 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "20da9961504df57d",
+          "text": "The dispatch code for Harbor Instrument 2 is MD-20DA99. This record concerns only Harbor Instrument 2.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "dc9e44ba9cc233dd",
+          "text": "Cobalt Ferry North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-DC9E44. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 164,
+              "end": 173
+            }
+          ]
+        },
+        {
+          "id": "d87ec985a6c833c5",
+          "text": "The inspection calendar label for Cobalt Ferry North is VB-30A57E. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-896a9f135ddf",
+      "block": "scope",
+      "pair": "scope-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Dunlin Foundry Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a passenger arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "db6697798eae2231",
+          "text": "The inspection calendar label for Dunlin Foundry Lower is VB-F00FA7. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "9678aaa011d5abe2",
+          "text": "The dispatch code for Harbor Instrument 33 is MD-9678AA. This record concerns only Harbor Instrument 33.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "c0d7deebd5b3e9c3",
+          "text": "Dunlin Foundry Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-C0D7DE. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 140,
+              "end": 149
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-c1b64a3d83d5",
+      "block": "metric",
+      "pair": "metric-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Bracken Archive Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies electricity consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "3d71c48dc312c2be",
+          "text": "The inspection calendar label for Bracken Archive Coastal is VB-1C6F89. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "fb3713398332e5db",
+          "text": "Bracken Archive Coastal records two separate measures. The reporting label for electricity consumption is NX-FB3713. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 106,
+              "end": 115
+            }
+          ]
+        },
+        {
+          "id": "7b53fbd25f2c2ea4",
+          "text": "The reporting label for Harbor Instrument 36 is MD-7B53FB. This record concerns only Harbor Instrument 36.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-FB3713",
+        "sources": [
+          "fb3713398332e5db"
+        ]
+      }
+    },
+    {
+      "id": "support-24efb38b831c",
+      "block": "date",
+      "pair": "date-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Dunlin Foundry North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 April 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "dbb0e4b7616f0e1c",
+          "text": "Dunlin Foundry North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-DBB0E4. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 166,
+              "end": 175
+            }
+          ]
+        },
+        {
+          "id": "37453c81abcb39c4",
+          "text": "The inspection calendar label for Dunlin Foundry North is VB-DBE0DE. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "09832260a75c20ea",
+          "text": "The dispatch code for Harbor Instrument 3 is MD-098322. This record concerns only Harbor Instrument 3.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-DBB0E4",
+        "sources": [
+          "dbb0e4b7616f0e1c"
+        ]
+      }
+    },
+    {
+      "id": "support-5cb5126b1344",
+      "block": "subject-correction",
+      "pair": "subject-correction-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Bracken Archive Annex 6, but my latest booking is for Bracken Archive Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I have corrected the booking back to Bracken Archive Annex 6. What is its recovery channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "f16d7ef5740eee4e",
+          "text": "The recovery channel for Harbor Instrument 26 is MD-F16D7E. This record concerns only Harbor Instrument 26.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "1a7f021678eb5bec",
+          "text": "The recovery channel for Bracken Archive Upper is NX-1A7F02. No recovery channel for the separate Bracken Archive Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 50,
+              "end": 59
+            }
+          ]
+        },
+        {
+          "id": "dcfde1be53875327",
+          "text": "The inspection calendar label for Bracken Archive Upper is VB-A89FBB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-661b125c1e52",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Bracken Archive Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code does the draft propose?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "482478d38b760812",
+          "text": "The migration code for Harbor Instrument 21 is MD-482478. This record concerns only Harbor Instrument 21.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "c2269b7094ccde13",
+          "text": "Bracken Archive Central has a draft migration plan. The proposed migration code is NX-C2269B. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 83,
+              "end": 92
+            }
+          ]
+        },
+        {
+          "id": "5a01c0820cc8569a",
+          "text": "The inspection calendar label for Bracken Archive Central is VB-94D037. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-C2269B",
+        "sources": [
+          "c2269b7094ccde13"
+        ]
+      }
+    },
+    {
+      "id": "support-28d2e79eab7e",
+      "block": "condition",
+      "pair": "condition-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Ember Observatory South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 81 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "c11570d9c2ba840a",
+          "text": "The inspection calendar label for Ember Observatory South is VB-3C1156. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "8a003b992b9b291b",
+          "text": "Ember Observatory South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-8A003B. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 119,
+              "end": 128
+            }
+          ]
+        },
+        {
+          "id": "fb8e61d596f5a49c",
+          "text": "The routing label for Harbor Instrument 14 is MD-FB8E61. This record concerns only Harbor Instrument 14.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-ab19867fd920",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Dunlin Foundry Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code has been approved?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "668dce1d77407a4f",
+          "text": "Dunlin Foundry Central has a draft migration plan. The proposed migration code is NX-668DCE. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 82,
+              "end": 91
+            }
+          ]
+        },
+        {
+          "id": "8bff0d8ba8daaeee",
+          "text": "The inspection calendar label for Dunlin Foundry Central is VB-135B89. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "0c022bcf3b44d26c",
+          "text": "The migration code for Harbor Instrument 23 is MD-0C022B. This record concerns only Harbor Instrument 23.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-607312521d69",
+      "block": "subject-correction",
+      "pair": "subject-correction-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Ember Observatory Annex 6, but my latest booking is for Ember Observatory Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What recovery channel is listed for my latest booking?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7a2f58213bfeeeb6",
+          "text": "The inspection calendar label for Ember Observatory Upper is VB-1967FB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "6cde641d257f816d",
+          "text": "The recovery channel for Harbor Instrument 29 is MD-6CDE64. This record concerns only Harbor Instrument 29.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "4d707534e14429a8",
+          "text": "The recovery channel for Ember Observatory Upper is NX-4D7075. No recovery channel for the separate Ember Observatory Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 52,
+              "end": 61
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-4D7075",
+        "sources": [
+          "4d707534e14429a8"
+        ]
+      }
+    },
+    {
+      "id": "support-dd6202052132",
+      "block": "metric",
+      "pair": "metric-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Dunlin Foundry Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies electricity consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ff8b812bf6b9b167",
+          "text": "Dunlin Foundry Coastal records two separate measures. The reporting label for electricity consumption is NX-FF8B81. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 105,
+              "end": 114
+            }
+          ]
+        },
+        {
+          "id": "d5e967ce03eb59e8",
+          "text": "The inspection calendar label for Dunlin Foundry Coastal is VB-F380C0. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "0fb2b6abc061863c",
+          "text": "The reporting label for Harbor Instrument 38 is MD-0FB2B6. This record concerns only Harbor Instrument 38.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-FF8B81",
+        "sources": [
+          "ff8b812bf6b9b167"
+        ]
+      }
+    },
+    {
+      "id": "support-296933c06226",
+      "block": "version",
+      "pair": "version-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Aster Relay East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.3. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "21e38884e7c616fb",
+          "text": "Aster Relay East maintains a device family. For firmware release 4.2 only, the support channel is NX-21E388. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 98,
+              "end": 107
+            }
+          ]
+        },
+        {
+          "id": "31d41b177a611ba7",
+          "text": "The inspection calendar label for Aster Relay East is VB-601681. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 54,
+              "end": 63
+            }
+          ]
+        },
+        {
+          "id": "e3dd289b583595b5",
+          "text": "The support channel for Harbor Instrument 5 is MD-E3DD28. This record concerns only Harbor Instrument 5.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-d96e3f874aaa",
+      "block": "date",
+      "pair": "date-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Aster Relay North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 July 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ee062ef348604014",
+          "text": "The dispatch code for Harbor Instrument 0 is MD-EE062E. This record concerns only Harbor Instrument 0.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "8aa39c6113f20e24",
+          "text": "The inspection calendar label for Aster Relay North is VB-D966F1. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "7b1f9bdf517b6ca9",
+          "text": "Aster Relay North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-7B1F9B. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 163,
+              "end": 172
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-6220b798284a",
+      "block": "condition",
+      "pair": "condition-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Aster Relay South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 63 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "0212892a3c4e4f87",
+          "text": "The routing label for Harbor Instrument 10 is MD-021289. This record concerns only Harbor Instrument 10.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "98f9de3d2f2851c2",
+          "text": "The inspection calendar label for Aster Relay South is VB-D3336D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "951107677cfa2f33",
+          "text": "Aster Relay South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-951107. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 113,
+              "end": 122
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-951107",
+        "sources": [
+          "951107677cfa2f33"
+        ]
+      }
+    },
+    {
+      "id": "support-8b866ef3e693",
+      "block": "version",
+      "pair": "version-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Dunlin Foundry East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.2. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "20d812529fe4158c",
+          "text": "Dunlin Foundry East maintains a device family. For firmware release 4.2 only, the support channel is NX-20D812. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 101,
+              "end": 110
+            }
+          ]
+        },
+        {
+          "id": "a002f4e21df5deb8",
+          "text": "The inspection calendar label for Dunlin Foundry East is VB-F68CC2. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "2655b9ec6f746c27",
+          "text": "The support channel for Harbor Instrument 8 is MD-2655B9. This record concerns only Harbor Instrument 8.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-20D812",
+        "sources": [
+          "20d812529fe4158c"
+        ]
+      }
+    },
+    {
+      "id": "support-b7a00764b8b2",
+      "block": "metric",
+      "pair": "metric-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Ember Observatory Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies electricity consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "15b0b24ed139b4d7",
+          "text": "The reporting label for Harbor Instrument 39 is MD-15B0B2. This record concerns only Harbor Instrument 39.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        },
+        {
+          "id": "22d1d66561edba9a",
+          "text": "The inspection calendar label for Ember Observatory Coastal is VB-3C5724. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 63,
+              "end": 72
+            }
+          ]
+        },
+        {
+          "id": "f3ab77fd947e3d8a",
+          "text": "Ember Observatory Coastal records two separate measures. The reporting label for electricity consumption is NX-F3AB77. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 108,
+              "end": 117
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-F3AB77",
+        "sources": [
+          "f3ab77fd947e3d8a"
+        ]
+      }
+    },
+    {
+      "id": "support-f208c21ff474",
+      "block": "missing-context",
+      "pair": "missing-context-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Ember Observatory West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "My signed agreement says Enhanced. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "4260cb0856d640c6",
+          "text": "The service desk for Harbor Instrument 19 is MD-4260CB. This record concerns only Harbor Instrument 19.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "683c50d1895f046a",
+          "text": "Ember Observatory West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-683C50. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 125,
+              "end": 134
+            }
+          ]
+        },
+        {
+          "id": "f43be5f8ca0b6c3f",
+          "text": "The inspection calendar label for Ember Observatory West is VB-E046A4. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-683C50",
+        "sources": [
+          "683c50d1895f046a"
+        ]
+      }
+    },
+    {
+      "id": "support-7fcfc565f6fd",
+      "block": "condition",
+      "pair": "condition-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Cobalt Ferry South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 81 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7a68d560ade392de",
+          "text": "The routing label for Harbor Instrument 12 is MD-7A68D5. This record concerns only Harbor Instrument 12.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "7b0653be1b2c574a",
+          "text": "Cobalt Ferry South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-7B0653. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 114,
+              "end": 123
+            }
+          ]
+        },
+        {
+          "id": "aafbc011be87c500",
+          "text": "The inspection calendar label for Cobalt Ferry South is VB-6DE6F3. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-80bef961fc25",
+      "block": "date",
+      "pair": "date-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Bracken Archive North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 April 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2f6151922ac23c6e",
+          "text": "Bracken Archive North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-2F6151. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 167,
+              "end": 176
+            }
+          ]
+        },
+        {
+          "id": "1bff472b884b5e40",
+          "text": "The dispatch code for Harbor Instrument 1 is MD-1BFF47. This record concerns only Harbor Instrument 1.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "a286d18ec022522a",
+          "text": "The inspection calendar label for Bracken Archive North is VB-52A873. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-2F6151",
+        "sources": [
+          "2f6151922ac23c6e"
+        ]
+      }
+    },
+    {
+      "id": "support-2a960fe4bf4d",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Cobalt Ferry Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code has been approved?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "110d1a0331df18dd",
+          "text": "The inspection calendar label for Cobalt Ferry Central is VB-B3F789. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "7ba1d1db8496107b",
+          "text": "The migration code for Harbor Instrument 22 is MD-7BA1D1. This record concerns only Harbor Instrument 22.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "0c60a32a7d116b4b",
+          "text": "Cobalt Ferry Central has a draft migration plan. The proposed migration code is NX-0C60A3. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 80,
+              "end": 89
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-dbdae5a25405",
+      "block": "date",
+      "pair": "date-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Bracken Archive North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 July 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2f6151922ac23c6e",
+          "text": "Bracken Archive North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-2F6151. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 167,
+              "end": 176
+            }
+          ]
+        },
+        {
+          "id": "1bff472b884b5e40",
+          "text": "The dispatch code for Harbor Instrument 1 is MD-1BFF47. This record concerns only Harbor Instrument 1.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "a286d18ec022522a",
+          "text": "The inspection calendar label for Bracken Archive North is VB-52A873. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-96dbed758b8d",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Bracken Archive Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code has been approved?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "482478d38b760812",
+          "text": "The migration code for Harbor Instrument 21 is MD-482478. This record concerns only Harbor Instrument 21.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "c2269b7094ccde13",
+          "text": "Bracken Archive Central has a draft migration plan. The proposed migration code is NX-C2269B. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 83,
+              "end": 92
+            }
+          ]
+        },
+        {
+          "id": "5a01c0820cc8569a",
+          "text": "The inspection calendar label for Bracken Archive Central is VB-94D037. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-eac4988bcfd3",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Cobalt Ferry Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code does the draft propose?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "110d1a0331df18dd",
+          "text": "The inspection calendar label for Cobalt Ferry Central is VB-B3F789. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "7ba1d1db8496107b",
+          "text": "The migration code for Harbor Instrument 22 is MD-7BA1D1. This record concerns only Harbor Instrument 22.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "0c60a32a7d116b4b",
+          "text": "Cobalt Ferry Central has a draft migration plan. The proposed migration code is NX-0C60A3. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 80,
+              "end": 89
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-0C60A3",
+        "sources": [
+          "0c60a32a7d116b4b"
+        ]
+      }
+    },
+    {
+      "id": "support-d28b4b2a35a9",
+      "block": "date",
+      "pair": "date-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Dunlin Foundry North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 July 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "dbb0e4b7616f0e1c",
+          "text": "Dunlin Foundry North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-DBB0E4. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 166,
+              "end": 175
+            }
+          ]
+        },
+        {
+          "id": "37453c81abcb39c4",
+          "text": "The inspection calendar label for Dunlin Foundry North is VB-DBE0DE. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "09832260a75c20ea",
+          "text": "The dispatch code for Harbor Instrument 3 is MD-098322. This record concerns only Harbor Instrument 3.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-3f4264d7708d",
+      "block": "condition",
+      "pair": "condition-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Dunlin Foundry South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 81 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "f8e01cdf874cbb44",
+          "text": "The inspection calendar label for Dunlin Foundry South is VB-68089B. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "4457a8c65f2f15e8",
+          "text": "The routing label for Harbor Instrument 13 is MD-4457A8. This record concerns only Harbor Instrument 13.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "620ca259eac6aa0f",
+          "text": "Dunlin Foundry South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-620CA2. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 116,
+              "end": 125
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-b1d8c671cb5c",
+      "block": "subject-correction",
+      "pair": "subject-correction-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Cobalt Ferry Annex 6, but my latest booking is for Cobalt Ferry Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I have corrected the booking back to Cobalt Ferry Annex 6. What is its recovery channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "8f2cb352fd6cbe1d",
+          "text": "The recovery channel for Cobalt Ferry Upper is NX-8F2CB3. No recovery channel for the separate Cobalt Ferry Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "0c2aacf84aa61957",
+          "text": "The recovery channel for Harbor Instrument 27 is MD-0C2AAC. This record concerns only Harbor Instrument 27.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "429cddbe57cc7a2b",
+          "text": "The inspection calendar label for Cobalt Ferry Upper is VB-0F0E08. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-c6e7d22de863",
+      "block": "metric",
+      "pair": "metric-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Aster Relay Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies electricity consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "0dcbcd817e65637e",
+          "text": "Aster Relay Coastal records two separate measures. The reporting label for electricity consumption is NX-0DCBCD. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 102,
+              "end": 111
+            }
+          ]
+        },
+        {
+          "id": "80409d75cc8cd994",
+          "text": "The inspection calendar label for Aster Relay Coastal is VB-4CAA49. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "5b64f819361b409f",
+          "text": "The reporting label for Harbor Instrument 35 is MD-5B64F8. This record concerns only Harbor Instrument 35.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-0DCBCD",
+        "sources": [
+          "0dcbcd817e65637e"
+        ]
+      }
+    },
+    {
+      "id": "support-0e51970bea98",
+      "block": "version",
+      "pair": "version-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Ember Observatory East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.2. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "179f13e4d7562912",
+          "text": "The inspection calendar label for Ember Observatory East is VB-761519. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "894111211156acf8",
+          "text": "The support channel for Harbor Instrument 9 is MD-894111. This record concerns only Harbor Instrument 9.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "5d7bc1b089135ae5",
+          "text": "Ember Observatory East maintains a device family. For firmware release 4.2 only, the support channel is NX-5D7BC1. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 104,
+              "end": 113
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-5D7BC1",
+        "sources": [
+          "5d7bc1b089135ae5"
+        ]
+      }
+    },
+    {
+      "id": "support-6e203f012a8e",
+      "block": "date",
+      "pair": "date-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Cobalt Ferry North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 April 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "20da9961504df57d",
+          "text": "The dispatch code for Harbor Instrument 2 is MD-20DA99. This record concerns only Harbor Instrument 2.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "dc9e44ba9cc233dd",
+          "text": "Cobalt Ferry North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-DC9E44. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 164,
+              "end": 173
+            }
+          ]
+        },
+        {
+          "id": "d87ec985a6c833c5",
+          "text": "The inspection calendar label for Cobalt Ferry North is VB-30A57E. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-DC9E44",
+        "sources": [
+          "dc9e44ba9cc233dd"
+        ]
+      }
+    },
+    {
+      "id": "support-5260c27e740e",
+      "block": "missing-context",
+      "pair": "missing-context-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Bracken Archive West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I do not know whether my agreement says Enhanced or Standard. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "1f502e161c812cf2",
+          "text": "The service desk for Harbor Instrument 16 is MD-1F502E. This record concerns only Harbor Instrument 16.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "49b45abab1f72f77",
+          "text": "Bracken Archive West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-49B45A. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 123,
+              "end": 132
+            }
+          ]
+        },
+        {
+          "id": "b4afa8dd21b233ab",
+          "text": "The inspection calendar label for Bracken Archive West is VB-6C8640. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-a47827b244b0",
+      "block": "scope",
+      "pair": "scope-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Ember Observatory Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a cargo arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "b07d062a373fcc09",
+          "text": "Ember Observatory Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-B07D06. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 143,
+              "end": 152
+            }
+          ]
+        },
+        {
+          "id": "1cd05e6491002ec9",
+          "text": "The dispatch code for Harbor Instrument 34 is MD-1CD05E. This record concerns only Harbor Instrument 34.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "75e21b41b367e775",
+          "text": "The inspection calendar label for Ember Observatory Lower is VB-123CE9. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-B07D06",
+        "sources": [
+          "b07d062a373fcc09"
+        ]
+      }
+    },
+    {
+      "id": "support-99f9e1db322f",
+      "block": "scope",
+      "pair": "scope-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Cobalt Ferry Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a cargo arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2efa64985dea3833",
+          "text": "The dispatch code for Harbor Instrument 32 is MD-2EFA64. This record concerns only Harbor Instrument 32.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "4c9d9f242943d66a",
+          "text": "The inspection calendar label for Cobalt Ferry Lower is VB-40ED9D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 56,
+              "end": 65
+            }
+          ]
+        },
+        {
+          "id": "f1fd96f73de33c55",
+          "text": "Cobalt Ferry Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-F1FD96. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 138,
+              "end": 147
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-F1FD96",
+        "sources": [
+          "f1fd96f73de33c55"
+        ]
+      }
+    },
+    {
+      "id": "support-16cfa43df8d5",
+      "block": "metric",
+      "pair": "metric-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Bracken Archive Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies water consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "3d71c48dc312c2be",
+          "text": "The inspection calendar label for Bracken Archive Coastal is VB-1C6F89. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "fb3713398332e5db",
+          "text": "Bracken Archive Coastal records two separate measures. The reporting label for electricity consumption is NX-FB3713. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 106,
+              "end": 115
+            }
+          ]
+        },
+        {
+          "id": "7b53fbd25f2c2ea4",
+          "text": "The reporting label for Harbor Instrument 36 is MD-7B53FB. This record concerns only Harbor Instrument 36.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-6ea56073163c",
+      "block": "subject-correction",
+      "pair": "subject-correction-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Dunlin Foundry Annex 6, but my latest booking is for Dunlin Foundry Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I have corrected the booking back to Dunlin Foundry Annex 6. What is its recovery channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "a5ee057064f1689e",
+          "text": "The inspection calendar label for Dunlin Foundry Upper is VB-EEBC41. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "b57b2b175d7577a9",
+          "text": "The recovery channel for Dunlin Foundry Upper is NX-B57B2B. No recovery channel for the separate Dunlin Foundry Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "35d2786a92c6ad5d",
+          "text": "The recovery channel for Harbor Instrument 28 is MD-35D278. This record concerns only Harbor Instrument 28.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-76b0dd770de0",
+      "block": "version",
+      "pair": "version-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Bracken Archive East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.2. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "d78caf644f86f0ee",
+          "text": "Bracken Archive East maintains a device family. For firmware release 4.2 only, the support channel is NX-D78CAF. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 102,
+              "end": 111
+            }
+          ]
+        },
+        {
+          "id": "f7f24585ad949ce5",
+          "text": "The inspection calendar label for Bracken Archive East is VB-DB4333. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "5e6260891eefd599",
+          "text": "The support channel for Harbor Instrument 6 is MD-5E6260. This record concerns only Harbor Instrument 6.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-D78CAF",
+        "sources": [
+          "d78caf644f86f0ee"
+        ]
+      }
+    },
+    {
+      "id": "support-1b2418dfed40",
+      "block": "scope",
+      "pair": "scope-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Ember Observatory Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a passenger arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "b07d062a373fcc09",
+          "text": "Ember Observatory Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-B07D06. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 143,
+              "end": 152
+            }
+          ]
+        },
+        {
+          "id": "1cd05e6491002ec9",
+          "text": "The dispatch code for Harbor Instrument 34 is MD-1CD05E. This record concerns only Harbor Instrument 34.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "75e21b41b367e775",
+          "text": "The inspection calendar label for Ember Observatory Lower is VB-123CE9. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-493b07976015",
+      "block": "metric",
+      "pair": "metric-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Dunlin Foundry Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies water consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ff8b812bf6b9b167",
+          "text": "Dunlin Foundry Coastal records two separate measures. The reporting label for electricity consumption is NX-FF8B81. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 105,
+              "end": 114
+            }
+          ]
+        },
+        {
+          "id": "d5e967ce03eb59e8",
+          "text": "The inspection calendar label for Dunlin Foundry Coastal is VB-F380C0. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "0fb2b6abc061863c",
+          "text": "The reporting label for Harbor Instrument 38 is MD-0FB2B6. This record concerns only Harbor Instrument 38.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-d311c3af8c34",
+      "block": "subject-correction",
+      "pair": "subject-correction-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Dunlin Foundry Annex 6, but my latest booking is for Dunlin Foundry Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What recovery channel is listed for my latest booking?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "a5ee057064f1689e",
+          "text": "The inspection calendar label for Dunlin Foundry Upper is VB-EEBC41. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "b57b2b175d7577a9",
+          "text": "The recovery channel for Dunlin Foundry Upper is NX-B57B2B. No recovery channel for the separate Dunlin Foundry Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "35d2786a92c6ad5d",
+          "text": "The recovery channel for Harbor Instrument 28 is MD-35D278. This record concerns only Harbor Instrument 28.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-B57B2B",
+        "sources": [
+          "b57b2b175d7577a9"
+        ]
+      }
+    },
+    {
+      "id": "support-e16882ed48e8",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Ember Observatory Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code does the draft propose?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ef4928eccfa74f2c",
+          "text": "The migration code for Harbor Instrument 24 is MD-EF4928. This record concerns only Harbor Instrument 24.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "443581c6e112b355",
+          "text": "The inspection calendar label for Ember Observatory Central is VB-170DA0. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 63,
+              "end": 72
+            }
+          ]
+        },
+        {
+          "id": "d2fa514cc5c90973",
+          "text": "Ember Observatory Central has a draft migration plan. The proposed migration code is NX-D2FA51. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 85,
+              "end": 94
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-D2FA51",
+        "sources": [
+          "d2fa514cc5c90973"
+        ]
+      }
+    },
+    {
+      "id": "support-5213246e5726",
+      "block": "missing-context",
+      "pair": "missing-context-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Cobalt Ferry West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "My signed agreement says Enhanced. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "fca3215d7af9d919",
+          "text": "Cobalt Ferry West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-FCA321. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 120,
+              "end": 129
+            }
+          ]
+        },
+        {
+          "id": "03f352c9007935dd",
+          "text": "The service desk for Harbor Instrument 17 is MD-03F352. This record concerns only Harbor Instrument 17.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "a6ff66d9f275d593",
+          "text": "The inspection calendar label for Cobalt Ferry West is VB-8A4355. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-FCA321",
+        "sources": [
+          "fca3215d7af9d919"
+        ]
+      }
+    },
+    {
+      "id": "support-a887fd55d3cd",
+      "block": "subject-correction",
+      "pair": "subject-correction-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Bracken Archive Annex 6, but my latest booking is for Bracken Archive Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What recovery channel is listed for my latest booking?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "f16d7ef5740eee4e",
+          "text": "The recovery channel for Harbor Instrument 26 is MD-F16D7E. This record concerns only Harbor Instrument 26.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "1a7f021678eb5bec",
+          "text": "The recovery channel for Bracken Archive Upper is NX-1A7F02. No recovery channel for the separate Bracken Archive Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 50,
+              "end": 59
+            }
+          ]
+        },
+        {
+          "id": "dcfde1be53875327",
+          "text": "The inspection calendar label for Bracken Archive Upper is VB-A89FBB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-1A7F02",
+        "sources": [
+          "1a7f021678eb5bec"
+        ]
+      }
+    },
+    {
+      "id": "support-022a46a262ff",
+      "block": "condition",
+      "pair": "condition-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Bracken Archive South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 63 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2542b7012686242e",
+          "text": "The routing label for Harbor Instrument 11 is MD-2542B7. This record concerns only Harbor Instrument 11.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "f048a02a29904cf8",
+          "text": "The inspection calendar label for Bracken Archive South is VB-9582DB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        },
+        {
+          "id": "95936c242a4220ac",
+          "text": "Bracken Archive South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-95936C. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 117,
+              "end": 126
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-95936C",
+        "sources": [
+          "95936c242a4220ac"
+        ]
+      }
+    },
+    {
+      "id": "support-ed8b8580add5",
+      "block": "date",
+      "pair": "date-4",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Ember Observatory North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 April 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "446cf3ce82914a3d",
+          "text": "Ember Observatory North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-446CF3. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 169,
+              "end": 178
+            }
+          ]
+        },
+        {
+          "id": "c2be7e6b264e2531",
+          "text": "The inspection calendar label for Ember Observatory North is VB-BF3D55. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "90256ed4524e66f5",
+          "text": "The dispatch code for Harbor Instrument 4 is MD-90256E. This record concerns only Harbor Instrument 4.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-446CF3",
+        "sources": [
+          "446cf3ce82914a3d"
+        ]
+      }
+    },
+    {
+      "id": "support-e93274032e65",
+      "block": "date",
+      "pair": "date-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Aster Relay North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 April 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ee062ef348604014",
+          "text": "The dispatch code for Harbor Instrument 0 is MD-EE062E. This record concerns only Harbor Instrument 0.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "8aa39c6113f20e24",
+          "text": "The inspection calendar label for Aster Relay North is VB-D966F1. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "7b1f9bdf517b6ca9",
+          "text": "Aster Relay North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-7B1F9B. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 163,
+              "end": 172
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-7B1F9B",
+        "sources": [
+          "7b1f9bdf517b6ca9"
+        ]
+      }
+    },
+    {
+      "id": "support-a40d6b564203",
+      "block": "missing-context",
+      "pair": "missing-context-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Bracken Archive West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "My signed agreement says Enhanced. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "1f502e161c812cf2",
+          "text": "The service desk for Harbor Instrument 16 is MD-1F502E. This record concerns only Harbor Instrument 16.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "49b45abab1f72f77",
+          "text": "Bracken Archive West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-49B45A. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 123,
+              "end": 132
+            }
+          ]
+        },
+        {
+          "id": "b4afa8dd21b233ab",
+          "text": "The inspection calendar label for Bracken Archive West is VB-6C8640. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-49B45A",
+        "sources": [
+          "49b45abab1f72f77"
+        ]
+      }
+    },
+    {
+      "id": "support-69ebae6b7bad",
+      "block": "missing-context",
+      "pair": "missing-context-3",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Dunlin Foundry West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I do not know whether my agreement says Enhanced or Standard. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2fd822ecc13a28e2",
+          "text": "The inspection calendar label for Dunlin Foundry West is VB-3BF60A. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "92911ada753223fa",
+          "text": "The service desk for Harbor Instrument 18 is MD-92911A. This record concerns only Harbor Instrument 18.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "126cabdbb6a2afe2",
+          "text": "Dunlin Foundry West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-126CAB. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 122,
+              "end": 131
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-779b32b69f94",
+      "block": "subject-correction",
+      "pair": "subject-correction-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Ember Observatory Annex 6, but my latest booking is for Ember Observatory Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I have corrected the booking back to Ember Observatory Annex 6. What is its recovery channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7a2f58213bfeeeb6",
+          "text": "The inspection calendar label for Ember Observatory Upper is VB-1967FB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "6cde641d257f816d",
+          "text": "The recovery channel for Harbor Instrument 29 is MD-6CDE64. This record concerns only Harbor Instrument 29.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "4d707534e14429a8",
+          "text": "The recovery channel for Ember Observatory Upper is NX-4D7075. No recovery channel for the separate Ember Observatory Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 52,
+              "end": 61
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-102b6bb83d81",
+      "block": "condition",
+      "pair": "condition-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I have a shipment for Bracken Archive South."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "The shipment weighs 81 kilograms. Which routing label applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "2542b7012686242e",
+          "text": "The routing label for Harbor Instrument 11 is MD-2542B7. This record concerns only Harbor Instrument 11.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "f048a02a29904cf8",
+          "text": "The inspection calendar label for Bracken Archive South is VB-9582DB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        },
+        {
+          "id": "95936c242a4220ac",
+          "text": "Bracken Archive South routes shipments weighing at least 40 kilograms but less than 80 kilograms using routing label NX-95936C. No other weight band is documented here.",
+          "spans": [
+            {
+              "start": 117,
+              "end": 126
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-a2e330bcad53",
+      "block": "metric",
+      "pair": "metric-2",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Cobalt Ferry Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies electricity consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7d29834372cbecd3",
+          "text": "The reporting label for Harbor Instrument 37 is MD-7D2983. This record concerns only Harbor Instrument 37.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        },
+        {
+          "id": "1afc697c0651ab27",
+          "text": "Cobalt Ferry Coastal records two separate measures. The reporting label for electricity consumption is NX-1AFC69. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 103,
+              "end": 112
+            }
+          ]
+        },
+        {
+          "id": "9b8af20544a18d61",
+          "text": "The inspection calendar label for Cobalt Ferry Coastal is VB-73057C. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-1AFC69",
+        "sources": [
+          "1afc697c0651ab27"
+        ]
+      }
+    },
+    {
+      "id": "support-9320bcbfa34c",
+      "block": "missing-context",
+      "pair": "missing-context-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Ember Observatory West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I do not know whether my agreement says Enhanced or Standard. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "4260cb0856d640c6",
+          "text": "The service desk for Harbor Instrument 19 is MD-4260CB. This record concerns only Harbor Instrument 19.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "683c50d1895f046a",
+          "text": "Ember Observatory West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-683C50. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 125,
+              "end": 134
+            }
+          ]
+        },
+        {
+          "id": "f43be5f8ca0b6c3f",
+          "text": "The inspection calendar label for Ember Observatory West is VB-E046A4. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-e5bd385776a1",
+      "block": "version",
+      "pair": "version-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Bracken Archive East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.3. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "d78caf644f86f0ee",
+          "text": "Bracken Archive East maintains a device family. For firmware release 4.2 only, the support channel is NX-D78CAF. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 102,
+              "end": 111
+            }
+          ]
+        },
+        {
+          "id": "f7f24585ad949ce5",
+          "text": "The inspection calendar label for Bracken Archive East is VB-DB4333. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        },
+        {
+          "id": "5e6260891eefd599",
+          "text": "The support channel for Harbor Instrument 6 is MD-5E6260. This record concerns only Harbor Instrument 6.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-ddfe2f20ef80",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-3",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Dunlin Foundry Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code does the draft propose?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "668dce1d77407a4f",
+          "text": "Dunlin Foundry Central has a draft migration plan. The proposed migration code is NX-668DCE. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 82,
+              "end": 91
+            }
+          ]
+        },
+        {
+          "id": "8bff0d8ba8daaeee",
+          "text": "The inspection calendar label for Dunlin Foundry Central is VB-135B89. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 60,
+              "end": 69
+            }
+          ]
+        },
+        {
+          "id": "0c022bcf3b44d26c",
+          "text": "The migration code for Harbor Instrument 23 is MD-0C022B. This record concerns only Harbor Instrument 23.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-668DCE",
+        "sources": [
+          "668dce1d77407a4f"
+        ]
+      }
+    },
+    {
+      "id": "support-7075b0eb039f",
+      "block": "subject-correction",
+      "pair": "subject-correction-0",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We first discussed Aster Relay Annex 6, but my latest booking is for Aster Relay Upper."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "I have corrected the booking back to Aster Relay Annex 6. What is its recovery channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "1b01658140ae76fc",
+          "text": "The recovery channel for Harbor Instrument 25 is MD-1B0165. This record concerns only Harbor Instrument 25.",
+          "spans": [
+            {
+              "start": 49,
+              "end": 58
+            }
+          ]
+        },
+        {
+          "id": "e95ee0c6e771e587",
+          "text": "The recovery channel for Aster Relay Upper is NX-E95EE0. No recovery channel for the separate Aster Relay Annex 6 facility is listed in this record.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "a756263f9505fadc",
+          "text": "The inspection calendar label for Aster Relay Upper is VB-A94EDF. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-c74cd0146de8",
+      "block": "scope",
+      "pair": "scope-1",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Bracken Archive Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a passenger arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "acfa88b065d82baf",
+          "text": "The dispatch code for Harbor Instrument 31 is MD-ACFA88. This record concerns only Harbor Instrument 31.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "db19f4106eb708e1",
+          "text": "Bracken Archive Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-DB19F4. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 141,
+              "end": 150
+            }
+          ]
+        },
+        {
+          "id": "af0dc8da0ebed35a",
+          "text": "The inspection calendar label for Bracken Archive Lower is VB-1A69DB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-b102cdb1974f",
+      "block": "metric",
+      "pair": "metric-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am filing consumption measurements for Cobalt Ferry Coastal."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which reporting label identifies water consumption?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "7d29834372cbecd3",
+          "text": "The reporting label for Harbor Instrument 37 is MD-7D2983. This record concerns only Harbor Instrument 37.",
+          "spans": [
+            {
+              "start": 48,
+              "end": 57
+            }
+          ]
+        },
+        {
+          "id": "1afc697c0651ab27",
+          "text": "Cobalt Ferry Coastal records two separate measures. The reporting label for electricity consumption is NX-1AFC69. Water consumption uses a different label, which is absent from this record.",
+          "spans": [
+            {
+              "start": 103,
+              "end": 112
+            }
+          ]
+        },
+        {
+          "id": "9b8af20544a18d61",
+          "text": "The inspection calendar label for Cobalt Ferry Coastal is VB-73057C. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 58,
+              "end": 67
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-a366b7ec5017",
+      "block": "date",
+      "pair": "date-4",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am arranging a visit to Ember Observatory North."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "Which dispatch code applies to my visit on 12 July 2027?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "446cf3ce82914a3d",
+          "text": "Ember Observatory North operates a seasonal service. This schedule applies from 1 March 2027 through 30 June 2027, inclusive. During that interval, the dispatch code is NX-446CF3. No schedule for any other interval is supplied.",
+          "spans": [
+            {
+              "start": 169,
+              "end": 178
+            }
+          ]
+        },
+        {
+          "id": "c2be7e6b264e2531",
+          "text": "The inspection calendar label for Ember Observatory North is VB-BF3D55. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 61,
+              "end": 70
+            }
+          ]
+        },
+        {
+          "id": "90256ed4524e66f5",
+          "text": "The dispatch code for Harbor Instrument 4 is MD-90256E. This record concerns only Harbor Instrument 4.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-b7950bcd860a",
+      "block": "version",
+      "pair": "version-2",
+      "category": "unsupported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We have a device maintained by Cobalt Ferry East."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "It runs firmware 4.3. What is its support channel?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "57275fb4bd0b15bf",
+          "text": "The inspection calendar label for Cobalt Ferry East is VB-64703C. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 55,
+              "end": 64
+            }
+          ]
+        },
+        {
+          "id": "2bbf044f62ac6400",
+          "text": "Cobalt Ferry East maintains a device family. For firmware release 4.2 only, the support channel is NX-2BBF04. This note does not specify channels for other releases.",
+          "spans": [
+            {
+              "start": 99,
+              "end": 108
+            }
+          ]
+        },
+        {
+          "id": "a7314dfeeacd5569",
+          "text": "The support channel for Harbor Instrument 7 is MD-A7314D. This record concerns only Harbor Instrument 7.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": null,
+        "sources": []
+      }
+    },
+    {
+      "id": "support-e8fc41e0aef1",
+      "block": "proposed-not-approved",
+      "pair": "proposed-not-approved-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "We are reviewing the migration at Aster Relay Central."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "What migration code does the draft propose?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "15c5f7cd54a28a16",
+          "text": "The inspection calendar label for Aster Relay Central is VB-70BD5D. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 57,
+              "end": 66
+            }
+          ]
+        },
+        {
+          "id": "7e54e506117784ec",
+          "text": "The migration code for Harbor Instrument 20 is MD-7E54E5. This record concerns only Harbor Instrument 20.",
+          "spans": [
+            {
+              "start": 47,
+              "end": 56
+            }
+          ]
+        },
+        {
+          "id": "b98d46862e465258",
+          "text": "Aster Relay Central has a draft migration plan. The proposed migration code is NX-B98D46. That code has not been approved. The approved migration code is not recorded in these documents.",
+          "spans": [
+            {
+              "start": 79,
+              "end": 88
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-B98D46",
+        "sources": [
+          "b98d46862e465258"
+        ]
+      }
+    },
+    {
+      "id": "support-44a70369efe5",
+      "block": "scope",
+      "pair": "scope-1",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I am coordinating an arrival at Bracken Archive Lower."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "This is a cargo arrival through the northern terminal. Which dispatch code applies?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "acfa88b065d82baf",
+          "text": "The dispatch code for Harbor Instrument 31 is MD-ACFA88. This record concerns only Harbor Instrument 31.",
+          "spans": [
+            {
+              "start": 46,
+              "end": 55
+            }
+          ]
+        },
+        {
+          "id": "db19f4106eb708e1",
+          "text": "Bracken Archive Lower runs passenger and cargo operations. For cargo operations arriving through the northern terminal, the dispatch code is NX-DB19F4. Passenger and southern-terminal routing are not specified.",
+          "spans": [
+            {
+              "start": 141,
+              "end": 150
+            }
+          ]
+        },
+        {
+          "id": "af0dc8da0ebed35a",
+          "text": "The inspection calendar label for Bracken Archive Lower is VB-1A69DB. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 59,
+              "end": 68
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-DB19F4",
+        "sources": [
+          "db19f4106eb708e1"
+        ]
+      }
+    },
+    {
+      "id": "support-d27c0a860e08",
+      "block": "missing-context",
+      "pair": "missing-context-0",
+      "category": "supported",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I need help with my account at Aster Relay West."
+        },
+        {
+          "role": "assistant",
+          "content": "I can use the supplied records to check that."
+        },
+        {
+          "role": "user",
+          "content": "My signed agreement says Enhanced. What service desk should I use?"
+        }
+      ],
+      "sources": [
+        {
+          "id": "ac9a3a68a17fc695",
+          "text": "The service desk for Harbor Instrument 15 is MD-AC9A3A. This record concerns only Harbor Instrument 15.",
+          "spans": [
+            {
+              "start": 45,
+              "end": 54
+            }
+          ]
+        },
+        {
+          "id": "900e3796b6eddea4",
+          "text": "The inspection calendar label for Aster Relay West is VB-927B06. This identifies a calendar, not a service route or consumption measure.",
+          "spans": [
+            {
+              "start": 54,
+              "end": 63
+            }
+          ]
+        },
+        {
+          "id": "6a4be0f418557922",
+          "text": "Aster Relay West offers two service tiers. For an account with the signed Enhanced tier agreement, the service desk is NX-6A4BE0. This record does not give the desk for Standard accounts.",
+          "spans": [
+            {
+              "start": 119,
+              "end": 128
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "answer": "NX-6A4BE0",
+        "sources": [
+          "6a4be0f418557922"
+        ]
+      }
+    }
+  ]
+}

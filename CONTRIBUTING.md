@@ -4,6 +4,11 @@ The native deployment candidate is the supported development path. It implements
 
 The home for protocol and client development is [neuroshard-ai/neuroshard](https://github.com/neuroshard-ai/neuroshard). A NeuroShard website account is not required to contribute or operate a native node. Keep the public tree focused on code, tests, configuration, network manifests and technical documentation.
 
+For a practical starting point, use the [contributor preview](docs/CONTRIBUTOR_ALPHA.md):
+run a testnet worker or package a complete assistant correction for review. Signed
+examples replay locally and can be exported as training data after explicit review;
+they do not automatically update weights or earn tokens.
+
 ## Install and check the native implementation
 
 Use Linux x86_64 and Python 3.10–3.12 for the recorded CPU profile:

@@ -1,0 +1,49 @@
+{
+  "format": "neuroshard-granite-shard-settlement-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 6,
+  "planning_cap_usd": 10,
+  "disk_gib": 40,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "granite-shard-settlement",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "prior_resources": {
+    "path": "config/experiments/granite-shard-audit2-report.json",
+    "sha256": "793d9a5c07b8e8d0cffd9b190f95b4af4c238565dde962a1643f101b8554c277"
+  },
+  "budget_scope": "One host of six for the settlement execution (three owners, one light auditor, two validators), each its own allocation: r7i.4xlarge at the canonical eight threads, six-hour expiry and ten-dollar allowance (at most $60). Setup/copy 20/10 minutes; fetch 30 minutes; two serving passes of at most one hour; two audits of at most 40 minutes; signing, challenge and validation phases of at most 10, 15 and 30 minutes. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-10-01T23:17:01Z",
+      "commit": "d76425458d58e03273d582912dc5f3f0d98412ec",
+      "outcome": "Six hosts allocated and retired after a bootstrap failure; nothing remained ($0.33)."
+    },
+    {
+      "utc": "2026-10-01T23:59:00Z",
+      "commit": "e51496ef75fd2b9272beac909ff3d057d36cb275",
+      "outcome": "Six hosts fetched and were retired after the bond-signing failure; nothing remained ($0.44)."
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "format": "neuroshard-assistant-experience-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "candidates": [
+    {
+      "instance_type": "g6e.xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "HEU7PA78QPB8SDYY",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.861
+      }
+    },
+    {
+      "instance_type": "g6e.2xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 2.2421,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    },
+    {
+      "instance_type": "g5.2xlarge",
+      "gpu_name": "NVIDIA A10G",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.212,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    }
+  ],
+  "placement": "Try candidates in order, each in every controller-VPC subnet whose zone offers it; the first placement is the only host.",
+  "hours": 8,
+  "planning_cap_usd": 21,
+  "disk_gib": 120,
+  "disk_type": "gp3",
+  "setup_seconds": 1800,
+  "copy_seconds": 1200,
+  "image": {
+    "ImageId": "ami-0efd0f6e601922cad",
+    "Name": "Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04) 20260911",
+    "CreationDate": "2026-09-11T14:09:30.000Z",
+    "OwnerId": "898082745236",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": true,
+  "purpose": "assistant-experience-gpu",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 2147483648,
+  "prior_resources": {
+    "path": "config/experiments/assistant-workflow-canonical-report.json",
+    "sha256": "e8d4eb8370c8bc558351ce1905486149bb05978a0e2d4da5d20fc39f9f2664fd"
+  },
+  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for the date-base repairs: the pinned compositional small module sampled on training cases, verified repairs, both compositional arms continued through one preference phase, and both evaluated with the parent on integration and opened development cases; eight-hour expiry and $21 worst-case allowance within the $1,000 ceiling. No fresh evaluation data.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-27T14:20:28Z",
+      "commit": "19877504f646aab1315f8cc3f8e403f0494dcca8",
+      "outcome": "RunInstances refused g6e.xlarge in the controller subnet (us-east-1f) before any instance started; temporary security group retired; no compute spent. Placement now uses an offering subnet in the same VPC."
+    },
+    {
+      "utc": "2026-09-27T14:47:07Z",
+      "commit": "5877b4da6c9516f069753ad75518a850eb40f48b",
+      "outcome": "InsufficientInstanceCapacity for g6e.xlarge in us-east-1a through 1d; no instance started, nothing spent. Added equivalent-GPU and A10G fallbacks and an eight-hour deadline for the slower GPU."
+    },
+    {
+      "utc": "2026-09-27T18:43:00Z",
+      "commit": "fc4e1923a631e0a548c366cde45bdc19221f5f54",
+      "outcome": "On g5.2xlarge: 2,640 rollouts, 722 selected verified trajectories and 256 replay answers written and pinned for retraining. The attempt's trainer draws adapter initial values with a CPU generator into CUDA tensors, which PyTorch rejects, so its addition arm and integration cannot complete."
+    },
+    {
+      "utc": "2026-09-27T20:41:09Z",
+      "commit": "621125dbb3fdc9e26d5a2a8bf667a5126a3217e4",
+      "outcome": "Round 1 retrained both arms from the pinned collection and fitted gates on g5.2xlarge ($1.87)."
+    },
+    {
+      "utc": "2026-09-27T23:25:59Z",
+      "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
+      "outcome": "Round 2 re-verified the collection and built 37 pairs, then stopped with KeyError: 'round2' because the worker passed runtime parameters where the pinned round-1 digests were read; $0.22."
+    },
+    {
+      "utc": "2026-09-27T23:25:59Z",
+      "commit": "d836fefb83ed3d0bde71d3361f9300558c219bfe",
+      "outcome": "Round 2 re-verified the collection and built 37 pairs, then stopped with KeyError: 'round2' because the worker passed runtime parameters where the pinned round-1 digests were read; $0.22."
+    },
+    {
+      "utc": "2026-09-28T01:26:45Z",
+      "commit": "9cd1c70ce5d51a6f826a6a8244152d479d8ad8fb",
+      "outcome": "Round 2 continued both arms on 37 verified version-choice pairs and refitted gates ($1.84)."
+    },
+    {
+      "utc": "2026-09-28T08:27:46Z",
+      "commit": "d592c69ee60bb95d8aca5fac904134a2d1c88156",
+      "outcome": "Round 3 sampled the round-2 addition, found 2 divergence pairs, continued both arms and refitted gates ($5.38)."
+    },
+    {
+      "utc": "2026-09-28T22:51:44Z",
+      "commit": "ec57db9da43e683823c9c61b59c1c711d7912b75",
+      "outcome": "Round 4 goal-guided repairs: 49 verified repairs, 15 pairs, both arms continued ($3.67)."
+    },
+    {
+      "utc": "2026-09-29T15:49:19Z",
+      "commit": "8b986409d695c64bb34414de965e30ad68206c24",
+      "outcome": "Methodology study stopped at startup: the worker passed runtime parameters instead of the pinned inventory (KeyError: collection) before reading any data ($0.22)."
+    },
+    {
+      "utc": "2026-09-29T23:09:00Z",
+      "commit": "304f97c8b4da9331ff4f5d035b3c5e21f8db6d4a",
+      "outcome": "Methodology study completed: update 74, small 71, large 69, committee 65; neither method carried forward ($5.18)."
+    },
+    {
+      "utc": "2026-09-30T11:15:00Z",
+      "commit": "94f378b",
+      "outcome": "Growth study completed: update 80, small 74 (2 lost parent successes), committee 59; no third attempt ($4.15 including a capacity refusal)."
+    },
+    {
+      "utc": "2026-09-30T19:26:00Z",
+      "commit": "1b8a7f4",
+      "outcome": "Compositional study completed: small 73 with 3 lost parent successes, update 77; no third attempt ($2.25)."
+    }
+  ],
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-repairs-inputs",
+    "files": [
+      "experience.json",
+      "rollouts.jsonl.gz",
+      "trajectories.jsonl.gz",
+      "replay.json",
+      "replay.jsonl.gz",
+      "rollouts-round3.jsonl.gz",
+      "repairs-round4.jsonl.gz",
+      "train2/experience.json",
+      "train2/rollouts.jsonl.gz",
+      "train2/trajectories.jsonl.gz",
+      "train3/experience.json",
+      "train3/rollouts.jsonl.gz",
+      "train3/trajectories.jsonl.gz",
+      "compose1/experience.json",
+      "compose1/rollouts.jsonl.gz",
+      "compose1/trajectories.jsonl.gz",
+      "compose2/experience.json",
+      "compose2/rollouts.jsonl.gz",
+      "compose2/trajectories.jsonl.gz",
+      "update-checkpoint/manifest.json",
+      "update-checkpoint/trainable.safetensors",
+      "small-checkpoint/manifest.json",
+      "small-checkpoint/trainable.safetensors"
+    ],
+    "maximum_bytes": 288105865
+  }
+}

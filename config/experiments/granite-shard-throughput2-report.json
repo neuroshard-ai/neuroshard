@@ -1,0 +1,124 @@
+{
+  "format": "neuroshard-granite-shard-throughput-report/1",
+  "attempt": 2,
+  "result": "config/experiments/granite-shard-throughput2-result.json",
+  "result_sha256": "0d51d45965f69f7297b64a93d7c46b3770aebff4827149b28bb6d90512c67c4e",
+  "commit": "b143cf5979876000936f0c1ab4eee611815a8ca9",
+  "passed": true,
+  "checks": {
+    "sequential_agreement": true,
+    "concurrent_agreement": true,
+    "overlap": true,
+    "throughput": true
+  },
+  "report": {
+    "passed": true,
+    "episodes_seconds": {
+      "sequential": 1584.924870837,
+      "concurrent": 704.5132855000002
+    },
+    "throughput_ratio": 2.2496735029094066,
+    "single_host_episode_seconds": 1547.4260831889999,
+    "ratio_vs_single_host": 2.1964469869305248,
+    "peak_in_flight": 3,
+    "owner_busy_seconds": {
+      "sequential": [
+        509.8794281420079,
+        525.0142824479935,
+        517.5099345709933
+      ],
+      "concurrent": [
+        525.0438996400042,
+        544.8003240730077,
+        535.2061079500061
+      ]
+    },
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "phases": {
+    "sequential": {
+      "passed": true,
+      "correct": 18,
+      "mismatches": [],
+      "p95_seconds": 92.70170774799999,
+      "owner_peak_rss_bytes": {
+        "0": 5233987584,
+        "1": 4846616576,
+        "2": 4846534656
+      },
+      "sent_bytes": {
+        "0": 304112640,
+        "1": 304112640,
+        "2": 45209600
+      }
+    },
+    "concurrent": {
+      "passed": true,
+      "correct": 18,
+      "mismatches": [],
+      "p95_seconds": 115.91341403299998,
+      "owner_peak_rss_bytes": {
+        "0": 5225472000,
+        "1": 4821643264,
+        "2": 4830384128
+      },
+      "sent_bytes": {
+        "0": 304112640,
+        "1": 304112640,
+        "2": 45209600
+      }
+    }
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 7476.194906000001,
+    "conservative_compute_usd": 2.198001302364,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T08:15:48.090378+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07eb8505b95492d39"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 2467.631541,
+        "conservative_compute_usd": 0.7254836730540001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T08:16:19.770538+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-09126c6ea238f2f67"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 2492.000269,
+        "conservative_compute_usd": 0.732648079086,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T08:16:51.547115+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01f4f893909c4eb24"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 2516.563096,
+        "conservative_compute_usd": 0.739869550224,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

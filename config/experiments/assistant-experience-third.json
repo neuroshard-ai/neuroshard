@@ -1,0 +1,70 @@
+{
+  "format": "neuroshard-assistant-experience-third/1",
+  "status": "Declared on October 2, 2026, after both confirmations failed and the methodology, growth, compositional and repair studies found no low-rank candidate, and before any look at the confirmation3 split. Authorized by the project owner, who chose this amendment.",
+  "amendment": {
+    "a2_learning_unit": "A bounded, separable learned update: tensors stored apart from the frozen backbone, applied only when the selector chooses them, and removed for rollback by serving the parent, while training a small fraction of the backbone's parameters. A low-rank module qualifies, and so does an update of declared projections.",
+    "unchanged": "Beat the unchanged parent on frozen development and fresh confirmation gates, lose no parent success, report training and serving costs and bound latency.",
+    "moves_to_a3": "Whether low-rank modules can match updates of the same projections joins A3's comparison of separate modules with repeated shared-weight updates, by cumulative retention across cohorts under a declared budget.",
+    "supersedes": "The growth_claim of the learning contract for A2. The candidate is not compared with a separate equal-data update, because it is that update."
+  },
+  "motivation": "On confirmation2 the round-4 update control solved 182/192 episodes with no lost parent success at a p95 of 106.1 s, while the addition failed on preservation and update parity. Those results are spent and earn no credit. They motivated this amendment, so only the sealed confirmation3 split can decide it.",
+  "learning_contract": {
+    "path": "config/experiments/assistant-experience-learning.json",
+    "sha256": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c"
+  },
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "candidate": {
+    "system": "update",
+    "round": 4,
+    "description": "Updated q_proj and v_proj matrices in layers 32..39 of the pinned Granite 4.1 3B, stored apart from the frozen parent and switched on once per episode by the round-4 gate. Anchors are served by the parent.",
+    "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865",
+    "integration_sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7",
+    "training_report": "config/experiments/assistant-experience-round4-report.json",
+    "trained_parameters": 62914560,
+    "backbone_parameters": 3402836480,
+    "training": "None. The pinned round-4 arm and gate, unchanged: no rollout, training or gate refit.",
+    "serving": "prefix-cache"
+  },
+  "development_gate": {
+    "cases": 24,
+    "minimum_total": 18,
+    "minimum_net_vs_parent": 4,
+    "maximum_lost_parent_successes": 0,
+    "protected": "Every canonical parent development success and every canonical anchor success.",
+    "p95_seconds": 180,
+    "latency": "Episode wall time plus the parent feature forward pass that selects its model for that episode."
+  },
+  "a1_served": "The learning contract's a1_served rule applied to the version that would be served: the pinned parent plus the update, selected by its gate under prefix-cache serving. At least 6/8 primitive development workflows with one per primitive family, the original anchor gate with every protected anchor routed to the parent, p95 at most 180 s including selection, and two fresh-process replays matching exactly.",
+  "confirmation_gate": {
+    "data": "config/experiments/assistant-workflow-data-confirmation3.json",
+    "cases": 192,
+    "opens": "Once, only after the update's development gate and A1 served-system check pass.",
+    "serving": "Both systems, the parent control included, under the declared prefix-cache serving.",
+    "minimum_total": 154,
+    "minimum_per_family": 16,
+    "minimum_net_vs_parent": 20,
+    "maximum_lost_parent_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092039,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_vs_parent_strictly_above": 0,
+    "p95_seconds": 180,
+    "latency": "Episode wall time plus, for the routed update, the parent feature forward pass that selects its model for that episode."
+  },
+  "not_applicable": "Comparisons with a separate update control (net, p95 ratio and lower bound against the update) do not apply: the candidate is the update.",
+  "execution": "One CPU host serves the update's version on the 24 opened development cases with selection, answers the forced-arm anchors, then replays the two declared episodes in a fresh process. Only after both checks pass, two CPU hosts run confirmation3 once, one system each.",
+  "outcome": {
+    "pass": "A2 is established for this capability. With the A1 served-system check, A1's usable-foundation condition is also met on fresh data; A1 closes once its remaining items are recorded. A3 can begin.",
+    "fail": "A2 stays open and confirmation3 is spent. Another attempt needs a split from a new generator seed."
+  },
+  "stop_rule": "Publish failed gates unchanged. One attempt per stage; a failed or interrupted run needs a new execution amendment.",
+  "budget": {
+    "ceiling_usd": 40,
+    "expected_usd": 10,
+    "note": "Three r7i.4xlarge host runs under their resource contracts: development (at most $8), then the parent and update confirmation hosts (at most $12 each)."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false,
+  "checklist_credit": "Only a confirmation pass counts toward A2; development is its precondition."
+}

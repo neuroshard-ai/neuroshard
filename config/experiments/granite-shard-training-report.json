@@ -1,0 +1,119 @@
+{
+  "format": "neuroshard-granite-shard-training-report/1",
+  "result": "config/experiments/granite-shard-training-result.json",
+  "result_sha256": "d4875c959bcff1c72807821bb71a628feab255459afe326dac1668994c0677e0",
+  "commit": "b789206aa62df5a004ab31d4696908dc20c637f7",
+  "passed": false,
+  "checks": {
+    "complete": true,
+    "fetched_only_owned": true,
+    "tensors": true,
+    "losses": true,
+    "outage_injected": true,
+    "recovery": false,
+    "memory": true
+  },
+  "report": {
+    "passed": false,
+    "steps": 6,
+    "outage_step": 3,
+    "owner_peak_rss_bytes": {
+      "0": 5279436800,
+      "1": 4936646656,
+      "2": 17116102656
+    },
+    "reference_peak_rss_bytes": 22376493056,
+    "owner_train_seconds": {
+      "0": 584.877442888,
+      "1": 584.842168772,
+      "2": 584.878463896
+    },
+    "reference_seconds": 625.0464611880001,
+    "sent_bytes": {
+      "0": 948101120,
+      "1": 499328000,
+      "2": 499328000
+    },
+    "trainable_parameters": 1048576,
+    "losses": [
+      0.1649729583024344,
+      0.1642564037839378,
+      0.15364409922620936,
+      0.14374034921832557,
+      0.10989284074651717,
+      0.1385217744291527
+    ],
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "diagnosis": {
+    "first_difference": "The outage run computed its first preference reference (the first forward pass of each fresh owner process) as -0.15565206110477448; the uninterrupted run and the reference host computed -0.15518701076507568. The other seven references are identical.",
+    "consequence": "Every later outage-run step inherits that difference: its step-0 gradient norm is 0.6610495 against 0.6610818, so its step-3 checkpoint is not the uninterrupted state and the resumed tensors differ from the reference.",
+    "not_implicated": "The resume path itself: the checkpoint step, the saved references and the continued schedule were consistent; tests on small checkpoints resume bit for bit.",
+    "open_question": "Why a fresh process on the same host produced a different first forward pass; the canonical runtime had only been shown deterministic at the token level."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 6439.67038,
+    "conservative_compute_usd": 1.8932630917200002,
+    "hosts": [
+      {
+        "finished_utc": "2026-09-29T03:18:30.530509+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a2597029f4ca68ff"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1571.239132,
+        "conservative_compute_usd": 0.461944304808,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T03:19:02.175870+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-08bcae0409066cb8a"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1594.999083,
+        "conservative_compute_usd": 0.468929730402,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T03:19:38.954094+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07817fdcaf3d8dac4"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1624.551527,
+        "conservative_compute_usd": 0.47761814893800003,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T03:20:10.549593+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0fb1df696e93278af"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 1648.880638,
+        "conservative_compute_usd": 0.48477090757200003,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

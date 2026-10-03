@@ -1,0 +1,44 @@
+{
+  "format": "neuroshard-granite-shard-throughput-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 4,
+  "planning_cap_usd": 8,
+  "disk_gib": 40,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "granite-shard-throughput",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "prior_resources": {
+    "path": "config/experiments/granite-shard-throughput-report.json",
+    "sha256": "e911f2d3b7cd71d2b058429ad60baa9d470ad2fd049505d6a1bf9bb9efc619c4"
+  },
+  "budget_scope": "One owner host of three for the Granite shard throughput execution, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; sequential and concurrent serving 80 minutes each. No GPU or training.",
+  "prior_attempts": [
+    {
+      "utc": "2026-09-29T05:56:00Z",
+      "commit": "d572cdfc31638763ce3a92ce8b6d1bdd2845ec86",
+      "outcome": "Both passes token-identical; throughput 0.97x against 1.5x; failed ($3.09)."
+    }
+  ]
+}

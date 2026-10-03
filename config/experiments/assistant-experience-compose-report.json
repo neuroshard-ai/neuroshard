@@ -1,0 +1,1324 @@
+{
+  "format": "neuroshard-assistant-experience-compose-report/1",
+  "source_commit": "1b8a7f43037c7a6a802e07210c80500ecb4b631f",
+  "execution_completed": true,
+  "gpu": "NVIDIA A10G",
+  "phases_seconds": {
+    "verify_collection": 103.99693700900002,
+    "train": 2938.996761631,
+    "evaluate": 2927.0146325189994
+  },
+  "training": {
+    "update": {
+      "sequences": 3302,
+      "pairs": 54,
+      "first_phase_steps": 551,
+      "final_loss": 0.03428378485477879,
+      "seconds": 1463.147807699,
+      "trainable_sha256": "3738bd941147a4cf73f734782b646df4e317415c02f0d20b41a682fac00d84cb"
+    },
+    "small": {
+      "sequences": 3302,
+      "pairs": 54,
+      "first_phase_steps": 551,
+      "final_loss": 0.02526754275691445,
+      "seconds": 1469.7908942010001,
+      "trainable_sha256": "43d9b2fd1d17f11f76420b73f6188e6d85b59a41e2325648e749495e705a8e41"
+    }
+  },
+  "report": {
+    "parent": {
+      "integration": {
+        "greedy_correct": 34,
+        "cases": 64,
+        "sampled_rate": 0.5234375,
+        "lost_parent_successes": [],
+        "versus_update": -26
+      },
+      "development": {
+        "greedy_correct": 9,
+        "cases": 24,
+        "sampled_rate": null,
+        "lost_parent_successes": [],
+        "versus_update": -10
+      }
+    },
+    "update": {
+      "integration": {
+        "greedy_correct": 60,
+        "cases": 64,
+        "sampled_rate": 0.9375,
+        "lost_parent_successes": [],
+        "versus_update": 0
+      },
+      "development": {
+        "greedy_correct": 19,
+        "cases": 24,
+        "sampled_rate": null,
+        "lost_parent_successes": [
+          "workflow-caf22532f0f4"
+        ],
+        "versus_update": 0
+      }
+    },
+    "small": {
+      "integration": {
+        "greedy_correct": 62,
+        "cases": 64,
+        "sampled_rate": 0.953125,
+        "lost_parent_successes": [],
+        "versus_update": 2
+      },
+      "development": {
+        "greedy_correct": 17,
+        "cases": 24,
+        "sampled_rate": null,
+        "lost_parent_successes": [
+          "workflow-c6b1500447f3",
+          "workflow-caf22532f0f4",
+          "workflow-fddb97d8bc7d"
+        ],
+        "versus_update": -2
+      }
+    }
+  },
+  "scores": {
+    "update": {
+      "greedy_integration": 60,
+      "greedy_development": 19,
+      "lost_parent_successes": 1,
+      "score": 77
+    },
+    "small": {
+      "greedy_integration": 62,
+      "greedy_development": 17,
+      "lost_parent_successes": 3,
+      "score": 73
+    }
+  },
+  "decision": {
+    "rule": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits), reported for both arms. The third attempt is declared with the small module only if it lost no parent success on either split. Otherwise there is no third attempt and the result is reported.",
+    "small_lost_parent_successes": 3,
+    "third_attempt": false,
+    "outcome": "No third attempt: the small module lost 3 parent successes on the development split."
+  },
+  "findings": {
+    "held_out_conjunction": "All three lost cases are latest or scope development cases whose correction ends \"Also move the resulting due date one calendar day later\"; two of them were lost in every study.",
+    "parent_variation": "The parent solved workflow-caf22532f0f4 here but not in the two earlier studies; batched GPU decoding is not bit-reproducible. The update control lost it too.",
+    "practice_effect": "Development successes moved from 16 to 17 for the small module and from 20 to 19 for the update; integration was unchanged at 62 and 60."
+  },
+  "systems": {
+    "parent": {
+      "integration": {
+        "workflow-649010d8bcac": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5bc38bf662fe": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b10e6663b879": [
+          true,
+          true,
+          true
+        ],
+        "workflow-288a273829c8": [
+          false,
+          false,
+          false
+        ],
+        "workflow-dcbfe9cbf0a7": [
+          false,
+          false,
+          false
+        ],
+        "workflow-81cf99f6249b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b4c98592d9ce": [
+          true,
+          true,
+          true
+        ],
+        "workflow-60c0c5ddd5b7": [
+          false,
+          false,
+          false
+        ],
+        "workflow-614b0047c562": [
+          false,
+          false,
+          false
+        ],
+        "workflow-a2bf59117f1f": [
+          false,
+          false,
+          false
+        ],
+        "workflow-0fb99db2903f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-31000d6ec700": [
+          false,
+          false,
+          false
+        ],
+        "workflow-fcb890302d35": [
+          true,
+          true,
+          true
+        ],
+        "workflow-be1da4c0ab18": [
+          false,
+          true,
+          false
+        ],
+        "workflow-aa8b183079e1": [
+          false,
+          false,
+          false
+        ],
+        "workflow-8558232971c8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-7f55deb21a8a": [
+          false,
+          false,
+          false
+        ],
+        "workflow-da18941932ea": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb5a5a0d03f2": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5efd5a4bc697": [
+          false,
+          false,
+          false
+        ],
+        "workflow-7758d166946d": [
+          true,
+          true,
+          true
+        ],
+        "workflow-78a7a3411a30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-798ba5040cb8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5225363e0192": [
+          false,
+          false,
+          false
+        ],
+        "workflow-e7d74c1e8c28": [
+          false,
+          false,
+          false
+        ],
+        "workflow-39eb4e7bbdc3": [
+          true,
+          false,
+          true
+        ],
+        "workflow-ea14c8f8ef43": [
+          false,
+          false,
+          false
+        ],
+        "workflow-119bfcd5da30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5c5538d8a790": [
+          true,
+          true,
+          true
+        ],
+        "workflow-224eecc9bc78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-660b1f7071c3": [
+          false,
+          false,
+          false
+        ],
+        "workflow-02d9a9debb8e": [
+          true,
+          false,
+          true
+        ],
+        "workflow-94a7831193ae": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f93dc2bf99c1": [
+          false,
+          false,
+          false
+        ],
+        "workflow-0040b166cd36": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5d0febbb46f8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-c73da6ee1963": [
+          false,
+          false,
+          false
+        ],
+        "workflow-d53f53174c27": [
+          false,
+          false,
+          false
+        ],
+        "workflow-1a6ce6a02fb5": [
+          false,
+          false,
+          false
+        ],
+        "workflow-10966efee52b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-aecb8d22854e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-80df88092670": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb020e32b12c": [
+          true,
+          true,
+          false
+        ],
+        "workflow-adb5833b108d": [
+          false,
+          false,
+          false
+        ],
+        "workflow-0948efe18212": [
+          true,
+          false,
+          true
+        ],
+        "workflow-e0df9bb08955": [
+          false,
+          false,
+          false
+        ],
+        "workflow-3bfa8f0bd586": [
+          true,
+          true,
+          true
+        ],
+        "workflow-2122a9e6750a": [
+          false,
+          false,
+          false
+        ],
+        "workflow-3e68db6e3c78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-89aac0b1993b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f04544b4ccce": [
+          false,
+          false,
+          false
+        ],
+        "workflow-b18bed96b8bb": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8bda48d06686": [
+          false,
+          false,
+          false
+        ],
+        "workflow-945abe21d245": [
+          false,
+          false,
+          false
+        ],
+        "workflow-526e755a8105": [
+          true,
+          true,
+          true
+        ],
+        "workflow-caec1c88890b": [
+          false,
+          false,
+          false
+        ],
+        "workflow-bc3050d0070e": [
+          false,
+          true,
+          true
+        ],
+        "workflow-0c7d0e80c2dc": [
+          false,
+          false,
+          false
+        ],
+        "workflow-0b295d3f0690": [
+          false,
+          false,
+          false
+        ],
+        "workflow-96d6a0ee5398": [
+          true,
+          true,
+          true
+        ],
+        "workflow-574c1134feba": [
+          false,
+          false,
+          false
+        ],
+        "workflow-14a29997b92f": [
+          false,
+          false,
+          false
+        ],
+        "workflow-03e613e611d1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8040f6dc94e7": [
+          true,
+          true,
+          true
+        ]
+      },
+      "development": {
+        "workflow-842f73726ac2": [
+          false
+        ],
+        "workflow-e47fa617df9c": [
+          false
+        ],
+        "workflow-5512bfdcbf01": [
+          false
+        ],
+        "workflow-fddb97d8bc7d": [
+          true
+        ],
+        "workflow-bd845e98b603": [
+          true
+        ],
+        "workflow-cdda343cccd8": [
+          true
+        ],
+        "workflow-1124e7a2f25c": [
+          true
+        ],
+        "workflow-5b59fbf07de4": [
+          true
+        ],
+        "workflow-c6b1500447f3": [
+          true
+        ],
+        "workflow-c5a251cb9186": [
+          false
+        ],
+        "workflow-901496964dce": [
+          false
+        ],
+        "workflow-705b57ba50cb": [
+          false
+        ],
+        "workflow-614a08aecd66": [
+          true
+        ],
+        "workflow-9e59abaad961": [
+          false
+        ],
+        "workflow-13de433c562f": [
+          false
+        ],
+        "workflow-bf78a2b7a3ee": [
+          false
+        ],
+        "workflow-0a46caf718a9": [
+          false
+        ],
+        "workflow-22e0b95f5781": [
+          false
+        ],
+        "workflow-21c0be04a7be": [
+          false
+        ],
+        "workflow-f4f40d77e7cd": [
+          false
+        ],
+        "workflow-5b541f25dc67": [
+          false
+        ],
+        "workflow-cceb5a621834": [
+          false
+        ],
+        "workflow-e5a0d5c80f43": [
+          true
+        ],
+        "workflow-caf22532f0f4": [
+          true
+        ]
+      }
+    },
+    "update": {
+      "integration": {
+        "workflow-649010d8bcac": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5bc38bf662fe": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b10e6663b879": [
+          true,
+          true,
+          true
+        ],
+        "workflow-288a273829c8": [
+          false,
+          false,
+          false
+        ],
+        "workflow-dcbfe9cbf0a7": [
+          false,
+          false,
+          false
+        ],
+        "workflow-81cf99f6249b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b4c98592d9ce": [
+          true,
+          true,
+          true
+        ],
+        "workflow-60c0c5ddd5b7": [
+          true,
+          true,
+          true
+        ],
+        "workflow-614b0047c562": [
+          true,
+          true,
+          true
+        ],
+        "workflow-a2bf59117f1f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0fb99db2903f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-31000d6ec700": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fcb890302d35": [
+          true,
+          true,
+          true
+        ],
+        "workflow-be1da4c0ab18": [
+          true,
+          true,
+          true
+        ],
+        "workflow-aa8b183079e1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8558232971c8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-7f55deb21a8a": [
+          true,
+          true,
+          true
+        ],
+        "workflow-da18941932ea": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb5a5a0d03f2": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5efd5a4bc697": [
+          true,
+          true,
+          true
+        ],
+        "workflow-7758d166946d": [
+          true,
+          true,
+          true
+        ],
+        "workflow-78a7a3411a30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-798ba5040cb8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5225363e0192": [
+          true,
+          true,
+          true
+        ],
+        "workflow-e7d74c1e8c28": [
+          true,
+          true,
+          true
+        ],
+        "workflow-39eb4e7bbdc3": [
+          true,
+          true,
+          true
+        ],
+        "workflow-ea14c8f8ef43": [
+          true,
+          true,
+          true
+        ],
+        "workflow-119bfcd5da30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5c5538d8a790": [
+          true,
+          true,
+          true
+        ],
+        "workflow-224eecc9bc78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-660b1f7071c3": [
+          true,
+          true,
+          true
+        ],
+        "workflow-02d9a9debb8e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-94a7831193ae": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f93dc2bf99c1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0040b166cd36": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5d0febbb46f8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-c73da6ee1963": [
+          true,
+          true,
+          true
+        ],
+        "workflow-d53f53174c27": [
+          true,
+          true,
+          true
+        ],
+        "workflow-1a6ce6a02fb5": [
+          true,
+          true,
+          true
+        ],
+        "workflow-10966efee52b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-aecb8d22854e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-80df88092670": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb020e32b12c": [
+          true,
+          true,
+          true
+        ],
+        "workflow-adb5833b108d": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0948efe18212": [
+          true,
+          true,
+          true
+        ],
+        "workflow-e0df9bb08955": [
+          true,
+          true,
+          true
+        ],
+        "workflow-3bfa8f0bd586": [
+          true,
+          true,
+          true
+        ],
+        "workflow-2122a9e6750a": [
+          true,
+          true,
+          true
+        ],
+        "workflow-3e68db6e3c78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-89aac0b1993b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f04544b4ccce": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b18bed96b8bb": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8bda48d06686": [
+          true,
+          true,
+          true
+        ],
+        "workflow-945abe21d245": [
+          true,
+          true,
+          true
+        ],
+        "workflow-526e755a8105": [
+          true,
+          true,
+          true
+        ],
+        "workflow-caec1c88890b": [
+          false,
+          false,
+          false
+        ],
+        "workflow-bc3050d0070e": [
+          false,
+          false,
+          false
+        ],
+        "workflow-0c7d0e80c2dc": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0b295d3f0690": [
+          true,
+          true,
+          true
+        ],
+        "workflow-96d6a0ee5398": [
+          true,
+          true,
+          true
+        ],
+        "workflow-574c1134feba": [
+          true,
+          true,
+          true
+        ],
+        "workflow-14a29997b92f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-03e613e611d1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8040f6dc94e7": [
+          true,
+          true,
+          true
+        ]
+      },
+      "development": {
+        "workflow-842f73726ac2": [
+          false
+        ],
+        "workflow-e47fa617df9c": [
+          true
+        ],
+        "workflow-5512bfdcbf01": [
+          false
+        ],
+        "workflow-fddb97d8bc7d": [
+          true
+        ],
+        "workflow-bd845e98b603": [
+          true
+        ],
+        "workflow-cdda343cccd8": [
+          true
+        ],
+        "workflow-1124e7a2f25c": [
+          true
+        ],
+        "workflow-5b59fbf07de4": [
+          true
+        ],
+        "workflow-c6b1500447f3": [
+          true
+        ],
+        "workflow-c5a251cb9186": [
+          true
+        ],
+        "workflow-901496964dce": [
+          true
+        ],
+        "workflow-705b57ba50cb": [
+          false
+        ],
+        "workflow-614a08aecd66": [
+          true
+        ],
+        "workflow-9e59abaad961": [
+          true
+        ],
+        "workflow-13de433c562f": [
+          true
+        ],
+        "workflow-bf78a2b7a3ee": [
+          false
+        ],
+        "workflow-0a46caf718a9": [
+          true
+        ],
+        "workflow-22e0b95f5781": [
+          true
+        ],
+        "workflow-21c0be04a7be": [
+          true
+        ],
+        "workflow-f4f40d77e7cd": [
+          true
+        ],
+        "workflow-5b541f25dc67": [
+          true
+        ],
+        "workflow-cceb5a621834": [
+          true
+        ],
+        "workflow-e5a0d5c80f43": [
+          true
+        ],
+        "workflow-caf22532f0f4": [
+          false
+        ]
+      }
+    },
+    "small": {
+      "integration": {
+        "workflow-649010d8bcac": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5bc38bf662fe": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b10e6663b879": [
+          true,
+          true,
+          true
+        ],
+        "workflow-288a273829c8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-dcbfe9cbf0a7": [
+          false,
+          false,
+          false
+        ],
+        "workflow-81cf99f6249b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b4c98592d9ce": [
+          true,
+          true,
+          true
+        ],
+        "workflow-60c0c5ddd5b7": [
+          true,
+          true,
+          true
+        ],
+        "workflow-614b0047c562": [
+          true,
+          true,
+          true
+        ],
+        "workflow-a2bf59117f1f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0fb99db2903f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-31000d6ec700": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fcb890302d35": [
+          true,
+          true,
+          true
+        ],
+        "workflow-be1da4c0ab18": [
+          true,
+          true,
+          true
+        ],
+        "workflow-aa8b183079e1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8558232971c8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-7f55deb21a8a": [
+          true,
+          true,
+          true
+        ],
+        "workflow-da18941932ea": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb5a5a0d03f2": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5efd5a4bc697": [
+          false,
+          false,
+          false
+        ],
+        "workflow-7758d166946d": [
+          true,
+          true,
+          true
+        ],
+        "workflow-78a7a3411a30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-798ba5040cb8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5225363e0192": [
+          true,
+          true,
+          true
+        ],
+        "workflow-e7d74c1e8c28": [
+          true,
+          true,
+          true
+        ],
+        "workflow-39eb4e7bbdc3": [
+          true,
+          true,
+          true
+        ],
+        "workflow-ea14c8f8ef43": [
+          true,
+          true,
+          true
+        ],
+        "workflow-119bfcd5da30": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5c5538d8a790": [
+          true,
+          true,
+          true
+        ],
+        "workflow-224eecc9bc78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-660b1f7071c3": [
+          true,
+          true,
+          true
+        ],
+        "workflow-02d9a9debb8e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-94a7831193ae": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f93dc2bf99c1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0040b166cd36": [
+          true,
+          true,
+          true
+        ],
+        "workflow-5d0febbb46f8": [
+          true,
+          true,
+          true
+        ],
+        "workflow-c73da6ee1963": [
+          true,
+          true,
+          true
+        ],
+        "workflow-d53f53174c27": [
+          true,
+          true,
+          true
+        ],
+        "workflow-1a6ce6a02fb5": [
+          true,
+          true,
+          true
+        ],
+        "workflow-10966efee52b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-aecb8d22854e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-80df88092670": [
+          true,
+          true,
+          true
+        ],
+        "workflow-fb020e32b12c": [
+          true,
+          true,
+          true
+        ],
+        "workflow-adb5833b108d": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0948efe18212": [
+          true,
+          true,
+          true
+        ],
+        "workflow-e0df9bb08955": [
+          true,
+          true,
+          true
+        ],
+        "workflow-3bfa8f0bd586": [
+          true,
+          true,
+          true
+        ],
+        "workflow-2122a9e6750a": [
+          true,
+          true,
+          true
+        ],
+        "workflow-3e68db6e3c78": [
+          true,
+          true,
+          true
+        ],
+        "workflow-89aac0b1993b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-f04544b4ccce": [
+          true,
+          true,
+          true
+        ],
+        "workflow-b18bed96b8bb": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8bda48d06686": [
+          true,
+          true,
+          true
+        ],
+        "workflow-945abe21d245": [
+          true,
+          false,
+          false
+        ],
+        "workflow-526e755a8105": [
+          true,
+          true,
+          true
+        ],
+        "workflow-caec1c88890b": [
+          true,
+          true,
+          true
+        ],
+        "workflow-bc3050d0070e": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0c7d0e80c2dc": [
+          true,
+          true,
+          true
+        ],
+        "workflow-0b295d3f0690": [
+          true,
+          true,
+          true
+        ],
+        "workflow-96d6a0ee5398": [
+          true,
+          true,
+          true
+        ],
+        "workflow-574c1134feba": [
+          true,
+          true,
+          true
+        ],
+        "workflow-14a29997b92f": [
+          true,
+          true,
+          true
+        ],
+        "workflow-03e613e611d1": [
+          true,
+          true,
+          true
+        ],
+        "workflow-8040f6dc94e7": [
+          true,
+          true,
+          true
+        ]
+      },
+      "development": {
+        "workflow-842f73726ac2": [
+          false
+        ],
+        "workflow-e47fa617df9c": [
+          true
+        ],
+        "workflow-5512bfdcbf01": [
+          false
+        ],
+        "workflow-fddb97d8bc7d": [
+          false
+        ],
+        "workflow-bd845e98b603": [
+          true
+        ],
+        "workflow-cdda343cccd8": [
+          true
+        ],
+        "workflow-1124e7a2f25c": [
+          true
+        ],
+        "workflow-5b59fbf07de4": [
+          true
+        ],
+        "workflow-c6b1500447f3": [
+          false
+        ],
+        "workflow-c5a251cb9186": [
+          true
+        ],
+        "workflow-901496964dce": [
+          true
+        ],
+        "workflow-705b57ba50cb": [
+          false
+        ],
+        "workflow-614a08aecd66": [
+          true
+        ],
+        "workflow-9e59abaad961": [
+          true
+        ],
+        "workflow-13de433c562f": [
+          true
+        ],
+        "workflow-bf78a2b7a3ee": [
+          false
+        ],
+        "workflow-0a46caf718a9": [
+          true
+        ],
+        "workflow-22e0b95f5781": [
+          true
+        ],
+        "workflow-21c0be04a7be": [
+          true
+        ],
+        "workflow-f4f40d77e7cd": [
+          true
+        ],
+        "workflow-5b541f25dc67": [
+          true
+        ],
+        "workflow-cceb5a621834": [
+          true
+        ],
+        "workflow-e5a0d5c80f43": [
+          true
+        ],
+        "workflow-caf22532f0f4": [
+          false
+        ]
+      }
+    }
+  },
+  "resources_finished": {
+    "finished_utc": "2026-09-30T19:26:43.967760+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0ed92807be32e74fe"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 6669.087572,
+    "conservative_compute_usd": 2.2452594825733336,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "compose_total_usd": 11.281623351979054,
+  "evidence_sha256": "478aaf5bc46008e95b30ce24ddc37e950959b7fd4da8297a4dcc71b23d454826",
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false
+}

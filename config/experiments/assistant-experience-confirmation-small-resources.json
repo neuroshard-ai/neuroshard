@@ -1,0 +1,45 @@
+{
+  "format": "neuroshard-assistant-experience-confirmation-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 8,
+  "planning_cap_usd": 12,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-experience-confirmation-small",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-experience-attempt3-arms",
+    "files": [
+      "small-checkpoint/manifest.json",
+      "small-checkpoint/trainable.safetensors"
+    ],
+    "maximum_bytes": 3945922
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-experience-development-round4-report.json",
+    "sha256": "59bb46e8b94c7a5d9ad7c7f1ef70fed2d74f88fc853f3bae21b9f0189d01e4e6"
+  },
+  "budget_scope": "Development diagnostic of the compositional study's small arm: served unrouted under the prefix cache on the 24 opened development cases with full transcripts and episode latency. One CPU host, a preparation worker and one evaluation worker at the canonical eight threads; eight-hour expiry and twelve-dollar allowance. No sealed data."
+}

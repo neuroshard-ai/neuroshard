@@ -1,0 +1,78 @@
+{
+  "format": "neuroshard-answerability-preflight/1",
+  "plan_sha256": "69855ab1e4c6bc1f6abdb35992086a1cd5923d14027ffa964e04078535adf2c5",
+  "cases_sha256": "6cce27e2cc0a19a0f3ad4daeff1ef4d99067e6e37211bc87569caa1c0d227dc7",
+  "fresh_cases": 80,
+  "retained_cases": 64,
+  "pretrained_model_generations": 0,
+  "models": {
+    "baseline": {
+      "max_selection_prompt_tokens": 463,
+      "max_check_prompt_tokens": 305,
+      "choice_tokens": {
+        "A": 32,
+        "B": 33,
+        "C": 34,
+        "Z": 57
+      },
+      "checker_paths": {
+        "\"answerable\"": [
+          1,
+          9399,
+          481,
+          1,
+          100257
+        ],
+        "\"unanswerable\"": [
+          1,
+          359,
+          9399,
+          481,
+          1,
+          100257
+        ]
+      }
+    },
+    "modular": {
+      "max_selection_prompt_tokens": 463,
+      "max_check_prompt_tokens": 305,
+      "choice_tokens": {
+        "A": 32,
+        "B": 33,
+        "C": 34,
+        "Z": 57
+      },
+      "checker_paths": {
+        "\"answerable\"": [
+          1,
+          9399,
+          481,
+          1,
+          100257
+        ],
+        "\"unanswerable\"": [
+          1,
+          359,
+          9399,
+          481,
+          1,
+          100257
+        ]
+      }
+    }
+  },
+  "all_selection_prompts_identical_across_checkpoints": true,
+  "all_checker_prompts_differ_only_by_activation_header": true,
+  "tiny_random_bf16_model_generations": 1,
+  "native_document_template_and_finite_generation_passed": true,
+  "tiny_output": "\"unanswerable\"",
+  "tiny_output_tokens": [
+    1,
+    359,
+    9399,
+    481,
+    1,
+    100257
+  ],
+  "toy_output_is_not_quality_evidence": true
+}

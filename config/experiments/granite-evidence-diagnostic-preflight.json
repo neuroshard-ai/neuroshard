@@ -1,0 +1,21 @@
+{
+  "format": "neuroshard-granite-evidence-preflight/1",
+  "plan_sha256": "41586f1f436190977741abf633886c25eea671e36631c976521255fc84ad60ec",
+  "opened_cases_checked": 64,
+  "supported_values_present": 48,
+  "maximum_prompt_tokens": 510,
+  "choice_tokens": {
+    "A": 32,
+    "B": 33,
+    "C": 34,
+    "Z": 57
+  },
+  "pretrained_model_generations": 0,
+  "tiny_random_bf16_model_generations": 1,
+  "tiny_allowed_decision": "Z",
+  "tiny_decision_tokens": [
+    57
+  ],
+  "native_prefix_mask_passed": true,
+  "toy_output_is_not_quality_evidence": true
+}

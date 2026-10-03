@@ -1,0 +1,106 @@
+{
+  "format": "neuroshard-granite-shard-report/1",
+  "result": "config/experiments/granite-shard-result.json",
+  "result_sha256": "8b9082bbe9fdd3c5e74021d20be26566cc190344688e30278866c404415d1146",
+  "commit": "cb06bf116d34ccf58d1d28b6b6266101f1918f0b",
+  "passed": true,
+  "checks": {
+    "complete": true,
+    "agreement": true,
+    "ownership": true,
+    "memory": true,
+    "outage_injected": true,
+    "recovery": true
+  },
+  "report": {
+    "passed": true,
+    "generations": 230,
+    "generated_tokens": 9170,
+    "owned_bytes": {
+      "0": 2401367040,
+      "1": 2202152960,
+      "2": 2202152960
+    },
+    "checkpoint_bytes": 6805672960,
+    "peak_rss_bytes": {
+      "0": 6218977280,
+      "1": 6050082816,
+      "2": 6094876672
+    },
+    "sent_bytes": {
+      "0": 1414246400,
+      "1": 1414246400,
+      "2": 46950400
+    },
+    "fetch_seconds": {
+      "0": 34.99221608,
+      "1": 31.441991869,
+      "2": 37.738981452999994
+    },
+    "fetch_requests": {
+      "0": 4,
+      "1": 2,
+      "2": 2
+    },
+    "generation_seconds": 2946.2616281310006,
+    "canonical_generation_seconds": 2738.760013243999,
+    "outage": {
+      "committed_before_loss": 39,
+      "resumed_tokens": 95
+    },
+    "checklist_credit": false,
+    "admission_evidence": false
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_instance_seconds": 16762.545694,
+    "conservative_compute_usd": 4.9281884340360005,
+    "owners": [
+      {
+        "finished_utc": "2026-09-29T00:37:21.162204+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-086f8b67b5f2f82b1"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 3223.800687,
+        "conservative_compute_usd": 0.947797401978,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T01:36:21.666911+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ad4eb12a0a4c46ab"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 6756.989466,
+        "conservative_compute_usd": 1.986554903004,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-09-29T01:36:53.701476+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-032d1f155e0ba3099"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 6781.755541,
+        "conservative_compute_usd": 1.993836129054,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ],
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "controller_incident": "The controller finished every phase and collected all evidence, then stopped while retiring hosts: owner 1's delete-on-termination volume outlived its terminated instance for a few seconds, and the volume check raised before owner 2 was retired and before result.json was written. Owner 2 ran about one extra hour until manual retirement at 01:36 UTC. This result is assembled from the saved phase and fetch files with the same assess function; retirement now waits for volumes and retires owners independently.",
+  "checklist_credit": false,
+  "admission_evidence": false
+}

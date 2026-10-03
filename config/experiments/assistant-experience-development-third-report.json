@@ -1,0 +1,150 @@
+{
+  "format": "neuroshard-assistant-experience-development-report/1",
+  "round": 4,
+  "attempt": "third",
+  "candidate": "update",
+  "serving": "prefix-cache",
+  "source_commit": "c85965cff2ae5fde9840599a2ddf567205c1ff67",
+  "result_sha256": "3d655f805f68eb34621e0a0cad7395e19f1daf59f90305b29ab701526158524f",
+  "execution_completed": true,
+  "development_passed": true,
+  "development_and_a1_passed": true,
+  "a1_served": {
+    "passed": true,
+    "checks": {
+      "primitive": true,
+      "anchors": true,
+      "p95": true,
+      "fresh_process_replay": true
+    },
+    "primitive_by_family": {
+      "copy": 2,
+      "date": 2,
+      "sum": 2,
+      "difference": 2
+    },
+    "primitive_correct": 8,
+    "p95_episode_seconds": 94.790340335,
+    "anchor_routing": "parent",
+    "anchor_correct": 19,
+    "replayed_ids": [
+      "workflow-5b59fbf07de4",
+      "workflow-bd845e98b603"
+    ],
+    "served": "update"
+  },
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "decision": "Third-attempt development of the update gated alone under prefix-cache serving: update 19/24 (parent 9/24), net 10, lost [], p95 94.790340335 s including selection; development gate passed. A1 served-system check passed: 8/8 primitive, fresh-process replay True. 24/24 episodes reproduce the round-4 update run exactly. The sealed confirmation3 split may open once.",
+  "report": {
+    "correct": {
+      "parent": 9,
+      "update": 19
+    },
+    "versus_parent": {
+      "gained": [
+        "workflow-0a46caf718a9",
+        "workflow-13de433c562f",
+        "workflow-21c0be04a7be",
+        "workflow-22e0b95f5781",
+        "workflow-5b541f25dc67",
+        "workflow-9e59abaad961",
+        "workflow-c5a251cb9186",
+        "workflow-cceb5a621834",
+        "workflow-e47fa617df9c",
+        "workflow-f4f40d77e7cd"
+      ],
+      "lost": [],
+      "net": 10
+    },
+    "lost_protected": [],
+    "p95_seconds": {
+      "update": 94.790340335,
+      "parent": 177.10837942299986
+    },
+    "checks": {
+      "total": true,
+      "net_vs_parent": true,
+      "lost_parent_successes": true,
+      "protected": true,
+      "p95": true
+    },
+    "passed": true,
+    "confirmation_may_open": true,
+    "forced_anchor_forgetting": {
+      "update": {
+        "correct": 18,
+        "lost_protected": [
+          "granite-instruction-counts"
+        ]
+      }
+    },
+    "selected_arm_episodes": {
+      "update": 24
+    },
+    "a1_served": {
+      "passed": true,
+      "checks": {
+        "primitive": true,
+        "anchors": true,
+        "p95": true,
+        "fresh_process_replay": true
+      },
+      "primitive_by_family": {
+        "copy": 2,
+        "date": 2,
+        "sum": 2,
+        "difference": 2
+      },
+      "primitive_correct": 8,
+      "p95_episode_seconds": 94.790340335,
+      "anchor_routing": "parent",
+      "anchor_correct": 19,
+      "replayed_ids": [
+        "workflow-5b59fbf07de4",
+        "workflow-bd845e98b603"
+      ],
+      "served": "update"
+    },
+    "development_and_a1_passed": true
+  },
+  "mean_episode_seconds": {
+    "update": 62.75140326858331
+  },
+  "reproduces_round4": {
+    "matching": 24,
+    "episodes": 24,
+    "differing": []
+  },
+  "ci": {
+    "id": 37094697946,
+    "head_sha": "c85965cff2ae5fde9840599a2ddf567205c1ff67",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37094697946"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-03T05:04:03.299464+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-04deb4e9940b618c7"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 1966.02493,
+    "conservative_compute_usd": 0.57801132942,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-03T05:04:34.294483+00:00",
+    "instances": [
+      {
+        "id": "i-04deb4e9940b618c7",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  }
+}

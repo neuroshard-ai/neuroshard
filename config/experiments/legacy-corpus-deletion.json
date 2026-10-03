@@ -1,0 +1,47 @@
+{
+  "format": "neuroshard-legacy-corpus-deletion/1",
+  "bucket": "neuroshard-training-data",
+  "applied_utc": "2026-09-29T19:45:24.218421Z",
+  "authorized_by": "Project owner, September 29, 2026, after the recommendation to stop paying for the quarantined legacy corpus.",
+  "scope": "Lifecycle expiration of every root-level key beginning with shard_ (legacy pre-tokenized tensor shards, about 20,001,605 bytes each).",
+  "rule": {
+    "ID": "expire-legacy-tensor-shards",
+    "Filter": {
+      "Prefix": "shard_"
+    },
+    "Expiration": {
+      "Days": 1
+    }
+  },
+  "versioning": "never enabled: expiration is permanent and leaves no noncurrent versions",
+  "before": {
+    "bucket_size_bytes_standard": 49621982419261,
+    "objects": 2522565,
+    "metric_date": "2026-09-27"
+  },
+  "kept": {
+    "research/": {
+      "objects": 142503,
+      "gib": 1889.166
+    },
+    "datasets/": {
+      "objects": 590,
+      "gib": 0.015
+    },
+    "recovered/": {
+      "objects": 10,
+      "gib": 0.155
+    },
+    "root records": [
+      "manifest.json",
+      "tokenizer.json",
+      "checkpoints.json"
+    ]
+  },
+  "reasons": [
+    "Tokenized for the earlier SmolLM2-era tokenizer, not Granite (vocabulary 49,152 against 100,352).",
+    "Audit found duplicate rows, identifiers pointing to different bytes and overwritten objects.",
+    "Provenance and licensing never reviewed; quarantined since 0.4.0 and unused by any current or planned execution."
+  ],
+  "consequence": "The v0.2 node client, which downloads shard_*.pt through the CloudFront CDN, can no longer fetch training shards."
+}

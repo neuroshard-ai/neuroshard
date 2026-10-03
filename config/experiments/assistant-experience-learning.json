@@ -1,0 +1,351 @@
+{
+  "format": "neuroshard-assistant-experience-learning/1",
+  "status": "Implemented. On September 27, 2026 the user authorized collection and training although the canonical parent failed primitive qualification (2/8) with tokenizer conformance and development headroom (9/24). A1 stays open; this comparison cannot close it. Development evaluation runs on the CPU parent runtime.",
+  "architecture": "docs/ASSISTANT_ARCHITECTURE.md",
+  "supersedes_for_a2": "config/experiments/assistant-workflow-learning.json",
+  "parent_baseline": "config/experiments/assistant-workflow-canonical.json",
+  "policy": "config/experiments/assistant-workflow-policy.json",
+  "data": "config/experiments/assistant-workflow-data.json",
+  "tokenizer": "Canonical tokenizer.json with the per-encode guard in every collection, training and evaluation process.",
+  "experience": {
+    "source": "Training split only (256 episodes). Integration, development and confirmation goals never enter training.",
+    "rollouts": "Parent samples 8 complete episodes per training case in the deterministic workspace under the frozen policy limits. Temperature 0.8, top-p 0.95, no top-k. Requests from concurrent episodes are batched; batched sampling is not bit-reproducible, so acceptance never depends on regenerating a rollout.",
+    "verification": "Replay each transcript and score it with the frozen outcome scorer. Accept a complete episode when every round passes. Accept the leading successful rounds of a partial episode as round-level experience.",
+    "masking": "Train on assistant generations only. A generation whose tool call was rejected stays in context with no loss.",
+    "selection": "At most 4 distinct accepted trajectories per case, preferring more verified rounds, then fewer model calls, then uncoached, then sample index.",
+    "near_policy": "Report each accepted trajectory's mean assistant-token negative log-likelihood under the parent in its uncoached context. Coached trajectories above the largest uncoached accepted value are rejected."
+  },
+  "coaching": {
+    "trigger": "Training cases or rounds without an accepted uncoached rollout.",
+    "card": "Procedure: 1) Call list_documents with the exact project name from the request. 2) The latest approved version is the approved document with the highest revision; use an older revision only when the user names it. 3) Read every document you will cite. 4) Use calculate for each arithmetic step and shift_date for each date offset, copying values exactly from tool results. 5) Call save_draft with every field, citing only documents you read. 6) For a correction, start from the fields of your most recent save_draft, change only what the user asks, recompute derived values with tools and save again before replying. 7) After saving, reply with one short confirmation and no tool call.",
+    "rollouts": "8 samples with the card appended to the system instruction; same verification.",
+    "distillation": "Store accepted coached trajectories with the card removed. The card is identical for every case, contains no case values and never appears during integration or evaluation."
+  },
+  "preservation_replay": {
+    "prompts": "256 generated prompts across conversation state, JSON instructions and single tool calls. Different templates, tools, entities and values from the 24 anchors and 16 reference tasks; checked by identity and 8-gram overlap.",
+    "targets": "Parent greedy responses under the canonical tokenizer, recorded before training.",
+    "mixture": "One replay sequence per three experience sequences in every accumulated update."
+  },
+  "arms": {
+    "parent": "Unchanged Granite 4.1 3B with the common tool runtime.",
+    "update": "Update existing q_proj and v_proj matrices in layers 32..39 (62,914,560 parameters). Parent retained for routing and rollback; its storage is charged.",
+    "addition": "Frozen backbone with rank-16, alpha-32 LoRA on q_proj and v_proj in layers 32..39 (1,048,576 parameters): Kaiming-uniform A, zero B, so the untrained arm equals the parent. Not merged."
+  },
+  "training": {
+    "sequences": "One canonical-tokenizer sequence per accepted trajectory; every trainable assistant span and its end token labeled. Loss normalized per trajectory so each accepted conversation has equal weight.",
+    "precision": "BF16 backbone and activations; FP32 LoRA tensors and FP32 master copies of updated projections.",
+    "layers": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ],
+    "rank": 16,
+    "alpha": 32,
+    "experience_per_replay": 3,
+    "optimizer": "AdamW",
+    "steps": 128,
+    "microbatch": 1,
+    "gradient_accumulation": 8,
+    "gradient_clip": 1.0,
+    "weight_decay": 0.01,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "learning_rates": {
+      "update": 1e-05,
+      "addition": 0.0003
+    },
+    "warmup_steps": 8,
+    "seed": 27092026,
+    "checkpoint": "Terminal step only, with optimizer/RNG state, data and source roots. No checkpoint selection."
+  },
+  "selection": {
+    "features": "Frozen parent final-layer hidden state at the first assistant-generation boundary; request, system instruction and tool definitions only.",
+    "estimates": "On each of the 64 integration episodes run parent and trained arm once greedily and 4 times sampled; success rate is the mean of the 5 outcomes.",
+    "labels": "Target the trained arm when its success rate exceeds the parent's, weighted by the absolute difference. Equal rates carry no weight. All targets arm: constant arm. No arm targets: constant parent.",
+    "gate": "One logistic linear gate (2560 weights plus bias), zero initialization, L2-normalized features, AdamW lr 0.001, weight decay 0.01, 128 updates, batch 8, seed 27092027; threshold 0.5, tie selects parent.",
+    "activation": "Select once at the first request of a workspace episode; keep that selection through its follow-ups.",
+    "accounting": "Charge feature prefill, every integration rollout, gate fit and rejected work."
+  },
+  "experience_selection_per_case": 4,
+  "selection_recipe": {
+    "seed": 27092027,
+    "epsilon": 1e-06,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "updates": 128,
+    "batch": 8,
+    "threshold": 0.5
+  },
+  "accelerator_runtime": "Collection, replay recording, training and integration may use one GPU host with SDPA attention in BF16: acceptance is by outcome replay, so collection needs no numerical parity. Development and confirmation evaluation use the CPU runtime of the canonical parent baseline.",
+  "development_gate": {
+    "cases": 24,
+    "minimum_total": 18,
+    "minimum_net_vs_parent": 4,
+    "minimum_net_vs_update": -1,
+    "maximum_lost_parent_successes": 0,
+    "protected": "Every canonical parent development success and every canonical anchor success.",
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
+  },
+  "confirmation_gate": {
+    "cases": 96,
+    "opens": "Once, only after both trained arms finish and the addition passes development.",
+    "minimum_total": 77,
+    "minimum_per_family": 8,
+    "minimum_net_vs_parent": 10,
+    "maximum_lost_parent_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092028,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_vs_parent_strictly_above": 0,
+    "lower_95_gain_vs_update_at_least": -0.05,
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
+  },
+  "growth_claim": "A2 requires beating the parent and matching the equal-data update at a fraction of its trained parameters and update traffic. Whether separate modules beat repeated shared-weight updates is measured in A3, across cohorts, by cumulative retention under a declared budget.",
+  "decentralized_role": "Rollouts are the parallel contributor workload. Each is replayed and rescored without trusting its producer or regenerating it; the parent-likelihood check rejects off-policy text. One compute group trains the module; replicas serve it. No settlement or payment is part of this experiment.",
+  "budget": {
+    "ceiling_usd": 100,
+    "training_spend_currently_authorized": true,
+    "note": "One GPU host under config/experiments/assistant-experience-resources.json (at most $15), then CPU development evaluation. Confirmation spend requires a development pass."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false,
+  "checklist_credit": false,
+  "stop_rule": "Publish failed gates unchanged. No opened-final method shopping, automatic relaunch or silent serving change. One GPU attempt; a failed or interrupted run needs a new execution amendment.",
+  "decision_preferences": {
+    "status": "Declared on September 27, 2026 before any round-1 development outcome was read. Runs only if the round-1 development gate fails.",
+    "motivation": "On integration episodes the round-1 arms complete 95-98% of cases whose latest approved revision is listed first but only 35-36% of cases whose older approved revision is listed first; version choice by listing position is the dominant remaining failure.",
+    "source": "Natural (uncoached) training rollouts pinned from the round-1 collection. No new rollouts and no integration, development or confirmation goals.",
+    "decision": "The first assistant message that calls read_document. Chosen: it opens exactly the latest approved revision and round one passes. Rejected: it opens only older approved revisions and round one fails. Both share every earlier message.",
+    "per_case": 8,
+    "objective": "DPO on the decision message and its end token, with the round-1 arm as reference; reference log-probabilities computed once before the first update. Mixed with the round-1 experience and replay sequences.",
+    "arms": "Both round-1 arms continue from their pinned checkpoints with identical sequences, pairs and schedule.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092031
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-2 arms with the declared recipe.",
+    "gates": "The same development and confirmation gates, comparing the round-2 update and addition systems with the canonical parent. The development split is reused; confirmation remains sealed until a development pass."
+  },
+  "serving": {
+    "runtime": "prefix-cache",
+    "status": "Declared on September 28, 2026 after the round-2 development gate failed only on p95 latency (192.0 s; 189.8 s without routing), and before any cached run.",
+    "rule": "Reuse the key/value cache of the longest unchanged token prefix between generations of one episode. Every request is still rendered and tokenized in full, at least one token is recomputed, and a new episode starts from an empty cache.",
+    "scope": "Both routed systems in development and confirmation. The parent control remains the canonical recompute baseline and its protected successes. The trained arms, gates and every other threshold are unchanged.",
+    "reason": "Prefill was 49% of generation time; compound workflows re-processed about 17,000 prompt tokens across twelve generations.",
+    "validation": "Rerun development with the round-2 arms under this runtime. The complete development gate, including zero lost parent successes, must pass under it before confirmation opens."
+  },
+  "divergence_preferences": {
+    "status": "Declared on September 28, 2026 after the cached round-2 development result and before any round-3 rollout. Authorized by the user.",
+    "motivation": "Round 2 fixed most version choices; the remaining brittle behavior (follow-up date arithmetic) flips with serving numerics and was never targeted.",
+    "source": "Fresh sampled rollouts of the pinned round-2 addition on the 256 training cases; every rollout is rescored through the frozen scorer. No integration, development or confirmation goals.",
+    "samples_per_case": 6,
+    "temperature": 0.8,
+    "seed": 27092032,
+    "decision": "The first message where a fully successful rollout and a failed rollout of the same case differ, given identical earlier messages. Chosen: that message from the success, which must be a valid tool call. Rejected: the failure's message, whose round must have failed.",
+    "per_case": 4,
+    "objective": "DPO on the divergent message and its end token with the round-2 arm as reference, mixed with the round-1 experience and replay sequences.",
+    "arms": "Both round-2 arms continue from their pinned checkpoints on identical sequences, pairs and schedule; pairs come from the addition's rollouts for both.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092033
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-3 arms with the declared recipe.",
+    "gates": "The same development gate under the declared prefix-cache serving; confirmation opens once, only after a complete development pass."
+  },
+  "a1_served": {
+    "status": "Declared on September 28, 2026 at the user's decision, before round 4.",
+    "rule": "A1's usable-foundation check judges the served version: the pinned parent plus its accepted, verified module under the declared serving runtime and selection. The bare parent's result is still reported. Required on development: at least 6/8 primitive workflows with one per primitive family, the original anchor gate with every protected anchor (routed to the parent), p95 at most 180 s, and two fresh-process replays matching exactly."
+  },
+  "goal_guided_repairs": {
+    "status": "Declared on September 28, 2026 after the confirmation failed on update parity, before any round-4 rollout.",
+    "diagnosis": "On confirmation the round-3 addition's difference failures read approved revision 2 and the draft revision 3 instead of approved revision 1, and its latest follow-up failures re-read revision 2 when asked for revision 1: round-2 preferences over-generalized into avoiding older revisions.",
+    "source": "Fresh sampled rollouts of the pinned round-3 addition on the 256 training cases.",
+    "samples_per_case": 4,
+    "temperature": 0.8,
+    "seed": 27092034,
+    "repair": "In a failed rollout, find the first read_document message that opens a document outside its round's goal sources (training goals only). Replace each such document with a goal source not yet read in that round, replay every earlier generation exactly, and let the same model continue by sampling.",
+    "repairs_per_failure": 2,
+    "verification": "Keep only repaired rollouts that the frozen scorer passes in every round. Goals locate the wrong document; they never enter a prompt.",
+    "pairs": "Chosen: the repaired message; rejected: the original message; shared prefix: all earlier messages. At most 4 per case.",
+    "experience": "Verified repaired rollouts (at most 2 per case) join the round-1 experience; the repaired message is trained with the rest of the conversation.",
+    "arms": "Both round-3 arms continue from their pinned checkpoints on identical experience, replay and pairs.",
+    "training": {
+      "steps": 64,
+      "microbatch": 1,
+      "gradient_accumulation": 8,
+      "experience_per_replay": 3,
+      "preference_per_update": 4,
+      "beta": 0.1,
+      "preference_weight": 1.0,
+      "learning_rates": {
+        "update": 5e-06,
+        "addition": 0.0001
+      },
+      "warmup_steps": 4,
+      "gradient_clip": 1.0,
+      "weight_decay": 0.01,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "seed": 27092035
+    },
+    "integration": "Refit each gate from fresh integration outcomes of the round-4 arms.",
+    "gates": "Development under prefix-cache serving, with the A1 served-system checks; then the fresh confirmation2 split once.",
+    "pairs_per_case": 4,
+    "experience_per_case": 2
+  },
+  "confirmation2_gate": {
+    "data": "config/experiments/assistant-workflow-data-confirmation2.json",
+    "cases": 192,
+    "opens": "Once, only after a complete round-4 development pass.",
+    "serving": "All three systems, including the parent control, under the declared prefix-cache serving.",
+    "minimum_total": 154,
+    "minimum_per_family": 16,
+    "minimum_net_vs_parent": 20,
+    "maximum_lost_parent_successes": 0,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27092036,
+    "bootstrap_clusters": "eight operation families",
+    "lower_95_gain_vs_parent_strictly_above": 0,
+    "lower_95_gain_vs_update_at_least": -0.05,
+    "p95_seconds": 180,
+    "p95_ratio_vs_update": 2.0,
+    "latency": "Episode wall time plus, for each routed system, the parent feature forward pass that selects its model for that episode."
+  },
+  "methodology_study": {
+    "status": "Declared on September 29, 2026 after the second confirmation failed, before any study rollout or training. Authorized by the user.",
+    "question": "Which method closes the gap to the update control: a larger module, or a consensus of small modules grown from disjoint verified experience?",
+    "data": "Every verified sequence and preference of rounds 1-4, rebuilt and re-verified from pinned files: 722 round-1 trajectories, 18 round-4 repaired trajectories, 256 parent replay items, 37 round-2 decision pairs, 2 round-3 divergence pairs and 15 round-4 repair pairs. No evaluation goals.",
+    "counts": {
+      "trajectories": 722,
+      "repaired_trajectories": 18,
+      "replay": 256,
+      "decision_pairs": 37,
+      "divergence_pairs": 2,
+      "repair_pairs": 15
+    },
+    "recipe": "Every arm from the parent in two phases: the round-1 training schedule on experience and replay, then one preference phase with the round-4 objective and settings on all preferences, experience and replay.",
+    "members": 3,
+    "membership": "A training case belongs to member int(sha256(case_id)[:8], 16) mod 3; each member trains on its cases' experience and preferences and on all replay.",
+    "arms": {
+      "update": {
+        "type": "update"
+      },
+      "small": {
+        "type": "addition"
+      },
+      "large": {
+        "type": "addition",
+        "spec": {
+          "layers": [
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39
+          ],
+          "rank": 64,
+          "alpha": 128,
+          "projections": [
+            "self_attn.q_proj",
+            "self_attn.k_proj",
+            "self_attn.v_proj",
+            "self_attn.o_proj",
+            "mlp.gate_proj",
+            "mlp.up_proj",
+            "mlp.down_proj"
+          ]
+        }
+      },
+      "member-0": {
+        "type": "addition",
+        "member": 0,
+        "spec": {
+          "seed": 27092036
+        }
+      },
+      "member-1": {
+        "type": "addition",
+        "member": 1,
+        "spec": {
+          "seed": 27092037
+        }
+      },
+      "member-2": {
+        "type": "addition",
+        "member": 2,
+        "spec": {
+          "seed": 27092038
+        }
+      }
+    },
+    "committee": "At every step the three members and the parent each propose the next message. The committee takes the action with the most votes (a canonical tool call, finish, or an invalid output that agrees with nothing); a tie that includes the parent goes to the parent.",
+    "evaluation": "Parent, every arm and the committee on the 64 integration cases (one greedy and two sampled episodes) and the 24 opened development cases (greedy), on the GPU.",
+    "integration_samples": 2,
+    "seed": 27092960,
+    "decision": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits). The third attempt uses whichever of large and committee scores higher, if it also scores at least as high as small; a tie goes to the committee. Otherwise neither method is carried forward.",
+    "credit": "None: already-opened data decides only the method of the third attempt, which needs fresh sealed confirmation data."
+  }
+}

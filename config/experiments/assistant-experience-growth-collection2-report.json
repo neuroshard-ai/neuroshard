@@ -1,0 +1,312 @@
+{
+  "format": "neuroshard-assistant-experience-growth-collection-report/1",
+  "attempt": 2,
+  "commit": "5c435c111cb94cbc2fade71885a86e940d7be190",
+  "execution_completed": true,
+  "pinned": {
+    "collections": {
+      "train2": {
+        "experience.json": "0cfed6ded876a200992845a0ea0fb08f6a8c6706ebde8fa6c48180844ba39b09",
+        "rollouts.jsonl.gz": "2e749a22f6bcab178524ccc7c01cca77d6b1661231bb5ecebdd8439886eac701",
+        "trajectories.jsonl.gz": "bae160b796457836cba8426e0d6cac5b546acf3495de5792d79ca7240a17b1e8"
+      },
+      "train3": {
+        "experience.json": "fc887d3bc74f88d6a858bb63acf721dbfcb977706e21db2e632598d7c28c5634",
+        "rollouts.jsonl.gz": "676f2bcb5813188fd6a31695d0e8f27cdf31639a99a46a46d3a1f5f2c4cb73bc",
+        "trajectories.jsonl.gz": "0c9261ea3a57475a640e3e6c54508ecfe3883928f3526ce09d15ad239fea6454"
+      }
+    },
+    "counts": {
+      "train2": 702,
+      "train3": 672
+    }
+  },
+  "local_reverification": "Every trajectory of both collections was rebuilt from its pinned rollout through the frozen scorer before pinning.",
+  "launches": [
+    {
+      "home": "assistant-experience-growth2-train2-20260930a",
+      "split": "train2",
+      "gpu": "NVIDIA A10G",
+      "collect_seconds": 12507.971226094,
+      "collection": {
+        "split": "train2",
+        "cases": 256,
+        "rollouts": 2720,
+        "accepted": 702,
+        "complete": 701,
+        "coached": 36,
+        "cases_without_experience": [
+          "workflow-03dba5ba1b47",
+          "workflow-05479d09623c",
+          "workflow-06b5e236d4f5",
+          "workflow-0c3b43cd5b19",
+          "workflow-0df406f61805",
+          "workflow-1d37f74abede",
+          "workflow-1ef2a2121fba",
+          "workflow-20bd9130d6fe",
+          "workflow-212b1af46044",
+          "workflow-21c26a610907",
+          "workflow-220c760c86f6",
+          "workflow-22ec79987be1",
+          "workflow-25f4ff5b662c",
+          "workflow-261c63e794c7",
+          "workflow-2843c6bceccf",
+          "workflow-2a5b96406add",
+          "workflow-2dab9c932741",
+          "workflow-351f0b23b587",
+          "workflow-3c256b8cdacf",
+          "workflow-3e8f7fb7761a",
+          "workflow-3fd2a3db0cd4",
+          "workflow-4037662ada9b",
+          "workflow-43254c5ee0b4",
+          "workflow-4726f8a3abe0",
+          "workflow-5abb4636cc19",
+          "workflow-650dea22e4a2",
+          "workflow-6a193a81c6e4",
+          "workflow-6f6a46634edb",
+          "workflow-70996d7df2d1",
+          "workflow-73653ccd2132",
+          "workflow-73f143b9abd9",
+          "workflow-75fb3ac622b3",
+          "workflow-76c7bd917906",
+          "workflow-78a61e4da17c",
+          "workflow-814e22c9fd39",
+          "workflow-8b002475ca6d",
+          "workflow-92f33458a969",
+          "workflow-993c4afb4869",
+          "workflow-9b01054d7663",
+          "workflow-9deb654622b5",
+          "workflow-9fab598e5743",
+          "workflow-a065e57993a0",
+          "workflow-a18892eb5f84",
+          "workflow-a38948b30a5f",
+          "workflow-a403397359d6",
+          "workflow-a4997f969f03",
+          "workflow-ac547c493451",
+          "workflow-af56c4b1e112",
+          "workflow-b0a8a75de5f9",
+          "workflow-b10d599257bd",
+          "workflow-b489e1dbbb41",
+          "workflow-b6f3a89f4e5c",
+          "workflow-b733c476cf3c",
+          "workflow-b9c76931d8f4",
+          "workflow-b9e01d29929a",
+          "workflow-bbdf60fbe1cc",
+          "workflow-cca76e191b24",
+          "workflow-cf476c5ff93d",
+          "workflow-d2e4c7612047",
+          "workflow-db84a644d8ab",
+          "workflow-e78fa1ec419b",
+          "workflow-e7ed107b36b6",
+          "workflow-e817405e4b97",
+          "workflow-eb4a32984a6e",
+          "workflow-ef0ca7ceab3d",
+          "workflow-f6e8bbba569a",
+          "workflow-f7cbb57c3108",
+          "workflow-fbf852029b02"
+        ],
+        "by_family": {
+          "difference": {
+            "cases": 32,
+            "complete": 15,
+            "coached_only": 13
+          },
+          "latest": {
+            "cases": 32,
+            "complete": 26,
+            "coached_only": 0
+          },
+          "copy": {
+            "cases": 32,
+            "complete": 26,
+            "coached_only": 0
+          },
+          "sum": {
+            "cases": 32,
+            "complete": 26,
+            "coached_only": 0
+          },
+          "scope": {
+            "cases": 32,
+            "complete": 24,
+            "coached_only": 1
+          },
+          "reschedule": {
+            "cases": 32,
+            "complete": 22,
+            "coached_only": 0
+          },
+          "recipient": {
+            "cases": 32,
+            "complete": 27,
+            "coached_only": 1
+          },
+          "date": {
+            "cases": 32,
+            "complete": 22,
+            "coached_only": 1
+          }
+        },
+        "near_policy_ceiling": 0.09421858936548233
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-30T08:12:12.517433+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-071deb9e3c0fba465"
+        ],
+        "instance_type": "g5.2xlarge",
+        "conservative_instance_seconds": 13110.75261,
+        "conservative_compute_usd": 4.4139533787,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "346ba968727b9b51f7b00844b888fb3f4944248a35c16c7f58cda257adc70aa9"
+    },
+    {
+      "home": "assistant-experience-growth2-train3-20260930a",
+      "split": "train3",
+      "gpu": "NVIDIA L40S",
+      "collect_seconds": 8096.644698323001,
+      "collection": {
+        "split": "train3",
+        "cases": 256,
+        "rollouts": 2728,
+        "accepted": 672,
+        "complete": 672,
+        "coached": 45,
+        "cases_without_experience": [
+          "workflow-046fecf23089",
+          "workflow-06dc3a27e3a3",
+          "workflow-097a47c12c91",
+          "workflow-0b03d1abf0cd",
+          "workflow-1533be44f042",
+          "workflow-18b80901ef0c",
+          "workflow-1cd024839ee0",
+          "workflow-1cd499d45ce9",
+          "workflow-2928d3504ef3",
+          "workflow-2a15cfb7287c",
+          "workflow-2cdcff5e8bcd",
+          "workflow-2e6b3d6ed70f",
+          "workflow-32c9bed5c2f4",
+          "workflow-357174996ece",
+          "workflow-37c89ab95196",
+          "workflow-3b44f6ea1324",
+          "workflow-3cc1044309b5",
+          "workflow-3d1963126510",
+          "workflow-42598067b573",
+          "workflow-474aeb4263e3",
+          "workflow-4fb663188c0e",
+          "workflow-5020091f4ac7",
+          "workflow-60a54571cba7",
+          "workflow-62f6f01c30c3",
+          "workflow-66240713f4f7",
+          "workflow-664718d2495e",
+          "workflow-6848e2b9b8ee",
+          "workflow-6855d4e069fc",
+          "workflow-68b3fe90ea09",
+          "workflow-69bb0de70abf",
+          "workflow-6b4d98697175",
+          "workflow-75a56e22bdbd",
+          "workflow-778267d6ccef",
+          "workflow-7a246ff08de5",
+          "workflow-7bc41893f008",
+          "workflow-7ff6a2f02173",
+          "workflow-858bb2a11f6e",
+          "workflow-88937b2af3ed",
+          "workflow-8c65c1f6a765",
+          "workflow-9d0f4d2b0d46",
+          "workflow-9d700ed1232b",
+          "workflow-9e644e4938a9",
+          "workflow-a337118fdec1",
+          "workflow-af58a4a954b5",
+          "workflow-b21fe5d719a3",
+          "workflow-b24c3684d856",
+          "workflow-ba9ba4f08a30",
+          "workflow-be0236d34e77",
+          "workflow-c1b5c2501c88",
+          "workflow-c94cc88a888a",
+          "workflow-cc6e46440b5f",
+          "workflow-d3309bbefa80",
+          "workflow-d37d373b7a7c",
+          "workflow-df42c294cc5d",
+          "workflow-e2f5a87ead5b",
+          "workflow-e5caf4f0afa3",
+          "workflow-ea0cea23e456",
+          "workflow-eaef3bd66ee3",
+          "workflow-eb3a2c6547c0",
+          "workflow-f20ce549dc93",
+          "workflow-f3621a463ec6",
+          "workflow-f3b7c8f42d3c",
+          "workflow-f77f07c7259e",
+          "workflow-fabb835c45e2",
+          "workflow-fdf20282e415",
+          "workflow-ffe8432f0925"
+        ],
+        "by_family": {
+          "scope": {
+            "cases": 32,
+            "complete": 24,
+            "coached_only": 1
+          },
+          "sum": {
+            "cases": 32,
+            "complete": 23,
+            "coached_only": 1
+          },
+          "latest": {
+            "cases": 32,
+            "complete": 27,
+            "coached_only": 1
+          },
+          "date": {
+            "cases": 32,
+            "complete": 23,
+            "coached_only": 0
+          },
+          "reschedule": {
+            "cases": 32,
+            "complete": 24,
+            "coached_only": 1
+          },
+          "difference": {
+            "cases": 32,
+            "complete": 18,
+            "coached_only": 15
+          },
+          "recipient": {
+            "cases": 32,
+            "complete": 28,
+            "coached_only": 0
+          },
+          "copy": {
+            "cases": 32,
+            "complete": 23,
+            "coached_only": 0
+          }
+        },
+        "near_policy_ceiling": 0.0993967279791832
+      },
+      "resources_finished": {
+        "finished_utc": "2026-09-30T06:59:56.783236+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-04a1a5f8a4360403a"
+        ],
+        "instance_type": "g6e.2xlarge",
+        "conservative_instance_seconds": 8774.141622,
+        "conservative_compute_usd": 5.464584147412833,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "evidence_sha256": "d211382b8029b79c229ef82f81e20f89d55701f597ebfc60d83151c4c497e43e"
+    }
+  ],
+  "pool_sequences": 2114,
+  "conservative_compute_usd": 9.878537526112833,
+  "remaining_instances": [],
+  "remaining_volumes": [],
+  "checklist_credit": false
+}

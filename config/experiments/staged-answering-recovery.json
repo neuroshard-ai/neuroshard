@@ -1,0 +1,103 @@
+{
+  "format": "neuroshard-staged-answering-recovery-v1",
+  "purpose": "Execution-only amendment: recover the saved expert, repeat the gate, and finish the unchanged comparison while charging retry expenditure.",
+  "method_contract": "ac66cb34bc0c529685c3271e17478b4a50965da582e346ad74b2875af9077007",
+  "method_freeze": "66e3a9f456ad74d181e1a349e2609e877eecb97c36a145c519097f02f25add9a",
+  "data": "92e9e3a3a287bfe979293ba1ca1dc399a5bdb8c8386a2b12ad39d5c59847e59a",
+  "timeout_record": "d7e8a3fd7d4e865a26e7d1ae858dda1f280edfaed52b269c080c52b37bea99cf",
+  "source_commit": "310aeb88b0ebf34f230f66f7011bef00e1d6265a",
+  "inputs": {
+    "baseline-launch.json": "1d24eb489aece673bb6802b865699c19dfbb0cccf621c79c38b8cf026caa6c5c",
+    "baseline.json": "373e6c1efba27f094fb16f53ec0f10c6a73b52bec0865da9c4d81da9bf39e258",
+    "checkpoints/expert/manifest.json": "ba8c1389061fe30dcf7583410976bc7fc9b7914404bc1d4f005a440cb3d53238",
+    "expansion-train-launch.json": "295e2b6b7fd235d987007337935af564b10a3161481a0fa2b9deb38758e353b0",
+    "expansion-training.json": "fe91afde5d48520bfafa9f9e85020589fb29d8e35a8fa3be1f1a6fadbac13d6d",
+    "failure.json": "ecc71bcb4b9d18f20eeaa1a74b4773b077d977d2ebd8845f6c34d646894cdf9d",
+    "protected-before-training.json": "c5da942f4fc894ada2d52608e961f7e000a097bc8b9cb5f6cafc6b714f8f6c60",
+    "study.json": "5068c85807894331e6f03f19ba631f216a0234bdbea4f0c5c7ba7d87b9a53445",
+    "checkpoints/expert/training.pt": "722f085d8ae0ff778afbfccc49ae01ccac9e5137642e05c81f3abff9d078f602",
+    "checkpoints/expert/weights.safetensors": "042495085918239ea52a20ab15471759f9d48e18518837159037d7479e1343fe"
+  },
+  "old_binding": {
+    "contract": "ac66cb34bc0c529685c3271e17478b4a50965da582e346ad74b2875af9077007",
+    "data": "92e9e3a3a287bfe979293ba1ca1dc399a5bdb8c8386a2b12ad39d5c59847e59a",
+    "freeze": "66e3a9f456ad74d181e1a349e2609e877eecb97c36a145c519097f02f25add9a",
+    "tokenizer": "e9478f6c6191dbe1c442af64c81352c531f08c5320f266a6ff7349c0f552cd5e"
+  },
+  "protected_ids": [
+    "13ba896d5682572cb27657bf594b947f4d3b1c5848e9de94d6d756cd2942dba4",
+    "7612dc76172399d6dfd94074c2ab18711d8f225264827acac79b67dac8fb4e57",
+    "648c9a6dca5da86f578094228fa52e7157d10449a1067a154a06ea25eb613bde",
+    "4dca6e468adc12721379549bee383d1c0d4c950a829a89de06cad7e55fdb1f67",
+    "55d75664a91915250d5523cc6cd10acc40ac93a49bf3bc233367f204831cea86",
+    "3cbb4f4fdc4e049342714a39cebb60b4385955e2e609568c1f8fc053b1b41e5d",
+    "03925a0521d35cb8aff1bb997d96bc638b0caaecda26f2b115586a1ecd2f0209",
+    "ab2d4d58018b19960fa18672ddde9e5b3b76b87c88f4ba666a227c2e4ec9d3d7",
+    "feb1c17fbb94069770fbab268d01a50c06125b09fb0c93cc887a6a08a3ab5ed3",
+    "b4a9ef40695fbf8e40b56a1b1fb1fb6e245445e9bd72f51eb9c4dea57d17918c",
+    "b9a62bf31b91f9c7593483d3c06603d6addd25854ca558d1ce174caa269dbd7e",
+    "8f819d8794dd1655f78e4148b1c6d2ad995bae73c791c90218fe734d707d3981",
+    "78fb59c6ac84ef1035cfd9d709ed3763103287a87f3c8e1cf492e7fa867c2633",
+    "d085fb190de4cb92344d5d841da00b0ad0cd0e446d4af2859c89cec019f4357a",
+    "abdeb613f5328e050998370498b545d3adc8249b211c026ba562ee3a1353cc5b"
+  ],
+  "expert_checkpoint": {
+    "manifest": "ba8c1389061fe30dcf7583410976bc7fc9b7914404bc1d4f005a440cb3d53238",
+    "module": "c39608ac6b707e4c3d40a08f26408cb70ae72a4ae0cf021c9b1015726780d0f4",
+    "step": 64
+  },
+  "gate": {
+    "steps": 64,
+    "router": "verify-saved-zero-weights-and-bias",
+    "optimizer": "fresh-AdamW-from-unchanged-method",
+    "rng": "restore-saved-Torch-and-Python-states-immediately-before-gate",
+    "verify_recorded_prefix_steps": 63
+  },
+  "accounting": {
+    "comparison": "entire-failed-expansion-child-CPU-plus-entire-recovery-gate-child-CPU",
+    "control": "unchanged-stream-and-optimizer-until-optimization-CPU-reaches-comparison-budget",
+    "retry_work": "report-63-discarded-recorded-gate-updates-and-unattributed-prior-process-CPU-separately",
+    "total": "previous-baseline-and-failed-training-plus-all-recovery-children-and-recovery-coordinator"
+  },
+  "budget": {
+    "threads": 1,
+    "total_wall_seconds": 3600,
+    "arms": {
+      "restart-gate": {
+        "wall_seconds": 600,
+        "cpu_seconds": 600
+      },
+      "control-train": {
+        "wall_seconds": 1500,
+        "cpu_seconds": 1500
+      },
+      "expansion-evaluate": {
+        "wall_seconds": 600,
+        "cpu_seconds": 600
+      },
+      "control-evaluate": {
+        "wall_seconds": 600,
+        "cpu_seconds": 600
+      }
+    }
+  },
+  "runtime": {
+    "packages": {
+      "safetensors": "0.7.0",
+      "tokenizers": "0.22.1",
+      "torch": "2.9.1+cpu",
+      "transformers": "4.57.3"
+    },
+    "python": "3.10.12",
+    "platform": "linux"
+  },
+  "method_changed": false,
+  "same_data_schedule_serving_protection_quality_gates": true,
+  "reuse_verified_baseline": true,
+  "gpu_launch_authorized": false,
+  "admission_evidence": false,
+  "confirmation_opened": false,
+  "item4_complete": false,
+  "independent_hosting": "four-independent-operators-remains-separate",
+  "stop": "one-recovery-attempt; any-identity-prefix-cost-or-runtime-failure-stops; no-automatic-retry"
+}

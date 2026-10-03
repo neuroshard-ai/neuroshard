@@ -1,0 +1,206 @@
+{
+  "format": "neuroshard-granite-shard-chain-report/1",
+  "result": "config/experiments/granite-shard-chain-result.json",
+  "result_sha256": "1f5cdf269e0e401640c8a602ff9782bb71024983408045e56db739147a6d8f4d",
+  "commit": "69d5b474cac22557ee2ecf4d3264e9df8d99c375",
+  "attempt": 1,
+  "passed": false,
+  "execution_completed": false,
+  "failed_step": "submitting the auditor's challenge",
+  "admissions": {
+    "bond-1": {
+      "code": 0,
+      "log": "",
+      "height": 18
+    },
+    "bond-2": {
+      "code": 0,
+      "log": "",
+      "height": 21
+    },
+    "open-honest": {
+      "code": 0,
+      "log": "",
+      "height": 23
+    },
+    "commit-honest-1": {
+      "code": 0,
+      "log": "",
+      "height": 1305
+    },
+    "commit-honest-2": {
+      "code": 0,
+      "log": "",
+      "height": 1308
+    },
+    "framing": {
+      "code": 1,
+      "log": "Fraud proof does not verify",
+      "height": null
+    },
+    "open-cheat": {
+      "code": 0,
+      "log": "",
+      "height": 1728
+    },
+    "commit-cheat-1": {
+      "code": 0,
+      "log": "",
+      "height": 3011
+    },
+    "commit-cheat-2": {
+      "code": 0,
+      "log": "",
+      "height": 3014
+    }
+  },
+  "final_states": {
+    "validator-1": {
+      "height": 3130,
+      "root": "af2808cfa7b8490f55b8a3480f28b6fed6a3486a3a52575297527a0154637398",
+      "results": {
+        "3fee82a430d4208f65015ec2d8f07fb28b440df38cf80cb87b4deb3dcdb63dc8": "settled"
+      }
+    },
+    "validator-2": {
+      "height": 3130,
+      "root": "af2808cfa7b8490f55b8a3480f28b6fed6a3486a3a52575297527a0154637398",
+      "results": {
+        "3fee82a430d4208f65015ec2d8f07fb28b440df38cf80cb87b4deb3dcdb63dc8": "settled"
+      }
+    },
+    "validator-3": {
+      "height": 3126,
+      "root": "a573c764e6a7ca4a11d274087e95253209fd102c6d396fd568c35e004ec51fe9",
+      "results": {
+        "3fee82a430d4208f65015ec2d8f07fb28b440df38cf80cb87b4deb3dcdb63dc8": "settled"
+      }
+    },
+    "validator-4": {
+      "height": 3130,
+      "root": "af2808cfa7b8490f55b8a3480f28b6fed6a3486a3a52575297527a0154637398",
+      "results": {
+        "3fee82a430d4208f65015ec2d8f07fb28b440df38cf80cb87b4deb3dcdb63dc8": "settled"
+      }
+    }
+  },
+  "diagnosis": {
+    "finding": "Every transaction before the auditor's challenge went through consensus as declared: both bonds, both openings and all four commitments were committed, the framing challenge was refused at admission, and the honest job settled by consensus at height 3109. Submitting the auditor's challenge then failed with the connection closed, and the controller's cleanup stopped every validator.",
+    "cause": "Admitting the challenge replays its proof, about 12 s on the real model. CometBFT's RPC server closes a response after its write timeout, about 11 s by default, so the admission reply was lost; the controller treated that as fatal. The application also replayed under its state lock, which held validator-3's consensus four blocks behind.",
+    "reproduction": "Locally, four validators with a 15 s stand-in proof check reproduced the lost reply; with the fixes, the same challenge was admitted after 15 s and committed, and all four validators advanced together."
+  },
+  "resources_finished": {
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "conservative_compute_usd": 10.724330043756,
+    "hosts": [
+      {
+        "finished_utc": "2026-10-02T04:54:24.023433+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01812d6e000f322ac"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4457.612306,
+        "conservative_compute_usd": 1.310538017964,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:55:00.823866+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0e3b6c6a79abab73f"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4487.116801,
+        "conservative_compute_usd": 1.319212339494,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:55:42.711374+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0eb3782cae00e2bbb"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4521.662465,
+        "conservative_compute_usd": 1.32936876471,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:56:19.802918+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0463d3e97415b511d"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4551.50199,
+        "conservative_compute_usd": 1.33814158506,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:56:51.357521+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07f82e7621d00e7d9"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4575.728126,
+        "conservative_compute_usd": 1.3452640690439999,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:57:27.993630+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a88a9159be630282"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4605.149542,
+        "conservative_compute_usd": 1.3539139653480001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:57:59.734472+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0bc3525b38f5813e3"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4629.576076,
+        "conservative_compute_usd": 1.3610953663440002,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      {
+        "finished_utc": "2026-10-02T04:58:26.326707+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-000740199df4969b5"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4648.965768,
+        "conservative_compute_usd": 1.3667959357919999,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    ]
+  },
+  "checklist_credit": false,
+  "admission_evidence": false
+}

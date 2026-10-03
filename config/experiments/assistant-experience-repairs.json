@@ -1,0 +1,44 @@
+{
+  "format": "neuroshard-assistant-experience-repairs/1",
+  "status": "Declared on September 30, 2026, after the development diagnostic and before any repair rollout. Authorized by the project owner.",
+  "diagnosis": "In every failed latest development case, the compositional small module started the review-interval shift from the start date plus the interval instead of the start date of approved revision 1, applying the interval twice; it read the right document, computed the total and applied the added day correctly.",
+  "sampler": "small",
+  "source": "Fresh sampled rollouts of the pinned compositional small module on every training case of the date, latest and scope families in the five training splits. No development or confirmation case.",
+  "splits": [
+    "train",
+    "train2",
+    "train3",
+    "compose1",
+    "compose2"
+  ],
+  "families": [
+    "date",
+    "latest",
+    "scope"
+  ],
+  "samples_per_case": 4,
+  "temperature": 0.8,
+  "collection_seed": 27095034,
+  "repair": "In a failed rollout, find the first shift_date call whose start date its round cannot justify: not the start date of one of the round's goal sources, not a date an earlier shift_date returned, and not the goal due date of an earlier round. Replace that start date with the round's goal-source start date, replay every earlier generation exactly, and let the same model continue by sampling. Goals locate the error and never enter a prompt.",
+  "repairs_per_failure": 2,
+  "verification": "Keep only repaired rollouts that the frozen scorer passes in every round.",
+  "pairs": "Chosen: the repaired message; rejected: the original message; shared prefix: all earlier messages.",
+  "pairs_per_case": 4,
+  "experience_per_case": 2,
+  "arms": {
+    "update": {
+      "type": "update"
+    },
+    "small": {
+      "type": "addition"
+    }
+  },
+  "continuation": "Both compositional arms continue from their pinned checkpoints through one preference phase with round 4's settings, on identical experience (the 3302-sequence pool plus verified repaired trajectories), replay, and pairs (the 54 earlier pairs plus the repair pairs).",
+  "evaluation": "Parent, update and small module on the 64 integration cases (one greedy and two sampled episodes) and the 24 opened development cases (greedy), on the GPU.",
+  "integration_samples": 2,
+  "seed": 27095960,
+  "decision": "Score = greedy integration successes + greedy development successes - 2 x parent successes lost (greedy, both splits), reported for both arms. The third attempt is declared with the small module only if it lost no parent success on either split, and fails if no verified repair is found. Otherwise there is no third attempt and the result is reported.",
+  "third_attempt": "Needs its own declaration on the frozen confirmation3 split under the second confirmation's gate. Its serving must meet that gate's latency limits on the canonical CPU runtime, measured on opened development cases before the split opens.",
+  "credit": "None: already-opened data decides only whether the third attempt runs.",
+  "budget": "One GPU host, at most 8 hours and $21 worst case; about $6 expected."
+}

@@ -9,6 +9,7 @@ from pathlib import Path, PurePosixPath
 EXCLUDED = {"archive", ".neuroshard", "website", "docs-site", "legacy",
             "node_modules", "venv_build", ".git", "__pycache__"}
 REQUIRED = {
+    "neuroshard/client/assistant-policy.json",
     "neuroshard/client/networks/llm-testnet.json",
     "neuroshard/client/consensus/go.mod", "neuroshard/client/consensus/go.sum",
     "neuroshard/publicnet/data/input.txt",
@@ -20,6 +21,7 @@ REQUIRED = {
     "neuroshard/evolution/update_witness.py",
 }
 REQUIRED_SOURCE = {
+    "examples/assistant-contribution.json",
     "docs/eval/data/input.txt", "docs/llm-requirements.txt",
     "tests/evolution/conftest.py", "tests/evolution/test_settlement.py",
     "config/evolution-epoch.example.json", "config/experiments/response-from-seed-plan.json",
