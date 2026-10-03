@@ -15,9 +15,11 @@ from test_granite_shard_serving import passing_evidence
 from test_optimistic_serving import Account
 
 FROZEN = read(ROOT / settlement.PLAN)
-# The published plan predates metered settlement; these tests give its ledger a position budget.
-BUDGET, SERVED = 64, 40
-PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET}}
+# The published plan predates metered settlement and challenge deposits; these tests give its ledger
+# a position budget, a deposit and a one-block proof window.
+BUDGET, SERVED, DEPOSIT = 64, 40, 1_000_000
+PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET, 'params': {
+    **FROZEN['ledger']['params'], 'challenge_deposit': DEPOSIT, 'proof_blocks': 1}}}
 TERMS = PLAN['ledger']
 
 
@@ -68,23 +70,29 @@ def declared_chain():
 
     honest_open, honest = open_job(0)
     cheat_open, cheated = open_job(1)
-    challenge = {'log_key': keys[1], 'nonce': 0}
+    framing, framing_prove = settlement.challenge_pair(people['accuser'].key, chain_id, honest, keys[1], '0f' * 32)
+    proven, proven_prove = settlement.challenge_pair(people['auditor'].key, chain_id, cheated, keys[1], 'aa' * 32)
     blocks = [[bond(1), bond(2)], [honest_open], [commit(1, honest, 1), commit(2, honest, 1)], [cheat_open],
-              [commit(1, cheated, 2), commit(2, cheated, 2)],
-              [people['accuser'].sign('challenge', job_id=honest, proof_root='0f' * 32, **challenge)],
-              [], [], [people['auditor'].sign('challenge', job_id=cheated, proof_root='aa' * 32, **challenge)], [], []]
+              [commit(1, cheated, 2), commit(2, cheated, 2)]] + settlement.challenge_blocks(TERMS['params'], {
+                  'framing': framing, 'framing_prove': framing_prove, 'proven': proven, 'proven_prove': proven_prove})
     parties = {name: p.public for name, p in people.items()}
-    return genesis, blocks, parties, keys, {'honest': honest, 'cheated': cheated}
+    return genesis, blocks, parties, keys, {'honest': honest, 'cheated': cheated,
+                                            'framing': ledger.transaction_id(framing)}
 
 
 def test_the_declared_sequence_leaves_exactly_the_declared_balances():
     genesis, blocks, parties, keys, jobs = declared_chain()
     report = settlement.replay_blocks(genesis, blocks, lambda state, request: request['proof_root'] == 'aa' * 32)
-    assert report['outcomes'] == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
+    assert report['outcomes'] == ['accepted'] * 9 + ['rejected: Fraud proof does not verify', 'accepted', 'accepted']
     state, served = report['state'], {1: SERVED, 2: SERVED}
     assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(
         PLAN, parties, served)
     assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheated']]['status'] == 'fraud'
+    # The framing lapses and the honest job settles at block 8, before the fraud proof lands at block 9.
+    assert state['results'][jobs['framing']] == {**state['results'][jobs['framing']], 'status': 'forfeited',
+                                                 'deposit': DEPOSIT, 'height': 8}
+    assert state['results'][jobs['honest']]['height'] == 8 and state['results'][jobs['cheated']]['height'] == 9
+    assert state['burned'] == 11 * TERMS['params']['fee'] + DEPOSIT + TERMS['owner_bond'] // 2
     paid = TERMS['price'] * SERVED // (BUDGET * 2)
     assert state['results'][jobs['honest']]['paid'] == settlement.honest_payments(PLAN, served) == [paid, paid]
     assert state['results'][jobs['honest']]['refunded'] == TERMS['price'] - 2 * paid > 0
@@ -112,7 +120,7 @@ def evidence():
     return fetches, phases, parties, jobs
 
 
-def test_assessment_requires_agreeing_validators_a_rejected_framing_a_proven_fault_and_exact_settlement():
+def test_assessment_requires_agreeing_validators_a_forfeited_framing_a_proven_fault_and_exact_settlement():
     fetches, phases, parties, jobs = evidence()
     report = settlement.assess(PLAN, fetches, phases, parties, jobs)
     assert report['passed'], report['checks']
@@ -121,8 +129,12 @@ def test_assessment_requires_agreeing_validators_a_rejected_framing_a_proven_fau
     assert not settlement.assess(PLAN, fetches, split, parties, jobs)['checks']['replicas_agree']
     framed = copy.deepcopy(phases)
     for name in ('validator-1', 'validator-2'):
-        framed['validate'][name]['outcomes'][8] = 'accepted'
-    assert not settlement.assess(PLAN, fetches, framed, parties, jobs)['checks']['framing_rejected']
+        framed['validate'][name]['outcomes'][9] = 'accepted'
+    assert not settlement.assess(PLAN, fetches, framed, parties, jobs)['checks']['framing_forfeited']
+    kept = copy.deepcopy(phases)
+    for name in ('validator-1', 'validator-2'):
+        del kept['validate'][name]['state']['results'][jobs['framing']]
+    assert not settlement.assess(PLAN, fetches, kept, parties, jobs)['checks']['framing_forfeited']
     misnamed = copy.deepcopy(phases)
     misnamed['audit-cheat']['fault_forward'] = 199
     assert not settlement.assess(PLAN, fetches, misnamed, parties, jobs)['checks']['fault_named']

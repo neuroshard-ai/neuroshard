@@ -3,8 +3,9 @@
 The settlement execution's owners, auditor and declared fault, with the ledger run by
 four CometBFT validators on separate hosts, each holding only shard 1. Transactions
 enter through the validators' mempools and blocks come from consensus. The framing
-attempt arrives inside the honest job's window; the fraud proof arrives inside the
-cheating job's window, after the honest job has settled.
+challenge opens inside the honest job's window, its proof is refused and its deposit
+lapses; the fraud proof opens and lands inside the cheating job's window, after the
+honest job has settled.
 """
 
 import hashlib
@@ -117,7 +118,10 @@ def validator(index, phase, home, store):
 
 
 def assess(plan, fetches, phases, parties, jobs, admissions, states):
-    """Serving agreement, four agreeing validators, a refused framing, a proven fault and exact settlement."""
+    """Serving agreement, four agreeing validators, a forfeited framing, a proven fault and exact settlement.
+
+    ``jobs`` names the honest and cheated jobs and the framing challenge.
+    """
     honest = phases['serve-honest']
     agreement = serving.assess(plan, fetches['owners'], [], honest)
     keys = {r: fetches['owners'][r].get('log_key') for r in (1, 2)}
@@ -128,22 +132,24 @@ def assess(plan, fetches, phases, parties, jobs, admissions, states):
     audit = phases.get('audit-cheat') or {}
     committed = [admissions.get(name) or {} for name in
                  ('bond-1', 'bond-2', 'open-honest', 'commit-honest-1', 'commit-honest-2', 'open-cheat',
-                  'commit-cheat-1', 'commit-cheat-2', 'proven')]
-    framing = admissions.get('framing') or {}
+                  'commit-cheat-1', 'commit-cheat-2', 'framing', 'proven', 'proven-prove')]
+    refused = admissions.get('framing-prove') or {}
+    included = lambda admission: admission.get('code') == 0 and bool(admission.get('height'))
     checks = {
         'honest_agreement': agreement['passed'],
         'validators_agree': len(states) == 4 and len({s.get('root') for s in states}) == 1
         and len({s.get('height') for s in states}) == 1,
-        'honest_work_committed': all(a.get('code') == 0 and a.get('height') for a in committed[:8]),
-        'framing_refused': framing.get('code') == 1 and framing.get('log') == 'Fraud proof does not verify'
-        and not framing.get('height'),
+        'honest_work_committed': all(included(a) for a in committed[:8]),
+        'framing_forfeited': included(committed[8]) and refused.get('code') == 1
+        and refused.get('log') == 'Fraud proof does not verify' and not refused.get('height')
+        and (results.get(jobs['framing']) or {}).get('status') == 'forfeited',
         'fault_named': audit.get('fault_forward') == plan['fault']['at'],
-        'fault_proven': committed[8].get('code') == 0 and bool(committed[8].get('height'))
+        'fault_proven': included(committed[9]) and included(committed[10])
         and (results.get(jobs['cheated']) or {}).get('status') == 'fraud'
         and results[jobs['cheated']].get('guilty') == keys[1] and (owners.get(keys[1]) or {}).get('status') == 'slashed',
         'honest_settled_first': served is not None and (results.get(jobs['honest']) or {}).get('status') == 'settled'
         and results[jobs['honest']].get('paid') == settlement.honest_payments(plan, served)
-        and results[jobs['honest']]['height'] < committed[8].get('height', 0)
+        and results[jobs['honest']]['height'] < (committed[10].get('height') or 0)
         and (owners.get(keys[2]) or {}).get('status') == 'active',
         'balances_exact': expected is not None
         and {a: state.get('accounts', {}).get(a, {}).get('balance') for a in expected} == expected,

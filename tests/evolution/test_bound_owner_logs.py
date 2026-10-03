@@ -132,10 +132,20 @@ def verdict(state, store, partitions, auditor, session, log_key, proof):
         shutil.rmtree(staging)
     else:
         shutil.move(str(staging), str(store / root))
-    envelope = auditor.sign('challenge', job_id=session['job_id'], log_key=log_key, proof_root=root)
-    auditor.nonce -= 1
-    request = ledger.admit(state, envelope)[2]
-    return granite_audit.challenge_checker(store, partitions)(state, request)
+    return granite_audit.challenge_checker(store, partitions)(*proof_request(state, auditor, session, log_key, root))
+
+
+def proof_request(state, auditor, session, log_key, root):
+    """The state with an auditor's challenge naming ``root`` open, and what a proof of it must establish.
+
+    Neither transaction is kept: the auditor's nonce is restored.
+    """
+    opening = auditor.sign('challenge', job_id=session['job_id'], log_key=log_key, proof_root=root)
+    opened = ledger.transition(state, opening, None)
+    request = ledger.admit(opened, auditor.sign('prove', job_id=session['job_id'],
+                                                challenge_id=ledger.transaction_id(opening)))[2]
+    auditor.nonce -= 2
+    return opened, request
 
 
 def committed(market, session, records):
@@ -251,9 +261,11 @@ def test_an_old_log_is_refused_and_relabelled_old_work_is_provable_without_repla
     # No shard is needed: the claim is judged by hashing the log.
     assert verdict(state, store, {}, market['people']['auditor'], session, market['public'][1], proof) is True
     (root,) = [path.name for path in store.iterdir()]
-    challenge = market['people']['auditor'].sign('challenge', job_id=session['job_id'], log_key=market['public'][1],
-                                                 proof_root=root)
-    state = ledger.transition(state, challenge, granite_audit.challenge_checker(store, {}))
+    auditor = market['people']['auditor']
+    opening = auditor.sign('challenge', job_id=session['job_id'], log_key=market['public'][1], proof_root=root)
+    state = ledger.transition(state, opening, None)
+    proven = auditor.sign('prove', job_id=session['job_id'], challenge_id=ledger.transaction_id(opening))
+    state = ledger.transition(state, proven, granite_audit.challenge_checker(store, {}))
     assert state['results'][session['job_id']]['status'] == 'fraud'
     assert state['owners'][market['public'][1]]['status'] == 'slashed'
 
@@ -334,9 +346,7 @@ def test_a_bundle_is_judged_only_from_bytes_matching_its_address(partitions, mar
     staging, store = tmp_path / 'staging', tmp_path / 'store'
     granite_audit.save_proof(proof, staging)
     root = granite_audit.bundle_root(staging)
-    envelope = market['people']['auditor'].sign('challenge', job_id=session['job_id'], log_key=market['public'][1],
-                                                proof_root=root)
-    request = ledger.admit(state, envelope)[2]
+    state, request = proof_request(state, market['people']['auditor'], session, market['public'][1], root)
     check = granite_audit.challenge_checker(store, partitions)
     with pytest.raises(ledger.ProofUnavailable):
         check(state, request)
@@ -380,9 +390,8 @@ def test_malformed_bundles_and_logs_fail_the_same_way_everywhere(partitions, mar
         (staging / name).write_bytes(data)
     root = granite_audit.bundle_root(staging)
     shutil.move(str(staging), str(store / root))
-    envelope = auditor.sign('challenge', job_id=session['job_id'], log_key=market['public'][1], proof_root=root)
-    auditor.nonce -= 1
-    assert granite_audit.challenge_checker(store, partitions)(state, ledger.admit(state, envelope)[2]) is False
+    assert granite_audit.challenge_checker(store, partitions)(
+        *proof_request(state, auditor, session, market['public'][1], root)) is False
     # Replay checks each logged command against what serving could have sent.
     for entries in ([{'op': CROP, 'value': 3}], [{'op': ADAPTER, 'value': 2}], [{'op': 99, 'value': 0}],
                     [{'op': FORWARD, 'value': 10 ** 9, 'input': 'x', 'output': 'y'}], [{'op': True, 'value': 0}]):

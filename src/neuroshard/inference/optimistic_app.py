@@ -4,17 +4,22 @@ Every block first advances the ledger, settling jobs whose challenge window clos
 then applies its transactions. Mempool admission and proposals evaluate a transaction
 against the next block's state, so only transactions that apply reach a block.
 Admission checks a transaction's signature, schema, nonce, fee and target before any
-proof replay; a challenge's proof is then replayed once per validator, outside the
-state lock, and its verdict cached.
+proof replay.
+
+Opening a challenge locks its deposit and replays nothing. After each commit, every
+validator replays the proof of each open challenge once, in the background on one
+dedicated thread outside the state lock, and caches its verdict; so only challenges
+whose deposits are locked on chain are ever replayed, and a ``prove`` transaction is
+usually judged from the cache.
 
 Holding a challenged bundle is local to each validator and never a ledger outcome. A
 validator that cannot judge a proof (it does not hold the bundle, or cannot replay it)
-refuses the challenge at admission with a retryable code, leaves it out of its own
+refuses the proof at admission with a retryable code, leaves it out of its own
 proposals and rejects proposals containing it; it caches nothing, so it judges the
 proof once the bundle arrives. A committed block was accepted by validators with more
 than two thirds of the voting power, and an honest validator accepts a block only after
-judging every challenge in it, so execution applies committed challenges without
-replaying them and needs no bundle.
+judging every proof in it, so execution applies committed proofs without replaying
+them and needs no bundle.
 """
 
 import argparse
@@ -61,14 +66,15 @@ def parse_json(raw):
 class cached:
     """One replay per proof on one dedicated thread: the verdict depends only on the request, which binds the proof.
 
-    A single worker gives every replay the same thread and so the same parallel arithmetic.
-    Only verdicts are kept. ``NoVerdict`` (the bundle is not held here, or this validator
-    cannot run the replay) propagates and the proof is judged afresh when asked again; so
-    does a failure of the checker itself, which says nothing about the proof.
+    A single worker gives every replay the same thread and so the same parallel arithmetic,
+    whether a proof is judged in the background or when asked. Only verdicts are kept.
+    ``NoVerdict`` (the bundle is not held here, or this validator cannot run the replay)
+    propagates and the proof is judged afresh when asked again; so does a failure of the
+    checker itself, which says nothing about the proof.
     """
 
     def __init__(self, check):
-        self.check, self.verdicts = check, {}
+        self.check, self.verdicts, self.queued = check, {}, set()
         self.lock, self.worker = threading.Lock(), ThreadPoolExecutor(max_workers=1)
 
     def replay(self, state, request):
@@ -89,15 +95,40 @@ class cached:
         with self.lock:
             return self.verdicts.get(ledger.digest(request))
 
+    def judge(self, state, request, key):
+        """On the worker: the cached verdict, or a replay's, which is then cached."""
+        with self.lock:
+            if key in self.verdicts:
+                return self.verdicts[key]
+        verdict = self.replay(state, request)
+        with self.lock:
+            self.verdicts[key] = verdict
+        return verdict
+
     def __call__(self, state, request):
         key = ledger.digest(request)
         with self.lock:
             if key in self.verdicts:
                 return self.verdicts[key]
-        verdict = self.worker.submit(self.replay, state, request).result()
+        return self.worker.submit(self.judge, state, request, key).result()
+
+    def prefetch(self, state, request):
+        """Judge ``request`` in the background unless it is judged or queued; with no verdict, it is tried again later."""
+        key = ledger.digest(request)
         with self.lock:
-            self.verdicts[key] = verdict
-        return verdict
+            if key in self.verdicts or key in self.queued:
+                return
+            self.queued.add(key)
+
+        def run():
+            try:
+                self.judge(state, request, key)
+            except ledger.NoVerdict:
+                pass
+            finally:
+                with self.lock:
+                    self.queued.discard(key)
+        self.worker.submit(run)
 
 
 class Application(rpc.ABCIServicer):
@@ -133,15 +164,22 @@ class Application(rpc.ABCIServicer):
         return state
 
     def committed(self, previous, request):
-        """The verdict execution applies to a challenge in a committed block: it verified.
+        """The verdict execution applies to a proof in a committed block: it verified.
 
         Validators with more than two thirds of the voting power accepted the block, and an
-        honest validator accepts a block only after judging every challenge in it.
+        honest validator accepts a block only after judging every proof in it.
         """
         if self.check.known(request) is False:
-            LOG.error('committed challenge of %s contradicts this validator\'s replay of %s', request['log_key'],
+            LOG.error('committed proof against %s contradicts this validator\'s replay of %s', request['log_key'],
                       request['proof_root'])
         return True
+
+    def prefetch(self):
+        """Start judging the proof of every open challenge, so a verdict is ready before anyone submits it."""
+        for job_id, job in sorted(self.state['jobs'].items()):
+            for challenge_id in sorted(job['challenges']):
+                request = ledger.challenge_request(self.state, job_id, job['challenges'][challenge_id])
+                self.check.prefetch(self.state, request)
 
     def Echo(self, request, context):
         return pb.ResponseEcho(message=request.message)
@@ -197,8 +235,8 @@ class Application(rpc.ABCIServicer):
         try:
             state, challenge = self.admit(request.tx)
             if challenge is not None:
-                # Only an authenticated, funded challenge of a committed log in an open window reaches a replay,
-                # which runs outside the state lock so consensus never waits behind it.
+                # Only a proof of an open challenge, whose deposit is locked, reaches a replay; it is usually
+                # judged already, and otherwise runs outside the state lock so consensus never waits behind it.
                 self.check(state, challenge)
             with self.lock:
                 self.block(self.state['height'] + 1, [request.tx])
@@ -267,6 +305,7 @@ class Application(rpc.ABCIServicer):
             if self.pending is not None:
                 self.persist(self.pending)
                 self.state, self.pending = self.pending, None
+                self.prefetch()
             return pb.ResponseCommit()
 
     def ListSnapshots(self, request, context):

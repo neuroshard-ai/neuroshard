@@ -17,6 +17,13 @@ the positions the link has carried, so each commitment states, under the upstrea
 sender's signature, how much work the log covers. Settlement pays each owner for those
 positions, never more than the user's device sent or the job bought, and returns the
 rest of the escrow to the user.
+
+A challenge takes two transactions. Opening one names a committed log and a proof's
+content address and locks a deposit; nothing is replayed. Validators then judge the
+open challenge's proof, and a ``prove`` transaction lands it only if it verifies: the
+owner is slashed and the deposit returned. A challenge not proven within its proof
+window lapses and its deposit is burned, so every replay a challenge causes is paid
+for. A job does not settle while a challenge of it is open.
 """
 
 import copy
@@ -29,12 +36,13 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from neuroshard.core.crypto.ecdsa import ecdsa_verify
 
 PARAMS = {'fee': 1000, 'owner_bond_minimum': 5_000_000, 'minimum_price': 100_000, 'challenge_blocks': 20,
-          'job_blocks': 60, 'auditor_share_ppm': 500_000, 'max_jobs': 32, 'max_results': 128}
+          'job_blocks': 60, 'auditor_share_ppm': 500_000, 'max_jobs': 32, 'max_results': 128,
+          'challenge_deposit': 1_000_000, 'proof_blocks': 20}
 FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession'},
           'owner_unbond': {'log_key'}, 'owner_withdraw': {'log_key'},
           'serve_open': {'model_root', 'owners', 'request_root', 'session_key', 'price', 'positions'},
           'log_commit': {'job_id', 'statement_root', 'entries_root', 'header', 'log_signature'},
-          'challenge': {'job_id', 'log_key', 'proof_root'}}
+          'challenge': {'job_id', 'log_key', 'proof_root'}, 'prove': {'job_id', 'challenge_id'}}
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
 HEADER_FIELDS = {'format', 'rank', 'public_key', 'session', 'upstream'}
 LINK_DOMAIN = 'neuroshard/serving-link/v1'
@@ -160,7 +168,7 @@ def root(state):
 def invariant(state):
     liquid = sum(a['balance'] for a in state['accounts'].values())
     bonded = sum(o['amount'] for o in state['owners'].values())
-    escrow = sum(j['price'] for j in state['jobs'].values())
+    escrow = sum(j['price'] + sum(c['deposit'] for c in j['challenges'].values()) for j in state['jobs'].values())
     assert all(a['balance'] >= 0 and a['nonce'] >= 0 for a in state['accounts'].values())
     assert all(o['amount'] >= 0 for o in state['owners'].values())
     assert state['initial_supply'] == liquid + bonded + escrow + state['burned']
@@ -191,10 +199,11 @@ def billable(job):
 
 
 def advance(previous, height):
-    """Block boundary: settle every job whose challenge window has closed; refund jobs never fully committed.
+    """Block boundary: burn the deposits of challenges not proven in time, then settle every job
+    whose challenge window has closed and refund jobs never fully committed.
 
     A settled job pays each owner its equal share of the price for every position it served;
-    whatever is not paid out returns to the user.
+    whatever is not paid out returns to the user. A job with an open challenge waits.
     """
     if height != previous['height'] + 1:
         raise ValueError('Nonmonotonic block height')
@@ -202,6 +211,14 @@ def advance(previous, height):
     state['height'] = height
     for job_id in sorted(state['jobs']):
         job = state['jobs'][job_id]
+        for challenge_id in sorted(job['challenges']):
+            lapsed = job['challenges'][challenge_id]
+            if height > lapsed['deadline']:
+                state['burned'] += lapsed['deposit']
+                remember(state, challenge_id, {'status': 'forfeited', 'job_id': job_id, **lapsed})
+                del job['challenges'][challenge_id]
+        if job['challenges']:
+            continue
         if job['deadline'] is not None and height > job['deadline']:
             served = billable(job)
             paid = [job['price'] * positions // (job['positions'] * len(job['owners'])) for positions in served]
@@ -213,7 +230,7 @@ def advance(previous, height):
                                      'positions': served, 'paid': paid, 'refunded': refunded})
             del state['jobs'][job_id]
         elif job['deadline'] is None and height > job['expires']:
-            account(state, job['user'])['balance'] += job['price']
+            refund(state, job)
             remember(state, job_id, {'status': 'expired', 'user': job['user'], 'owners': job['owners'],
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
@@ -225,23 +242,38 @@ def open_jobs(state, key):
     return [job_id for job_id, job in state['jobs'].items() if key in job['owners']]
 
 
-def challenge_request(state, body):
-    """What a challenge's proof must establish; raises when the challenge cannot apply, without any replay."""
+def challenge_request(state, job_id, challenge):
+    """What the proof of an open challenge of ``job_id`` must establish against the committed log."""
+    key = challenge['log_key']
+    return {'chain_id': state['chain_id'], 'job_id': job_id, 'shard': state['owners'][key]['shard'],
+            'log_key': key, 'statement_root': state['jobs'][job_id]['commits'][key], 'proof_root': challenge['proof_root']}
+
+
+def opening(state, body):
+    """Refuse a challenge that cannot open: it must name a committed log in an open window."""
     job, key = state['jobs'].get(body['job_id']), body['log_key']
     if job is None or key not in job['commits']:
         raise ValueError('No committed log to challenge')
     if job['deadline'] is not None and state['height'] > job['deadline']:
         raise ValueError('Challenge window closed')
-    return {'chain_id': state['chain_id'], 'job_id': body['job_id'], 'shard': state['owners'][key]['shard'],
-            'log_key': key, 'statement_root': job['commits'][key], 'proof_root': hex_digest(body['proof_root'])}
+    hex_digest(body['proof_root'])
+
+
+def proving(state, body):
+    """The request a ``prove`` transaction's proof must establish: that of an open challenge."""
+    job = state['jobs'].get(body['job_id'])
+    challenge = job['challenges'].get(hex_digest(body['challenge_id'])) if job else None
+    if challenge is None:
+        raise ValueError('No open challenge to prove')
+    return challenge_request(state, body['job_id'], challenge)
 
 
 def admit(previous, envelope):
     """The checks every transaction passes before it changes state or any proof is replayed.
 
-    Signature, schema, chain, nonce and fee apply to every kind; a challenge must also name
-    a committed log in an open window. Returns the body, the sender and, for a challenge,
-    the request its proof must establish.
+    Signature, schema, chain, nonce and fee apply to every kind. A challenge must also name
+    a committed log in an open window, and a proof an open challenge. Returns the body, the
+    sender and, for a proof, the request it must establish. Nothing else is ever replayed.
     """
     body, sender = verify(envelope)
     kind = body.get('kind')
@@ -254,7 +286,9 @@ def admit(previous, envelope):
         raise ValueError('Wrong account nonce')
     if payer['balance'] < previous['params']['fee']:
         raise ValueError('Insufficient transaction fee')
-    return body, sender, challenge_request(previous, body) if kind == 'challenge' else None
+    if kind == 'challenge':
+        opening(previous, body)
+    return body, sender, proving(previous, body) if kind == 'prove' else None
 
 
 def upstream_key(job, shard):
@@ -288,13 +322,20 @@ def bound(state, job, job_id, key, header):
     return positions
 
 
-def transition(previous, envelope, execute):
-    """One signed transaction. ``execute(state, request)`` judges a challenge's proof.
+def refund(state, job):
+    """Return a job's escrow to its user and the deposits of its open challenges to their challengers."""
+    account(state, job['user'])['balance'] += job['price']
+    for challenge in job['challenges'].values():
+        account(state, challenge['challenger'])['balance'] += challenge['deposit']
 
-    It is called only for challenges, and only after every check in ``admit`` has passed.
+
+def transition(previous, envelope, execute):
+    """One signed transaction. ``execute(state, request)`` judges a proof of an open challenge.
+
+    It is called only for ``prove``, and only after every check in ``admit`` has passed.
     """
     params = previous['params']
-    body, sender, challenge = admit(previous, envelope)
+    body, sender, request = admit(previous, envelope)
     kind, nonce = body['kind'], body['nonce']
     state = copy.deepcopy(previous)
     payer = account(state, sender)
@@ -350,7 +391,8 @@ def transition(previous, envelope, execute):
         state['jobs'][transaction_id(envelope)] = {
             'user': sender, 'owners': list(owners), 'request_root': body['request_root'], 'session_key': session_key,
             'price': price, 'positions': positions, 'opened': state['height'],
-            'expires': state['height'] + params['job_blocks'], 'commits': {}, 'served': {}, 'deadline': None}
+            'expires': state['height'] + params['job_blocks'], 'commits': {}, 'served': {}, 'challenges': {},
+            'deadline': None}
     elif kind == 'log_commit':
         job = state['jobs'].get(body['job_id'])
         if job is None or job['deadline'] is not None:
@@ -373,25 +415,33 @@ def transition(previous, envelope, execute):
         job['served'][key] = served
         if len(job['commits']) == len(job['owners']):
             job['deadline'] = state['height'] + params['challenge_blocks']
+    elif kind == 'challenge':
+        debit(params['challenge_deposit'])
+        state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {
+            'challenger': sender, 'log_key': body['log_key'], 'proof_root': body['proof_root'],
+            'deposit': params['challenge_deposit'], 'deadline': state['height'] + params['proof_blocks']}
     else:
-        job, key = state['jobs'][body['job_id']], body['log_key']
-        owner = state['owners'][key]
-        if execute(previous, challenge) is not True:
+        if execute(previous, request) is not True:
             raise ValueError('Fraud proof does not verify')
+        job = state['jobs'].pop(body['job_id'])
+        proven = job['challenges'].pop(body['challenge_id'])
+        key = proven['log_key']
+        owner = state['owners'][key]
         slashed = owner['amount']
         reward = slashed * params['auditor_share_ppm'] // 1_000_000
-        payer['balance'] += reward
+        account(state, proven['challenger'])['balance'] += proven['deposit'] + reward
         state['burned'] += slashed - reward
         owner.update(amount=0, status='slashed')
-        account(state, job['user'])['balance'] += job['price']
+        # The job's other challenges are moot: their deposits return with the user's escrow.
+        refund(state, job)
         remember(state, body['job_id'], {'status': 'fraud', 'user': job['user'], 'owners': job['owners'],
-                                         'guilty': key, 'challenger': sender, 'slashed': slashed, 'reward': reward,
-                                         'proof_root': body['proof_root']})
-        del state['jobs'][body['job_id']]
+                                         'guilty': key, 'challenger': proven['challenger'],
+                                         'challenge_id': body['challenge_id'], 'slashed': slashed, 'reward': reward,
+                                         'proof_root': proven['proof_root']})
         # A proven cheater is paid for nothing else still open.
         for other in sorted(open_jobs(state, key)):
             voided = state['jobs'].pop(other)
-            account(state, voided['user'])['balance'] += voided['price']
+            refund(state, voided)
             remember(state, other, {'status': 'voided', 'user': voided['user'], 'owners': voided['owners'],
                                     'guilty': key})
     invariant(state)

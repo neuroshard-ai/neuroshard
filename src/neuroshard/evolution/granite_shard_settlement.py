@@ -3,8 +3,9 @@
 Owners 1 and 2 bond their log keys on the optimistic serving ledger, serve an honest
 pass and a pass in which owner 1 flips one declared bit, and commit to each job a log
 bound to it by signed serving links. The auditor of shard 1 proves the fault, and a
-separate accuser tries to frame the honest owner. Two validators, each holding shard 1,
-replay the same blocks. Every party signs its own transactions on its own host.
+separate accuser tries to frame the honest owner and forfeits its challenge deposit.
+Two validators, each holding shard 1, replay the same blocks. Every party signs its own
+transactions on its own host.
 """
 
 import json
@@ -118,8 +119,19 @@ def owner(rank, address, port, phase, home, store, plan_path=PLAN):
     return result
 
 
+def challenge_pair(key, chain_id, job_id, log_key, proof_root):
+    """A fresh account's signed challenge naming ``proof_root``, and its signed proof of that challenge."""
+    from neuroshard.inference import optimistic as ledger
+
+    opening = signed(key, {'kind': 'challenge', 'chain_id': chain_id, 'nonce': 0, 'log_key': log_key,
+                           'job_id': job_id, 'proof_root': proof_root})
+    proving = signed(key, {'kind': 'prove', 'chain_id': chain_id, 'nonce': 1, 'job_id': job_id,
+                           'challenge_id': ledger.transaction_id(opening)})
+    return opening, proving
+
+
 def framing_challenge(home, store, request):
-    """A forged bundle claiming the honest log's first output was wrong, and the accuser's signed challenge."""
+    """A forged bundle claiming the honest log's first output was wrong; the accuser's challenge and attempted proof."""
     from neuroshard.evolution.sharded import granite_audit
 
     record, payloads = granite_audit.load(home / 'serve-honest' / 'log-1')
@@ -128,20 +140,20 @@ def framing_challenge(home, store, request):
                               'inputs': {i: p for i, p in payloads.items() if i <= first}}, home / 'forged')
     forged = granite_audit.bundle_root(home / 'forged')
     shutil.copytree(home / 'forged', home / 'bundles' / forged)
-    body = {'kind': 'challenge', 'chain_id': request['chain_id'], 'nonce': 0, 'log_key': request['log_key'],
-            'job_id': request['honest_job'], 'proof_root': forged}
-    return {'forged_root': forged, 'forged_mismatch': first, 'framing': signed(account(store, 'accuser')[0], body)}
+    opening, proving = challenge_pair(account(store, 'accuser')[0], request['chain_id'], request['honest_job'],
+                                      request['log_key'], forged)
+    return {'forged_root': forged, 'forged_mismatch': first, 'framing': opening, 'framing_prove': proving}
 
 
 def proven_challenge(home, store, request):
-    """The auditor's own fraud proof as a content-addressed bundle, and its signed challenge."""
+    """The auditor's own fraud proof as a content-addressed bundle; its signed challenge and proof."""
     from neuroshard.evolution.sharded import granite_audit
 
     proven = granite_audit.bundle_root(home / 'audit-cheat' / 'proof')
     shutil.copytree(home / 'audit-cheat' / 'proof', home / 'bundles' / proven)
-    body = {'kind': 'challenge', 'chain_id': request['chain_id'], 'nonce': 0, 'log_key': request['log_key'],
-            'job_id': request['cheated_job'], 'proof_root': proven}
-    return {'proven_root': proven, 'proven': signed(account(store)[0], body)}
+    opening, proving = challenge_pair(account(store)[0], request['chain_id'], request['cheated_job'],
+                                      request['log_key'], proven)
+    return {'proven_root': proven, 'proven': opening, 'proven_prove': proving}
 
 
 def auditor(phase, home, store):
@@ -167,6 +179,23 @@ def auditor(phase, home, store):
     return result
 
 
+def challenge_blocks(params, challenges):
+    """The declared blocks after the bonds (block 1), the honest job (opened at 2, committed at 3)
+    and the cheating job (opened at 4, committed at 5).
+
+    The framing opens at block 6, inside the honest job's window, and its proof is refused.
+    The honest job settles once its window closes and the framing has lapsed; the fraud proof
+    then opens, inside the cheating job's window, and lands at the next block.
+    """
+    framed, window = 6, params['challenge_blocks']
+    settles = max(3 + window, framed + params['proof_blocks']) + 1
+    if params['proof_blocks'] < 1 or settles > 5 + window:
+        raise ValueError('the declared windows close the cheating job before the honest job settles')
+    waiting = [[] for _ in range(settles - framed - 2)]
+    return ([[challenges['framing']], [challenges['framing_prove']]] + waiting
+            + [[challenges['proven']], [challenges['proven_prove']], [], []])
+
+
 def replay_blocks(genesis, blocks, check):
     """Replay every block from genesis; a rejected transaction leaves the state unchanged and is recorded."""
     import time
@@ -183,7 +212,7 @@ def replay_blocks(genesis, blocks, check):
                 outcomes.append('accepted')
             except ValueError as error:
                 outcomes.append(f'rejected: {error}')
-            if envelope['body'].get('kind') == 'challenge':
+            if envelope['body'].get('kind') == 'prove':
                 challenge_seconds.append(time.monotonic() - started)
     return {'root': ledger.root(state), 'outcomes': outcomes, 'state': state, 'challenge_seconds': challenge_seconds}
 
@@ -238,20 +267,23 @@ def honest_positions(phases):
 
 def expected_balances(plan, parties, served):
     """Final balances the declared sequence must leave: the honest job settled for the positions
-    its logs cover (``served`` by owner rank), one cheating owner slashed."""
+    its logs cover (``served`` by owner rank), the framing's deposit forfeited, one cheating owner slashed."""
     ledger = plan['ledger']
-    fee, start, bond = ledger['params']['fee'], ledger['allocation'], ledger['owner_bond']
-    reward = bond * ledger['params']['auditor_share_ppm'] // 1_000_000
+    params, start, bond = ledger['params'], ledger['allocation'], ledger['owner_bond']
+    fee, reward = params['fee'], bond * params['auditor_share_ppm'] // 1_000_000
     paid = honest_payments(plan, served)
     return {parties['user']: start - 2 * fee - sum(paid),
             parties['owner-1']: start - 3 * fee - bond + paid[0],
             parties['owner-2']: start - 3 * fee - bond + paid[1],
-            parties['auditor']: start - fee + reward,
-            parties['accuser']: start}
+            parties['auditor']: start - 2 * fee + reward,
+            parties['accuser']: start - fee - params['challenge_deposit']}
 
 
 def assess(plan, fetches, phases, parties, jobs):
-    """Honest serving agreement, agreeing replicas, a rejected framing, a proven fault and exact settlement."""
+    """Honest serving agreement, agreeing replicas, a forfeited framing, a proven fault and exact settlement.
+
+    ``jobs`` names the honest and cheated jobs and the framing challenge.
+    """
     honest = phases['serve-honest']
     agreement = serving.assess(plan, fetches['owners'], [], honest)
     reports = [phases['validate'].get(f'validator-{i}') or {} for i in (1, 2)]
@@ -268,9 +300,11 @@ def assess(plan, fetches, phases, parties, jobs):
         'replicas_agree': all(r.get('completed') for r in reports) and reports[0].get('root') == reports[1].get('root')
         and reports[0].get('outcomes') == reports[1].get('outcomes'),
         'honest_work_accepted': outcomes[:8] == ['accepted'] * 8,
-        'framing_rejected': outcomes[8:9] == ['rejected: Fraud proof does not verify'],
+        'framing_forfeited': outcomes[8:10] == ['accepted', 'rejected: Fraud proof does not verify']
+        and (results.get(jobs['framing']) or {}).get('status') == 'forfeited',
         'fault_named': audit.get('fault_forward') == plan['fault']['at'],
-        'fault_proven': outcomes[9:10] == ['accepted'] and (results.get(jobs['cheated']) or {}).get('status') == 'fraud'
+        'fault_proven': outcomes[10:12] == ['accepted', 'accepted']
+        and (results.get(jobs['cheated']) or {}).get('status') == 'fraud'
         and results[jobs['cheated']].get('guilty') == keys[1] and (owners.get(keys[1]) or {}).get('status') == 'slashed',
         'honest_settled': served is not None and (results.get(jobs['honest']) or {}).get('status') == 'settled'
         and results[jobs['honest']].get('paid') == honest_payments(plan, served)

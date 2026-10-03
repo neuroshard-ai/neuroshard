@@ -77,8 +77,8 @@ def run(home):
     home.mkdir(parents=True, exist_ok=True)
     plan = read(ROOT / settlement.PLAN)
     terms = plan["ledger"]
-    if "positions" not in terms:
-        raise ValueError("the plan declares no position budget, which metered settlement needs")
+    if "positions" not in terms or not {"challenge_deposit", "proof_blocks"} <= set(terms["params"]):
+        raise ValueError("the plan predates metered settlement and challenge deposits")
     source = settlement.committed_sources()
     wait_for_ci(home, source["commit"])
     if settlement.committed_sources() != source:
@@ -170,8 +170,8 @@ def run(home):
         phases["challenge"] = run_phase([(hosts["auditor"], "auditor")], plan, "challenge")["auditor"]
         if not (phases["challenge"] or {}).get("completed"):
             raise RuntimeError("the auditor could not prepare its challenges")
-        # The honest job settles at block 8, before the fraud proof against its owner arrives at block 9.
-        blocks += [[phases["challenge"]["framing"]], [], [], [phases["challenge"]["proven"]], [], []]
+        challenges = phases["challenge"]
+        blocks += settlement.challenge_blocks(terms["params"], challenges)
         chain = {"genesis": genesis, "blocks": blocks}
         save(home / "blocks.json", chain)
         payload = cloud.ssh(*hosts["auditor"], ["tar", "-czf", "-", "-C", ring.OWNER_HOME, "bundles"], timeout=1800).stdout
@@ -185,7 +185,8 @@ def run(home):
                                        plan, "validate")
         result.update(fetches=fetches, parties=parties, jobs=jobs, phases=phases, transferred_bytes=transferred,
                       report=settlement.assess(plan, fetches, phases, parties,
-                                               {"honest": jobs["honest"], "cheated": jobs["cheat"]}),
+                                               {"honest": jobs["honest"], "cheated": jobs["cheat"],
+                                                "framing": ledger.transaction_id(challenges["framing"])}),
                       execution_completed=True)
     except BaseException as error:
         failure = str(error) or type(error).__name__

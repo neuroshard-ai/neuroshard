@@ -10,7 +10,8 @@ from neuroshard.inference import optimistic as ledger
 
 CHAIN = 'neuroshard-optimistic-test'
 MODEL = 'ab' * 32
-PARAMS = {**ledger.PARAMS, 'challenge_blocks': 3, 'job_blocks': 6}
+PARAMS = {**ledger.PARAMS, 'challenge_blocks': 3, 'job_blocks': 6, 'proof_blocks': 4}
+DEPOSIT = PARAMS['challenge_deposit']
 # Who sends each shard its inputs: the user's device under its session key, then owner 1.
 UPSTREAM = {1: 'session', 2: 'log-1'}
 # The token positions a test job buys; the default logs cover all of them.
@@ -104,6 +105,16 @@ def committed(state, people, job_id, request='cd' * 32):
         state = ledger.transition(state, commit(people[f'owner-{shard}'], shard, job_id, header(job_id, shard, request)),
                                   None)
     return state
+
+
+def challenge(account, job_id, log_key, proof_root='ee' * 32):
+    """A challenge of the log ``log_key`` committed for ``job_id``, and the ID a proof of it names."""
+    envelope = account.sign('challenge', job_id=job_id, log_key=log_key, proof_root=proof_root)
+    return envelope, ledger.transaction_id(envelope)
+
+
+def prove(account, job_id, challenge_id):
+    return account.sign('prove', job_id=job_id, challenge_id=challenge_id)
 
 
 def test_an_honest_job_settles_after_the_challenge_window_and_conserves_money(market):
@@ -267,45 +278,87 @@ def test_a_verified_fraud_proof_slashes_the_owner_pays_the_auditor_and_refunds_e
     state, people, keys = market
     state, first = opened(state, people, keys)
     state, second = opened(state, people, keys, price=2_000_000)
-    state = committed(state, people, first)
+    state = committed(committed(state, people, first), people, second)
     seen = []
 
     def execute(previous, request):
         seen.append(request)
         return True
 
-    user = state['accounts'][people['user'].public]['balance']
-    auditor = state['accounts'][people['auditor'].public]['balance']
-    challenge = people['auditor'].sign('challenge', job_id=first, log_key=keys[1], proof_root='ee' * 32)
-    state = ledger.transition(state, challenge, execute)
+    balance = lambda name: state['accounts'][people[name].public]['balance']
+    user, auditor, other = balance('user'), balance('auditor'), balance('owner-2')
+    opening, challenge_id = challenge(people['auditor'], first, keys[1])
+    state = ledger.transition(state, opening, execute)
+    # Opening a challenge locks its deposit and replays nothing.
+    assert seen == [] and balance('auditor') == auditor - PARAMS['fee'] - DEPOSIT
+    # Other challenges of the proven job and of the voided one are moot.
+    state = ledger.transition(state, challenge(people['owner-2'], first, keys[1], 'dd' * 32)[0], None)
+    state = ledger.transition(state, challenge(people['user'], second, keys[2], 'dd' * 32)[0], None)
+    state = ledger.transition(state, prove(people['owner-2'], first, challenge_id), execute)
     assert seen == [{'chain_id': CHAIN, 'job_id': first, 'shard': 1, 'log_key': keys[1],
                      'statement_root': statement(first, 1, '11' * 32), 'proof_root': 'ee' * 32}]
     reward = PARAMS['owner_bond_minimum'] * PARAMS['auditor_share_ppm'] // 1_000_000
     assert state['owners'][keys[1]] == {**state['owners'][keys[1]], 'amount': 0, 'status': 'slashed'}
-    assert state['accounts'][people['auditor'].public]['balance'] == auditor - PARAMS['fee'] + reward
-    assert state['accounts'][people['user'].public]['balance'] == user + 1_000_000 + 2_000_000
-    assert state['results'][first]['status'] == 'fraud' and state['results'][second]['status'] == 'voided'
-    assert not state['jobs']
+    # The reward goes to whoever opened the challenge, whoever submits its proof.
+    assert balance('auditor') == auditor - PARAMS['fee'] + reward
+    assert balance('owner-2') == other - 2 * PARAMS['fee']
+    assert balance('user') == user - PARAMS['fee'] + 1_000_000 + 2_000_000
+    assert state['results'][first] == {**state['results'][first], 'status': 'fraud', 'guilty': keys[1],
+                                       'challenger': people['auditor'].public, 'challenge_id': challenge_id}
+    assert state['results'][second]['status'] == 'voided' and not state['jobs']
     refuse(state, open_job(people['user'], keys), 'active and bonded')
 
 
-def test_challenges_that_fail_or_come_late_change_nothing(market):
+def test_an_unproven_challenge_forfeits_its_deposit_and_holds_settlement_only_until_it_lapses(market):
     state, people, keys = market
     state, job_id = opened(state, people, keys)
     called = []
-    refuse(state, people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='ee' * 32),
-           'No committed log', lambda *a: called.append(a) or True)
+    replay = lambda *a: called.append(a) or True
+    refuse(state, challenge(people['auditor'], job_id, keys[1])[0], 'No committed log', replay)
     people['auditor'].nonce -= 1
     state = committed(state, people, job_id)
-    refuse(state, people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='ee' * 32),
-           'does not verify', lambda previous, request: False)
+    deadline = state['jobs'][job_id]['deadline']
+    opening, challenge_id = challenge(people['auditor'], job_id, keys[1])
+    state = ledger.transition(state, opening, replay)
+    lapse = state['height'] + PARAMS['proof_blocks']
+    assert lapse > deadline and not called
+    assert state['jobs'][job_id]['challenges'] == {challenge_id: {
+        'challenger': people['auditor'].public, 'log_key': keys[1], 'proof_root': 'ee' * 32, 'deposit': DEPOSIT,
+        'deadline': lapse}}
+    refuse(state, prove(people['auditor'], job_id, challenge_id), 'does not verify', lambda previous, request: False)
     people['auditor'].nonce -= 1
-    assert not called
-    for _ in range(PARAMS['challenge_blocks']):
+    burned, owner = state['burned'], state['accounts'][people['owner-1'].public]['balance']
+    while state['height'] < lapse:
         state = ledger.advance(state, state['height'] + 1)
-    late = people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='ee' * 32)
+        assert job_id in state['jobs']
+    # The window has closed, but the open challenge holds the job; no new challenge may open.
+    refuse(state, challenge(people['auditor'], job_id, keys[2])[0], 'Challenge window closed')
+    people['auditor'].nonce -= 1
     state = ledger.advance(state, state['height'] + 1)
-    refuse(state, late, 'No committed log', lambda *a: True)
+    assert state['results'][challenge_id] == {**state['results'][challenge_id], 'status': 'forfeited',
+                                              'job_id': job_id, 'challenger': people['auditor'].public,
+                                              'deposit': DEPOSIT}
+    assert state['burned'] == burned + DEPOSIT and state['results'][job_id]['status'] == 'settled'
+    assert state['accounts'][people['owner-1'].public]['balance'] == owner + 500_000
+    refuse(state, prove(people['auditor'], job_id, challenge_id), 'No open challenge', replay)
+    people['auditor'].nonce -= 1
+    refuse(state, challenge(people['auditor'], job_id, keys[1])[0], 'No committed log', replay)
+    assert not called
+
+
+def test_a_challenge_needs_its_deposit(market):
+    state, people, keys = market
+    state, job_id = opened(state, people, keys)
+    state = committed(state, people, job_id)
+    poor = Account('poor')
+    state['accounts'][poor.public] = {'balance': PARAMS['fee'] + DEPOSIT - 1, 'nonce': 0}
+    state['initial_supply'] += PARAMS['fee'] + DEPOSIT - 1
+    refuse(state, challenge(poor, job_id, keys[1])[0], 'Insufficient spendable balance')
+    state['accounts'][poor.public]['balance'] += 1
+    state['initial_supply'] += 1
+    poor.nonce = 0
+    state = ledger.transition(state, challenge(poor, job_id, keys[1])[0], None)
+    assert state['accounts'][poor.public]['balance'] == 0
 
 
 def challenges_failing_admission(state, people, keys, job_id, pending):
@@ -337,13 +390,22 @@ def test_every_cheap_check_precedes_a_proof_replay(market):
     state, pending = opened(state, people, keys)
     state = committed(state, people, job_id)
     replays = []
+    replay = lambda previous, request: replays.append(request) or True
     failing, good = challenges_failing_admission(state, people, keys, job_id, pending)
     for envelope, match in failing:
         with pytest.raises(ValueError, match=match):
             ledger.admit(state, envelope)
-        refuse(state, envelope, match, lambda previous, request: replays.append(request) or True)
+        refuse(state, envelope, match, replay)
+    # Opening a challenge replays nothing, even when every check passes.
+    assert ledger.admit(state, good)[2] is None
+    state = ledger.transition(state, good, replay)
+    challenge_id, people['auditor'].nonce = ledger.transaction_id(good), 1
+    for target, named, match in ((pending, challenge_id, 'No open challenge'), (job_id, 'ff' * 32, 'No open challenge'),
+                                 (job_id, 'FF' * 32, 'Noncanonical digest'), (job_id, ['ff' * 32], 'Noncanonical digest')):
+        refuse(state, prove(people['auditor'], target, named), match, replay)
+        people['auditor'].nonce -= 1
     assert replays == []
-    request = ledger.admit(state, good)[2]
+    request = ledger.admit(state, prove(people['auditor'], job_id, challenge_id))[2]
     assert request == {'chain_id': CHAIN, 'job_id': job_id, 'shard': 1, 'log_key': keys[1],
                        'statement_root': state['jobs'][job_id]['commits'][keys[1]], 'proof_root': 'ee' * 32}
     assert ledger.admit(state, open_job(people['user'], keys))[2] is None
@@ -410,6 +472,19 @@ def finalize(value, txs):
     return results
 
 
+def drained(value):
+    """Wait for every proof the application queued for background judging."""
+    value.check.worker.submit(lambda: None).result()
+
+
+def opened_challenge(value, people, keys, job_id, proof_root='aa' * 32):
+    """The auditor's challenge, committed in its own block and judged in the background; the raw proof of it."""
+    opening, challenge_id = challenge(people['auditor'], job_id, keys[1], proof_root)
+    assert [r.code for r in finalize(value, [ledger.canonical(opening)])] == [0]
+    drained(value)
+    return ledger.canonical(prove(people['auditor'], job_id, challenge_id))
+
+
 def committed_job(value, people):
     """Both bonds, one opened job and both of its log commitments, each in its own committed block."""
     keys = {}
@@ -459,14 +534,22 @@ def test_the_abci_application_admits_proposes_and_finalizes_only_transactions_th
     assert application_.ProcessProposal(pb.RequestProcessProposal(txs=commits, height=application_.state['height'] + 1),
                                         None).status == 2
     block(list(proposed))
-    bad = people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='ee' * 32)
-    rejected = application_.CheckTx(pb.RequestCheckTx(tx=raw(bad)), None)
-    assert rejected.code == 1 and rejected.log == 'Fraud proof does not verify'
-    application_.CheckTx(pb.RequestCheckTx(tx=raw(bad)), None)
+    # A challenge opens without a replay; its proof is judged once, in the background, after its block commits.
+    bad, challenge_id = challenge(people['auditor'], job_id, keys[1])
+    assert application_.CheckTx(pb.RequestCheckTx(tx=raw(bad)), None).code == 0 and replays == []
+    block([raw(bad)])
+    drained(application_)
     assert replays == ['ee' * 32]
+    failed = raw(prove(people['auditor'], job_id, challenge_id))
+    for _ in range(2):
+        rejected = application_.CheckTx(pb.RequestCheckTx(tx=failed), None)
+        assert rejected.code == 1 and rejected.log == 'Fraud proof does not verify'
     while job_id in application_.state['jobs']:
         block([])
+        drained(application_)
+    assert replays == ['ee' * 32]
     assert application_.state['results'][job_id]['status'] == 'settled'
+    assert application_.state['results'][challenge_id]['status'] == 'forfeited'
     reloaded = app.Application(tmp_path / 'settlement.sqlite', check)
     assert ledger.root(reloaded.state) == ledger.root(application_.state)
     queried = json.loads(application_.Query(pb.RequestQuery(path='/state'), None).value)
@@ -474,7 +557,7 @@ def test_the_abci_application_admits_proposes_and_finalizes_only_transactions_th
     assert application_.Info(pb.RequestInfo(), None).last_block_app_hash == bytes.fromhex(queried['root'])
 
 
-def test_admission_never_replays_a_proof_for_a_challenge_that_fails_a_cheap_check(tmp_path):
+def test_only_challenges_whose_deposits_are_locked_on_chain_are_ever_replayed(tmp_path):
     from neuroshard.demo import abci_pb2 as pb
 
     replays = []
@@ -486,8 +569,14 @@ def test_admission_never_replays_a_proof_for_a_challenge_that_fails_a_cheap_chec
     for envelope, match in failing:
         response = value.CheckTx(pb.RequestCheckTx(tx=ledger.canonical(envelope)), None)
         assert response.code == 1 and match in response.log, (match, response.log)
+    assert value.CheckTx(pb.RequestCheckTx(tx=ledger.canonical(good)), None).code == 0
+    drained(value)
     assert replays == []
-    assert value.CheckTx(pb.RequestCheckTx(tx=ledger.canonical(good)), None).code == 0 and len(replays) == 1
+    finalize(value, [ledger.canonical(good)])
+    for _ in range(3):
+        drained(value)
+        finalize(value, [])
+    assert len(replays) == 1
 
 
 def test_a_bundle_this_validator_lacks_gives_no_verdict_until_it_arrives(tmp_path):
@@ -504,18 +593,23 @@ def test_a_bundle_this_validator_lacks_gives_no_verdict_until_it_arrives(tmp_pat
 
     value, people = application(tmp_path, check)
     keys, job_id = committed_job(value, people)
-    challenge = ledger.canonical(people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='aa' * 32))
+    proof = opened_challenge(value, people, keys, job_id)
     height = value.state['height'] + 1
-    refused = value.CheckTx(pb.RequestCheckTx(tx=challenge), None)
+    refused = value.CheckTx(pb.RequestCheckTx(tx=proof), None)
     assert refused.code == app.NO_VERDICT and 'bundle not delivered' in refused.log
     # It is neither proposed nor voted for here, and nothing about the proof is remembered.
-    assert list(value.PrepareProposal(pb.RequestPrepareProposal(txs=[challenge], height=height,
+    assert list(value.PrepareProposal(pb.RequestPrepareProposal(txs=[proof], height=height,
                                                                 max_tx_bytes=app.MAX_TX_BYTES), None).txs) == []
-    assert value.ProcessProposal(pb.RequestProcessProposal(txs=[challenge], height=height), None).status == 2
-    assert value.check.known(ledger.admit(value.state, json.loads(challenge))[2]) is None and replays == []
+    assert value.ProcessProposal(pb.RequestProcessProposal(txs=[proof], height=height), None).status == 2
+    assert value.check.known(ledger.admit(value.state, json.loads(proof))[2]) is None and replays == []
+    # Once the bundle arrives, the next block's background judging replays it.
     held.add('aa' * 32)
-    assert value.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == 0 and replays == ['aa' * 32]
-    assert value.ProcessProposal(pb.RequestProcessProposal(txs=[challenge], height=height), None).status == 1
+    finalize(value, [])
+    drained(value)
+    assert replays == ['aa' * 32]
+    height = value.state['height'] + 1
+    assert value.CheckTx(pb.RequestCheckTx(tx=proof), None).code == 0
+    assert value.ProcessProposal(pb.RequestProcessProposal(txs=[proof], height=height), None).status == 1
     assert replays == ['aa' * 32]
 
 
@@ -533,9 +627,10 @@ def test_a_checker_failure_is_no_verdict_and_is_judged_afresh(tmp_path):
 
     value, people = application(tmp_path, check)
     keys, job_id = committed_job(value, people)
-    challenge = ledger.canonical(people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='aa' * 32))
-    assert value.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == app.NO_VERDICT
-    assert value.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == 0 and len(calls) == 2
+    proof = opened_challenge(value, people, keys, job_id)
+    # The background replay failed, so nothing is cached and admission judges the proof afresh.
+    assert calls == ['aa' * 32] and value.check.known(ledger.admit(value.state, json.loads(proof))[2]) is None
+    assert value.CheckTx(pb.RequestCheckTx(tx=proof), None).code == 0 and len(calls) == 2
     with pytest.raises(ledger.NoVerdict):
         app.shard_checker({})(value.state, {'proof_root': 'aa' * 32})
 
@@ -552,13 +647,13 @@ def test_validators_with_and_without_the_bundle_execute_a_committed_challenge_al
         for person in people.values():
             person.nonce = 0
         keys, job_id = committed_job(value, people)
-    challenge = ledger.canonical(people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='aa' * 32))
+        proof = opened_challenge(value, people, keys, job_id)
     height = holder.state['height'] + 1
-    assert holder.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == 0
-    assert holder.ProcessProposal(pb.RequestProcessProposal(txs=[challenge], height=height), None).status == 1
+    assert holder.CheckTx(pb.RequestCheckTx(tx=proof), None).code == 0
+    assert holder.ProcessProposal(pb.RequestProcessProposal(txs=[proof], height=height), None).status == 1
     # The other validator would not vote for the block, but executes it exactly once it is committed.
-    assert other.ProcessProposal(pb.RequestProcessProposal(txs=[challenge], height=height), None).status == 2
-    assert [r.code for r in finalize(holder, [challenge])] == [r.code for r in finalize(other, [challenge])] == [0]
+    assert other.ProcessProposal(pb.RequestProcessProposal(txs=[proof], height=height), None).status == 2
+    assert [r.code for r in finalize(holder, [proof])] == [r.code for r in finalize(other, [proof])] == [0]
     assert ledger.root(holder.state) == ledger.root(other.state)
     assert other.state['results'][job_id]['status'] == 'fraud' and other.state['owners'][keys[1]]['status'] == 'slashed'
 
@@ -580,8 +675,7 @@ def test_a_slow_proof_replay_runs_outside_the_state_lock(tmp_path):
 
     value, people = application(tmp_path, check)
     keys, job_id = committed_job(value, people)
-    challenge = ledger.canonical(people['auditor'].sign('challenge', job_id=job_id, log_key=keys[1], proof_root='aa' * 32))
-    assert value.CheckTx(pb.RequestCheckTx(tx=challenge), None).code == 0
-    assert free == [True]
-    finalize(value, [challenge])
+    proof = opened_challenge(value, people, keys, job_id)
+    assert free == [True] and value.CheckTx(pb.RequestCheckTx(tx=proof), None).code == 0
+    finalize(value, [proof])
     assert value.state['results'][job_id]['status'] == 'fraud' and len(threads) == 1

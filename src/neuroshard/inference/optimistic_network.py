@@ -68,7 +68,7 @@ def configure_node(node_home, genesis, settlement, peers, ports, block_seconds=1
     text = path.read_text()
     for section, key, value in (('', 'proxy_app', json.dumps(f'127.0.0.1:{ports["abci"]}')), ('', 'abci', '"grpc"'),
                                 ('', 'log_level', '"info"'), ('rpc', 'laddr', json.dumps(f'tcp://127.0.0.1:{ports["rpc"]}')),
-                                # Admitting a challenge replays its proof; the RPC write timeout derives from this value.
+                                # Admitting a proof can replay it; the RPC write timeout derives from this value.
                                 ('rpc', 'timeout_broadcast_tx_commit', '"120s"'),
                                 ('p2p', 'laddr', json.dumps(f'tcp://{p2p_host}:{ports["p2p"]}')),
                                 ('p2p', 'persistent_peers', json.dumps(peers)), ('p2p', 'allow_duplicate_ip', 'true'),

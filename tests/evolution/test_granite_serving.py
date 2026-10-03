@@ -329,11 +329,14 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
 
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+    from neuroshard.evolution import granite_shard_settlement as settlement
     from neuroshard.evolution.sharded import granite_audit
     from neuroshard.inference import optimistic as ledger
 
     from test_optimistic_serving import CHAIN, PARAMS, Account
 
+    # A one-block proof window lets the refused framing lapse, and the honest job settle, before the fraud lands.
+    PARAMS = {**PARAMS, 'proof_blocks': 1}
     keys, public = signing_keys(tmp_path)
     people = {name: Account(name) for name in ('user', 'owner-1', 'owner-2', 'auditor', 'accuser')}
     model = hashlib.sha256((world['config'] / 'config.json').read_bytes()).hexdigest()
@@ -386,15 +389,20 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
     def commit(rank, job_id, pass_name):
         return log_commit(people[f'owner-{rank}'], keys[rank], CHAIN, job_id, tmp_path / pass_name / f'log-{rank}')
 
+    def challenge(name, job_id, proof_root):
+        opening = people[name].sign('challenge', job_id=job_id, log_key=public[1], proof_root=proof_root)
+        return {'opening': opening, 'proving': people[name].sign('prove', job_id=job_id,
+                                                                 challenge_id=ledger.transaction_id(opening))}
+
     blocks = [[bond(1), bond(2)], [open_honest], [commit(1, honest_job, 'honest'), commit(2, honest_job, 'honest')],
               [open_cheated]]
     # Owner 1 first offers its honest job's log, internally correct, for the cheated job.
     reused = commit(1, cheated_job, 'honest')
     people['owner-1'].nonce -= 1
-    blocks += [[reused, commit(1, cheated_job, 'cheated'), commit(2, cheated_job, 'cheated')],
-               [people['accuser'].sign('challenge', job_id=honest_job, log_key=public[1], proof_root=forged)],
-               [people['auditor'].sign('challenge', job_id=cheated_job, log_key=public[1], proof_root=real)],
-               [], [], []]
+    blocks.append([reused, commit(1, cheated_job, 'cheated'), commit(2, cheated_job, 'cheated')])
+    framing, fraud = challenge('accuser', honest_job, forged), challenge('auditor', cheated_job, real)
+    blocks += settlement.challenge_blocks(PARAMS, {'framing': framing['opening'], 'framing_prove': framing['proving'],
+                                                   'proven': fraud['opening'], 'proven_prove': fraud['proving']})
     (tmp_path / 'plan.json').write_text(json.dumps({'genesis': genesis, 'blocks': blocks}))
     replicas = []
     for _ in range(2):
@@ -404,12 +412,15 @@ def test_the_ledger_settles_honest_serving_and_slashes_a_fault_proven_by_replay(
         replicas.append(json.loads(output.strip().splitlines()[-1]))
     assert replicas[0]['root'] == replicas[1]['root']
     outcomes, state = replicas[0]['outcomes'], replicas[0]['state']
-    assert outcomes == (['accepted'] * 6 + ['rejected: Log is not bound to this job request'] + ['accepted'] * 2
-                        + ['rejected: Fraud proof does not verify', 'accepted'])
+    assert outcomes == (['accepted'] * 6 + ['rejected: Log is not bound to this job request'] + ['accepted'] * 3
+                        + ['rejected: Fraud proof does not verify', 'accepted', 'accepted'])
     assert state['results'][honest_job]['status'] == 'settled' and state['results'][cheated_job]['status'] == 'fraud'
+    assert state['results'][ledger.transaction_id(framing['opening'])]['status'] == 'forfeited'
     assert state['owners'][public[1]]['status'] == 'slashed' and state['owners'][public[2]]['status'] == 'active'
     reward = PARAMS['owner_bond_minimum'] * PARAMS['auditor_share_ppm'] // 1_000_000
-    assert state['accounts'][people['auditor'].public]['balance'] == 20_000_000 - PARAMS['fee'] + reward
+    assert state['accounts'][people['auditor'].public]['balance'] == 20_000_000 - 2 * PARAMS['fee'] + reward
+    assert state['accounts'][people['accuser'].public]['balance'] == (20_000_000 - PARAMS['fee']
+                                                                      - PARAMS['challenge_deposit'])
     # The honest job pays for the positions served out of the budget bought, and refunds the rest.
     paid = 1_000_000 * served(tmp_path / 'honest') // (2 * BUDGET)
     assert state['results'][honest_job] == {**state['results'][honest_job], 'paid': [paid, paid],
@@ -443,7 +454,8 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
     from neuroshard.inference import optimistic as ledger
 
     frozen = read(ROOT / settlement.PLAN)
-    plan = {**frozen, 'ledger': {**frozen['ledger'], 'positions': BUDGET}}
+    plan = {**frozen, 'ledger': {**frozen['ledger'], 'positions': BUDGET, 'params': {
+        **frozen['ledger']['params'], 'challenge_deposit': ledger.PARAMS['challenge_deposit'], 'proof_blocks': 1}}}
     terms = plan['ledger']
     homes = {name: tmp_path / name / 'home' for name in ('owner-1', 'owner-2', 'auditor')}
     stores = {name: tmp_path / name / 'store' for name in homes}
@@ -501,18 +513,19 @@ def test_settlement_roles_sign_every_declared_transaction_and_validators_settle_
                'auditor': challenge['proven']['public_key'], 'accuser': challenge['framing']['public_key']}
     genesis = ledger.genesis(terms['chain_id'], model, terms['shards'],
                              {account: terms['allocation'] for account in parties.values()}, terms['params'])
-    blocks = [bonds, [opened['honest']], commits['honest'], [opened['cheat']], commits['cheat'],
-              [challenge['framing']], [], [], [challenge['proven']], [], []]
+    blocks = ([bonds, [opened['honest']], commits['honest'], [opened['cheat']], commits['cheat']]
+              + settlement.challenge_blocks(terms['params'], challenge))
     (tmp_path / 'plan.json').write_text(json.dumps({'genesis': genesis, 'blocks': blocks}))
     output = subprocess.check_output([sys.executable, '-c', VALIDATOR, str(world['config']), str(world['shards']),
                                       str(homes['auditor'] / 'bundles'), str(tmp_path / 'plan.json')],
                                      env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, text=True)
     replica = json.loads(output.strip().splitlines()[-1])
-    assert replica['outcomes'] == ['accepted'] * 8 + ['rejected: Fraud proof does not verify', 'accepted']
+    assert replica['outcomes'] == ['accepted'] * 9 + ['rejected: Fraud proof does not verify', 'accepted', 'accepted']
     state = replica['state']
     assert {a: state['accounts'][a]['balance'] for a in parties.values()} == settlement.expected_balances(
         plan, parties, positions)
     assert state['results'][jobs['honest']]['status'] == 'settled' and state['results'][jobs['cheat']]['status'] == 'fraud'
+    assert state['results'][ledger.transaction_id(challenge['framing'])]['status'] == 'forfeited'
     assert 0 < state['results'][jobs['honest']]['refunded'] < terms['price']
 
 
@@ -590,6 +603,10 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
                 return states
             time.sleep(0.1)
 
+    def challenge(name, job_id, proof_root):
+        opening = people[name].sign('challenge', job_id=job_id, log_key=public[1], proof_root=proof_root)
+        return opening, people[name].sign('prove', job_id=job_id, challenge_id=ledger.transaction_id(opening))
+
     try:
         network.start(config, timeout=300)
         for rank in (1, 2):
@@ -597,11 +614,13 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
         opened, honest = jobs['honest']
         submit(opened)
         committed = max(submit(commit(rank, honest, 'honest'), rank) for rank in (1, 2))
-        framing = submit(people['accuser'].sign('challenge', job_id=honest, log_key=public[1], proof_root=forged), 3)
-        assert framing == {**framing, 'code': 1, 'log': 'Fraud proof does not verify'}
-        people['accuser'].nonce -= 1
-        network.wait_height(config, committed + params['challenge_blocks'] + 1)
-        assert agreed()[0]['results'][honest]['status'] == 'settled'
+        framing, framing_prove = challenge('accuser', honest, forged)
+        framed = submit(framing, 3)
+        refused = submit(framing_prove, 3)
+        assert refused == {**refused, 'code': 1, 'log': 'Fraud proof does not verify'}
+        network.wait_height(config, max(committed + params['challenge_blocks'], framed + params['proof_blocks']) + 1)
+        results = agreed()[0]['results']
+        assert results[honest]['status'] == 'settled' and results[ledger.transaction_id(framing)]['status'] == 'forfeited'
         opened, cheated = jobs['cheat']
         submit(opened)
         for rank in (1, 2):
@@ -609,14 +628,16 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
         # The proof reaches three of the four validators: more than two thirds of the voting power.
         for store in stores[:3]:
             shutil.copytree(tmp_path / 'cheat' / 'log-1' / 'proof', store / proven)
-        challenge = people['auditor'].sign('challenge', job_id=cheated, log_key=public[1], proof_root=proven)
-        lacking = submit(challenge, 3)
+        # Opening a challenge replays nothing, so a validator lacking the bundle admits it.
+        opening, proving = challenge('auditor', cheated, proven)
+        submit(opening, 3)
+        lacking = submit(proving, 3)
         assert lacking['code'] == app.NO_VERDICT and 'not held here' in lacking['log']
-        submit(challenge, 2)
+        submit(proving, 2)
         states = agreed()
     finally:
         network.stop(config)
-    # The fourth validator gave no verdict, so it voted for no block holding the challenge; it executed the
+    # The fourth validator gave no verdict, so it voted for no block holding the proof; it executed the
     # committed block all the same, reaching the others' state without the bundle.
     assert 'has no verdict on this validator' in (Path(config['home']) / 'logs' / 'app3.log').read_text()
     assert not (stores[3] / proven).exists()
@@ -627,8 +648,8 @@ def test_cometbft_validators_settle_honest_serving_and_slash_a_proven_fault(worl
     paid = 1_000_000 * served(tmp_path / 'honest') // (2 * BUDGET)
     assert {name: state['accounts'][p.public]['balance'] for name, p in people.items()} == {
         'user': 20_000_000 - 2 * fee - 2 * paid, 'owner-1': 20_000_000 - 3 * fee - bond_amount + paid,
-        'owner-2': 20_000_000 - 3 * fee - bond_amount + paid, 'auditor': 20_000_000 - fee + bond_amount // 2,
-        'accuser': 20_000_000}
+        'owner-2': 20_000_000 - 3 * fee - bond_amount + paid, 'auditor': 20_000_000 - 2 * fee + bond_amount // 2,
+        'accuser': 20_000_000 - fee - params['challenge_deposit']}
 
 
 def test_owner_caches_crop_to_the_shared_prefix_like_the_single_host_responder(world, tmp_path):

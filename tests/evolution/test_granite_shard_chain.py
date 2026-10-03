@@ -13,11 +13,13 @@ from neuroshard.evolution import granite_shard_chain as chain
 from neuroshard.evolution import granite_shard_settlement as settlement
 from neuroshard.evolution.modular_reference_execution import ROOT, read, sha256
 
-from test_granite_shard_settlement import BUDGET, declared_chain, evidence
+from test_granite_shard_settlement import BUDGET, DEPOSIT, declared_chain, evidence
 
 FROZEN = read(ROOT / chain.PLAN)
-# The published plan predates metered settlement; these tests give its ledger a position budget.
-PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET}}
+# The published plan predates metered settlement and challenge deposits; these tests give its ledger
+# a position budget, a deposit and a proof window of two minutes of one-second blocks.
+PLAN = {**FROZEN, 'ledger': {**FROZEN['ledger'], 'positions': BUDGET, 'params': {
+    **FROZEN['ledger']['params'], 'challenge_deposit': DEPOSIT, 'proof_blocks': 120}}}
 
 
 def cloud_module():
@@ -33,12 +35,13 @@ def chain_evidence():
     states = [{**copy.deepcopy(state), 'root': phases['validate']['validator-1']['root']} for _ in range(4)]
     admissions = {name: {'code': 0, 'log': '', 'height': height} for name, height in (
         ('bond-1', 1), ('bond-2', 1), ('open-honest', 2), ('commit-honest-1', 3), ('commit-honest-2', 3),
-        ('open-cheat', 4), ('commit-cheat-1', 5), ('commit-cheat-2', 5), ('proven', 9))}
-    admissions['framing'] = {'code': 1, 'log': 'Fraud proof does not verify', 'height': None}
-    return fetches, phases, parties, {'honest': jobs['honest'], 'cheated': jobs['cheated']}, admissions, states
+        ('open-cheat', 4), ('commit-cheat-1', 5), ('commit-cheat-2', 5), ('framing', 6), ('proven', 8),
+        ('proven-prove', 9))}
+    admissions['framing-prove'] = {'code': 1, 'log': 'Fraud proof does not verify', 'height': None}
+    return fetches, phases, parties, jobs, admissions, states
 
 
-def test_assessment_requires_four_agreeing_validators_a_refused_framing_and_settlement_before_the_proof():
+def test_assessment_requires_four_agreeing_validators_a_forfeited_framing_and_settlement_before_the_proof():
     fetches, phases, parties, jobs, admissions, states = chain_evidence()
     report = chain.assess(PLAN, fetches, phases, parties, jobs, admissions, states)
     assert report['passed'], report['checks']
@@ -46,10 +49,14 @@ def test_assessment_requires_four_agreeing_validators_a_refused_framing_and_sett
     split[3]['root'] = '00' * 32
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, admissions, split)['checks']['validators_agree']
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, admissions, states[:3])['checks']['validators_agree']
-    framed = {**admissions, 'framing': {'code': 0, 'log': '', 'height': 7}}
-    assert not chain.assess(PLAN, fetches, phases, parties, jobs, framed, states)['checks']['framing_refused']
-    early = {**admissions, 'proven': {'code': 0, 'log': '', 'height': 8}}
+    framed = {**admissions, 'framing-prove': {'code': 0, 'log': '', 'height': 7}}
+    assert not chain.assess(PLAN, fetches, phases, parties, jobs, framed, states)['checks']['framing_forfeited']
+    unopened = {**admissions, 'framing': {'code': 1, 'log': 'Insufficient spendable balance', 'height': None}}
+    assert not chain.assess(PLAN, fetches, phases, parties, jobs, unopened, states)['checks']['framing_forfeited']
+    early = {**admissions, 'proven-prove': {'code': 0, 'log': '', 'height': 8}}
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, early, states)['checks']['honest_settled_first']
+    unproven = {**admissions, 'proven-prove': {'code': 1, 'log': 'Fraud proof does not verify', 'height': None}}
+    assert not chain.assess(PLAN, fetches, phases, parties, jobs, unproven, states)['checks']['fault_proven']
     dropped = {**admissions, 'commit-cheat-2': {'code': 1, 'log': 'x', 'height': None}}
     assert not chain.assess(PLAN, fetches, phases, parties, jobs, dropped, states)['checks']['honest_work_committed']
     overcounted = copy.deepcopy(phases)
@@ -69,6 +76,9 @@ def test_the_chain_plan_reuses_settlement_and_pins_its_consensus_binary():
     # The honest window must outlast the honest audit and framing; the job deadline must outlast one serving pass.
     assert params['challenge_blocks'] * PLAN['ledger']['block_seconds'] > PLAN['phase_seconds']['audit'] / 2
     assert params['job_blocks'] * PLAN['ledger']['block_seconds'] > PLAN['phase_seconds']['serve']
+    # A proof window must outlast a background replay (about 12 s on these hosts) yet let the framing lapse
+    # before the cheating job's window closes.
+    assert 60 <= params['proof_blocks'] * PLAN['ledger']['block_seconds'] and params['proof_blocks'] < params['challenge_blocks']
     local = PLAN['cometbft']['local']
     if os.path.exists(local):
         assert sha256(local) == PLAN['cometbft']['sha256']

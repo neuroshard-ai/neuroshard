@@ -96,6 +96,8 @@ replication.
   price equally per shard; weighting shares by the bytes each owner's layers
   stream is future work.
 - **Auditors.** Earn a small fee per clean audit and the slashed bond on fraud.
+  Each challenge locks a deposit, forfeited unless its proof verifies
+  ([challenges and deposits](OPTIMISTIC_SERVING.md#challenges-and-deposits)).
 - **Module contributors.** Earn the fee share described above.
 - **Training rewards.** Paid only for work that replays: the exact sharded
   training already reproduces a single host.
@@ -113,5 +115,6 @@ replication.
 | Bonded settlement (owner bonds, log commitments, challenge window, slashing) | [Passed on the real assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md): honest job paid, framing rejected, cheater slashed, two validators agreeing; then [through four CometBFT validators](GRANITE_SHARD_CHAIN_RESULTS.md) under one operator |
 | Request-bound logs, proof availability, cheap admission before replay | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; not yet run on the real model |
 | Metered settlement (signed position counts, payment for positions served, refund of the rest) | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; a committed prefix is paid as a prefix |
+| Challenge deposits (challenges open with a deposit, proofs replay in the background and land separately) | [Tested](OPTIMISTIC_SERVING.md#evidence) on small checkpoints and four local CometBFT validators; a failed challenge forfeits its deposit; the deposit size is not calibrated |
 | User-held first stage | Design |
 | Independent operators (A5) | Not started |

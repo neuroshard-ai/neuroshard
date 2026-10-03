@@ -6,15 +6,16 @@ day, before any untrusted participant joins: owner logs are bound to the paid
 request, a proof bundle a validator lacks gives no verdict instead of a rejection,
 and every cheap admission check runs before any proof replay. A job then buys a
 budget of token positions and pays only for the
-[positions its logs cover](#metered-settlement). The revisions are
-tested on small checkpoints and four local CometBFT validators. The published
-real-model runs used the earlier protocol (commit `fc53411`). Not a public chain and
-not independent operation.
+[positions its logs cover](#metered-settlement), and a challenge
+[locks a deposit](#challenges-and-deposits) that it forfeits unless its proof
+verifies. The revisions are tested on small checkpoints and four local CometBFT
+validators. The published real-model runs used the earlier protocol (commit
+`fc53411`). Not a public chain and not independent operation.
 
 This is the settlement layer of the [verifiable network design](VERIFIABLE_NETWORK_DESIGN.md):
 serving work is accepted unless an auditor proves fraud within a challenge window.
-Validators replay a fraud proof only when a challenge arrives, so honest serving
-costs them no neural recomputation.
+Validators replay a fraud proof only for a challenge that has locked a deposit, so
+honest serving costs them no neural recomputation.
 
 The state machine is [`neuroshard.inference.optimistic`](../src/neuroshard/inference/optimistic.py).
 It imports no model code. The validator's proof checker is
@@ -30,12 +31,14 @@ launches a local validator set.
 - Each block first advances the ledger, settling jobs whose window closed, then
   applies its transactions.
 - Mempool admission and proposals evaluate a transaction against the next block's
-  state, so only transactions that apply reach a block. A challenge whose proof
-  does not verify is refused at admission and never enters a block.
-- Each validator replays a challenged proof once, with the shard it holds, and
-  caches the verdict. Admission replays outside the state lock; a validator that
-  first meets the challenge in a proposal replays it while judging that proposal.
-  [Proof availability](#proof-availability) says what happens when it cannot.
+  state, so only transactions that apply reach a block. A proof that does not
+  verify is refused at admission and never enters a block.
+- After each block, every validator replays the proofs of open challenges in the
+  background, once each, with the shard it holds, and caches the verdicts. A proof
+  is then judged from the cache. A validator that has not finished the replay
+  finishes it outside the state lock at admission, or while judging a proposal
+  that holds the proof. [Proof availability](#proof-availability) says what
+  happens when it cannot.
 
 ## Roles
 
@@ -44,10 +47,11 @@ launches a local validator set.
   signs everything it sends under that key, and is never bonded.
 - **Owners** of every other shard bond NEURO and register the Ed25519 key that
   signs their logs and everything they send on.
-- **Auditors** hold one shard, replay an owner's signed log, and submit a fraud
-  proof when an output does not reproduce or the log departs from what was signed.
-- **Validators** order transactions and, for a challenge, check the proof, replaying
-  it with the challenged shard when the claim needs it.
+- **Auditors** hold one shard, replay an owner's signed log, and challenge it with
+  a fraud proof when an output does not reproduce or the log departs from what was
+  signed.
+- **Validators** order transactions and check the proof of each open challenge,
+  replaying it with the challenged shard when the claim needs it.
 
 ## Transactions
 
@@ -61,7 +65,8 @@ and each burns the fee.
 | `owner_withdraw` | Returns the bond once the challenge window has passed since unbonding. |
 | `serve_open` | Escrows the price for a budget of token positions and names one active owner per bonded shard, in order, the request digest and the user's Ed25519 session key. The job's ID is the digest of the transaction. |
 | `log_commit` | A named owner commits a log bound to the job: its header, the digest of its entries and the statement they produce, signed by its log key over the chain, job and statement. The header must name this chain, job and request and carry its upstream sender's signature over the log's inputs and the positions they carried. When every owner has committed, the challenge window opens. |
-| `challenge` | Names a committed owner and the content address of a fraud-proof bundle. Validators accept it only if the bundle's log is the committed one and proves one of the claims below. |
+| `challenge` | Opens a challenge: names an owner whose log the job has committed, while its challenge window is open, and the content address of a fraud-proof bundle, and locks the challenge deposit. Nothing is replayed. |
+| `prove` | Lands the proof of an open challenge before its proof window closes. Validators accept it only if the bundle's log is the committed one and proves one of the claims below. |
 
 ## Request-bound logs
 
@@ -131,6 +136,36 @@ Neither side can take much from the other.
   message only after the previous result returns, so if an owner stops, the user
   has paid for at most one message per stream whose result never returned.
 
+## Challenges and deposits
+
+The earlier ledger replayed a proof when its challenge arrived and refused it if
+it failed, so a failed proof cost its sender nothing while every validator paid for
+the replay. On the real assistant that replay took 12.3–13.1 s per validator
+([measurements](GRANITE_SHARD_CHAIN_RESULTS.md#measurements)), longer than the
+3-second proposal timeout. A challenge now takes two transactions.
+
+- **Open.** `challenge` names the owner and the bundle's content address and locks
+  a deposit. It passes only cheap checks and replays nothing. While a job has an
+  open challenge it neither settles nor expires.
+- **Replay.** After each block, validators replay the proofs of open challenges in
+  the background, one at a time, and cache the verdicts. Only challenges whose
+  deposits are locked on chain are replayed.
+- **Prove.** `prove` lands the proof within the proof window, `proof_blocks` after
+  the opening. A proof that verifies slashes the owner and returns the deposit with
+  the challenger's reward; the deposits of the job's other open challenges return
+  to their challengers. A proof that does not verify is refused, and its challenge
+  stays open.
+- **Lapse.** A challenge not proven within its window closes, and its deposit is
+  burned. The job then settles or expires as usual.
+
+Every replay a validator runs is therefore paid for by a locked deposit, which the
+challenger forfeits unless the proof verifies. Forfeited deposits are burned rather
+than paid to the owner, so an owner colluding with a challenger cannot buy replays
+for nothing. A job may have any number of open challenges: a cap would let an
+attacker fill it and crowd out a real proof. Block size and the deposit bound them
+instead. An unproven challenge delays an honest owner's payment by at most one
+proof window after the challenge window.
+
 ## Proof availability
 
 Holding a bundle is local to each validator and never a ledger outcome. A
@@ -138,49 +173,60 @@ validator holds a bundle when its store has all three files and they hash to the
 challenged content address.
 
 - A validator that does not hold a challenged bundle, or cannot replay it (it lacks
-  the shard, or memory), gives no verdict. It refuses the challenge at mempool
-  admission with a retryable code (3), leaves it out of its own proposals and
-  rejects proposals containing it. It caches nothing, so it judges the proof once
-  the bundle arrives.
+  the shard, or memory), gives no verdict. It still admits the challenge, which
+  needs no bundle. It refuses the proof at mempool admission with a retryable code
+  (3), leaves it out of its own proposals and rejects proposals containing it. It
+  caches nothing and retries after each block, so it judges the proof once the
+  bundle arrives.
 - Only verdicts computed from bytes matching the content address are cached. A
   malformed bundle at its address fails the same way on every validator: replay
   checks each logged command against what serving could have sent.
 - A block commits only with prevotes from more than two thirds of the voting
   power, and an honest validator prevotes for a block only after judging every
-  challenge in it. Execution therefore applies a committed challenge without
-  replaying it and needs no bundle. Validators with and without the bundle reach
-  the same state, and a validator replaying old blocks needs none of them.
-- The challenger delivers its bundle to validators' stores before submitting. A
-  challenge commits only once validators with more than two thirds of the voting
-  power hold it, so delivery and replay time count against the challenge window.
+  proof in it. Execution therefore applies a committed proof without replaying it
+  and needs no bundle. Validators with and without the bundle reach the same
+  state, and a validator replaying old blocks needs none of them.
+- The challenger delivers its bundle to validators' stores, best before opening
+  the challenge so their replays start at once. A proof commits only once
+  validators with more than two thirds of the voting power hold its bundle and have
+  judged it, so delivery and replay time count against the proof window.
 
 ## Admission order
 
 Mempool admission and every block check run the same checks in order: the
 envelope's signature, the schema, the chain, the account nonce and the fee
-balance, then, for a challenge, a committed log in an open window and a canonical
-proof address. Only a transaction that passes all of them reaches a proof replay.
-At admission the replay runs outside the state lock, on one dedicated thread.
+balance. A challenge must then name a committed log in an open window and a
+canonical proof address, and its sender must hold the deposit. A proof must name
+an open challenge. Only a proof that passes all of them is judged, and its replay
+has usually run already, in the background after the block that opened its
+challenge. Admission waits for any unfinished replay outside the state lock. Every
+replay runs on one dedicated thread.
 
 ## Settlement rules
 
-- **Settled.** At the first block after the challenge window closes, each owner
-  is paid for the positions its log covers ([metered](#metered-settlement)) and
-  the rest of the price is refunded to the user.
-- **Fraud.** A verified challenge slashes the owner's whole bond: half goes to the
-  challenger and half is burned. The user is refunded, and every other unsettled
-  job naming that owner is voided and refunded too.
-- **Rejected challenge.** A proof that does not verify, an owner who has not
-  committed, or a closed window leaves the state unchanged. A validator lacking
-  the bundle gives no verdict, which is not a rejection.
+- **Settled.** At the first block after the challenge window closes in which the
+  job has no open challenge, each owner is paid for the positions its log covers
+  ([metered](#metered-settlement)) and the rest of the price is refunded to the
+  user.
+- **Fraud.** A verified proof slashes the owner's whole bond: half goes to the
+  challenger, with its deposit back, and half is burned. The user is refunded, the
+  job's other open challenges return their deposits, and every other unsettled job
+  naming that owner is voided and refunded the same way.
+- **Forfeited.** A challenge not proven within its proof window closes and its
+  deposit is burned.
+- **Rejected.** A challenge naming an owner who has not committed, a closed window
+  or a deposit its sender lacks leaves the state unchanged, as does a proof that
+  does not verify or names no open challenge. A validator lacking the bundle gives
+  no verdict, which is not a rejection.
 - **Expired.** If the job's owners have not all committed by the job deadline,
-  the user is refunded.
+  the user is refunded once the job has no open challenge.
 - **Conservation.** Initial supply equals liquid balances plus owner bonds plus
-  job escrow plus burned fees and penalties, checked after every transition.
+  job escrow and challenge deposits plus burned fees and penalties, checked after
+  every transition.
 
 Parameters: fee 0.001 NEURO, minimum owner bond 5 NEURO, minimum price 0.1 NEURO,
-a 20-block challenge window, 60 blocks to commit, and a 50% challenger share of
-the slashed bond.
+a 20-block challenge window, 60 blocks to commit, a 50% challenger share of the
+slashed bond, a 1 NEURO challenge deposit and a 20-block proof window.
 
 ## Evidence
 
@@ -196,10 +242,12 @@ Tests on the small Granite-shaped checkpoints
 - Two separate validator processes, each holding shard 1, replay the same blocks
   and reach the same state root. Owner 1's honest log offered for the cheating
   job is refused at commitment.
-- A forged proof claiming the honest owner's first output was wrong is rejected.
+- A challenge naming a forged proof, claiming the honest owner's first output was
+  wrong, opens with its deposit. The proof is refused, the challenge lapses and its
+  deposit is burned, and the honest job then settles.
 - The real proof is accepted: owner 1 is slashed, the auditor receives half the
-  bond, and the user is refunded. The honest job settles and pays both owners for
-  the positions served, refunding the rest of the budget.
+  bond and its deposit back, and the user is refunded. The honest job pays both
+  owners for the positions served, refunding the rest of the budget.
 - Owners that serve a whole session but commit only the prefix their first
   upstream signature covers (4 of 14 positions) are paid 4/14 of their share, and
   the user gets the rest back. An owner that signed a count its log contradicts
@@ -210,17 +258,20 @@ Tests on the small Granite-shaped checkpoints
   without the shard. An owner that sent a wrong output and committed a corrected
   log is proven by its own signature, for a middle owner and for the last owner.
   Missing, incomplete or altered bundles give no verdict; malformed ones fail.
-- Admission refuses challenges with a bad signature, schema, chain, nonce, fee,
-  job, log or proof address before any replay. Unit tests also cover possession
-  proofs, bond exposure while named or within the window, commitment signatures,
-  voiding, late and failed challenges, expiry, conservation and deterministic
-  replay.
+- Admission refuses challenges and proofs with a bad signature, schema, chain,
+  nonce, fee, job, log, proof address or challenge, and challenges without their
+  deposit, before any replay. Opening a challenge replays nothing, and validators
+  replay only challenges whose deposits are locked on chain. Unit tests also cover
+  possession proofs, bond exposure while named or within the window, commitment
+  signatures, voiding, late, failed and lapsed challenges, deposits returned when
+  another challenge proves fraud, expiry, conservation and deterministic replay.
 - Four local CometBFT validators, each holding shard 1 of the small checkpoint and
   its own bundle store, settled the scenario through consensus. The framing
-  challenge was refused at admission, and the honest job settled. The real proof
-  reached three validators; the fourth refused the challenge with no verdict, and
-  the challenge committed through the other three. All four reached the same
-  state root with exactly the expected balances.
+  challenge opened, its proof was refused at admission, and once the challenge
+  lapsed the honest job settled. The real proof reached three validators. The
+  fourth admitted its challenge, which needs no bundle, but refused the proof with
+  no verdict, and the proof committed through the other three. All four reached
+  the same state root with exactly the expected balances.
 - With the earlier protocol, [on the real 3B assistant](GRANITE_SHARD_SETTLEMENT_RESULTS.md),
   every party signing on its own host, the same sequence passed all eight declared
   checks: two validators reached the same state root, and the final balances
@@ -239,20 +290,25 @@ Tests on the small Granite-shaped checkpoints
   not load yet; the published runs audited shard 1 only. Committees of shard
   holders are future work.
 - **Proof delivery.** Bundles reach validators' stores out of band; validators do
-  not fetch them from one another or from challengers. A challenge commits only
-  if validators with more than two thirds of the voting power hold its bundle in
-  time.
+  not fetch them from one another or from challengers. A proof commits only if
+  validators with more than two thirds of the voting power hold its bundle within
+  its proof window.
 - **Commit trust.** Execution trusts that the validators that prevoted for a
-  committed block, more than two thirds of the voting power, judged every challenge
-  in it. A validator whose own verdict disagrees logs it but follows the chain.
-  Safety rests on less than one third of the voting power being faulty, and on the
+  committed block, more than two thirds of the voting power, judged every proof in
+  it. A validator whose own verdict disagrees logs it but follows the chain. Safety
+  rests on less than one third of the voting power being faulty, and on the
   execution class below.
-- **Challenge cost.** Only authenticated, funded challenges of a committed log
-  reach a replay, and only for bundles in a validator's own store. A proof that
-  fails is still refused at admission, so it costs its sender nothing while each
-  validator pays a replay up to the claimed message. Before validators accept
-  bundles from anyone, a failed challenge must cost a deposit (committed and
-  forfeited rather than refused) or be rate-limited.
+- **Challenge cost.** Every replay is paid for by a deposit forfeited unless the
+  proof verifies, but the 1 NEURO deposit is not calibrated against what a replay
+  costs. Forfeited deposits are burned: they neither pay validators for replays nor
+  compensate an honest owner, whose payment an unproven challenge delays by up to
+  one proof window.
+- **Replay capacity.** Each validator replays one proof at a time, so challenges
+  with slow but well-formed bundles queue ahead of a real proof. The deposit must
+  cost more than delaying a real proof past its windows could gain, and the windows
+  must outlast the backlog it can buy, at about 13 s per real replay. Today only
+  bundles in a validator's own store are replayed; accepting bundles from anyone
+  needs this settled first.
 - **Job checks before serving.** An owner should confirm that the job is open,
   names it and registers the session key it was given. The serving code takes the
   session from its job file.
@@ -270,5 +326,5 @@ Tests on the small Granite-shaped checkpoints
   the pinned runtime and CPU instruction class.
 - **Not yet on a public chain.** It has run on four CometBFT hosts under one
   operator, and no independent operator has run it. The revised protocol has not
-  run on the real model. The published plans declare no position budget, so a new
-  run needs a new plan.
+  run on the real model. The published plans declare no position budget or
+  challenge deposit, so a new run needs a new plan.

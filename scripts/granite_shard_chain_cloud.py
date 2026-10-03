@@ -127,8 +127,8 @@ def run(home):
     home.mkdir(parents=True, exist_ok=True)
     plan = read(ROOT / chain.PLAN)
     terms = plan["ledger"]
-    if "positions" not in terms:
-        raise ValueError("the plan declares no position budget, which metered settlement needs")
+    if "positions" not in terms or not {"challenge_deposit", "proof_blocks"} <= set(terms["params"]):
+        raise ValueError("the plan predates metered settlement and challenge deposits")
     source = chain.committed_sources()
     wait_for_ci(home, source["commit"])
     if chain.committed_sources() != source:
@@ -258,8 +258,11 @@ def run(home):
             save(home / f"{audit}.json", phases[audit])
             challenge = "frame" if label == "honest" else "prove"
             if label == "cheat":
-                window = max(admissions[f"commit-honest-{r}"]["height"] for r in (1, 2)) + terms["params"]["challenge_blocks"]
-                wait_height(validators, window + 1)
+                # The honest job settles once its window has closed and the framing challenge has lapsed.
+                params = terms["params"]
+                window = max(admissions[f"commit-honest-{r}"]["height"] for r in (1, 2)) + params["challenge_blocks"]
+                framed = admissions["framing"].get("height") or 0
+                wait_height(validators, max(window, framed + params["proof_blocks"]) + 1)
             helpers.put(hosts["auditor"], f"{challenge}-request.json",
                         {"chain_id": terms["chain_id"], "honest_job": jobs["honest"], "cheated_job": jobs.get("cheat"),
                          "log_key": log_keys[0]})
@@ -269,16 +272,21 @@ def run(home):
             payload = cloud.ssh(*hosts["auditor"], ["tar", "-czf", "-", "-C", ring.OWNER_HOME, "bundles"], timeout=900).stdout
             for host in validators:
                 cloud.ssh(*host, ["bash", "-c", f"tar -xzf - -C {ring.OWNER_HOME}"], data=payload, timeout=900)
+            # Each challenge opens first; validators judge its proof in the background once its deposit is locked.
             if challenge == "frame":
                 admissions["framing"] = submit(validators, phases["frame"]["framing"], via=3)
+                admissions["framing-prove"] = submit(validators, phases["frame"]["framing_prove"], via=3)
             else:
                 admissions["proven"] = submit(validators, phases["prove"]["proven"], via=2)
+                admissions["proven-prove"] = submit(validators, phases["prove"]["proven_prove"], via=2)
         save(home / "status.json", {"state": "running", "phase": "agree"})
         states = agreed(validators)
         save(home / "states.json", states)
         result.update(fetches=fetches, parties=parties, jobs=jobs, phases=phases, admissions=admissions,
                       genesis_sha256=hashlib.sha256(json.dumps(genesis, sort_keys=True).encode()).hexdigest(),
-                      report=chain.assess(plan, fetches, phases, parties, {"honest": jobs["honest"], "cheated": jobs["cheat"]},
+                      report=chain.assess(plan, fetches, phases, parties,
+                                          {"honest": jobs["honest"], "cheated": jobs["cheat"],
+                                           "framing": ledger.transaction_id(phases["frame"]["framing"])},
                                           admissions, states),
                       execution_completed=True)
     except BaseException as error:

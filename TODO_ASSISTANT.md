@@ -230,9 +230,11 @@ remain evidence, not readiness claims for this assistant.
   owners committing one message of a session were paid the whole price, so
   settlement is now [metered](docs/OPTIMISTIC_SERVING.md#metered-settlement): a job
   buys a budget of token positions, each owner is paid for the positions its
-  upstream signatures attest, and the user gets the rest back. Small-checkpoint and
-  four-validator tests pass. The real-model runs above used the earlier protocol,
-  and a failed challenge still costs its sender nothing.
+  upstream signatures attest, and the user gets the rest back. A challenge now
+  [locks a deposit](docs/OPTIMISTIC_SERVING.md#challenges-and-deposits) that is
+  burned unless its proof verifies, and validators replay proofs in the background
+  rather than at admission. Small-checkpoint and four-validator tests pass. The
+  real-model runs above used the earlier protocol.
 Contributors can join the existing CPU testnet or prepare reviewed demonstrations
 now. That preview does not require all six assistant milestones to be complete.
 
