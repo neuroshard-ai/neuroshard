@@ -193,7 +193,12 @@ remain evidence, not readiness claims for this assistant.
   [Round 3 learned scheduling in part](docs/ASSISTANT_REPEATED_GROWTH_ROUND3_RESULTS.md)
   ($2.96). On the integration cases U2 completed 28/64 scheduling and 6/8 cross, and
   L2 26/64 and 4/8, against 10/64 and 0/8 in stage 1. The gate asks for 18/24 and
-  6/8. Development runs as declared.
+  6/8. [Development failed](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT_RESULTS.md)
+  ($3.53). The candidate, the separate module, completed 6/24 scheduling and 1/8
+  cross, keeping all 19 drafting successes; the shared version lost 2. The
+  selectors sent too many scheduling turns to the drafting route: all of them for
+  the separate update. When the candidate's first scheduling turn reached L2, it
+  passed 12 of 16 times. The sealed sets stay closed. A3 has spent $25.53 of $100.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

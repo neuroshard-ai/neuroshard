@@ -1,0 +1,314 @@
+{
+  "format": "neuroshard-assistant-growth-development-report/1",
+  "stage": 1,
+  "plan_sha256": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+  "execution_sha256": "d368590acee7664180c74a04db09d450a587bd5d92e24cabc7cf4bb32fc83446",
+  "decision": "A3 stage-1 development: separate update 0/24 scheduling, 0/8 cross, 19/24 drafting (0 lost), separate module 6/24 scheduling, 1/8 cross, 19/24 drafting (0 lost), shared 3/24 scheduling, 0/8 cross, 18/24 drafting (2 lost). Candidate separate module: fails ['cross', 'scheduling']; the sealed sets stay closed. p95 113.1 s.",
+  "report": {
+    "versions": {
+      "separate_update": {
+        "scheduling": {
+          "correct": 0,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 0,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 19,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ]
+          ]
+        },
+        "drafting_lost": [],
+        "p95_seconds": 115.7247248069998,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        }
+      },
+      "separate_module": {
+        "scheduling": {
+          "correct": 6,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ],
+            [
+              "scheduling"
+            ],
+            [
+              "scheduling",
+              "drafting"
+            ],
+            [
+              "scheduling",
+              "scheduling"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 1,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 19,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ]
+          ]
+        },
+        "drafting_lost": [],
+        "p95_seconds": 113.12956389200008,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        }
+      },
+      "shared": {
+        "scheduling": {
+          "correct": 3,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "scheduling"
+            ],
+            [
+              "scheduling",
+              "scheduling"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 0,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 18,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ]
+          ]
+        },
+        "drafting_lost": [
+          "workflow-5b541f25dc67",
+          "workflow-c6b1500447f3"
+        ],
+        "p95_seconds": 102.86439565200044,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        }
+      }
+    },
+    "candidate": "separate_module",
+    "checks": {
+      "scheduling": false,
+      "cross": false,
+      "drafting": true,
+      "p95": true
+    },
+    "passed": false,
+    "accepted_drafting": 19
+  },
+  "hosts": {
+    "separate_update": {
+      "result_sha256": "398b618ccdba5c777eca04dc1d851cfe1c3273e4398a4eab1f4614afc1e6a7e1",
+      "source_commit": "5c171572068f4d3884482900f11bc7f2e4ace973",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 3822.0807251310002,
+      "peak_rss_bytes": 16856199168,
+      "ci": {
+        "id": 37224553373,
+        "head_sha": "5c171572068f4d3884482900f11bc7f2e4ace973",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37224553373"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-04T20:13:57.438307+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0ccafb6c29a0eacc6"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4036.354869,
+        "conservative_compute_usd": 1.186688331486,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-04T20:17:14.041884+00:00",
+        "instances": [
+          {
+            "id": "i-0ccafb6c29a0eacc6",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "separate_module": {
+      "result_sha256": "65e19395c73aa6cfcda97d582ce09d3cee20f183deef65cfa5ec622ae1399bac",
+      "source_commit": "5c171572068f4d3884482900f11bc7f2e4ace973",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 4004.433119759,
+      "peak_rss_bytes": 24480092160,
+      "ci": {
+        "id": 37224553373,
+        "head_sha": "5c171572068f4d3884482900f11bc7f2e4ace973",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37224553373"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-04T20:16:47.464589+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0dbdc0a5ed60487b6"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4203.753902,
+        "conservative_compute_usd": 1.2359036471880003,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-04T20:17:14.331518+00:00",
+        "instances": [
+          {
+            "id": "i-0dbdc0a5ed60487b6",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "shared": {
+      "result_sha256": "ec7690b5d08f31034fdcc5206616b2c29e53aaab9ce8260f41377233b3826bc9",
+      "source_commit": "5c171572068f4d3884482900f11bc7f2e4ace973",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 3573.954806539,
+      "peak_rss_bytes": 17289912320,
+      "ci": {
+        "id": 37224553373,
+        "head_sha": "5c171572068f4d3884482900f11bc7f2e4ace973",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37224553373"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-04T20:09:44.852550+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0d24ac014f9dac26d"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 3777.912207,
+        "conservative_compute_usd": 1.1107061888579999,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-04T20:17:14.626257+00:00",
+        "instances": [
+          {
+            "id": "i-0d24ac014f9dac26d",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    }
+  },
+  "conservative_compute_usd": 3.533298167532,
+  "confirmation_may_open": false,
+  "sealed_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false
+}
