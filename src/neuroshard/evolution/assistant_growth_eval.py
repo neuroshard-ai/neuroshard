@@ -23,7 +23,7 @@ from neuroshard.evolution import assistant_workflow_canonical as canonical
 from neuroshard.evolution import granite_reference as reference
 from neuroshard.evolution import granite_tokenizer
 from neuroshard.evolution.modular_reference_execution import (
-    ROOT, file_state, launch, read, save, sha256, verify_artifacts,
+    ROOT, file_state, identity, launch, read, save, sha256, verify_artifacts,
 )
 
 PLAN = 'config/experiments/assistant-growth-stage1.json'
@@ -124,6 +124,31 @@ def load_units(load_parent, spec, directory, execution, units):
     return {unit: load(unit) for unit in sorted(set(units))}
 
 
+def refit_selector(parent, tokenizer, integration, version, rules):
+    """The version's turn selector fitted from the pinned integration outcomes on this runtime's parent features.
+
+    Features are computed here, on the serving runtime, before any development case is served.
+    """
+    from neuroshard.evolution import assistant_growth_run as growth
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution.assistant_workflow_data import public_case
+
+    plan = read(ROOT / PLAN)
+    _, learning, _ = growth.contracts(plan)
+    cases = growth.integration_cases(plan, learning)
+    drafting_unit, scheduling_unit = VERSIONS[version]
+    rows = routing.turn_targets(integration['outcomes'][f'{drafting_unit}-drafting'],
+                                integration['outcomes'][f'{scheduling_unit}-scheduling'],
+                                {case['id']: len(case['turns']) for case in cases}, failed_ties=rules['failed_ties'])
+    drafting = policies()['drafting']
+    features = {routing.turn_key(case['id'], turn): routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
+                for case in cases for turn, user in enumerate(public_case(case)['user_turns'])
+                if routing.turn_key(case['id'], turn) in rows}
+    gate = selector.fit(features, rows, plan['integration']['recipe'])
+    return gate, {**{k: v for k, v in gate.items() if k != 'weight'}, 'examples': len(rows),
+                  'features_sha256': identity(features)}
+
+
 def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases):
     """One version served turn by turn. The A2 gate chooses, once per episode, the drafting route's model."""
     from neuroshard.evolution import assistant_experience_run as accelerator
@@ -184,6 +209,11 @@ def worker(request_path):
         units = ROOT / UPLOADED
         a2_gate, turn_gate = verify_units(units, execution, version)
         parent, _ = reference.load_model(directory, 'baseline')
+        if execution.get('selectors', {}).get('refit'):
+            begun = time.monotonic()
+            integration = read(units / execution['gates']['stage1']['file'])
+            turn_gate, reply['selector'] = refit_selector(parent, tokenizer, integration, version, execution['selectors'])
+            reply['selector']['seconds'] = time.monotonic() - begun
         models = load_units(lambda: reference.load_model(directory, 'baseline')[0], spec, units, execution,
                             VERSIONS[version])
         reply['units'] = {unit: execution['units'][unit]['trainable_sha256'] for unit in needed(version)}

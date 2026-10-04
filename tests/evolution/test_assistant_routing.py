@@ -86,6 +86,10 @@ def test_turn_targets_follow_success_rates_and_ties_keep_the_drafting_route():
     assert rows == {'a#0': (0.0, 0.5), 'a#1': (1.0, 1.0), 'b#0': (1.0, 0.5), 'c#0': (0.0, 0.5)}
     with pytest.raises(ValueError, match='no integration outcome'):
         routing.turn_targets({'a': []}, scheduling_runs, {'a': 1})
+    failed = {'d': [[False], [False]]}
+    assert routing.turn_targets(failed, failed, {'d': 1}) == {'d#0': (0.0, 0.5)}
+    assert routing.turn_targets({**drafting_runs, **failed}, {**scheduling_runs, **failed},
+                                {'a': 2, 'b': 1, 'c': 1, 'd': 1}, failed_ties=False) == rows
 
 
 def test_a_turn_feature_renders_one_user_message_after_the_policy_instruction_and_tools():

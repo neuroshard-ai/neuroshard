@@ -192,11 +192,12 @@ def turn_key(case_id, turn):
     return f'{case_id}#{turn}'
 
 
-def turn_targets(drafting, scheduling, turns):
+def turn_targets(drafting, scheduling, turns, failed_ties=True):
     """Per-turn targets from single-route outcomes: 1 selects scheduling, 0 keeps the incumbent drafting route.
 
     A turn selects scheduling only where that route succeeded more often, weighted by the
-    difference; a tie counts for the drafting route with the weight of one episode.
+    difference; a tie counts for the drafting route with the weight of one episode. With
+    ``failed_ties`` false, a turn that both routes always failed is no example at all.
     ``drafting`` and ``scheduling`` map a case to its runs' round successes; ``turns`` to its user-turn count.
     """
     rows = {}
@@ -207,6 +208,8 @@ def turn_targets(drafting, scheduling, turns):
         for turn in range(turns[case_id]):
             rates = [sum(bool(run[turn]) if turn < len(run) else False for run in outcomes) / len(outcomes)
                      for outcomes in runs]
+            if not failed_ties and not any(rates):
+                continue
             difference = rates[1] - rates[0]
             weight = abs(difference) or 1 / max(len(outcomes) for outcomes in runs)
             rows[turn_key(case_id, turn)] = (1.0 if difference > 0 else 0.0, weight)

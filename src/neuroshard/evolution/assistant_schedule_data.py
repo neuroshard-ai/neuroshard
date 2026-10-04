@@ -20,8 +20,11 @@ CROSS = ('review', 'handoff')
 SPLITS = {'train': (21000, 32), 'integration': (22000, 8), 'development': (23000, 3), 'confirmation': (24000, 24),
           'cross-train': (25000, 16), 'cross-integration': (26000, 4), 'cross-development': (27000, 4),
           'cross-confirmation': (28000, 24)}
+# Further training splits of the same grammar, frozen in their own manifest.
+GROWTH = {'train2': (29000, 32), 'train3': (30000, 32), 'train4': (31000, 32),
+          'cross-train2': (32000, 16), 'cross-train3': (33000, 16), 'cross-train4': (34000, 16)}
 SEALED = ('confirmation', 'cross-confirmation')
-TRAINING = ('train', 'cross-train')
+TRAINING = ('train', 'cross-train', *GROWTH)
 WINDOW = 14
 DURATIONS = (30, 45, 60, 90)
 BOUNDS = (11 * 60, 12 * 60 + 30, 13 * 60, 14 * 60)
@@ -77,9 +80,10 @@ def meeting(project, attendees, day, start, duration, sources=()):
 
 
 def make_case(split, family, index):
-    if split not in SPLITS or family not in families(split) or type(index) is not int or not 0 <= index < 40:
+    seeds = {**SPLITS, **GROWTH}
+    if split not in seeds or family not in families(split) or type(index) is not int or not 0 <= index < 40:
         raise ValueError('unknown scheduling split or family')
-    number = SPLITS[split][0] + families(split).index(family) * 40 + index
+    number = seeds[split][0] + families(split).index(family) * 40 + index
     rng = random.Random(number)
     project = f"{rng.choice(['Cedar', 'Harbor', 'Meadow', 'Orchard', 'Summit', 'Willow'])} {number}"
     sibling = project + ' Annex'
@@ -210,8 +214,9 @@ def make_case(split, family, index):
 
 
 def cases(split):
-    if split not in SPLITS:
+    seeds = {**SPLITS, **GROWTH}
+    if split not in seeds:
         raise ValueError('unknown scheduling split')
-    result = [make_case(split, family, i) for family in families(split) for i in range(SPLITS[split][1])]
-    random.Random(SPLITS[split][0]).shuffle(result)
+    result = [make_case(split, family, i) for family in families(split) for i in range(seeds[split][1])]
+    random.Random(seeds[split][0]).shuffle(result)
     return result

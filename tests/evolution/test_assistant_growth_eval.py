@@ -131,6 +131,33 @@ def test_each_turn_is_served_by_its_routes_unit_and_drafting_by_the_a2_choice(mo
     assert all(instructed for _, instructed in served)
 
 
+def test_the_selector_is_refitted_from_integration_outcomes_without_turns_both_routes_failed(monkeypatch):
+    from neuroshard.evolution import assistant_growth_run as growth
+    from neuroshard.evolution.assistant_workflow_data import public_case
+
+    plan = read(ROOT / development.PLAN)
+    _, learning, _ = growth.contracts(plan)
+    cases = growth.integration_cases(plan, learning)
+    meeting = {user for case in cases if case.get('capability') for user in public_case(case)['user_turns']}
+    monkeypatch.setattr(routing, 'turn_feature',
+                        lambda model, tokenizer, policy, user, device: [1.0, 0.1] if user in meeting else [0.1, 1.0])
+
+    def runs(succeeds):
+        return {case['id']: [[succeeds(case, index)] * len(case['turns']) for index in range(3)] for case in cases}
+
+    scheduling = runs(lambda case, index: bool(case.get('capability')) and (index != 0 or case['family'] == 'slot'))
+    drafting = runs(lambda case, index: not case.get('capability'))
+    failed = runs(lambda case, index: False)
+    integration = {'outcomes': {'U1-drafting': drafting, 'L2-scheduling': {**scheduling, **{
+        case['id']: failed[case['id']] for case in cases if case.get('capability') == 'cross'}}}}
+    gate, report = development.refit_selector(None, None, integration, 'separate_module', {'failed_ties': False})
+    from neuroshard.evolution import assistant_selector as selector
+    assert selector.choose(gate, [1.0, 0.1]) and not selector.choose(gate, [0.1, 1.0])
+    cross_turns = sum(len(case['turns']) for case in cases if case.get('capability') == 'cross')
+    assert report['examples'] == sum(len(case['turns']) for case in cases) - cross_turns
+    assert report['counts']['ties'] == 0 and 'weight' not in report
+
+
 def test_latency_counts_each_selection_pass_once():
     case = next(c for c in SETS['scheduling'] if len(c['turns']) == 2)
     respond = scripted(schedule_texts(case), [])

@@ -199,6 +199,11 @@ remain evidence, not readiness claims for this assistant.
   selectors sent too many scheduling turns to the drafting route: all of them for
   the separate update. When the candidate's first scheduling turn reached L2, it
   passed 12 of 16 times. The sealed sets stay closed. A3 has spent $25.53 of $100.
+  The project owner chose [round 4](docs/ASSISTANT_REPEATED_GROWTH_ROUND4.md): 1,152
+  verified correct solutions, four times as many, from six further frozen training
+  splits, and 512 training steps. Each development host refits its selector on its
+  own CPU runtime, and turns both routes failed are left out. Integration and every
+  gate are unchanged ($99.53 in allowances within the $100 ceiling, A10G only).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
