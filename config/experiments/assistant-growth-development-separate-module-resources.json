@@ -1,0 +1,50 @@
+{
+  "format": "neuroshard-assistant-growth-development-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 2.75,
+  "planning_cap_usd": 6,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-growth-development-separate-module",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-development-inputs",
+    "files": [
+      "L2/manifest.json",
+      "L2/trainable.safetensors",
+      "U1/manifest.json",
+      "U1/trainable.safetensors",
+      "a2-integration.json",
+      "stage1-integration.json"
+    ],
+    "maximum_bytes": 268435456
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-growth-round3-report.json",
+    "sha256": "239d383bc9ef08cb1dd70971f1093e19e7fade9d1f709173413f5a7d445a47a2"
+  },
+  "budget_scope": "A3 stage-1 development of the separate module version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads routing the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the low-rank module L2 and the accepted update U1, the round-4 gates and the stage-1 turn selectors. No GPU, training or sealed data.",
+  "prior_attempts": []
+}

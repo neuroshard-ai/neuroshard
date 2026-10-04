@@ -147,3 +147,64 @@ def test_latency_counts_each_selection_pass_once():
 def test_importing_development_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_growth_eval; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
+
+
+def cloud_module():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location('development_cloud', ROOT / 'scripts/modular_reference_cloud.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtime():
+    execution = read(ROOT / development.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources'])
+    probe = ('import os, sys; import neuroshard.evolution.assistant_growth_eval; assert "torch" not in sys.modules; '
+             'import neuroshard.evolution.assistant_experience_run, neuroshard.evolution.assistant_experience_train, '
+             'neuroshard.evolution.assistant_growth_run, neuroshard.evolution.assistant_selector, '
+             'neuroshard.evolution.assistant_serving, neuroshard.evolution.assistant_experience_gate, '
+             'neuroshard.evolution.granite_context_reference, neuroshard.evolution.assistant_calendar; '
+             'root = os.path.abspath("src"); print("\\n".join(sorted(os.path.relpath(x.__file__) '
+             'for x in list(sys.modules.values()) if getattr(x, "__file__", None) and '
+             'os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources'])
+    assert development.SCRIPT in execution['sources']
+    canonical = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
+    assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
+    round3 = read(ROOT / 'config/experiments/assistant-growth-round3-report.json')
+    assert {unit: row['trainable_sha256'] for unit, row in round3['units'].items()} == {
+        unit: row['trainable_sha256'] for unit, row in execution['units'].items()}
+    assert execution['units']['U1']['trainable_sha256'] == read(ROOT / PLAN['plan'])['cohort1']['trainable_sha256']
+    a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
+    assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
+    assert execution['gates']['stage1']['sha256'] == round3['integration']['integration_sha256']
+    assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
+
+
+def test_each_development_host_is_one_bounded_cpu_host_uploading_only_its_units():
+    cloud = cloud_module()
+    execution = read(ROOT / development.EXECUTION)
+    total = 0
+    for profile, version in development.PROFILES.items():
+        resources = cloud.resources(profile)
+        assert not resources['gpu'] and resources['instance_type'] == 'r7i.4xlarge'
+        assert resources['hours'] <= cloud.LONG_CPU_PROFILES[profile][0]
+        assert resources['planning_cap_usd'] <= cloud.LONG_CPU_PROFILES[profile][1]
+        assert resources['hours'] * resources['price']['usd_per_hour'] + 3 <= resources['planning_cap_usd']
+        assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
+                + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
+        command = cloud.remote_command(profile)
+        assert command[1].endswith(development.SCRIPT) and command[-2:] == ['--version', version]
+        assert cloud.UPLOAD_PROFILES[profile] == development.UPLOADED
+        assert cloud.GRANITE_PROFILES[profile][0] == 'assistant_growth_eval'
+        units = {f"{execution['units'][unit]['checkpoint']}/{name}" for unit in development.needed(version)
+                 for name in ('manifest.json', 'trainable.safetensors')}
+        assert set(resources['upload']['files']) == units | {gate['file'] for gate in execution['gates'].values()}
+        total += resources['planning_cap_usd']
+    assert total <= 18

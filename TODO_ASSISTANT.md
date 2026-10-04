@@ -190,6 +190,10 @@ remain evidence, not readiness claims for this assistant.
   solver as the accepted version's own replies: exact team names, two `list_busy`
   calls per reply and `shift_date` for plan due dates. Training, integration and every
   gate are unchanged ($95.04 in allowances within the $100 ceiling).
+  [Round 3 learned scheduling in part](docs/ASSISTANT_REPEATED_GROWTH_ROUND3_RESULTS.md)
+  ($2.96). On the integration cases U2 completed 28/64 scheduling and 6/8 cross, and
+  L2 26/64 and 4/8, against 10/64 and 0/8 in stage 1. The gate asks for 18/24 and
+  6/8. Development runs as declared.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

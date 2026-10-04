@@ -1,0 +1,232 @@
+{
+  "format": "neuroshard-assistant-growth-round3-report/1",
+  "round": 3,
+  "source_commit": "c567d79ffd58ec290a32aeafcfe44a641967cbb2",
+  "result_sha256": "09c74ea41f544e98bd23bf7540b083c64fa126ee8a68d6a5937709fc9f07a1a5",
+  "execution_completed": true,
+  "error": null,
+  "stopped": null,
+  "gpu": "NVIDIA A10G",
+  "max_batch": 16,
+  "phases_seconds": {
+    "demonstrate": 8.429961570999978,
+    "verify_drafting": 17.004151776000015,
+    "train": 592.397418925,
+    "integrate": 7426.918166782999
+  },
+  "peak_gpu_bytes": 13811757056,
+  "wall_seconds": 8130.249794443001,
+  "collection": {
+    "cases": 288,
+    "complete": 288,
+    "by_family": {
+      "after": 32,
+      "invite": 32,
+      "longer": 32,
+      "move": 32,
+      "swap": 32,
+      "day": 32,
+      "slot": 32,
+      "three": 32,
+      "review": 16,
+      "handoff": 16
+    },
+    "replies": 1488,
+    "demonstrations_sha256": "139bc9a9360a44792ac62d01c06404c226036b2eb32e26d51e193ab3905c01a8",
+    "trajectories_sha256": "8134f14e44dcbf64efd540d225838934708ccbd435341797c663cc0f29e8b948"
+  },
+  "decision": "Round 3 trained U2 and L2 on 288 verified demonstrations and fitted the turn selectors. Integration, greedy: U1-drafting 0/64 scheduling, 0/8 cross, 59/64 drafting; U2-drafting 0/64 scheduling, 0/8 cross, 54/64 drafting; U2-scheduling 28/64 scheduling, 6/8 cross, 51/64 drafting; L2-scheduling 26/64 scheduling, 4/8 cross, 55/64 drafting.",
+  "units": {
+    "U1": {
+      "checkpoint": "update-checkpoint",
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865",
+      "source": "round-4 update, accepted by A2"
+    },
+    "U2": {
+      "checkpoint": "update-checkpoint",
+      "trainable_sha256": "9bcfa9d30cd7d152ede32a5dbaf136ac7a4614a87b9a4eef15cfe36250e9babf",
+      "trainable_parameters": 62914560,
+      "steps": 128,
+      "final_loss": 0.013526784022531047,
+      "seconds": 296.810817376,
+      "tokens_processed": 1393302,
+      "schedule_sha256": "2b2671c8ed2171c274831b08de3c13ce500c4f22f08360a42284229555de512e",
+      "roots": {
+        "scheduling": "faa59805297fba199800f87ee8e6977aae307b26858a1ebec7cf618228d0ca3d",
+        "drafting": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "plan": "43698bd244880bf05913f26feb5af1887fb6e2375a14483e69c1f504bf3f57ea"
+      },
+      "tensors": 16
+    },
+    "L2": {
+      "checkpoint": "module-checkpoint",
+      "trainable_sha256": "f2dba5a7504b0bdb8d6b5ee7eac21c534db2ab4f933fdd3f7c9221665ddee5f9",
+      "trainable_parameters": 1048576,
+      "steps": 128,
+      "final_loss": 0.013753483997106741,
+      "seconds": 294.717850988,
+      "tokens_processed": 1393302,
+      "schedule_sha256": "2b2671c8ed2171c274831b08de3c13ce500c4f22f08360a42284229555de512e",
+      "roots": {
+        "scheduling": "faa59805297fba199800f87ee8e6977aae307b26858a1ebec7cf618228d0ca3d",
+        "drafting": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "plan": "43698bd244880bf05913f26feb5af1887fb6e2375a14483e69c1f504bf3f57ea"
+      },
+      "tensors": 32
+    }
+  },
+  "integration": {
+    "routes": {
+      "U1-drafting": {
+        "scheduling": {
+          "cases": 64,
+          "greedy": 0,
+          "sampled_rate": 0.0
+        },
+        "cross": {
+          "cases": 8,
+          "greedy": 0,
+          "sampled_rate": 0.0
+        },
+        "drafting": {
+          "cases": 64,
+          "greedy": 59,
+          "sampled_rate": 0.9296875
+        }
+      },
+      "U2-drafting": {
+        "scheduling": {
+          "cases": 64,
+          "greedy": 0,
+          "sampled_rate": 0.0
+        },
+        "cross": {
+          "cases": 8,
+          "greedy": 0,
+          "sampled_rate": 0.0
+        },
+        "drafting": {
+          "cases": 64,
+          "greedy": 54,
+          "sampled_rate": 0.8515625
+        }
+      },
+      "U2-scheduling": {
+        "scheduling": {
+          "cases": 64,
+          "greedy": 28,
+          "sampled_rate": 0.4453125
+        },
+        "cross": {
+          "cases": 8,
+          "greedy": 6,
+          "sampled_rate": 0.5
+        },
+        "drafting": {
+          "cases": 64,
+          "greedy": 51,
+          "sampled_rate": 0.796875
+        }
+      },
+      "L2-scheduling": {
+        "scheduling": {
+          "cases": 64,
+          "greedy": 26,
+          "sampled_rate": 0.3828125
+        },
+        "cross": {
+          "cases": 8,
+          "greedy": 4,
+          "sampled_rate": 0.5625
+        },
+        "drafting": {
+          "cases": 64,
+          "greedy": 55,
+          "sampled_rate": 0.8671875
+        }
+      }
+    },
+    "versions": {
+      "separate_update": {
+        "turns": {
+          "scheduling_better": 72,
+          "drafting_better": 18,
+          "ties": 114
+        },
+        "rule": "logistic",
+        "counts": {
+          "arm_better": 72,
+          "parent_better": 132,
+          "ties": 0
+        },
+        "gate_sha256": "6e0aa15f3cf70486820a180d32345e64ae48ca7eea133d23c3c40c0eb91a389b"
+      },
+      "separate_module": {
+        "turns": {
+          "scheduling_better": 73,
+          "drafting_better": 12,
+          "ties": 119
+        },
+        "rule": "logistic",
+        "counts": {
+          "arm_better": 73,
+          "parent_better": 131,
+          "ties": 0
+        },
+        "gate_sha256": "8c859e1c8244c85289098b1b0612455895f56a1e959ef68d5927f802e91b7817"
+      },
+      "shared": {
+        "turns": {
+          "scheduling_better": 72,
+          "drafting_better": 9,
+          "ties": 123
+        },
+        "rule": "logistic",
+        "counts": {
+          "arm_better": 72,
+          "parent_better": 132,
+          "ties": 0
+        },
+        "gate_sha256": "35b4c2a0594dfea525d99952126220c01255d54ec8d6e88151fe006c852a1334"
+      }
+    },
+    "integration_sha256": "e5fcb0c5b7f998746a13eaf06ebea1681e78d061582097f1f46d89fdec5ebec8",
+    "features_sha256": "c29ede337a40cc4094bb0ab31fb7c4c4b42898bce2cd21ef394e6350d9d4666b"
+  },
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "ci": {
+    "id": 37212465500,
+    "head_sha": "c567d79ffd58ec290a32aeafcfe44a641967cbb2",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37212465500"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-04T18:22:48.615729+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0ce37e78ebe5df047"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 8783.247499,
+    "conservative_compute_usd": 2.9570266579966664,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-04T18:23:24.967556+00:00",
+    "instances": [
+      {
+        "id": "i-0ce37e78ebe5df047",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  }
+}
