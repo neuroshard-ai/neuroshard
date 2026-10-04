@@ -165,11 +165,20 @@ remain evidence, not readiness claims for this assistant.
   the same mixture. Per-turn selectors are fitted from integration success rates.
   The development gate is 18/24 scheduling and 6/8 cross with no drafting success
   lost; the sealed confirmation decides acceptance and A3's comparison. Ceiling $100.
-  Measured during the run, scheduling rollouts take about 4.2 s each, so the worker's
-  seven hours may end during integration. A [resumption](config/experiments/assistant-growth-stage1-resume.json)
-  was declared before any outcome was read. If both units are saved and integration
-  is not, a second GPU host runs only the declared integration from the saved units.
-  It is allowed at most $12, within the ceiling.
+  Measured during the run, scheduling rollouts took about 4.2 s each, so an
+  [integration-only resumption](config/experiments/assistant-growth-stage1-resume.json)
+  was declared before any outcome was read; the worker finished in time and it was
+  not needed. [Stage 1 ran](docs/ASSISTANT_REPEATED_GROWTH_STAGE1_RESULTS.md) ($14.22)
+  but learned little scheduling. The accepted version made one tool call per reply
+  and ran out of replies in most rollouts. The stage-1 card produced no complete
+  success, and the near-policy filter removed every coached partial success. The
+  units trained on 33 trajectories from 11 of 288 cases, and their scheduling routes
+  completed 10/64 and 7/64 integration episodes and 0/8 cross. Development was not
+  run. [Round 2](docs/ASSISTANT_REPEATED_GROWTH_ROUND2.md) changes only the collection.
+  It re-verifies stage 1's natural rollouts and coaches with a card that fits the
+  budget and states the conflict rule. It drops the near-policy filter, and stops
+  before training if fewer than 32 cases have a complete trajectory ($96.22 in
+  allowances within the $100 ceiling).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

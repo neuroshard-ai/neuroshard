@@ -1,0 +1,754 @@
+{
+  "binding": {
+    "freeze": {
+      "commit": "326f125915468238fce54ed2b6d10983b9dac81d",
+      "sources": {
+        "config/experiments/assistant-growth-stage1.json": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+        "docs/ASSISTANT_REPEATED_GROWTH_STAGE1.md": "224e64998e5fae9c9f055032148f6dd44d45c33f23be4525066a768310fb8c09",
+        "config/experiments/assistant-growth.json": "5ed81ffe5716d86c83fadac180171c4c44afa5b912fefcd298d3169bc2824333",
+        "config/experiments/assistant-growth-baseline-report.json": "bcbabae4d92cbbdaa00de34b9b87d10d069c407ae6591355f4701dfd040c7285",
+        "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+        "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+        "config/experiments/assistant-workflow-policy-calendar.json": "22b7351ec748265b6f22c5c3b8c83e5a6e80792c67e1f11540c6501d0574842e",
+        "config/experiments/assistant-schedule-data.json": "2e184d28098238853b192691d5c82f82d9d0d5b5a8a0e45cb967eb9ddc615fbb",
+        "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+        "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
+        "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+        "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
+        "config/experiments/assistant-growth-resources.json": "f1369a0709aea47f15020ee8d818a28ff7f02d121e251af4fcba4469c731daac",
+        "config/experiments/assistant-growth-execution.json": "37b08b6ef05763eaa2136fe863e38c9df861b6d8bd70f96e9929e9f617caae67",
+        "src/neuroshard/__init__.py": "4ed35ca7a44e55cdd74e6a10b6e3cc3523258456a21aee45159b2dea3a0c0266",
+        "src/neuroshard/version.py": "e364931a8afff672985ee99f795e6d8b20ff33c55d71d757ec211ec6689b3c19",
+        "src/neuroshard/evolution/__init__.py": "01db1888cb7b1947c173c0fb401427b0339812f5b3aea68db97d09d60cb28b3d",
+        "src/neuroshard/evolution/assistant_calendar.py": "06e7a5cbe63bd0ea2552520db636f972bfbe5a387dfad8efed1f5c1fa4f399ce",
+        "src/neuroshard/evolution/assistant_experience.py": "49eb0807d2e418b6d1e8449f4a05015111def9313413c9bd9b86b7be07e4f61a",
+        "src/neuroshard/evolution/assistant_experience_run.py": "67162e1ded297ae57d3e4d85b517b70eb398181a8d42f0a96888c9df1a6e0de2",
+        "src/neuroshard/evolution/assistant_experience_train.py": "ff0987a433cb69a7a3f5a11c601da89400c8376982719cfa8c4adb0b4e61a138",
+        "src/neuroshard/evolution/assistant_growth_run.py": "ce98e6768b9b38058240a46799eae23059c47c9546bb1abf4f41d7f372e51678",
+        "src/neuroshard/evolution/assistant_replay.py": "ee09fd51dabee0762d1e0b20708bb641e8a9d8e24e6b78e8efcfd4912ee6f356",
+        "src/neuroshard/evolution/assistant_rollout.py": "7de41baf3f013338427262c9761ad9bc29fc4575750f03a15971fb9029d73c0c",
+        "src/neuroshard/evolution/assistant_routing.py": "33a2525dac8360be48f86f6557da4dcf7d5be261aec6ece0857a381a91916d97",
+        "src/neuroshard/evolution/assistant_schedule_data.py": "e8c1bf63fc917abcb2c16485b2f609d95b335ad9ee4d45347b4acb02abcf3518",
+        "src/neuroshard/evolution/assistant_selector.py": "2abeecbf0cc7e728026b3bc9aa97509a59c7e2e044fade8da78f73350a76d9fc",
+        "src/neuroshard/evolution/assistant_workflow.py": "96b27b31fcacc3a1719b3be764d819822869cb358afaa413e9f56697cac1c755",
+        "src/neuroshard/evolution/assistant_workflow_data.py": "8affd5827cdc84ac5023b8fc422d897cf64df65edeaae6268954c8515aa20958",
+        "src/neuroshard/evolution/assistant_workspace.py": "d94b4e160752d52f5d6f84149f00a915d65f0480f1164a8547cd2ea5bca1768c",
+        "src/neuroshard/evolution/granite_reference.py": "7da36fdb7910e2e399808c462dec1c1b449ca860635eebe9674cb1e5eca58b3b",
+        "src/neuroshard/evolution/granite_tokenizer.py": "12617bb30d6916064fba499fce6755c894598ff25365f09fbd828a80a45c1580",
+        "src/neuroshard/evolution/modular_reference.py": "7201ff7fee2c651ec8a8831da884284a75bb9b09a4d8aecd4805e99a2629c065",
+        "src/neuroshard/evolution/modular_reference_execution.py": "7bed17d4fde0795845e222a00e8417d04adb42ea3127515b3212b434a91bc5ff",
+        "src/neuroshard/evolution/modular_tools.py": "1083a97b45bdab3b1366d3a93c2f516de31c22833de31a5ee727de727c95212f",
+        "scripts/run_assistant_growth.py": "8a92b3af620ffe23751669f0eadf6acb30c0527b1e9359b8f9fdb813637bd989",
+        "scripts/modular_reference_cloud.py": "15821a3dc487937cb29ec45ea04d50075f6a2d43315cb0ea5613425a663edfc6"
+      },
+      "packages": {
+        "annotated-doc": "0.0.5",
+        "anyio": "4.15.1",
+        "certifi": "2026.7.22",
+        "click": "8.5.0",
+        "cuda-bindings": "12.9.4",
+        "cuda-pathfinder": "1.8.2",
+        "filelock": "4.0.4",
+        "fsspec": "2026.9.0",
+        "h11": "0.16.0",
+        "hf-xet": "1.6.0",
+        "httpcore": "1.0.9",
+        "httpx": "0.28.1",
+        "huggingface_hub": "1.33.0",
+        "idna": "3.20",
+        "Jinja2": "3.1.6",
+        "markdown-it-py": "4.2.0",
+        "MarkupSafe": "3.0.3",
+        "mdurl": "0.1.2",
+        "mpmath": "1.3.0",
+        "networkx": "3.7",
+        "numpy": "2.2.6",
+        "nvidia-cublas-cu12": "12.8.4.1",
+        "nvidia-cuda-cupti-cu12": "12.8.90",
+        "nvidia-cuda-nvrtc-cu12": "12.8.93",
+        "nvidia-cuda-runtime-cu12": "12.8.90",
+        "nvidia-cudnn-cu12": "9.10.2.21",
+        "nvidia-cufft-cu12": "11.3.3.83",
+        "nvidia-cufile-cu12": "1.13.1.3",
+        "nvidia-curand-cu12": "10.3.9.90",
+        "nvidia-cusolver-cu12": "11.7.3.90",
+        "nvidia-cusparse-cu12": "12.5.8.93",
+        "nvidia-cusparselt-cu12": "0.7.1",
+        "nvidia-nccl-cu12": "2.27.5",
+        "nvidia-nvjitlink-cu12": "12.8.93",
+        "nvidia-nvshmem-cu12": "3.4.5",
+        "nvidia-nvtx-cu12": "12.8.90",
+        "packaging": "26.3",
+        "Pygments": "2.21.0",
+        "PyYAML": "6.0.3",
+        "regex": "2026.9.10",
+        "rich": "15.0.0",
+        "safetensors": "0.7.0",
+        "setuptools": "84.0.0",
+        "shellingham": "1.5.4",
+        "sympy": "1.14.0",
+        "tokenizers": "0.22.2",
+        "torch": "2.10.0+cu128",
+        "tqdm": "4.70.1",
+        "transformers": "5.5.4",
+        "triton": "3.6.0",
+        "typer": "0.27.2",
+        "typing_extensions": "4.16.0"
+      },
+      "python": "3.12.12",
+      "gpus": [
+        "NVIDIA L40S"
+      ]
+    },
+    "profile": "assistant-growth-gpu",
+    "plan_sha256": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865"
+  },
+  "execution_completed": true,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "development_opened": false,
+  "confirmation_opened": false,
+  "reply": {
+    "binding": "fb6e03b5bb3225142b2ffa9b8a5120434c6d8aa04611e699bb8a7147be88f13c",
+    "execution_completed": true,
+    "phases": {
+      "collect": 16873.492967714,
+      "verify_drafting": 13.669673229000182,
+      "train": 196.7862585690018,
+      "integrate": 4972.529608906003
+    },
+    "gpu": "NVIDIA L40S",
+    "max_batch": 32,
+    "tokenizer": {
+      "runtime_class": "TokenizersBackend",
+      "pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
+      "splitting_sha256": "c0550637596ccb7e70bf2cd4f0e297f1734b29e7eb868a407db8cd6e885d2581",
+      "control_tokens": {},
+      "fixture_count": 16,
+      "fixture_sha256": "57351890555a59a2ec04eed0a71589c2ebbd8a832606e96180c12db56f343bbb",
+      "eos_token_id": 100257,
+      "pad_token_id": 100256,
+      "transformers": "5.5.4",
+      "tokenizers": "0.22.2",
+      "parent_tokenizer_digest": "d7e1714703eb97dcef3435aa50eb1de1cf241d62"
+    },
+    "collection": {
+      "cases": 288,
+      "rollouts": 4592,
+      "accepted": 33,
+      "complete": 6,
+      "coached": 0,
+      "cases_without_experience": [
+        "schedule-00ae07305cdd",
+        "schedule-029b35c49f35",
+        "schedule-030471c8b08a",
+        "schedule-03a8af42d2af",
+        "schedule-047ca5bca059",
+        "schedule-04d4b3de1e89",
+        "schedule-0500ca5661f4",
+        "schedule-07042e7e9a00",
+        "schedule-073d9c8a7ebb",
+        "schedule-0777292c346a",
+        "schedule-09247ab20a94",
+        "schedule-0a1366bfd81f",
+        "schedule-0b086ebe3fc6",
+        "schedule-0bf9d86cca00",
+        "schedule-0e1232ad0cb1",
+        "schedule-0e505d9c1a9d",
+        "schedule-0e722b2ea9e7",
+        "schedule-0f8b3fe3c7c2",
+        "schedule-0ffb6d777ad4",
+        "schedule-1060063a791a",
+        "schedule-10af92dbd731",
+        "schedule-10fe2dc4215c",
+        "schedule-12398f7f3274",
+        "schedule-134aa3c56bdf",
+        "schedule-14b7c687f83f",
+        "schedule-184d17548eda",
+        "schedule-187153ea5aa6",
+        "schedule-1a48bcfb5534",
+        "schedule-1c4f09fd2109",
+        "schedule-1dc384a7c1ef",
+        "schedule-1df0539b318b",
+        "schedule-1e9fe0c1685b",
+        "schedule-1f20f48f774a",
+        "schedule-1f984f335ac9",
+        "schedule-2171b1de639a",
+        "schedule-21ae88a98dc1",
+        "schedule-21cc4d201a80",
+        "schedule-23c0c8f5ff04",
+        "schedule-2451c79aa1a4",
+        "schedule-248f7ee76b9b",
+        "schedule-24a8756f97a4",
+        "schedule-24e76cde219e",
+        "schedule-2597e189581d",
+        "schedule-27050ea6a2b4",
+        "schedule-28a1af3e1887",
+        "schedule-2a12e3bc8e42",
+        "schedule-2a824aae8562",
+        "schedule-2acdb00288aa",
+        "schedule-2adc55bd667a",
+        "schedule-2bd42a74c339",
+        "schedule-2bfd48031b3e",
+        "schedule-2d7c88926e5d",
+        "schedule-2d97a0fd4348",
+        "schedule-2e1eba6f096b",
+        "schedule-2e2183b6b2ec",
+        "schedule-2e4a428e1312",
+        "schedule-2f1c27b23979",
+        "schedule-2f64a7e9a559",
+        "schedule-2faf9e60fce4",
+        "schedule-301db229ac6e",
+        "schedule-30ac1fdc1abe",
+        "schedule-3388b8631ec5",
+        "schedule-33dfb84cb079",
+        "schedule-3429b9db7c72",
+        "schedule-343dacf51a2d",
+        "schedule-3647d5ac0d46",
+        "schedule-3682ffd47770",
+        "schedule-37ca4b79bd74",
+        "schedule-383da7901d0f",
+        "schedule-3886e37e0f82",
+        "schedule-38bf9f9a187a",
+        "schedule-3980c88d1ca7",
+        "schedule-3bb42ff1231d",
+        "schedule-3bf54f6f17e7",
+        "schedule-3d5290d65b13",
+        "schedule-3d778a3272d3",
+        "schedule-3d8b55ed3ed6",
+        "schedule-3d8d12a556d1",
+        "schedule-3d90926924ab",
+        "schedule-3d97504e5504",
+        "schedule-3dcb507f56e7",
+        "schedule-3f0d0218bad0",
+        "schedule-42e38460c99c",
+        "schedule-44851f3cae9e",
+        "schedule-452a5b7cfed2",
+        "schedule-454fa2cd5e93",
+        "schedule-45965bbbcdf5",
+        "schedule-46dce1a28ab5",
+        "schedule-478fb6095643",
+        "schedule-47c25223fc7c",
+        "schedule-4a6bc260a256",
+        "schedule-4c180515a9af",
+        "schedule-4dc86454abe7",
+        "schedule-4f3865735d26",
+        "schedule-4f90ab7c38f4",
+        "schedule-4fd6f7eb5c1e",
+        "schedule-501082689ddb",
+        "schedule-51b4e3f78ad2",
+        "schedule-5230ed1a4b97",
+        "schedule-52d072a507b1",
+        "schedule-5507a817aa4d",
+        "schedule-552369c36ad1",
+        "schedule-5629773fd287",
+        "schedule-566ef906b34e",
+        "schedule-56bb16ba85cf",
+        "schedule-56eb290e1995",
+        "schedule-571fa6b20879",
+        "schedule-579824d9da44",
+        "schedule-591ae47b0320",
+        "schedule-59cbc5bbabd0",
+        "schedule-59ee1fd15be3",
+        "schedule-5a55e8ed2255",
+        "schedule-5bade2a64fc2",
+        "schedule-5e3c3fecc756",
+        "schedule-5fbbddd5cebf",
+        "schedule-5fe6da6a7acb",
+        "schedule-62951e3e49f4",
+        "schedule-638bf5e21af3",
+        "schedule-64b77a84ecbb",
+        "schedule-660b1b1fd2d3",
+        "schedule-678b86a6e899",
+        "schedule-68268ab01811",
+        "schedule-6888b038b60d",
+        "schedule-68e1caaedbfd",
+        "schedule-6a5efd13e812",
+        "schedule-6a89be564b70",
+        "schedule-6ae965d70c5f",
+        "schedule-6bc0dd88006e",
+        "schedule-6cbd15ddab56",
+        "schedule-6e7c110b3807",
+        "schedule-6e861e411689",
+        "schedule-7142fb4c518d",
+        "schedule-71a12a53008d",
+        "schedule-72a813b831aa",
+        "schedule-7353c3ebd638",
+        "schedule-7525aa9b3825",
+        "schedule-75643ffa2a20",
+        "schedule-7616979e6d18",
+        "schedule-77b6b96ef335",
+        "schedule-780eac099802",
+        "schedule-78e1ab9f2247",
+        "schedule-7991182eb26f",
+        "schedule-7999b7d69971",
+        "schedule-7ad3c4b82688",
+        "schedule-7b8223a31ad5",
+        "schedule-7db0338d71bf",
+        "schedule-7dbdbdedcf70",
+        "schedule-7ec92acc395a",
+        "schedule-7ee5218b2e7a",
+        "schedule-7ffbc6a86104",
+        "schedule-817e77c2ea77",
+        "schedule-822a8b743d0d",
+        "schedule-8572c866e935",
+        "schedule-8577528544f3",
+        "schedule-859176eefe24",
+        "schedule-85b9690ffd11",
+        "schedule-861e8382f903",
+        "schedule-86599b63de50",
+        "schedule-86d744c56485",
+        "schedule-87d64e2c79f6",
+        "schedule-87ebe45e5eda",
+        "schedule-882df6780ed0",
+        "schedule-887e3d42874e",
+        "schedule-88cdeaef45b5",
+        "schedule-892cbc861199",
+        "schedule-89bd34cf0567",
+        "schedule-8d50cae30715",
+        "schedule-8fc18e4db97b",
+        "schedule-8fe3cf657f1f",
+        "schedule-902269b55e52",
+        "schedule-9033d56378fe",
+        "schedule-90eb35643fa8",
+        "schedule-914dcdf736e7",
+        "schedule-922025b00f4b",
+        "schedule-94e9574d7589",
+        "schedule-962bf8ed0b5d",
+        "schedule-96e3085a2bd5",
+        "schedule-970ea012c304",
+        "schedule-97eb5fbde290",
+        "schedule-9a118b273fe6",
+        "schedule-9bb9bbc5840a",
+        "schedule-9f4634fc0de4",
+        "schedule-a0030383ae25",
+        "schedule-a105582f08ac",
+        "schedule-a23aa9355ebc",
+        "schedule-a282c9318112",
+        "schedule-a2890475f092",
+        "schedule-a2bbd564252b",
+        "schedule-a306ba2c7541",
+        "schedule-a35b1e120150",
+        "schedule-a390fad73e84",
+        "schedule-a3c4a8147ea5",
+        "schedule-a4602815341d",
+        "schedule-a950fe81e99d",
+        "schedule-a9cc96f225d8",
+        "schedule-aa5386ee2fc3",
+        "schedule-ac104293d54e",
+        "schedule-aef1b68d8ed1",
+        "schedule-af3c4d1c8c4f",
+        "schedule-b17ae3606855",
+        "schedule-b21cfda36776",
+        "schedule-b339cfd32c28",
+        "schedule-b54127452687",
+        "schedule-b680676a1959",
+        "schedule-b8aa15765d52",
+        "schedule-b987a310fbd8",
+        "schedule-b98e73df41a8",
+        "schedule-b9d07765b767",
+        "schedule-bacd415459b7",
+        "schedule-bb04e5e9d568",
+        "schedule-bca46d58dfa5",
+        "schedule-bd6d234f8100",
+        "schedule-bd8c98f87ae4",
+        "schedule-be0130bf3b93",
+        "schedule-be6773104303",
+        "schedule-bede29747a64",
+        "schedule-c07fc34d030c",
+        "schedule-c13a6f794cd5",
+        "schedule-c2f41ddaf8d0",
+        "schedule-c310f823ab53",
+        "schedule-c53ee45fdecf",
+        "schedule-c721274e18ec",
+        "schedule-c83b0c163770",
+        "schedule-c876c8bdaf0b",
+        "schedule-c8ae2c08a0cc",
+        "schedule-c9f0cd17bdeb",
+        "schedule-ca6559041688",
+        "schedule-cb43f69da011",
+        "schedule-cbb76e324973",
+        "schedule-cc2121f7fc81",
+        "schedule-cc4bd09be797",
+        "schedule-ccab27e65231",
+        "schedule-cef68dafb473",
+        "schedule-cf4232b96f60",
+        "schedule-cf9aa1336119",
+        "schedule-d196525e7c93",
+        "schedule-d3d2ff05202c",
+        "schedule-d4af5e8b896f",
+        "schedule-d4c47b3b3282",
+        "schedule-d4ebd55a399b",
+        "schedule-d6c01dc0d9d9",
+        "schedule-d6de4e4ccdcd",
+        "schedule-d70d02b4a829",
+        "schedule-d73117102054",
+        "schedule-d9288798f376",
+        "schedule-da44de12ce43",
+        "schedule-dc2e093115c8",
+        "schedule-dc341aa188b5",
+        "schedule-dde6793061f9",
+        "schedule-df004e4235db",
+        "schedule-e1570c6da2f3",
+        "schedule-e1795bba8e54",
+        "schedule-e2aca037b999",
+        "schedule-e332b15dd78c",
+        "schedule-e4500b8bab0f",
+        "schedule-e4c3515aafd8",
+        "schedule-e4fef3213f0b",
+        "schedule-e628090b92ee",
+        "schedule-e8b014732a2e",
+        "schedule-ee7df901a000",
+        "schedule-f030fad6826f",
+        "schedule-f10e4650c20a",
+        "schedule-f1aa3f7adf95",
+        "schedule-f3886b62b203",
+        "schedule-f4b4f7471bec",
+        "schedule-f4c6a522972f",
+        "schedule-f5d33f3b350f",
+        "schedule-f69a859a7e86",
+        "schedule-f6ddb8be59eb",
+        "schedule-f94f5dfc9356",
+        "schedule-f96b7fbf7fe1",
+        "schedule-fa68d924815c",
+        "schedule-fa79b1080a0b",
+        "schedule-fad4173ed9db",
+        "schedule-fb531b3d073e",
+        "schedule-fd3ec991518d",
+        "schedule-ffe92a2525e3"
+      ],
+      "by_family": {
+        "after": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "invite": {
+          "cases": 32,
+          "complete": 1,
+          "coached_only": 0
+        },
+        "longer": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "move": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "swap": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "day": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "slot": {
+          "cases": 32,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "three": {
+          "cases": 32,
+          "complete": 1,
+          "coached_only": 0
+        },
+        "review": {
+          "cases": 16,
+          "complete": 0,
+          "coached_only": 0
+        },
+        "handoff": {
+          "cases": 16,
+          "complete": 0,
+          "coached_only": 0
+        }
+      },
+      "near_policy_ceiling": 0.06739704310894012,
+      "drafting_reference": {
+        "cases": 64,
+        "natural_successes": 126
+      }
+    },
+    "training": {
+      "U2": {
+        "format": "neuroshard-assistant-experience-checkpoint/1",
+        "arm": "update",
+        "trainable_sha256": "d15d4a77b240e982b75efac5d1e183cb6a6bc9f09b94039c15ceee94b54a43de",
+        "trainable_parameters": 62914560,
+        "tensors": {
+          "model.layers.32.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.32.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.33.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.33.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.34.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.34.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.35.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.35.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.36.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.36.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.37.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.37.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.38.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.38.self_attn.v_proj.weight": [
+            512,
+            2560
+          ],
+          "model.layers.39.self_attn.q_proj.weight": [
+            2560,
+            2560
+          ],
+          "model.layers.39.self_attn.v_proj.weight": [
+            512,
+            2560
+          ]
+        },
+        "steps": 128,
+        "schedule_sha256": "6be08cb2677e436814a4ebe8fd4a1b43a1dde62fceaf633c37aaae86aae883ef",
+        "final_loss": 0.013939318464562866,
+        "roots": {
+          "scheduling": "176bbbe88440c33979c166aeb3cf407d4ae768498823683e2b0b7c47e59601ff",
+          "drafting": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+          "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+          "plan": "4206176b69b64af700b657e428c4772d11d77db532e8b6411b5455b439494ccb"
+        },
+        "seconds": 98.34659951499998,
+        "tokens_processed": 1382205
+      },
+      "L2": {
+        "format": "neuroshard-assistant-experience-checkpoint/1",
+        "arm": "addition",
+        "trainable_sha256": "cc4e8cca168174a9614b6a02229539b883d456864d74d0b0e47de83341f7d3dc",
+        "trainable_parameters": 1048576,
+        "tensors": {
+          "model.layers.32.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.32.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.32.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.32.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.33.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.33.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.33.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.33.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.34.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.34.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.34.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.34.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.35.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.35.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.35.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.35.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.36.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.36.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.36.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.36.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.37.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.37.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.37.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.37.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.38.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.38.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.38.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.38.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.39.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.39.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.39.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.39.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ]
+        },
+        "steps": 128,
+        "schedule_sha256": "6be08cb2677e436814a4ebe8fd4a1b43a1dde62fceaf633c37aaae86aae883ef",
+        "final_loss": 0.014925882599183815,
+        "roots": {
+          "scheduling": "176bbbe88440c33979c166aeb3cf407d4ae768498823683e2b0b7c47e59601ff",
+          "drafting": "1477b49317f8f922813970b485ecef4b50ddeaef822d1d48767196798c2735d4",
+          "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+          "plan": "4206176b69b64af700b657e428c4772d11d77db532e8b6411b5455b439494ccb"
+        },
+        "seconds": 97.66651086300044,
+        "tokens_processed": 1382205
+      }
+    },
+    "gates": {
+      "separate_update": {
+        "rule": "logistic",
+        "bias": -0.03290003165602684,
+        "epsilon": 1e-06,
+        "threshold": 0.5,
+        "counts": {
+          "arm_better": 29,
+          "parent_better": 175,
+          "ties": 0
+        },
+        "sha256": "f38aa59cb28743f72b2b5fbb61c5f9729ea62c5d437b9122e4b7438e0e90d1b4"
+      },
+      "separate_module": {
+        "rule": "logistic",
+        "bias": -0.04398109018802643,
+        "epsilon": 1e-06,
+        "threshold": 0.5,
+        "counts": {
+          "arm_better": 20,
+          "parent_better": 184,
+          "ties": 0
+        },
+        "sha256": "1b31c34caac221726d580ba646b88c6d7a505d74ced7579c9c7d2b8d2d2222a0"
+      },
+      "shared": {
+        "rule": "logistic",
+        "bias": -0.03183327987790108,
+        "epsilon": 1e-06,
+        "threshold": 0.5,
+        "counts": {
+          "arm_better": 28,
+          "parent_better": 176,
+          "ties": 0
+        },
+        "sha256": "b73e3339f1d8babd2d21b5ebb25626e78f1bfa8a8c8c7715b68c93333fd51b6a"
+      }
+    },
+    "checked_encodes": 42413,
+    "wall_seconds": 22149.97488824,
+    "process_cpu_seconds": 22269.30378189,
+    "peak_rss_bytes": 8279691264,
+    "peak_gpu_bytes": 19742367744
+  }
+}

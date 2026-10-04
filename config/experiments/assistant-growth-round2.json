@@ -1,0 +1,40 @@
+{
+  "format": "neuroshard-assistant-growth-round2/1",
+  "status": "Declared on October 4, 2026, after the stage-1 report and before any round-2 rollout. Stage 1's outcome rule allows a second round within the remaining budget; no development or confirmation case was run in stage 1.",
+  "amends": "config/experiments/assistant-growth-stage1.json",
+  "stage1_report": "config/experiments/assistant-growth-stage1-report.json",
+  "findings": "In stage 1 the calendar policy allowed six replies per user message and two calls per reply, but the accepted version made exactly one call per reply. It ran out of replies in 1,649 of 2,304 natural and 2,045 of 2,288 coached rollouts. The stage-1 card added steps and produced no complete success. When a natural rollout saved a meeting whose only error was its start, the start was earlier than the correct one in 208 of 211 such rollouts. The near-policy filter, calibrated mostly by drafting successes, removed every coached partial success, leaving 33 trajectories from 11 of 288 training cases. On the integration cases the scheduling routes then completed 10/64 and 7/64 scheduling and 0/8 cross episodes.",
+  "unchanged": "Routing, the three versions, the training mixture, schedule, steps and learning rates, the integration sets, runs, seeds and selector recipe, the development and confirmation gates, the comparison, the outcome rules and the calendar interface with its limits are stage 1's.",
+  "collection": {
+    "sampler": "The accepted version: the parent plus U1, as in stage 1.",
+    "natural": {
+      "use": "Stage 1's 2,304 natural scheduling and cross rollouts came from the same sampler under the same policy. They are re-verified on the host instead of being sampled again, and their verified rounds are experience.",
+      "file": "stage1-rollouts.jsonl.gz",
+      "sha256": "c48e645db6884ca0aea556595ab4fe073adf9e6f30f2496364d23d80044cbf01",
+      "rows_sha256": "1b403ced93326ba56a203c0419e31e3ae65a0048b7f8afd7b147eb4999954b37"
+    },
+    "trigger": "Training cases without a complete verified natural trajectory.",
+    "card": "Meeting procedure. Each user message allows at most six replies and ten tool calls, so put two independent calls in one reply whenever you can, and make no call you do not need.\n1) Only when the meeting date must come from a plan: list the project's documents, read the latest approved plan, and shift its start date by its review interval with shift_date. If the conversation already gives the date, use it.\n2) Call list_busy for every attendee on the meeting date, two calls per reply.\n3) Try starts in time order: 09:00 or the earliest start the user allows, then the end of each busy time. A start works if the meeting ends by 17:00 and every busy time of every attendee ends at or before the start or begins at or after the end. Use add_minutes only for an end you cannot compute.\n4) Save the meeting once with the first start that works, citing only documents you read. If the user asked for the first date with a free slot and no start works, repeat steps 2 and 3 for the next date.\n5) For a follow-up, keep every field the user does not change. Call list_busy only for an attendee or a date not yet listed in this conversation, then repeat step 3 and save again.\n6) After saving, reply with one short confirmation and no tool call.\nExample: a 60-minute meeting with teams A and B. A is busy 09:00-10:30 and 13:00-14:00; B is busy 10:00-11:30. 09:00 fails because A is busy, 10:30 fails because B is busy until 11:30, and 11:30 works and ends at 12:30, so save 11:30.",
+    "rollouts": "8 samples per triggered case with the card appended to the system instruction; same verification; stored without the card.",
+    "samples_per_case": 8,
+    "temperature": 0.8,
+    "top_p": 0.95,
+    "seed": 27094001,
+    "near_policy": "Not applied. Stage 1 had six complete natural scheduling successes, too few to calibrate it, and the filter removed every coached success. Drafting retention is still gated case by case in development and confirmation.",
+    "selection_per_case": 4
+  },
+  "stop": {
+    "minimum_complete_cases": 32,
+    "rule": "If fewer than 32 of the 288 training cases have a complete verified trajectory, natural or coached, training and integration do not run and round 2 ends."
+  },
+  "budget": {
+    "spent_usd": 14.22,
+    "gpu_usd": 17,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1's GPU host cost $14.22. Round 2: GPU at most $17, development at most $18 on three CPU hosts, confirmation at most $47 on five CPU hosts; $96.22 within the unchanged $100 ceiling."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false
+}
