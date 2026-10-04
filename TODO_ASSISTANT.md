@@ -179,6 +179,12 @@ remain evidence, not readiness claims for this assistant.
   budget and states the conflict rule. It drops the near-policy filter, and stops
   before training if fewer than 32 cases have a complete trajectory ($96.22 in
   allowances within the $100 ceiling).
+  [Round 2 stopped by its rule](docs/ASSISTANT_REPEATED_GROWTH_ROUND2_RESULTS.md)
+  ($4.82): 2 of 288 cases had a complete trajectory, and the card produced none.
+  The cause: `list_busy` accepts a team only under its exact name, and 77% of
+  coached calls used a shortened one ("operations") and got a generic error. Even
+  after a valid first call, no coached first round passed. The model still made one
+  call per reply. The next step is a design decision. A3 has spent $19.04 of $100.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
