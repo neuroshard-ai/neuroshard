@@ -184,7 +184,12 @@ remain evidence, not readiness claims for this assistant.
   The cause: `list_busy` accepts a team only under its exact name, and 77% of
   coached calls used a shortened one ("operations") and got a generic error. Even
   after a valid first call, no coached first round passed. The model still made one
-  call per reply. The next step is a design decision. A3 has spent $19.04 of $100.
+  call per reply. A3 has spent $19.04 of $100. The project owner chose
+  [round 3](docs/ASSISTANT_REPEATED_GROWTH_ROUND3.md): U2 and L2 learn from one
+  verified correct solution per training case. Each is written by a goal-directed
+  solver as the accepted version's own replies: exact team names, two `list_busy`
+  calls per reply and `shift_date` for plan due dates. Training, integration and every
+  gate are unchanged ($95.04 in allowances within the $100 ceiling).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

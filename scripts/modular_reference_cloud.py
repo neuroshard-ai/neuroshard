@@ -37,6 +37,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-gpu": "config/experiments/assistant-growth-resources.json",
                      "assistant-growth-resume-gpu": "config/experiments/assistant-growth-resume-resources.json",
                      "assistant-growth-round2-gpu": "config/experiments/assistant-growth-round2-resources.json",
+                     "assistant-growth-round3-gpu": "config/experiments/assistant-growth-round3-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
                         for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
@@ -66,6 +67,7 @@ GRANITE_PROFILES = {
     "assistant-growth-gpu": ("assistant_growth_run", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-resume-gpu": ("assistant_growth_resume", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-round2-gpu": ("assistant_growth_round2", "docs/assistant-experience-requirements.txt"),
+    "assistant-growth-round3-gpu": ("assistant_growth_round3", "docs/assistant-experience-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
     **{profile: ("assistant_growth_confirm", "docs/granite-reference-requirements.txt") for profile in GROWTH_CONFIRMATION},
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
@@ -87,10 +89,10 @@ GRANITE_PROFILES = {
 GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile in (
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3",
     "assistant-experience-compose-compose1", "assistant-experience-compose-compose2", "assistant-growth-gpu",
-    "assistant-growth-resume-gpu", "assistant-growth-round2-gpu")}
+    "assistant-growth-resume-gpu", "assistant-growth-round2-gpu", "assistant-growth-round3-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
                    "assistant-growth-gpu": ".growth", "assistant-growth-resume-gpu": ".growth",
-                   "assistant-growth-round2-gpu": ".growth",
+                   "assistant-growth-round2-gpu": ".growth", "assistant-growth-round3-gpu": ".growth",
                    **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
@@ -134,6 +136,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-round2-gpu":
         from neuroshard.evolution.assistant_growth_round2 import committed_sources as round_sources
         return round_sources()
+    if profile == "assistant-growth-round3-gpu":
+        from neuroshard.evolution.assistant_growth_round3 import committed_sources as demonstration_sources
+        return demonstration_sources()
     if profile in GROWTH_DEVELOPMENT:
         from neuroshard.evolution.assistant_growth_eval import committed_sources as development_sources
         return development_sources()
@@ -562,6 +567,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-growth-round2-gpu":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_round2.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-growth-round3-gpu":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_round3.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile in GROWTH_DEVELOPMENT:
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_development.py", "run",
