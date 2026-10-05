@@ -40,9 +40,15 @@
     "usd_per_hour": 1.0584
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-growth-round3-report.json",
-    "sha256": "239d383bc9ef08cb1dd70971f1093e19e7fade9d1f709173413f5a7d445a47a2"
+    "path": "config/experiments/assistant-growth-round4-report.json",
+    "sha256": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
   },
-  "budget_scope": "A3 stage-1 development of the shared version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads routing the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the continued update U2, the round-4 gates and the stage-1 turn selectors. No GPU, training or sealed data.",
-  "prior_attempts": []
+  "budget_scope": "A3 round-4 development of the shared version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that refits the version's turn selector on its own runtime and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the continued update U2, A2's round-4 gates and the A3 round-4 integration outcomes. No GPU, training or sealed data.",
+  "prior_attempts": [
+    {
+      "home": ".neuroshard/assistant-growth-development-shared-20261004",
+      "report": "config/experiments/assistant-growth-development-report.json",
+      "outcome": "Round-3 units; development failed on scheduling and cross."
+    }
+  ]
 }

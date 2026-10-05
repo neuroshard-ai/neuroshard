@@ -8,7 +8,7 @@ import pytest
 from neuroshard.evolution import assistant_growth_baseline as baseline
 from neuroshard.evolution import assistant_growth_eval as development
 from neuroshard.evolution import assistant_routing as routing
-from neuroshard.evolution.modular_reference_execution import ROOT, read, save, sha256
+from neuroshard.evolution.modular_reference_execution import ROOT, identity, read, save, sha256
 
 from test_assistant_calendar import schedule_texts
 from test_assistant_routing import POLICIES, scripted
@@ -156,6 +156,7 @@ def test_the_selector_is_refitted_from_integration_outcomes_without_turns_both_r
     cross_turns = sum(len(case['turns']) for case in cases if case.get('capability') == 'cross')
     assert report['examples'] == sum(len(case['turns']) for case in cases) - cross_turns
     assert report['counts']['ties'] == 0 and 'weight' not in report
+    assert report['gate_sha256'] == identity(gate)
 
 
 def test_latency_counts_each_selection_pass_once():
@@ -204,13 +205,16 @@ def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtim
     assert development.SCRIPT in execution['sources']
     canonical = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
-    round3 = read(ROOT / 'config/experiments/assistant-growth-round3-report.json')
-    assert {unit: row['trainable_sha256'] for unit, row in round3['units'].items()} == {
+    round4 = read(ROOT / 'config/experiments/assistant-growth-round4-report.json')
+    assert {unit: row['trainable_sha256'] for unit, row in round4['units'].items()} == {
         unit: row['trainable_sha256'] for unit, row in execution['units'].items()}
     assert execution['units']['U1']['trainable_sha256'] == read(ROOT / PLAN['plan'])['cohort1']['trainable_sha256']
     a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
     assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
-    assert execution['gates']['stage1']['sha256'] == round3['integration']['integration_sha256']
+    assert execution['gates']['stage1']['sha256'] == round4['integration']['integration_sha256']
+    declared = read(ROOT / 'config/experiments/assistant-growth-round4.json')['selectors']
+    assert execution['selectors'] == {'refit': declared['refit'], 'failed_ties': declared['failed_ties']} == {
+        'refit': True, 'failed_ties': False}
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

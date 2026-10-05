@@ -146,7 +146,7 @@ def refit_selector(parent, tokenizer, integration, version, rules):
                 if routing.turn_key(case['id'], turn) in rows}
     gate = selector.fit(features, rows, plan['integration']['recipe'])
     return gate, {**{k: v for k, v in gate.items() if k != 'weight'}, 'examples': len(rows),
-                  'features_sha256': identity(features)}
+                  'features_sha256': identity(features), 'gate_sha256': identity(gate)}
 
 
 def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases):
