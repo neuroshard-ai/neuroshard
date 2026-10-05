@@ -124,9 +124,10 @@ def test_each_turn_is_served_by_its_routes_unit_and_drafting_by_the_a2_choice(mo
     monkeypatch.setattr(serving, 'cached_responder', responder)
     monkeypatch.setattr(accelerator, 'boundary_feature', lambda model, tokenizer, policy, case, device: case['id'])
     monkeypatch.setattr(routing, 'turn_feature', lambda model, tokenizer, policy, user, device: user)
-    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate == 'turns'
+    turns = {'rule': 'logistic'}
+    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate is turns
                         else feature == draft['id'])
-    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', 'turns',
+    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', turns,
                                        [meeting, draft])
     assert [row['score']['passed'] for row in rows] == [True, True]
     assert rows[0]['score']['routes'] == ['scheduling', 'scheduling'] and rows[0]['a2_selected'] == 'parent'
@@ -187,6 +188,43 @@ def test_the_centroid_rule_separates_turns_that_share_most_of_their_feature():
     assert development.held_out(features, rows, 1e-6) == 1.0
     favoured = {key: (1.0, 1.0) for key in rows}
     assert selector.fit_centroid(features, favoured, 1e-6)['rule'] == 'constant-arm'
+
+
+def test_a_router_fitted_on_message_features_is_served_on_message_features(monkeypatch):
+    from neuroshard.evolution import assistant_experience_run as accelerator
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution import assistant_serving as serving
+    from neuroshard.evolution.assistant_workflow_data import public_case
+
+    meeting = next(c for c in SETS['scheduling'] if len(c['turns']) == 2)
+    draft = SETS['drafting'][0]
+    scripts = {public_case(c)['user_turns'][0]: iter(texts)
+               for c, texts in ((meeting, schedule_texts(meeting)), (draft, reference_texts(draft)))}
+    prefixes = []
+
+    def responder(model, tokenizer, policy):
+        return lambda messages, tools: reply(next(scripts[messages[1]['content']]))
+
+    def unexpected(*args):
+        raise AssertionError('a message-feature router must not be served on reply-start features')
+
+    meeting_turns = set(public_case(meeting)['user_turns'])
+    monkeypatch.setattr(serving, 'cached_responder', responder)
+    monkeypatch.setattr(accelerator, 'boundary_feature', lambda model, tokenizer, policy, case, device: case['id'])
+    monkeypatch.setattr(routing, 'turn_feature', unexpected)
+    monkeypatch.setattr(routing, 'message_prefix', lambda *args: prefixes.append(args) or {'ids': []})
+    monkeypatch.setattr(routing, 'message_feature', lambda model, tokenizer, policy, user, device, prefix: user)
+    router = {'rule': 'centroid', 'feature': 'message-mean'}
+    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate is router
+                        else feature == draft['id'])
+    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', router,
+                                       [meeting, draft])
+    assert [row['score']['routes'] for row in rows] == [['scheduling', 'scheduling'], ['drafting'] * len(draft['turns'])]
+    assert len(prefixes) == 1 and all(row['score']['passed'] for row in rows)
+    tagged = selector.fit_centroid({'a#0': [1.0, 0.0], 'b#0': [0.0, 1.0]}, {'a#0': (1.0, 1.0), 'b#0': (0.0, 1.0)},
+                                   1e-6, 'message-mean')
+    assert tagged['feature'] == 'message-mean' and tagged['sha256'] == identity(
+        {k: v for k, v in tagged.items() if k != 'sha256'})
 
 
 def test_latency_counts_each_selection_pass_once():

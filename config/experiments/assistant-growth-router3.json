@@ -1,0 +1,28 @@
+{
+  "format": "neuroshard-assistant-growth-router3/1",
+  "status": "Declared on October 5, 2026, after the turn-need router's report and before any development with it. The project owner chose this change: the feature becomes the parent's average state over the user's own message.",
+  "amends": ["config/experiments/assistant-growth-router2.json"],
+  "router2_report": "config/experiments/assistant-growth-router2-report.json",
+  "findings": "Trained on 2,112 turns labelled by what their verified correct solutions need, the router was only 74.3% accurate held out and 73.0% on the integration turns. Routing every turn to scheduling would score 79% on the training turns. Its feature, the parent's state at the first token of its reply, encodes little of what the user wrote.",
+  "router": {
+    "labels_and_data": "Unchanged: the 1,728 training scheduling turns and 384 drafting training turns, each labelled by whether its verified correct solution uses the calendar.",
+    "feature": "message-mean: the parent's mean final-layer state over the tokens after the prefix every turn shares, that is, the user message, its end marker and the reply header. The prefix is the instruction, tools and user header, found as the longest prefix two different messages share. It is computed once into a key/value cache that each turn extends and is cropped back to.",
+    "rule": "The centroid rule, every example weighted equally; an exact tie keeps the drafting route.",
+    "serving": "The router file names its feature, and development and confirmation compute it in the same way on the same runtime.",
+    "reported": "Held-out accuracy over four folds of training cases and accuracy on the 204 integration turns; neither is a gate.",
+    "pinned": "The router is fitted on one CPU host and pinned by digest before any development host starts."
+  },
+  "unchanged": "Round 4's units, routing, the three versions, the development and confirmation gates, the comparison and the outcome rules. Nothing is trained.",
+  "confirmation": "If the candidate passes, the sealed confirmation opens once as declared for stage 1, on five CPU hosts serving the same pinned router.",
+  "budget": {
+    "ceiling_usd": 110,
+    "spent_usd": 38.98,
+    "router_usd": 5.5,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1, rounds 2 to 4, three developments and the turn-need router cost $38.98. Router: at most $5.50 on one CPU host. Development: at most $18 on three CPU hosts. Confirmation: at most $47 on five CPU hosts. $109.48 within the $110 ceiling."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false
+}

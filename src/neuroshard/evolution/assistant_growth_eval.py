@@ -181,9 +181,12 @@ def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, case
     drafting_unit, scheduling_unit = VERSIONS[version]
     route_policies = policies()
     drafting, scheduling = route_policies['drafting'], route_policies['scheduling']
+    prefix = (routing.message_prefix(parent, tokenizer, drafting, 'cpu') if turn_gate.get('feature') == 'message-mean'
+              else None)
 
     def select(turn, user):
-        feature = routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
+        feature = (routing.message_feature(parent, tokenizer, drafting, user, 'cpu', prefix) if prefix
+                   else routing.turn_feature(parent, tokenizer, drafting, user, 'cpu'))
         return 'scheduling' if selector.choose(turn_gate, feature) else 'drafting'
 
     rows = []

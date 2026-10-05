@@ -64,11 +64,12 @@ def fit(features, rows, recipe):
     return gate
 
 
-def fit_centroid(features, rows, epsilon):
+def fit_centroid(features, rows, epsilon, feature=None):
     """Nearer weighted class mean of mean-centred, normalised features; the logistic gate's constant rules.
 
     Centring removes the component every feature shares, so the class means differ by
-    what separates the examples rather than by what they have in common.
+    what separates the examples rather than by what they have in common. ``feature`` names
+    how the features were computed, so serving computes them the same way.
     """
     keys = sorted(rows)
     if set(features) != set(keys):
@@ -88,7 +89,7 @@ def fit_centroid(features, rows, epsilon):
     arm = torch.nn.functional.normalize((x * (w * y)[:, None]).sum(dim=0), dim=0, eps=epsilon)
     parent = torch.nn.functional.normalize((x * (w * (1 - y))[:, None]).sum(dim=0), dim=0, eps=epsilon)
     gate = {'rule': 'centroid', 'mean': mean.tolist(), 'arm': arm.tolist(), 'parent': parent.tolist(),
-            'epsilon': epsilon, 'counts': counts}
+            'epsilon': epsilon, 'counts': counts, **({'feature': feature} if feature else {})}
     gate['sha256'] = identity(gate)
     return gate
 

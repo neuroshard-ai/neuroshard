@@ -188,6 +188,40 @@ def turn_feature(model, tokenizer, policy, user, device):
         return model.model(input_ids=ids).last_hidden_state[0, -1].float().cpu().tolist()
 
 
+def message_prefix(model, tokenizer, policy, device):
+    """The tokens every turn shares, the instruction, tools and user header, run once into a key/value cache."""
+    import torch
+
+    first, second = turn_ids(tokenizer, policy, 'Schedule'), turn_ids(tokenizer, policy, 'Create')
+    common = 0
+    for left, right in zip(first, second):
+        if left != right:
+            break
+        common += 1
+    if not 0 < common < min(len(first), len(second)):
+        raise ValueError('turns share no prefix before the user message')
+    ids = first[:common]
+    with torch.no_grad():
+        cache = model.model(input_ids=torch.tensor([ids], device=device), use_cache=True).past_key_values
+    return {'ids': ids, 'cache': cache}
+
+
+def message_feature(model, tokenizer, policy, user, device, prefix):
+    """Mean frozen-parent final-layer state over one user message and the reply header, after the cached prefix."""
+    import torch
+
+    ids = turn_ids(tokenizer, policy, user)
+    if ids[:len(prefix['ids'])] != prefix['ids'] or len(ids) == len(prefix['ids']):
+        raise ValueError('a turn does not extend the shared prefix')
+    try:
+        with torch.no_grad():
+            states = model.model(input_ids=torch.tensor([ids[len(prefix['ids']):]], device=device),
+                                 past_key_values=prefix['cache'], use_cache=True).last_hidden_state[0]
+        return states.float().mean(dim=0).cpu().tolist()
+    finally:
+        prefix['cache'].crop(len(prefix['ids']))
+
+
 def turn_key(case_id, turn):
     return f'{case_id}#{turn}'
 

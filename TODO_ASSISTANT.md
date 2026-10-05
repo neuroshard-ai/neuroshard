@@ -231,7 +231,11 @@ remain evidence, not readiness claims for this assistant.
   ($1.82): 74.3% held out and 73.0% on the integration turns, below the 79% of
   routing everything to scheduling. The labels are clean, so the parent's state at
   the start of its reply is the limit. Development has not been run with it. A3 has
-  spent $38.98 of $110.
+  spent $38.98 of $110. The project owner chose to
+  [change the feature](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md) to the parent's mean
+  state over the user's own message. The shared prefix is computed once and each turn
+  extends it, at fit and at serve time. Same labels, refit once, then development
+  ($109.48 in allowances).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
