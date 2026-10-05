@@ -206,7 +206,12 @@ remain evidence, not readiness claims for this assistant.
   gate are unchanged ($99.53 in allowances within the $100 ceiling, A10G only).
   [Round 4 reached about 60% scheduling](docs/ASSISTANT_REPEATED_GROWTH_ROUND4_RESULTS.md)
   ($3.54). On the integration cases U2 completed 39/64 scheduling and 6/8 cross, and
-  L2 38/64 and 3/8. U2's drafting rose to 63/64. Development runs as declared.
+  L2 38/64 and 3/8. U2's drafting rose to 63/64.
+  [Its development failed on one drafting success](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT4_RESULTS.md)
+  ($4.05). The candidate met the scheduling and cross gates exactly, 18/24 and 6/8.
+  But the refitted selectors sent every turn, drafting included, to the scheduling
+  route, and it lost one accepted drafting success. The A2 logistic recipe does not
+  separate the two kinds of turn on these features. A3 has spent $33.12 of $100.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
