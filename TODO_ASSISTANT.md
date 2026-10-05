@@ -216,6 +216,11 @@ remain evidence, not readiness claims for this assistant.
   for a development rerun with the round-4 units. Each host centres its CPU turn
   features and routes a turn to the nearer weighted class mean. Nothing is trained
   ($98.12 in allowances, confirmation included, within the $100 ceiling).
+  [The rerun failed on routing](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT5_RESULTS.md)
+  ($4.05). The candidate kept every drafting success (22/24), but completed 15/24
+  scheduling and 2/8 cross, because the router (about 85% accurate) sent all four
+  reviews and three scheduling requests to the drafting route. A3 has spent $37.17;
+  another rerun and the confirmation would exceed the $100 ceiling.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

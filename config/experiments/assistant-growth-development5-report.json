@@ -1,0 +1,353 @@
+{
+  "format": "neuroshard-assistant-growth-development-report/1",
+  "stage": 1,
+  "round": 4,
+  "router": "centroid",
+  "plan_sha256": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+  "execution_sha256": "0dd0b4dd313891226ff9f5db254c5daa7a274cf78c572bc5c8ba74c9eb29fc88",
+  "decision": "A3 stage-1 development: separate update 12/24 scheduling, 3/8 cross, 19/24 drafting (0 lost), separate module 15/24 scheduling, 2/8 cross, 22/24 drafting (0 lost), shared 11/24 scheduling, 3/8 cross, 19/24 drafting (0 lost). Candidate separate module: fails ['cross', 'scheduling']; the sealed sets stay closed. p95 112.9 s.",
+  "report": {
+    "versions": {
+      "separate_update": {
+        "scheduling": {
+          "correct": 12,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "scheduling"
+            ],
+            [
+              "scheduling",
+              "scheduling"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 3,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 19,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting_lost": [],
+        "p95_seconds": 118.6880162059997,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        },
+        "selector": {
+          "rule": "centroid",
+          "epsilon": 1e-06,
+          "counts": {
+            "arm_better": 90,
+            "parent_better": 93,
+            "ties": 0
+          },
+          "sha256": "887ea3d79e87e46027c38966f4addbdca60650328ddff8a036fc63029b891bc3",
+          "held_out_accuracy": 0.8478260869565218,
+          "examples": 183,
+          "features_sha256": "11bc323eabf9cc204b5b08ce51585b05ef0f78463da658b3df3d0f0694d69e02",
+          "gate_sha256": "71517bc9a97310b300537d412ba1f69d7311300660afcedc63407cf8cc8f03a2",
+          "seconds": 566.53932563
+        }
+      },
+      "separate_module": {
+        "scheduling": {
+          "correct": 15,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "scheduling"
+            ],
+            [
+              "scheduling",
+              "scheduling"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 2,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 22,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting_lost": [],
+        "p95_seconds": 112.92148771499978,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        },
+        "selector": {
+          "rule": "centroid",
+          "epsilon": 1e-06,
+          "counts": {
+            "arm_better": 85,
+            "parent_better": 93,
+            "ties": 0
+          },
+          "sha256": "d81caa7cc0afd074c0860b72d04bdd3d98be531321242df8d7520c61fa3786f7",
+          "held_out_accuracy": 0.83641975308642,
+          "examples": 178,
+          "features_sha256": "4c0eead3b75555d04e5c6d7ed4bb6545373c3cb090829684ee92c91268d04506",
+          "gate_sha256": "d0c4a0d59b81c50e612cd407a96c0c3f41be359eec5f07334ab78e13237e6c1d",
+          "seconds": 499.24682719199996
+        }
+      },
+      "shared": {
+        "scheduling": {
+          "correct": 11,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "scheduling"
+            ],
+            [
+              "scheduling",
+              "scheduling"
+            ]
+          ]
+        },
+        "cross": {
+          "correct": 3,
+          "cases": 8,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting": {
+          "correct": 19,
+          "cases": 24,
+          "routes": [
+            [
+              "drafting"
+            ],
+            [
+              "drafting",
+              "drafting"
+            ],
+            [
+              "drafting",
+              "scheduling"
+            ]
+          ]
+        },
+        "drafting_lost": [],
+        "p95_seconds": 116.93022121100012,
+        "a2_selected_arm": {
+          "scheduling": 24,
+          "cross": 8,
+          "drafting": 24
+        },
+        "selector": {
+          "rule": "centroid",
+          "epsilon": 1e-06,
+          "counts": {
+            "arm_better": 85,
+            "parent_better": 100,
+            "ties": 0
+          },
+          "sha256": "e4e99fd20e0d13394eca188c7405e66f2ead61dd635d925bc47b804617adcf36",
+          "held_out_accuracy": 0.8643533123028392,
+          "examples": 185,
+          "features_sha256": "874a09b96547d474c8937b7c5d86f33434d86d62b19ddddf09a0913a07e193b0",
+          "gate_sha256": "123c456a0444218494ebdb26ed8292b0225460603d092ba8c26d2aec617024c0",
+          "seconds": 563.4394130139999
+        }
+      }
+    },
+    "candidate": "separate_module",
+    "checks": {
+      "scheduling": false,
+      "cross": false,
+      "drafting": true,
+      "p95": true
+    },
+    "passed": false,
+    "accepted_drafting": 19
+  },
+  "hosts": {
+    "separate_update": {
+      "result_sha256": "4c426a156d4335ca103c5fbb36b0578dc0ac1e25ec423702667075951098da0c",
+      "source_commit": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 4534.033462409,
+      "peak_rss_bytes": 24778698752,
+      "ci": {
+        "id": 37273543224,
+        "head_sha": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37273543224"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-05T08:38:09.330037+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0b86766404b5b27ec"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4747.135892,
+        "conservative_compute_usd": 1.3956579522480002,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-05T08:45:51.283958+00:00",
+        "instances": [
+          {
+            "id": "i-0b86766404b5b27ec",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "separate_module": {
+      "result_sha256": "c4b93c712cfc70442e60e2e28c44a8777de822b001f42b3a4e5b9ba781f852bb",
+      "source_commit": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 4181.161849508,
+      "peak_rss_bytes": 24721133568,
+      "ci": {
+        "id": 37273543224,
+        "head_sha": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37273543224"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-05T08:32:02.056768+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-097c5e85c9e0a6f06"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4377.08122,
+        "conservative_compute_usd": 1.28686187868,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-05T08:45:51.563809+00:00",
+        "instances": [
+          {
+            "id": "i-097c5e85c9e0a6f06",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "shared": {
+      "result_sha256": "4d1a9c304a0cef25f1fd85fef93fc25c35a938065d91b53384c6b24b2c6e1c9b",
+      "source_commit": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 4453.097759511,
+      "peak_rss_bytes": 17851617280,
+      "ci": {
+        "id": 37273543224,
+        "head_sha": "483e6a56469a4b00be4a6b9bbfadcf05a17d649f",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37273543224"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-05T08:36:32.246172+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-058894b47ac43c0c1"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 4644.864829,
+        "conservative_compute_usd": 1.3655902597260001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-05T08:45:51.852296+00:00",
+        "instances": [
+          {
+            "id": "i-058894b47ac43c0c1",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    }
+  },
+  "conservative_compute_usd": 4.048110090654,
+  "confirmation_may_open": false,
+  "sealed_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false
+}
