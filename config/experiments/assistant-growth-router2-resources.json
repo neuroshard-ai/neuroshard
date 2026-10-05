@@ -1,0 +1,38 @@
+{
+  "format": "neuroshard-assistant-growth-router-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 3.5,
+  "planning_cap_usd": 7,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-growth-router",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-growth-round4-report.json",
+    "sha256": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
+  },
+  "budget_scope": "A3's router fit on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that labels 2,112 training turns by what their verified correct solutions need, computes the parent's features for them and the 204 integration turns, and fits the centroid router; 3.5-hour expiry and $7 allowance within the raised $110 ceiling. No upload, GPU, training, development or confirmation data.",
+  "prior_attempts": []
+}

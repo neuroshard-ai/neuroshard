@@ -102,7 +102,8 @@ def verify_units(directory, execution, version):
         if sha256(directory / pinned['file']) != pinned['sha256']:
             raise ValueError(f'{name} gates differ from their pinned digest')
         gates[name] = read(directory / pinned['file'])
-    return gates['a2']['arms']['update']['gate'], gates['stage1']['gates'][version]
+    turn = gates['router']['gate'] if 'router' in gates else gates['stage1']['gates'][version]
+    return gates['a2']['arms']['update']['gate'], turn
 
 
 def load_units(load_parent, spec, directory, execution, units):
@@ -236,6 +237,8 @@ def worker(request_path):
             integration = read(units / execution['gates']['stage1']['file'])
             turn_gate, reply['selector'] = refit_selector(parent, tokenizer, integration, version, execution['selectors'])
             reply['selector']['seconds'] = time.monotonic() - begun
+        else:
+            reply['selector'] = {'rule': turn_gate['rule'], 'gate_sha256': identity(turn_gate)}
         models = load_units(lambda: reference.load_model(directory, 'baseline')[0], spec, units, execution,
                             VERSIONS[version])
         reply['units'] = {unit: execution['units'][unit]['trainable_sha256'] for unit in needed(version)}

@@ -191,12 +191,14 @@ def worker(request_path):
         else:
             version = candidate if role == 'candidate' else 'shared'
             reply['version'] = version
-            turn_gate = gates['stage1']['gates'][version]
+            turn_gate = gates['router']['gate'] if 'router' in gates else gates['stage1']['gates'][version]
             if execution.get('selectors', {}).get('refit'):
                 turn_gate, reply['selector'] = development.refit_selector(parent, tokenizer, gates['stage1'], version,
                                                                           execution['selectors'])
                 if reply['selector']['gate_sha256'] != execution['selectors']['gate_sha256'][version]:
                     raise ValueError('the refitted selector differs from the one development used')
+            else:
+                reply['selector'] = {'rule': turn_gate['rule'], 'gate_sha256': identity(turn_gate)}
             reply['episodes'] = {name: development.routed_episodes(parent, models, tokenizer, version, a2_gate,
                                                                    turn_gate, cases)
                                  for name, cases in sets.items()}

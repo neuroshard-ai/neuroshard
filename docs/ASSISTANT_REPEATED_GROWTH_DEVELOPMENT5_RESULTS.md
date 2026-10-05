@@ -52,6 +52,6 @@ happened to succeed.
 ## Cost
 
 Three r7i.4xlarge hosts ran in parallel, $4.05 in total, and every instance is
-terminated. A3 has spent $37.17 of its $100 ceiling, plus stage 0's $2.15.
+terminated. A3 has spent $37.16 of its $100 ceiling, plus stage 0's $2.15.
 Another development rerun and the confirmation together would need $65 in
-allowances, more than the $62.83 left.
+allowances, more than the $62.84 left.

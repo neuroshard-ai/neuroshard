@@ -1,0 +1,29 @@
+{
+  "format": "neuroshard-assistant-growth-router2/1",
+  "status": "Declared on October 5, 2026, after the centroid-router development report and before any router fit. The project owner chose this router and raised A3's stage-1 ceiling from $100 to $110.",
+  "amends": ["config/experiments/assistant-growth-stage1.json", "config/experiments/assistant-growth-router.json"],
+  "development_report": "config/experiments/assistant-growth-development5-report.json",
+  "findings": "The centroid router kept every drafting success but was about 85% accurate. It sent all four review turns and three scheduling requests to the drafting route, so scheduling (15/24) and cross (2/8) fell short. With every turn sent to the scheduling unit, the same candidate had reached 18/24 and 6/8. Every router so far learned from about 180 integration turns, labelled by which route happened to succeed.",
+  "router": {
+    "label": "Whether the turn's verified correct solution uses the calendar. Each training scheduling case is solved by its round-3 demonstration in the calendar workspace, and a turn is labelled for the scheduling route if that turn's calls include list_busy, add_minutes or save_meeting. Every turn of the drafting training split is labelled for the drafting route: its goals are drafts, and the drafting interface has no calendar.",
+    "data": "The 1,152 training scheduling cases of round 4 (1,728 turns) and the 256 drafting training cases (384 turns). No integration, development or confirmation goal is a label.",
+    "features": "The parent's final-layer state at each user message, rendered alone after the drafting instruction and tools, computed once on the canonical CPU runtime that serves development and confirmation.",
+    "rule": "The centroid rule of the previous router: mean-centred, normalised features, and a turn goes to the scheduling route only if it is closer to that class's mean; an exact tie keeps the drafting route. Every example has weight one.",
+    "reported": "Held-out accuracy over four folds of training cases, and accuracy on the 204 integration turns labelled by whether their goal includes a meeting. Neither is a gate.",
+    "versions": "One router serves all three versions, since what a turn needs does not depend on the unit that serves it.",
+    "pinned": "The router is fitted on one CPU host and pinned by digest before any development host starts; development and confirmation hosts serve it unchanged."
+  },
+  "unchanged": "Round 4's units U1, U2 and L2, routing, the three versions, the development and confirmation gates, the comparison and the outcome rules. Nothing is trained.",
+  "confirmation": "If the candidate passes, the sealed confirmation opens once as declared for stage 1, on five CPU hosts serving the same pinned router.",
+  "budget": {
+    "ceiling_usd": 110,
+    "spent_usd": 37.16,
+    "router_usd": 7,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1, rounds 2 to 4 and three developments cost $37.16. Router: at most $7 on one CPU host. Development: at most $18 on three CPU hosts. Confirmation: at most $47 on five CPU hosts. $109.16 within the raised $110 ceiling."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false
+}

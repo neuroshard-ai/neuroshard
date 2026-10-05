@@ -69,6 +69,11 @@ def test_units_and_gates_must_match_their_pinned_digests(tmp_path):
     broken['gates']['stage1']['sha256'] = 'e' * 64
     with pytest.raises(ValueError, match='stage1 gates'):
         development.verify_units(tmp_path, broken, 'shared')
+    save(tmp_path / 'router.json', {'gate': {'rule': 'centroid-pinned'}})
+    routed = {**execution, 'gates': {'a2': execution['gates']['a2'],
+                                     'router': {'file': 'router.json', 'sha256': sha256(tmp_path / 'router.json')}}}
+    assert all(development.verify_units(tmp_path, routed, version)[1] == {'rule': 'centroid-pinned'}
+               for version in development.VERSIONS)
 
 
 def test_the_development_gate_picks_the_candidate_and_checks_drafting_case_by_case():

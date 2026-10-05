@@ -219,8 +219,14 @@ remain evidence, not readiness claims for this assistant.
   [The rerun failed on routing](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT5_RESULTS.md)
   ($4.05). The candidate kept every drafting success (22/24), but completed 15/24
   scheduling and 2/8 cross, because the router (about 85% accurate) sent all four
-  reviews and three scheduling requests to the drafting route. A3 has spent $37.17;
+  reviews and three scheduling requests to the drafting route. A3 has spent $37.16;
   another rerun and the confirmation would exceed the $100 ceiling.
+  The project owner raised the ceiling to $110 and chose a
+  [router that learns what each turn needs](docs/ASSISTANT_REPEATED_GROWTH_ROUTER2.md).
+  A turn is labelled for scheduling if its verified correct solution uses the
+  calendar, over 1,728 scheduling and 384 drafting training turns. The router is
+  fitted once on a CPU host, pinned, and served unchanged by development and, if it
+  passes, by the confirmation ($109.16 in allowances).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
