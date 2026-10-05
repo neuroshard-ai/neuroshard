@@ -227,6 +227,11 @@ remain evidence, not readiness claims for this assistant.
   calendar, over 1,728 scheduling and 384 drafting training turns. The router is
   fitted once on a CPU host, pinned, and served unchanged by development and, if it
   passes, by the confirmation ($109.16 in allowances).
+  [The router is only 74% accurate](docs/ASSISTANT_REPEATED_GROWTH_ROUTER2_RESULTS.md)
+  ($1.82): 74.3% held out and 73.0% on the integration turns, below the 79% of
+  routing everything to scheduling. The labels are clean, so the parent's state at
+  the start of its reply is the limit. Development has not been run with it. A3 has
+  spent $38.98 of $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
