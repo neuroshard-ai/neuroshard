@@ -236,6 +236,10 @@ remain evidence, not readiness claims for this assistant.
   state over the user's own message. The shared prefix is computed once and each turn
   extends it, at fit and at serve time. Same labels, refit once, then development
   ($109.48 in allowances).
+  [The refit is 92.6% accurate on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3_RESULTS.md)
+  ($0.23), up from 73.0%, and 88.6% held out. Every error sent a scheduling or cross
+  turn to the drafting route; no drafting turn was misrouted. A3 has spent $39.21 of
+  $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
