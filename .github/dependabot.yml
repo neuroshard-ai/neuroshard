@@ -8,10 +8,21 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # The numerical stack is pinned by the testnet runtime and every execution contract.
+    ignore:
+      - dependency-name: torch
+      - dependency-name: transformers
+      - dependency-name: tokenizers
+      - dependency-name: safetensors
+      - dependency-name: huggingface-hub
+      - dependency-name: numpy
+      - dependency-name: protobuf
   - package-ecosystem: pip
     directory: /docs
     schedule:
       interval: weekly
+    # These files are frozen reproduction runtimes; a version changes only with a new execution contract.
+    open-pull-requests-limit: 0
   - package-ecosystem: gomod
     directory: /src/neuroshard/client/consensus
     schedule:
