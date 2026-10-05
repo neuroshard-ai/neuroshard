@@ -157,6 +157,31 @@ def test_the_selector_is_refitted_from_integration_outcomes_without_turns_both_r
     assert report['examples'] == sum(len(case['turns']) for case in cases) - cross_turns
     assert report['counts']['ties'] == 0 and 'weight' not in report
     assert report['gate_sha256'] == identity(gate)
+    gate, report = development.refit_selector(None, None, integration, 'separate_module',
+                                              {'failed_ties': False, 'rule': 'centroid'})
+    assert gate['rule'] == 'centroid' and report['held_out_accuracy'] == 1.0
+    assert selector.choose(gate, [1.0, 0.1]) and not selector.choose(gate, [0.1, 1.0])
+    assert not {'mean', 'arm', 'parent', 'weight'} & set(report)
+
+
+def test_the_centroid_rule_separates_turns_that_share_most_of_their_feature():
+    from neuroshard.evolution import assistant_selector as selector
+
+    shared = [5.0] * 64
+    features, rows = {}, {}
+    for index in range(40):
+        meeting = index % 2 == 0
+        signal = [0.0] * 64
+        signal[index % 7 if meeting else 32 + index % 7] = 0.3
+        features[f'case-{index}#0'] = [s + t for s, t in zip(shared, signal)]
+        rows[f'case-{index}#0'] = (1.0, 1.0) if meeting else (0.0, 1 / 3)
+    gate = selector.fit_centroid(features, rows, 1e-6)
+    assert gate['rule'] == 'centroid' and gate['sha256'] == identity({k: v for k, v in gate.items() if k != 'sha256'})
+    assert all(selector.choose(gate, features[key]) == (rows[key][0] == 1.0) for key in rows)
+    assert not selector.choose(gate, gate['mean'])
+    assert development.held_out(features, rows, 1e-6) == 1.0
+    favoured = {key: (1.0, 1.0) for key in rows}
+    assert selector.fit_centroid(features, favoured, 1e-6)['rule'] == 'constant-arm'
 
 
 def test_latency_counts_each_selection_pass_once():
@@ -212,9 +237,9 @@ def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtim
     a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
     assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
     assert execution['gates']['stage1']['sha256'] == round4['integration']['integration_sha256']
-    declared = read(ROOT / 'config/experiments/assistant-growth-round4.json')['selectors']
-    assert execution['selectors'] == {'refit': declared['refit'], 'failed_ties': declared['failed_ties']} == {
-        'refit': True, 'failed_ties': False}
+    declared = read(ROOT / 'config/experiments/assistant-growth-router.json')['selectors']
+    assert execution['selectors'] == {key: declared[key] for key in ('refit', 'failed_ties', 'rule')} == {
+        'refit': True, 'failed_ties': False, 'rule': 'centroid'}
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

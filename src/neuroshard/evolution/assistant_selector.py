@@ -64,12 +64,45 @@ def fit(features, rows, recipe):
     return gate
 
 
+def fit_centroid(features, rows, epsilon):
+    """Nearer weighted class mean of mean-centred, normalised features; the logistic gate's constant rules.
+
+    Centring removes the component every feature shares, so the class means differ by
+    what separates the examples rather than by what they have in common.
+    """
+    keys = sorted(rows)
+    if set(features) != set(keys):
+        raise ValueError('features and targets cover different episodes')
+    counts = {'arm_better': sum(rows[k][0] == 1.0 for k in keys),
+              'parent_better': sum(rows[k][0] == 0.0 and rows[k][1] > 0 for k in keys),
+              'ties': sum(rows[k][1] == 0 for k in keys)}
+    if not sum(rows[k][1] for k in keys if rows[k][0] == 1.0):
+        return {'rule': 'constant-parent', 'counts': counts}
+    if not sum(rows[k][1] for k in keys if rows[k][0] == 0.0):
+        return {'rule': 'constant-arm', 'counts': counts}
+    raw = torch.tensor([features[k] for k in keys], dtype=torch.float32)
+    mean = raw.mean(dim=0)
+    x = torch.nn.functional.normalize(raw - mean, dim=1, eps=epsilon)
+    y = torch.tensor([rows[k][0] for k in keys])
+    w = torch.tensor([rows[k][1] for k in keys])
+    arm = torch.nn.functional.normalize((x * (w * y)[:, None]).sum(dim=0), dim=0, eps=epsilon)
+    parent = torch.nn.functional.normalize((x * (w * (1 - y))[:, None]).sum(dim=0), dim=0, eps=epsilon)
+    gate = {'rule': 'centroid', 'mean': mean.tolist(), 'arm': arm.tolist(), 'parent': parent.tolist(),
+            'epsilon': epsilon, 'counts': counts}
+    gate['sha256'] = identity(gate)
+    return gate
+
+
 def choose(gate, feature):
     """True selects the trained arm for the whole episode; an exact tie selects the parent."""
     if gate['rule'] == 'constant-parent':
         return False
     if gate['rule'] == 'constant-arm':
         return True
+    if gate['rule'] == 'centroid':
+        x = torch.nn.functional.normalize(torch.tensor(feature, dtype=torch.float32) - torch.tensor(gate['mean']),
+                                          dim=0, eps=gate['epsilon'])
+        return bool(x @ torch.tensor(gate['arm']) > x @ torch.tensor(gate['parent']))
     x = torch.nn.functional.normalize(torch.tensor([feature], dtype=torch.float32), dim=1, eps=gate['epsilon'])[0]
     probability = torch.sigmoid(x @ torch.tensor(gate['weight']) + gate['bias'])
     return bool(probability > gate['threshold'])

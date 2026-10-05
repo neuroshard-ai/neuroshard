@@ -45,12 +45,17 @@
     "path": "config/experiments/assistant-growth-round4-report.json",
     "sha256": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
   },
-  "budget_scope": "A3 round-4 development of the separate module version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that refits the version's turn selector on its own runtime and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the low-rank module L2 and the accepted update U1, A2's round-4 gates and the A3 round-4 integration outcomes. No GPU, training or sealed data.",
+  "budget_scope": "A3 round-4 development rerun of the separate module version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that refits the version's centroid router on its own runtime and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the low-rank module L2 and the accepted update U1, A2's round-4 gates and the A3 round-4 integration outcomes. No GPU, training or sealed data.",
   "prior_attempts": [
     {
       "home": ".neuroshard/assistant-growth-development-separate-module-20261004",
       "report": "config/experiments/assistant-growth-development-report.json",
       "outcome": "Round-3 units; development failed on scheduling and cross."
+    },
+    {
+      "home": ".neuroshard/assistant-growth-development-separate-module-20261005",
+      "report": "config/experiments/assistant-growth-development4-report.json",
+      "outcome": "Round-4 units with the logistic refit; failed on one drafting success."
     }
   ]
 }

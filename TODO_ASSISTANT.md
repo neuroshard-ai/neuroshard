@@ -212,6 +212,10 @@ remain evidence, not readiness claims for this assistant.
   But the refitted selectors sent every turn, drafting included, to the scheduling
   route, and it lost one accepted drafting success. The A2 logistic recipe does not
   separate the two kinds of turn on these features. A3 has spent $33.12 of $100.
+  The project owner chose a [new router](docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md)
+  for a development rerun with the round-4 units. Each host centres its CPU turn
+  features and routes a turn to the nearer weighted class mean. Nothing is trained
+  ($98.12 in allowances, confirmation included, within the $100 ceiling).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
