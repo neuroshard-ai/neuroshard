@@ -1,0 +1,105 @@
+{
+  "format": "neuroshard-assistant-growth-stage1/1",
+  "status": "Declared on October 3, 2026, after the stage-0 report and before any scheduling rollout or training. Authorized by the project owner, who chose turn-level routing with each unit's own tool set and a $100 ceiling.",
+  "plan": "config/experiments/assistant-growth.json",
+  "stage0_report": "config/experiments/assistant-growth-baseline-report.json",
+  "routing": {
+    "rule": "Each user turn is served by one route: a learning unit with the interface it is served with. A conversation can switch routes at a follow-up; earlier messages and tool results stay in the history.",
+    "drafting": "The version's drafting unit with the drafting instruction and tools, as A2 accepted them.",
+    "scheduling": "The version's scheduling unit with the calendar instruction and tools.",
+    "world": "One calendar workspace executes every call; a route's model is shown, and may call, only its route's tools.",
+    "selector": "Per version, the A2 logistic recipe on the frozen parent's final-layer state at each user message, rendered alone after the drafting instruction and tools. From one greedy and two sampled episodes per route, an integration turn selects the scheduling route only where it succeeded more often on that round than the drafting route, weighted by the difference; otherwise it keeps the drafting route, the incumbent, with the same weight, and a tie counts for the drafting route with the weight of one episode. The degenerate rules are the A2 rules, with the drafting route in the parent's place.",
+    "anchors": "Anchor prompts stay with the parent, as accepted."
+  },
+  "versions": {
+    "separate_update": {"drafting": "U1, the accepted update", "scheduling": "U2, the update trained from U1"},
+    "separate_module": {"drafting": "U1, the accepted update", "scheduling": "L2, a new low-rank module on top of U1"},
+    "shared": {"drafting": "U2, replacing U1", "scheduling": "U2"}
+  },
+  "same_budget": "U2 serves both the separate update and the shared version: one training run, so they differ only in whether U1 is kept for drafting turns. L2 trains on the same mixture, schedule and steps.",
+  "collection": {
+    "sampler": "The accepted version: the parent plus U1, sampled under the calendar policy.",
+    "data": "config/experiments/assistant-schedule-data.json",
+    "splits": ["train", "cross-train"],
+    "samples_per_case": 8,
+    "temperature": 0.8,
+    "top_p": 0.95,
+    "seed": 27093001,
+    "coaching": {
+      "trigger": "Training cases without an uncoached rollout that completes every round.",
+      "card": "Meeting procedure: 1) For a meeting on a plan's due date, list the project's documents, read the latest approved plan, and shift its start date by its review interval with shift_date. 2) Call list_busy for every attendee on the meeting date. 3) Candidate starts are 09:00, any earliest start the user gives, and the end of each busy time, in time order. 4) For each candidate, compute the end with add_minutes. It works if the end is no later than 17:00 and no attendee has a busy time that starts before the end and ends after the start. 5) Call save_meeting with the first start that works, citing only documents you read. If none works and the user asked for the first date with a free slot, repeat for the next date. 6) For a follow-up, keep every field the user does not change, search again, and save again before replying. 7) After saving, reply with one short confirmation and no tool call.",
+      "rollouts": "8 samples with the card appended to the system instruction; same verification; stored without the card."
+    },
+    "drafting_reference": "64 drafting training cases (the first 64 of the drafting train split), 2 uncoached samples each under the drafting policy, used only to bound the near-policy check.",
+    "near_policy": "Mean per-token likelihood under the sampler without the card. A coached trajectory is kept only if it is no less likely than the least likely natural verified success of this collection, scheduling, cross or drafting reference.",
+    "selection_per_case": 4
+  },
+  "training": {
+    "update": "Continue U1's q_proj and v_proj matrices in layers 32..39 (62,914,560 parameters) from the accepted tensors, with a fresh optimizer.",
+    "module": "Rank-16, alpha-32 LoRA on the same projections on top of U1 (1,048,576 parameters): Kaiming-uniform A, zero B, so the untrained module equals the accepted version.",
+    "mixture": {"scheduling": 4, "drafting": 2, "preservation": 2},
+    "scheduling_experience": "The verified scheduling and cross trajectories of this collection, encoded with the calendar tools.",
+    "drafting_experience": "A2's pinned round-1 verified drafting trajectories, re-verified from their rollouts and encoded with the drafting tools.",
+    "preservation": "A2's pinned parent replay items.",
+    "steps": 128,
+    "microbatch": 1,
+    "gradient_accumulation": 8,
+    "learning_rates": {"update": 1e-05, "module": 0.0003},
+    "warmup_steps": 8,
+    "gradient_clip": 1.0,
+    "weight_decay": 0.01,
+    "betas": [0.9, 0.999],
+    "epsilon": 1e-08,
+    "seed": 27093002
+  },
+  "integration": {
+    "sets": {"scheduling": "integration", "cross": "cross-integration", "drafting": "integration of the drafting grammar"},
+    "greedy": 1,
+    "samples": 2,
+    "temperature": 0.8,
+    "seed": 27093003,
+    "routes": "Each version's drafting and scheduling routes run every integration case alone: U1 and U2 with the drafting tools, U2 and L2 with the calendar tools.",
+    "recipe": {"seed": 27093004, "epsilon": 1e-06, "learning_rate": 0.001, "weight_decay": 0.01, "updates": 128, "batch": 8, "threshold": 0.5}
+  },
+  "development_gate": {
+    "sets": "The opened development cases: 24 scheduling, 8 cross and 24 drafting, each version routed per turn on the canonical CPU runtime with prefix-cache serving.",
+    "minimum_scheduling": 18,
+    "minimum_cross": 6,
+    "drafting": "No lost success of the accepted version as accepted: its 19 drafting development successes under the drafting interface.",
+    "p95_seconds": 180,
+    "latency": "Episode wall time plus every per-turn selection forward pass.",
+    "candidate": "The separate version with more scheduling and cross development successes; a tie goes to the low-rank module, which is cheaper to distribute.",
+    "reported": "All three versions, including the shared version's drafting retention."
+  },
+  "confirmation_gate": {
+    "opens": "Once, only after the candidate passes development.",
+    "sets": {"scheduling": "confirmation (192)", "cross": "cross-confirmation (48)", "drafting": "confirmation4 of the drafting grammar (192)"},
+    "systems": "The candidate on all three sets; the shared version on drafting; the accepted version as accepted on drafting; and the accepted version under the calendar interface on scheduling and cross, as the previous system.",
+    "minimum_scheduling": 154,
+    "minimum_per_scheduling_family": 16,
+    "minimum_cross": 36,
+    "minimum_net_vs_previous": 20,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27093005,
+    "bootstrap_clusters": "the eight scheduling and two cross families",
+    "lower_95_gain_vs_previous_strictly_above": 0,
+    "drafting": "The candidate loses none of the accepted version's drafting successes on confirmation4.",
+    "p95_seconds": 180
+  },
+  "comparison": {
+    "requirement": "On confirmation4, the separate candidate loses fewer of the accepted version's drafting successes than the shared version. It is evaluated once, on the confirmation data, and A3 counts it only if it holds.",
+    "module_versus_update": "Reported from development and integration."
+  },
+  "outcome": {
+    "pass": "Cohort 2 is accepted: scheduling becomes the assistant's second capability.",
+    "fail": "Cohort 2 is not accepted. A second round may be declared within the remaining budget; the sealed splits are spent only if confirmation opened."
+  },
+  "budget": {
+    "ceiling_usd": 100,
+    "allowances": "GPU collection, training and integration at most $21; development at most $18 on three CPU hosts; confirmation at most $47 on five CPU hosts."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false,
+  "checklist_credit": "A confirmation pass accepts cohort 2. A3 still needs cohort 3 and a beneficial update or consolidation."
+}

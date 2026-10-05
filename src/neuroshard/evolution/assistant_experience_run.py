@@ -689,7 +689,8 @@ def feature_ids(tokenizer, policy, case):
     """Token IDs of the first assistant-generation boundary, the selection feature's input."""
     messages = [{'role': 'system', 'content': policy['system_instruction']},
                 {'role': 'user', 'content': data.public_case(case)['user_turns'][0]}]
-    prompt = tokenizer.apply_chat_template(messages, tools=sandbox.TOOLS, add_generation_prompt=True, tokenize=False)
+    prompt = tokenizer.apply_chat_template(messages, tools=workflow.interface(policy).TOOLS, add_generation_prompt=True,
+                                           tokenize=False)
     return tokenizer(prompt, add_special_tokens=False)['input_ids']
 
 

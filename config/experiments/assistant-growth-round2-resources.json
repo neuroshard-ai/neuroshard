@@ -1,0 +1,80 @@
+{
+  "format": "neuroshard-assistant-growth-round2-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "candidates": [
+    {
+      "instance_type": "g6e.xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "HEU7PA78QPB8SDYY",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.861
+      }
+    },
+    {
+      "instance_type": "g6e.2xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 2.2421,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    },
+    {
+      "instance_type": "g5.2xlarge",
+      "gpu_name": "NVIDIA A10G",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.212,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    }
+  ],
+  "placement": "Try candidates in order, each in every controller-VPC subnet whose zone offers it; the first placement is the only host.",
+  "hours": 6,
+  "planning_cap_usd": 17,
+  "disk_gib": 120,
+  "disk_type": "gp3",
+  "setup_seconds": 1800,
+  "copy_seconds": 1200,
+  "image": {
+    "ImageId": "ami-0efd0f6e601922cad",
+    "Name": "Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04) 20260911",
+    "CreationDate": "2026-09-11T14:09:30.000Z",
+    "OwnerId": "898082745236",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": true,
+  "purpose": "assistant-growth-round2-gpu",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 2147483648,
+  "prior_resources": {
+    "path": "config/experiments/assistant-growth-stage1-report.json",
+    "sha256": "543117e3dc7b1b81c3a82091eb06d1ee1819f0f5e4955a5943a0c327b6540a28"
+  },
+  "budget_scope": "One GPU host (L40S preferred, A10G fallback) for A3 round 2: stage 1's natural rollouts are re-verified, the accepted version runs coached rollouts under the budget-aware card, and unless the stop rule ends the round, U2 and L2 train as in stage 1 and every route runs the integration cases; six-hour expiry and $17 worst-case allowance within the $100 ceiling. No development or confirmation data.",
+  "prior_attempts": [],
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-round2-inputs",
+    "files": [
+      "experience.json",
+      "rollouts.jsonl.gz",
+      "trajectories.jsonl.gz",
+      "replay.json",
+      "replay.jsonl.gz",
+      "update-checkpoint/manifest.json",
+      "update-checkpoint/trainable.safetensors",
+      "stage1-rollouts.jsonl.gz"
+    ],
+    "maximum_bytes": 320000000
+  }
+}

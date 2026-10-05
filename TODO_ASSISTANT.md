@@ -147,6 +147,71 @@ remain evidence, not readiness claims for this assistant.
   [The sealed confirmation passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) ($7.10):
   183/192 against the parent's 119, no parent success lost, a lower 95% gain of
   +22.4 points and p95 103.0 s. A2 is established for this capability.
+- [ ] [Repeated growth (A3)](docs/ASSISTANT_REPEATED_GROWTH.md): drafting is cohort 1;
+  cohort 2 adds meeting scheduling in a calendar workspace that keeps every drafting
+  tool, and cohort 3 will be an upgrade. Cohort 2 trains a separate update, a
+  separate low-rank module and the shared update under one budget; the separate
+  units must retain drafting better. Stage 0 first serves the opened development
+  cases under the new interface on CPU, to confirm room to learn and to measure
+  what the larger tool list does to drafting. Stage 1 is declared after it.
+  [Stage 0](docs/ASSISTANT_REPEATED_GROWTH_STAGE0_RESULTS.md) ($2.15): scheduling is
+  new, with the parent at 1/24 and the accepted version at 0/24, so there is room to
+  learn. The larger tool list alone lowered drafting from 19 to 15 for the accepted
+  version (parent 9 to 5); those four must be regained before cohort 2 is accepted.
+  [Stage 1 is declared](docs/ASSISTANT_REPEATED_GROWTH_STAGE1.md): each user turn is
+  routed to a unit with its own tool set, so drafting keeps the tools it was accepted
+  with. The accepted version collects coached scheduling experience. One continued
+  update serves the separate-update and shared versions; a low-rank module trains on
+  the same mixture. Per-turn selectors are fitted from integration success rates.
+  The development gate is 18/24 scheduling and 6/8 cross with no drafting success
+  lost; the sealed confirmation decides acceptance and A3's comparison. Ceiling $100.
+  Measured during the run, scheduling rollouts took about 4.2 s each, so an
+  [integration-only resumption](config/experiments/assistant-growth-stage1-resume.json)
+  was declared before any outcome was read; the worker finished in time and it was
+  not needed. [Stage 1 ran](docs/ASSISTANT_REPEATED_GROWTH_STAGE1_RESULTS.md) ($14.22)
+  but learned little scheduling. The accepted version made one tool call per reply
+  and ran out of replies in most rollouts. The stage-1 card produced no complete
+  success, and the near-policy filter removed every coached partial success. The
+  units trained on 33 trajectories from 11 of 288 cases, and their scheduling routes
+  completed 10/64 and 7/64 integration episodes and 0/8 cross. Development was not
+  run. [Round 2](docs/ASSISTANT_REPEATED_GROWTH_ROUND2.md) changes only the collection.
+  It re-verifies stage 1's natural rollouts and coaches with a card that fits the
+  budget and states the conflict rule. It drops the near-policy filter, and stops
+  before training if fewer than 32 cases have a complete trajectory ($96.22 in
+  allowances within the $100 ceiling).
+  [Round 2 stopped by its rule](docs/ASSISTANT_REPEATED_GROWTH_ROUND2_RESULTS.md)
+  ($4.82): 2 of 288 cases had a complete trajectory, and the card produced none.
+  The cause: `list_busy` accepts a team only under its exact name, and 77% of
+  coached calls used a shortened one ("operations") and got a generic error. Even
+  after a valid first call, no coached first round passed. The model still made one
+  call per reply. A3 has spent $19.04 of $100. The project owner chose
+  [round 3](docs/ASSISTANT_REPEATED_GROWTH_ROUND3.md): U2 and L2 learn from one
+  verified correct solution per training case. Each is written by a goal-directed
+  solver as the accepted version's own replies: exact team names, two `list_busy`
+  calls per reply and `shift_date` for plan due dates. Training, integration and every
+  gate are unchanged ($95.04 in allowances within the $100 ceiling).
+  [Round 3 learned scheduling in part](docs/ASSISTANT_REPEATED_GROWTH_ROUND3_RESULTS.md)
+  ($2.96). On the integration cases U2 completed 28/64 scheduling and 6/8 cross, and
+  L2 26/64 and 4/8, against 10/64 and 0/8 in stage 1. The gate asks for 18/24 and
+  6/8. [Development failed](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT_RESULTS.md)
+  ($3.53). The candidate, the separate module, completed 6/24 scheduling and 1/8
+  cross, keeping all 19 drafting successes; the shared version lost 2. The
+  selectors sent too many scheduling turns to the drafting route: all of them for
+  the separate update. When the candidate's first scheduling turn reached L2, it
+  passed 12 of 16 times. The sealed sets stay closed. A3 has spent $25.53 of $100.
+  The project owner chose [round 4](docs/ASSISTANT_REPEATED_GROWTH_ROUND4.md): 1,152
+  verified correct solutions, four times as many, from six further frozen training
+  splits, and 512 training steps. Each development host refits its selector on its
+  own CPU runtime, and turns both routes failed are left out. Integration and every
+  gate are unchanged ($99.53 in allowances within the $100 ceiling, A10G only).
+  [Round 4 reached about 60% scheduling](docs/ASSISTANT_REPEATED_GROWTH_ROUND4_RESULTS.md)
+  ($3.54). On the integration cases U2 completed 39/64 scheduling and 6/8 cross, and
+  L2 38/64 and 3/8. U2's drafting rose to 63/64.
+  [Its development failed on one drafting success](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT4_RESULTS.md)
+  ($4.05). The candidate met the scheduling and cross gates exactly, 18/24 and 6/8.
+  But the refitted selectors sent every turn, drafting included, to the scheduling
+  route, and it lost one accepted drafting success. The A2 logistic recipe does not
+  separate the two kinds of turn on these features. A3 has spent $33.12 of $100.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
@@ -197,8 +262,8 @@ remain evidence, not readiness claims for this assistant.
 
 **Current status:** the assistant has learned its first useful capability.
 On fresh sealed workspace episodes, the learned update lifts it from 62% to 95%
-with no parent success lost. A1, A2 and A4 are complete; A3, repeated growth,
-is next.
+with no parent success lost. A1, A2 and A4 are complete. A3, repeated growth, has
+[begun](docs/ASSISTANT_REPEATED_GROWTH.md) with scheduling as its second cohort.
 
 - **A2 complete.** The 1M-parameter added module twice came within 4–8 episodes
   of the 63M-parameter update without meeting the declared parity margin, and

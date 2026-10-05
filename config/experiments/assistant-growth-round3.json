@@ -1,0 +1,26 @@
+{
+  "format": "neuroshard-assistant-growth-round3/1",
+  "status": "Declared on October 4, 2026, after the round-2 report and before any round-3 execution. The project owner chose this round: train on correct solutions of the training cases with the current tools, then integrate and run development as declared.",
+  "amends": "config/experiments/assistant-growth-stage1.json",
+  "round2_report": "config/experiments/assistant-growth-round2-report.json",
+  "findings": "Neither coaching card produced a complete coached success. The model made one call per reply. Most list_busy calls named a team that does not exist, because the team argument is valid only as the user writes it and an unknown name returns a generic error. Even after a valid first call, no coached first round passed.",
+  "experience": {
+    "source": "One demonstration per training case, 256 scheduling and 32 cross. Each is a correct solution written by a goal-directed solver as the accepted version's own replies, executed in the calendar workspace under the calendar policy and verified by the scorer before use. Nothing is sampled.",
+    "solver": "src/neuroshard/evolution/assistant_schedule_demonstration.py",
+    "replies": "Each reply is one or two tool calls in the accepted version's native envelope, or a one-sentence confirmation. A plan's due date comes from shift_date on the start date and review interval the plan states. Busy times are listed two calls per reply, for each date the user asks about up to the expected date. The expected draft and meeting are saved once each.",
+    "splits": "Training cases only; the solver refuses every other split.",
+    "verification": "Every demonstration must pass the scorer within the policy's limits; one that does not stops the round before training.",
+    "method": "Cohort 2 is learned from demonstrations of correct solutions, not from the accepted version's own experience. A3's criterion asks for accepted cohorts, not for a source of experience. Cohort 1 was learned from verified own experience in A2."
+  },
+  "unchanged": "Routing, the three versions, the training mixture (four scheduling sequences, now demonstrations, two drafting and two replay per step), schedule, steps and learning rates, the integration sets, runs, seeds and selector recipe, the development and confirmation gates, the comparison, the outcome rules and the calendar interface with its limits are stage 1's. U2 and L2 again start from the accepted version.",
+  "budget": {
+    "spent_usd": 19.04,
+    "gpu_usd": 11,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1 and round 2 cost $19.04. Round 3: GPU at most $11, development at most $18 on three CPU hosts, confirmation at most $47 on five CPU hosts; $95.04 within the unchanged $100 ceiling."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false
+}

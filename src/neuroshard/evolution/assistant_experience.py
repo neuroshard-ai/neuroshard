@@ -41,9 +41,18 @@ def rejected_turns(messages):
     return rejected
 
 
+def training_splits(case):
+    """The splits whose goals may become experience, for the grammar that generated ``case``."""
+    if case.get('capability'):
+        from neuroshard.evolution import assistant_schedule_data as schedule
+
+        return schedule.TRAINING
+    return TRAINING_SPLITS
+
+
 def trajectory(case, result, executed_policy, train_policy, *, sample, coaching=False):
     """Leading verified rounds as a trainable conversation, or None when round one fails."""
-    if case['split'] not in TRAINING_SPLITS:
+    if case['split'] not in training_splits(case):
         raise ValueError('experience may only be collected on training goals')
     if coaching != (executed_policy['system_instruction'] != train_policy['system_instruction']):
         raise ValueError('coaching flag does not match the executed instruction')
@@ -67,7 +76,7 @@ def trajectory(case, result, executed_policy, train_policy, *, sample, coaching=
     return {'case_id': case['id'], 'family': case['family'], 'sample': sample, 'coached': coaching,
             'rounds': rounds, 'complete': rounds == len(case['turns']), 'messages': messages,
             'trainable': trainable, 'model_calls': generations, 'rejected_turns': len(rejected),
-            'tools_sha256': identity(sandbox.TOOLS), 'executed_policy_sha256': identity(executed_policy),
+            'tools_sha256': identity(workflow.interface(executed_policy).TOOLS), 'executed_policy_sha256': identity(executed_policy),
             'train_policy_sha256': identity(train_policy), 'transcript_sha256': identity(result['messages'])}
 
 

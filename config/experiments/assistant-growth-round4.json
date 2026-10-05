@@ -1,0 +1,35 @@
+{
+  "format": "neuroshard-assistant-growth-round4/1",
+  "status": "Declared on October 4, 2026, after the stage-1 development report and before any round-4 execution. The project owner chose this round: about four times the correct solutions from new frozen training splits, selectors refitted on the serving CPU with turns both routes failed left out, then integration and development, on an A10G host within the $100 ceiling.",
+  "amends": "config/experiments/assistant-growth-stage1.json",
+  "round3": "config/experiments/assistant-growth-round3.json",
+  "development_report": "config/experiments/assistant-growth-development-report.json",
+  "findings": "Round 3's units completed 41% to 44% of the integration scheduling episodes alone. In development the candidate kept every drafting success but completed 6/24 scheduling and 1/8 cross. The selectors sent most scheduling turns to the drafting route: all of them for the separate update. When the candidate's first scheduling turn reached L2, it passed 12 times in 16. The selectors had counted every tie for drafting, including turns both routes failed, and were fitted on GPU features but served on CPU features.",
+  "experience": {
+    "source": "One verified demonstration per training case, written by the round-3 solver: the 288 round-3 cases and 864 more.",
+    "data": "config/experiments/assistant-schedule-data-growth.json",
+    "splits": ["train2", "train3", "train4", "cross-train2", "cross-train3", "cross-train4"],
+    "cases": 1152,
+    "verification": "Every demonstration must pass the scorer within the policy's limits; one that does not stops the round before training."
+  },
+  "training": {
+    "steps": 512,
+    "rule": "Steps scale with the demonstrations, so each is seen about as often as in round 3 (512 x 4 / 1152 = 128 x 4 / 288). The mixture, learning rates, warmup and every other setting are stage 1's, the same for both arms."
+  },
+  "selectors": {
+    "refit": true,
+    "failed_ties": false,
+    "rule": "Each development host fits its version's selector before serving any development case. It uses the pinned round-4 integration outcomes, the A2 recipe declared for stage 1, and the parent's features at each integration user turn computed on that host's CPU runtime. A turn that both routes always failed is no example. Other ties count for the drafting route with the weight of one episode, as before. The selectors fitted on the GPU host are reported only."
+  },
+  "unchanged": "Routing, the three versions, the integration sets, runs and seeds, the development and confirmation gates, the comparison, the outcome rules and the calendar interface with its limits are stage 1's. U2 and L2 again start from the accepted version.",
+  "budget": {
+    "spent_usd": 25.53,
+    "gpu_usd": 9,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1, rounds 2 and 3 and development cost $25.53. Round 4: GPU at most $9 on one A10G host with a 4.5-hour expiry, development at most $18 on three CPU hosts, confirmation at most $47 on five CPU hosts; $99.53 within the unchanged $100 ceiling."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false
+}

@@ -1,0 +1,19 @@
+{
+  "format": "neuroshard-assistant-growth-stage1-resume/1",
+  "status": "Declared while the stage-1 GPU worker was still collecting, before any collection, training or integration outcome was read.",
+  "amends": "config/experiments/assistant-growth-stage1.json",
+  "reason": "Measured from the worker's progress counter only: about 4.2 seconds per natural scheduling rollout on the placed L40S host. At that rate the 2,432 natural rollouts, up to 2,304 coached rollouts, two training runs and the 1,632 integration rollouts can exceed the worker's seven hours.",
+  "trigger": "The stage-1 worker stops after both trained units are saved, each with its manifest and the training manifest file, and before its integration file is saved.",
+  "resumption": {
+    "hosts": 1,
+    "work": "Exactly the declared integration: the same routes, cases, greedy and sampled runs, temperature, seeds and selector recipe, on the same runtime and GPU candidates.",
+    "units": "U1 as pinned by A2. U2 and L2 as saved by the first host, each re-verified against the first host's training manifest before use.",
+    "excluded": "Collection and training do not run again. No development or confirmation goal is read."
+  },
+  "not_covered": "If the worker stops before both units are saved, stage 1 has no result; the next step is decided and declared anew.",
+  "budget": {
+    "resumption_usd": 12,
+    "allowances": "GPU at most $21 for the declared run and at most $12 for the resumption; development at most $18 on three CPU hosts; confirmation at most $47 on five CPU hosts. $98 within the unchanged $100 ceiling."
+  },
+  "gates_unchanged": true
+}

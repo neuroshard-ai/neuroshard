@@ -14,9 +14,22 @@ from neuroshard.evolution.assistant_workflow_data import public_case
 from neuroshard.evolution.modular_reference_execution import identity
 
 
+def interface(policy):
+    """The tools, workspace and scorer a policy declares; the drafting workspace when it declares none."""
+    name = policy.get('interface')
+    if name is None:
+        return sandbox
+    from neuroshard.evolution import assistant_calendar as calendar
+
+    if name != calendar.INTERFACE:
+        raise ValueError('unknown workspace interface')
+    return calendar
+
+
 def execute(case, respond, policy, *, _rescore=True):
     public = public_case(case)
-    world = sandbox.Workspace(public['world'])
+    tools = interface(policy)
+    world = tools.Workspace(public['world'])
     messages = [{'role': 'system', 'content': policy['system_instruction']}]
     calls, rounds, generations = [], [], []
     started = time.monotonic()
@@ -26,8 +39,8 @@ def execute(case, respond, policy, *, _rescore=True):
         final_text, completed, failure = '', False, None
         used_calls = 0
         for _ in range(policy['limits']['model_turns_per_user_turn']):
-            generated = respond(copy.deepcopy(messages), copy.deepcopy(sandbox.TOOLS))
-            generated = {**generated, 'request_sha256': identity({'messages': messages, 'tools': sandbox.TOOLS})}
+            generated = respond(copy.deepcopy(messages), copy.deepcopy(tools.TOOLS))
+            generated = {**generated, 'request_sha256': identity({'messages': messages, 'tools': tools.TOOLS})}
             generations.append(generated)
             if not generated['terminated']:
                 failure = 'generation did not terminate within its token/input budget'
@@ -35,7 +48,7 @@ def execute(case, respond, policy, *, _rescore=True):
             text = generated['text']
             messages.append({'role': 'assistant', 'content': text})
             try:
-                proposed = sandbox.parse_calls(text)
+                proposed = tools.parse_calls(text)
             except (ValueError, TypeError, RecursionError):
                 messages.append({'role': 'tool', 'content': json.dumps({'error': 'invalid tool-call syntax or schema'})})
                 continue
@@ -98,6 +111,7 @@ def score(case, result, policy):
         raise ValueError('workspace rounds differ from model/tool transcript')
     if len(result['rounds']) > len(case['turns']):
         raise ValueError('too many conversation rounds')
+    tools = interface(policy)
     successes = []
     previous_calls = previous_generations = 0
     for index, turn in enumerate(result['rounds']):
@@ -107,15 +121,15 @@ def score(case, result, policy):
                 or count - previous_calls > policy['limits']['tool_calls_per_user_turn']
                 or generations - previous_generations > policy['limits']['model_turns_per_user_turn']):
             raise ValueError('invalid workflow counters or budget')
-        replay = sandbox.replay_transcript(case['world'], result['calls'][:count])
+        replay = tools.replay_transcript(case['world'], result['calls'][:count])
         if identity(replay) != identity(turn['snapshot']):
             raise ValueError('workspace state does not match tool transcript')
         last = result['generations'][generations - 1]
         if turn['completed'] and (not last['terminated'] or turn['final_text'] != last['text']
-                                  or sandbox.parse_calls(last['text']) or turn['failure']):
+                                  or tools.parse_calls(last['text']) or turn['failure']):
             raise ValueError('workflow completion differs from model response')
-        successes.append(sandbox.score_round(replay, case['turns'][index]['expected'],
-                                               turn['completed'], turn['final_text']))
+        successes.append(tools.score_round(replay, case['turns'][index]['expected'],
+                                           turn['completed'], turn['final_text']))
         previous_calls, previous_generations = count, generations
     if (previous_calls != len(result['calls']) or previous_generations != len(result['generations'])
             or result['model_attempts'] != len(result['generations'])

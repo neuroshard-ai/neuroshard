@@ -506,7 +506,7 @@ def test_accelerator_phases_never_open_evaluation_goals():
     assert len(run.split_cases(plan, 'train')) == 256 and len(run.split_cases(plan, 'integration')) == 64
     assert [len(run.split_cases(plan, split)) for split in data.GROWTH] == [256, 256]
     assert [len(run.split_cases(plan, split)) for split in data.COMPOSE] == [240, 240]
-    for split in ('development', 'confirmation', 'confirmation3'):
+    for split in ('development', 'confirmation', 'confirmation3', 'confirmation4'):
         with pytest.raises(ValueError, match='may not access'):
             run.split_cases(plan, split)
 
@@ -551,7 +551,9 @@ def test_compositional_practice_holds_out_every_development_and_confirmation_pai
     compose = read(ROOT / run.COMPOSE_PLAN)
     manifest = read(ROOT / compose['data'])
     assert list(manifest['splits']) == list(data.COMPOSE) == compose['collection']['splits']
-    assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.COMPOSE)
+    # Splits declared after the compositional study are checked against it in their own tests.
+    later = {'confirmation4'}
+    assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.COMPOSE and s not in later)
     for held, splits in (('development', ['development']), ('confirmation', list(data.CONFIRMATIONS))):
         for split in splits:
             for case in data.cases(split):
