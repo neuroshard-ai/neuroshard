@@ -55,8 +55,8 @@ uses a capable pretrained foundation, bounded learned modules and actual hardwar
 shards. Three of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
 a [first learned capability](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) that lifts fresh workspace
 conversations from 62% to 95% with no earlier success lost (A2), and [actual sharding](docs/A4_SHARDING_REVIEW.md)
-(A4). Repeated growth (A3) is under way. Its first new cohort, meeting scheduling, now reaches the
-development gate's scheduling and cross levels but is not yet accepted; see the
+(A4). Repeated growth (A3) is under way. Its first new cohort, meeting scheduling, has passed the
+development gate; a sealed confirmation decides whether it is accepted. See the
 [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.

@@ -250,6 +250,11 @@ remain evidence, not readiness claims for this assistant.
   need the calendar to drafting, down from 15, and none of the other 100 to
   scheduling. Held out, 2 of 384 drafting turns cross. Development runs with it
   pinned. A3 has spent $39.43 of $110.
+  [Development passed](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT6_RESULTS.md) ($3.40).
+  The candidate, the separate module, completed 18/24 scheduling and 6/8 cross and
+  kept all 19 accepted drafting successes, at p95 98.9 s; the shared version lost one.
+  Every turn went to the route it needs. The sealed confirmation opens once on five
+  CPU hosts (at most $47). A3 has spent $42.83 of $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
