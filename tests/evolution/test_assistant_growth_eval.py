@@ -76,7 +76,8 @@ def test_units_and_gates_must_match_their_pinned_digests(tmp_path):
                for version in development.VERSIONS)
 
 
-def test_the_development_gate_picks_the_candidate_and_checks_drafting_case_by_case():
+def test_the_development_gate_picks_the_candidate_and_checks_drafting_case_by_case(monkeypatch):
+    monkeypatch.setattr(development, 'policies', lambda: POLICIES)
     solved = {'separate_update': {'scheduling': 18, 'cross': 6, 'drafting': 19},
               'separate_module': {'scheduling': 19, 'cross': 6, 'drafting': 19},
               'shared': {'scheduling': 19, 'cross': 6, 'drafting': 16}}
@@ -273,10 +274,15 @@ def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtim
     assert development.SCRIPT in execution['sources']
     canonical = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
-    round4 = read(ROOT / 'config/experiments/assistant-growth-round4-report.json')
-    assert {unit: row['trainable_sha256'] for unit, row in round4['units'].items()} == {
+    round5 = read(ROOT / 'config/experiments/assistant-growth-round5-report.json')
+    assert {unit: row['trainable_sha256'] for unit, row in round5['units'].items()} == {
         unit: row['trainable_sha256'] for unit, row in execution['units'].items()}
     assert execution['units']['U1']['trainable_sha256'] == read(ROOT / PLAN['plan'])['cohort1']['trainable_sha256']
+    assert execution['scheduling_policy'] == read(ROOT / 'config/experiments/assistant-growth-round5.json')['interface']['policy']
+    assert execution['round5'] == {
+        'result_sha256': sha256(ROOT / 'config/experiments/assistant-growth-round5-result.json'),
+        'report_sha256': sha256(ROOT / 'config/experiments/assistant-growth-round5-report.json')}
+    assert development.policies()['scheduling']['interface'] == 'workspace-calendar/2'
     a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
     assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
     router = read(ROOT / 'config/experiments/assistant-growth-router4-report.json')
@@ -314,11 +320,13 @@ def test_each_development_host_is_one_bounded_cpu_host_uploading_only_its_units(
 
 
 def test_the_execution_may_name_the_scheduling_policy(tmp_path, monkeypatch):
-    before = development.policies()
-    execution = read(ROOT / development.EXECUTION)
-    save(tmp_path / 'execution.json',
+    execution = {k: v for k, v in read(ROOT / development.EXECUTION).items() if k != 'scheduling_policy'}
+    save(tmp_path / 'stage1.json', execution)
+    save(tmp_path / 'round5.json',
          {**execution, 'scheduling_policy': 'config/experiments/assistant-workflow-policy-calendar-slots.json'})
-    monkeypatch.setattr(development, 'EXECUTION', str(tmp_path / 'execution.json'))
+    monkeypatch.setattr(development, 'EXECUTION', str(tmp_path / 'stage1.json'))
+    before = development.policies()
+    monkeypatch.setattr(development, 'EXECUTION', str(tmp_path / 'round5.json'))
     after = development.policies()
     assert before['scheduling']['interface'] == 'workspace-calendar/1'
     assert after['scheduling']['interface'] == 'workspace-calendar/2' and after['drafting'] == before['drafting']

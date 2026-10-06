@@ -271,6 +271,10 @@ remain evidence, not readiness claims for this assistant.
   the control is learning, not the tool. Round 4's demonstrations are rewritten for the
   tool and the units retrained; the calibrated router is kept. Fresh sealed scheduling,
   cross and drafting sets are frozen in the declaration ($137.87 in allowances).
+  [With the tool, both units solved every integration scheduling case](docs/ASSISTANT_REPEATED_GROWTH_ROUND5_RESULTS.md)
+  ($4.46): U2 and L2 64/64, against 38–39 without it; cross 8/8 and 6/8. The control,
+  the accepted version given the same tool but no scheduling training, solved 21/64 and
+  0/8. Development runs next. A3 has spent $67.33 of $150.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
