@@ -68,6 +68,7 @@ retaining the existing generated-answer and retention requirements.
 | [Observable selection](OBSERVABLE_SELECTION.md) | Next rule: choose a shard without the gold answer and beat the training-label baseline. Not trained. No GPU. |
 | [Observable reasoning experiment](OBSERVABLE_REASONING.md) / [result](OBSERVABLE_REASONING_RESULTS.md) | Completed and rejected: added blocks 7/96, trained control 10/96, constant 16/96. Task routing worked; no qualifying protected baseline. |
 | [Independent hosting](INDEPENDENT_HOSTING.md) | Item 4 soak freeze: equal-power CPU genesis and stranger-provider join. No GPU. |
+| [Operator kit](OPERATOR_KIT.md) | One page for volunteers: what running one of the four independent nodes involves, needs and demonstrates. |
 | [Neural-work research](NEURAL_WORK_RESEARCH.md) / [results](NEURAL_WORK_RESULTS.md) | Exact linear training with challenge-bound intermediate mining tickets, adversarial checks and full-cost measurements; experimental, no consensus activation. |
 | [Retired alpha guide](JOIN_ALPHA.md) | Pinned source, ledger observation and historical setup; GPU service closed September 20, 2026. |
 | [Alpha deployment result](OPERATED_ALPHA_RESULT.md) | Measured latency, automatic recovery, public evidence, funding and remaining limits. |

@@ -2,7 +2,8 @@
 
 Owner 0 renders every request, selects the parent or the arm once per episode
 from the parent's final-layer feature, and decodes greedily; the owner holding
-the arm switches it on or off for the episode. Every owner keeps one episode
+the arm, an added module or an update of declared projections, switches it on or
+off for the episode. Every owner keeps one episode
 cache and crops it to the longest token prefix shared with the new request, as
 the single-host prefix-cache responder does, so each request runs the same
 operations on the same shapes.
@@ -23,8 +24,22 @@ from .granite_pipeline import FORWARD, RESET, STOP, command
 CROP, ADAPTER, FEATURE = 9, 10, 11
 
 
+def plain(master, dtype):
+    """An updated projection as single-host serving stores it: a plain Linear in the backbone dtype."""
+    linear = torch.nn.Linear(master.weight.shape[1], master.weight.shape[0], bias=False, dtype=dtype,
+                             device=master.weight.device)
+    with torch.no_grad():
+        linear.weight.copy_(master.weight.to(dtype))
+    linear.weight.requires_grad_(False)
+    return linear
+
+
 class Adapter:
-    """The saved addition arm on its owner, switchable per episode without touching the backbone."""
+    """A saved arm on its owner, switchable per episode without touching the backbone.
+
+    The addition wraps the parent's projections; the update replaces them with plain projections,
+    as ``trainer.serving`` stores them on one host. Switching off restores the parent's own modules.
+    """
 
     def __init__(self, partition, spec, directory):
         from safetensors.torch import load_file
@@ -33,11 +48,14 @@ class Adapter:
 
         directory = Path(directory)
         manifest = json.loads((directory / 'manifest.json').read_text())
-        if (manifest['arm'] != 'addition'
+        if (manifest['arm'] not in ('addition', 'update')
                 or hashlib.sha256((directory / 'trainable.safetensors').read_bytes()).hexdigest()
                 != manifest['trainable_sha256']):
             raise ValueError('arm checkpoint differs from its manifest')
-        trainable = attach(partition, 'addition', spec)
+        sites = [(partition.layers[index - partition.begin].self_attn, name)
+                 for index in spec['layers'] for name in ('q_proj', 'v_proj')]
+        parents = [getattr(attention, name) for attention, name in sites]
+        trainable = attach(partition, manifest['arm'], spec)
         saved = load_file(str(directory / 'trainable.safetensors'))
         if set(saved) != set(trainable):
             raise ValueError('arm checkpoint tensor inventory differs')
@@ -46,15 +64,17 @@ class Adapter:
                 value.copy_(saved[name])
                 value.requires_grad_(False)
         self.manifest, self.wrapped = manifest, []
-        for index in spec['layers']:
-            attention = partition.layers[index - partition.begin].self_attn
-            for name in ('q_proj', 'v_proj'):
-                self.wrapped.append((attention, name, getattr(attention, name)))
+        for (attention, name), parent in zip(sites, parents):
+            module = getattr(attention, name)
+            if manifest['arm'] == 'update':
+                module = plain(module, parent.weight.dtype)
+                setattr(attention, name, module)
+            self.wrapped.append((attention, name, module, parent))
         self.enabled = True
 
     def set(self, enabled):
-        for attention, name, module in self.wrapped:
-            setattr(attention, name, module if enabled else module.base)
+        for attention, name, module, parent in self.wrapped:
+            setattr(attention, name, module if enabled else parent)
         self.enabled = enabled
 
 

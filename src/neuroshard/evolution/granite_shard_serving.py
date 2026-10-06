@@ -69,16 +69,21 @@ def prepare(plan, rank, store):
 
 
 def arm_files(plan, directory):
-    """The uploaded arm and gate, checked against the digests pinned by the development execution."""
+    """The uploaded arm and gate, checked against the digests pinned by the development execution.
+
+    The plan names the arm's kind, an added module or an update; a plan that names none serves the addition.
+    """
     directory = Path(directory)
     pinned = plan['arm']
-    manifest = read(directory / 'addition-checkpoint' / 'manifest.json')
-    if (manifest['trainable_sha256'] != pinned['trainable_sha256']
-            or sha256(directory / 'addition-checkpoint' / 'trainable.safetensors') != pinned['trainable_sha256']):
+    kind = pinned.get('kind', 'addition')
+    checkpoint = directory / f'{kind}-checkpoint'
+    manifest = read(checkpoint / 'manifest.json')
+    if (manifest['arm'] != kind or manifest['trainable_sha256'] != pinned['trainable_sha256']
+            or sha256(checkpoint / 'trainable.safetensors') != pinned['trainable_sha256']):
         raise ValueError('uploaded arm differs from the pinned development arm')
     if sha256(directory / 'integration.json') != pinned['integration_sha256']:
         raise ValueError('uploaded gate differs from the pinned development gate')
-    return directory / 'addition-checkpoint', read(directory / 'integration.json')['arms']['addition']['gate']
+    return checkpoint, read(directory / 'integration.json')['arms'][kind]['gate']
 
 
 def job(plan):
