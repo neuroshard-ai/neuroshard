@@ -255,6 +255,13 @@ remain evidence, not readiness claims for this assistant.
   kept all 19 accepted drafting successes, at p95 98.9 s; the shared version lost one.
   Every turn went to the route it needs. The sealed confirmation opens once on five
   CPU hosts (at most $47). A3 has spent $42.83 of $110.
+  [The sealed confirmation failed on scheduling](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION_RESULTS.md)
+  ($20.04). The candidate completed 117/192 scheduling against a bar of 154, and four
+  families fell below 16/24 (lowest 9/24). Cross (37/48), the gain over the previous
+  version (+152), drafting retention (none lost) and p95 (102.5 s) passed, and routing
+  was exact on every sealed turn. Cohort 2 is not accepted. The separate unit lost no
+  accepted drafting success and the shared update lost one, so the declared comparison
+  holds, narrowly. The sealed scheduling sets are spent. A3 has spent $62.87 of $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
