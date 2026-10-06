@@ -1,0 +1,31 @@
+{
+  "format": "neuroshard-assistant-growth-router4/1",
+  "status": "Declared on October 5, 2026, after the message-feature router's report and before any calibration or development with it. The project owner chose this change: shift the router toward scheduling by an amount chosen on held-out training turns, then run development.",
+  "amends": ["config/experiments/assistant-growth-router3.json"],
+  "router3_report": "config/experiments/assistant-growth-router3-report.json",
+  "findings": "On the parent's mean state over the user's own message, the router was 88.6% accurate held out and 92.6% on the 204 integration turns. All 15 integration errors sent a turn that needs the calendar to the drafting route, 15 of 104; none of the other 100 turns went to scheduling. A turn that needs the calendar always fails on the drafting route, which has none. A drafting turn on the scheduling route can still succeed: in the centroid router's development 12 went there and no accepted success was lost. Round 4's candidate met the scheduling and cross levels exactly when every turn went to scheduling.",
+  "router": {
+    "unchanged": "The message-feature router's labels, data, feature and rule: 2,112 training turns labelled by whether their verified correct solutions use the calendar, the parent's mean state over each user message after the cached shared prefix, and the centroid rule fitted on every training turn with equal weights.",
+    "shift": "A turn goes to the scheduling route when its margin, its cosine to the scheduling class mean minus its cosine to the drafting class mean, exceeds minus the shift. A shift of zero is the unshifted router; a margin exactly at the threshold keeps the drafting route.",
+    "calibration": {
+      "rate": 0.01,
+      "rule": "Each of four folds of training cases, the folds of the reported held-out accuracy, is scored by the centroid rule fitted without it. Of the 384 turns of the drafting training cases, at most 1%, rounded down to 3, may have a held-out margin above minus the shift. The shift is the largest that satisfies this, and never negative. No integration, development or confirmation outcome is used."
+    },
+    "reported": "Held out and on the 204 integration turns, with and without the shift: turns that need the calendar sent to drafting, other turns sent to scheduling, and accuracy. None is a gate except the development rule.",
+    "pinned": "The shifted router is fitted on one CPU host and pinned by digest before any development host starts. Development and, if it passes, confirmation serve it unchanged."
+  },
+  "development": "Runs only if the shifted router sends fewer of the integration turns that need the calendar to the drafting route than the unshifted router does in the same fit. Otherwise development does not run, and the result returns to the project owner. When it runs: three CPU hosts, one per version, with round 4's units.",
+  "unchanged": "Round 4's units, routing, the three versions, the development and confirmation gates, the comparison and the outcome rules. Nothing is trained.",
+  "confirmation": "If the candidate passes development, the sealed confirmation opens once as declared for stage 1, on five CPU hosts serving the same pinned router.",
+  "budget": {
+    "ceiling_usd": 110,
+    "spent_usd": 39.21,
+    "router_usd": 5.5,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1, rounds 2 to 4, three developments and two router fits cost $39.21. Calibrated router: at most $5.50 on one CPU host. Development: at most $18 on three CPU hosts. Confirmation: at most $47 on five CPU hosts. $109.71 within the $110 ceiling."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false
+}

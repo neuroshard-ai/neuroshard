@@ -31,7 +31,7 @@
       "U1/manifest.json",
       "U1/trainable.safetensors",
       "a2-integration.json",
-      "stage1-integration.json"
+      "router.json"
     ],
     "maximum_bytes": 268435456
   },
@@ -42,10 +42,10 @@
     "usd_per_hour": 1.0584
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-growth-round4-report.json",
-    "sha256": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
+    "path": "config/experiments/assistant-growth-router4-report.json",
+    "sha256": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12"
   },
-  "budget_scope": "A3 round-4 development rerun of the separate module version on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that refits the version's centroid router on its own runtime and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests of the low-rank module L2 and the accepted update U1, A2's round-4 gates and the A3 round-4 integration outcomes. No GPU, training or sealed data.",
+  "budget_scope": "A3 development of the separate module version with the pinned shifted message-feature router on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads routing the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the prefix cache; 2.75-hour expiry and six-dollar allowance, one of three such hosts within the declared $18. Uploads only the trained tensors and manifests it serves, A2's round-4 gates and the router. No GPU, training or sealed data.",
   "prior_attempts": [
     {
       "home": ".neuroshard/assistant-growth-development-separate-module-20261004",
@@ -56,6 +56,11 @@
       "home": ".neuroshard/assistant-growth-development-separate-module-20261005",
       "report": "config/experiments/assistant-growth-development4-report.json",
       "outcome": "Round-4 units with the logistic refit; failed on one drafting success."
+    },
+    {
+      "home": ".neuroshard/assistant-growth-development-separate-module-20261005r",
+      "report": "config/experiments/assistant-growth-development5-report.json",
+      "outcome": "Round-4 units with the centroid router refitted from integration outcomes; failed on scheduling and cross."
     }
   ]
 }

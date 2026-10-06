@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 3, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
+**Updated October 5, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -239,7 +239,29 @@ remain evidence, not readiness claims for this assistant.
   [The refit is 92.6% accurate on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3_RESULTS.md)
   ($0.23), up from 73.0%, and 88.6% held out. Every error sent a scheduling or cross
   turn to the drafting route; no drafting turn was misrouted. A3 has spent $39.21 of
-  $110.
+  $110. A misrouted scheduling turn always fails, while a drafting turn on the
+  scheduling route can still succeed, so the project owner chose to
+  [shift the router toward scheduling](docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md) first.
+  The shift is chosen on held-out training turns, so that at most 1% of drafting
+  turns cross. Development runs only if the shift recovers misrouted scheduling
+  turns on integration ($109.71 in allowances).
+  [The shift recovers every misrouted turn on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER4_RESULTS.md)
+  ($0.22). Shifted by 0.747, the router sends none of the 104 integration turns that
+  need the calendar to drafting, down from 15, and none of the other 100 to
+  scheduling. Held out, 2 of 384 drafting turns cross. Development runs with it
+  pinned. A3 has spent $39.43 of $110.
+  [Development passed](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT6_RESULTS.md) ($3.40).
+  The candidate, the separate module, completed 18/24 scheduling and 6/8 cross and
+  kept all 19 accepted drafting successes, at p95 98.9 s; the shared version lost one.
+  Every turn went to the route it needs. The sealed confirmation opens once on five
+  CPU hosts (at most $47). A3 has spent $42.83 of $110.
+  [The sealed confirmation failed on scheduling](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION_RESULTS.md)
+  ($20.04). The candidate completed 117/192 scheduling against a bar of 154, and four
+  families fell below 16/24 (lowest 9/24). Cross (37/48), the gain over the previous
+  version (+152), drafting retention (none lost) and p95 (102.5 s) passed, and routing
+  was exact on every sealed turn. Cohort 2 is not accepted. The separate unit lost no
+  accepted drafting success and the shared update lost one, so the declared comparison
+  holds, narrowly. The sealed scheduling sets are spent. A3 has spent $62.87 of $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
