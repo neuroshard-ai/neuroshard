@@ -120,10 +120,10 @@ def determinism(plan, rank, store, home, index):
     return result
 
 
-def owner(rank, address, port, phase, home, store, index=0):
+def owner(rank, address, port, phase, home, store, index=0, plan_path=PLAN):
     configure()
-    source = freeze()
-    plan = read(ROOT / PLAN)
+    source = shard.freeze(plan_path)
+    plan = read(ROOT / plan_path)
     home, store = Path(home), Path(store)
     world = len(plan['boundaries']) - 1
     if not 0 <= rank < world or phase not in PHASES:
@@ -144,7 +144,8 @@ def owner(rank, address, port, phase, home, store, index=0):
     if rank == 0:
         value['tokenizer'] = str(store / 'config')
     save(directory / 'job.json', value, exclusive=True)
-    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / PLAN), 'rank': rank}, exclusive=True)
+    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / plan_path), 'rank': rank},
+         exclusive=True)
     return granite_serving.run_owner(store / 'config', store / 'shard', rank, world, address, port,
                                      directory / 'job.json', directory / 'result.json',
                                      timeout=plan['peer_timeout_seconds'])

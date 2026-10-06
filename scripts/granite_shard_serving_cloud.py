@@ -26,7 +26,8 @@ def unit(phase, index=None):
     return f"granite-owner-{phase}" + ("" if index is None else f"-{index}")
 
 
-EXECUTIONS = ("granite_shard_serving", "granite_shard_throughput", "granite_shard_determinism")
+EXECUTIONS = ("granite_shard_serving", "granite_shard_throughput", "granite_shard_determinism",
+              "granite_shard_serving_update")
 
 
 def seconds(plan, phase):
