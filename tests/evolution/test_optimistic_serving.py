@@ -294,6 +294,11 @@ def test_a_verified_fraud_proof_slashes_the_owner_pays_the_auditor_and_refunds_e
     # Other challenges of the proven job and of the voided one are moot.
     state = ledger.transition(state, challenge(people['owner-2'], first, keys[1], 'dd' * 32)[0], None)
     state = ledger.transition(state, challenge(people['user'], second, keys[2], 'dd' * 32)[0], None)
+    # A proof in the challenge's own block is refused before any replay: its deposit is not committed yet.
+    refuse(state, prove(people['owner-2'], first, challenge_id), 'later block', execute)
+    people['owner-2'].nonce -= 1
+    assert seen == []
+    state = ledger.advance(state, state['height'] + 1)
     state = ledger.transition(state, prove(people['owner-2'], first, challenge_id), execute)
     assert seen == [{'chain_id': CHAIN, 'job_id': first, 'shard': 1, 'log_key': keys[1],
                      'statement_root': statement(first, 1, '11' * 32), 'proof_root': 'ee' * 32}]
@@ -325,6 +330,9 @@ def test_an_unproven_challenge_forfeits_its_deposit_and_holds_settlement_only_un
     assert state['jobs'][job_id]['challenges'] == {challenge_id: {
         'challenger': people['auditor'].public, 'log_key': keys[1], 'proof_root': 'ee' * 32, 'deposit': DEPOSIT,
         'deadline': lapse}}
+    refuse(state, prove(people['auditor'], job_id, challenge_id), 'later block', replay)
+    people['auditor'].nonce -= 1
+    state = ledger.advance(state, state['height'] + 1)
     refuse(state, prove(people['auditor'], job_id, challenge_id), 'does not verify', lambda previous, request: False)
     people['auditor'].nonce -= 1
     burned, owner = state['burned'], state['accounts'][people['owner-1'].public]['balance']
@@ -404,7 +412,11 @@ def test_every_cheap_check_precedes_a_proof_replay(market):
                                  (job_id, 'FF' * 32, 'Noncanonical digest'), (job_id, ['ff' * 32], 'Noncanonical digest')):
         refuse(state, prove(people['auditor'], target, named), match, replay)
         people['auditor'].nonce -= 1
+    with pytest.raises(ValueError, match='later block'):
+        ledger.admit(state, prove(people['auditor'], job_id, challenge_id))
+    people['auditor'].nonce -= 1
     assert replays == []
+    state = ledger.advance(state, state['height'] + 1)
     request = ledger.admit(state, prove(people['auditor'], job_id, challenge_id))[2]
     assert request == {'chain_id': CHAIN, 'job_id': job_id, 'shard': 1, 'log_key': keys[1],
                        'statement_root': state['jobs'][job_id]['commits'][keys[1]], 'proof_root': 'ee' * 32}
@@ -483,6 +495,11 @@ def opened_challenge(value, people, keys, job_id, proof_root='aa' * 32):
     assert [r.code for r in finalize(value, [ledger.canonical(opening)])] == [0]
     drained(value)
     return ledger.canonical(prove(people['auditor'], job_id, challenge_id))
+
+
+def request_of(value, proof):
+    """What a proof must establish, admitted in the next block as validators admit it."""
+    return ledger.admit(ledger.advance(value.state, value.state['height'] + 1), json.loads(proof))[2]
 
 
 def committed_job(value, people):
@@ -601,7 +618,7 @@ def test_a_bundle_this_validator_lacks_gives_no_verdict_until_it_arrives(tmp_pat
     assert list(value.PrepareProposal(pb.RequestPrepareProposal(txs=[proof], height=height,
                                                                 max_tx_bytes=app.MAX_TX_BYTES), None).txs) == []
     assert value.ProcessProposal(pb.RequestProcessProposal(txs=[proof], height=height), None).status == 2
-    assert value.check.known(ledger.admit(value.state, json.loads(proof))[2]) is None and replays == []
+    assert value.check.known(request_of(value, proof)) is None and replays == []
     # Once the bundle arrives, the next block's background judging replays it.
     held.add('aa' * 32)
     finalize(value, [])
@@ -629,7 +646,7 @@ def test_a_checker_failure_is_no_verdict_and_is_judged_afresh(tmp_path):
     keys, job_id = committed_job(value, people)
     proof = opened_challenge(value, people, keys, job_id)
     # The background replay failed, so nothing is cached and admission judges the proof afresh.
-    assert calls == ['aa' * 32] and value.check.known(ledger.admit(value.state, json.loads(proof))[2]) is None
+    assert calls == ['aa' * 32] and value.check.known(request_of(value, proof)) is None
     assert value.CheckTx(pb.RequestCheckTx(tx=proof), None).code == 0 and len(calls) == 2
     with pytest.raises(ledger.NoVerdict):
         app.shard_checker({})(value.state, {'proof_root': 'aa' * 32})

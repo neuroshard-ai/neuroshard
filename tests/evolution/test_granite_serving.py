@@ -79,6 +79,20 @@ def world(tmp_path):
             'config': config_dir, 'cases': cases, 'gate': gate}
 
 
+@pytest.fixture
+def update_world(world, tmp_path):
+    """The same tiny assistant with a saved update of its declared projections in place of the addition."""
+    trainable = trainer.prepare(load(world['checkpoint']), 'update', SPEC)
+    generator = torch.Generator().manual_seed(11)
+    with torch.no_grad():
+        for value in trainable.values():
+            value.add_(0.1 * torch.randn(value.shape, generator=generator))
+    arm = tmp_path / 'update-arm'
+    trainer.checkpoint(arm, trainable, {'arm': 'update', 'optimizer_state': {}, 'trainable_parameters': 1,
+                                        'steps': 0, 'schedule_sha256': '', 'losses': [0.0]}, {})
+    return {**world, 'arm': arm, 'arm_kind': 'update'}
+
+
 def load(checkpoint):
     from transformers import AutoModelForCausalLM
 
@@ -90,7 +104,8 @@ def single_host(world):
     """The development evaluator's served system in a fresh process with the owners' numerical environment."""
     work = world['checkpoint'].parent / 'single'
     work.mkdir()
-    job = {'checkpoint': str(world['checkpoint']), 'arm': str(world['arm']), 'spec': SPEC, 'gate': world['gate'],
+    job = {'checkpoint': str(world['checkpoint']), 'arm': str(world['arm']), 'arm_kind': world.get('arm_kind', 'addition'),
+           'spec': SPEC, 'gate': world['gate'],
            'tokenizer': str(world['directory']), 'case_ids': [c['id'] for c in world['cases']], 'policy': bounded()}
     (work / 'job.json').write_text(json.dumps(job))
     code = '''
@@ -106,7 +121,9 @@ torch.set_num_threads(1)
 job = json.loads(Path(sys.argv[1]).read_text())
 tokenizer = load_tiny(Path(job["tokenizer"]))[0]
 parent, model = load(job["checkpoint"]), load(job["checkpoint"])
-trainer.load_trainable(model, "addition", job["spec"], job["arm"])
+trainer.load_trainable(model, job["arm_kind"], job["spec"], job["arm"])
+if job["arm_kind"] == "update":
+    trainer.serving(model, job["spec"])
 by_id = {c["id"]: c for c in data.cases("development")}
 cases = [by_id[k] for k in job["case_ids"]]
 feature = lambda case: accelerator.boundary_feature(parent, tokenizer, job["policy"], case, "cpu")
@@ -686,6 +703,41 @@ def test_switching_the_arm_off_restores_the_parent_bit_for_bit(world):
     parent = granite.Partition(config, BOUNDARIES, 2).load(read)
     served = granite.Partition(config, BOUNDARIES, 2).load(read)
     adapter = Adapter(served, SPEC, world['arm'])
+    hidden = torch.randn(1, 7, 32, generator=torch.Generator().manual_seed(1)).to(torch.bfloat16)
+    with torch.inference_mode():
+        assert not torch.equal(served(hidden), parent(hidden))
+        adapter.set(False)
+        assert torch.equal(served(hidden), parent(hidden))
+        adapter.set(True)
+        assert not torch.equal(served(hidden), parent(hidden))
+
+
+def test_the_accepted_update_on_owners_reproduces_single_host_serving(update_world, tmp_path):
+    expected = single_host(update_world)
+    results = sharded(update_world, tmp_path / 'served')
+    assert all(r['completed'] for r in results), [r.get('error') for r in results]
+    rows = results[0]['episodes']
+    assert {row['selected'] for row in expected} == {'arm', 'parent'}
+    assert [row['selected'] for row in rows] == [row['selected'] for row in expected]
+    for got, want in zip(rows, expected):
+        assert got['score'] == want['score'] and got['calls'] == want['calls']
+        for a, b in zip(got['generations'], want['generations'], strict=True):
+            for key in ('input_token_ids', 'token_ids', 'text', 'terminated', 'prompt_sha256', 'reused_prefix_tokens'):
+                assert a[key] == b[key], key
+    manifest = json.loads((update_world['arm'] / 'manifest.json').read_text())
+    assert results[2]['arm_sha256'] == manifest['trainable_sha256'] and results[0]['arm_sha256'] is None
+
+
+def test_switching_the_update_off_restores_the_parent_bit_for_bit(update_world):
+    from neuroshard.evolution.sharded.granite_serving import Adapter
+
+    read, _ = granite.checkpoint_reader(update_world['checkpoint'])
+    config = granite.load_config(update_world['checkpoint'])
+    parent = granite.Partition(config, BOUNDARIES, 2).load(read)
+    served = granite.Partition(config, BOUNDARIES, 2).load(read)
+    adapter = Adapter(served, SPEC, update_world['arm'])
+    attention = served.layers[SPEC['layers'][0] - served.begin].self_attn
+    assert type(attention.q_proj) is torch.nn.Linear and attention.q_proj.weight.dtype == torch.bfloat16
     hidden = torch.randn(1, 7, 32, generator=torch.Generator().manual_seed(1)).to(torch.bfloat16)
     with torch.inference_mode():
         assert not torch.equal(served(hidden), parent(hidden))

@@ -69,16 +69,21 @@ def prepare(plan, rank, store):
 
 
 def arm_files(plan, directory):
-    """The uploaded arm and gate, checked against the digests pinned by the development execution."""
+    """The uploaded arm and gate, checked against the digests pinned by the development execution.
+
+    The plan names the arm's kind, an added module or an update; a plan that names none serves the addition.
+    """
     directory = Path(directory)
     pinned = plan['arm']
-    manifest = read(directory / 'addition-checkpoint' / 'manifest.json')
-    if (manifest['trainable_sha256'] != pinned['trainable_sha256']
-            or sha256(directory / 'addition-checkpoint' / 'trainable.safetensors') != pinned['trainable_sha256']):
+    kind = pinned.get('kind', 'addition')
+    checkpoint = directory / f'{kind}-checkpoint'
+    manifest = read(checkpoint / 'manifest.json')
+    if (manifest['arm'] != kind or manifest['trainable_sha256'] != pinned['trainable_sha256']
+            or sha256(checkpoint / 'trainable.safetensors') != pinned['trainable_sha256']):
         raise ValueError('uploaded arm differs from the pinned development arm')
     if sha256(directory / 'integration.json') != pinned['integration_sha256']:
         raise ValueError('uploaded gate differs from the pinned development gate')
-    return directory / 'addition-checkpoint', read(directory / 'integration.json')['arms']['addition']['gate']
+    return checkpoint, read(directory / 'integration.json')['arms'][kind]['gate']
 
 
 def job(plan):
@@ -115,10 +120,10 @@ def determinism(plan, rank, store, home, index):
     return result
 
 
-def owner(rank, address, port, phase, home, store, index=0):
+def owner(rank, address, port, phase, home, store, index=0, plan_path=PLAN):
     configure()
-    source = freeze()
-    plan = read(ROOT / PLAN)
+    source = shard.freeze(plan_path)
+    plan = read(ROOT / plan_path)
     home, store = Path(home), Path(store)
     world = len(plan['boundaries']) - 1
     if not 0 <= rank < world or phase not in PHASES:
@@ -139,7 +144,8 @@ def owner(rank, address, port, phase, home, store, index=0):
     if rank == 0:
         value['tokenizer'] = str(store / 'config')
     save(directory / 'job.json', value, exclusive=True)
-    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / PLAN), 'rank': rank}, exclusive=True)
+    save(directory / 'binding.json', {'freeze': source, 'plan_sha256': sha256(ROOT / plan_path), 'rank': rank},
+         exclusive=True)
     return granite_serving.run_owner(store / 'config', store / 'shard', rank, world, address, port,
                                      directory / 'job.json', directory / 'result.json',
                                      timeout=plan['peer_timeout_seconds'])
