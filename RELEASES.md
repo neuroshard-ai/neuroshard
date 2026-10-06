@@ -1,5 +1,27 @@
 # Native releases
 
+## 0.4.1 — client security patch
+
+Released from the 0.4.0 line (branch `release/0.4.x`, tag `v0.4.1`): 0.4.0 plus
+urllib3 2.8.0 for the lightweight client and its managed CPU runtime, which fixes
+GHSA-8988-9cw3-xx77 and GHSA-vxq7-64xx-v4gw (high) and GHSA-gh4c-6fx4-qh6g
+(medium). It joins the same network: the 0.4.0 genesis binds torch, numpy,
+transformers, tokenizers, safetensors and a hash of the execution source, and
+none of these change.
+
+It is not built from main. Main's execution source no longer matches the 0.4.0
+genesis source hash, because of a refactor in `src/neuroshard/demo/client.py`, and
+a wheel built from main fails `neuroshard join` with "Execution source differs
+from genesis". Before release, the 0.4.1 wheel installed its managed runtime,
+passed the 0.4.0 genesis conformance check and synced 8,740 blocks of the live
+network as an observer.
+
+Main's version and pins follow the release, so `neuroshard join` from a source
+checkout installs `neuroshard-ai==0.4.1` into its managed runtime. The transformers
+and torch advisories in the runtime remain; those versions are bound by the genesis
+and change only with a new network release. `docs/llm-requirements.txt` and the
+other files under `docs/` are frozen reproduction runtimes and are unchanged.
+
 ## Operated alpha — September 2026 (source release)
 
 The [growing-model alpha](docs/JOIN_ALPHA.md) served the accepted graph through

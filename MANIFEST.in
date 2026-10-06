@@ -14,6 +14,8 @@ recursive-include tests *.py
 recursive-include docs *.md
 include docs/llm-requirements.txt docs/demo-requirements.txt docs/evolution-requirements.txt docs/eval/data/input.txt
 recursive-include config *.json *.service *.timer *.conf
+# Per-run result transcripts are raw experiment output; they stay in the repository.
+recursive-exclude config/experiments *-result.json
 recursive-include networks *.json *.sha256
 recursive-include scripts *.py *.sh
 recursive-include tools/protocolprobe *.go go.mod go.sum

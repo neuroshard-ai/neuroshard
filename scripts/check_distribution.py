@@ -79,6 +79,8 @@ def main():
         if any(p.startswith(("docs/archive/", "docs/whitepaper/", "docs/figures/",
                              "docs/experiments/", "docs/eval/results/")) for p in paths):
             raise ValueError("Historical documentation output entered the source distribution")
+        if any(p.startswith("config/experiments/") and p.endswith("-result.json") for p in paths):
+            raise ValueError("Raw experiment results entered the source distribution")
     print("Wheel and source distribution contain required runtime assets and exclude local/publishing material")
 
 
