@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 3, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
+**Updated October 5, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -239,7 +239,12 @@ remain evidence, not readiness claims for this assistant.
   [The refit is 92.6% accurate on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3_RESULTS.md)
   ($0.23), up from 73.0%, and 88.6% held out. Every error sent a scheduling or cross
   turn to the drafting route; no drafting turn was misrouted. A3 has spent $39.21 of
-  $110.
+  $110. A misrouted scheduling turn always fails, while a drafting turn on the
+  scheduling route can still succeed, so the project owner chose to
+  [shift the router toward scheduling](docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md) first.
+  The shift is chosen on held-out training turns, so that at most 1% of drafting
+  turns cross. Development runs only if the shift recovers misrouted scheduling
+  turns on integration ($109.71 in allowances).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

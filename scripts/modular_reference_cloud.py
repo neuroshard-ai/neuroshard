@@ -41,6 +41,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-round4-gpu": "config/experiments/assistant-growth-round4-resources.json",
                      "assistant-growth-router": "config/experiments/assistant-growth-router2-resources.json",
                      "assistant-growth-router3": "config/experiments/assistant-growth-router3-resources.json",
+                     "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
                         for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
@@ -74,6 +75,7 @@ GRANITE_PROFILES = {
     "assistant-growth-round4-gpu": ("assistant_growth_round4", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-router": ("assistant_growth_router", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router3": ("assistant_growth_router3", "docs/granite-reference-requirements.txt"),
+    "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
     **{profile: ("assistant_growth_confirm", "docs/granite-reference-requirements.txt") for profile in GROWTH_CONFIRMATION},
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
@@ -108,7 +110,7 @@ UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growt
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-growth-baseline": (4, 8),
                      **{profile: (3, 6) for profile in GROWTH_DEVELOPMENT}, "assistant-growth-router": (3.5, 7),
-                     "assistant-growth-router3": (2, 5.5),
+                     "assistant-growth-router3": (2, 5.5), "assistant-growth-router4": (2, 5.5),
                      **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION},
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8),
@@ -157,6 +159,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-router3":
         from neuroshard.evolution.assistant_growth_router3 import committed_sources as message_sources
         return message_sources()
+    if profile == "assistant-growth-router4":
+        from neuroshard.evolution.assistant_growth_router4 import committed_sources as shifted_sources
+        return shifted_sources()
     if profile in GROWTH_DEVELOPMENT:
         from neuroshard.evolution.assistant_growth_eval import committed_sources as development_sources
         return development_sources()
@@ -597,6 +602,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-growth-router3":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_router3.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-growth-router4":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_router4.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile in GROWTH_DEVELOPMENT:
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_development.py", "run",
