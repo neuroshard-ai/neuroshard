@@ -7,6 +7,6 @@ protobuf==6.33.6
 cryptography==50.0.1
 requests==2.34.2
 pytest==9.1.1
-urllib3==2.7.0
+urllib3==2.8.0
 idna==3.19
 filelock==3.32.6
