@@ -9,7 +9,7 @@ GO_VERSION='1.27.1'
 GO_SHA256='63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
 CPU_REQUIREMENTS=['torch==2.9.1+cpu']
 RUNTIME_REQUIREMENTS=['numpy==2.2.6','grpcio==1.83.1','protobuf==6.33.6','cryptography==50.0.1','requests==2.34.2',
-    'transformers==4.57.3','tokenizers==0.22.1','safetensors==0.7.0','huggingface-hub==0.36.0','urllib3==2.7.0','idna==3.19','filelock==3.32.6']
+    'transformers==4.57.3','tokenizers==0.22.1','safetensors==0.7.0','huggingface-hub==0.36.0','urllib3==2.8.0','idna==3.19','filelock==3.32.6']
 
 
 def root():return Path(os.environ.get('NEUROSHARD_STATE_DIR',str(Path.home()/'.neuroshard'))).expanduser()

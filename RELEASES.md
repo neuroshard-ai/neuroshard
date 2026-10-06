@@ -1,5 +1,18 @@
 # Native releases
 
+## 0.4.1 — client security patch
+
+The lightweight client and its managed CPU runtime move from urllib3 2.7.0 to
+2.8.0, which fixes GHSA-8988-9cw3-xx77 and GHSA-vxq7-64xx-v4gw (high) and
+GHSA-gh4c-6fx4-qh6g (medium). Nothing else changes: this release is 0.4.0 with
+that dependency. The 0.4.0 genesis binds torch, numpy, transformers, tokenizers,
+safetensors and a hash of the execution source, and none of these change, so a
+0.4.1 client joins the same network. It installs a fresh runtime under its own
+version directory. The transformers and torch advisories in the runtime remain;
+those versions are bound by the genesis and change only with a new network release.
+
+Compatible network: `neuroshard-llm-testnet-1`.
+
 ## 0.4.0 — LLM training and native paid inference (experimental)
 
 The old PyPI registration client is replaced by a lightweight local-key client: `neuroshard doctor`, `join`, `wallet`, `chat` and request recovery. Joining installs a separate pinned CPU runtime and follows NeuroShard's own consensus; it needs no starting token balance. The website adds browser signing and paid inference using the same account backup.
