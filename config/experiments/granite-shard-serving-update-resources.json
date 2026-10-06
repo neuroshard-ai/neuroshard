@@ -33,5 +33,11 @@
     "path": "config/experiments/assistant-growth-router4-report.json",
     "sha256": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12"
   },
-  "budget_scope": "One owner host of three for serving the accepted update across owners, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; six ten-minute determinism processes; serving 90 minutes. No GPU or training."
+  "budget_scope": "One owner host of three for serving the accepted update across owners, each its own allocation: r7i.4xlarge at the canonical eight threads, four-hour expiry and eight-dollar allowance (at most $24). Setup/copy 20/10 minutes; fetch 30 minutes; six ten-minute determinism processes; serving 90 minutes. No GPU or training.",
+  "prior_attempts": [
+    {
+      "home": ".neuroshard/granite-shard-serving-update-20261006",
+      "outcome": "Owners 1 and 2 could not import neuroshard.evolution.sharded.granite_audit, which the plan did not list; no episode was served."
+    }
+  ]
 }

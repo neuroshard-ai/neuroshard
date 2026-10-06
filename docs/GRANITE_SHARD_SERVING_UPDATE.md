@@ -20,6 +20,13 @@ off per episode by A2's gate. The 24 served development episodes must reproduce 
 single-host development result of [A2's third attempt](ASSISTANT_EXPERIENCE_THIRD_RESULTS.md)
 token for token: selection, every generation and score. No new evaluation data is opened.
 
+## First attempt
+
+It failed at serving and served no episode ($0.28). Owners 1 and 2 could not import the
+auditing module that the owner runtime now imports: the plan's source list, copied from
+A4's, predates it, and hosts check out only listed sources. The second attempt lists the
+runtime's whole import closure, and a test keeps the list complete. Nothing else changes.
+
 ## Budget
 
 Three r7i.4xlarge hosts, each with a four-hour expiry and an eight-dollar allowance, at

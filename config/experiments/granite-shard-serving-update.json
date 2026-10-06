@@ -67,7 +67,7 @@
   "measured_not_gated": "p95 latency with selection against the single host (94.8 s), traffic per owner, the determinism diagnostic.",
   "not_claimed": "No new quality claim: the target is already-opened development data. Independent operators remain A5.",
   "resources": "config/experiments/granite-shard-serving-update-resources.json",
-  "attempts": 1,
+  "attempts": 2,
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "checklist_credit": false,
@@ -81,9 +81,9 @@
     "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
     "config/experiments/assistant-experience-development-third-result.json": "3d655f805f68eb34621e0a0cad7395e19f1daf59f90305b29ab701526158524f",
-    "config/experiments/granite-shard-serving-update-resources.json": "e4e56a8fc276fd87b007c80f50e69fd358648ac78d62f0ef6816f5c855ea795a",
+    "config/experiments/granite-shard-serving-update-resources.json": "a81830969281744a3b0dc19e9e06cf4ff5bc57d0980396a70a4a6594a9b32e30",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "docs/GRANITE_SHARD_SERVING_UPDATE.md": "1dd2a15293f06df0d58e4155f97ef81b79d06ca24d07597cdf3247a3a35984ef"
+    "docs/GRANITE_SHARD_SERVING_UPDATE.md": "77ae2cf466cb3b53294e5f21a99288cbf821ba453ee7053082575320058c17b2"
   },
   "sources": [
     "config/experiments/granite-reference-artifacts.json",
@@ -129,6 +129,18 @@
     "scripts/granite_shard_cloud.py",
     "scripts/modular_reference_cloud.py",
     "src/neuroshard/evolution/granite_shard_serving_update.py",
-    "scripts/run_granite_shard_serving_update.py"
-  ]
+    "scripts/run_granite_shard_serving_update.py",
+    "src/neuroshard/core/__init__.py",
+    "src/neuroshard/core/crypto/__init__.py",
+    "src/neuroshard/core/crypto/ecdsa.py",
+    "src/neuroshard/evolution/assistant_experience_eval.py",
+    "src/neuroshard/evolution/assistant_serving.py",
+    "src/neuroshard/evolution/assistant_workflow_baseline.py",
+    "src/neuroshard/evolution/assistant_workflow_canonical.py",
+    "src/neuroshard/evolution/sharded/granite_audit.py",
+    "src/neuroshard/evolution/sharded/granite_streams.py",
+    "src/neuroshard/inference/__init__.py",
+    "src/neuroshard/inference/optimistic.py"
+  ],
+  "amendment": "The first attempt failed at serving: owners 1 and 2 could not import the auditing module the owner runtime imports, because the source list, copied from A4's plan, predates it and hosts check out only listed sources. This attempt lists the runtime's whole import closure. Nothing else changes."
 }

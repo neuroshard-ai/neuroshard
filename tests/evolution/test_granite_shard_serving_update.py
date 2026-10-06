@@ -55,3 +55,19 @@ def test_each_owner_is_one_bounded_cpu_host_and_the_launcher_knows_the_execution
 def test_importing_the_update_execution_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.granite_shard_serving_update; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
+
+
+def test_the_plan_lists_every_module_an_owner_imports_while_serving():
+    probe = ('import importlib, os, sys; '
+             '[importlib.import_module("neuroshard.evolution." + m) for m in ("granite_shard_serving_update", '
+             '"sharded.granite_serving", "sharded.granite_audit", "sharded.granite_training", "sharded.granite_streams", '
+             '"sharded.granite", "sharded.granite_pipeline", "assistant_experience_run", "assistant_experience_eval", '
+             '"assistant_workflow_data", "granite_tokenizer", "assistant_selector", "assistant_workflow", '
+             '"assistant_serving")]; importlib.import_module("neuroshard.inference.optimistic"); '
+             'root = os.path.abspath("src"); print("\\n".join(sorted(os.path.relpath(x.__file__) '
+             'for x in list(sys.modules.values()) if getattr(x, "__file__", None) and '
+             'os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert 'src/neuroshard/evolution/sharded/granite_audit.py' in imported
+    assert set(imported) <= set(PLAN['sources'])
