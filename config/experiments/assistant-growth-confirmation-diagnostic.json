@@ -1,0 +1,814 @@
+{
+  "format": "neuroshard-assistant-growth-confirmation-diagnostic/1",
+  "source": {
+    "result": "config/experiments/assistant-growth-confirmation-candidate-calendar-result.json",
+    "sha256": "af92b18642717da8a965bbe02dbacc16c225bae59ffd825351da901ae35ccbfc",
+    "splits": [
+      "confirmation",
+      "cross-confirmation"
+    ]
+  },
+  "failed": {
+    "scheduling": 75,
+    "cross": 11
+  },
+  "kinds": {
+    "wrong start time: free at the start but runs into a busy block": 33,
+    "wrong start time: later than the earliest free slot": 25,
+    "wrong start time: starts inside a busy block": 18,
+    "model-turn budget exhausted": 4,
+    "wrong date, start_time": 2,
+    "wrong date": 2,
+    "wrong date, start_time, source_ids": 2
+  },
+  "failures_with_an_unchecked_attendee": 0,
+  "families": {
+    "move": {
+      "episodes": 24,
+      "failed": 8,
+      "failures": {
+        "turn 1: wrong start time: free at the start but runs into a busy block": 3,
+        "turn 0: wrong start time: free at the start but runs into a busy block": 2,
+        "turn 1: wrong start time: starts inside a busy block": 1,
+        "turn 1: wrong start time: later than the earliest free slot": 1,
+        "turn 0: wrong start time: later than the earliest free slot": 1
+      }
+    },
+    "slot": {
+      "episodes": 24,
+      "failed": 5,
+      "failures": {
+        "turn 0: wrong start time: free at the start but runs into a busy block": 4,
+        "turn 0: wrong start time: later than the earliest free slot": 1
+      }
+    },
+    "swap": {
+      "episodes": 24,
+      "failed": 9,
+      "failures": {
+        "turn 1: wrong start time: later than the earliest free slot": 3,
+        "turn 1: wrong start time: starts inside a busy block": 2,
+        "turn 0: wrong start time: later than the earliest free slot": 2,
+        "turn 0: wrong start time: free at the start but runs into a busy block": 2
+      }
+    },
+    "day": {
+      "episodes": 24,
+      "failed": 15,
+      "failures": {
+        "turn 0: wrong start time: free at the start but runs into a busy block": 5,
+        "turn 0: wrong start time: starts inside a busy block": 5,
+        "turn 0: wrong date, start_time": 2,
+        "turn 0: wrong date": 2,
+        "turn 0: wrong start time: later than the earliest free slot": 1
+      }
+    },
+    "longer": {
+      "episodes": 24,
+      "failed": 13,
+      "failures": {
+        "turn 0: wrong start time: later than the earliest free slot": 6,
+        "turn 0: wrong start time: free at the start but runs into a busy block": 3,
+        "turn 1: wrong start time: free at the start but runs into a busy block": 3,
+        "turn 1: model-turn budget exhausted": 1
+      }
+    },
+    "invite": {
+      "episodes": 24,
+      "failed": 14,
+      "failures": {
+        "turn 0: wrong start time: free at the start but runs into a busy block": 4,
+        "turn 0: wrong start time: later than the earliest free slot": 4,
+        "turn 0: wrong start time: starts inside a busy block": 2,
+        "turn 1: model-turn budget exhausted": 2,
+        "turn 1: wrong start time: free at the start but runs into a busy block": 2
+      }
+    },
+    "after": {
+      "episodes": 24,
+      "failed": 4,
+      "failures": {
+        "turn 0: wrong start time: later than the earliest free slot": 2,
+        "turn 0: wrong start time: free at the start but runs into a busy block": 1,
+        "turn 0: model-turn budget exhausted": 1
+      }
+    },
+    "three": {
+      "episodes": 24,
+      "failed": 7,
+      "failures": {
+        "turn 0: wrong start time: starts inside a busy block": 4,
+        "turn 0: wrong start time: later than the earliest free slot": 2,
+        "turn 0: wrong start time: free at the start but runs into a busy block": 1
+      }
+    },
+    "handoff": {
+      "episodes": 24,
+      "failed": 5,
+      "failures": {
+        "turn 1: wrong start time: free at the start but runs into a busy block": 3,
+        "turn 1: wrong start time: starts inside a busy block": 1,
+        "turn 1: wrong start time: later than the earliest free slot": 1
+      }
+    },
+    "review": {
+      "episodes": 24,
+      "failed": 6,
+      "failures": {
+        "turn 0: wrong start time: starts inside a busy block": 3,
+        "turn 0: wrong date, start_time, source_ids": 2,
+        "turn 0: wrong start time: later than the earliest free slot": 1
+      }
+    }
+  },
+  "episodes": [
+    {
+      "id": "schedule-8414b6e11d50",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 1,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-4e8b9afbec4e",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong date, start_time",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-840f3b12ae2f",
+      "set": "scheduling",
+      "family": "slot",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ce6bd729daf7",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-388320f88633",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 1,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-378692579de1",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-eeb46e7b5daa",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-a44e21564ef9",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-833265454594",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-2da2aaf47cf3",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-f225a68ac88c",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-f5bc73aecd97",
+      "set": "scheduling",
+      "family": "after",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-4558637dcb5b",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-6239d416704b",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-b7fe26d1a309",
+      "set": "scheduling",
+      "family": "slot",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-0944eda4bd4e",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ad3c678b882b",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-095cb7fc6225",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-4f1aa0afa123",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-b3a5a90829fd",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-806ef1b186ea",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-4e68c99ab19e",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-7f47d55d3f2f",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-7d691bf8641e",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-054fbcd9ecb7",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-816fa8a8ce79",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-8f8a6af1ff77",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-d0c8f20faee5",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-405fd78ca305",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 1,
+      "kind": "model-turn budget exhausted",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-6c46d7c13b5f",
+      "set": "scheduling",
+      "family": "slot",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ba65d2645e23",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-3d62df61866e",
+      "set": "scheduling",
+      "family": "slot",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-73345a12efcf",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 1,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-c53ea0f7e818",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-8a9d2a127119",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-821921ded470",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong date, start_time",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-c373bd99c93e",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong date",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-a4b041b87c60",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-293d1df4a163",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 1,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ac8a420f0b16",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-06d71bb8153b",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-3687b0c34cd2",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-b7141a0b49d5",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-b304e35236d4",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-a84cc6364269",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 1,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-4090e889391f",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 1,
+      "kind": "model-turn budget exhausted",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ff1e884d45a7",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-fcb113c3e385",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-79f1da55c7a2",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-87ecbda5c301",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 1,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-34636e243921",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-21bf1bfd4954",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 1,
+      "kind": "model-turn budget exhausted",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-47b2022bce2b",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-1070fd29e0d4",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-e408711d9784",
+      "set": "scheduling",
+      "family": "slot",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-20f6717e7a20",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ea17ab21fd1e",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-3e379c73cbca",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-40392f16fb9e",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-892f31823833",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-2ee531d88266",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-809c39958f6c",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong date",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-7dcb38dc90dc",
+      "set": "scheduling",
+      "family": "after",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-c1ccb9d1ec21",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-976bda5cafdd",
+      "set": "scheduling",
+      "family": "swap",
+      "turn": 1,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-d515839fca00",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-edb48747c6ca",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-ea3fbd768628",
+      "set": "scheduling",
+      "family": "move",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-f70702626218",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-11384c0ea645",
+      "set": "scheduling",
+      "family": "three",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-a32f5668110b",
+      "set": "scheduling",
+      "family": "day",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-822263fc1365",
+      "set": "scheduling",
+      "family": "after",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-6e07cd20b52a",
+      "set": "scheduling",
+      "family": "after",
+      "turn": 0,
+      "kind": "model-turn budget exhausted",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-1cdd9ec58cc4",
+      "set": "scheduling",
+      "family": "longer",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-e051222c1199",
+      "set": "scheduling",
+      "family": "invite",
+      "turn": 0,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-8bf18a186004",
+      "set": "cross",
+      "family": "handoff",
+      "turn": 1,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-2120cfb32c38",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-f9322140afa6",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong date, start_time, source_ids",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-d9cc8a0e6a50",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong date, start_time, source_ids",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-50563eb8c7f2",
+      "set": "cross",
+      "family": "handoff",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-3a890415ca0c",
+      "set": "cross",
+      "family": "handoff",
+      "turn": 1,
+      "kind": "wrong start time: later than the earliest free slot",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-62464dc6c2b7",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-0fd5c8188ae8",
+      "set": "cross",
+      "family": "handoff",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-6d139376b495",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-e5595925084f",
+      "set": "cross",
+      "family": "handoff",
+      "turn": 1,
+      "kind": "wrong start time: free at the start but runs into a busy block",
+      "unchecked_attendees": []
+    },
+    {
+      "id": "schedule-296ad5d77ac3",
+      "set": "cross",
+      "family": "review",
+      "turn": 0,
+      "kind": "wrong start time: starts inside a busy block",
+      "unchecked_attendees": []
+    }
+  ]
+}
