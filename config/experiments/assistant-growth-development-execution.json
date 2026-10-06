@@ -72,9 +72,9 @@
       "file": "a2-integration.json",
       "sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
     },
-    "stage1": {
-      "file": "stage1-integration.json",
-      "sha256": "bcea2363743bd654a42ca3788e41b2beddccf6c1de7fd6f7d1b397d2c782edcd"
+    "router": {
+      "file": "router.json",
+      "sha256": "791f7ef488d473e91ff6e27bb286909f406ea2ba1f8d3107b0a2ee5bbcbf327a"
     }
   },
   "drafting_references": {
@@ -88,9 +88,7 @@
     "report_sha256": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
   },
   "selectors": {
-    "refit": true,
-    "failed_ties": false,
-    "rule": "centroid"
+    "router": "pinned"
   },
   "contracts": {
     "config/experiments/assistant-growth-stage1.json": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
@@ -114,9 +112,9 @@
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/assistant-growth-development-separate-update-resources.json": "5d9392adf89e2f7c55e683c580667c96834601a5b547343e18d16ad57ccda76c",
-    "config/experiments/assistant-growth-development-separate-module-resources.json": "41f2266b5ed9e119429e721f795fea102e6e8f16f5e185a3264187b7bbab2ff0",
-    "config/experiments/assistant-growth-development-shared-resources.json": "543d36ee322b5d9b867b0e3ab36f14103be638497fb00b5f02fae9b4d5cbbe5d",
+    "config/experiments/assistant-growth-development-separate-update-resources.json": "53ddbc093a22caaeae6ee53236688e2cc051abf07e758f740c7b06f87721f436",
+    "config/experiments/assistant-growth-development-separate-module-resources.json": "554d1f2483fec7533a7dba3c4c99109778dc757a3ce85e5ba9f1c3997e9f028f",
+    "config/experiments/assistant-growth-development-shared-resources.json": "659d8f16ee58e77d0099c2cbabd28db8f0dda2bc6fbba86ecf234a814a360459",
     "config/experiments/assistant-growth-router.json": "94d76b1cd36b33fd053ef8f2ea35231145e411f7584a3505d3e1085896712f69",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md": "242363c2d64f42db1b39da9c873686ddc5ed8352eaafa8c14ac7ec0a81703922",
     "config/experiments/assistant-growth-development4-report.json": "e8569889cd8bb271b3acf18db0783a7e83f92c26fe2cb037c814c1a45a3640b2",
@@ -125,7 +123,16 @@
     "config/experiments/assistant-growth-round4-execution.json": "f434f03d000425cdfaba35f16f11d531790ecd0536d88272346e8dd9dcd27e5c",
     "config/experiments/assistant-schedule-data-growth.json": "4380db71f8cf0d44566feaf815ff450683e789de51627f400e641ce9b748c368",
     "config/experiments/assistant-growth-round4-result.json": "b420569506708bc9693dd9eb2d60083d22c856db495ce156ccbcb9036603e71c",
-    "config/experiments/assistant-growth-round4-report.json": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd"
+    "config/experiments/assistant-growth-round4-report.json": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd",
+    "config/experiments/assistant-growth-router4.json": "b0eba380e106f0ec8c154d7a8022f99fa3fd01e1ecec4231de4d7dc7cad1b1a0",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md": "4866c93b1b4a967f9bc240d15241ef3e84f6462f6ac9ddfb8e7b74b2f0814f75",
+    "config/experiments/assistant-growth-router4-execution.json": "27363338dbab087b5e70da71d4484dd92c7cb194fd559a0de76c251e1953b616",
+    "config/experiments/assistant-growth-router4-result.json": "931dcdb5c1e98adce5ff75a80baac14198b9830f3475625daa61519810b2f868",
+    "config/experiments/assistant-growth-router4-report.json": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12",
+    "config/experiments/assistant-growth-router3.json": "c4842ae4e734645f765e17d7fd5af69f92ddefdaf6a947ef3d035326a5b76f08",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md": "47f317987589f9332f994c4bc724afa5b522ded2cf96f6112a95ddf3005d1498",
+    "config/experiments/assistant-growth-router3-report.json": "93d281adaafd5aa1bbe40771b302f39985cbaa8b5b425831eaf74a99fdbb0878",
+    "config/experiments/assistant-growth-development5-report.json": "6daccda80ad46ef481a0d54c9650781bab67403dc339c7576d83ad3f353cb084"
   },
   "sources": [
     "config/experiments/assistant-growth-stage1.json",
@@ -161,6 +168,15 @@
     "config/experiments/assistant-schedule-data-growth.json",
     "config/experiments/assistant-growth-round4-result.json",
     "config/experiments/assistant-growth-round4-report.json",
+    "config/experiments/assistant-growth-router4.json",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md",
+    "config/experiments/assistant-growth-router4-execution.json",
+    "config/experiments/assistant-growth-router4-result.json",
+    "config/experiments/assistant-growth-router4-report.json",
+    "config/experiments/assistant-growth-router3.json",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md",
+    "config/experiments/assistant-growth-router3-report.json",
+    "config/experiments/assistant-growth-development5-report.json",
     "config/experiments/assistant-growth-development-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
@@ -197,6 +213,10 @@
   "gpu_launch_authorized": false,
   "attempts": 1,
   "serving": "prefix-cache",
-  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its scheduling unit, refits the version's router from the pinned round-4 integration outcomes on this runtime's mean-centred parent features, choosing the nearer weighted class mean, without turns both routes failed, and only then routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit. Each route is served with the prefix cache under its own instruction and tools in one calendar workspace.",
-  "interpretation": "The declared stage-1 development gate, assessed once all three versions finish: the candidate is the separate version with more scheduling and cross successes, a tie going to the low-rank module. Passing opens the sealed confirmation sets once; it is not admission, promotion or checklist credit."
+  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its scheduling unit, and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the pinned message-feature router and its shift toward scheduling, the same for every version. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit.",
+  "interpretation": "The declared stage-1 development gate, assessed once all three versions finish: the candidate is the separate version with more scheduling and cross successes, a tie going to the low-rank module. Passing opens the sealed confirmation sets once; it is not admission, promotion or checklist credit.",
+  "router4": {
+    "result_sha256": "931dcdb5c1e98adce5ff75a80baac14198b9830f3475625daa61519810b2f868",
+    "report_sha256": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12"
+  }
 }

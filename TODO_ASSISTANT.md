@@ -245,6 +245,11 @@ remain evidence, not readiness claims for this assistant.
   The shift is chosen on held-out training turns, so that at most 1% of drafting
   turns cross. Development runs only if the shift recovers misrouted scheduling
   turns on integration ($109.71 in allowances).
+  [The shift recovers every misrouted turn on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER4_RESULTS.md)
+  ($0.22). Shifted by 0.747, the router sends none of the 104 integration turns that
+  need the calendar to drafting, down from 15, and none of the other 100 to
+  scheduling. Held out, 2 of 384 drafting turns cross. Development runs with it
+  pinned. A3 has spent $39.43 of $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
