@@ -311,3 +311,14 @@ def test_each_development_host_is_one_bounded_cpu_host_uploading_only_its_units(
         assert set(resources['upload']['files']) == units | {gate['file'] for gate in execution['gates'].values()}
         total += resources['planning_cap_usd']
     assert total <= 18
+
+
+def test_the_execution_may_name_the_scheduling_policy(tmp_path, monkeypatch):
+    before = development.policies()
+    execution = read(ROOT / development.EXECUTION)
+    save(tmp_path / 'execution.json',
+         {**execution, 'scheduling_policy': 'config/experiments/assistant-workflow-policy-calendar-slots.json'})
+    monkeypatch.setattr(development, 'EXECUTION', str(tmp_path / 'execution.json'))
+    after = development.policies()
+    assert before['scheduling']['interface'] == 'workspace-calendar/1'
+    assert after['scheduling']['interface'] == 'workspace-calendar/2' and after['drafting'] == before['drafting']

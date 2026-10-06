@@ -51,13 +51,21 @@ def development_pass(execution):
     return report['report']['candidate']
 
 
+def sealed(execution, which):
+    """A host's (name, split) pairs: stage 1's, or the fresh splits and manifest the execution names."""
+    fresh = execution.get('sealed')
+    if fresh is None:
+        return SETS[which], read(ROOT / read(ROOT / read(ROOT / development.PLAN)['plan'])['cohort2']['data'])['splits']
+    return tuple((name, fresh[name]) for name, _ in SETS[which]), read(ROOT / fresh['scheduling_data'])['splits']
+
+
 def opened(execution, which):
     """One host's sealed sets behind the pinned development pass, each checked against its frozen manifest."""
     development_pass(execution)
-    manifests = read(ROOT / read(ROOT / read(ROOT / development.PLAN)['plan'])['cohort2']['data'])['splits']
+    pairs, manifests = sealed(execution, which)
     sets = {}
-    for name, split in SETS[which]:
-        if split == 'confirmation4':
+    for name, split in pairs:
+        if name == 'drafting':
             frozen = read(ROOT / execution['drafting_data'])
             if frozen['split'] != split:
                 raise ValueError('drafting manifest is for another split')

@@ -142,3 +142,20 @@ def test_confirmation_inventory_pins_the_development_pass_and_the_router_it_serv
 def test_importing_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_growth_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
+
+
+def test_fresh_sealed_splits_replace_the_spent_ones_when_the_execution_names_them(monkeypatch):
+    monkeypatch.setattr(confirm, 'development_pass', lambda execution: 'separate_module')
+    execution = {'sealed': {'scheduling': 'confirmation2', 'cross': 'cross-confirmation2', 'drafting': 'confirmation5',
+                            'scheduling_data': 'config/experiments/assistant-schedule-data-confirmation2.json'},
+                 'drafting_data': 'config/experiments/assistant-workflow-data-confirmation5.json'}
+    calendar = confirm.opened(execution, 'calendar')
+    assert {name: {c['split'] for c in cases} for name, cases in calendar.items()} == {
+        'scheduling': {'confirmation2'}, 'cross': {'cross-confirmation2'}}
+    assert len(calendar['scheduling']) == 192 and len(calendar['cross']) == 48
+    drafting = confirm.opened(execution, 'drafting')['drafting']
+    assert {c['split'] for c in drafting} == {'confirmation5'} and len(drafting) == 192
+    with pytest.raises(ValueError, match='another split'):
+        confirm.opened({**execution, 'drafting_data': 'config/experiments/assistant-workflow-data-confirmation4.json'},
+                       'drafting')
+    assert confirm.sealed({}, 'calendar')[0] == confirm.SETS['calendar']
