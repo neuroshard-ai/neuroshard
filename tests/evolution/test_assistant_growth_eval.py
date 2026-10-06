@@ -69,6 +69,11 @@ def test_units_and_gates_must_match_their_pinned_digests(tmp_path):
     broken['gates']['stage1']['sha256'] = 'e' * 64
     with pytest.raises(ValueError, match='stage1 gates'):
         development.verify_units(tmp_path, broken, 'shared')
+    save(tmp_path / 'router.json', {'gate': {'rule': 'centroid-pinned'}})
+    routed = {**execution, 'gates': {'a2': execution['gates']['a2'],
+                                     'router': {'file': 'router.json', 'sha256': sha256(tmp_path / 'router.json')}}}
+    assert all(development.verify_units(tmp_path, routed, version)[1] == {'rule': 'centroid-pinned'}
+               for version in development.VERSIONS)
 
 
 def test_the_development_gate_picks_the_candidate_and_checks_drafting_case_by_case():
@@ -119,9 +124,10 @@ def test_each_turn_is_served_by_its_routes_unit_and_drafting_by_the_a2_choice(mo
     monkeypatch.setattr(serving, 'cached_responder', responder)
     monkeypatch.setattr(accelerator, 'boundary_feature', lambda model, tokenizer, policy, case, device: case['id'])
     monkeypatch.setattr(routing, 'turn_feature', lambda model, tokenizer, policy, user, device: user)
-    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate == 'turns'
+    turns = {'rule': 'logistic'}
+    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate is turns
                         else feature == draft['id'])
-    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', 'turns',
+    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', turns,
                                        [meeting, draft])
     assert [row['score']['passed'] for row in rows] == [True, True]
     assert rows[0]['score']['routes'] == ['scheduling', 'scheduling'] and rows[0]['a2_selected'] == 'parent'
@@ -157,6 +163,68 @@ def test_the_selector_is_refitted_from_integration_outcomes_without_turns_both_r
     assert report['examples'] == sum(len(case['turns']) for case in cases) - cross_turns
     assert report['counts']['ties'] == 0 and 'weight' not in report
     assert report['gate_sha256'] == identity(gate)
+    gate, report = development.refit_selector(None, None, integration, 'separate_module',
+                                              {'failed_ties': False, 'rule': 'centroid'})
+    assert gate['rule'] == 'centroid' and report['held_out_accuracy'] == 1.0
+    assert selector.choose(gate, [1.0, 0.1]) and not selector.choose(gate, [0.1, 1.0])
+    assert not {'mean', 'arm', 'parent', 'weight'} & set(report)
+
+
+def test_the_centroid_rule_separates_turns_that_share_most_of_their_feature():
+    from neuroshard.evolution import assistant_selector as selector
+
+    shared = [5.0] * 64
+    features, rows = {}, {}
+    for index in range(40):
+        meeting = index % 2 == 0
+        signal = [0.0] * 64
+        signal[index % 7 if meeting else 32 + index % 7] = 0.3
+        features[f'case-{index}#0'] = [s + t for s, t in zip(shared, signal)]
+        rows[f'case-{index}#0'] = (1.0, 1.0) if meeting else (0.0, 1 / 3)
+    gate = selector.fit_centroid(features, rows, 1e-6)
+    assert gate['rule'] == 'centroid' and gate['sha256'] == identity({k: v for k, v in gate.items() if k != 'sha256'})
+    assert all(selector.choose(gate, features[key]) == (rows[key][0] == 1.0) for key in rows)
+    assert not selector.choose(gate, gate['mean'])
+    assert development.held_out(features, rows, 1e-6) == 1.0
+    favoured = {key: (1.0, 1.0) for key in rows}
+    assert selector.fit_centroid(features, favoured, 1e-6)['rule'] == 'constant-arm'
+
+
+def test_a_router_fitted_on_message_features_is_served_on_message_features(monkeypatch):
+    from neuroshard.evolution import assistant_experience_run as accelerator
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution import assistant_serving as serving
+    from neuroshard.evolution.assistant_workflow_data import public_case
+
+    meeting = next(c for c in SETS['scheduling'] if len(c['turns']) == 2)
+    draft = SETS['drafting'][0]
+    scripts = {public_case(c)['user_turns'][0]: iter(texts)
+               for c, texts in ((meeting, schedule_texts(meeting)), (draft, reference_texts(draft)))}
+    prefixes = []
+
+    def responder(model, tokenizer, policy):
+        return lambda messages, tools: reply(next(scripts[messages[1]['content']]))
+
+    def unexpected(*args):
+        raise AssertionError('a message-feature router must not be served on reply-start features')
+
+    meeting_turns = set(public_case(meeting)['user_turns'])
+    monkeypatch.setattr(serving, 'cached_responder', responder)
+    monkeypatch.setattr(accelerator, 'boundary_feature', lambda model, tokenizer, policy, case, device: case['id'])
+    monkeypatch.setattr(routing, 'turn_feature', unexpected)
+    monkeypatch.setattr(routing, 'message_prefix', lambda *args: prefixes.append(args) or {'ids': []})
+    monkeypatch.setattr(routing, 'message_feature', lambda model, tokenizer, policy, user, device, prefix: user)
+    router = {'rule': 'centroid', 'feature': 'message-mean'}
+    monkeypatch.setattr(selector, 'choose', lambda gate, feature: feature in meeting_turns if gate is router
+                        else feature == draft['id'])
+    rows = development.routed_episodes('parent', {'U1': 'u1', 'L2': 'l2'}, None, 'separate_module', 'a2', router,
+                                       [meeting, draft])
+    assert [row['score']['routes'] for row in rows] == [['scheduling', 'scheduling'], ['drafting'] * len(draft['turns'])]
+    assert len(prefixes) == 1 and all(row['score']['passed'] for row in rows)
+    tagged = selector.fit_centroid({'a#0': [1.0, 0.0], 'b#0': [0.0, 1.0]}, {'a#0': (1.0, 1.0), 'b#0': (0.0, 1.0)},
+                                   1e-6, 'message-mean')
+    assert tagged['feature'] == 'message-mean' and tagged['sha256'] == identity(
+        {k: v for k, v in tagged.items() if k != 'sha256'})
 
 
 def test_latency_counts_each_selection_pass_once():
@@ -212,9 +280,9 @@ def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtim
     a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
     assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
     assert execution['gates']['stage1']['sha256'] == round4['integration']['integration_sha256']
-    declared = read(ROOT / 'config/experiments/assistant-growth-round4.json')['selectors']
-    assert execution['selectors'] == {'refit': declared['refit'], 'failed_ties': declared['failed_ties']} == {
-        'refit': True, 'failed_ties': False}
+    declared = read(ROOT / 'config/experiments/assistant-growth-router.json')['selectors']
+    assert execution['selectors'] == {key: declared[key] for key in ('refit', 'failed_ties', 'rule')} == {
+        'refit': True, 'failed_ties': False, 'rule': 'centroid'}
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

@@ -89,7 +89,8 @@
   },
   "selectors": {
     "refit": true,
-    "failed_ties": false
+    "failed_ties": false,
+    "rule": "centroid"
   },
   "contracts": {
     "config/experiments/assistant-growth-stage1.json": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
@@ -113,9 +114,12 @@
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/assistant-growth-development-separate-update-resources.json": "15960a95f1f56883217bb3aef8c7ba4c215a9f8662b6a4061e86890dca3220eb",
-    "config/experiments/assistant-growth-development-separate-module-resources.json": "d2dcea75f8333881a2c5c469dbe7c636ada8b6b358d3cf9d550e737fd775560d",
-    "config/experiments/assistant-growth-development-shared-resources.json": "b5daf9de7f290da1fb5b9f1e45a97d95ffdc702f26c396884e89048705d9a27a",
+    "config/experiments/assistant-growth-development-separate-update-resources.json": "5d9392adf89e2f7c55e683c580667c96834601a5b547343e18d16ad57ccda76c",
+    "config/experiments/assistant-growth-development-separate-module-resources.json": "41f2266b5ed9e119429e721f795fea102e6e8f16f5e185a3264187b7bbab2ff0",
+    "config/experiments/assistant-growth-development-shared-resources.json": "543d36ee322b5d9b867b0e3ab36f14103be638497fb00b5f02fae9b4d5cbbe5d",
+    "config/experiments/assistant-growth-router.json": "94d76b1cd36b33fd053ef8f2ea35231145e411f7584a3505d3e1085896712f69",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md": "242363c2d64f42db1b39da9c873686ddc5ed8352eaafa8c14ac7ec0a81703922",
+    "config/experiments/assistant-growth-development4-report.json": "e8569889cd8bb271b3acf18db0783a7e83f92c26fe2cb037c814c1a45a3640b2",
     "config/experiments/assistant-growth-round4.json": "e2a38ff17b1c7009d349f174cfa17911d6a39ea0a2fa269442372d5d7bff5ad8",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUND4.md": "c90d01cb599ec53dce2bc677666fe7ce8320fb206eaa1dd0898311ef3435cb36",
     "config/experiments/assistant-growth-round4-execution.json": "f434f03d000425cdfaba35f16f11d531790ecd0536d88272346e8dd9dcd27e5c",
@@ -148,6 +152,9 @@
     "config/experiments/assistant-growth-development-separate-update-resources.json",
     "config/experiments/assistant-growth-development-separate-module-resources.json",
     "config/experiments/assistant-growth-development-shared-resources.json",
+    "config/experiments/assistant-growth-router.json",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md",
+    "config/experiments/assistant-growth-development4-report.json",
     "config/experiments/assistant-growth-round4.json",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUND4.md",
     "config/experiments/assistant-growth-round4-execution.json",
@@ -190,6 +197,6 @@
   "gpu_launch_authorized": false,
   "attempts": 1,
   "serving": "prefix-cache",
-  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its scheduling unit, refits the version's selector from the pinned round-4 integration outcomes on this runtime's parent features, without turns both routes failed, and only then routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit. Each route is served with the prefix cache under its own instruction and tools in one calendar workspace.",
+  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its scheduling unit, refits the version's router from the pinned round-4 integration outcomes on this runtime's mean-centred parent features, choosing the nearer weighted class mean, without turns both routes failed, and only then routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit. Each route is served with the prefix cache under its own instruction and tools in one calendar workspace.",
   "interpretation": "The declared stage-1 development gate, assessed once all three versions finish: the candidate is the separate version with more scheduling and cross successes, a tie going to the low-rank module. Passing opens the sealed confirmation sets once; it is not admission, promotion or checklist credit."
 }

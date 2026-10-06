@@ -1,0 +1,24 @@
+{
+  "format": "neuroshard-assistant-growth-router/1",
+  "status": "Declared on October 5, 2026, after the round-4 development report and before any development rerun. The project owner chose this router: mean-centred features and the nearer weighted class mean, with the round-4 units and a development rerun.",
+  "amends": ["config/experiments/assistant-growth-stage1.json", "config/experiments/assistant-growth-round4.json"],
+  "development_report": "config/experiments/assistant-growth-development4-report.json",
+  "findings": "The round-4 candidate met the development gate's scheduling (18/24) and cross (6/8) levels and lost one drafting success, because its selector sent every turn of every case to the scheduling route. The A2 logistic recipe has now failed both ways. Fitted on GPU features with every tie counted for drafting, it sent every scheduling turn of the separate update to the drafting route. Refitted on CPU features without the turns both routes failed, it sent every turn to the scheduling route. Every turn feature shares a large component, the instruction and tools rendered before the user message, and the two kinds of turn differ only in a small part of it.",
+  "selectors": {
+    "refit": true,
+    "failed_ties": false,
+    "rule": "centroid",
+    "description": "Each development host computes the parent's features at the integration user turns on its own CPU runtime, as in round 4, subtracts their mean and normalises them. From the round-4 targets it forms each class's weighted mean: turns both routes always failed are left out, and other ties count for the drafting route with the weight of one episode. A turn goes to the scheduling route only if its centred, normalised feature is closer to the scheduling mean, and an exact tie keeps the drafting route. The constant rules apply when no example favours one side. Held-out weighted accuracy over four folds of integration cases is reported, not gated."
+  },
+  "unchanged": "Round 4's units U1, U2 and L2, the integration outcomes they produced, routing, the three versions, the development and confirmation gates, the comparison and the outcome rules. Nothing is trained.",
+  "confirmation": "If the candidate passes, the sealed confirmation opens once as declared for stage 1. Each confirmation host refits the same router from the same outcomes and must reproduce the selector development used.",
+  "budget": {
+    "spent_usd": 33.12,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1, rounds 2 to 4 and two developments cost $33.12. The rerun: development at most $18 on three CPU hosts, confirmation at most $47 on five CPU hosts; $98.12 within the unchanged $100 ceiling."
+  },
+  "training_execution_authorized": false,
+  "gpu_launch_authorized": false,
+  "native_promotion_authorized": false
+}

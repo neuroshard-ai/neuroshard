@@ -212,6 +212,34 @@ remain evidence, not readiness claims for this assistant.
   But the refitted selectors sent every turn, drafting included, to the scheduling
   route, and it lost one accepted drafting success. The A2 logistic recipe does not
   separate the two kinds of turn on these features. A3 has spent $33.12 of $100.
+  The project owner chose a [new router](docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md)
+  for a development rerun with the round-4 units. Each host centres its CPU turn
+  features and routes a turn to the nearer weighted class mean. Nothing is trained
+  ($98.12 in allowances, confirmation included, within the $100 ceiling).
+  [The rerun failed on routing](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT5_RESULTS.md)
+  ($4.05). The candidate kept every drafting success (22/24), but completed 15/24
+  scheduling and 2/8 cross, because the router (about 85% accurate) sent all four
+  reviews and three scheduling requests to the drafting route. A3 has spent $37.16;
+  another rerun and the confirmation would exceed the $100 ceiling.
+  The project owner raised the ceiling to $110 and chose a
+  [router that learns what each turn needs](docs/ASSISTANT_REPEATED_GROWTH_ROUTER2.md).
+  A turn is labelled for scheduling if its verified correct solution uses the
+  calendar, over 1,728 scheduling and 384 drafting training turns. The router is
+  fitted once on a CPU host, pinned, and served unchanged by development and, if it
+  passes, by the confirmation ($109.16 in allowances).
+  [The router is only 74% accurate](docs/ASSISTANT_REPEATED_GROWTH_ROUTER2_RESULTS.md)
+  ($1.82): 74.3% held out and 73.0% on the integration turns, below the 79% of
+  routing everything to scheduling. The labels are clean, so the parent's state at
+  the start of its reply is the limit. Development has not been run with it. A3 has
+  spent $38.98 of $110. The project owner chose to
+  [change the feature](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md) to the parent's mean
+  state over the user's own message. The shared prefix is computed once and each turn
+  extends it, at fit and at serve time. Same labels, refit once, then development
+  ($109.48 in allowances).
+  [The refit is 92.6% accurate on integration](docs/ASSISTANT_REPEATED_GROWTH_ROUTER3_RESULTS.md)
+  ($0.23), up from 73.0%, and 88.6% held out. Every error sent a scheduling or cross
+  turn to the drafting route; no drafting turn was misrouted. A3 has spent $39.21 of
+  $110.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

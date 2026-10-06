@@ -1,0 +1,77 @@
+{
+  "format": "neuroshard-assistant-growth-router3-report/1",
+  "source_commit": "3c6af575e52a2c0812e06d03372874ff236e6b9f",
+  "result_sha256": "8a0b9631e5e720e75b89cfcc7fe738873127383324fabc0fd1ae8838968a4ee8",
+  "execution_completed": true,
+  "error": null,
+  "decision": "The message-feature router was fitted on 2112 training turns (1664 needing the calendar). Held-out accuracy 0.886; integration accuracy 0.926 with 15 of 204 turns misrouted. It is pinned for development.",
+  "router": {
+    "turns": 2112,
+    "scheduling_turns": 1664,
+    "counts": {
+      "arm_better": 1664,
+      "parent_better": 448,
+      "ties": 0
+    },
+    "held_out_accuracy": 0.8863636363636364,
+    "integration_turns": 204,
+    "integration_accuracy": 0.9264705882352942,
+    "integration_errors": [
+      "schedule-0c28d3f7efbf#1",
+      "schedule-2e101727f35b#1",
+      "schedule-38a9ebf5c961#1",
+      "schedule-3c81f66cfd79#1",
+      "schedule-461e00a5ee7a#0",
+      "schedule-4b8c3c1bcb93#0",
+      "schedule-551f6c4cef30#1",
+      "schedule-6844720712ec#1",
+      "schedule-9ea9ae76d756#1",
+      "schedule-a70f33155dd5#1",
+      "schedule-b1b37b3f7683#1",
+      "schedule-bb63d29a3286#0",
+      "schedule-e10f759768fc#1",
+      "schedule-e5553b2ca349#1",
+      "schedule-e7562e293eaa#0"
+    ],
+    "features_sha256": "1c74a01eea7bea861238fb402cc4ea76556a8f708cad301514c5124b4a9ffd16",
+    "gate_sha256": "750692d442302b9b2c9e641dedfd41c3387a0a4925090c728349e7973d2fefce"
+  },
+  "router_file_sha256": "fcac676493f5e159464ca68b85cca1fd5a0c32ef60b77109a918ef797a484c43",
+  "feature_seconds": 587.182513487,
+  "wall_seconds": 619.4378309489999,
+  "peak_rss_bytes": 7739670528,
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "ci": {
+    "id": 37364729177,
+    "head_sha": "3c6af575e52a2c0812e06d03372874ff236e6b9f",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37364729177"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-05T21:34:27.085948+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-082beb12d5d289185"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 781.486597,
+    "conservative_compute_usd": 0.229757059518,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-05T22:03:36.637719+00:00",
+    "instances": [
+      {
+        "id": "i-082beb12d5d289185",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  }
+}

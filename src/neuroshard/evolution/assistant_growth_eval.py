@@ -102,7 +102,8 @@ def verify_units(directory, execution, version):
         if sha256(directory / pinned['file']) != pinned['sha256']:
             raise ValueError(f'{name} gates differ from their pinned digest')
         gates[name] = read(directory / pinned['file'])
-    return gates['a2']['arms']['update']['gate'], gates['stage1']['gates'][version]
+    turn = gates['router']['gate'] if 'router' in gates else gates['stage1']['gates'][version]
+    return gates['a2']['arms']['update']['gate'], turn
 
 
 def load_units(load_parent, spec, directory, execution, units):
@@ -144,9 +145,31 @@ def refit_selector(parent, tokenizer, integration, version, rules):
     features = {routing.turn_key(case['id'], turn): routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
                 for case in cases for turn, user in enumerate(public_case(case)['user_turns'])
                 if routing.turn_key(case['id'], turn) in rows}
-    gate = selector.fit(features, rows, plan['integration']['recipe'])
-    return gate, {**{k: v for k, v in gate.items() if k != 'weight'}, 'examples': len(rows),
-                  'features_sha256': identity(features), 'gate_sha256': identity(gate)}
+    recipe = plan['integration']['recipe']
+    if rules.get('rule') == 'centroid':
+        gate = selector.fit_centroid(features, rows, recipe['epsilon'])
+        extra = {'held_out_accuracy': held_out(features, rows, recipe['epsilon'])}
+    else:
+        gate, extra = selector.fit(features, rows, recipe), {}
+    return gate, {**{k: v for k, v in gate.items() if k not in ('weight', 'mean', 'arm', 'parent')}, **extra,
+                  'examples': len(rows), 'features_sha256': identity(features), 'gate_sha256': identity(gate)}
+
+
+def held_out(features, rows, epsilon, folds=4):
+    """Weighted accuracy of the centroid rule on each case's turns, fitted without that case's fold; reported only."""
+    from neuroshard.evolution import assistant_selector as selector
+
+    cases = sorted({key.rsplit('#', 1)[0] for key in rows})
+    fold = {case: index % folds for index, case in enumerate(cases)}
+    right = total = 0.0
+    for k in range(folds):
+        train = {key: row for key, row in rows.items() if fold[key.rsplit('#', 1)[0]] != k}
+        gate = selector.fit_centroid({key: features[key] for key in train}, train, epsilon)
+        for key, (target, weight) in rows.items():
+            if fold[key.rsplit('#', 1)[0]] == k:
+                right += weight * (selector.choose(gate, features[key]) == (target == 1.0))
+                total += weight
+    return right / total if total else None
 
 
 def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases):
@@ -158,9 +181,12 @@ def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, case
     drafting_unit, scheduling_unit = VERSIONS[version]
     route_policies = policies()
     drafting, scheduling = route_policies['drafting'], route_policies['scheduling']
+    prefix = (routing.message_prefix(parent, tokenizer, drafting, 'cpu') if turn_gate.get('feature') == 'message-mean'
+              else None)
 
     def select(turn, user):
-        feature = routing.turn_feature(parent, tokenizer, drafting, user, 'cpu')
+        feature = (routing.message_feature(parent, tokenizer, drafting, user, 'cpu', prefix) if prefix
+                   else routing.turn_feature(parent, tokenizer, drafting, user, 'cpu'))
         return 'scheduling' if selector.choose(turn_gate, feature) else 'drafting'
 
     rows = []
@@ -214,6 +240,8 @@ def worker(request_path):
             integration = read(units / execution['gates']['stage1']['file'])
             turn_gate, reply['selector'] = refit_selector(parent, tokenizer, integration, version, execution['selectors'])
             reply['selector']['seconds'] = time.monotonic() - begun
+        else:
+            reply['selector'] = {'rule': turn_gate['rule'], 'gate_sha256': identity(turn_gate)}
         models = load_units(lambda: reference.load_model(directory, 'baseline')[0], spec, units, execution,
                             VERSIONS[version])
         reply['units'] = {unit: execution['units'][unit]['trainable_sha256'] for unit in needed(version)}

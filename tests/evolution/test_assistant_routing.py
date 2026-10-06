@@ -92,6 +92,28 @@ def test_turn_targets_follow_success_rates_and_ties_keep_the_drafting_route():
                                 {'a': 2, 'b': 1, 'c': 1, 'd': 1}, failed_ties=False) == rows
 
 
+def test_a_message_feature_reuses_the_shared_prefix_and_matches_a_full_forward(tmp_path):
+    torch = pytest.importorskip('torch')
+    from test_assistant_experience import TEMPLATE, tiny_model
+    from test_granite_tokenizer import granite_like, load_tiny
+
+    directory = granite_like(tmp_path / 'granite')
+    (directory / 'chat_template.jinja').write_text(TEMPLATE)
+    tokenizer = load_tiny(directory)[0]
+    model = tiny_model(tokenizer)
+    prefix = routing.message_prefix(model, tokenizer, DRAFTING, 'cpu')
+    features = []
+    for user in ('Schedule a 45-minute review with the design team.', 'Change the recipient to the finance team.'):
+        ids = routing.turn_ids(tokenizer, DRAFTING, user)
+        assert ids[:len(prefix['ids'])] == prefix['ids'] and len(ids) > len(prefix['ids'])
+        with torch.no_grad():
+            full = model.model(input_ids=torch.tensor([ids])).last_hidden_state[0, len(prefix['ids']):].mean(dim=0)
+        features.append(routing.message_feature(model, tokenizer, DRAFTING, user, 'cpu', prefix))
+        assert torch.allclose(torch.tensor(features[-1]), full, atol=1e-5)
+        assert prefix['cache'].get_seq_length() == len(prefix['ids'])
+    assert features[0] != features[1]
+
+
 def test_a_turn_feature_renders_one_user_message_after_the_policy_instruction_and_tools():
     captured = {}
 
