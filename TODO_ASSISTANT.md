@@ -262,6 +262,10 @@ remain evidence, not readiness claims for this assistant.
   was exact on every sealed turn. Cohort 2 is not accepted. The separate unit lost no
   accepted drafting success and the shared update lost one, so the declared comparison
   holds, narrowly. The sealed scheduling sets are spent. A3 has spent $62.87 of $110.
+  [A diagnostic of the failures](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION_DIAGNOSTIC.md)
+  ($0): 76 of the 86 failed episodes saved the meeting on the right date at the wrong
+  start time, every attendee's calendar read. The interval arithmetic fails, not routing
+  or tool use.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
