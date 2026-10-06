@@ -265,7 +265,12 @@ remain evidence, not readiness claims for this assistant.
   [A diagnostic of the failures](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION_DIAGNOSTIC.md)
   ($0): 76 of the 86 failed episodes saved the meeting on the right date at the wrong
   start time, every attendee's calendar read. The interval arithmetic fails, not routing
-  or tool use.
+  or tool use. The project owner chose [round 5](docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md)
+  and raised A3's ceiling to $150: a deterministic free-slot tool in the calendar interface
+  for every system that serves scheduling, the unchanged control included, so a gain over
+  the control is learning, not the tool. Round 4's demonstrations are rewritten for the
+  tool and the units retrained; the calibrated router is kept. Fresh sealed scheduling,
+  cross and drafting sets are frozen in the declaration ($137.87 in allowances).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

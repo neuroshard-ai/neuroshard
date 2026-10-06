@@ -228,7 +228,7 @@ def integration_cases(plan, learning):
             + drafting_cases(learning, 'integration'))
 
 
-def integrate(load_parent, loaders, tokenizer, plan, learning, policies, execution, home):
+def integrate(load_parent, loaders, tokenizer, plan, learning, policies, execution, home, route_runs=ROUTE_RUNS):
     """Every route alone on every integration case, then each version's turn selector."""
     from neuroshard.evolution import assistant_selector as selector
 
@@ -241,7 +241,7 @@ def integrate(load_parent, loaders, tokenizer, plan, learning, policies, executi
     del parent
     release_accelerator()
     outcomes = {}
-    for index, (unit, route) in enumerate(ROUTE_RUNS):
+    for index, (unit, route) in enumerate(route_runs):
         model = loaders[unit]()
         runs = {case['id']: [] for case in cases}
         for temperature, count in ((0, stage['greedy']), (stage['temperature'], stage['samples'])):

@@ -20,10 +20,11 @@ def interface(policy):
     if name is None:
         return sandbox
     from neuroshard.evolution import assistant_calendar as calendar
+    from neuroshard.evolution import assistant_calendar_slots as slots
 
-    if name != calendar.INTERFACE:
+    if name not in (calendar.INTERFACE, slots.INTERFACE):
         raise ValueError('unknown workspace interface')
-    return calendar
+    return slots if name == slots.INTERFACE else calendar
 
 
 def execute(case, respond, policy, *, _rescore=True):
