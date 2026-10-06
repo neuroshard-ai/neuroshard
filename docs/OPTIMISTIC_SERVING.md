@@ -151,7 +151,10 @@ the replay. On the real assistant that replay took 12.3–13.1 s per validator
   the background, one at a time, and cache the verdicts. Only challenges whose
   deposits are locked on chain are replayed.
 - **Prove.** `prove` lands the proof within the proof window, `proof_blocks` after
-  the opening. A proof that verifies slashes the owner and returns the deposit with
+  the opening, and only in a later block than the challenge. A proof in the
+  challenge's own block is refused before any replay, because its deposit is not yet
+  committed: a proposer could otherwise make every validator replay a proof whose
+  deposit would never be locked. A proof that verifies slashes the owner and returns the deposit with
   the challenger's reward; the deposits of the job's other open challenges return
   to their challengers. A proof that does not verify is refused, and its challenge
   stays open.

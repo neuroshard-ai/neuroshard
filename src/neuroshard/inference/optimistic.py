@@ -260,11 +260,17 @@ def opening(state, body):
 
 
 def proving(state, body):
-    """The request a ``prove`` transaction's proof must establish: that of an open challenge."""
+    """The request a ``prove`` transaction's proof must establish: that of a challenge opened in an earlier block.
+
+    A challenge opened in the same block has no committed deposit yet, so its proof is refused
+    before any replay.
+    """
     job = state['jobs'].get(body['job_id'])
     challenge = job['challenges'].get(hex_digest(body['challenge_id'])) if job else None
     if challenge is None:
         raise ValueError('No open challenge to prove')
+    if challenge['deadline'] - state['params']['proof_blocks'] >= state['height']:
+        raise ValueError('A proof must come in a later block than its challenge')
     return challenge_request(state, body['job_id'], challenge)
 
 

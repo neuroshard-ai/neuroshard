@@ -32,14 +32,21 @@ def test_target_is_the_pinned_round4_served_addition_episodes():
 
 
 def test_uploaded_arm_and_gate_must_match_the_development_pins(tmp_path):
-    (tmp_path / 'addition-checkpoint').mkdir()
-    (tmp_path / 'addition-checkpoint' / 'trainable.safetensors').write_bytes(b'tensors')
     digest = hashlib.sha256(b'tensors').hexdigest()
-    save(tmp_path / 'addition-checkpoint' / 'manifest.json', {'trainable_sha256': digest})
-    save(tmp_path / 'integration.json', {'arms': {'addition': {'gate': {'rule': 'constant-arm'}}}})
+    for kind in ('addition', 'update'):
+        (tmp_path / f'{kind}-checkpoint').mkdir()
+        (tmp_path / f'{kind}-checkpoint' / 'trainable.safetensors').write_bytes(b'tensors')
+        save(tmp_path / f'{kind}-checkpoint' / 'manifest.json', {'arm': kind, 'trainable_sha256': digest})
+    save(tmp_path / 'integration.json', {'arms': {'addition': {'gate': {'rule': 'constant-arm'}},
+                                                  'update': {'gate': {'rule': 'constant-parent'}}}})
     plan = {**PLAN, 'arm': {'trainable_sha256': digest, 'integration_sha256': sha256(tmp_path / 'integration.json')}}
     arm, gate = serving.arm_files(plan, tmp_path)
     assert arm == tmp_path / 'addition-checkpoint' and gate == {'rule': 'constant-arm'}
+    update = {**plan, 'arm': {**plan['arm'], 'kind': 'update'}}
+    assert serving.arm_files(update, tmp_path) == (tmp_path / 'update-checkpoint', {'rule': 'constant-parent'})
+    save(tmp_path / 'update-checkpoint' / 'manifest.json', {'arm': 'addition', 'trainable_sha256': digest})
+    with pytest.raises(ValueError, match='arm differs'):
+        serving.arm_files(update, tmp_path)
     with pytest.raises(ValueError, match='arm differs'):
         serving.arm_files({**plan, 'arm': {**plan['arm'], 'trainable_sha256': '0' * 64}}, tmp_path)
     with pytest.raises(ValueError, match='gate differs'):

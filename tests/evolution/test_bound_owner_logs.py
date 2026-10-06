@@ -136,12 +136,13 @@ def verdict(state, store, partitions, auditor, session, log_key, proof):
 
 
 def proof_request(state, auditor, session, log_key, root):
-    """The state with an auditor's challenge naming ``root`` open, and what a proof of it must establish.
+    """The next block's state with an auditor's challenge naming ``root`` open, and what a proof of it must establish.
 
     Neither transaction is kept: the auditor's nonce is restored.
     """
     opening = auditor.sign('challenge', job_id=session['job_id'], log_key=log_key, proof_root=root)
     opened = ledger.transition(state, opening, None)
+    opened = ledger.advance(opened, opened['height'] + 1)
     request = ledger.admit(opened, auditor.sign('prove', job_id=session['job_id'],
                                                 challenge_id=ledger.transaction_id(opening)))[2]
     auditor.nonce -= 2
@@ -264,6 +265,7 @@ def test_an_old_log_is_refused_and_relabelled_old_work_is_provable_without_repla
     auditor = market['people']['auditor']
     opening = auditor.sign('challenge', job_id=session['job_id'], log_key=market['public'][1], proof_root=root)
     state = ledger.transition(state, opening, None)
+    state = ledger.advance(state, state['height'] + 1)
     proven = auditor.sign('prove', job_id=session['job_id'], challenge_id=ledger.transaction_id(opening))
     state = ledger.transition(state, proven, granite_audit.challenge_checker(store, {}))
     assert state['results'][session['job_id']]['status'] == 'fraud'
