@@ -420,6 +420,9 @@ No automatic training or admission follows a baseline. This is not a public assi
   More AWS instances owned by us do not provide independent ownership. Two integration
   gaps found in review are fixed: a proof is judged only for a challenge committed in an
   earlier block, and sharded serving loads the accepted update as well as an added module.
+  [On the real model](docs/GRANITE_SHARD_SERVING_UPDATE_RESULTS.md), the accepted assistant
+  served across three owners reproduced all 24 single-host development episodes token for
+  token ($1.96 over two attempts).
   The [operator kit](docs/OPERATOR_KIT.md) is the one page to send volunteers.
 - [ ] **A6 — Sustainable public assistant.** Versioned chat/tool/memory interface,
   consent and private-data boundaries, join/recovery guides, monitored quality,
