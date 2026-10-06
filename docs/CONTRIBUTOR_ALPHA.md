@@ -33,10 +33,10 @@ another machine managed by the project does not count as another administrator.
 
 The source client provides an offline path for complete tool-use demonstrations.
 It runs on the supported Linux development environment without downloading model
-weights. Install this branch in a separate virtual environment:
+weights. Install the main branch in a separate virtual environment:
 
 ```bash
-git clone --branch development/modular-assistant https://github.com/neuroshard-ai/neuroshard.git
+git clone --branch main https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
 python3 -m venv .venv
 source .venv/bin/activate

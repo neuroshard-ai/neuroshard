@@ -94,6 +94,25 @@ def fit_centroid(features, rows, epsilon, feature=None):
     return gate
 
 
+def margin(gate, feature):
+    """A centroid gate's cosine to the arm's class mean minus its cosine to the parent's."""
+    if gate['rule'] != 'centroid':
+        raise ValueError('only a centroid gate has a margin')
+    x = torch.nn.functional.normalize(torch.tensor(feature, dtype=torch.float32) - torch.tensor(gate['mean']),
+                                      dim=0, eps=gate['epsilon'])
+    return float(x @ torch.tensor(gate['arm']) - x @ torch.tensor(gate['parent']))
+
+
+def shifted(gate, shift):
+    """The centroid gate that selects the arm when the margin exceeds ``-shift``; the digest covers the shift."""
+    if gate['rule'] != 'centroid' or not shift >= 0:
+        raise ValueError('a shift applies to a centroid gate and is never negative')
+    moved = {key: value for key, value in gate.items() if key != 'sha256'}
+    moved['shift'] = float(shift)
+    moved['sha256'] = identity(moved)
+    return moved
+
+
 def choose(gate, feature):
     """True selects the trained arm for the whole episode; an exact tie selects the parent."""
     if gate['rule'] == 'constant-parent':
@@ -101,6 +120,8 @@ def choose(gate, feature):
     if gate['rule'] == 'constant-arm':
         return True
     if gate['rule'] == 'centroid':
+        if 'shift' in gate:
+            return margin(gate, feature) > -gate['shift']
         x = torch.nn.functional.normalize(torch.tensor(feature, dtype=torch.float32) - torch.tensor(gate['mean']),
                                           dim=0, eps=gate['epsilon'])
         return bool(x @ torch.tensor(gate['arm']) > x @ torch.tensor(gate['parent']))

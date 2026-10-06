@@ -6,7 +6,7 @@ import pytest
 
 from neuroshard.evolution import assistant_growth_confirm as confirm
 from neuroshard.evolution import assistant_workflow as workflow
-from neuroshard.evolution.modular_reference_execution import ROOT, save, sha256
+from neuroshard.evolution.modular_reference_execution import ROOT, read, save, sha256
 
 from test_assistant_growth_eval import PLAN, SETS, episode
 from test_assistant_routing import CALENDAR, DRAFTING, scripted
@@ -106,6 +106,37 @@ def test_each_confirmation_profile_runs_one_system_with_its_uploaded_units():
         assert cloud.UPLOAD_PROFILES[profile] == confirm.UPLOADED
         assert cloud.GRANITE_PROFILES[profile][0] == 'assistant_growth_confirm'
         assert 5 * cloud.LONG_CPU_PROFILES[profile][1] <= 47
+
+
+def test_confirmation_inventory_pins_the_development_pass_and_the_router_it_served():
+    from test_assistant_growth_baseline import cloud_module
+
+    execution = read(ROOT / confirm.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources']) and confirm.SCRIPT in execution['sources']
+    assert confirm.development_pass(execution) == 'separate_module'
+    development = read(ROOT / 'config/experiments/assistant-growth-development-execution.json')
+    assert execution['units'] == development['units'] and execution['gates'] == development['gates']
+    report = read(ROOT / execution['development_report']['path'])
+    pinned = {version: report['report']['versions'][version]['selector']['gate_sha256']
+              for version in ('separate_module', 'shared')}
+    assert execution['selectors'] == {'router': 'pinned', 'gate_sha256': pinned}
+    canonical = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
+    assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
+    assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
+    cloud = cloud_module()
+    total = 0
+    for profile, system in confirm.PROFILES.items():
+        resources = cloud.resources(profile)
+        assert not resources['gpu'] and resources['instance_type'] == 'r7i.4xlarge'
+        assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
+                + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
+        units = {f"{execution['units'][unit]['checkpoint']}/{name}"
+                 for unit in confirm.units(system, 'separate_module') for name in ('manifest.json', 'trainable.safetensors')}
+        assert set(resources['upload']['files']) == units | {gate['file'] for gate in execution['gates'].values()}
+        total += resources['planning_cap_usd']
+    assert total <= 47
 
 
 def test_importing_confirmation_does_not_load_torch():

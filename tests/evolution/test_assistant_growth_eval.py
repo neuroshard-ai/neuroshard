@@ -279,10 +279,14 @@ def test_development_inventory_pins_units_gates_sources_and_the_canonical_runtim
     assert execution['units']['U1']['trainable_sha256'] == read(ROOT / PLAN['plan'])['cohort1']['trainable_sha256']
     a2 = read(ROOT / 'config/experiments/assistant-experience-development-execution.json')
     assert execution['gates']['a2']['sha256'] == a2['arms']['integration_sha256']
-    assert execution['gates']['stage1']['sha256'] == round4['integration']['integration_sha256']
-    declared = read(ROOT / 'config/experiments/assistant-growth-router.json')['selectors']
-    assert execution['selectors'] == {key: declared[key] for key in ('refit', 'failed_ties', 'rule')} == {
-        'refit': True, 'failed_ties': False, 'rule': 'centroid'}
+    router = read(ROOT / 'config/experiments/assistant-growth-router4-report.json')
+    assert router['execution_completed'] and router['development_runs']
+    assert execution['gates'] == {'a2': execution['gates']['a2'],
+                                  'router': {'file': 'router.json', 'sha256': router['router_file_sha256']}}
+    assert execution['selectors'] == {'router': 'pinned'}
+    assert execution['router4'] == {
+        'result_sha256': sha256(ROOT / 'config/experiments/assistant-growth-router4-result.json'),
+        'report_sha256': sha256(ROOT / 'config/experiments/assistant-growth-router4-report.json')}
     assert not execution['training_authorized'] and not execution['gpu_launch_authorized']
 
 

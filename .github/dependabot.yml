@@ -8,6 +8,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # requirements.txt includes the frozen docs runtimes, so version updates from here edit them too.
+    open-pull-requests-limit: 0
     # The numerical stack is pinned by the testnet runtime and every execution contract.
     ignore:
       - dependency-name: torch
