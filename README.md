@@ -52,15 +52,15 @@ at 9/64. It is not a deployable assistant. The subsequent
 failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
 no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
 uses a capable pretrained foundation, bounded learned modules and actual hardware
-shards. Three of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
+shards. Four of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
 a [first learned capability](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) that lifts fresh workspace
-conversations from 62% to 95% with no earlier success lost (A2), and [actual sharding](docs/A4_SHARDING_REVIEW.md)
-(A4). Repeated growth (A3) is under way. Its first new cohort, meeting scheduling, failed a
-first sealed confirmation on the arithmetic over busy times (117/192 against 154). With a
-deterministic free-slot tool given to every system, the previous version included, it
-[was accepted](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md): 192/192 fresh sealed
-scheduling episodes against the previous version's 68, with every drafting success kept. An
-upgrade cohort remains. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
+conversations from 62% to 95% with no earlier success lost (A2), [repeated growth](docs/A3_REPEATED_GROWTH_REVIEW.md)
+(A3) and [actual sharding](docs/A4_SHARDING_REVIEW.md) (A4). In A3 the assistant learned meeting
+scheduling as a separate unit: [192/192 fresh sealed scheduling episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md)
+against 68 for the previous version given the same free-slot tool, with every drafting success
+kept. An upgrade of drafting then [solved 192/192 sealed drafting episodes](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)
+against 183, losing nothing and serving faster. The tasks are fictional workspace grammars, not
+open-ended work. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
