@@ -174,14 +174,18 @@ def held_out(features, rows, epsilon, folds=4):
     return right / total if total else None
 
 
-def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases):
-    """One version served turn by turn. The A2 gate chooses, once per episode, the drafting route's model."""
+def routed_episodes(parent, models, tokenizer, version, a2_gate, turn_gate, cases, *, units=None,
+                    route_policies=None):
+    """One version served turn by turn. The A2 gate chooses, once per episode, the drafting route's model.
+
+    ``units`` and ``route_policies`` serve another system's drafting and scheduling units under its own policies.
+    """
     from neuroshard.evolution import assistant_experience_run as accelerator
     from neuroshard.evolution import assistant_selector as selector
     from neuroshard.evolution.assistant_serving import cached_responder
 
-    drafting_unit, scheduling_unit = VERSIONS[version]
-    route_policies = policies()
+    drafting_unit, scheduling_unit = units or VERSIONS[version]
+    route_policies = route_policies or policies()
     drafting, scheduling = route_policies['drafting'], route_policies['scheduling']
     prefix = (routing.message_prefix(parent, tokenizer, drafting, 'cpu') if turn_gate.get('feature') == 'message-mean'
               else None)

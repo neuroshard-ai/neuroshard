@@ -1,0 +1,162 @@
+{
+  "format": "neuroshard-assistant-growth-cohort3-report/1",
+  "cohort": 3,
+  "source_commit": "60f67934206181d2bc1e45e28d92bc57fac361b8",
+  "result_sha256": "95596c27b2f327dfa872549e8f07bdd1de6bfcdbbe0ace1baebfd29bc4e944e6",
+  "execution_completed": true,
+  "error": null,
+  "gpu": "NVIDIA A10G",
+  "max_batch": 16,
+  "phases_seconds": {
+    "demonstrate": 25.895271270000023,
+    "verify_replay": 17.094618939999975,
+    "train": 1069.614406504,
+    "integrate": 1497.483919455
+  },
+  "peak_gpu_bytes": 13812150272,
+  "wall_seconds": 2697.788149122,
+  "collection": {
+    "cases": 1248,
+    "complete": 1248,
+    "by_family": {
+      "date": 176,
+      "copy": 176,
+      "reschedule": 96,
+      "sum": 176,
+      "difference": 176,
+      "recipient": 96,
+      "scope": 176,
+      "latest": 176
+    },
+    "by_split": {
+      "train": 256,
+      "train2": 256,
+      "train3": 256,
+      "compose1": 240,
+      "compose2": 240
+    },
+    "replies": 8422,
+    "two_call_replies": 1058,
+    "demonstrations_sha256": "3c82ea954896936499d1639dbb68f8110d7dcaf632824b72f3d154ac9ef89691",
+    "trajectories_sha256": "09a745c4536b4f18dd48fc930472358f4cab875ba5595d47b7eb64c6c964be43"
+  },
+  "decision": "Cohort 3 trained L3 for 512 steps on 1248 verified drafting demonstrations. Integration, greedy: U1 58/64, L3 64/64; L3 gained 6 and lost 0. Development runs next.",
+  "units": {
+    "U1": {
+      "checkpoint": "update-checkpoint",
+      "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865",
+      "source": "round-4 update, accepted by A2"
+    },
+    "L3": {
+      "checkpoint": "module-checkpoint",
+      "trainable_sha256": "84e786957757e0085c9991cf5ed4809838af408914830d346d84cbaf069b6a19",
+      "trainable_parameters": 1048576,
+      "steps": 512,
+      "final_loss": 0.0018339676457799214,
+      "seconds": 1069.169359056,
+      "tokens_processed": 4918852,
+      "schedule_sha256": "2a9070c6796e2cc60e2ba9a6d473ae9588a4bb03a11ed669a8f140e091304ca5",
+      "roots": {
+        "experience": "c5cb7cab1698617602d820411c6e182940c386d274c4724de59fafe44d019997",
+        "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+        "plan": "b1197b4e330829346d7ba49d1bcacd14e33d6f06d5766c607c7be7b13909f996"
+      },
+      "tensors": 32
+    }
+  },
+  "integration": {
+    "greedy": {
+      "U1-drafting": 58,
+      "L3-drafting": 64
+    },
+    "sampled": {
+      "U1-drafting": 119,
+      "L3-drafting": 127
+    },
+    "gained": [
+      "workflow-526e755a8105",
+      "workflow-5efd5a4bc697",
+      "workflow-945abe21d245",
+      "workflow-caec1c88890b",
+      "workflow-dcbfe9cbf0a7",
+      "workflow-f04544b4ccce"
+    ],
+    "lost": [],
+    "cases": 64,
+    "greedy_by_family": {
+      "U1-drafting": {
+        "copy": 7,
+        "date": 8,
+        "difference": 6,
+        "latest": 6,
+        "recipient": 8,
+        "reschedule": 8,
+        "scope": 7,
+        "sum": 8
+      },
+      "L3-drafting": {
+        "copy": 8,
+        "date": 8,
+        "difference": 8,
+        "latest": 8,
+        "recipient": 8,
+        "reschedule": 8,
+        "scope": 8,
+        "sum": 8
+      }
+    },
+    "integration_sha256": "f8931cdcce63891b2b434371dce44da45cee7b90bf9b0db83c9fbded79c9a2db"
+  },
+  "development_opened": false,
+  "confirmation_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "ci": {
+    "id": 37622874605,
+    "head_sha": "60f67934206181d2bc1e45e28d92bc57fac361b8",
+    "conclusion": "success",
+    "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37622874605"
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-07T14:13:57.683682+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-02eadc21786e99905"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 3236.679614,
+    "conservative_compute_usd": 1.0896821367133334,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-07T14:14:53.929516+00:00",
+    "instances": [
+      {
+        "id": "i-02eadc21786e99905",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  },
+  "placement_attempts": [
+    {
+      "home": ".neuroshard/assistant-growth-cohort3-20261007",
+      "error": "no declared instance type could be placed: [{'instance_type': 'g5.2xlarge', 'subnet': 'subnet-06a30cbe7b35238a9', 'code': 'InsufficientInstanceCapacity'}]",
+      "resources_finished": {
+        "finished_utc": "2026-10-07T13:17:06.705592+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [],
+        "instance_type": null,
+        "conservative_instance_seconds": 12.227258,
+        "conservative_compute_usd": 0.004116510193333334,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    }
+  ],
+  "conservative_compute_usd": 1.0937986469066667
+}

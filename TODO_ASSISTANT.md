@@ -294,6 +294,9 @@ remain evidence, not readiness claims for this assistant.
   calls; the scheduling route and router are unchanged. It must gain at least 5 sealed drafting
   episodes over the previous system, lose no success anywhere, and stay within a declared
   resource budget, on fresh sealed sets frozen now ($144.78 in allowances).
+  [L3 solved every drafting integration case](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_RESULTS.md)
+  ($1.09): 64/64 greedy against U1's 58, gaining 6 and losing none, and 127/128 sampled
+  against 119. Development runs next. A3 has spent $92.27 of $150.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

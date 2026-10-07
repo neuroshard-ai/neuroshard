@@ -1,0 +1,349 @@
+{
+  "binding": {
+    "freeze": {
+      "commit": "60f67934206181d2bc1e45e28d92bc57fac361b8",
+      "sources": {
+        "config/experiments/assistant-growth-cohort3.json": "b8fd55a681d1136ff298a6249879a4d77f5fdd4977ad2bf4947b3c119b1cb82b",
+        "docs/ASSISTANT_REPEATED_GROWTH_COHORT3.md": "949e01cf9e164b8e969ff92e35e113aab59e256bbcdd76648a05b34e3fd15f77",
+        "config/experiments/assistant-growth-confirmation2-report.json": "64e3ebf1bd8ca951c3c2f6f84c9fafebf7bfb45e78bc1c43caead6d7578dd859",
+        "config/experiments/assistant-growth-development7-report.json": "d5224238e1ac1102e4d5297de26a0cb30f5188091bd58630b0d8df22888446b8",
+        "config/experiments/assistant-workflow-data-confirmation6.json": "103cf688b78be02cb5a297532af7305372b574cfdb75de728172a4a60a86096e",
+        "config/experiments/assistant-schedule-data-confirmation3.json": "923c3c4974e3d3c9d625bd9dbdaeaa18ecda9dcef57ac28f3320e4985b386f6d",
+        "config/experiments/assistant-workflow-policy.json": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc",
+        "config/experiments/assistant-workflow-policy-calendar.json": "22b7351ec748265b6f22c5c3b8c83e5a6e80792c67e1f11540c6501d0574842e",
+        "config/experiments/assistant-workflow-policy-calendar-slots.json": "59a6d4c026f2f2832421b7c44e931e602e22d6dfc9bc9361672866a38984153a",
+        "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
+        "config/experiments/assistant-workflow-data-growth.json": "23f57513919216e1a063f7f06f434cd6b4528f825d03ca68a876079ea13d8716",
+        "config/experiments/assistant-workflow-data-compose.json": "f3d175f896bd71fc6b9a23f14b6a7e8d40d4090e0ccbc0f77a30a01d0f38d6e9",
+        "config/experiments/assistant-experience-growth.json": "28722973d9d33aa07a6452f5ec01b54e176b34c6c2c8346f83e82b467ace28e5",
+        "config/experiments/assistant-experience-compose.json": "1b2cd591e7d9ee6778e0d7eae1baca0af2ae34899ed88124bfefe914e625182f",
+        "config/experiments/assistant-experience-learning.json": "07f034ee5d934e9bb3dd62401635ceec4e4c1ca424b049aedb17d94095945f4c",
+        "config/experiments/assistant-growth-stage1.json": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+        "docs/ASSISTANT_REPEATED_GROWTH_STAGE1.md": "224e64998e5fae9c9f055032148f6dd44d45c33f23be4525066a768310fb8c09",
+        "config/experiments/assistant-growth-execution.json": "37b08b6ef05763eaa2136fe863e38c9df861b6d8bd70f96e9929e9f617caae67",
+        "config/experiments/assistant-growth.json": "5ed81ffe5716d86c83fadac180171c4c44afa5b912fefcd298d3169bc2824333",
+        "docs/ASSISTANT_REPEATED_GROWTH.md": "c07202bc657f1864c074cc5c325564396d4a8d152d041a5c1072f0e1dbbf8c53",
+        "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
+        "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
+        "docs/assistant-experience-requirements.txt": "cb123f943daffd95858805a6a9c57fa99bcb4744f3f5945bd3ee63756e488654",
+        "config/experiments/assistant-growth-cohort3-resources.json": "4e790698c0b6dc6c4eca53f73b2297277a3ea9f9aa4dc59e05f308749cb18a11",
+        "config/experiments/assistant-growth-cohort3-execution.json": "49fef50a837b8af18cdcba9a21af89ca3c2b44587ac341ce437a8423856871ce",
+        "src/neuroshard/__init__.py": "4ed35ca7a44e55cdd74e6a10b6e3cc3523258456a21aee45159b2dea3a0c0266",
+        "src/neuroshard/evolution/__init__.py": "01db1888cb7b1947c173c0fb401427b0339812f5b3aea68db97d09d60cb28b3d",
+        "src/neuroshard/evolution/assistant_calendar.py": "06e7a5cbe63bd0ea2552520db636f972bfbe5a387dfad8efed1f5c1fa4f399ce",
+        "src/neuroshard/evolution/assistant_calendar_slots.py": "3b2c6be488fe1743035a5e740afc68814dc9c2fffb39817be05c762aa01073a5",
+        "src/neuroshard/evolution/assistant_drafting_demonstration.py": "d96c869e86550aaf1a3b6e3196bf70cd583836bd4cfd35de0ae8c7d8f048b89a",
+        "src/neuroshard/evolution/assistant_experience.py": "49eb0807d2e418b6d1e8449f4a05015111def9313413c9bd9b86b7be07e4f61a",
+        "src/neuroshard/evolution/assistant_experience_run.py": "67162e1ded297ae57d3e4d85b517b70eb398181a8d42f0a96888c9df1a6e0de2",
+        "src/neuroshard/evolution/assistant_experience_train.py": "ff0987a433cb69a7a3f5a11c601da89400c8376982719cfa8c4adb0b4e61a138",
+        "src/neuroshard/evolution/assistant_growth_cohort3.py": "60f70c60eafddfe39c2499aeff19c2b73b8cc840b16a170c2492df60626a785a",
+        "src/neuroshard/evolution/assistant_growth_run.py": "d14250343f638dbe508ad6a0a34b0dc5ed166d02748e7bb3e1e633e8e16513b1",
+        "src/neuroshard/evolution/assistant_replay.py": "ee09fd51dabee0762d1e0b20708bb641e8a9d8e24e6b78e8efcfd4912ee6f356",
+        "src/neuroshard/evolution/assistant_rollout.py": "7de41baf3f013338427262c9761ad9bc29fc4575750f03a15971fb9029d73c0c",
+        "src/neuroshard/evolution/assistant_routing.py": "8074476009a5114c503bcea5a1163cf8382d6744f0f0f1300278b778a5d2e5a1",
+        "src/neuroshard/evolution/assistant_schedule_data.py": "2380bd1eed92657088cc57568e8fc3ca311ea9b06eb38ba057a77865639de4b1",
+        "src/neuroshard/evolution/assistant_selector.py": "d43dae657082bd3a447962b665de985853e67e77d9862547d4889cab91b43fe7",
+        "src/neuroshard/evolution/assistant_workflow.py": "735d0b229bae6391dd8f8de99cb17520718ca6c1502046769e9ed1b093ed5be4",
+        "src/neuroshard/evolution/assistant_workflow_data.py": "b621319f85184f1a2adeda25adf2d8b33259c813178778d70fda7e5aea3bb543",
+        "src/neuroshard/evolution/assistant_workspace.py": "d94b4e160752d52f5d6f84149f00a915d65f0480f1164a8547cd2ea5bca1768c",
+        "src/neuroshard/evolution/granite_reference.py": "7da36fdb7910e2e399808c462dec1c1b449ca860635eebe9674cb1e5eca58b3b",
+        "src/neuroshard/evolution/granite_tokenizer.py": "12617bb30d6916064fba499fce6755c894598ff25365f09fbd828a80a45c1580",
+        "src/neuroshard/evolution/modular_reference.py": "7201ff7fee2c651ec8a8831da884284a75bb9b09a4d8aecd4805e99a2629c065",
+        "src/neuroshard/evolution/modular_reference_execution.py": "7bed17d4fde0795845e222a00e8417d04adb42ea3127515b3212b434a91bc5ff",
+        "src/neuroshard/evolution/modular_tools.py": "1083a97b45bdab3b1366d3a93c2f516de31c22833de31a5ee727de727c95212f",
+        "src/neuroshard/version.py": "a4cb53992521b7e5ed6d1ffb0e8cfa6ec42aa2924977cad9f08f33cb61f0c280",
+        "scripts/run_assistant_growth_cohort3.py": "2638b72835a84a97a28087f0eb7ec8b1e57c0aed49665bd8d98328f51e3ef0c4",
+        "scripts/modular_reference_cloud.py": "a8fd26c7443b13a7eebc61f4513f134679fcbb255eb83ea9a418678e14f950e9"
+      },
+      "packages": {
+        "annotated-doc": "0.0.5",
+        "anyio": "4.15.1",
+        "certifi": "2026.7.22",
+        "click": "8.5.0",
+        "cuda-bindings": "12.9.4",
+        "cuda-pathfinder": "1.8.2",
+        "filelock": "4.0.4",
+        "fsspec": "2026.9.0",
+        "h11": "0.16.0",
+        "hf-xet": "1.6.0",
+        "httpcore": "1.0.9",
+        "httpx": "0.28.1",
+        "huggingface_hub": "1.33.0",
+        "idna": "3.20",
+        "Jinja2": "3.1.6",
+        "markdown-it-py": "4.2.0",
+        "MarkupSafe": "3.0.3",
+        "mdurl": "0.1.2",
+        "mpmath": "1.3.0",
+        "networkx": "3.7",
+        "numpy": "2.2.6",
+        "nvidia-cublas-cu12": "12.8.4.1",
+        "nvidia-cuda-cupti-cu12": "12.8.90",
+        "nvidia-cuda-nvrtc-cu12": "12.8.93",
+        "nvidia-cuda-runtime-cu12": "12.8.90",
+        "nvidia-cudnn-cu12": "9.10.2.21",
+        "nvidia-cufft-cu12": "11.3.3.83",
+        "nvidia-cufile-cu12": "1.13.1.3",
+        "nvidia-curand-cu12": "10.3.9.90",
+        "nvidia-cusolver-cu12": "11.7.3.90",
+        "nvidia-cusparse-cu12": "12.5.8.93",
+        "nvidia-cusparselt-cu12": "0.7.1",
+        "nvidia-nccl-cu12": "2.27.5",
+        "nvidia-nvjitlink-cu12": "12.8.93",
+        "nvidia-nvshmem-cu12": "3.4.5",
+        "nvidia-nvtx-cu12": "12.8.90",
+        "packaging": "26.3",
+        "Pygments": "2.21.0",
+        "PyYAML": "6.0.3",
+        "regex": "2026.9.10",
+        "rich": "15.0.0",
+        "safetensors": "0.7.0",
+        "setuptools": "84.0.0",
+        "shellingham": "1.5.4",
+        "sympy": "1.14.0",
+        "tokenizers": "0.22.2",
+        "torch": "2.10.0+cu128",
+        "tqdm": "4.70.1",
+        "transformers": "5.5.4",
+        "triton": "3.6.0",
+        "typer": "0.27.2",
+        "typing_extensions": "4.16.0"
+      },
+      "python": "3.12.12",
+      "gpus": [
+        "NVIDIA A10G"
+      ]
+    },
+    "profile": "assistant-growth-cohort3-gpu",
+    "plan_sha256": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+    "declaration_sha256": "b8fd55a681d1136ff298a6249879a4d77f5fdd4977ad2bf4947b3c119b1cb82b"
+  },
+  "execution_completed": true,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "development_opened": false,
+  "confirmation_opened": false,
+  "reply": {
+    "binding": "76080f83ca1f9b78b813a3c251926ae9b6fb74a9dea6865887078f352567efb6",
+    "execution_completed": true,
+    "phases": {
+      "demonstrate": 25.895271270000023,
+      "verify_replay": 17.094618939999975,
+      "train": 1069.614406504,
+      "integrate": 1497.483919455
+    },
+    "gpu": "NVIDIA A10G",
+    "max_batch": 16,
+    "tokenizer": {
+      "runtime_class": "TokenizersBackend",
+      "pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
+      "splitting_sha256": "c0550637596ccb7e70bf2cd4f0e297f1734b29e7eb868a407db8cd6e885d2581",
+      "control_tokens": {},
+      "fixture_count": 16,
+      "fixture_sha256": "57351890555a59a2ec04eed0a71589c2ebbd8a832606e96180c12db56f343bbb",
+      "eos_token_id": 100257,
+      "pad_token_id": 100256,
+      "transformers": "5.5.4",
+      "tokenizers": "0.22.2",
+      "parent_tokenizer_digest": "d7e1714703eb97dcef3435aa50eb1de1cf241d62"
+    },
+    "collection": {
+      "cases": 1248,
+      "complete": 1248,
+      "by_family": {
+        "date": 176,
+        "copy": 176,
+        "reschedule": 96,
+        "sum": 176,
+        "difference": 176,
+        "recipient": 96,
+        "scope": 176,
+        "latest": 176
+      },
+      "by_split": {
+        "train": 256,
+        "train2": 256,
+        "train3": 256,
+        "compose1": 240,
+        "compose2": 240
+      },
+      "replies": 8422,
+      "two_call_replies": 1058,
+      "demonstrations_sha256": "3c82ea954896936499d1639dbb68f8110d7dcaf632824b72f3d154ac9ef89691",
+      "trajectories_sha256": "09a745c4536b4f18dd48fc930472358f4cab875ba5595d47b7eb64c6c964be43"
+    },
+    "training": {
+      "L3": {
+        "format": "neuroshard-assistant-experience-checkpoint/1",
+        "arm": "addition",
+        "trainable_sha256": "84e786957757e0085c9991cf5ed4809838af408914830d346d84cbaf069b6a19",
+        "trainable_parameters": 1048576,
+        "tensors": {
+          "model.layers.32.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.32.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.32.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.32.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.33.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.33.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.33.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.33.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.34.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.34.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.34.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.34.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.35.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.35.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.35.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.35.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.36.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.36.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.36.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.36.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.37.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.37.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.37.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.37.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.38.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.38.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.38.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.38.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ],
+          "model.layers.39.self_attn.q_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.39.self_attn.q_proj.lora_b": [
+            2560,
+            16
+          ],
+          "model.layers.39.self_attn.v_proj.lora_a": [
+            16,
+            2560
+          ],
+          "model.layers.39.self_attn.v_proj.lora_b": [
+            512,
+            16
+          ]
+        },
+        "steps": 512,
+        "schedule_sha256": "2a9070c6796e2cc60e2ba9a6d473ae9588a4bb03a11ed669a8f140e091304ca5",
+        "final_loss": 0.0018339676457799214,
+        "roots": {
+          "experience": "c5cb7cab1698617602d820411c6e182940c386d274c4724de59fafe44d019997",
+          "replay": "ce8b23b915bdfc5ba0e0ab27de6aed1bd8e213d57c937d2550b2f811f962fe26",
+          "plan": "b1197b4e330829346d7ba49d1bcacd14e33d6f06d5766c607c7be7b13909f996"
+        },
+        "seconds": 1069.169359056,
+        "tokens_processed": 4918852
+      }
+    },
+    "integration": {
+      "greedy": {
+        "U1-drafting": 58,
+        "L3-drafting": 64
+      },
+      "sampled": {
+        "U1-drafting": 119,
+        "L3-drafting": 127
+      },
+      "gained": [
+        "workflow-526e755a8105",
+        "workflow-5efd5a4bc697",
+        "workflow-945abe21d245",
+        "workflow-caec1c88890b",
+        "workflow-dcbfe9cbf0a7",
+        "workflow-f04544b4ccce"
+      ],
+      "lost": [],
+      "cases": 64
+    },
+    "checked_encodes": 4951,
+    "wall_seconds": 2697.788149122,
+    "process_cpu_seconds": 2677.298258611,
+    "peak_rss_bytes": 7465627648,
+    "peak_gpu_bytes": 13812150272
+  }
+}
