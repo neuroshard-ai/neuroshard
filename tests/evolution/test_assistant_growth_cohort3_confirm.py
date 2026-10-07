@@ -104,3 +104,38 @@ def test_each_host_runs_one_system_with_its_units():
 def test_importing_cohort_three_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_growth_cohort3_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
+
+
+def test_confirmation_inventory_pins_the_development_pass_units_and_sources():
+    from test_assistant_growth_baseline import cloud_module
+
+    execution = read(ROOT / confirm.EXECUTION)
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert set(execution['contracts']) <= set(execution['sources']) and confirm.SCRIPT in execution['sources']
+    probe = ('import os, sys; import neuroshard.evolution.assistant_growth_cohort3_confirm; assert "torch" not in sys.modules; '
+             'import neuroshard.evolution.assistant_growth_run, neuroshard.evolution.assistant_experience_run, '
+             'neuroshard.evolution.assistant_experience_train, neuroshard.evolution.assistant_selector, '
+             'neuroshard.evolution.assistant_serving, neuroshard.evolution.assistant_calendar, '
+             'neuroshard.evolution.assistant_calendar_slots; '
+             'root = os.path.abspath("src"); print("\\n".join(sorted(os.path.relpath(x.__file__) '
+             'for x in list(sys.modules.values()) if getattr(x, "__file__", None) and '
+             'os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources'])
+    development = read(ROOT / confirm.development.EXECUTION)
+    assert all(execution[key] == development[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment',
+                                                               'threads', 'units', 'gates', 'serving'))
+    assert confirm.development_pass(execution)['report']['passed']
+    cloud = cloud_module()
+    gates = [gate['file'] for gate in execution['gates'].values()]
+    for profile, system in confirm.PROFILES.items():
+        resources = cloud.resources(profile)
+        role, _ = confirm.SYSTEMS[system]
+        assert resources['upload']['files'] == [f'{unit}/{name}' for unit in confirm.development.needed(role)
+                                                for name in ('manifest.json', 'trainable.safetensors')] + gates
+        assert execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds'] + (
+            resources['copy_seconds']) + 600 <= resources['hours'] * 3600
+    assert sum(cloud.resources(profile)['planning_cap_usd'] for profile in confirm.PROFILES) <= (
+        DECLARATION['budget']['confirmation_usd'])

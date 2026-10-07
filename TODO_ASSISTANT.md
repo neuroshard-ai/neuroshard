@@ -296,7 +296,12 @@ remain evidence, not readiness claims for this assistant.
   resource budget, on fresh sealed sets frozen now ($144.78 in allowances).
   [L3 solved every drafting integration case](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_RESULTS.md)
   ($1.09): 64/64 greedy against U1's 58, gaining 6 and losing none, and 127/128 sampled
-  against 119. Development runs next. A3 has spent $92.27 of $150.
+  against 119. A3 has spent $92.27 of $150.
+  [Development passed](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_DEVELOPMENT_RESULTS.md) ($1.02): the
+  upgraded system solved 23/24 drafting against the previous system's 19, gaining 4 and losing
+  none, kept all 24 scheduling and 8 cross cases, and reached p95 88.3 s against 99.4 s with
+  fewer model calls. The fresh sealed confirmation opens once on four CPU hosts (at most
+  $37.60). A3 has spent $93.29 of $150.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
