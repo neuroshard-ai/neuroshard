@@ -1,0 +1,450 @@
+{
+  "format": "neuroshard-assistant-growth-confirmation-report/1",
+  "stage": 1,
+  "round": 5,
+  "router": "shifted-message-mean",
+  "scheduling_policy": "free-slot",
+  "sealed": [
+    "confirmation2",
+    "cross-confirmation2",
+    "confirmation5"
+  ],
+  "plan_sha256": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
+  "execution_sha256": "9124fe9f5f9fa12313abb83a5751814656bb1255611bf6cb051e6353d7c1d98d",
+  "decision": "A3 round-5 confirmation: the candidate completed 192/192 scheduling and 44/48 cross (previous version 68 and 2), lowest family 24/24, net +166, lower 95% gain 0.596; drafting 177/192 against the accepted 177 with 0 lost (shared 5 lost); p95 95.6 s. Passes: cohort 2 is accepted. The separate unit retains drafting better than the shared update.",
+  "report": {
+    "correct": {
+      "scheduling": 192,
+      "cross": 44,
+      "drafting": 177
+    },
+    "previous": {
+      "scheduling": 68,
+      "cross": 2
+    },
+    "accepted_drafting": 177,
+    "shared_drafting": 178,
+    "per_family": {
+      "slot": 24,
+      "after": 24,
+      "three": 24,
+      "day": 24,
+      "longer": 24,
+      "invite": 24,
+      "move": 24,
+      "swap": 24
+    },
+    "versus_previous": {
+      "gained": [
+        "schedule-03936c0b5c1c",
+        "schedule-0422f241282b",
+        "schedule-06b4ba6aba2a",
+        "schedule-0719051ff442",
+        "schedule-08fc8f0411dc",
+        "schedule-0a8b382b6368",
+        "schedule-1089f70b694f",
+        "schedule-12fb7f3d63d4",
+        "schedule-15a939a8c5e0",
+        "schedule-16816d0d7133",
+        "schedule-18ef88f85ca4",
+        "schedule-1b15a09d6543",
+        "schedule-21041330d5c6",
+        "schedule-21550c48ebf1",
+        "schedule-2378c0f52d68",
+        "schedule-239bb7b3b0b2",
+        "schedule-258e5fa9bcd2",
+        "schedule-25bbc1382d0e",
+        "schedule-26ef0ab0c5ef",
+        "schedule-2b5cf30c52fd",
+        "schedule-2dab1cf64ce4",
+        "schedule-2de2766d598f",
+        "schedule-2e3141c38ee9",
+        "schedule-30c491b92b0a",
+        "schedule-34f4826e205c",
+        "schedule-3603e279ec71",
+        "schedule-36492a8831ad",
+        "schedule-3872b6979a3a",
+        "schedule-3e95a6c4739a",
+        "schedule-4039fadc7e95",
+        "schedule-41aceac8e009",
+        "schedule-429e3b607e39",
+        "schedule-43d693947a06",
+        "schedule-44e92e00e175",
+        "schedule-452c8cfaf1c3",
+        "schedule-45bf32b9fd92",
+        "schedule-4603910ca3b0",
+        "schedule-468a89a4ceba",
+        "schedule-46c15d00d876",
+        "schedule-473a29942230",
+        "schedule-478ce02437e2",
+        "schedule-4822eec8d7d6",
+        "schedule-48f637c244b6",
+        "schedule-4965d4a55304",
+        "schedule-4c097ef49b6f",
+        "schedule-4cec4ec7e0b5",
+        "schedule-50df4eb1ea00",
+        "schedule-524400b15c3d",
+        "schedule-532e452589d1",
+        "schedule-5753aee396ee",
+        "schedule-57d521a630a3",
+        "schedule-57f08bdf62db",
+        "schedule-5956371cb66e",
+        "schedule-597b83028e34",
+        "schedule-5a149511ee59",
+        "schedule-5d89e7498f2a",
+        "schedule-5da37863616f",
+        "schedule-5fac39d51a69",
+        "schedule-613ea856aaf6",
+        "schedule-6146022d0277",
+        "schedule-636453f7ac74",
+        "schedule-6386032728cd",
+        "schedule-647e6a5e8166",
+        "schedule-6612304a7c3b",
+        "schedule-66458e10a87d",
+        "schedule-67f8ef94d49a",
+        "schedule-697dd1c60ec5",
+        "schedule-6b51623e9b77",
+        "schedule-6cf4416bca71",
+        "schedule-6dd4f6ad3763",
+        "schedule-6faf0cba4ed4",
+        "schedule-7194063dbf44",
+        "schedule-763822fb71c1",
+        "schedule-78b912b4acc6",
+        "schedule-78db5949da52",
+        "schedule-7fb12de1a2a9",
+        "schedule-812bdd9dd59c",
+        "schedule-81a94e75cdd3",
+        "schedule-83bcdb5d933a",
+        "schedule-8607ee7cd9fd",
+        "schedule-87561ab307ec",
+        "schedule-8aaad284b7ac",
+        "schedule-8ba82b8fe892",
+        "schedule-8dc342220cef",
+        "schedule-90e29683b502",
+        "schedule-920d3f1414ba",
+        "schedule-94ef61777855",
+        "schedule-95d03de2d8e3",
+        "schedule-95fc053f6dd5",
+        "schedule-974d8edacbe8",
+        "schedule-9b484d6978ff",
+        "schedule-9ba4859b445c",
+        "schedule-9d71e4c91b75",
+        "schedule-9da47f56d014",
+        "schedule-9ed0af756506",
+        "schedule-9fd78367148c",
+        "schedule-a030b7676b31",
+        "schedule-a08081e32ed2",
+        "schedule-a2b92f4ca68b",
+        "schedule-a4c779cea2bf",
+        "schedule-a59a21605445",
+        "schedule-a5f8d4ab3ab8",
+        "schedule-a62834ddf815",
+        "schedule-a6f6c07ad426",
+        "schedule-a88758995303",
+        "schedule-a8f2a27ad35d",
+        "schedule-a8ff52450911",
+        "schedule-a9d399b6a4c4",
+        "schedule-aa36f422cf02",
+        "schedule-ad895984d4ed",
+        "schedule-b0ac758354f2",
+        "schedule-b2f9d7853258",
+        "schedule-b44b6cb33b12",
+        "schedule-b4a48052ae99",
+        "schedule-b4a4d8390022",
+        "schedule-b5c2ef3db591",
+        "schedule-b70907479ba5",
+        "schedule-bb3d3acdd726",
+        "schedule-bbe5538bc3b2",
+        "schedule-bdd4e55a9584",
+        "schedule-be04f2ed7ec3",
+        "schedule-c1acfa6926ba",
+        "schedule-c201040891a7",
+        "schedule-c274e50cb91b",
+        "schedule-c4580d98b62d",
+        "schedule-c82f8fc771df",
+        "schedule-cb36bdb1186b",
+        "schedule-cc6645c7b0aa",
+        "schedule-cd05fe91eaff",
+        "schedule-ce7de72a6046",
+        "schedule-d0a6e8d0a23a",
+        "schedule-d0aa80e2f2ed",
+        "schedule-d37092069a06",
+        "schedule-d502d5ac7b88",
+        "schedule-d677f8e67ad5",
+        "schedule-d7002e8157c7",
+        "schedule-d74aa30c46bc",
+        "schedule-d926b3bdc1a1",
+        "schedule-db58250e26ad",
+        "schedule-dbd59678dd14",
+        "schedule-dcd7e04d22e2",
+        "schedule-def5c1f222f2",
+        "schedule-defaff48657c",
+        "schedule-df76aa984236",
+        "schedule-df77da543bb5",
+        "schedule-e0131471016b",
+        "schedule-e03d9a355e45",
+        "schedule-e15ced4fb19b",
+        "schedule-e167cec3b5a8",
+        "schedule-e25c420890fd",
+        "schedule-e2d51297c308",
+        "schedule-e66ce9a1b9ed",
+        "schedule-e7e336949a21",
+        "schedule-e9d0e9f8f9ef",
+        "schedule-ea06b65e84b1",
+        "schedule-eca936017d55",
+        "schedule-ee5b241d8a5e",
+        "schedule-f0970580589c",
+        "schedule-f2383049092a",
+        "schedule-f497f50ff0ec",
+        "schedule-f975d0c6075e",
+        "schedule-fad601535fe5",
+        "schedule-fb462c39d411",
+        "schedule-fc0e087ab2bb",
+        "schedule-fcbaa0b6be86",
+        "schedule-fee8103d8fd7"
+      ],
+      "lost": [],
+      "net": 166
+    },
+    "lower_95_gain_vs_previous": 0.5958333333333333,
+    "drafting_versus_accepted": {
+      "candidate-drafting": {
+        "gained": [],
+        "lost": [],
+        "net": 0
+      },
+      "shared-drafting": {
+        "gained": [
+          "workflow-238403f52aec",
+          "workflow-5077112c19da",
+          "workflow-5447638eb14a",
+          "workflow-ab90448a6df8",
+          "workflow-bbcd8e04ceee",
+          "workflow-d3eb2344e025"
+        ],
+        "lost": [
+          "workflow-18e22a1ba853",
+          "workflow-3ace96e59488",
+          "workflow-6371ea01508e",
+          "workflow-79a6bec62298",
+          "workflow-f3d7082a823c"
+        ],
+        "net": 1
+      }
+    },
+    "p95_seconds": 95.63300937099984,
+    "checks": {
+      "scheduling": true,
+      "per_family": true,
+      "cross": true,
+      "net_vs_previous": true,
+      "lower_vs_previous": true,
+      "drafting": true,
+      "p95": true
+    },
+    "passed": true,
+    "separate_retains_better": true,
+    "turn_routes": {
+      "candidate-calendar": {
+        "scheduling": {
+          "scheduling": 288,
+          "drafting": 0
+        },
+        "cross": {
+          "scheduling": 48,
+          "drafting": 24
+        }
+      },
+      "candidate-drafting": {
+        "drafting": {
+          "scheduling": 0,
+          "drafting": 288
+        }
+      },
+      "shared-drafting": {
+        "drafting": {
+          "scheduling": 0,
+          "drafting": 288
+        }
+      }
+    }
+  },
+  "hosts": {
+    "candidate-calendar": {
+      "result_sha256": "06b3a5e5a60671ca435909f7969ff0c51bb9aad295a99e1217d2ede3c9b3fc79",
+      "source_commit": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 13444.519642117,
+      "peak_rss_bytes": 25733910528,
+      "ci": {
+        "id": 37555341257,
+        "head_sha": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37555341257"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T05:33:09.219824+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-07ef2875183408727"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13630.736217,
+        "conservative_compute_usd": 4.007436447798,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T06:43:35.959414+00:00",
+        "instances": [],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "candidate-drafting": {
+      "result_sha256": "7b6764b1f141008ece26a5af509a2e9b877968b306af5ca501a2f815658bbdc5",
+      "source_commit": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 12663.447841408,
+      "peak_rss_bytes": 17326170112,
+      "ci": {
+        "id": 37555341257,
+        "head_sha": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37555341257"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T05:20:20.657546+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-02df89c2779dfecca"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 12860.520117,
+        "conservative_compute_usd": 3.780992914398,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T06:43:36.599324+00:00",
+        "instances": [],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "shared-drafting": {
+      "result_sha256": "74fea4a3ed7b4b216e1a8ed6eaed98bc1a25a599d0dcfbe3bf4c62e1b9e3cda7",
+      "source_commit": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 13232.008198385,
+      "peak_rss_bytes": 16896647168,
+      "ci": {
+        "id": 37555341257,
+        "head_sha": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37555341257"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T05:29:59.542864+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0b2d8fc525a44c942"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13436.487497,
+        "conservative_compute_usd": 3.9503273241179997,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T06:43:37.261025+00:00",
+        "instances": [],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "accepted-drafting": {
+      "result_sha256": "e63c8be2d627c0b309c068c579679ebcf2e18c60422984cccc779e65c05a7604",
+      "source_commit": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 13233.360141304,
+      "peak_rss_bytes": 16885784576,
+      "ci": {
+        "id": 37555341257,
+        "head_sha": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37555341257"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T05:30:00.636786+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0d6e4f0393d9f6e93"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13431.970273,
+        "conservative_compute_usd": 3.9489992602620005,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T06:43:37.922120+00:00",
+        "instances": [],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "accepted-calendar": {
+      "result_sha256": "39bc3c2b26703a9bcabcddab291929f902218933674d756a7444de749e8942da",
+      "source_commit": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 16643.844084365,
+      "peak_rss_bytes": 17645944832,
+      "ci": {
+        "id": 37555341257,
+        "head_sha": "7c870ba55e2fc8fdd16c01a0c0208eff805af816",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37555341257"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T06:27:04.603169+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-027c4fc4fff336e6b"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 16855.26167,
+        "conservative_compute_usd": 4.95544693098,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T06:43:38.881377+00:00",
+        "instances": [
+          {
+            "id": "i-027c4fc4fff336e6b",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    }
+  },
+  "conservative_compute_usd": 20.643202877556,
+  "cohort2_accepted": true,
+  "separate_retains_better": true,
+  "sealed_opened": true,
+  "checklist_credit": false,
+  "admission_evidence": false
+}
