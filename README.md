@@ -55,10 +55,12 @@ uses a capable pretrained foundation, bounded learned modules and actual hardwar
 shards. Three of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
 a [first learned capability](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) that lifts fresh workspace
 conversations from 62% to 95% with no earlier success lost (A2), and [actual sharding](docs/A4_SHARDING_REVIEW.md)
-(A4). Repeated growth (A3) is under way. Its first new cohort, meeting scheduling, passed
-development but failed its sealed confirmation on scheduling (117/192 against 154), so it is not
-accepted; routing and drafting retention held. See the
-[assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
+(A4). Repeated growth (A3) is under way. Its first new cohort, meeting scheduling, failed a
+first sealed confirmation on the arithmetic over busy times (117/192 against 154). With a
+deterministic free-slot tool given to every system, the previous version included, it
+[was accepted](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md): 192/192 fresh sealed
+scheduling episodes against the previous version's 68, with every drafting success kept. An
+upgrade cohort remains. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 
