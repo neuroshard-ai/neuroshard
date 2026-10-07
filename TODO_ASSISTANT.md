@@ -286,7 +286,14 @@ remain evidence, not readiness claims for this assistant.
   kept every accepted drafting success (177/192) at p95 95.6 s, and routing was exact. The
   shared update lost five drafting successes, so the separate unit retained drafting
   better. The four cross failures ran out of model turns or read an older plan revision.
-  A3 has spent $91.17 of $150. Cohort 3, an upgrade, is declared next.
+  A3 has spent $91.18 of $150. The project owner chose
+  [cohort 3, an upgrade of drafting](docs/ASSISTANT_REPEATED_GROWTH_COHORT3.md): 14 of the 15 sealed
+  drafting failures cited the wrong plan revision, and most development failures ran out of
+  model turns making one call per reply. A new low-rank module, L3, on top of U1 learns from
+  1,248 verified demonstrations that read the latest approved revision and batch independent
+  calls; the scheduling route and router are unchanged. It must gain at least 5 sealed drafting
+  episodes over the previous system, lose no success anywhere, and stay within a declared
+  resource budget, on fresh sealed sets frozen now ($144.78 in allowances).
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
@@ -435,7 +442,8 @@ No automatic training or admission follows a baseline. This is not a public assi
   Two cohorts are accepted: drafting, then scheduling, a new capability, with tasks
   that need both. [On fresh sealed episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md)
   the separate scheduling unit lost no drafting success and the shared update lost
-  five. The upgrade cohort and the resource-budget comparison remain.
+  five. The upgrade cohort and the resource-budget comparison remain;
+  [cohort 3 is declared](docs/ASSISTANT_REPEATED_GROWTH_COHORT3.md) as an upgrade of drafting.
 - [x] **A4 — Actual sharding and value from additional peers.** [Complete](docs/A4_SHARDING_REVIEW.md). No execution worker
   holds the complete backbone. Measure forward/backward/generation agreement,
   per-owner memory and traffic, outage recovery and a benefit from extra machines

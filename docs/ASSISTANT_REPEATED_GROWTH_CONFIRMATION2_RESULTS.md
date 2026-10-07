@@ -85,7 +85,7 @@ right draft but ran out of model turns before the closing confirmation.
 
 Five r7i.4xlarge hosts ran in parallel, $20.64 in total, and every instance is terminated.
 The previous version's calendar host took the longest, 16,644 s of its 18,000 s limit,
-because failing episodes use the whole turn budget. A3 has spent $91.17 of its $150 ceiling,
+because failing episodes use the whole turn budget. A3 has spent $91.18 of its $150 ceiling,
 plus stage 0's $2.15.
 
 ## What this means
