@@ -1,0 +1,384 @@
+{
+  "format": "neuroshard-assistant-growth-cohort3-confirmation-report/1",
+  "cohort": 3,
+  "sealed": [
+    "confirmation6",
+    "confirmation3",
+    "cross-confirmation3"
+  ],
+  "declaration_sha256": "b8fd55a681d1136ff298a6249879a4d77f5fdd4977ad2bf4947b3c119b1cb82b",
+  "execution_sha256": "ac0f521dcfe8e4d224991450496a0c10cf176785d7fcce5eb93098170a0708ea",
+  "decision": "A3 cohort-3 confirmation: the upgraded system completed 192/192 drafting against the previous system's 183 (net +9, lower 95% gain 0.010), 192/192 scheduling (previous 192) and 47/48 cross (previous 47), losing 0; p95 82.8 s against 100.4 s. Passes: cohort 3 is accepted.",
+  "report": {
+    "sets": {
+      "scheduling": {
+        "upgrade": 192,
+        "previous": 192,
+        "cases": 192,
+        "gained": [],
+        "lost": [],
+        "net": 0
+      },
+      "cross": {
+        "upgrade": 47,
+        "previous": 47,
+        "cases": 48,
+        "gained": [],
+        "lost": [],
+        "net": 0
+      },
+      "drafting": {
+        "upgrade": 192,
+        "previous": 183,
+        "cases": 192,
+        "gained": [
+          "workflow-124eebd3693f",
+          "workflow-25443381090f",
+          "workflow-4606e9c33622",
+          "workflow-6591454020a1",
+          "workflow-6bb62e8d1ef7",
+          "workflow-bf3d0c44e83f",
+          "workflow-c6a7fb6a3be3",
+          "workflow-e39c83ec9c7f",
+          "workflow-f1ae3e3a73e2"
+        ],
+        "lost": [],
+        "net": 9
+      }
+    },
+    "lower_95_drafting_gain": 0.010416666666666666,
+    "per_family": {
+      "copy": {
+        "upgrade": 24,
+        "previous": 23
+      },
+      "date": {
+        "upgrade": 24,
+        "previous": 24
+      },
+      "sum": {
+        "upgrade": 24,
+        "previous": 24
+      },
+      "difference": {
+        "upgrade": 24,
+        "previous": 20
+      },
+      "latest": {
+        "upgrade": 24,
+        "previous": 21
+      },
+      "recipient": {
+        "upgrade": 24,
+        "previous": 24
+      },
+      "reschedule": {
+        "upgrade": 24,
+        "previous": 24
+      },
+      "scope": {
+        "upgrade": 24,
+        "previous": 23
+      }
+    },
+    "p95_seconds": {
+      "upgrade": 82.79327946600006,
+      "previous": 100.380915146
+    },
+    "checks": {
+      "net_drafting": true,
+      "lower_drafting": true,
+      "lost": true,
+      "p95": true,
+      "p95_ratio": true
+    },
+    "passed": true,
+    "model_calls": {
+      "upgrade-calendar": {
+        "scheduling": 876,
+        "cross": 336
+      },
+      "upgrade-drafting": {
+        "drafting": 1299
+      },
+      "previous-calendar": {
+        "scheduling": 876,
+        "cross": 336
+      },
+      "previous-drafting": {
+        "drafting": 1491
+      }
+    },
+    "turn_routes": {
+      "upgrade-calendar": {
+        "scheduling": {
+          "scheduling": 288,
+          "drafting": 0
+        },
+        "cross": {
+          "scheduling": 48,
+          "drafting": 24
+        }
+      },
+      "upgrade-drafting": {
+        "drafting": {
+          "scheduling": 0,
+          "drafting": 288
+        }
+      },
+      "previous-calendar": {
+        "scheduling": {
+          "scheduling": 288,
+          "drafting": 0
+        },
+        "cross": {
+          "scheduling": 48,
+          "drafting": 24
+        }
+      },
+      "previous-drafting": {
+        "drafting": {
+          "scheduling": 0,
+          "drafting": 288
+        }
+      }
+    }
+  },
+  "hosts": {
+    "upgrade-calendar": {
+      "result_sha256": "787e5bb9ccdaf371a22f91442e07f77c81759b01d036cb6b46c1109100a4508c",
+      "source_commit": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 13119.162988764,
+      "peak_rss_bytes": 25928744960,
+      "ci": {
+        "id": 37654640960,
+        "head_sha": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37654640960"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T21:09:42.441861+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0c7edae19c0967e96"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13320.051062,
+        "conservative_compute_usd": 3.9160950122280003,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T21:43:05.915014+00:00",
+        "instances": [
+          {
+            "id": "i-0c7edae19c0967e96",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "upgrade-drafting": {
+      "result_sha256": "bfa10e8f7524efd628886d06c0bd3df0fbecb0bb44463120e1c9391512192f30",
+      "source_commit": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 10944.221538557,
+      "peak_rss_bytes": 17186082816,
+      "ci": {
+        "id": 37654640960,
+        "head_sha": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37654640960"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T20:33:16.550782+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0a745f9454efc299f"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 11130.846102,
+        "conservative_compute_usd": 3.272468753988,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T21:43:06.494449+00:00",
+        "instances": [],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "previous-calendar": {
+      "result_sha256": "1821569b1ce07b1b018c5c7828637ac09383a594dc7ac377c3279e7d47fee197",
+      "source_commit": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 14317.906669,
+      "peak_rss_bytes": 25827028992,
+      "ci": {
+        "id": 37654640960,
+        "head_sha": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37654640960"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T21:29:35.421876+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-04c75aa391f934193"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 14507.506434,
+        "conservative_compute_usd": 4.265206891596001,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T21:43:07.183620+00:00",
+        "instances": [
+          {
+            "id": "i-04c75aa391f934193",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    },
+    "previous-drafting": {
+      "result_sha256": "ae2c381c9b2b06954c39864b7fcc8952a7f3321439260e450a2e2f07c7c46884",
+      "source_commit": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+      "execution_completed": true,
+      "error": null,
+      "wall_seconds": 13043.852202889,
+      "peak_rss_bytes": 17199439872,
+      "ci": {
+        "id": 37654640960,
+        "head_sha": "fbb76e478072b11ef423fb647be2aad3612b1d7c",
+        "conclusion": "success",
+        "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37654640960"
+      },
+      "resources_finished": {
+        "finished_utc": "2026-10-07T21:08:29.299239+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-0868321d2a8df6449"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 13238.907378,
+        "conservative_compute_usd": 3.892238769132,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      },
+      "resource_verification": {
+        "checked_utc": "2026-10-07T21:43:07.869541+00:00",
+        "instances": [
+          {
+            "id": "i-0868321d2a8df6449",
+            "state": "terminated"
+          }
+        ],
+        "volumes": [],
+        "security_group": "retired"
+      }
+    }
+  },
+  "conservative_compute_usd": 15.346009426944,
+  "cohort3_accepted": true,
+  "sealed_opened": true,
+  "checklist_credit": false,
+  "admission_evidence": false,
+  "prior_attempts": [
+    {
+      "system": "upgrade-calendar",
+      "home": ".neuroshard/assistant-growth-cohort3-confirmation-upgrade-calendar-20261007",
+      "source_commit": "26a153c98d9406864a43652e7edc0a0bc277b81e",
+      "error": "[Errno 2] No such file or directory: '/home/ubuntu/neuroshard-reference/config/experiments/assistant-schedule-data-confirmation3.json'",
+      "sealed_cases_generated": false,
+      "resources_finished": {
+        "finished_utc": "2026-10-07T16:43:39.117022+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01fd062d68e74bc35"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 134.447299,
+        "conservative_compute_usd": 0.039527505905999995,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "system": "upgrade-drafting",
+      "home": ".neuroshard/assistant-growth-cohort3-confirmation-upgrade-drafting-20261007",
+      "source_commit": "26a153c98d9406864a43652e7edc0a0bc277b81e",
+      "error": "[Errno 2] No such file or directory: '/home/ubuntu/neuroshard-reference/config/experiments/assistant-workflow-data-confirmation6.json'",
+      "sealed_cases_generated": false,
+      "resources_finished": {
+        "finished_utc": "2026-10-07T16:43:42.460530+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-04d2edea79e475d9b"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 135.88381,
+        "conservative_compute_usd": 0.039949840140000005,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "system": "previous-calendar",
+      "home": ".neuroshard/assistant-growth-cohort3-confirmation-previous-calendar-20261007",
+      "source_commit": "26a153c98d9406864a43652e7edc0a0bc277b81e",
+      "error": "[Errno 2] No such file or directory: '/home/ubuntu/neuroshard-reference/config/experiments/assistant-schedule-data-confirmation3.json'",
+      "sealed_cases_generated": false,
+      "resources_finished": {
+        "finished_utc": "2026-10-07T16:43:35.738017+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-054cd341f8bff82a2"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 125.567481,
+        "conservative_compute_usd": 0.036916839414,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    },
+    {
+      "system": "previous-drafting",
+      "home": ".neuroshard/assistant-growth-cohort3-confirmation-previous-drafting-20261007",
+      "source_commit": "26a153c98d9406864a43652e7edc0a0bc277b81e",
+      "error": "[Errno 2] No such file or directory: '/home/ubuntu/neuroshard-reference/config/experiments/assistant-workflow-data-confirmation6.json'",
+      "sealed_cases_generated": false,
+      "resources_finished": {
+        "finished_utc": "2026-10-07T16:43:44.045656+00:00",
+        "remaining_instances": [],
+        "remaining_volumes": [],
+        "security_group_retired": true,
+        "instance_ids": [
+          "i-01a89531d0298d0f7"
+        ],
+        "instance_type": "r7i.4xlarge",
+        "conservative_instance_seconds": 131.135717,
+        "conservative_compute_usd": 0.038553900798,
+        "storage_and_transfer_invoice_not_in_compute_total": true
+      }
+    }
+  ],
+  "prior_attempts_usd": 0.154948086258
+}

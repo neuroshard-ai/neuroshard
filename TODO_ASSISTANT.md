@@ -147,7 +147,7 @@ remain evidence, not readiness claims for this assistant.
   [The sealed confirmation passed](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) ($7.10):
   183/192 against the parent's 119, no parent success lost, a lower 95% gain of
   +22.4 points and p95 103.0 s. A2 is established for this capability.
-- [ ] [Repeated growth (A3)](docs/ASSISTANT_REPEATED_GROWTH.md): drafting is cohort 1;
+- [x] [Repeated growth (A3)](docs/ASSISTANT_REPEATED_GROWTH.md): drafting is cohort 1;
   cohort 2 adds meeting scheduling in a calendar workspace that keeps every drafting
   tool, and cohort 3 will be an upgrade. Cohort 2 trains a separate update, a
   separate low-rank module and the shared update under one budget; the separate
@@ -302,6 +302,13 @@ remain evidence, not readiness claims for this assistant.
   none, kept all 24 scheduling and 8 cross cases, and reached p95 88.3 s against 99.4 s with
   fewer model calls. The fresh sealed confirmation opens once on four CPU hosts (at most
   $37.60). A3 has spent $93.29 of $150.
+  [The fresh sealed confirmation accepts cohort 3](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)
+  ($15.35, after a first attempt that stopped before any sealed case, $0.15). The upgraded
+  system solved 192/192 drafting against the previous system's 183, net +9 with none lost,
+  kept every scheduling and cross success (192/192 and 47/48 for both), and reached p95
+  82.8 s against 100.4 s. [A3 is complete](docs/A3_REPEATED_GROWTH_REVIEW.md): three accepted
+  cohorts, a new capability and an upgrade, cumulative retention, and separate units that
+  retained earlier cohorts better than a shared update. A3 cost $108.79 of $150.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).
@@ -350,13 +357,13 @@ remain evidence, not readiness claims for this assistant.
   fraud proof, and owner 2 audited clean ($7.19). The raw logs and proof
   exceeded the evidence cap and were not archived.
 
-**Current status:** the assistant has learned two useful capabilities in succession.
-On fresh sealed workspace episodes, the learned update lifts drafting from 62% to 95%
-with no parent success lost. A separately learned scheduling unit then
-[solved all 192 fresh sealed scheduling episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md),
-against 68 for the previous version with the same tool, while keeping every drafting
-success. A1, A2 and A4 are complete. A3, [repeated growth](docs/ASSISTANT_REPEATED_GROWTH.md),
-has two accepted cohorts; cohort 3, an upgrade, remains.
+**Current status:** the assistant has grown three times in succession, each time
+accepted on fresh sealed workspace episodes that re-checked everything before it. The
+learned update lifted drafting from 62% to 95% with no parent success lost. A separately
+learned scheduling unit then [solved all 192 sealed scheduling episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md),
+against 68 for the previous version with the same tool, keeping every drafting success. An
+upgrade of drafting then [solved all 192 sealed drafting episodes](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)
+against 183, losing nothing and serving faster. A1–A4 are complete.
 
 - **A2 complete.** The 1M-parameter added module twice came within 4–8 episodes
   of the 63M-parameter update without meeting the declared parity margin, and
@@ -374,6 +381,12 @@ has two accepted cohorts; cohort 3, an upgrade, remains.
   one host. Extra machines add pooled memory, recovery and 2.25× throughput. A
   [review](docs/A4_SHARDING_REVIEW.md) maps every clause to published evidence;
   all owners ran in one availability zone under one operator.
+- **A3 complete.** Drafting, then scheduling as a new capability with tasks that need
+  both, then an upgrade of drafting, each a separate unit accepted on fresh sealed
+  episodes that re-checked every earlier cohort. The separate scheduling unit lost no
+  drafting success where the shared update lost five, and the upgrade beat keeping the
+  previous system within its declared resource budget. A [review](docs/A3_REPEATED_GROWTH_REVIEW.md)
+  maps every clause to published evidence; the tasks are fictional workspace grammars.
 - **Toward A5.** Light auditors verified real-model serving and proved a one-bit
   fault. A [bonded optimistic serving ledger](docs/OPTIMISTIC_SERVING.md) now settles
   honest jobs after a challenge window and slashes an owner on a verified fraud
@@ -440,7 +453,7 @@ No automatic training or admission follows a baseline. This is not a public assi
   after both confirmations and before the third sealed split opened: the unit was
   "a new module" that had to match the equal-data update. Whether low-rank modules
   can match updates now joins A3's retention comparison.
-- [ ] **A3 — Repeated useful growth and an upgrade/consolidation.** Three successive
+- [x] **A3 — Repeated useful growth and an upgrade/consolidation.** [Complete](docs/A3_REPEATED_GROWTH_REVIEW.md). Three successive
   accepted cohorts, cumulative retention and cross-capability tasks; at least one
   new capability and one upgrade. Separate modules must retain earlier cohorts
   better than repeated shared-weight updates under the same budget. Demonstrate a
@@ -450,8 +463,9 @@ No automatic training or admission follows a baseline. This is not a public assi
   Two cohorts are accepted: drafting, then scheduling, a new capability, with tasks
   that need both. [On fresh sealed episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md)
   the separate scheduling unit lost no drafting success and the shared update lost
-  five. The upgrade cohort and the resource-budget comparison remain;
-  [cohort 3 is declared](docs/ASSISTANT_REPEATED_GROWTH_COHORT3.md) as an upgrade of drafting.
+  five. [Cohort 3](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md), an upgrade
+  of drafting, gained 9 sealed drafting episodes over keeping the previous system and lost
+  none, within its declared resource budget and faster.
 - [x] **A4 — Actual sharding and value from additional peers.** [Complete](docs/A4_SHARDING_REVIEW.md). No execution worker
   holds the complete backbone. Measure forward/backward/generation agreement,
   per-owner memory and traffic, outage recovery and a benefit from extra machines
@@ -473,11 +487,8 @@ No automatic training or admission follows a baseline. This is not a public assi
   resource limits, funding, rollback and a public operating soak. Requires A1–A5;
   neither a research pass nor a token transaction substitutes for usability.
 
-A1, A2 and A4 are complete. A3 has two accepted cohorts, and the separate units
-retained earlier cohorts better than the shared update; the low-rank module matched
-the separate update on every development case. A3 still needs an upgrade cohort and
-an update or consolidation that beats keeping the previous system under a declared
-resource budget. Recruitment for A5 can proceed now.
+A1–A4 are complete. A5 needs independently administered operators, and recruitment
+can proceed now with the [operator kit](docs/OPERATOR_KIT.md). A6 requires A1–A5.
 Native 0.4.0 stays separate until a complete candidate passes its activation
 contract.
 
