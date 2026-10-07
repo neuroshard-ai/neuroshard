@@ -1,0 +1,97 @@
+{
+  "format": "neuroshard-assistant-growth-cohort3/1",
+  "status": "Declared on October 7, 2026, after cohort 2 was accepted and before any cohort-3 execution. The project owner chose the upgrade.",
+  "cohort": 3,
+  "kind": "upgrade",
+  "capability": "Drafting, cohort 1's capability, upgraded: read the latest approved plan revision, or approved revision 1 when the user asks for it or for the change from it, and make calls that do not depend on each other together, two per reply, so a turn fits its budget.",
+  "cohort2_report": "config/experiments/assistant-growth-confirmation2-report.json",
+  "findings": {
+    "sealed_drafting": "On the 192 sealed drafting episodes of the cohort-2 confirmation, the accepted drafting route failed 15, all in the first turn: 9 cited approved revision 1 instead of the latest approved revision, 5 cited the unapproved draft when the user asked for the change from revision 1, and 1 saved the right draft but ran out of model turns before its confirmation.",
+    "development_drafting": "On the 24 opened development drafting cases, 4 of its 5 failures saved the right draft and then ran out of model turns, having made one call per reply.",
+    "cross": "Of the 4 sealed cross failures, the handoff's drafting turn cited approved revision 1; the other 3 were review requests on the scheduling route, which this upgrade does not change."
+  },
+  "unit": {
+    "name": "L3",
+    "module": "Rank-16, alpha-32 LoRA on q_proj and v_proj in layers 32..39 (1,048,576 parameters) on top of the frozen accepted update U1: Kaiming-uniform A, zero B, so the untrained module equals U1.",
+    "serves": "The drafting route only, behind A2's per-episode gate. The scheduling route (U1 with L2), the pinned router and every policy are cohort 2's, unchanged."
+  },
+  "experience": {
+    "solver": "src/neuroshard/evolution/assistant_drafting_demonstration.py",
+    "source": "One verified demonstration per drafting training case, written by the drafting solver as the accepted version's own replies.",
+    "splits": ["train", "train2", "train3", "compose1", "compose2"],
+    "cases": 1248,
+    "policy": "config/experiments/assistant-workflow-policy.json",
+    "verification": "Every demonstration must pass the scorer within the drafting policy's limits and read no unapproved revision; one that does not stops the job before training."
+  },
+  "training": {
+    "arm": "addition",
+    "steps": 512,
+    "mixture": {"experience": 6, "replay": 2},
+    "replay": "A2's pinned parent replay items, re-verified from their recorded rollouts.",
+    "seed": 27100701,
+    "rule": "Stage 1's trainer settings for the low-rank module: learning rate 3e-4, microbatch 1, gradient accumulation 8, warmup 8, clip 1.0, weight decay 0.01. Terminal step only; no checkpoint selection."
+  },
+  "integration": {
+    "routes": [["U1", "drafting"], ["L3", "drafting"]],
+    "set": "The 64 drafting integration cases, each run alone on the drafting route once greedily and twice sampled at temperature 0.8.",
+    "seed": 27100702,
+    "role": "Reported, not a gate."
+  },
+  "policies": {
+    "drafting": "config/experiments/assistant-workflow-policy.json",
+    "scheduling": "config/experiments/assistant-workflow-policy-calendar-slots.json"
+  },
+  "previous": {
+    "system": "Cohort 2's accepted system: the pinned router, U1 behind A2's per-episode gate on the drafting route, and U1 with L2 on the scheduling route under the free-slot policy.",
+    "development": {
+      "path": "config/experiments/assistant-growth-development7-separate-module-result.json",
+      "sha256": "4038c6379877f05e0f32866bc74142f5a8365a1b84e957cb4225066f7f811daf"
+    }
+  },
+  "development_gate": {
+    "sets": "The opened development cases: 24 drafting, 24 scheduling and 8 cross. The upgraded system runs on one CPU host on the canonical runtime with prefix-cache serving; the previous system's development episodes are pinned, and both are rescored.",
+    "minimum_drafting": 21,
+    "lost": "The upgraded system loses none of the previous system's successes on any of the three sets.",
+    "p95_seconds": 180,
+    "latency": "Episode wall time plus every per-turn selection forward pass and A2's per-episode pass."
+  },
+  "confirmation_gate": {
+    "opens": "Once, only after the upgraded system passes development.",
+    "sets": {"drafting": "confirmation6 (192)", "scheduling": "confirmation3 (192)", "cross": "cross-confirmation3 (48)"},
+    "systems": "The upgraded and the previous system, each on drafting and, on a second host, on scheduling and cross: four CPU hosts.",
+    "minimum_net_drafting": 5,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 27100703,
+    "bootstrap_clusters": "the eight drafting families",
+    "lower_95_drafting_gain_strictly_above": 0,
+    "lost": "The upgraded system loses none of the previous system's successes on drafting, scheduling or cross.",
+    "p95_seconds": 180
+  },
+  "resource_budget": {
+    "parameters": 1048576,
+    "training": "One A10G host within the $10 GPU allowance.",
+    "serving_p95_ratio": 1.1,
+    "rule": "A3 asks for an update that proves better than keeping the previous system under a declared resource budget. The upgrade adds exactly one rank-16 module, trains on one GPU host within its allowance, and its p95 on the sealed episodes may be at most 10% above the previous system's on the same episodes, as well as within 180 s. Passing the confirmation gate within this budget is that comparison."
+  },
+  "sealed": {
+    "drafting": "confirmation6",
+    "scheduling": "confirmation3",
+    "cross": "cross-confirmation3",
+    "drafting_data": "config/experiments/assistant-workflow-data-confirmation6.json",
+    "scheduling_data": "config/experiments/assistant-schedule-data-confirmation3.json",
+    "rule": "Fresh splits, frozen in this declaration before any cohort-3 training. They open once, only after the upgraded system passes development."
+  },
+  "acceptance": "Passing the confirmation accepts cohort 3. With cohorts 1 and 2, that is A3's three successive accepted cohorts with cumulative retention, a new capability and an upgrade. Acceptance is not native promotion.",
+  "budget": {
+    "ceiling_usd": 150,
+    "spent_usd": 91.18,
+    "gpu_usd": 10,
+    "development_usd": 6,
+    "confirmation_usd": 37.6,
+    "allowances": "Stage 1 through cohort 2's confirmation cost $91.18. Cohort 3: GPU at most $10 on one A10G host with a five-hour expiry, development at most $6 on one CPU host, confirmation at most $37.60 on four CPU hosts; $144.78 within the $150 ceiling."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false,
+  "checklist_credit": false
+}

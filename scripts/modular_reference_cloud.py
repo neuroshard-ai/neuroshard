@@ -24,6 +24,9 @@ GROWTH_DEVELOPMENT = tuple(f"assistant-growth-development-{version}"
                            for version in ("separate-update", "separate-module", "shared"))
 GROWTH_CONFIRMATION = tuple(f"assistant-growth-confirmation-{system}" for system in (
     "candidate-calendar", "candidate-drafting", "shared-drafting", "accepted-drafting", "accepted-calendar"))
+COHORT3_DEVELOPMENT = "assistant-growth-cohort3-development"
+COHORT3_CONFIRMATION = tuple(f"assistant-growth-cohort3-confirmation-{system}" for system in (
+    "upgrade-calendar", "upgrade-drafting", "previous-calendar", "previous-drafting"))
 RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-workflow-baseline": "config/experiments/assistant-workflow-resources.json",
                      "assistant-workflow-canonical": "config/experiments/assistant-workflow-canonical-resources.json",
@@ -40,11 +43,13 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-round3-gpu": "config/experiments/assistant-growth-round3-resources.json",
                      "assistant-growth-round4-gpu": "config/experiments/assistant-growth-round4-resources.json",
                      "assistant-growth-round5-gpu": "config/experiments/assistant-growth-round5-resources.json",
+                     "assistant-growth-cohort3-gpu": "config/experiments/assistant-growth-cohort3-resources.json",
                      "assistant-growth-router": "config/experiments/assistant-growth-router2-resources.json",
                      "assistant-growth-router3": "config/experiments/assistant-growth-router3-resources.json",
                      "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
-                        for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
+                        for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION + (COHORT3_DEVELOPMENT,)
+                        + COHORT3_CONFIRMATION},
                      **{f"assistant-experience-confirmation-{system}": f"config/experiments/assistant-experience-confirmation-{system}-resources.json"
                         for system in ("parent", "update", "addition", "small", "committee")},
                      "granite-answerability-reference": "config/experiments/granite-answerability-reference-resources.json",
@@ -76,11 +81,15 @@ GRANITE_PROFILES = {
     "assistant-growth-round3-gpu": ("assistant_growth_round3", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-round4-gpu": ("assistant_growth_round4", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-round5-gpu": ("assistant_growth_round5", "docs/assistant-experience-requirements.txt"),
+    "assistant-growth-cohort3-gpu": ("assistant_growth_cohort3", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-router": ("assistant_growth_router", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router3": ("assistant_growth_router3", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
     **{profile: ("assistant_growth_confirm", "docs/granite-reference-requirements.txt") for profile in GROWTH_CONFIRMATION},
+    COHORT3_DEVELOPMENT: ("assistant_growth_cohort3_eval", "docs/granite-reference-requirements.txt"),
+    **{profile: ("assistant_growth_cohort3_confirm", "docs/granite-reference-requirements.txt")
+       for profile in COHORT3_CONFIRMATION},
     **{f"assistant-experience-confirmation-{system}": ("assistant_experience_confirm", "docs/granite-reference-requirements.txt")
        for system in ("parent", "update", "addition", "small", "committee")},
     "granite-answerability-reference": ("granite_answerability_reference", "docs/granite-reference-requirements.txt"),
@@ -102,12 +111,14 @@ GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3",
     "assistant-experience-compose-compose1", "assistant-experience-compose-compose2", "assistant-growth-gpu",
     "assistant-growth-resume-gpu", "assistant-growth-round2-gpu", "assistant-growth-round3-gpu",
-    "assistant-growth-round4-gpu", "assistant-growth-round5-gpu")}
+    "assistant-growth-round4-gpu", "assistant-growth-round5-gpu", "assistant-growth-cohort3-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
                    "assistant-growth-gpu": ".growth", "assistant-growth-resume-gpu": ".growth",
                    "assistant-growth-round2-gpu": ".growth", "assistant-growth-round3-gpu": ".growth",
                    "assistant-growth-round4-gpu": ".growth", "assistant-growth-round5-gpu": ".growth",
-                   **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION},
+                   "assistant-growth-cohort3-gpu": ".growth",
+                   **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION
+                      + (COHORT3_DEVELOPMENT,) + COHORT3_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
                    "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms"}
@@ -115,7 +126,8 @@ UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growt
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-growth-baseline": (4, 8),
                      **{profile: (3, 6) for profile in GROWTH_DEVELOPMENT}, "assistant-growth-router": (3.5, 7),
                      "assistant-growth-router3": (2, 5.5), "assistant-growth-router4": (2, 5.5),
-                     **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION},
+                     **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION + COHORT3_CONFIRMATION},
+                     COHORT3_DEVELOPMENT: (3, 6),
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8), "granite-shard-serving-update": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
@@ -160,6 +172,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-round5-gpu":
         from neuroshard.evolution.assistant_growth_round5 import committed_sources as slot_sources
         return slot_sources()
+    if profile == "assistant-growth-cohort3-gpu":
+        from neuroshard.evolution.assistant_growth_cohort3 import committed_sources as upgrade_sources
+        return upgrade_sources()
     if profile == "assistant-growth-router":
         from neuroshard.evolution.assistant_growth_router import committed_sources as router_sources
         return router_sources()
@@ -175,6 +190,12 @@ def source_freeze(profile):
     if profile in GROWTH_CONFIRMATION:
         from neuroshard.evolution.assistant_growth_confirm import committed_sources as sealed_sources
         return sealed_sources()
+    if profile == COHORT3_DEVELOPMENT:
+        from neuroshard.evolution.assistant_growth_cohort3_eval import committed_sources as upgrade_development_sources
+        return upgrade_development_sources()
+    if profile in COHORT3_CONFIRMATION:
+        from neuroshard.evolution.assistant_growth_cohort3_confirm import committed_sources as upgrade_sealed_sources
+        return upgrade_sealed_sources()
     if profile.startswith("assistant-experience-confirmation-"):
         from neuroshard.evolution.assistant_experience_confirm import committed_sources as confirmation_sources
         return confirmation_sources()
@@ -607,6 +628,9 @@ def remote_command(profile):
     if profile == "assistant-growth-round5-gpu":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_round5.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "assistant-growth-cohort3-gpu":
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_cohort3.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-growth-router":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_router.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
@@ -624,6 +648,13 @@ def remote_command(profile):
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_confirmation.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models",
                 "--system", profile.removeprefix("assistant-growth-confirmation-")]
+    if profile == COHORT3_DEVELOPMENT:
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_cohort3_development.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile in COHORT3_CONFIRMATION:
+        return [PYTHON, REMOTE + "/scripts/run_assistant_growth_cohort3_confirmation.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models",
+                "--system", profile.removeprefix("assistant-growth-cohort3-confirmation-")]
     if profile.startswith("assistant-experience-confirmation-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_experience_confirmation.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--system", profile.rsplit("-", 1)[1]]

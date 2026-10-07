@@ -27,6 +27,9 @@ SEALED = ('confirmation', 'cross-confirmation')
 # Fresh sealed splits for round 5, frozen in their own manifest before any round-5 training.
 FRESH = {'confirmation2': (35000, 24), 'cross-confirmation2': (36000, 24)}
 SEALED2 = tuple(FRESH)
+# Fresh sealed splits for cohort 3, frozen in their own manifest before any cohort-3 training.
+FRESH3 = {'confirmation3': (37000, 24), 'cross-confirmation3': (38000, 24)}
+SEALED3 = tuple(FRESH3)
 TRAINING = ('train', 'cross-train', *GROWTH)
 WINDOW = 14
 DURATIONS = (30, 45, 60, 90)
@@ -83,7 +86,7 @@ def meeting(project, attendees, day, start, duration, sources=()):
 
 
 def make_case(split, family, index):
-    seeds = {**SPLITS, **GROWTH, **FRESH}
+    seeds = {**SPLITS, **GROWTH, **FRESH, **FRESH3}
     if split not in seeds or family not in families(split) or type(index) is not int or not 0 <= index < 40:
         raise ValueError('unknown scheduling split or family')
     number = seeds[split][0] + families(split).index(family) * 40 + index
@@ -217,7 +220,7 @@ def make_case(split, family, index):
 
 
 def cases(split):
-    seeds = {**SPLITS, **GROWTH, **FRESH}
+    seeds = {**SPLITS, **GROWTH, **FRESH, **FRESH3}
     if split not in seeds:
         raise ValueError('unknown scheduling split')
     result = [make_case(split, family, i) for family in families(split) for i in range(seeds[split][1])]

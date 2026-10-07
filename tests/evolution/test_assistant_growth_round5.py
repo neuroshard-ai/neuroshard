@@ -142,7 +142,7 @@ def test_fresh_sealed_splits_are_frozen_before_training_and_disjoint_from_every_
     cases = data.cases(drafting['split'])
     assert drafting['split'] == DECLARATION['sealed']['drafting'] == 'confirmation5' and len(cases) == 192
     assert identity(cases) == drafting['sha256'] and [c['id'] for c in cases] == drafting['case_ids']
-    assert set(drafting['disjoint_from']) == set(data.SPLITS) - {'confirmation5'}
+    assert set(drafting['disjoint_from']) == set(data.SPLITS) - {'confirmation5', 'confirmation6'}
     others = {c['id'] for split in data.SPLITS if split != 'confirmation5' for c in data.cases(split)}
     assert not {c['id'] for c in cases} & others
 

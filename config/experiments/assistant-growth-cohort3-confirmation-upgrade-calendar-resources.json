@@ -1,0 +1,57 @@
+{
+  "format": "neuroshard-assistant-growth-cohort3-confirmation-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 6,
+  "planning_cap_usd": 9.4,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-growth-cohort3-confirmation-upgrade-calendar",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 536870912,
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-cohort3-development-inputs",
+    "files": [
+      "L2/manifest.json",
+      "L2/trainable.safetensors",
+      "L3/manifest.json",
+      "L3/trainable.safetensors",
+      "U1/manifest.json",
+      "U1/trainable.safetensors",
+      "a2-integration.json",
+      "router.json"
+    ],
+    "maximum_bytes": 536870912
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-growth-cohort3-development-report.json",
+    "sha256": "a21a60d3a53908bdc9bff8189e1d3f21ad92fe92f410eec3fd93dee5cd893c6e"
+  },
+  "budget_scope": "A3 cohort 3's sealed confirmation, one of four CPU hosts: the upgrade system serves its 240 sealed scheduling and cross episodes once at the canonical eight threads with the prefix cache; six-hour expiry and $9.40 allowance within the declared $37.60. Uploads only the trained tensors and manifests it serves and the two gate files. No GPU or training.",
+  "prior_attempts": [
+    {
+      "home": ".neuroshard/assistant-growth-cohort3-confirmation-upgrade-calendar-20261007",
+      "outcome": "Stopped before any sealed case was generated: the sealed manifests were missing from the execution sources, so the sparse checkout lacked them ($0.15 for all four hosts)."
+    }
+  ]
+}

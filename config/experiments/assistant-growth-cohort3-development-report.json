@@ -1,0 +1,119 @@
+{
+  "format": "neuroshard-assistant-growth-cohort3-development-report/1",
+  "cohort": 3,
+  "declaration_sha256": "b8fd55a681d1136ff298a6249879a4d77f5fdd4977ad2bf4947b3c119b1cb82b",
+  "execution_sha256": "485a7dac122183ca28bc5245950a68e6a4789a18411b98177caa5007acbaa0b3",
+  "decision": "A3 cohort-3 development: the upgraded system completed scheduling 24/24 (previous 24, +0 -0), cross 8/8 (previous 8, +0 -0), drafting 23/24 (previous 19, +4 -0); p95 88.3 s. Passes: the fresh sealed confirmation opens once.",
+  "report": {
+    "sets": {
+      "scheduling": {
+        "upgrade": 24,
+        "previous": 24,
+        "cases": 24,
+        "gained": [],
+        "lost": [],
+        "net": 0
+      },
+      "cross": {
+        "upgrade": 8,
+        "previous": 8,
+        "cases": 8,
+        "gained": [],
+        "lost": [],
+        "net": 0
+      },
+      "drafting": {
+        "upgrade": 23,
+        "previous": 19,
+        "cases": 24,
+        "gained": [
+          "workflow-5512bfdcbf01",
+          "workflow-842f73726ac2",
+          "workflow-bf78a2b7a3ee",
+          "workflow-caf22532f0f4"
+        ],
+        "lost": [],
+        "net": 4
+      }
+    },
+    "p95_seconds": 88.33980525499987,
+    "checks": {
+      "drafting": true,
+      "lost": true,
+      "p95": true
+    },
+    "passed": true,
+    "a2_selected_arm": {
+      "scheduling": 24,
+      "cross": 8,
+      "drafting": 24
+    },
+    "turn_routes": {
+      "scheduling": {
+        "scheduling": 36,
+        "drafting": 0
+      },
+      "cross": {
+        "scheduling": 8,
+        "drafting": 4
+      },
+      "drafting": {
+        "scheduling": 0,
+        "drafting": 40
+      }
+    },
+    "model_calls": {
+      "scheduling": 109,
+      "cross": 56,
+      "drafting": 183
+    },
+    "previous_model_calls": {
+      "scheduling": 109,
+      "cross": 56,
+      "drafting": 205
+    }
+  },
+  "host": {
+    "result_sha256": "743ad809eb7c581bac90a96c8b45f911db752b8f481782ccacba47b5235385bc",
+    "source_commit": "1ff17897ed8333fe253043cf42b3937a38411d16",
+    "execution_completed": true,
+    "error": null,
+    "wall_seconds": 3282.419295092,
+    "peak_rss_bytes": 24815337472,
+    "ci": {
+      "id": 37635472105,
+      "head_sha": "1ff17897ed8333fe253043cf42b3937a38411d16",
+      "conclusion": "success",
+      "html_url": "https://github.com/neuroshard-ai/neuroshard/actions/runs/37635472105"
+    }
+  },
+  "resources_finished": {
+    "finished_utc": "2026-10-07T15:44:24.123531+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-04547ca7dd001191e"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 3472.130055,
+    "conservative_compute_usd": 1.02080623617,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "resource_verification": {
+    "checked_utc": "2026-10-07T15:56:12.790964+00:00",
+    "instances": [
+      {
+        "id": "i-04547ca7dd001191e",
+        "state": "terminated"
+      }
+    ],
+    "volumes": [],
+    "security_group": "retired"
+  },
+  "conservative_compute_usd": 1.02080623617,
+  "confirmation_may_open": true,
+  "sealed_opened": false,
+  "checklist_credit": false,
+  "admission_evidence": false
+}

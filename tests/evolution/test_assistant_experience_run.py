@@ -552,7 +552,7 @@ def test_compositional_practice_holds_out_every_development_and_confirmation_pai
     manifest = read(ROOT / compose['data'])
     assert list(manifest['splits']) == list(data.COMPOSE) == compose['collection']['splits']
     # Splits declared after the compositional study are checked against it in their own tests.
-    later = {'confirmation4', 'confirmation5'}
+    later = {'confirmation4', 'confirmation5', 'confirmation6'}
     assert sorted(manifest['disjoint_from']) == sorted(s for s in data.SPLITS if s not in data.COMPOSE and s not in later)
     for held, splits in (('development', ['development']), ('confirmation', list(data.CONFIRMATIONS))):
         for split in splits:
