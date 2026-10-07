@@ -17,10 +17,17 @@ from neuroshard.evolution.assistant_workflow_data import public_case
 from neuroshard.evolution.modular_reference_execution import identity
 
 
+def workspace(policies):
+    """The calendar interface whose workspace runs every route's calls: the free-slot one if any route offers it."""
+    from neuroshard.evolution import assistant_calendar_slots as slots
+
+    return slots if any(policy.get('interface') == slots.INTERFACE for policy in policies) else calendar
+
+
 def execute(case, routes, select, *, _rescore=True):
     """``routes`` maps a name to (respond, policy); ``select(turn, user)`` names the route of each user turn."""
     public = public_case(case)
-    world = calendar.Workspace(public['world'])
+    world = workspace([policy for _, policy in routes.values()]).Workspace(public['world'])
     history, calls, rounds, generations = [], [], [], []
     started = time.monotonic()
     for turn, user in enumerate(public['user_turns']):
@@ -151,7 +158,7 @@ def score(case, result, policies):
                 or count - previous_calls > policy['limits']['tool_calls_per_user_turn']
                 or generations - previous_generations > policy['limits']['model_turns_per_user_turn']):
             raise ValueError('invalid workflow counters or budget')
-        replay = calendar.replay_transcript(case['world'], result['calls'][:count])
+        replay = workspace(policies.values()).replay_transcript(case['world'], result['calls'][:count])
         if identity(replay) != identity(row['snapshot']):
             raise ValueError('workspace state does not match tool transcript')
         last = result['generations'][generations - 1]

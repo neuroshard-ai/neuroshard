@@ -265,7 +265,21 @@ remain evidence, not readiness claims for this assistant.
   [A diagnostic of the failures](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION_DIAGNOSTIC.md)
   ($0): 76 of the 86 failed episodes saved the meeting on the right date at the wrong
   start time, every attendee's calendar read. The interval arithmetic fails, not routing
-  or tool use.
+  or tool use. The project owner chose [round 5](docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md)
+  and raised A3's ceiling to $150: a deterministic free-slot tool in the calendar interface
+  for every system that serves scheduling, the unchanged control included, so a gain over
+  the control is learning, not the tool. Round 4's demonstrations are rewritten for the
+  tool and the units retrained; the calibrated router is kept. Fresh sealed scheduling,
+  cross and drafting sets are frozen in the declaration ($137.87 in allowances).
+  [With the tool, both units solved every integration scheduling case](docs/ASSISTANT_REPEATED_GROWTH_ROUND5_RESULTS.md)
+  ($4.46): U2 and L2 64/64, against 38–39 without it; cross 8/8 and 6/8. The control,
+  the accepted version given the same tool but no scheduling training, solved 21/64 and
+  0/8. A3 has spent $67.33 of $150.
+  [Development passed](docs/ASSISTANT_REPEATED_GROWTH_DEVELOPMENT7_RESULTS.md) ($3.20).
+  The candidate, the separate module, completed 24/24 scheduling and 8/8 cross and kept
+  all 19 accepted drafting successes, at p95 99.4 s; the separate update did the same, and
+  the shared version lost one drafting success. Routing was exact. The fresh sealed
+  confirmation opens once on five CPU hosts (at most $47). A3 has spent $70.53 of $150.
 - [x] Port Granite execution to the shard runtime and validate numerical/cache
   agreement and checkpoint recovery before distributing a passing candidate.
   [Closed with A4](docs/A4_SHARDING_REVIEW.md).

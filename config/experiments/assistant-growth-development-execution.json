@@ -54,17 +54,17 @@
   "worker_seconds": 6300,
   "memory_bytes": 68719476736,
   "units": {
-    "L2": {
-      "checkpoint": "L2",
-      "trainable_sha256": "bbe4feefbb5603f470483696c2dc9aee6b657835b4660e86d57bd4f624330ff7"
-    },
     "U1": {
       "checkpoint": "U1",
       "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
     },
     "U2": {
       "checkpoint": "U2",
-      "trainable_sha256": "8d7922fa6a149fa6c1e7bab74d627877af5251c0adcffefcbb593a414ef536d6"
+      "trainable_sha256": "d85d97174946efa28dc3e545b2a6fdd5b9073dff0b818e6eb13d7fab08e5ae62"
+    },
+    "L2": {
+      "checkpoint": "L2",
+      "trainable_sha256": "461b36aaaab3410201f05278b37e7a74e550fbe4327aa02e48d54a44cf5f6550"
     }
   },
   "gates": {
@@ -112,9 +112,9 @@
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/assistant-growth-development-separate-update-resources.json": "53ddbc093a22caaeae6ee53236688e2cc051abf07e758f740c7b06f87721f436",
-    "config/experiments/assistant-growth-development-separate-module-resources.json": "554d1f2483fec7533a7dba3c4c99109778dc757a3ce85e5ba9f1c3997e9f028f",
-    "config/experiments/assistant-growth-development-shared-resources.json": "659d8f16ee58e77d0099c2cbabd28db8f0dda2bc6fbba86ecf234a814a360459",
+    "config/experiments/assistant-growth-development-separate-update-resources.json": "25bbdf8753446cebfc066e84aacdfaf8c343d10eeb1806de2bd4ef58546acba6",
+    "config/experiments/assistant-growth-development-separate-module-resources.json": "5c5c904aaee6e647e050bc7897985ab3a75907b27a3a9ca05ccd6240ad2c1891",
+    "config/experiments/assistant-growth-development-shared-resources.json": "528931aff4edcb788c7bc9c3666f25e013860bf2e4bc9ce93d77d86913619ffa",
     "config/experiments/assistant-growth-router.json": "94d76b1cd36b33fd053ef8f2ea35231145e411f7584a3505d3e1085896712f69",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER.md": "242363c2d64f42db1b39da9c873686ddc5ed8352eaafa8c14ac7ec0a81703922",
     "config/experiments/assistant-growth-development4-report.json": "e8569889cd8bb271b3acf18db0783a7e83f92c26fe2cb037c814c1a45a3640b2",
@@ -132,7 +132,15 @@
     "config/experiments/assistant-growth-router3.json": "c4842ae4e734645f765e17d7fd5af69f92ddefdaf6a947ef3d035326a5b76f08",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md": "47f317987589f9332f994c4bc724afa5b522ded2cf96f6112a95ddf3005d1498",
     "config/experiments/assistant-growth-router3-report.json": "93d281adaafd5aa1bbe40771b302f39985cbaa8b5b425831eaf74a99fdbb0878",
-    "config/experiments/assistant-growth-development5-report.json": "6daccda80ad46ef481a0d54c9650781bab67403dc339c7576d83ad3f353cb084"
+    "config/experiments/assistant-growth-development5-report.json": "6daccda80ad46ef481a0d54c9650781bab67403dc339c7576d83ad3f353cb084",
+    "config/experiments/assistant-growth-round5.json": "1a613496a180543e636c4e790b5912abb61bf4ca9fbfb5548d8c9bcb1719b2b8",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md": "3cfe1215549c386f4c75127741bc3daaac297897fe35e2197d6508274864287f",
+    "config/experiments/assistant-workflow-policy-calendar-slots.json": "59a6d4c026f2f2832421b7c44e931e602e22d6dfc9bc9361672866a38984153a",
+    "config/experiments/assistant-growth-round5-execution.json": "6b8a0c11b533a2ac9da59a995b154663a6111fcda16e67af3001e94bdc14bd4b",
+    "config/experiments/assistant-growth-round5-result.json": "4b014764e085799607484a92c100c3578698e5a543a981de3c8711acb5c1acbe",
+    "config/experiments/assistant-growth-round5-report.json": "e333c6a0a856314a1f580153d8f85fe41a8e32484203673abb0d235bf1d69f20",
+    "config/experiments/assistant-growth-development6-report.json": "517a36e5b1e53a34265a493d2084c68bd145659d62faa7937822926cd01b6700",
+    "config/experiments/assistant-growth-confirmation-report.json": "1f9bd7bff12e207e7429288b6af5ca2a681c920a2329054bdd4f8cf573b48fd1"
   },
   "sources": [
     "config/experiments/assistant-growth-stage1.json",
@@ -177,6 +185,14 @@
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER3.md",
     "config/experiments/assistant-growth-router3-report.json",
     "config/experiments/assistant-growth-development5-report.json",
+    "config/experiments/assistant-growth-round5.json",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md",
+    "config/experiments/assistant-workflow-policy-calendar-slots.json",
+    "config/experiments/assistant-growth-round5-execution.json",
+    "config/experiments/assistant-growth-round5-result.json",
+    "config/experiments/assistant-growth-round5-report.json",
+    "config/experiments/assistant-growth-development6-report.json",
+    "config/experiments/assistant-growth-confirmation-report.json",
     "config/experiments/assistant-growth-development-execution.json",
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
@@ -207,16 +223,22 @@
     "src/neuroshard/evolution/modular_tools.py",
     "src/neuroshard/version.py",
     "scripts/run_assistant_growth_development.py",
-    "scripts/modular_reference_cloud.py"
+    "scripts/modular_reference_cloud.py",
+    "src/neuroshard/evolution/assistant_calendar_slots.py"
   ],
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "attempts": 1,
   "serving": "prefix-cache",
-  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its scheduling unit, and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the pinned message-feature router and its shift toward scheduling, the same for every version. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit.",
+  "execution": "Per version, one CPU host: a preparation worker, then one fresh worker at the canonical eight threads that loads the frozen parent, the version's drafting unit and its round-5 scheduling unit, and routes the 24 scheduling, 8 cross and 24 drafting opened development cases turn by turn with the pinned calibrated router, scheduling turns under the free-slot policy. Drafting turns are served as A2 served them: the round-4 gate chooses, once per episode, between the parent and the drafting unit.",
   "interpretation": "The declared stage-1 development gate, assessed once all three versions finish: the candidate is the separate version with more scheduling and cross successes, a tie going to the low-rank module. Passing opens the sealed confirmation sets once; it is not admission, promotion or checklist credit.",
   "router4": {
     "result_sha256": "931dcdb5c1e98adce5ff75a80baac14198b9830f3475625daa61519810b2f868",
     "report_sha256": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12"
+  },
+  "scheduling_policy": "config/experiments/assistant-workflow-policy-calendar-slots.json",
+  "round5": {
+    "result_sha256": "4b014764e085799607484a92c100c3578698e5a543a981de3c8711acb5c1acbe",
+    "report_sha256": "e333c6a0a856314a1f580153d8f85fe41a8e32484203673abb0d235bf1d69f20"
   }
 }

@@ -53,17 +53,17 @@
   "prepare_seconds": 900,
   "memory_bytes": 68719476736,
   "units": {
-    "L2": {
-      "checkpoint": "L2",
-      "trainable_sha256": "bbe4feefbb5603f470483696c2dc9aee6b657835b4660e86d57bd4f624330ff7"
-    },
     "U1": {
       "checkpoint": "U1",
       "trainable_sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
     },
     "U2": {
       "checkpoint": "U2",
-      "trainable_sha256": "8d7922fa6a149fa6c1e7bab74d627877af5251c0adcffefcbb593a414ef536d6"
+      "trainable_sha256": "d85d97174946efa28dc3e545b2a6fdd5b9073dff0b818e6eb13d7fab08e5ae62"
+    },
+    "L2": {
+      "checkpoint": "L2",
+      "trainable_sha256": "461b36aaaab3410201f05278b37e7a74e550fbe4327aa02e48d54a44cf5f6550"
     }
   },
   "gates": {
@@ -86,18 +86,24 @@
     }
   },
   "development_report": {
-    "path": "config/experiments/assistant-growth-development6-report.json",
-    "sha256": "517a36e5b1e53a34265a493d2084c68bd145659d62faa7937822926cd01b6700"
+    "path": "config/experiments/assistant-growth-development7-report.json",
+    "sha256": "d5224238e1ac1102e4d5297de26a0cb30f5188091bd58630b0d8df22888446b8"
   },
-  "drafting_data": "config/experiments/assistant-workflow-data-confirmation4.json",
+  "drafting_data": "config/experiments/assistant-workflow-data-confirmation5.json",
+  "sealed": {
+    "scheduling": "confirmation2",
+    "cross": "cross-confirmation2",
+    "drafting": "confirmation5",
+    "scheduling_data": "config/experiments/assistant-schedule-data-confirmation2.json"
+  },
   "contracts": {
     "config/experiments/assistant-growth-stage1.json": "cd4c1a23f8cb74c92795545177c957ff1b3dee2d43916ecdc3eaf8855c724865",
     "docs/ASSISTANT_REPEATED_GROWTH_STAGE1.md": "224e64998e5fae9c9f055032148f6dd44d45c33f23be4525066a768310fb8c09",
     "config/experiments/assistant-growth-router4.json": "b0eba380e106f0ec8c154d7a8022f99fa3fd01e1ecec4231de4d7dc7cad1b1a0",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md": "4866c93b1b4a967f9bc240d15241ef3e84f6462f6ac9ddfb8e7b74b2f0814f75",
     "config/experiments/assistant-growth-router4-report.json": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12",
-    "config/experiments/assistant-growth-development6-report.json": "517a36e5b1e53a34265a493d2084c68bd145659d62faa7937822926cd01b6700",
-    "config/experiments/assistant-growth-development-execution.json": "0c62b650d514748d587d976020b00ae996acac454a2e5a426665c05af62ca041",
+    "config/experiments/assistant-growth-development7-report.json": "d5224238e1ac1102e4d5297de26a0cb30f5188091bd58630b0d8df22888446b8",
+    "config/experiments/assistant-growth-development-execution.json": "97ef1d3f58e8760a736c73eda3520bdf2e4c66a5e5abac47177985f432cd60ac",
     "config/experiments/assistant-growth-round4.json": "e2a38ff17b1c7009d349f174cfa17911d6a39ea0a2fa269442372d5d7bff5ad8",
     "config/experiments/assistant-growth-round4-report.json": "33200e548eca0acebc8eeb87260fd8fa0ad03ce8a9cbbbacf2f6230a4d7da3fd",
     "config/experiments/assistant-growth.json": "5ed81ffe5716d86c83fadac180171c4c44afa5b912fefcd298d3169bc2824333",
@@ -107,17 +113,22 @@
     "config/experiments/assistant-workflow-policy-calendar.json": "22b7351ec748265b6f22c5c3b8c83e5a6e80792c67e1f11540c6501d0574842e",
     "config/experiments/assistant-schedule-data.json": "2e184d28098238853b192691d5c82f82d9d0d5b5a8a0e45cb967eb9ddc615fbb",
     "config/experiments/assistant-workflow-data.json": "ce8142883f4beafec1a263cb6b3cb41f5ec6afdf0d7409d11ac19ad32f52aa1b",
-    "config/experiments/assistant-workflow-data-confirmation4.json": "96702f4edefdd1f2b1921a0bdfb76e7ccc6b566e86f41ee473139ac69f2fd56e",
+    "config/experiments/assistant-workflow-data-confirmation5.json": "e941bc9a1ca03b512d05d5cc71873ad67004189b55002b2f39095c47bb06ca2f",
+    "config/experiments/assistant-schedule-data-confirmation2.json": "be5d36d1e6b6215c42f695362d1ec6fae1778e1cce7d8c9b635b977d63cef0b3",
+    "config/experiments/assistant-growth-round5.json": "1a613496a180543e636c4e790b5912abb61bf4ca9fbfb5548d8c9bcb1719b2b8",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md": "3cfe1215549c386f4c75127741bc3daaac297897fe35e2197d6508274864287f",
+    "config/experiments/assistant-growth-round5-report.json": "e333c6a0a856314a1f580153d8f85fe41a8e32484203673abb0d235bf1d69f20",
+    "config/experiments/assistant-workflow-policy-calendar-slots.json": "59a6d4c026f2f2832421b7c44e931e602e22d6dfc9bc9361672866a38984153a",
     "config/experiments/assistant-workflow-canonical.json": "c24ab49cc014a164f3fed69c84e217846859cd85c914a2d654839bb3be7f8bb5",
     "config/experiments/assistant-workflow-canonical-execution.json": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb",
     "config/experiments/granite-reference.json": "81808d939761d321c0c7be294085a17b7c19a7c8b7cb547f844f1bbc2a193f7d",
     "config/experiments/granite-reference-artifacts.json": "4641ce7da1e86b955d7714f4bd0590430b1d0446a51884cb24265e8648cbcbb7",
     "docs/granite-reference-requirements.txt": "c01affd2cc90cdc44b6c0b5998b263941a71eb08ee676973236066c28b208501",
-    "config/experiments/assistant-growth-confirmation-candidate-calendar-resources.json": "babf70c04ad689a1287164e03d6d74bbd0963c8cc06b66a3fcf76f94d1719662",
-    "config/experiments/assistant-growth-confirmation-candidate-drafting-resources.json": "eb7821dd84c53ed74ac5db5ad3ed0fbbf1101b450fbd351cee05683af3b60d7b",
-    "config/experiments/assistant-growth-confirmation-shared-drafting-resources.json": "6634f9b672e502b1b6fbb2c086ea8b049ede25f5840a1ccb0aa61a149d1c2093",
-    "config/experiments/assistant-growth-confirmation-accepted-drafting-resources.json": "44ce4f7199a928c97cbbecec3391299fb20a5b6741543348b872e2f3271882bc",
-    "config/experiments/assistant-growth-confirmation-accepted-calendar-resources.json": "5c8ab77a0c3fe2e115c92c7d7424686d7159ab9a70514f48d4eea2f53e72d792"
+    "config/experiments/assistant-growth-confirmation-candidate-calendar-resources.json": "4a27a3bc94fc9976ba680b72dd3f8f3b4cf0b5635e9f5603a61c428940a024a2",
+    "config/experiments/assistant-growth-confirmation-candidate-drafting-resources.json": "850cf753d4a245ea551456f5faf936bf40ec0ba295d73f849cc2d61901dc8730",
+    "config/experiments/assistant-growth-confirmation-shared-drafting-resources.json": "729b13c02da6a0867cf0f9cd689d24ef82f3852229c0eb99d4d09855bb15ca2a",
+    "config/experiments/assistant-growth-confirmation-accepted-drafting-resources.json": "4dfb3a931f2d872abba500d086f067cb3b57e1b78458defc6676526091706459",
+    "config/experiments/assistant-growth-confirmation-accepted-calendar-resources.json": "0af2bfecb8a9a7631005d9cf7789e31db97986d746ac0e8e93f797292a273c22"
   },
   "sources": [
     "config/experiments/assistant-growth-stage1.json",
@@ -125,7 +136,7 @@
     "config/experiments/assistant-growth-router4.json",
     "docs/ASSISTANT_REPEATED_GROWTH_ROUTER4.md",
     "config/experiments/assistant-growth-router4-report.json",
-    "config/experiments/assistant-growth-development6-report.json",
+    "config/experiments/assistant-growth-development7-report.json",
     "config/experiments/assistant-growth-development-execution.json",
     "config/experiments/assistant-growth-round4.json",
     "config/experiments/assistant-growth-round4-report.json",
@@ -136,7 +147,12 @@
     "config/experiments/assistant-workflow-policy-calendar.json",
     "config/experiments/assistant-schedule-data.json",
     "config/experiments/assistant-workflow-data.json",
-    "config/experiments/assistant-workflow-data-confirmation4.json",
+    "config/experiments/assistant-workflow-data-confirmation5.json",
+    "config/experiments/assistant-schedule-data-confirmation2.json",
+    "config/experiments/assistant-growth-round5.json",
+    "docs/ASSISTANT_REPEATED_GROWTH_ROUND5.md",
+    "config/experiments/assistant-growth-round5-report.json",
+    "config/experiments/assistant-workflow-policy-calendar-slots.json",
     "config/experiments/assistant-workflow-canonical.json",
     "config/experiments/assistant-workflow-canonical-execution.json",
     "config/experiments/granite-reference.json",
@@ -151,6 +167,7 @@
     "src/neuroshard/__init__.py",
     "src/neuroshard/evolution/__init__.py",
     "src/neuroshard/evolution/assistant_calendar.py",
+    "src/neuroshard/evolution/assistant_calendar_slots.py",
     "src/neuroshard/evolution/assistant_experience.py",
     "src/neuroshard/evolution/assistant_experience_eval.py",
     "src/neuroshard/evolution/assistant_experience_gate.py",
@@ -184,6 +201,6 @@
   "training_authorized": false,
   "gpu_launch_authorized": false,
   "attempts": 1,
-  "execution": "Five CPU hosts, one system and set each, on the canonical runtime with the prefix cache. The candidate (separate_module) and the shared version are routed turn by turn by the pinned message-feature router with its shift toward scheduling, the router development served; the accepted version runs as accepted. Each sealed set is opened once, behind the pinned development pass.",
+  "execution": "Five CPU hosts, one system and set each, on the canonical runtime with the prefix cache. The candidate (separate_module) and the shared version are routed turn by turn by the pinned message-feature router with its shift toward scheduling, the router development served, with scheduling turns under the free-slot policy; the accepted version runs as accepted. Each sealed set is opened once, behind the pinned development pass.",
   "interpretation": "The declared stage-1 confirmation gate and A3's comparison, assessed after all five hosts finish. Passing accepts cohort 2; it is not native promotion."
 }

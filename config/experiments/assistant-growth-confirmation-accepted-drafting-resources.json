@@ -24,7 +24,7 @@
   "attempts": 1,
   "outbound_upload_cap_bytes": 536870912,
   "upload": {
-    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-development-inputs",
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-development-round5-inputs",
     "files": [
       "U1/manifest.json",
       "U1/trainable.safetensors",
@@ -40,8 +40,8 @@
     "usd_per_hour": 1.0584
   },
   "prior_resources": {
-    "path": "config/experiments/assistant-growth-router4-report.json",
-    "sha256": "7b41e25a1f67b3f4b0a860ca08a3fade707d20f1295eb8d00c655a757ca79d12"
+    "path": "config/experiments/assistant-growth-round5-report.json",
+    "sha256": "e333c6a0a856314a1f580153d8f85fe41a8e32484203673abb0d235bf1d69f20"
   },
   "budget_scope": "A3's sealed confirmation, one of five CPU hosts: the accepted drafting system serves its 192 sealed episodes once at the canonical eight threads with the prefix cache; six-hour expiry and $9.40 allowance within the declared $47. Uploads only the trained tensors and manifests it serves and the two gate files. No GPU or training.",
   "prior_attempts": []

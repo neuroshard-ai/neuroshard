@@ -1,0 +1,55 @@
+{
+  "format": "neuroshard-assistant-growth-round5/1",
+  "status": "Declared on October 6, 2026, after the stage-1 confirmation and its diagnostic, and before any round-5 execution. The project owner chose this round and raised A3's ceiling to $150: a deterministic free-slot tool in the calendar interface for every system that serves scheduling, the unchanged control included, then training, integration, development and a fresh sealed confirmation.",
+  "amends": "config/experiments/assistant-growth-stage1.json",
+  "round4": "config/experiments/assistant-growth-round4.json",
+  "confirmation_report": "config/experiments/assistant-growth-confirmation-report.json",
+  "diagnostic": "config/experiments/assistant-growth-confirmation-diagnostic.json",
+  "findings": "On the sealed confirmation the candidate completed 117/192 scheduling episodes against a bar of 154. 76 of its 86 failed episodes saved the meeting on the right date with the right teams and length at the wrong start time, having read every attendee's busy times: 33 started in a gap too short, 25 skipped an earlier slot and 18 started inside a busy block. Routing, tool choice and team choice worked; the computation over busy times did not.",
+  "interface": {
+    "name": "workspace-calendar/2",
+    "policy": "config/experiments/assistant-workflow-policy-calendar-slots.json",
+    "tool": "free_slots(teams, date, duration_minutes, not_before): the windows on one date in which every listed team is free for at least the length, earliest first, starting on the quarter hour no earlier than not_before. It computes from the public calendars only; the model chooses the teams, the date, the length and the bound, and saves the meeting itself.",
+    "systems": "Every system that serves a scheduling turn uses it: the candidate, the separate update, the shared update, and the accepted version served as the previous system. The drafting route, its policy and every other tool, limit and scoring rule are unchanged."
+  },
+  "experience": {
+    "source": "One verified demonstration per training case, written by the round-3 solver under the free-slot interface: round 4's 1,152 training cases.",
+    "data": "config/experiments/assistant-schedule-data-growth.json",
+    "splits": [
+      "train2",
+      "train3",
+      "train4",
+      "cross-train2",
+      "cross-train3",
+      "cross-train4"
+    ],
+    "cases": 1152,
+    "verification": "Every demonstration must pass the scorer within the policy's limits, and every saved meeting must start at the first window the tool returned for its date; one that does not stops the round before training."
+  },
+  "training": {
+    "steps": 512,
+    "rule": "Round 4's: the same number of demonstrations and steps, mixture, learning rates and every other setting, the same for both arms. U2 and L2 again start from the accepted version."
+  },
+  "integration": "Stage 1's integration runs under the free-slot interface, plus the accepted version on the scheduling route: the control's rate with the tool. The selectors fitted here are reported only.",
+  "routing": "The calibrated router of config/experiments/assistant-growth-router4-report.json, pinned and unchanged. Its features use the drafting policy, which this round does not change.",
+  "sealed": {
+    "scheduling": "confirmation2",
+    "cross": "cross-confirmation2",
+    "drafting": "confirmation5",
+    "scheduling_data": "config/experiments/assistant-schedule-data-confirmation2.json",
+    "drafting_data": "config/experiments/assistant-workflow-data-confirmation5.json",
+    "rule": "Fresh splits, frozen in this declaration before any round-5 training, replace the spent confirmation sets, which are never reopened. They open once, only after the candidate passes development."
+  },
+  "unchanged": "The three versions, routing, the integration sets, the development and confirmation gates and their thresholds, the comparison and the outcome rules are stage 1's. The previous system in the confirmation is the accepted version under the free-slot interface, so a gain over it is learning, not the tool.",
+  "budget": {
+    "ceiling_usd": 150,
+    "spent_usd": 62.87,
+    "gpu_usd": 10,
+    "development_usd": 18,
+    "confirmation_usd": 47,
+    "allowances": "Stage 1 through the sealed confirmation cost $62.87. Round 5: GPU at most $10 on one A10G host with a five-hour expiry, development at most $18 on three CPU hosts, confirmation at most $47 on five CPU hosts; $137.87 within the $150 ceiling the project owner set."
+  },
+  "training_execution_authorized": true,
+  "gpu_launch_authorized": true,
+  "native_promotion_authorized": false
+}

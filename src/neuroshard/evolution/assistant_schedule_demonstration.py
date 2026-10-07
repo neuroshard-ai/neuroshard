@@ -4,7 +4,8 @@ Every reply is one or two tool calls in the native envelope the accepted version
 or a one-sentence confirmation. A plan's due date comes from shift_date on the start date
 and review interval the plan states. Busy times are listed two calls per reply, for each
 date the user asks about, until the expected date. The expected draft and meeting are
-saved once each. Only training cases are solved, and a demonstration becomes experience
+saved once each. Under the free-slot interface each of those dates is asked for its common
+windows instead. Only training cases are solved, and a demonstration becomes experience
 only after it passes the scorer in the calendar workspace.
 """
 
@@ -16,6 +17,7 @@ from neuroshard.evolution import assistant_schedule_data as schedule
 
 PLAN = re.compile(r'starts on (\d{4}-\d{2}-\d{2})\..*The review interval is (\d+) calendar days', re.S)
 FIRST_DATE = re.compile(r'from (\d{4}-\d{2}-\d{2}) onward')
+BOUND = re.compile(r'no earlier than (\d{2}:\d{2})')
 
 
 def call(name, arguments):
@@ -30,8 +32,23 @@ def plan_steps(case, project, plan_id):
             call('shift_date', {'start_date': start, 'days': int(interval)})]
 
 
-def texts(case):
-    """The demonstration's replies, in order, for every turn of one training case."""
+def busy_calls(turn, meeting, days):
+    """Under the first calendar interface: every attendee's busy times on each date."""
+    return [call('list_busy', {'team': team, 'date': day}) for day in days for team in meeting['attendees']]
+
+
+def slot_calls(turn, meeting, days):
+    """Under the free-slot interface: the attendees' common windows on each date, after any bound the user names."""
+    bound = BOUND.search(turn['user'])
+    return [call('free_slots', {'teams': meeting['attendees'], 'date': day, 'duration_minutes': meeting['duration_minutes'],
+                                'not_before': bound.group(1) if bound else '09:00'}) for day in days]
+
+
+def texts(case, lookups=busy_calls):
+    """The demonstration's replies, in order, for every turn of one training case.
+
+    ``lookups(turn, meeting, days)`` are the calls that find the meeting's time, made two per reply.
+    """
     if not case.get('capability') or case['split'] not in schedule.TRAINING:
         raise ValueError('demonstrations may only solve training scheduling cases')
     window = sorted(case['world']['calendars'][0]['busy'])
@@ -50,10 +67,15 @@ def texts(case):
             if case['family'] == 'day' and index == 0:
                 first = FIRST_DATE.search(turn['user']).group(1)
                 days = [day for day in window if first <= day <= meeting['date']]
-            busy = [call('list_busy', {'team': team, 'date': day}) for day in days for team in meeting['attendees']]
-            outputs += ['\n'.join(busy[i:i + 2]) for i in range(0, len(busy), 2)]
+            found = lookups(turn, meeting, days)
+            outputs += ['\n'.join(found[i:i + 2]) for i in range(0, len(found), 2)]
             outputs.append(call('save_meeting', meeting))
             outputs.append(f"Meeting draft saved for {meeting['project']}: {meeting['duration_minutes']} minutes with "
                            f"the {' and the '.join(meeting['attendees'])} on {meeting['date']} at "
                            f"{meeting['start_time']}.")
     return outputs
+
+
+def slot_texts(case):
+    """The same solutions under the free-slot interface."""
+    return texts(case, slot_calls)

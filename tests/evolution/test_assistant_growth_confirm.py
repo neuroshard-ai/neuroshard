@@ -9,7 +9,7 @@ from neuroshard.evolution import assistant_workflow as workflow
 from neuroshard.evolution.modular_reference_execution import ROOT, read, save, sha256
 
 from test_assistant_growth_eval import PLAN, SETS, episode
-from test_assistant_routing import CALENDAR, DRAFTING, scripted
+from test_assistant_routing import CALENDAR, DRAFTING, POLICIES, scripted
 from test_assistant_workflow import reference_texts
 
 # The opened development cases stand in for the sealed sets; the thresholds are scaled to them in memory.
@@ -45,7 +45,8 @@ PASSING = {'candidate-calendar': {'scheduling': 24, 'cross': 7}, 'accepted-calen
            'accepted-drafting': {'drafting': 19}}
 
 
-def test_the_confirmation_gate_and_the_comparison_from_five_hosts():
+def test_the_confirmation_gate_and_the_comparison_from_five_hosts(monkeypatch):
+    monkeypatch.setattr(confirm.development, 'policies', lambda: POLICIES)
     report = confirm.assess(SCALED, SETS, replies(PASSING))
     assert report['passed'], report['checks']
     assert report['correct'] == {'scheduling': 24, 'cross': 7, 'drafting': 19}
@@ -61,7 +62,8 @@ def test_the_confirmation_gate_and_the_comparison_from_five_hosts():
     assert not confirm.assess(SCALED, SETS, replies(weak))['checks']['scheduling']
 
 
-def test_every_confirmation_episode_is_rescored_and_in_order():
+def test_every_confirmation_episode_is_rescored_and_in_order(monkeypatch):
+    monkeypatch.setattr(confirm.development, 'policies', lambda: POLICIES)
     rows = replies(PASSING)
     forged = copy.deepcopy(rows)
     score = forged['accepted-calendar']['episodes']['scheduling'][0]['score']
@@ -112,15 +114,20 @@ def test_confirmation_inventory_pins_the_development_pass_and_the_router_it_serv
     from test_assistant_growth_baseline import cloud_module
 
     execution = read(ROOT / confirm.EXECUTION)
-    for name, digest in execution['contracts'].items():
-        assert sha256(ROOT / name) == digest
-    assert set(execution['contracts']) <= set(execution['sources']) and confirm.SCRIPT in execution['sources']
-    assert confirm.development_pass(execution) == 'separate_module'
-    development = read(ROOT / 'config/experiments/assistant-growth-development-execution.json')
-    assert execution['units'] == development['units'] and execution['gates'] == development['gates']
     report = read(ROOT / execution['development_report']['path'])
-    pinned = {version: report['report']['versions'][version]['selector']['gate_sha256']
-              for version in ('separate_module', 'shared')}
+    for name, digest in execution['contracts'].items():
+        # Later rounds re-pin development; a confirmation pins it as its own development ran.
+        pinned = report['execution_sha256'] if name == 'config/experiments/assistant-growth-development-execution.json' else (
+            sha256(ROOT / name))
+        assert pinned == digest
+    assert set(execution['contracts']) <= set(execution['sources']) and confirm.SCRIPT in execution['sources']
+    candidate = confirm.development_pass(execution)
+    stem = execution['development_report']['path'].removesuffix('-report.json')
+    served = {}
+    for version in (candidate, 'shared'):
+        served.update(read(ROOT / f"{stem}-{version.replace('_', '-')}-result.json")['reply']['units'])
+    assert {unit: row['trainable_sha256'] for unit, row in execution['units'].items()} == served
+    pinned = {version: report['report']['versions'][version]['selector']['gate_sha256'] for version in (candidate, 'shared')}
     assert execution['selectors'] == {'router': 'pinned', 'gate_sha256': pinned}
     canonical = read(ROOT / 'config/experiments/assistant-workflow-canonical-execution.json')
     assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
@@ -133,7 +140,7 @@ def test_confirmation_inventory_pins_the_development_pass_and_the_router_it_serv
         assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
                 + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
         units = {f"{execution['units'][unit]['checkpoint']}/{name}"
-                 for unit in confirm.units(system, 'separate_module') for name in ('manifest.json', 'trainable.safetensors')}
+                 for unit in confirm.units(system, candidate) for name in ('manifest.json', 'trainable.safetensors')}
         assert set(resources['upload']['files']) == units | {gate['file'] for gate in execution['gates'].values()}
         total += resources['planning_cap_usd']
     assert total <= 47
@@ -142,3 +149,20 @@ def test_confirmation_inventory_pins_the_development_pass_and_the_router_it_serv
 def test_importing_confirmation_does_not_load_torch():
     probe = 'import sys, neuroshard.evolution.assistant_growth_confirm; assert "torch" not in sys.modules'
     subprocess.run([sys.executable, '-c', probe], check=True, cwd=ROOT, env={'PYTHONPATH': str(ROOT / 'src')})
+
+
+def test_fresh_sealed_splits_replace_the_spent_ones_when_the_execution_names_them(monkeypatch):
+    monkeypatch.setattr(confirm, 'development_pass', lambda execution: 'separate_module')
+    execution = {'sealed': {'scheduling': 'confirmation2', 'cross': 'cross-confirmation2', 'drafting': 'confirmation5',
+                            'scheduling_data': 'config/experiments/assistant-schedule-data-confirmation2.json'},
+                 'drafting_data': 'config/experiments/assistant-workflow-data-confirmation5.json'}
+    calendar = confirm.opened(execution, 'calendar')
+    assert {name: {c['split'] for c in cases} for name, cases in calendar.items()} == {
+        'scheduling': {'confirmation2'}, 'cross': {'cross-confirmation2'}}
+    assert len(calendar['scheduling']) == 192 and len(calendar['cross']) == 48
+    drafting = confirm.opened(execution, 'drafting')['drafting']
+    assert {c['split'] for c in drafting} == {'confirmation5'} and len(drafting) == 192
+    with pytest.raises(ValueError, match='another split'):
+        confirm.opened({**execution, 'drafting_data': 'config/experiments/assistant-workflow-data-confirmation4.json'},
+                       'drafting')
+    assert confirm.sealed({}, 'calendar')[0] == confirm.SETS['calendar']

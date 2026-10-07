@@ -35,9 +35,11 @@ PROFILES = {f"assistant-growth-development-{version.replace('_', '-')}": version
 
 
 def policies():
+    """Each route's policy; the execution may name the scheduling route's, as round 5's free-slot policy."""
     growth = read(ROOT / read(ROOT / PLAN)['plan'])
     learning = read(ROOT / growth['cohort1']['learning'])
-    return {'drafting': read(ROOT / learning['policy']), 'scheduling': read(ROOT / growth['cohort2']['policy'])}
+    scheduling = read(ROOT / EXECUTION).get('scheduling_policy', growth['cohort2']['policy'])
+    return {'drafting': read(ROOT / learning['policy']), 'scheduling': read(ROOT / scheduling)}
 
 
 def committed_sources(root=ROOT):
