@@ -91,6 +91,8 @@
     "config/experiments/assistant-growth-cohort3-development-execution.json": "485a7dac122183ca28bc5245950a68e6a4789a18411b98177caa5007acbaa0b3",
     "config/experiments/assistant-growth-cohort3-development-result.json": "743ad809eb7c581bac90a96c8b45f911db752b8f481782ccacba47b5235385bc",
     "config/experiments/assistant-growth-cohort3-development-report.json": "a21a60d3a53908bdc9bff8189e1d3f21ad92fe92f410eec3fd93dee5cd893c6e",
+    "config/experiments/assistant-workflow-data-confirmation6.json": "103cf688b78be02cb5a297532af7305372b574cfdb75de728172a4a60a86096e",
+    "config/experiments/assistant-schedule-data-confirmation3.json": "923c3c4974e3d3c9d625bd9dbdaeaa18ecda9dcef57ac28f3320e4985b386f6d",
     "config/experiments/assistant-growth-development7-separate-module-result.json": "4038c6379877f05e0f32866bc74142f5a8365a1b84e957cb4225066f7f811daf",
     "config/experiments/assistant-growth-development7-report.json": "d5224238e1ac1102e4d5297de26a0cb30f5188091bd58630b0d8df22888446b8",
     "config/experiments/assistant-growth-confirmation2-report.json": "64e3ebf1bd8ca951c3c2f6f84c9fafebf7bfb45e78bc1c43caead6d7578dd859",
@@ -146,10 +148,10 @@
     "config/experiments/assistant-growth-development6-report.json": "517a36e5b1e53a34265a493d2084c68bd145659d62faa7937822926cd01b6700",
     "config/experiments/assistant-growth-confirmation-report.json": "1f9bd7bff12e207e7429288b6af5ca2a681c920a2329054bdd4f8cf573b48fd1",
     "config/experiments/assistant-growth-cohort3-development-resources.json": "45108a5ed36aa4b3ce70c30c924407693d31723fc389157c900d23735e0d69c6",
-    "config/experiments/assistant-growth-cohort3-confirmation-upgrade-calendar-resources.json": "5fea32e89ba821a4667946a82e699d88c764626feb2ff04aa4c6a24193dbbfb8",
-    "config/experiments/assistant-growth-cohort3-confirmation-upgrade-drafting-resources.json": "510ee540f107447abaf175771a82d4798df1e5f3853eadf27e1cca2a58ef2319",
-    "config/experiments/assistant-growth-cohort3-confirmation-previous-calendar-resources.json": "3daac192c171f8e9aefe1d94b37fcb86bb11883a6f4df645facb193ed73f4bc6",
-    "config/experiments/assistant-growth-cohort3-confirmation-previous-drafting-resources.json": "75f7396ccb8cef1fbfd45f53861c9e6036e03bb8038ece63a591bd2d866928bf"
+    "config/experiments/assistant-growth-cohort3-confirmation-upgrade-calendar-resources.json": "5a7a72568d285909af4c460a6b618e9e68bdf572ad950846974fe9aa0c6cf116",
+    "config/experiments/assistant-growth-cohort3-confirmation-upgrade-drafting-resources.json": "181d680e26eaaf772969b4ee80e8b9354d17dab248e65ba5bfd732ba82e6b14d",
+    "config/experiments/assistant-growth-cohort3-confirmation-previous-calendar-resources.json": "fc0d16198e02814e220f6f93b09ad7604fcefbedcfb2d0097c66d8976a723925",
+    "config/experiments/assistant-growth-cohort3-confirmation-previous-drafting-resources.json": "27c4eed4a769251888185a63eb77febf6bf42150b8ad4fb20b5ba9d0d129863d"
   },
   "sources": [
     "config/experiments/assistant-growth-cohort3.json",
@@ -160,6 +162,8 @@
     "config/experiments/assistant-growth-cohort3-development-execution.json",
     "config/experiments/assistant-growth-cohort3-development-result.json",
     "config/experiments/assistant-growth-cohort3-development-report.json",
+    "config/experiments/assistant-workflow-data-confirmation6.json",
+    "config/experiments/assistant-schedule-data-confirmation3.json",
     "config/experiments/assistant-growth-development7-separate-module-result.json",
     "config/experiments/assistant-growth-development7-report.json",
     "config/experiments/assistant-growth-confirmation2-report.json",

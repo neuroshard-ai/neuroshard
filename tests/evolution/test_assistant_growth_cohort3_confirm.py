@@ -124,6 +124,8 @@ def test_confirmation_inventory_pins_the_development_pass_units_and_sources():
     imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
                                        env={'PYTHONPATH': str(ROOT / 'src')}).split()
     assert set(imported) <= set(execution['sources'])
+    for name in (confirm.DECLARATION, DECLARATION['sealed']['drafting_data'], DECLARATION['sealed']['scheduling_data']):
+        assert name in execution['contracts']
     development = read(ROOT / confirm.development.EXECUTION)
     assert all(execution[key] == development[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment',
                                                                'threads', 'units', 'gates', 'serving'))
