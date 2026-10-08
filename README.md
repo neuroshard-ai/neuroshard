@@ -60,7 +60,8 @@ scheduling as a separate unit: [192/192 fresh sealed scheduling episodes](docs/A
 against 68 for the previous version given the same free-slot tool, with every drafting success
 kept. An upgrade of drafting then [solved 192/192 sealed drafting episodes](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)
 against 183, losing nothing and serving faster. The tasks are fictional workspace grammars, not
-open-ended work. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open. The research serving baseline remains
+open-ended work. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open
+([operator kit](docs/OPERATOR_KIT.md), [session contract](docs/ASSISTANT_PUBLIC.md)). The research serving baseline remains
 the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
 (+4/32). None of this is a public promoted model.
 

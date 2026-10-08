@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 5, 2026. Status: 3/6 milestones complete (A1, A2, A4).**
+**Updated October 8, 2026. Status: 4/6 milestones complete (A1–A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -482,13 +482,19 @@ No automatic training or admission follows a baseline. This is not a public assi
   served across three owners reproduced all 24 single-host development episodes token for
   token ($1.96 over two attempts).
   The [operator kit](docs/OPERATOR_KIT.md) is the one page to send volunteers.
+  [Join and recovery](docs/ASSISTANT_JOIN_RECOVERY.md) is what those operators follow
+  once four are confirmed.
 - [ ] **A6 — Sustainable public assistant.** Versioned chat/tool/memory interface,
   consent and private-data boundaries, join/recovery guides, monitored quality,
   resource limits, funding, rollback and a public operating soak. Requires A1–A5;
   neither a research pass nor a token transaction substitutes for usability.
+  The [versioned session](docs/ASSISTANT_PUBLIC.md) (`neuroshard.assistant.public`)
+  is declared: current `a3-cohort3`, rollback `a2-u1`, default consent deny. It is
+  not a public endpoint.
 
 A1–A4 are complete. A5 needs independently administered operators, and recruitment
-can proceed now with the [operator kit](docs/OPERATOR_KIT.md). A6 requires A1–A5.
+can proceed now with the [operator kit](docs/OPERATOR_KIT.md). A6 requires A1–A5;
+its session contract can be used now, the soak cannot.
 Native 0.4.0 stays separate until a complete candidate passes its activation
 contract.
 

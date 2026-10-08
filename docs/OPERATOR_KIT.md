@@ -42,5 +42,6 @@ join, leave, lose a shard and recover.
 ## To volunteer
 
 Open a GitHub issue titled "Independent operator: your name or organization", with your
-region and machine type. Setup instructions follow once four operators are confirmed
-and the protocol preflight has passed.
+region and machine type. Setup, soak and recovery steps are in
+[ASSISTANT_JOIN_RECOVERY.md](ASSISTANT_JOIN_RECOVERY.md). They start once four operators
+are confirmed and the protocol preflight has passed.
