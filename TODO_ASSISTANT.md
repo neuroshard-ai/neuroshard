@@ -490,7 +490,8 @@ No automatic training or admission follows a baseline. This is not a public assi
   neither a research pass nor a token transaction substitutes for usability.
   The [versioned session](docs/ASSISTANT_PUBLIC.md) (`neuroshard.assistant.public`)
   is declared: current `a3-cohort3`, rollback `a2-u1`, default consent deny. It is
-  not a public endpoint.
+  not a public endpoint. A [local research preview](docs/ASSISTANT_PREVIEW.md) runs
+  the accepted version from published modules on anyone's own machine.
 
 A1–A4 are complete. A5 needs independently administered operators, and recruitment
 can proceed now with the [operator kit](docs/OPERATOR_KIT.md). A6 requires A1–A5;
