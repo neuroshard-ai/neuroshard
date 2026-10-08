@@ -22,7 +22,7 @@ git clone --branch main https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
 python3.12 -m venv ~/.venvs/neuroshard-assistant
 source ~/.venvs/neuroshard-assistant/bin/activate
-python -m pip install -r docs/granite-reference-requirements.txt
+python -m pip install -r docs/granite-reference-requirements.txt cryptography==50.0.1
 python -m pip install --no-deps -e .
 neuroshard assistant fetch
 ```
