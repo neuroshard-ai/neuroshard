@@ -64,6 +64,9 @@ class Ring:
         self.received_bytes += payload.numel()
         return bytes(payload.numpy())
 
+    def command(self, op, length=0):
+        return command(op, length)
+
 
 def command(op, length=0):
     header = torch.tensor([op, length], dtype=torch.int64)

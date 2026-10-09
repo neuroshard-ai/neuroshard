@@ -50,4 +50,7 @@ and the [bonded serving ledger](OPTIMISTIC_SERVING.md).
    for A5. Contributions train the next module, its sealed gate promotes it, and
    the network switches version with the previous one kept for rollback.
 
-Milestone 1 is implemented and tested on the ledger's small fixtures.
+Milestones 1 and 2 are implemented and tested on small fixtures. A signed job
+served through the relay ([`neuroshard.inference.relay`](../src/neuroshard/inference/relay.py))
+matches single-host serving token for token. Both owners' committed logs, and
+the user's evidence signature, equal those of the in-datacenter ring.
