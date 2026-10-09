@@ -68,10 +68,15 @@ class LanguageModelEncoder:
         prompt = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
         return self.tokenizer(prompt, add_special_tokens=False)['input_ids']
 
-    def encode(self, texts, batch=16):
-        """Features for many texts: the shared prefix is identical, so each batch runs prefix plus suffix, padded right."""
+    def encode(self, texts, batch=16, layers=None):
+        """Mean state over each message after the shared prefix; one forward pass per batch, padded right.
+
+        With ``layers`` (hidden-state indices; 0 is the embeddings, the last is after the final
+        norm, the accepted feature), returns ``{layer: features}`` instead of final-layer features.
+        """
         torch = self.torch
-        out = []
+        wanted = layers if layers is not None else [-1]
+        out = {layer: [] for layer in wanted}
         for start in range(0, len(texts), batch):
             chunk = [self._ids(text) for text in texts[start:start + batch]]
             for ids in chunk:
@@ -82,10 +87,12 @@ class LanguageModelEncoder:
             ids = torch.tensor([row + [pad] * (longest - len(row)) for row in chunk])
             mask = torch.tensor([[1] * len(row) + [0] * (longest - len(row)) for row in chunk])
             with torch.no_grad():
-                states = self.model.model(input_ids=ids, attention_mask=mask).last_hidden_state.double()
-            for row, length in zip(states, map(len, chunk)):
-                out.append(row[len(self.prefix):length].mean(dim=0).tolist())
-        return out
+                hidden = self.model.model(input_ids=ids, attention_mask=mask, output_hidden_states=True).hidden_states
+            for layer in wanted:
+                states = hidden[layer].double()
+                for row, length in zip(states, map(len, chunk)):
+                    out[layer].append(row[len(self.prefix):length].mean(dim=0).tolist())
+        return out if layers is not None else out[-1]
 
 
 def strategy_features(cases, encode):

@@ -150,29 +150,96 @@ CAPABILITIES = {
 
 REAL = ('drafting', 'scheduling')
 SYNTHETIC = tuple(CAPABILITIES)
+
+# Unseen phrasings of the two real capabilities, authored for this study only: the router
+# must still send earlier cohorts' requests home when users word them differently. Labels
+# hold by construction: a draft request needs drafting, a meeting request needs scheduling.
+REAL_UNSEEN = {
+    'drafting': (
+        ('Could you put together a draft for {project} to the {team}? Go by the newest approved delivery plan.',
+         'draft for {project} -> {team}, latest approved plan, due on the plan start, cite sources, do not send',
+         'I need the {project} handoff written up for the {team} from the approved plan; keep it unsent.'),
+        ('Push that due date back {n} days.', 'Same draft, but address it to the {team}.'),
+    ),
+    'scheduling': (
+        ('When can the {team} and the {team2} both meet for {minutes} minutes on {date}? Book the first slot.',
+         'mtg: {project}, {team} + {team2}, {date}, {minutes} min, earliest common slot, draft only',
+         'Find a {minutes}-minute window on {date} that suits the {team} and the {team2} for {project} and hold it.'),
+        ('Bring the {team} into that meeting as well.', 'Make it {minutes} minutes instead, same day.'),
+    ),
+}
 # The order in which the study adds capabilities after the two real ones; confusable ones are spread out.
 ORDER = REAL + ('invoices', 'tickets', 'rooms', 'expenses', 'approvals', 'reminders', 'summaries', 'travel',
                 'inventory', 'timesheets', 'contacts', 'search')
+
+# What each unit would declare about itself when it joins: a short card, written without
+# reusing any request template. The prototype router is fitted on these alone.
+DESCRIPTIONS = {
+    'drafting': ('Writes and saves unsent document drafts for a project from its approved delivery plans.',
+                 'Composes a handoff draft to a team, citing the plan revision it used.',
+                 'Edits a saved draft: due dates, totals, recipients.'),
+    'scheduling': ('Books meetings at times when every attendee team is free.',
+                   'Finds a common free slot in team calendars and saves a meeting draft.',
+                   'Changes a booked meeting: attendees, length, earliest start.'),
+    'invoices': ('Bills a client or team: creates unsent invoices with amounts and due dates.',
+                 'Adds line items and payment terms to an invoice.',
+                 'Prepares billing documents for project work.'),
+    'tickets': ('Opens and tracks support issues when something is broken.',
+                'Reports a failure with a priority and assigns it to a person.',
+                'Escalates bugs and outages to the responsible team.'),
+    'rooms': ('Reserves physical meeting rooms and equipment for a time.',
+              'Books a named room on a date for a team.',
+              'Checks whether a room is available and holds it.'),
+    'expenses': ('Files spending claims with a category, amount and date.',
+                 'Records money a person spent for reimbursement.',
+                 'Attaches receipts and marks claims reimbursable.'),
+    'approvals': ('Signs off or rejects a revision of a plan.',
+                  'Records an approval decision and notifies the team.',
+                  'Withdraws or annotates an earlier sign-off.'),
+    'reminders': ('Sets personal reminders and notifications for a given time.',
+                  'Pings a person later so they do not forget something.',
+                  'Repeats or snoozes a reminder.'),
+    'summaries': ('Condenses reports and notes into short bullet points.',
+                  'Gives the main points of a long document briefly.',
+                  'Shortens or extends an existing summary.'),
+    'travel': ('Arranges trips: trains, flights and hotels between cities.',
+               'Buys or holds tickets for a traveller on a date.',
+               'Adds accommodation or return legs to a trip.'),
+    'inventory': ('Tracks warehouse stock levels and reorders supplies.',
+                  'Counts items on hand and flags low stock.',
+                  'Reserves stock for a team or changes reorder thresholds.'),
+    'timesheets': ('Logs hours a person worked on a project.',
+                   'Records time entries by day and marks them billable.',
+                   'Corrects or splits recorded work hours.'),
+    'contacts': ('Maintains the directory of people: phone numbers and emails.',
+                 'Adds or updates a person in a contact list.',
+                 'Removes outdated contact details.'),
+    'search': ('Finds files and documents in a folder by topic or date.',
+               'Looks up which documents mention something.',
+               'Filters and sorts search results.'),
+}
 SPLITS = {'fit': (61000, 48), 'test': (62000, 24), 'unseen': (63000, 24)}
 
 
 def _turns(rng, capability, phrasing):
     fit, unseen, own = CAPABILITIES[capability]
     slots = _slots(rng)
-    turns = [(capability, rng.choice(fit if phrasing == 'fit' else unseen).format(**slots))]
+    pool = fit if phrasing == 'fit' else unseen
+    template = rng.randrange(len(pool))
+    turns = [(capability, pool[template].format(**slots))]
     for _ in range(rng.choice((0, 1, 1, 2))):
-        pool = own if rng.random() < 0.6 else GENERIC
-        turns.append((capability, rng.choice(pool).format(**_slots(rng))))
-    return turns
+        follow = own if rng.random() < 0.6 else GENERIC
+        turns.append((capability, rng.choice(follow).format(**_slots(rng))))
+    return turns, template
 
 
 def make_case(split, capability, index):
-    """One fictional conversation: its user turns and the capability each turn needs."""
+    """One fictional conversation: its user turns, the capability each turn needs, and its opening template."""
     seed, _ = SPLITS[split]
     rng = random.Random(f'{seed}:{capability}:{index}')
-    turns = _turns(rng, capability, 'unseen' if split == 'unseen' else 'fit')
+    turns, template = _turns(rng, capability, 'unseen' if split == 'unseen' else 'fit')
     case = {'id': f'{split}-{capability}-{index:03d}', 'split': split, 'capability': capability,
-            'user_turns': [text for _, text in turns], 'labels': [label for label, _ in turns]}
+            'user_turns': [text for _, text in turns], 'labels': [label for label, _ in turns], 'template': template}
     case['sha256'] = identity(case)
     return case
 
@@ -182,11 +249,11 @@ def make_cross(split, first, second, index):
     seed, _ = SPLITS[split]
     rng = random.Random(f'{seed}:cross:{first}:{second}:{index}')
     phrasing = 'unseen' if split == 'unseen' else 'fit'
-    opening = _turns(rng, first, phrasing)[:1]
-    follow = _turns(rng, second, phrasing)[:1]
-    turns = opening + [(second, 'Next, ' + follow[0][1][0].lower() + follow[0][1][1:])]
+    opening, template = _turns(rng, first, phrasing)
+    follow, _ = _turns(rng, second, phrasing)
+    turns = opening[:1] + [(second, 'Next, ' + follow[0][1][0].lower() + follow[0][1][1:])]
     case = {'id': f'{split}-cross-{first}-{second}-{index:03d}', 'split': split, 'capability': f'{first}+{second}',
-            'user_turns': [text for _, text in turns], 'labels': [label for label, _ in turns]}
+            'user_turns': [text for _, text in turns], 'labels': [label for label, _ in turns], 'template': template}
     case['sha256'] = identity(case)
     return case
 
@@ -204,6 +271,22 @@ def cases(split, capabilities=SYNTHETIC, cross_per_pair=0):
         for second in capabilities:
             if first != second:
                 result.extend(make_cross(split, first, second, i) for i in range(cross_per_pair))
+    return result
+
+
+def real_unseen_cases(count=24):
+    """Authored unseen-phrasing conversations of drafting and scheduling, for the ``unseen`` set only."""
+    seed, _ = SPLITS['unseen']
+    result = []
+    for capability, (openings, follow_ups) in REAL_UNSEEN.items():
+        for index in range(count):
+            rng = random.Random(f'{seed}:real:{capability}:{index}')
+            turns = [rng.choice(openings).format(**_slots(rng))]
+            turns += [rng.choice(follow_ups).format(**_slots(rng)) for _ in range(rng.choice((0, 1, 1)))]
+            case = {'id': f'unseen-real-{capability}-{index:03d}', 'split': 'unseen', 'capability': capability,
+                    'user_turns': turns, 'labels': [capability] * len(turns)}
+            case['sha256'] = identity(case)
+            result.append(case)
     return result
 
 

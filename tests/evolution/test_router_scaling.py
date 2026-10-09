@@ -21,6 +21,10 @@ def clusters(routes, per_route=12, width=24, noise=0.2, seed=3):
     return features, rows
 
 
+def single_turn_cases(features):
+    return [{'id': key[:-2], 'labels': [key.split('-')[0]], 'user_turns': ['x']} for key in sorted(features)]
+
+
 def test_two_route_centroids_agree_with_the_accepted_rule():
     features, rows = clusters(('drafting', 'scheduling'), per_route=20, noise=0.4)
     binary = {key: (1.0 if route == 'scheduling' else 0.0, weight) for key, (route, weight) in rows.items()}
@@ -65,13 +69,15 @@ def test_logistic_router_fits_separable_routes():
 def test_frozen_centring_keeps_the_first_mean():
     order = ('a', 'b', 'c')
     features, _ = clusters(order, per_route=6)
-    cases = [{'id': key[:-2], 'labels': [key[0]], 'user_turns': ['x']} for key in sorted(features)]
+    cases = single_turn_cases(features)
     strategies = {'message': features, 'with-opening': features}
     frozen = scaling.growth(order, cases, {'test': cases}, strategies, strategies=('message',), centre='frozen')
     refit = scaling.growth(order, cases, {'test': cases}, strategies, strategies=('message',))
     assert len(frozen['steps']) == len(refit['steps']) == 2
-    assert frozen['steps'][1]['strategies']['message']['gate_sha256'] != refit['steps'][1]['strategies']['message']['gate_sha256']
+    assert frozen['final_gates']['message']['mean'] != refit['final_gates']['message']['mean']
     assert refit['steps'][1]['strategies']['message']['test']['turn_accuracy'] == 1.0
+    interval = refit['steps'][1]['strategies']['message']['test']['interval']
+    assert interval['turn_accuracy'] == [1.0, 1.0]
 
 
 def test_evaluation_counts_episodes_recall_confusion_and_retention():
@@ -83,6 +89,58 @@ def test_evaluation_counts_episodes_recall_confusion_and_retention():
     later = {**chosen, 'y#0': 'c'}
     kept = scaling.retention(chosen, later, cases)
     assert kept['previously_correct'] == 4 and kept['lost'] == 1 and kept['lost_turns'] == ['y#0']
+
+
+def test_bootstrap_resamples_whole_conversations():
+    cases = [{'id': f'c{i}', 'labels': ['a', 'a']} for i in range(40)]
+    chosen = {f'c{i}#{t}': ('a' if i % 2 == 0 else ('a' if t == 0 else 'b')) for i in range(40) for t in range(2)}
+    interval = scaling.bootstrap(chosen, cases, draws=500, seed=1)
+    low, high = interval['episode_accuracy']
+    assert low < 0.5 < high and 0.3 < low and high < 0.7
+    assert interval['turn_accuracy'][0] < 0.75 < interval['turn_accuracy'][1]
+    assert scaling.bootstrap(chosen, cases, draws=500, seed=1) == interval
+    assert scaling.bootstrap({}, cases) is None
+
+
+def test_coverage_abstains_on_the_least_confident_turns_first():
+    features, rows = clusters(('a', 'b'), per_route=20, noise=0.0)
+    gate = scaling.fit_centroids(features, rows)
+    hard = [(x + y) / 2 for x, y in zip(features['a-00#0'], features['b-00#0'])]
+    hard[1] += 0.001
+    features = {**features, 'a-99#0': hard}
+    cases = single_turn_cases(features)
+    curve = scaling.coverage(gate, cases, {'message': features}, ('a', 'b'), 'message', quantiles=(0.0, 0.05))
+    assert curve[0]['kept'] == 1.0 and curve[0]['errors_kept'] == 1
+    assert curve[1]['kept'] < 1.0 and curve[1]['errors_kept'] == 0 and curve[1]['kept_accuracy'] == 1.0
+    assert scaling.coverage(gate, cases, {'message': features}, ('a', 'b'), 'episode') is None
+
+
+def test_description_prototypes_share_the_fitted_centring_and_blend():
+    features, rows = clusters(('a', 'b'), per_route=10, noise=0.1)
+    fitted = scaling.fit_centroids(features, rows)
+    cards = {'a': ['alpha'], 'b': ['beta']}
+    lookup = {'alpha': features['a-00#0'], 'beta': features['b-00#0']}
+    described = scaling.prototypes(cards, lambda texts: [lookup[t] for t in texts], mean=fitted['mean'])
+    assert described['mean'] == fitted['mean'] and described['routes'] == ['a', 'b']
+    assert all(scaling.choose(described, features[key]) == route for key, (route, _) in rows.items())
+    zero = scaling.blend(fitted, described, 0.0)['means']
+    assert all(max(abs(x - y) for x, y in zip(zero[r], fitted['means'][r])) < 1e-12 for r in zero)
+    halfway = scaling.blend(fitted, described, 0.5)
+    assert halfway['blend'] == 0.5 and halfway['sha256'] == scaling._digest(halfway)
+    with pytest.raises(ValueError):
+        scaling.blend(fitted, scaling.fit_centroids(features, rows, mean=[0.0] * 24), 0.5)
+
+
+def test_paired_bootstrap_measures_the_difference_on_the_same_turns():
+    cases = [{'id': f'c{i}', 'labels': ['a']} for i in range(50)]
+    worse = {f'c{i}#0': 'a' if i < 25 else 'b' for i in range(50)}
+    better = {f'c{i}#0': 'a' if i < 45 else 'b' for i in range(50)}
+    result = scaling.paired_bootstrap(worse, better, cases, draws=500, seed=2)
+    assert result['difference'] == 0.4 and 0.2 < result['interval'][0] < 0.4 < result['interval'][1]
+    same = scaling.paired_bootstrap(worse, worse, cases, draws=100)
+    assert same['difference'] == 0.0 and same['interval'] == [0.0, 0.0]
+    with pytest.raises(ValueError):
+        scaling.paired_bootstrap(worse, {'c0#0': 'a'}, cases)
 
 
 def test_episode_strategy_routes_every_turn_from_the_opening():
@@ -107,8 +165,17 @@ def test_synthetic_cases_are_deterministic_disjoint_and_labelled():
     assert len(crosses) == len(data.SYNTHETIC) * (len(data.SYNTHETIC) - 1)
     assert all(case['labels'][0] != case['labels'][1] for case in crosses)
     assert set(data.ORDER) == set(data.REAL) | set(data.SYNTHETIC) and len(data.ORDER) == len(set(data.ORDER))
+    assert set(data.DESCRIPTIONS) == set(data.ORDER)
     with pytest.raises(ValueError):
         data.cases('confirmation')
+
+
+def test_descriptions_reuse_no_request_template():
+    templates = [t for fit, unseen, own in data.CAPABILITIES.values() for t in fit + unseen + own]
+    templates += [t for openings, follow in data.REAL_UNSEEN.values() for t in openings + follow]
+    for cards in data.DESCRIPTIONS.values():
+        for card in cards:
+            assert all(card.lower()[:30] not in template.lower() for template in templates)
 
 
 def test_real_anchors_read_only_training_and_integration_splits():
@@ -118,6 +185,14 @@ def test_real_anchors_read_only_training_and_integration_splits():
     assert any('scheduling' in case['labels'] for case in fit)
     with pytest.raises(ValueError):
         data.real_cases('unseen')
+
+
+def test_real_unseen_phrasings_differ_from_the_real_grammars():
+    unseen = data.real_unseen_cases(8)
+    assert {case['capability'] for case in unseen} == set(data.REAL)
+    assert all(set(case['labels']) == {case['capability']} for case in unseen)
+    real = {text for case in data.real_cases('fit', limit=16) + data.real_cases('test') for text in case['user_turns']}
+    assert not real & {text for case in unseen for text in case['user_turns']}
 
 
 def test_hashed_features_and_strategies():

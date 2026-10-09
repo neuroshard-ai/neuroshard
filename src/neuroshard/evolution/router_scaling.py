@@ -65,7 +65,7 @@ def fit_logistic(features, rows, epsilon=1e-6, steps=300, learning_rate=0.05, we
 
     keys = sorted(rows)
     order = sorted({rows[key][0] for key in keys})
-    raw = torch.tensor([features[key] for key in keys], dtype=torch.float64)
+    raw = torch.tensor(np.array([features[key] for key in keys]), dtype=torch.float64)
     mean = raw.mean(dim=0)
     x = torch.nn.functional.normalize(raw - mean, dim=1, eps=epsilon)
     y = torch.tensor([order.index(rows[key][0]) for key in keys])
@@ -197,7 +197,7 @@ def growth(order, fit_cases, eval_sets, features, *, rule='centroids', strategie
     """
     if centre not in ('refit', 'frozen'):
         raise ValueError('centre is refit or frozen')
-    steps, previous, mean = [], {}, {}
+    steps, previous, mean, gates = [], {}, {}, {}
     for size in range(start, len(order) + 1):
         routes = order[:size]
         step = {'routes': size, 'added': routes[-1], 'strategies': {}}
@@ -210,15 +210,124 @@ def growth(order, fit_cases, eval_sets, features, *, rule='centroids', strategie
             else:
                 gate = fit_logistic(features[fitted_with], rows)
             report = {'fit_turns': len(rows), 'gate_sha256': gate['sha256']}
+            gates[strategy] = gate
             for name, cases in eval_sets.items():
                 chosen = decisions(gate, cases, features, routes, strategy)
                 report[name] = evaluate(chosen, cases)
+                if report[name].get('turns'):
+                    report[name]['interval'] = bootstrap(chosen, cases)
                 if (strategy, name) in previous:
                     report[name]['retention'] = retention(previous[strategy, name], chosen, cases)
                 previous[strategy, name] = chosen
             step['strategies'][strategy] = report
         steps.append(step)
-    return {'order': list(order), 'rule': rule, 'centre': centre, 'steps': steps}
+    return {'order': list(order), 'rule': rule, 'centre': centre, 'steps': steps, 'final_gates': gates}
+
+
+def bootstrap(chosen, cases, draws=1000, seed=0, level=0.95):
+    """Percentile intervals for turn and episode accuracy, resampling whole conversations.
+
+    Turns of one conversation share an opening and often a template, so they are not
+    independent; resampling cases rather than turns keeps that correlation in the interval.
+    """
+    rng = np.random.default_rng(seed)
+    eligible = [case for case in cases if f'{case["id"]}#0' in chosen]
+    if not eligible:
+        return None
+    right = np.array([sum(chosen[f'{c["id"]}#{t}'] == label for t, label in enumerate(c['labels'])) for c in eligible])
+    turns = np.array([len(c['labels']) for c in eligible])
+    whole = (right == turns).astype(float)
+    picks = rng.integers(0, len(eligible), size=(draws, len(eligible)))
+    turn_acc = right[picks].sum(axis=1) / turns[picks].sum(axis=1)
+    episode_acc = whole[picks].mean(axis=1)
+    low, high = (1 - level) / 2 * 100, (1 + level) / 2 * 100
+    return {'turn_accuracy': [float(np.percentile(turn_acc, low)), float(np.percentile(turn_acc, high))],
+            'episode_accuracy': [float(np.percentile(episode_acc, low)), float(np.percentile(episode_acc, high))],
+            'draws': draws, 'level': level}
+
+
+def coverage(gate, cases, features, routes, strategy, quantiles=(0.0, 0.05, 0.1, 0.2, 0.3)):
+    """Accuracy of the turns a router keeps when it abstains on its least confident ones.
+
+    Confidence is the gap between the top two route scores. Abstaining means handing the turn
+    to a fallback (the parent, or a clarifying question) instead of a unit that may lack the
+    tools. The lowest-gap share ``q`` of the evaluated turns abstains (ties broken by order),
+    so this is a descriptive curve on the evaluated turns, not a calibrated policy.
+    """
+    allowed = set(routes)
+    keys, labels = [], []
+    for case in cases:
+        if set(case['labels']) <= allowed:
+            for turn, label in enumerate(case['labels']):
+                keys.append(f'{case["id"]}#{turn}')
+                labels.append(label)
+    if not keys or strategy == 'episode':
+        return None
+    matrix = score_matrix(gate, [features[strategy][key] for key in keys])
+    ordered = np.sort(matrix, axis=1)
+    gap = ordered[:, -1] - (ordered[:, -2] if matrix.shape[1] > 1 else ordered[:, -1] * 0)
+    picked = [gate['routes'][i] for i in np.argmax(matrix, axis=1)]
+    correct = np.array([p == label for p, label in zip(picked, labels)])
+    order = np.argsort(gap, kind='stable')
+    curve = []
+    for q in quantiles:
+        kept = np.ones(len(keys), dtype=bool)
+        kept[order[:int(round(q * len(keys)))]] = False
+        curve.append({'abstain_quantile': q, 'kept': float(kept.mean()),
+                      'kept_accuracy': float(correct[kept].mean()) if kept.any() else None,
+                      'errors_kept': int((~correct & kept).sum())})
+    return curve
+
+
+def prototypes(texts_by_route, encode, epsilon=1e-6, mean=None):
+    """A centroid router from a few written descriptions per route, not from routed conversations.
+
+    A new unit can ship such descriptions with its module, so the router can include it
+    before any labelled traffic exists. ``mean`` should be the centring of a fitted router
+    over the same feature, so both are compared in one space.
+    """
+    keys, rows, features = [], {}, {}
+    for route, texts in sorted(texts_by_route.items()):
+        for index, vector in enumerate(encode(list(texts))):
+            key = f'proto-{route}-{index}#0'
+            features[key], rows[key] = vector, (route, 1.0)
+            keys.append(key)
+    return fit_centroids(features, rows, epsilon, mean=mean)
+
+
+def blend(fitted, described, weight):
+    """Centroids that average a fitted router's class means with description prototypes, then renormalise."""
+    if fitted['rule'] != 'centroids' or described['rule'] != 'centroids' or fitted['mean'] != described['mean']:
+        raise ValueError('blending needs two centroid routers centred the same way')
+    means = {}
+    for route in fitted['routes']:
+        a = np.asarray(fitted['means'][route])
+        b = np.asarray(described['means'].get(route, fitted['means'][route]))
+        means[route] = _rows((1 - weight) * a + weight * b, fitted['epsilon']).tolist()
+    gate = {**{k: v for k, v in fitted.items() if k != 'sha256'}, 'means': means, 'blend': weight}
+    gate['sha256'] = _digest(gate)
+    return gate
+
+
+def paired_bootstrap(first, second, cases, draws=2000, seed=0, level=0.95):
+    """Interval for turn-accuracy(second) minus turn-accuracy(first) on the same turns, resampling conversations.
+
+    Both decision sets must cover the same turns. An interval that excludes zero is the
+    study's bar for calling one router better than another.
+    """
+    if set(first) != set(second):
+        raise ValueError('paired comparison needs the same turns')
+    eligible = [case for case in cases if f'{case["id"]}#0' in first]
+    if not eligible:
+        return None
+    diff = np.array([sum((second[f'{c["id"]}#{t}'] == label) - (first[f'{c["id"]}#{t}'] == label)
+                         for t, label in enumerate(c['labels'])) for c in eligible], dtype=float)
+    turns = np.array([len(c['labels']) for c in eligible], dtype=float)
+    picks = np.random.default_rng(seed).integers(0, len(eligible), size=(draws, len(eligible)))
+    deltas = diff[picks].sum(axis=1) / turns[picks].sum(axis=1)
+    low, high = (1 - level) / 2 * 100, (1 + level) / 2 * 100
+    return {'difference': float(diff.sum() / turns.sum()),
+            'interval': [float(np.percentile(deltas, low)), float(np.percentile(deltas, high))], 'draws': draws}
 
 
 def summary_rows(result, set_name):

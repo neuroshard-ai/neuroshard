@@ -1,0 +1,519 @@
+{
+ "comparisons": {
+  "layer15 vs final (centroids, message)": {
+   "test": {
+    "difference": 0.052884615384615384,
+    "draws": 2000,
+    "interval": [
+     0.030719701190273736,
+     0.0753867688620709
+    ]
+   },
+   "unseen": {
+    "difference": 0.2222222222222222,
+    "draws": 2000,
+    "interval": [
+     0.19255280051259113,
+     0.253247462144842
+    ]
+   }
+  },
+  "layer15 vs final (centroids, with-opening)": {
+   "test": {
+    "difference": 0.010576923076923078,
+    "draws": 2000,
+    "interval": [
+     -0.0019072691501346947,
+     0.02436993953624241
+    ]
+   },
+   "unseen": {
+    "difference": 0.1551155115511551,
+    "draws": 2000,
+    "interval": [
+     0.12415463469916403,
+     0.1879208194905869
+    ]
+   }
+  },
+  "layer15 vs final (logistic, message)": {
+   "test": {
+    "difference": -0.0009615384615384616,
+    "draws": 2000,
+    "interval": [
+     -0.004868905755537975,
+     0.002929759095491202
+    ]
+   },
+   "unseen": {
+    "difference": 0.0319031903190319,
+    "draws": 2000,
+    "interval": [
+     0.008619534686033192,
+     0.05470459518599562
+    ]
+   }
+  },
+  "layer15 vs final (logistic, with-opening)": {
+   "test": {
+    "difference": 0.0019230769230769232,
+    "draws": 2000,
+    "interval": [
+     -0.004704113023077735,
+     0.008604206500956023
+    ]
+   },
+   "unseen": {
+    "difference": 0.0121012101210121,
+    "draws": 2000,
+    "interval": [
+     -0.015590634954922744,
+     0.03786748935489575
+    ]
+   }
+  },
+  "layer22 vs final (centroids, message)": {
+   "test": {
+    "difference": 0.07019230769230769,
+    "draws": 2000,
+    "interval": [
+     0.05110450548132422,
+     0.0889040207522697
+    ]
+   },
+   "unseen": {
+    "difference": 0.20572057205720573,
+    "draws": 2000,
+    "interval": [
+     0.1758091980771146,
+     0.23652365236523654
+    ]
+   }
+  },
+  "layer22 vs final (centroids, with-opening)": {
+   "test": {
+    "difference": 0.010576923076923078,
+    "draws": 2000,
+    "interval": [
+     -0.0009570066765237994,
+     0.02371720138546762
+    ]
+   },
+   "unseen": {
+    "difference": 0.08250825082508251,
+    "draws": 2000,
+    "interval": [
+     0.05021706269807656,
+     0.11505570882852291
+    ]
+   }
+  },
+  "layer22 vs final (logistic, message)": {
+   "test": {
+    "difference": -0.0038461538461538464,
+    "draws": 2000,
+    "interval": [
+     -0.008604412343216811,
+     0.0
+    ]
+   },
+   "unseen": {
+    "difference": 0.034103410341034104,
+    "draws": 2000,
+    "interval": [
+     0.011073890865257403,
+     0.05591876929628444
+    ]
+   }
+  },
+  "layer22 vs final (logistic, with-opening)": {
+   "test": {
+    "difference": 0.0019230769230769232,
+    "draws": 2000,
+    "interval": [
+     -0.0029645736312761705,
+     0.00761197952063794
+    ]
+   },
+   "unseen": {
+    "difference": 0.0187018701870187,
+    "draws": 2000,
+    "interval": [
+     -0.005434782608695652,
+     0.04139560889889076
+    ]
+   }
+  },
+  "layer8 vs final (centroids, message)": {
+   "test": {
+    "difference": -0.03365384615384615,
+    "draws": 2000,
+    "interval": [
+     -0.058198754075552896,
+     -0.008561655835667106
+    ]
+   },
+   "unseen": {
+    "difference": 0.0352035203520352,
+    "draws": 2000,
+    "interval": [
+     -0.0054779674421030515,
+     0.07290590300530843
+    ]
+   }
+  },
+  "layer8 vs final (centroids, with-opening)": {
+   "test": {
+    "difference": -0.021153846153846155,
+    "draws": 2000,
+    "interval": [
+     -0.034723731884057966,
+     -0.006802391179556208
+    ]
+   },
+   "unseen": {
+    "difference": -0.0022002200220022,
+    "draws": 2000,
+    "interval": [
+     -0.04481119709837861,
+     0.038331454340473504
+    ]
+   }
+  },
+  "layer8 vs final (logistic, message)": {
+   "test": {
+    "difference": -0.0019230769230769232,
+    "draws": 2000,
+    "interval": [
+     -0.005825384245237623,
+     0.0018888882904813695
+    ]
+   },
+   "unseen": {
+    "difference": -0.007700770077007701,
+    "draws": 2000,
+    "interval": [
+     -0.03429298479012926,
+     0.017744843978759826
+    ]
+   }
+  },
+  "layer8 vs final (logistic, with-opening)": {
+   "test": {
+    "difference": -0.007692307692307693,
+    "draws": 2000,
+    "interval": [
+     -0.015429122468659595,
+     0.0
+    ]
+   },
+   "unseen": {
+    "difference": -0.009900990099009901,
+    "draws": 2000,
+    "interval": [
+     -0.04230627599011072,
+     0.01960998841549748
+    ]
+   }
+  },
+  "logistic vs centroids (message, final layer)": {
+   "test": {
+    "difference": 0.13365384615384615,
+    "draws": 2000,
+    "interval": [
+     0.11100292112950341,
+     0.1576402321083172
+    ]
+   },
+   "unseen": {
+    "difference": 0.253025302530253,
+    "draws": 2000,
+    "interval": [
+     0.2186043945089998,
+     0.2897320617077254
+    ]
+   }
+  },
+  "logistic with-opening vs today (centroid message)": {
+   "test": {
+    "difference": 0.2173076923076923,
+    "draws": 2000,
+    "interval": [
+     0.19056556212475365,
+     0.24509243658923896
+    ]
+   },
+   "unseen": {
+    "difference": 0.3311331133113311,
+    "draws": 2000,
+    "interval": [
+     0.29266797183022,
+     0.3717112414187643
+    ]
+   }
+  },
+  "with-opening vs message (centroids, final layer)": {
+   "test": {
+    "difference": 0.09807692307692308,
+    "draws": 2000,
+    "interval": [
+     0.06354798267608845,
+     0.13421581811953667
+    ]
+   },
+   "unseen": {
+    "difference": 0.14521452145214522,
+    "draws": 2000,
+    "interval": [
+     0.11171667080174037,
+     0.1809338370176911
+    ]
+   }
+  },
+  "with-opening vs message (logistic, final layer)": {
+   "test": {
+    "difference": 0.08365384615384615,
+    "draws": 2000,
+    "interval": [
+     0.06279739465527352,
+     0.10431155894358389
+    ]
+   },
+   "unseen": {
+    "difference": 0.0781078107810781,
+    "draws": 2000,
+    "interval": [
+     0.04777117863720075,
+     0.10756828290421597
+    ]
+   }
+  }
+ },
+ "diversity": {
+  "layer-1 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.638755980861244,
+    "paired": {
+     "difference": 0.08373205741626795,
+     "draws": 2000,
+     "interval": [
+      0.06105006105006105,
+      0.10714390880026921
+     ]
+    },
+    "two_templates": 0.722488038277512
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.47475961538461536,
+    "paired": {
+     "difference": -0.03365384615384615,
+     "draws": 2000,
+     "interval": [
+      -0.0620581850918055,
+      -0.007039008243006443
+     ]
+    },
+    "two_templates": 0.4411057692307692
+   }
+  },
+  "layer-1 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.9497607655502392,
+    "paired": {
+     "difference": 0.03349282296650718,
+     "draws": 2000,
+     "interval": [
+      0.018778243229871032,
+      0.04936962247585601
+     ]
+    },
+    "two_templates": 0.9832535885167464
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.7367788461538461,
+    "paired": {
+     "difference": 0.08052884615384616,
+     "draws": 2000,
+     "interval": [
+      0.05522043349713986,
+      0.10663909722541755
+     ]
+    },
+    "two_templates": 0.8173076923076923
+   }
+  },
+  "layer15 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.7057416267942583,
+    "paired": {
+     "difference": 0.0729665071770335,
+     "draws": 2000,
+     "interval": [
+      0.0514703732370141,
+      0.0953544536768115
+     ]
+    },
+    "two_templates": 0.7787081339712919
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.6730769230769231,
+    "paired": {
+     "difference": 0.010817307692307692,
+     "draws": 2000,
+     "interval": [
+      -0.01326980103065566,
+      0.03562653562653563
+     ]
+    },
+    "two_templates": 0.6838942307692307
+   }
+  },
+  "layer15 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.9485645933014354,
+    "paired": {
+     "difference": 0.03708133971291866,
+     "draws": 2000,
+     "interval": [
+      0.02117214633811518,
+      0.054255390389231876
+     ]
+    },
+    "two_templates": 0.9856459330143541
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.7572115384615384,
+    "paired": {
+     "difference": 0.078125,
+     "draws": 2000,
+     "interval": [
+      0.05192923869390607,
+      0.10406754148805607
+     ]
+    },
+    "two_templates": 0.8353365384615384
+   }
+  },
+  "layer22 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.7188995215311005,
+    "paired": {
+     "difference": 0.08373205741626795,
+     "draws": 2000,
+     "interval": [
+      0.06264496159909748,
+      0.10457360692771081
+     ]
+    },
+    "two_templates": 0.8026315789473685
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.6514423076923077,
+    "paired": {
+     "difference": 0.007211538461538462,
+     "draws": 2000,
+     "interval": [
+      -0.02304208952035037,
+      0.03645569883557289
+     ]
+    },
+    "two_templates": 0.6586538461538461
+   }
+  },
+  "layer22 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.94377990430622,
+    "paired": {
+     "difference": 0.041866028708133975,
+     "draws": 2000,
+     "interval": [
+      0.02575812165976101,
+      0.058336813842482085
+     ]
+    },
+    "two_templates": 0.9856459330143541
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.7992788461538461,
+    "paired": {
+     "difference": 0.040865384615384616,
+     "draws": 2000,
+     "interval": [
+      0.01796246409329313,
+      0.06444008443228867
+     ]
+    },
+    "two_templates": 0.8401442307692307
+   }
+  },
+  "layer8 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.666267942583732,
+    "paired": {
+     "difference": 0.03349282296650718,
+     "draws": 2000,
+     "interval": [
+      0.013252215593141799,
+      0.05379068155496542
+     ]
+    },
+    "two_templates": 0.6997607655502392
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.4675480769230769,
+    "paired": {
+     "difference": 0.046875,
+     "draws": 2000,
+     "interval": [
+      0.018136208679943477,
+      0.07563480265752508
+     ]
+    },
+    "two_templates": 0.5144230769230769
+   }
+  },
+  "layer8 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.9294258373205742,
+    "paired": {
+     "difference": 0.04425837320574163,
+     "draws": 2000,
+     "interval": [
+      0.026695804605787726,
+      0.06293939393939393
+     ]
+    },
+    "two_templates": 0.9736842105263158
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.796875,
+    "paired": {
+     "difference": 0.007211538461538462,
+     "draws": 2000,
+     "interval": [
+      -0.01794419921078479,
+      0.033799956082564774
+     ]
+    },
+    "two_templates": 0.8040865384615384
+   }
+  }
+ },
+ "final_layer": "layer-1"
+}
