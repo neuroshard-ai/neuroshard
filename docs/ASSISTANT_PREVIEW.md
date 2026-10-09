@@ -27,6 +27,9 @@ python -m pip install --no-deps -e .
 neuroshard assistant fetch
 ```
 
+pip warns that `neuroshard-ai` wants idna 3.19 while the research runtime pins 3.20;
+the preview uses the pinned runtime, so the warning is harmless.
+
 `fetch` downloads the modules (about 250 MB) from the
 [assistant-preview-1 release](https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-preview-1)
 and Granite 4.1 3B (about 6.8 GB) from its pinned Hugging Face revision. Every file
@@ -39,7 +42,10 @@ neuroshard assistant replay --set drafting --limit 3
 ```
 
 This re-runs published confirmation conversations and compares each outcome, and
-each generated token, with the published episode. Use `--set scheduling` or
+each generated token, with the published episode. On October 8, 2026, these steps
+on a fresh Ubuntu 24.04 r7i.4xlarge took 78 seconds to fetch, then reproduced
+two drafting conversations and one cross conversation token for token; a chat
+with one follow-up peaked at 18.8 GB. Use `--set scheduling` or
 `--set cross`; `--limit 0` runs a whole set (the 192 drafting conversations took
 about 3 hours on 8 AMX cores). Published results: drafting 192/192, scheduling
 192/192, cross 47/48 ([report](ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)).
