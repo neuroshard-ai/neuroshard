@@ -23,6 +23,10 @@ def register(subcommands, root):
     host.add_argument('--endpoint', required=True, help='host:port where users reach this machine')
     host.add_argument('--listen', default='0.0.0.0', help='Local address to listen on')
     host.add_argument('--threads', type=int)
+    audit = actions.add_parser('audit', parents=[common], help='Replay committed owner logs and prove faults on chain')
+    audit.add_argument('--shard', type=int, action='append', required=True, help='Shard to audit; may be repeated')
+    audit.add_argument('--once', action='store_true', help='Audit the currently open jobs and exit')
+    audit.add_argument('--interval', type=float, default=10)
     chat = actions.add_parser('chat', parents=[common],
                               help='Chat with the assistant through the network; stage 0 runs on this machine')
     chat.add_argument('--sample', type=int, default=0, help='Sample workspace number')
@@ -32,6 +36,8 @@ def register(subcommands, root):
     chat.add_argument('--threads', type=int)
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
+    seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
+                      help='Shard holdings used to judge fraud proofs; defaults to both network owner shards')
 
 
 def atoms(value):
@@ -77,16 +83,22 @@ def render(result, before):
 
 
 def run(args):
-    if args.assistant_action == 'host':
+    if args.assistant_action in ('host', 'audit', 'seed', 'chat'):
         from neuroshard.evolution import granite_shard_execution as runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
         runtime.configure()
+        if args.assistant_action in ('host', 'audit', 'seed'):
+            from neuroshard.evolution import assistant_growth_cohort3_eval
+            from neuroshard.evolution.modular_reference_execution import ROOT, read
+            assistant_growth_cohort3_eval.runtime(read(ROOT / runtime.RUNTIME))
+            if getattr(args, 'threads', None) not in (None, 8):
+                raise ValueError('auditable owners require the pinned eight-thread execution class')
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
     if args.assistant_action == 'seed':
-        config, _, _ = network.seed(descriptor, args.home, args.public_host)
+        config, _, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
         stopped = threading.Event()
         signal.signal(signal.SIGTERM, lambda *_: stopped.set())
         try:
@@ -99,6 +111,32 @@ def run(args):
             optimistic_network.stop(config)
         return
     chain = network.Chain(descriptor['rpc'], descriptor['chain_id'])
+    if args.assistant_action == 'audit':
+        import torch
+        from neuroshard.assistant.audit import Auditor
+        from neuroshard.evolution.sharded import granite
+
+        if args.interval < 1:
+            raise ValueError('audit interval must be at least one second')
+        account = network.Account(args.home / 'account.key')
+        state = chain.state()
+        network.ensure_balance(chain, account, 2 * state['params']['challenge_deposit'], descriptor.get('faucet'))
+        torch.set_num_threads(8)
+        holdings = {}
+        for rank in sorted(set(args.shard)):
+            served, stage = network.fetch_stage(descriptor, rank, args.home)
+            if rank == 0:
+                raise ValueError('stage 0 is not a bonded owner shard')
+            partition, _ = granite.load_partition(granite.load_config(stage['config']), stage['shard'], rank)
+            adapter = network.load_adapter(partition, served, stage)
+            network.warm(partition, adapter)
+            holdings[rank] = partition, adapter
+        auditor = Auditor(chain, account, descriptor, args.home, holdings)
+        if args.once:
+            auditor.once()
+        else:
+            auditor.run(args.interval)
+        return
     if args.assistant_action == 'status':
         state = chain.state()
         served = network.version(descriptor)[0]
@@ -119,8 +157,8 @@ def run(args):
         owner.register(args.endpoint, descriptor.get('faucet'))
         owner.run(args.listen, int(args.endpoint.rsplit(':', 1)[1]))
         return
-    if args.budget < 1:
-        raise ValueError('budget must be positive')
+    if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
+        raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
     price = atoms(args.price)
     served, stage = network.fetch_stage(descriptor, 0, args.home)
     world, suggestions = workspace(args.sample, args.world)

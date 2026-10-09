@@ -1,74 +1,41 @@
 # NeuroShard
 
-[Assistant development plan](TODO_ASSISTANT.md) · [Earlier demonstration checklist](TODO.md)
+NeuroShard is building a shared assistant that learns useful capabilities while
+keeping earlier behavior, runs across model shards on different machines, and
+pays contributors through its native ledger. The current product is an
+**experimental CPU workspace assistant** on its own test network. It is open
+source under Apache-2.0; keys stay on your machine and no website registration
+is required.
 
-NeuroShard is an experimental native blockchain for verifying and rewarding neural computation. Its public testnet demonstrates small-scale training and paid inference; permissionless full-model training remains under development. The goal is a collectively trained LLM whose usable capacity can expand as reliable compute joins. Keys stay on your machine and participation requires no website registration.
+[Run the assistant](docs/ASSISTANT_NETWORK.md) · [Contribute examples](docs/CONTRIBUTOR_ALPHA.md) · [Host independently](docs/OPERATOR_KIT.md) · [Development milestones](TODO_ASSISTANT.md)
 
-**Start contributing:** [run a worker or submit an assistant correction](docs/CONTRIBUTOR_ALPHA.md).
-The source client can replay, sign and export explicitly reviewed tool-use examples
-without downloading a model. Public workers currently train the small testnet
-adapter; the broader assistant and its learning path are still under development.
+Four of six assistant milestones have evidence: a capable foundation, useful
+learning, three accepted learning cohorts and actual model sharding. The accepted
+Granite 3B system learned drafting and scheduling, then upgraded drafting. On
+its frozen fictional workspaces it solved 192/192 drafting and 192/192 scheduling
+conversations. These are bounded task results, not general assistant benchmarks.
+See [the growth review](docs/A3_REPEATED_GROWTH_REVIEW.md).
 
-**The operated GPU alpha closed on September 20, 2026.** Its
-[results, exact source and retirement record](docs/OPERATED_ALPHA_RESULT.md)
-remain available. It demonstrated streamed conversations with native payment,
-complete replay and automatic provider replacement under one administrator.
-The GPU deployment served fixed accepted weights and ran no new training.
-The ledger remains scheduled through September 26 for expiry and refunds;
-the [historical joining guide](docs/JOIN_ALPHA.md) records the original setup.
-The website and PyPI release below use the earlier chain.
+The live assistant chain currently serves the earlier accepted A2 update across
+CPU owners. [PR #85](https://github.com/neuroshard-ai/neuroshard/pull/85) integrates
+A3 routing, audits and native promotion; its [release gate](docs/ASSISTANT_RELEASE_CHECK.md)
+requires all 432 accepted conversations to reproduce across machines before
+activation. Test NEURO has no monetary value. All current network hosts have one
+administrator; four independent operators and the public operating soak remain
+open. Peer growth first buys replicas, audits, serving and training capacity.
+Parameters grow only when an admitted candidate improves measured behavior.
 
-The intended assistant is one useful model whose learning and serving capacity
-grow as independent peers contribute shards. The [earlier checklist](TODO.md) is
-**5/6** against bounded demonstrations. Item 4, reliable permissionless hosting,
-remains open. [Independent hosting](docs/INDEPENDENT_HOSTING.md) requires four
-independently administered operators and aggregates voting power by
-administrator. This operator may hold at most one of the four validators.
-Machines under one AWS account do not satisfy that criterion. The soak is not
-authorized, and no GPU is authorized.
+Chats run stage 0 locally and send signed intermediate activations to shard
+owners. Activations can leak information; use non-sensitive example data.
+The ledger stores payments and digests. This CPU alpha is slow, has bounded tool
+and generation budgets, and needs a capable local device. It is not production
+infrastructure for private workspaces.
 
-Learning is a separate track. Programming-growth is closed. Stage-1
-[learned integration](docs/LEARNED_INTEGRATION_RESULTS.md) failed development
-(expansion 0/32, control 5/32); confirmation was never opened. The staged
-expert-then-gate study [stopped before training](docs/STAGED_INTEGRATION_RESULTS.md)
-on an unusable output format. Its successor
-[timed out](docs/STAGED_ANSWERING_RESULTS.md) after 64 expert updates and 63 of
-64 gate updates, with 15 protected answers saved and no candidate answers scored.
-The [recovery amendment](docs/STAGED_ANSWERING_RECOVERY.md) restores that expert,
-restarts the gate, charges the interrupted work, and finishes the same
-comparison. It [completed and failed](docs/STAGED_ANSWERING_RECOVERY_RESULTS.md):
-expansion 0/32 versus control 2/32, with 11 of 15 protected answers lost.
-The later [block-expert study](docs/BLOCK_EXPERT_RESULTS.md) stopped before
-training at 6/64 protected answers. The [measurement contract](docs/BLOCK_EXPERT_MEASURE.md)
-records that baseline and still trains the added blocks. That run
-[failed](docs/BLOCK_EXPERT_MEASURE_RESULTS.md): added blocks 10/64 versus
-control 11/64, and both erased all 8 protected answers. The next rule is
-[append-only growth](docs/APPEND_ONLY_GROWTH.md): the parent keeps every
-protected answer, and a new shard is used only where the parent missed. The
-[CPU execution](docs/APPEND_ONLY_EXECUTION_RESULTS.md) met that rule only by
-reading the hidden answer, and the added blocks tied a constant training label
-at 9/64. It is not a deployable assistant. The subsequent
-[observable-reasoning experiment](docs/OBSERVABLE_REASONING_RESULTS.md) also
-failed: added blocks 7/96, trained control 10/96, constant baseline 16/96, with
-no qualifying protected answers. The new [assistant plan](TODO_ASSISTANT.md)
-uses a capable pretrained foundation, bounded learned modules and actual hardware
-shards. Four of its six milestones are complete: a [usable foundation](docs/A1_FOUNDATION_REVIEW.md) (A1),
-a [first learned capability](docs/ASSISTANT_EXPERIENCE_THIRD_RESULTS.md) that lifts fresh workspace
-conversations from 62% to 95% with no earlier success lost (A2), [repeated growth](docs/A3_REPEATED_GROWTH_REVIEW.md)
-(A3) and [actual sharding](docs/A4_SHARDING_REVIEW.md) (A4). In A3 the assistant learned meeting
-scheduling as a separate unit: [192/192 fresh sealed scheduling episodes](docs/ASSISTANT_REPEATED_GROWTH_CONFIRMATION2_RESULTS.md)
-against 68 for the previous version given the same free-slot tool, with every drafting success
-kept. An upgrade of drafting then [solved 192/192 sealed drafting episodes](docs/ASSISTANT_REPEATED_GROWTH_COHORT3_CONFIRMATION_RESULTS.md)
-against 183, losing nothing and serving faster. The tasks are fictional workspace grammars, not
-open-ended work. See the [assistant plan](TODO_ASSISTANT.md). Independent operation and a public assistant remain open
-([operator kit](docs/OPERATOR_KIT.md), [session contract](docs/ASSISTANT_PUBLIC.md)). The research serving baseline remains
-the leftover [programming fallback](docs/PROGRAMMING_FALLBACK_RESULTS.md)
-(+4/32). None of this is a public promoted model.
-
-Release **0.4.0** remains the experimental **protocol testnet** — SmolLM2-135M-Instruct
-with a 4,608-parameter adapter, native replay, and paid inference. It is not
-the assistant being grown. Independent ownership and economical large-model
-verification remain open.
+The September GPU alpha is retired; its [evidence](docs/OPERATED_ALPHA_RESULT.md)
+and all failed experiments remain available in [the documentation](docs/README.md).
+PyPI **0.4.1** is a security patch for the separate SmolLM2-135M protocol testnet.
+Use the source instructions above for the assistant; its balances and genesis
+are separate from that earlier chain.
 
 ## Join the 0.4.0 protocol testnet
 

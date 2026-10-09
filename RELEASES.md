@@ -1,5 +1,16 @@
 # Native releases
 
+## Unreleased — assistant network source alpha
+
+PR #85 integrates paid CPU shard hosting with the accepted U1/L2/L3 assistant,
+automatic signed-log audits, proof delivery, bounded work and stewarded native
+model promotion. [Release qualification](docs/ASSISTANT_RELEASE_CHECK.md) requires
+exact reproduction of all 432 accepted confirmation conversations before A3
+activation. Until that record exists, the public assistant chain stays on A2.
+Independent operation and a sustainable general assistant remain open. Install
+from source using [the assistant guide](docs/ASSISTANT_NETWORK.md); this is not
+a replacement wheel for the 0.4.0 chain.
+
 ## 0.4.1 — client security patch
 
 Released from the 0.4.0 line (branch `release/0.4.x`, tag `v0.4.1`): 0.4.0 plus

@@ -22,6 +22,7 @@ from neuroshard.evolution.modular_reference_execution import identity
 from .granite_pipeline import FORWARD, RESET, STOP
 
 CROP, ADAPTER, FEATURE = 9, 10, 11
+ROUTER_FEATURE, ROUTER_CROP, ROUTER_RESET, ROUTE = 12, 13, 14, 15
 
 
 def plain(master, dtype):
@@ -78,6 +79,36 @@ class Adapter:
         self.enabled = enabled
 
 
+class AdapterBank:
+    """Accepted additions on the accepted update, retaining the unchanged parent for fallback."""
+
+    def __init__(self, partition, spec, base, additions):
+        self.update = Adapter(partition, spec, base)
+        self.routes = {}
+        for index, directory in sorted(additions.items(), key=lambda row: int(row[0])):
+            added = Adapter(partition, spec, directory)
+            if added.manifest['arm'] != 'addition':
+                raise ValueError('a route must be an addition on the accepted update')
+            self.routes[int(index)] = added
+            added.set(False)
+        if not self.routes:
+            raise ValueError('an adapter bank needs at least one route')
+        self.route, self.enabled = min(self.routes), False
+        self.set(False)
+
+    def select(self, index):
+        if index not in self.routes:
+            raise ValueError('unknown accepted route')
+        self.route = index
+        self.set(self.enabled)
+
+    def set(self, enabled):
+        self.update.set(bool(enabled))
+        if enabled:
+            self.routes[self.route].set(True)
+        self.enabled = bool(enabled)
+
+
 def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
     """Owner loop for ranks after 0: episode caches, prefix crops, arm switching and parent features.
 
@@ -90,36 +121,50 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
     from transformers import DynamicCache
 
     cache, steps, busy, forwards = DynamicCache(), 0, 0.0, 0
+    caches, route, router_cache = {1: cache}, 1, DynamicCache()
     while True:
         op, value = ring.command(0)
         if op == STOP:
             return {'steps': steps, 'busy_seconds': busy}
-        if op in (RESET, CROP, ADAPTER):
+        if op in (RESET, CROP, ADAPTER, ROUTE, ROUTER_CROP, ROUTER_RESET):
             if log is not None:
                 log.command(op, value)
             if link is not None:
                 link.command(op, value)
         if op == RESET:
             cache = DynamicCache()
+            caches[route] = cache
         elif op == CROP:
             cache.crop(value)
         elif op == ADAPTER:
             if adapter is not None:
                 adapter.set(bool(value))
-        elif op in (FORWARD, FEATURE):
+        elif op == ROUTE:
+            if value not in (1, 2):
+                raise ValueError('unknown accepted route')
+            route = value
+            cache = caches.setdefault(route, DynamicCache())
+            if adapter is not None:
+                adapter.select(route)
+        elif op == ROUTER_RESET:
+            router_cache = DynamicCache()
+        elif op == ROUTER_CROP:
+            router_cache.crop(value)
+        elif op in (FORWARD, FEATURE, ROUTER_FEATURE):
             steps += op == FORWARD
             hidden = ring.receive(ring.rank - 1, value)
             attested = link.receive(op, value, hidden, ring.receive_signature(ring.rank - 1)) if link else None
             began = time.monotonic()
             with torch.inference_mode():
-                if op == FORWARD:
-                    mask = torch.ones((1, cache.get_seq_length() + value), dtype=torch.long)
-                    out = partition(hidden, mask, cache)
+                if op in (FORWARD, ROUTER_FEATURE):
+                    active = router_cache if op == ROUTER_FEATURE else cache
+                    mask = torch.ones((1, active.get_seq_length() + value), dtype=torch.long)
+                    out = partition(hidden, mask, active)
                 else:
                     out = partition(hidden, None, DynamicCache())
             busy += time.monotonic() - began
             last = ring.rank == ring.world - 1
-            sent = out[:, -1:] if last else out
+            sent = out[:, -1:] if last and op != ROUTER_FEATURE else out
             if fault is not None and forwards == fault:
                 sent = sent.clone()
                 sent.view(torch.int16).view(-1)[0] ^= 1
@@ -147,6 +192,8 @@ class ServingDriver:
             raise ValueError('owner 0 drives serving')
         self.partition, self.ring, self.cache_type, self.link = partition, ring, DynamicCache, link
         self.cache = DynamicCache()
+        self.caches, self.route_index, self.router_cache = {1: self.cache}, 1, DynamicCache()
+        self.router_prefix = None
         self.busy_seconds = 0.0
 
     def control(self, op, value=0):
@@ -160,7 +207,7 @@ class ServingDriver:
         self.ring.send(hidden, 1)
         if self.link is not None:
             self.ring.send_signature(self.link.send(op, value, hidden), 1)
-        back = self.ring.receive(self.ring.world - 1, 1)
+        back = self.ring.receive(self.ring.world - 1, value if op == ROUTER_FEATURE else 1)
         if self.link is not None:
             self.link.receive(op, value, back, self.ring.receive_signature(self.ring.world - 1))
         return back
@@ -186,6 +233,50 @@ class ServingDriver:
         self.control(RESET)
         self.control(ADAPTER, int(arm))
         self.cache = self.cache_type()
+        self.caches[self.route_index] = self.cache
+
+    def route(self, index, arm=True):
+        self.control(ROUTE, index)
+        self.route_index = index
+        self.cache = self.caches.setdefault(index, self.cache_type())
+        self.control(ADAPTER, int(arm))
+
+    def message_feature(self, tokenizer, policy, user):
+        """The accepted router's cached-prefix, mean-message feature, computed across owners."""
+        from neuroshard.evolution import assistant_routing as routing
+
+        self.control(ADAPTER, 0)
+        ids = routing.turn_ids(tokenizer, policy, user)
+        if self.router_prefix is None:
+            first = routing.turn_ids(tokenizer, policy, 'Schedule')
+            second = routing.turn_ids(tokenizer, policy, 'Create')
+            common = 0
+            for left, right in zip(first, second):
+                if left != right:
+                    break
+                common += 1
+            self.router_prefix = first[:common]
+            if not self.router_prefix:
+                raise ValueError('router prefix is empty')
+            self.router_forward(self.router_prefix)
+        length = len(self.router_prefix)
+        if ids[:length] != self.router_prefix or len(ids) <= length:
+            raise ValueError('router turn does not extend the accepted prefix')
+        try:
+            states = self.router_forward(ids[length:])
+            return states[0].float().mean(dim=0).tolist()
+        finally:
+            self.control(ROUTER_CROP, length)
+            self.router_cache.crop(length)
+
+    def router_forward(self, ids):
+        self.ring.command(ROUTER_FEATURE, len(ids))
+        tokens = torch.tensor([ids])
+        mask = torch.ones((1, self.router_cache.get_seq_length() + len(ids)), dtype=torch.long)
+        with torch.inference_mode():
+            hidden = self.partition(self.partition.embed(tokens), mask, self.router_cache)
+            back = self.exchange(ROUTER_FEATURE, len(ids), hidden)
+            return self.partition.norm(back)
 
     def cached_tokens(self):
         return self.cache.get_seq_length()

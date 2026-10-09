@@ -7,8 +7,10 @@ every conversation is paid and settled on the native ledger. It follows the
 [bonded serving ledger](OPTIMISTIC_SERVING.md).
 
 Until peers join, the project runs both owners: shard 1 on the seed and a
-stand-in for shard 2. Auditing is not live yet. The validator holds no shard,
-so a challenge cannot land, and users trust the seed's RPC. Test NEURO has no
+stand-in for shard 2. Automatic auditing and A3 promotion are being qualified in
+[PR #85](https://github.com/neuroshard-ai/neuroshard/pull/85), under the
+[release contract](ASSISTANT_RELEASE_CHECK.md). Until deployment is recorded,
+auditing is not live and users trust the seed's RPC. Test NEURO has no
 value, and the tasks are the fictional drafting workspaces A2 was measured on.
 
 ## Who does what
@@ -22,8 +24,10 @@ value, and the tasks are the fictional drafting workspaces A2 was measured on.
   served. A proven fault slashes its bond.
 - **Users.** Get test NEURO from the faucet and open a paid job naming one owner
   per shard. Their device runs stage 0: the embedding, layers 0–11 and the output
-  head, about 2.4 GB. Prompts, answers and the workspace never leave it; owners
-  see only intermediate activations. Unused budget is refunded.
+  head, about 2.4 GB. The client sends intermediate activations, rather than raw
+  prompts or documents, to owners. Activations can leak information: this is
+  not encryption or a confidentiality guarantee. Do not submit sensitive data.
+  The ledger records digests and payments. Unused budget is refunded.
 - **Auditors** hold one shard, replay committed logs and prove fraud for half the
   slashed bond. **Validators** order transactions and judge proofs. Independent
   operation (A5) begins when four operators run validators and none holds a
@@ -54,6 +58,22 @@ fetches only that shard's tensors, bonds 5 test NEURO and serves jobs. `HOST`
 must be your public address, and inbound TCP 28700 must be open. An owner needs
 about 8 GB of RAM and eight threads. To keep audits exact, it should match the
 current owners' execution class: an Intel CPU with AMX, such as AWS m7i or r7i.
+Owners, auditors and the seed refuse a mismatched canonical runtime. Install
+Python **3.12.12** and the pinned requirements above. The client can run on other
+x86_64 CPUs, but its measured quality and latency can differ.
+
+**Audit a shard.** `neuroshard assistant audit --shard 2` holds just that shard,
+downloads signed logs inside the challenge window, replays them and delivers a
+funded proof when it detects a fault. `--once` checks current jobs and exits.
+Clean audits currently earn no automatic reward: project funding pays their
+operating cost. A slashing reward is not an honest-audit budget. See the
+[optimistic protocol](OPTIMISTIC_SERVING.md).
+
+Each owner serves one authenticated job at a time. Jobs are limited to 65,536
+paid positions, bounded frames and an hour of owner time. The default chat buys
+16,384 positions. Replicas add availability and concurrent capacity; they do not
+automatically improve a single answer. A lost job expires and refunds unused
+escrow; reconnecting a conversation is not yet supported.
 
 ## First conversation
 

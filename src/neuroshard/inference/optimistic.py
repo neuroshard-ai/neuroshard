@@ -45,7 +45,8 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'serve_open': {'model_root', 'owners', 'request_root', 'session_key', 'price', 'positions'},
           'log_commit': {'job_id', 'statement_root', 'entries_root', 'header', 'log_signature'},
           'challenge': {'job_id', 'log_key', 'proof_root'}, 'prove': {'job_id', 'challenge_id'},
-          'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'}}
+          'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'},
+          'model_promote': {'model_root', 'quality_root'}}
 ENDPOINT = re.compile(r'[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?:[1-9][0-9]{0,4}')
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
 HEADER_FIELDS = {'format', 'rank', 'public_key', 'session', 'upstream'}
@@ -305,6 +306,14 @@ def admit(previous, envelope):
         raise ValueError('Insufficient transaction fee')
     if kind == 'challenge':
         opening(previous, body)
+    if kind == 'model_promote':
+        if previous['jobs']:
+            raise ValueError('Drain every open job before changing the serving model')
+        if hex_digest(body['model_root']) == previous['model_root']:
+            raise ValueError('The requested model is already serving')
+        hex_digest(body['quality_root'])
+        return body, sender, {'kind': 'model_promotion', 'chain_id': previous['chain_id'], 'signer': sender,
+                              'model_root': body['model_root'], 'quality_root': body['quality_root']}
     return body, sender, proving(previous, body) if kind == 'prove' else None
 
 
@@ -441,6 +450,14 @@ def transition(previous, envelope, execute):
         if owner is None or owner['account'] != sender or owner['status'] != 'active':
             raise ValueError('Only an active owner can publish its endpoint')
         owner['endpoint'] = endpoint(body['endpoint'])
+    elif kind == 'model_promote':
+        if execute is None or execute(previous, request) is not True:
+            raise ValueError('Model promotion is not authorized by the approved quality record')
+        old = state['model_root']
+        state['model_root'] = body['model_root']
+        state.setdefault('model_history', []).append({'previous': old, 'model_root': body['model_root'],
+                                                    'quality_root': body['quality_root'], 'height': state['height'],
+                                                    'authority': sender})
     elif kind == 'challenge':
         debit(params['challenge_deposit'])
         state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {

@@ -34,6 +34,10 @@ PARAMS = {**ledger.PARAMS, 'job_blocks': 3600, 'challenge_blocks': 600, 'proof_b
           'max_results': 1024}
 PORTS = {'p2p': 26656, 'rpc': 26657, 'owner': 28700, 'faucet': 28780}
 PEER_TIMEOUT = 600
+HANDSHAKE_SECONDS = 5
+MAX_HANDSHAKES = 16
+MAX_PER_ADDRESS = 2
+MAX_PAID_POSITIONS = 65536
 CHUNK = 1 << 20
 
 
@@ -43,19 +47,23 @@ def descriptor(path=None):
 
 def model_root(network):
     """The ledger's name for the served version: its verified plan and the digests of its released files."""
-    return ledger.digest({'format': network['format'], 'version': network['version'],
-                          'plan_sha256': network['plan_sha256'],
-                          'files': {name: pin['sha256'] for name, pin in sorted(network['files'].items())}})
+    body = {'format': network['format'], 'version': network['version'], 'plan_sha256': network['plan_sha256'],
+            'files': {name: pin['sha256'] for name, pin in sorted(network['files'].items())}}
+    if network.get('policies'):
+        body['policies'] = network['policies']
+        body['routing'] = network['routing']
+    return ledger.digest(body)
 
 
 class Version:
     """What the network serves: partition, module spec, policy and bounds; the last shard holds the module."""
 
-    def __init__(self, name, boundaries, spec, policy, eos_ids, max_tokens, root):
+    def __init__(self, name, boundaries, spec, policy, eos_ids, max_tokens, root, policies=None):
         self.name, self.boundaries, self.spec, self.policy = name, list(boundaries), spec, policy
         self.eos_ids, self.max_tokens, self.root = set(eos_ids), max_tokens, root
         self.world = len(self.boundaries) - 1
         self.arm_rank = self.world - 1
+        self.policies = policies
 
 
 def version(network):
@@ -66,8 +74,12 @@ def version(network):
         raise ValueError('the serving plan differs from the network descriptor')
     plan = read(ROOT / network['plan'])
     learning = read(ROOT / plan['learning'])
+    policies = {name: read(ROOT / pin['path']) for name, pin in network.get('policies', {}).items()}
+    for name, pin in network.get('policies', {}).items():
+        if sha256(ROOT / pin['path']) != pin['sha256']:
+            raise ValueError(f'the {name} policy differs from the accepted version')
     return Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
-                   plan['eos_ids'], plan['max_boundary_tokens'], model_root(network)), plan
+                   plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None), plan
 
 
 def digest_file(path):
@@ -111,9 +123,11 @@ def download(url, path, pin, opener=urllib.request.urlopen):
 
 def stage_files(served, rank):
     if rank == 0:
-        return ['integration.json']
+        return ['integration.json'] + (['router.json'] if served.policies else [])
     if rank == served.arm_rank:
-        return ['update-checkpoint/manifest.json', 'update-checkpoint/trainable.safetensors']
+        return (['update-checkpoint/manifest.json', 'update-checkpoint/trainable.safetensors']
+                + ([f'{unit}/{name}' for unit in ('L2', 'L3') for name in ('manifest.json', 'trainable.safetensors')]
+                   if served.policies else []))
     return []
 
 
@@ -138,9 +152,34 @@ def fetch_stage(network, rank, home, progress=print):
     stage = {'config': store / 'config', 'shard': store / 'shard'}
     if rank == 0:
         stage.update(tokenizer=store / 'config', gate=read(store / 'integration.json')['arms']['update']['gate'])
+        if served.policies:
+            stage['router'] = read(store / 'router.json')['gate']
     if rank == served.arm_rank:
         stage['arm'] = store / 'update-checkpoint'
+        if served.policies:
+            stage['additions'] = {1: store / 'L3', 2: store / 'L2'}
     return served, stage
+
+
+def load_adapter(partition, served, stage):
+    from neuroshard.evolution.sharded import granite_serving as serving
+
+    if partition.rank != served.arm_rank:
+        return None
+    if stage.get('additions'):
+        return serving.AdapterBank(partition, served.spec, stage['arm'], stage['additions'])
+    return serving.Adapter(partition, served.spec, stage['arm'])
+
+
+def warm(partition, adapter):
+    routes = sorted(adapter.routes) if hasattr(adapter, 'routes') else [None]
+    for route in routes:
+        if route is not None:
+            adapter.select(route)
+        for enabled in ((True, False) if adapter else (None,)):
+            if adapter:
+                adapter.set(enabled)
+            partition.warm_up()
 
 
 def private_file(path, content):
@@ -255,16 +294,36 @@ class Faucet:
             return {'granted': self.amount, 'balance': balance + self.amount}
 
 
-def serve_faucet(faucet, host, port):
+def serve_faucet(faucet, host, port, proof_store=None):
     class Handler(BaseHTTPRequestHandler):
         def do_POST(self):
             try:
-                if self.path != '/faucet':
+                proof = self.path.startswith('/proofs/') and proof_store is not None
+                if self.path != '/faucet' and not proof:
                     raise KeyError('unknown path')
                 size = int(self.headers.get('Content-Length', 0))
-                if not 0 < size <= 1024:
+                from neuroshard.assistant import audit
+                if not 0 < size <= (audit.MAX_PROOF_BYTES if proof else 1024):
                     raise ValueError('invalid request size')
-                result, code = faucet.grant(json.loads(self.rfile.read(size))['account'], self.client_address[0]), 200
+                if proof:
+                    root = self.path.removeprefix('/proofs/')
+                    state = faucet.chain.state()
+                    ledger.hex_digest(root)
+                    if not any(c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values()):
+                        raise ValueError('no funded open challenge names this proof')
+                deadline, content = time.monotonic() + 30, bytearray()
+                while len(content) < size:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise ValueError('HTTP request deadline exceeded')
+                    self.connection.settimeout(remaining)
+                    block = self.rfile.read1(min(CHUNK, size - len(content)))
+                    if not block:
+                        raise ValueError('incomplete HTTP request')
+                    content.extend(block)
+                result = ({'proof_root': audit.receive_proof(content, root, state, proof_store)} if proof
+                          else faucet.grant(json.loads(content)['account'], self.client_address[0]))
+                code = 200
             except (ValueError, KeyError, TypeError) as error:
                 result, code = {'error': str(error)}, 400
             except Exception as error:
@@ -279,7 +338,25 @@ def serve_faucet(faucet, host, port):
         def log_message(self, *args):
             pass
 
-    server = ThreadingHTTPServer((host, port), Handler)
+    class BoundedHTTPServer(ThreadingHTTPServer):
+        def __init__(self, *args):
+            self.slots = threading.BoundedSemaphore(16)
+            super().__init__(*args)
+
+        def process_request(self, request, address):
+            if not self.slots.acquire(blocking=False):
+                self.shutdown_request(request)
+                return
+            request.settimeout(HANDSHAKE_SECONDS)
+            super().process_request(request, address)
+
+        def process_request_thread(self, request, address):
+            try:
+                super().process_request_thread(request, address)
+            finally:
+                self.slots.release()
+
+    server = BoundedHTTPServer((host, port), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server
 
@@ -318,19 +395,19 @@ class Owner:
 
         if not 0 < rank < served.world:
             raise ValueError(f'owners host shards 1 to {served.world - 1}; stage 0 runs on the user device')
-        torch.set_num_threads(threads or min(8, os.cpu_count() or 1))
+        self.threads = threads or min(8, os.cpu_count() or 1)
+        torch.set_num_threads(self.threads)
         self.served, self.rank, self.chain, self.account, self.log_key = served, rank, chain, account, log_key
         self.home, self.public, self.jobs = Path(home), public_hex(log_key), {}
+        self.serving_lock = threading.Lock()
         self.config = granite.load_config(stage['config'])
         self.partition, _ = granite.load_partition(self.config, stage['shard'], rank)
-        self.adapter = serving.Adapter(self.partition, served.spec, stage['arm']) if rank == served.arm_rank else None
+        self.adapter = load_adapter(self.partition, served, stage)
         # A fresh process's first pass can round differently; audits replay from warm passes.
-        for enabled in ((True, False) if self.adapter else (None,)):
-            if self.adapter:
-                self.adapter.set(enabled)
-            self.partition.warm_up()
+        warm(self.partition, self.adapter)
         logs = self.home / 'logs'
         self.served_jobs = {path.name for path in logs.iterdir()} if logs.exists() else set()
+        self.pending_jobs = set(self.served_jobs)
 
     def register(self, endpoint, faucet_url=None, bond=None, progress=print):
         """Bond this shard once, and publish where users reach it."""
@@ -354,35 +431,84 @@ class Owner:
             self.chain.submit(self.account, 'owner_endpoint', log_key=self.public, endpoint=endpoint)
             progress(f'Published endpoint {endpoint}')
 
-    def session_key_of(self, chain_id, job_id):
-        job = self.chain.state()['jobs'].get(job_id) if chain_id == self.chain.chain_id else None
+    def job_of(self, chain_id, job_id):
+        state = self.chain.state() if chain_id == self.chain.chain_id else {}
+        job = state.get('jobs', {}).get(job_id)
         if (job is None or job['deadline'] is not None or len(job['owners']) != self.served.world - 1
-                or job['owners'][self.rank - 1] != self.public):
+                or job['owners'][self.rank - 1] != self.public or state['height'] > job['expires']
+                or state['model_root'] != self.served.root):
             raise ValueError('no open job names this owner')
+        if job['positions'] > MAX_PAID_POSITIONS:
+            raise ValueError('job exceeds this owner\'s maximum paid positions')
         if job_id in self.served_jobs:
             raise ValueError('this owner already served that job')
-        self.jobs[job_id] = job
-        return job['session_key']
+        return job
+
+    def session_key_of(self, chain_id, job_id):
+        return self.job_of(chain_id, job_id)['session_key']
 
     def serve(self, connection, progress=print):
         """Serve one job over one connection, then commit its signed log; returns what was served, or None."""
         from neuroshard.evolution.sharded import granite_audit, granite_serving as serving
 
-        self.jobs.clear()
         try:
-            body = relay.answer(connection, self.rank, self.served.world, self.session_key_of)
+            deadline = time.monotonic() + HANDSHAKE_SECONDS
+            message = json.loads(relay.receive_frame(connection, (relay.HELLO, relay.AUDIT), relay.MAX_HELLO, deadline))
+            if (isinstance(message, dict) and isinstance(message.get('body'), dict)
+                    and message['body'].get('kind') == 'audit_log'):
+                from neuroshard.assistant.audit import serve_log
+                connection.settimeout(30)
+                try:
+                    serve_log(self, connection, message)
+                finally:
+                    connection.close()
+                return None
+            body = relay.answer(connection, self.rank, self.served.world, self.session_key_of,
+                                deadline=deadline, ready=False, message=message)
+            if body['hidden'] != self.config.hidden_size or body['max_tokens'] != self.served.max_tokens:
+                raise ValueError('the hello differs from this owner\'s model')
         except (ValueError, KeyError, TypeError, ConnectionError, OSError):
             connection.close()
             return None
+        if not self.serving_lock.acquire(blocking=False):
+            connection.close()
+            return None
+        try:
+            return self.serve_authenticated(connection, body, progress)
+        except Exception as error:
+            progress(f'Owner job failed: {type(error).__name__}: {error}')
+            return None
+        finally:
+            connection.close()
+            self.serving_lock.release()
+
+    def serve_authenticated(self, connection, body, progress):
+        import torch
+        from neuroshard.evolution.sharded import granite_audit, granite_serving as serving
+
+        torch.set_num_threads(self.threads)
+        connection.settimeout(PEER_TIMEOUT)
         job_id = body['job_id']
-        job = self.jobs.pop(job_id)
+        job = self.job_of(body['chain_id'], job_id)
         self.served_jobs.add(job_id)
+        relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': self.rank}))
         session = {'chain_id': self.chain.chain_id, 'job_id': job_id, 'request_root': job['request_root'],
                    'session_key': job['session_key'], 'log_keys': job['owners']}
         upstream = job['session_key'] if self.rank == 1 else job['owners'][self.rank - 2]
         link = granite_audit.Link(session, self.rank, self.served.world, self.log_key, upstream)
         log = granite_audit.OwnerLog(self.rank)
-        ring = relay.OwnerRelay(connection, self.rank, self.served.world, self.config.hidden_size, self.served.max_tokens)
+        checked_at = [0.0]
+
+        def alive():
+            if time.monotonic() - checked_at[0] >= 10:
+                current = self.chain.state()
+                if job_id not in current['jobs'] or current['height'] > job['expires']:
+                    raise ValueError('the paid job has expired')
+                checked_at[0] = time.monotonic()
+
+        budget = relay.WorkBudget(job['positions'], self.config.max_position_embeddings, alive)
+        ring = relay.OwnerRelay(connection, self.rank, self.served.world, self.config.hidden_size,
+                                self.served.max_tokens, budget, deadline=time.monotonic() + 3600)
         try:
             serving.serve(self.partition, ring, self.adapter, log, None, link)
         except (ConnectionError, OSError, ValueError) as error:
@@ -393,26 +519,80 @@ class Owner:
             return None
         directory = self.home / 'logs' / job_id
         log.save(directory, self.log_key, session)
+        self.pending_jobs.add(job_id)
         commitment = granite_audit.commitment(granite_audit.load(directory)[0])
         signature = self.log_key.sign(ledger.commitment_message(self.chain.chain_id, job_id,
                                                                 commitment['statement_root'])).hex()
         self.chain.submit(self.account, 'log_commit', job_id=job_id, log_signature=signature, **commitment)
+        self.pending_jobs.discard(job_id)
         return {'job_id': job_id, 'positions': log.attested['positions']}
 
+    def commit_pending(self):
+        """Recover saved commitments after a process restart or a lost RPC reply."""
+        from neuroshard.evolution.sharded import granite_audit
+
+        if not self.pending_jobs or not self.serving_lock.acquire(blocking=False):
+            return
+        try:
+            state = self.chain.state()
+            for job_id in sorted(self.pending_jobs):
+                job = state['jobs'].get(job_id)
+                if job is None or self.public in job['commits']:
+                    self.pending_jobs.discard(job_id)
+                    continue
+                record, _ = granite_audit.load(self.home / 'logs' / job_id)
+                commitment = granite_audit.commitment(record)
+                signature = self.log_key.sign(ledger.commitment_message(self.chain.chain_id, job_id,
+                                                                        commitment['statement_root'])).hex()
+                self.chain.submit(self.account, 'log_commit', job_id=job_id, log_signature=signature, **commitment)
+                self.pending_jobs.discard(job_id)
+        finally:
+            self.serving_lock.release()
+
     def run(self, host, port, stop=None, progress=print):
-        """Serve jobs one at a time until ``stop`` is set."""
+        """Authenticate bounded connections independently; one authenticated job owns the model."""
+        slots = threading.BoundedSemaphore(MAX_HANDSHAKES)
+        lock, addresses, connections = threading.Lock(), {}, set()
+
+        def handle(connection, address):
+            try:
+                outcome = self.serve(connection, progress)
+                if outcome:
+                    progress(f"Served job {outcome['job_id'][:12]}: {outcome['positions']} positions; log committed")
+            finally:
+                connection.close()
+                with lock:
+                    connections.discard(connection)
+                    addresses[address] -= 1
+                    if not addresses[address]:
+                        del addresses[address]
+                slots.release()
+
         with socket.create_server((host, port)) as listener:
             listener.settimeout(1.0)
             progress(f'Shard {self.rank} of {self.served.name} is serving on {host}:{port}')
             while stop is None or not stop.is_set():
+                if getattr(self, 'pending_jobs', None):
+                    try:
+                        self.commit_pending()
+                    except Exception as error:
+                        progress(f'Pending commitment will retry: {error}')
                 try:
-                    connection, _ = listener.accept()
+                    connection, peer = listener.accept()
                 except socket.timeout:
                     continue
-                connection.settimeout(PEER_TIMEOUT)
-                outcome = self.serve(connection, progress)
-                if outcome:
-                    progress(f"Served job {outcome['job_id'][:12]}: {outcome['positions']} positions; log committed")
+                address = peer[0]
+                with lock:
+                    if addresses.get(address, 0) >= MAX_PER_ADDRESS or not slots.acquire(blocking=False):
+                        connection.close()
+                        continue
+                    addresses[address] = addresses.get(address, 0) + 1
+                    connections.add(connection)
+                connection.settimeout(HANDSHAKE_SECONDS)
+                threading.Thread(target=handle, args=(connection, address), daemon=True).start()
+            with lock:
+                for connection in connections:
+                    connection.close()
 
 
 def reachable(endpoint, timeout=5):
@@ -456,6 +636,7 @@ class Conversation:
         self.tokenizer, _ = granite_tokenizer.load(stage['tokenizer'], parent_digest=stage.get('parent_tokenizer_digest'))
         config = granite.load_config(stage['config'])
         partition, _ = granite.load_partition(config, stage['shard'], 0)
+        partition.warm_up()
         state = chain.state()
         if state['model_root'] != served.root:
             raise ValueError('the ledger serves another version than this device holds')
@@ -479,9 +660,14 @@ class Conversation:
         except BaseException:
             self.close()
             raise
-        ring = relay.DriverRelay(self.sockets, served.world, config.hidden_size, served.max_tokens, signed=True)
+        self.budget = relay.WorkBudget(budget, config.max_position_embeddings)
+        ring = relay.DriverRelay(self.sockets, served.world, config.hidden_size, served.max_tokens, signed=True,
+                                 budget=self.budget)
         self.driver = serving.ServingDriver(partition, ring, self.link)
-        self.session = Session(served.policy, world, name=served.name, previous=None, modules=('U1',))
+        self.session = Session(served.policy, world, name=served.name, previous='a2-u1' if served.policies else None,
+                               modules=('U1', 'L2', 'L3') if served.policies else ('U1',),
+                               route_policies=served.policies)
+        self.router, self.responses = stage.get('router'), {}
         self.respond = self.arm = None
 
     def say(self, text):
@@ -490,12 +676,20 @@ class Conversation:
         from neuroshard.evolution import assistant_selector as selector
         from neuroshard.evolution.sharded import granite_serving as serving
 
-        if self.respond is None:
+        if self.arm is None:
             case = {'world': self.world, 'turns': [{'user': text}]}
             ids = accelerator.feature_ids(self.tokenizer, self.served.policy, case)
             self.arm = selector.choose(self.gate, self.driver.feature(ids))
             self.driver.episode(self.arm)
             self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids)
+        if self.router is not None:
+            feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
+            route = 'scheduling' if selector.choose(self.router, feature) else 'drafting'
+            self.driver.route(2 if route == 'scheduling' else 1, self.arm if route == 'drafting' else True)
+            if route not in self.responses:
+                self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
+                                                         self.served.eos_ids)
+            return self.session.turn(text, self.responses[route], route=route)
         return self.session.turn(text, self.respond)
 
     def close(self):
@@ -510,7 +704,7 @@ class Conversation:
 
 
 def seed(network, home, public_host, served=None, block_seconds=1.0, params=None, p2p_port=PORTS['p2p'],
-         faucet_port=PORTS['faucet'], progress=print):
+         faucet_port=PORTS['faucet'], progress=print, audit_shards=None):
     """The project's seed: the ledger's first validator, its public RPC and the faucet.
 
     It holds no shard of the model; serving needs owners. The RPC listens on the next port after P2P.
@@ -531,9 +725,29 @@ def seed(network, home, public_host, served=None, block_seconds=1.0, params=None
             text = chain_network.edit_config(text, section, key, value)
         node.write_text(text)
     config = json.loads(config_path.read_text())
+    for node in config['validators']:
+        path = Path(node['home']) / 'settlement.json'
+        terms = json.loads(path.read_text())
+        terms.update(promotion_authority=faucet.public, approved_models=network.get('approved_versions', {}))
+        path.write_text(json.dumps(terms, sort_keys=True))
+    if audit_shards:
+        shards = {}
+        for rank in audit_shards:
+            _, stage = fetch_stage(network, rank, home / 'audit-holdings', progress)
+            paths = {name: str(stage[name]) for name in ('config', 'shard')}
+            if 'arm' in stage:
+                paths.update(arm=str(stage['arm']), spec=served.spec)
+                if 'additions' in stage:
+                    paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
+            shards[str(rank)] = paths
+        for node in config['validators']:
+            path = Path(node['home']) / 'settlement.json'
+            terms = json.loads(path.read_text())
+            terms.update(runtime='granite-shard', threads=8, bundles=str(home / 'bundles'), shards=shards)
+            path.write_text(json.dumps(terms, sort_keys=True))
     chain_network.start(config)
     chain = Chain(chain_network.url(config), network['chain_id'])
-    server = serve_faucet(Faucet(chain, faucet), '0.0.0.0', faucet_port)
+    server = serve_faucet(Faucet(chain, faucet), '0.0.0.0', faucet_port, home / 'bundles')
     progress(json.dumps({'chain_id': network['chain_id'], 'rpc': f'http://{public_host}:{rpc_port}',
                          'faucet': f'http://{public_host}:{faucet_port}/faucet',
                          'persistent_peers': f"{config['validators'][0]['id']}@{public_host}:{p2p_port}"}))

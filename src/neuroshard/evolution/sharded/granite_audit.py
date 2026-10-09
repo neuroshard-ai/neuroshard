@@ -25,7 +25,7 @@ from pathlib import Path
 import torch
 
 from .granite_pipeline import FORWARD, RESET
-from .granite_serving import ADAPTER, CROP, FEATURE
+from .granite_serving import ADAPTER, CROP, FEATURE, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET
 
 LOG_FORMAT = 'neuroshard-granite-owner-log/1'
 PROOF_FORMAT = 'neuroshard-granite-fraud-proof/1'
@@ -446,6 +446,7 @@ def replay(partition, record, payloads, adapter=None):
     last = partition.rank == len(partition.boundaries) - 2
     width, positions = partition.config.hidden_size, partition.config.max_position_embeddings
     cache, checked, started = DynamicCache(), 0, time.monotonic()
+    caches, route, router_cache = {1: cache}, 1, DynamicCache()
     report = {'entries': len(record['entries']), 'input_mismatch': None, 'first_mismatch': None}
     for index, entry in enumerate(record['entries']):
         op, value = entry['op'], entry['value']
@@ -453,6 +454,7 @@ def replay(partition, record, payloads, adapter=None):
             raise ValueError('malformed logged command')
         if op == RESET:
             cache = DynamicCache()
+            caches[route] = cache
         elif op == CROP:
             if not 0 <= value <= cache.get_seq_length():
                 raise ValueError('logged crop outside the cache')
@@ -462,8 +464,22 @@ def replay(partition, record, payloads, adapter=None):
                 raise ValueError('malformed logged arm switch')
             if adapter is not None:
                 adapter.set(bool(value))
-        elif op in (FORWARD, FEATURE):
-            past = cache.get_seq_length() if op == FORWARD else 0
+        elif op == ROUTE:
+            if value not in (1, 2):
+                raise ValueError('unknown logged route')
+            route = value
+            cache = caches.setdefault(route, DynamicCache())
+            if adapter is not None:
+                adapter.select(route)
+        elif op == ROUTER_RESET:
+            router_cache = DynamicCache()
+        elif op == ROUTER_CROP:
+            if not 0 <= value <= router_cache.get_seq_length():
+                raise ValueError('logged router crop outside the cache')
+            router_cache.crop(value)
+        elif op in (FORWARD, FEATURE, ROUTER_FEATURE):
+            active = router_cache if op == ROUTER_FEATURE else cache
+            past = active.get_seq_length() if op != FEATURE else 0
             if not 0 < value <= positions - past:
                 raise ValueError('logged message outside the model context')
             hidden = payloads.get(index)
@@ -472,13 +488,13 @@ def replay(partition, record, payloads, adapter=None):
                 report['input_mismatch'] = index
                 break
             with torch.inference_mode():
-                if op == FORWARD:
+                if op in (FORWARD, ROUTER_FEATURE):
                     mask = torch.ones((1, past + value), dtype=torch.long)
-                    out = partition(hidden, mask, cache)
+                    out = partition(hidden, mask, active)
                 else:
                     out = partition(hidden, None, DynamicCache())
             checked += 1
-            if digest(out[:, -1:] if last else out) != entry['output']:
+            if digest(out[:, -1:] if last and op != ROUTER_FEATURE else out) != entry['output']:
                 report['first_mismatch'] = index
                 break
         else:

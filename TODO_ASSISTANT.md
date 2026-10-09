@@ -1,6 +1,6 @@
 # Decentralized assistant — active TODO
 
-**Updated October 8, 2026. Status: 4/6 milestones complete (A1–A4).**
+**Updated October 9, 2026. Status: 4/6 milestones complete (A1–A4).**
 
 Build one useful conversational assistant that can learn new capabilities from
 contributed data, execute across independently owned machines, and pay for useful
@@ -13,6 +13,22 @@ direction. The older [demonstration checklist](TODO.md) and all experiment repor
 remain evidence, not readiness claims for this assistant.
 
 ## Current deliverable
+
+Release integration is [PR #85](https://github.com/neuroshard-ai/neuroshard/pull/85).
+Its [qualification contract](docs/ASSISTANT_RELEASE_CHECK.md) separates working
+source, deployed behavior and independent ownership:
+
+- [x] Implement routed U1/L2/L3 shard serving with separate route caches and replay.
+- [x] Implement signed log retrieval, automatic auditing and funded proof delivery.
+- [x] Bound authenticated work, handshakes, connections and proof uploads.
+- [x] Implement stewarded native promotion without resetting accounts or supply.
+- [ ] Reproduce all 432 accepted A3 conversations through three physical shard hosts.
+- [ ] Deploy audits, publish assets, promote A3 and verify native paid chat.
+- [ ] Merge final green PR to main and publish the tested source entry point.
+- [ ] Recruit four independent operators; qualify A5, then the A6 operating soak.
+
+The completed implementation boxes are supported by tests. Deployment boxes need
+recorded runtime evidence; extra project-owned AWS hosts cannot complete A5.
 
 - [x] Replace isolated checker qualification with a complete-assistant contract.
 - [x] Implement a reusable document/tool/draft workspace with multi-turn execution,

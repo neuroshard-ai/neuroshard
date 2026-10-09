@@ -3,6 +3,7 @@
   "chain_id": "neuroshard-assistant-1",
   "rpc": "http://34.194.51.150:26657",
   "faucet": "http://34.194.51.150:28780/faucet",
+  "proof_endpoints": ["http://34.194.51.150:28780/proofs"],
   "version": "a2-u1",
   "plan": "config/experiments/granite-shard-serving-update.json",
   "plan_sha256": "8456a131bc5a69595e1dcdca1597025c36e87de557c23e7874a1e1aed4a93fad",

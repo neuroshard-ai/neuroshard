@@ -79,15 +79,16 @@ class cached:
 
     def replay(self, state, request):
         started = time.monotonic()
+        key = request.get('proof_root', request.get('model_root'))
         try:
             verdict = self.check(state, request) is True
         except ledger.NoVerdict as reason:
-            LOG.info('proof %s has no verdict on this validator: %s', request['proof_root'], reason)
+            LOG.info('verification %s has no verdict on this validator: %s', key, reason)
             raise
         except Exception as error:
-            LOG.exception('proof check failed for %s', request['proof_root'])
+            LOG.exception('verification failed for %s', key)
             raise ledger.NoVerdict(f'the proof check failed on this validator ({type(error).__name__})') from error
-        LOG.info('proof %s verdict %s in %.1f s', request['proof_root'], verdict, time.monotonic() - started)
+        LOG.info('verification %s verdict %s in %.1f s', key, verdict, time.monotonic() - started)
         return verdict
 
     def known(self, request):
@@ -170,8 +171,7 @@ class Application(rpc.ABCIServicer):
         honest validator accepts a block only after judging every proof in it.
         """
         if self.check.known(request) is False:
-            LOG.error('committed proof against %s contradicts this validator\'s replay of %s', request['log_key'],
-                      request['proof_root'])
+            LOG.error('committed verification contradicts this validator: %s', ledger.digest(request))
         return True
 
     def prefetch(self):
@@ -327,6 +327,17 @@ class Application(rpc.ABCIServicer):
         return pb.ResponseVerifyVoteExtension(status=1)
 
 
+def promotion_or_fraud(node, replay):
+    """Stewarded testnet admission: signed by the genesis authority, with an approved quality digest."""
+    def check(state, request):
+        if request.get('kind') == 'model_promotion':
+            approved = node.get('approved_models', {}).get(request['model_root'])
+            return bool(approved and request['signer'] == node.get('promotion_authority')
+                        and request['quality_root'] == approved['quality_root'])
+        return replay(state, request)
+    return check
+
+
 def shard_checker(node):
     """The validator's real proof checker from its node configuration: shard holdings and the bundle store.
 
@@ -335,7 +346,7 @@ def shard_checker(node):
     if not node.get('shards'):
         def judge_nothing(state, request):
             raise ledger.NoVerdict('this validator holds no shard')
-        return judge_nothing
+        return promotion_or_fraud(node, judge_nothing)
     if node.get('runtime') == 'granite-shard':
         # Replays must run in the owners' numerical environment, set before torch loads.
         from neuroshard.evolution import granite_shard_execution as shard
@@ -343,24 +354,39 @@ def shard_checker(node):
         shard.configure()
     import torch
 
-    from neuroshard.evolution.sharded import granite, granite_audit
+    from neuroshard.evolution.sharded import granite, granite_audit, granite_serving
+    from neuroshard.assistant.network import warm
 
     torch.set_num_threads(node['threads'])
     configured = threading.local()
-    partitions = {}
+    partitions, adapters, update_adapters = {}, {}, {}
     for rank, paths in node['shards'].items():
         partition, _ = granite.load_partition(granite.load_config(paths['config']), paths['shard'], int(rank))
-        partition.warm_up(**({'lengths': tuple(node['warm_up_lengths'])} if node.get('warm_up_lengths') else {}))
+        adapter = None
+        if paths.get('arm'):
+            update = granite_serving.Adapter(partition, paths['spec'], paths['arm'])
+            update.set(False)
+            update_adapters[int(rank)] = update
+            adapter = (granite_serving.AdapterBank(partition, paths['spec'], paths['arm'], paths['additions'])
+                       if paths.get('additions') else update)
+        if node.get('warm_up_lengths') and adapter is None:
+            partition.warm_up(lengths=tuple(node['warm_up_lengths']))
+        else:
+            warm(partition, adapter)
         partitions[int(rank)] = partition
-    check = granite_audit.challenge_checker(node.get('bundles'), partitions)
+        if adapter is not None:
+            adapters[int(rank)] = adapter
+    check = granite_audit.challenge_checker(node.get('bundles'), partitions, adapters)
 
     def replay(state, request):
         # Thread counts are per thread; the replay thread uses the same count as the loading thread.
         if not getattr(configured, 'threads', False):
             torch.set_num_threads(node['threads'])
             configured.threads = True
-        return check(state, request)
-    return replay
+        routed = node.get('approved_models', {}).get(state['model_root'], {}).get('routed', True)
+        checker = check if routed else granite_audit.challenge_checker(node.get('bundles'), partitions, update_adapters)
+        return checker(state, request)
+    return promotion_or_fraud(node, replay)
 
 
 def main():
