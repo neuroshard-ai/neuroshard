@@ -203,6 +203,33 @@ def test_owner_bonds_need_their_log_key_and_stay_exposed_while_named_or_within_t
     assert state['accounts'][people['owner-1'].public]['balance'] == balance - PARAMS['fee'] + PARAMS['owner_bond_minimum']
 
 
+def test_an_active_owner_publishes_where_users_reach_its_shard(market):
+    state, people, keys = market
+    for address in ('shard1.example.org:28700', '203.0.113.7:28701'):
+        state = ledger.transition(state, people['owner-1'].sign('owner_endpoint', log_key=keys[1], endpoint=address), None)
+        assert state['owners'][keys[1]]['endpoint'] == address
+    refuse(state, people['user'].sign('owner_endpoint', log_key=keys[1], endpoint='other.example:1'), 'active owner')
+    for bad in ('shard2.example.org', 'Shard2.example.org:1', 'host:0', 'host:65536', 'host:80/path', 'a' * 300 + ':1', 7):
+        refuse(state, people['owner-2'].sign('owner_endpoint', log_key=keys[2], endpoint=bad), 'host:port')
+        people['owner-2'].nonce -= 1
+    state = ledger.transition(state, people['owner-2'].sign('owner_unbond', log_key=keys[2]), None)
+    refuse(state, people['owner-2'].sign('owner_endpoint', log_key=keys[2], endpoint='shard2.example.org:1'), 'active owner')
+
+
+def test_accounts_transfer_neuro_and_conserve_money(market):
+    state, people, keys = market
+    newcomer = Account('newcomer')
+    state = ledger.transition(state, people['user'].sign('transfer', to=newcomer.public, amount=3_000_000), None)
+    assert state['accounts'][newcomer.public] == {'balance': 3_000_000, 'nonce': 0}
+    assert state['accounts'][people['user'].public]['balance'] == 20_000_000 - 3_000_000 - PARAMS['fee']
+    for bad in (0, -1, '5', None):
+        refuse(state, people['user'].sign('transfer', to=newcomer.public, amount=bad), 'Integer')
+        people['user'].nonce -= 1
+    with pytest.raises(ValueError):
+        ledger.transition(state, people['user'].sign('transfer', to='00' * 33, amount=1), None)
+    refuse(state, newcomer.sign('transfer', to=people['user'].public, amount=3_000_000), 'spendable')
+
+
 def test_a_job_registers_a_valid_session_key(market):
     state, people, keys = market
     for bad in ('cd' * 31, 'AB' * 32, 7, None):

@@ -63,6 +63,8 @@ and each burns the fee.
 | `owner_bond` | Locks at least the minimum bond for one shard of the current model and registers a log key. Requires a possession signature by that key over the account, shard, amount and nonce. A key can bond once. |
 | `owner_unbond` | Starts withdrawal. Refused while the owner is named in an unsettled job. |
 | `owner_withdraw` | Returns the bond once the challenge window has passed since unbonding. |
+| `owner_endpoint` | An active owner publishes the `host:port` where users reach its shard; a later one replaces it. |
+| `transfer` | Moves a positive amount of NEURO to another account, such as from a faucet to a new user. |
 | `serve_open` | Escrows the price for a budget of token positions and names one active owner per bonded shard, in order, the request digest and the user's Ed25519 session key. The job's ID is the digest of the transaction. |
 | `log_commit` | A named owner commits a log bound to the job: its header, the digest of its entries and the statement they produce, signed by its log key over the chain, job and statement. The header must name this chain, job and request and carry its upstream sender's signature over the log's inputs and the positions they carried. When every owner has committed, the challenge window opens. |
 | `challenge` | Opens a challenge: names an owner whose log the job has committed, while its challenge window is open, and the content address of a fraud-proof bundle, and locks the challenge deposit. Nothing is replayed. |

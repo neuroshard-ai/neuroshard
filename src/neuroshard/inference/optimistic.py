@@ -3,7 +3,8 @@
 Serving work is accepted unless an auditor proves fraud within the challenge window.
 Validators replay a fraud proof only when a challenge arrives, so honest serving costs
 them no recomputation. Owner 0 runs on the user's own device and is not bonded; every
-other shard of a job has one bonded owner whose signed log the job commits to.
+other shard of a job has one bonded owner whose signed log the job commits to. An active
+owner publishes the endpoint where users reach its shard, and accounts transfer NEURO.
 
 A committed log answers its job's request. The job registers the user's session key;
 the user's device signs the transcript of every message it sends under that key, and
@@ -29,6 +30,7 @@ for. A job does not settle while a challenge of it is open.
 import copy
 import hashlib
 import json
+import re
 
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -42,7 +44,9 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'owner_unbond': {'log_key'}, 'owner_withdraw': {'log_key'},
           'serve_open': {'model_root', 'owners', 'request_root', 'session_key', 'price', 'positions'},
           'log_commit': {'job_id', 'statement_root', 'entries_root', 'header', 'log_signature'},
-          'challenge': {'job_id', 'log_key', 'proof_root'}, 'prove': {'job_id', 'challenge_id'}}
+          'challenge': {'job_id', 'log_key', 'proof_root'}, 'prove': {'job_id', 'challenge_id'},
+          'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'}}
+ENDPOINT = re.compile(r'[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?:[1-9][0-9]{0,4}')
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
 HEADER_FIELDS = {'format', 'rank', 'public_key', 'session', 'upstream'}
 LINK_DOMAIN = 'neuroshard/serving-link/v1'
@@ -91,6 +95,13 @@ def ed25519_key(value):
 
 
 log_key = ed25519_key
+
+
+def endpoint(value):
+    """Where users reach an owner's shard: a lowercase host name or IPv4 address and a port."""
+    if not isinstance(value, str) or not ENDPOINT.fullmatch(value) or int(value.rsplit(':', 1)[1]) > 65535:
+        raise ValueError('Endpoint must be a lowercase host:port')
+    return value
 
 
 def ed25519_valid(public, message, signature):
@@ -421,6 +432,15 @@ def transition(previous, envelope, execute):
         job['served'][key] = served
         if len(job['commits']) == len(job['owners']):
             job['deadline'] = state['height'] + params['challenge_blocks']
+    elif kind == 'transfer':
+        recipient, amount = account_key(body['to']), integer(body['amount'], 1)
+        debit(amount)
+        account(state, recipient)['balance'] += amount
+    elif kind == 'owner_endpoint':
+        owner = state['owners'].get(body['log_key'])
+        if owner is None or owner['account'] != sender or owner['status'] != 'active':
+            raise ValueError('Only an active owner can publish its endpoint')
+        owner['endpoint'] = endpoint(body['endpoint'])
     elif kind == 'challenge':
         debit(params['challenge_deposit'])
         state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {
