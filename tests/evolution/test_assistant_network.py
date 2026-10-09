@@ -75,6 +75,34 @@ def test_a_user_picks_one_reachable_active_owner_per_shard():
         network.choose_owners(state, served, probe=probe)
 
 
+def test_the_host_command_sets_the_pinned_numerical_environment_before_torch_loads(tmp_path):
+    code = '''
+import sys
+from neuroshard.client import cli
+from neuroshard.evolution import granite_shard_execution as runtime
+seen, configure = [], runtime.configure
+
+def recorded():
+    seen.append("torch" in sys.modules)
+    configure()
+    from neuroshard.assistant import network
+    network.fetch_stage = lambda *args, **kwargs: (print("ordered" if seen == [False] else "torch-before-configure"),
+                                                   sys.exit(0))
+
+runtime.configure = recorded
+cli.main(["assistant", "host", "--shard", "1", "--endpoint", "127.0.0.1:1", "--home", sys.argv[1]])
+'''
+    import os
+    import subprocess
+    import sys
+
+    from test_granite_serving import ROOT
+
+    result = subprocess.run([sys.executable, '-c', code, str(tmp_path)], capture_output=True, text=True,
+                            env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, timeout=120)
+    assert result.stdout.strip() == 'ordered', result.stdout + result.stderr
+
+
 @pytest.mark.skipif(engine() is None, reason='needs CometBFT 0.38.26')
 def test_owners_on_the_network_serve_a_paid_conversation_that_settles(world, tmp_path):  # noqa: F811
     served = network.Version('tiny', BOUNDARIES, SPEC, bounded(), [world['tokenizer'].eos_token_id], 100000, 'ab' * 32)

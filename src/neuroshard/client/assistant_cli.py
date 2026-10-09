@@ -77,6 +77,11 @@ def render(result, before):
 
 
 def run(args):
+    if args.assistant_action == 'host':
+        from neuroshard.evolution import granite_shard_execution as runtime
+
+        # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
+        runtime.configure()
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
@@ -108,10 +113,6 @@ def run(args):
             print(json.dumps(state['results'].get(args.job) or state['jobs'].get(args.job) or 'unknown job', indent=2))
         return
     if args.assistant_action == 'host':
-        from neuroshard.evolution import granite_shard_execution as runtime
-
-        # Audits replay an owner's log bit for bit only in the pinned numerical environment and thread count.
-        runtime.configure()
         served, stage = network.fetch_stage(descriptor, args.shard, args.home)
         owner = network.Owner(served, stage, args.shard, chain, network.Account(args.home / 'account.key'),
                               network.signing_key(args.home / f'log-{args.shard}.key'), args.home, args.threads or 8)
