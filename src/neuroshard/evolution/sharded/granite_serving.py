@@ -19,7 +19,7 @@ import torch
 from neuroshard.evolution import assistant_experience_train as trainer
 from neuroshard.evolution.modular_reference_execution import identity
 
-from .granite_pipeline import FORWARD, RESET, STOP, command
+from .granite_pipeline import FORWARD, RESET, STOP
 
 CROP, ADAPTER, FEATURE = 9, 10, 11
 
@@ -91,7 +91,7 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
 
     cache, steps, busy, forwards = DynamicCache(), 0, 0.0, 0
     while True:
-        op, value = command(0)
+        op, value = ring.command(0)
         if op == STOP:
             return {'steps': steps, 'busy_seconds': busy}
         if op in (RESET, CROP, ADAPTER):
@@ -151,7 +151,7 @@ class ServingDriver:
 
     def control(self, op, value=0):
         """A command that changes owner state: one step of every link transcript."""
-        command(op, value)
+        self.ring.command(op, value)
         if self.link is not None:
             self.link.command(op, value)
 
@@ -172,7 +172,7 @@ class ServingDriver:
     def feature(self, ids):
         """The frozen parent's final-layer state at the last prompt position, as ``boundary_feature`` computes it."""
         self.control(ADAPTER, 0)
-        command(FEATURE, len(ids))
+        self.ring.command(FEATURE, len(ids))
         tokens = torch.tensor([ids])
         began = time.monotonic()
         with torch.inference_mode():
@@ -195,7 +195,7 @@ class ServingDriver:
         self.cache.crop(length)
 
     def step(self, tokens, mask):
-        command(FORWARD, tokens.shape[1])
+        self.ring.command(FORWARD, tokens.shape[1])
         began = time.monotonic()
         with torch.inference_mode():
             hidden = self.partition(self.partition.embed(tokens), mask, self.cache)
@@ -211,7 +211,7 @@ class ServingDriver:
         return greedy(self.step(tokens, mask))
 
     def stop(self):
-        command(STOP)
+        self.ring.command(STOP)
 
 
 def greedy(logits):
