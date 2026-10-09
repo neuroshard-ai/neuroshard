@@ -66,6 +66,11 @@ from both owners. It held one two-turn conversation from development sample 0.
   out of its six-generation budget before confirming.
 - **Outcome.** Both drafts equal the case's expected outcomes. Each owner
   committed a signed log of 2,731 token positions.
+- **Settlement.** Consensus settled the job at block 2,770: 0.083 NEURO to
+  each owner, and 0.833 of the 1 NEURO escrow back to the user.
+- **Where the time goes.** On that client, stage 0 alone costs about 50 s per
+  1,000 prompt tokens and about 340 ms per generated token, for layers 0–11 and
+  the output head. Running it in FP32 instead of BF16 barely changes that.
 
 ## Milestones
 
