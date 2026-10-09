@@ -5,6 +5,11 @@ or submit a reproducible assistant correction. The public CPU chain's September 
 [recovery](NETWORK_RECOVERY_20260927.md) restores existing small-model operation;
 the newer assistant is not yet active on that chain.
 
+For the assistant's own live chain, use [assistant network setup](ASSISTANT_NETWORK.md).
+The [release qualification](ASSISTANT_RELEASE_CHECK.md) tracks audited serving
+and A3 promotion; the [promotion RFC](ASSISTANT_PROMOTION_RFC.md) states its
+stewarded trust model. The two chains have distinct genesis and token balances.
+
 The active [assistant checklist](../TODO_ASSISTANT.md) follows the
 [complete-assistant architecture](ASSISTANT_ARCHITECTURE.md). The next deliverable
 is the [workspace learning contract](ASSISTANT_WORKFLOW_LEARNING.md): a complete

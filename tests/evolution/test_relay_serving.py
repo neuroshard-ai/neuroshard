@@ -123,7 +123,7 @@ def test_frames_keep_their_order_and_bounds():
     with pytest.raises(ValueError, match='boundary'):
         driver.send(torch.zeros((1, 9, 4), dtype=torch.bfloat16), 1)
     driver.send(value, 1)
-    with pytest.raises(ValueError, match='length'):
+    with pytest.raises(ValueError, match='length|bound'):
         owner.receive(0, 2)
     driver.command(1, 1)
     with pytest.raises(ValueError, match='frame'):

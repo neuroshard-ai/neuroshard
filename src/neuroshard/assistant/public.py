@@ -22,18 +22,25 @@ def default_consent():
     return {'training_opt_in': False, 'external_actions': False, 'share_outside_session': False}
 
 
-def bind(policy, *, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3')):
+def bind(policy, *, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'), route_policies=None):
     if policy.get('external_effects'):
         raise ValueError('public session refuses external effects')
     body = {'format': FORMAT, 'name': name, 'previous': previous,
             'policy_sha256': identity(policy),
             'tools_sha256': identity(workflow.interface(policy).TOOLS),
             'modules': list(modules), 'limits': copy.deepcopy(policy['limits'])}
+    if route_policies:
+        if any(item.get('external_effects') for item in route_policies.values()):
+            raise ValueError('public routes refuse external effects')
+        body['routes'] = {name: {'policy_sha256': identity(item),
+                                'tools_sha256': identity(workflow.interface(item).TOOLS)}
+                          for name, item in sorted(route_policies.items())}
     return {**body, 'version_sha256': identity(body)}
 
 
 class Session:
-    def __init__(self, policy, world, *, consent=None, name=CURRENT, previous=PREVIOUS):
+    def __init__(self, policy, world, *, consent=None, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'),
+                 route_policies=None):
         consent = default_consent() if consent is None else dict(consent)
         extra = set(consent) - set(default_consent())
         missing = set(default_consent()) - set(consent)
@@ -42,10 +49,15 @@ class Session:
         if consent['external_actions']:
             raise ValueError('external actions are not authorized')
         self.policy = policy
-        self.version = bind(policy, name=name, previous=previous)
+        self.route_policies = route_policies
+        self.version = bind(policy, name=name, previous=previous, modules=modules, route_policies=route_policies)
         self.consent = consent
         self.tools = workflow.interface(policy)
-        self.world = self.tools.Workspace(copy.deepcopy(world))
+        if route_policies:
+            from neuroshard.evolution import assistant_routing
+            self.world = assistant_routing.workspace(route_policies.values()).Workspace(copy.deepcopy(world))
+        else:
+            self.world = self.tools.Workspace(copy.deepcopy(world))
         self.messages = [{'role': 'system', 'content': policy['system_instruction']}]
         self.calls = []
         self.memory = {}
@@ -77,18 +89,24 @@ class Session:
             payload['memory'] = copy.deepcopy(self.memory)
         return payload
 
-    def turn(self, user, respond):
+    def turn(self, user, respond, route=None):
         if not isinstance(user, str) or not user.strip():
             raise ValueError('user turn must be non-empty text')
+        if route is not None:
+            self.policy = self.route_policies[route]
+            self.tools = workflow.interface(self.policy)
+            self.messages[0] = {'role': 'system', 'content': self.policy['system_instruction']}
         self.messages.append({'role': 'user', 'content': user})
         used, final, completed, failure = 0, '', False, None
         started = time.monotonic()
         generations = 0
+        responses = []
         for _ in range(self.policy['limits']['model_turns_per_user_turn']):
             generated = respond(copy.deepcopy(self.messages), copy.deepcopy(self.tools.TOOLS))
             generated = {**generated,
                          'request_sha256': identity({'messages': self.messages, 'tools': self.tools.TOOLS})}
             generations += 1
+            responses.append(generated)
             if not generated['terminated']:
                 failure = 'generation did not terminate within its token/input budget'
                 break
@@ -116,4 +134,5 @@ class Session:
             failure = 'model-turn budget exhausted'
         return {'completed': completed, 'final_text': final, 'failure': failure,
                 'snapshot': self.world.snapshot(), 'version': self.version['name'],
-                'seconds': time.monotonic() - started, 'generations': generations}
+                'seconds': time.monotonic() - started, 'generations': generations,
+                'responses': responses, 'route': route}

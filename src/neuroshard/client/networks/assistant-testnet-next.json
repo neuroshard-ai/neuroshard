@@ -1,0 +1,80 @@
+{
+  "format": "neuroshard-assistant-network/1",
+  "chain_id": "neuroshard-assistant-1",
+  "rpc": "http://34.194.51.150:26657",
+  "faucet": "http://34.194.51.150:28780/faucet",
+  "proof_endpoints": [
+    "http://34.194.51.150:28780/proofs"
+  ],
+  "version": "a3-cohort3",
+  "plan": "config/experiments/granite-shard-serving-update.json",
+  "plan_sha256": "8456a131bc5a69595e1dcdca1597025c36e87de557c23e7874a1e1aed4a93fad",
+  "assets": "https://github.com/neuroshard-ai/neuroshard/releases/download/assistant-a3-cohort3/",
+  "files": {
+    "integration.json": {
+      "asset": "a2-integration.json",
+      "bytes": 184029,
+      "sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"
+    },
+    "update-checkpoint/manifest.json": {
+      "asset": "U1-manifest.json",
+      "bytes": 2053,
+      "sha256": "e586ddf3d14f53cd74fc344a676cf57b4ad19f716d3fa847f318b99749e9da6b"
+    },
+    "update-checkpoint/trainable.safetensors": {
+      "asset": "U1-trainable.safetensors",
+      "bytes": 251660064,
+      "sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"
+    },
+    "router.json": {
+      "asset": "router.json",
+      "bytes": 332951,
+      "sha256": "791f7ef488d473e91ff6e27bb286909f406ea2ba1f8d3107b0a2ee5bbcbf327a"
+    },
+    "L2/manifest.json": {
+      "asset": "L2-manifest.json",
+      "bytes": 3176,
+      "sha256": "967154aae9f590cdcf86cdbf1d6d6e5d03274ceeec582484615d9b8f4de21ffa"
+    },
+    "L2/trainable.safetensors": {
+      "asset": "L2-trainable.safetensors",
+      "bytes": 4197776,
+      "sha256": "461b36aaaab3410201f05278b37e7a74e550fbe4327aa02e48d54a44cf5f6550"
+    },
+    "L3/manifest.json": {
+      "asset": "L3-manifest.json",
+      "bytes": 3093,
+      "sha256": "ad49018f2033b956dbf2a2a945098c832fd9aa42a7bf90045f86a952b17656fe"
+    },
+    "L3/trainable.safetensors": {
+      "asset": "L3-trainable.safetensors",
+      "bytes": 4197776,
+      "sha256": "84e786957757e0085c9991cf5ed4809838af408914830d346d84cbaf069b6a19"
+    }
+  },
+  "policies": {
+    "drafting": {
+      "path": "config/experiments/assistant-workflow-policy.json",
+      "sha256": "69b991aecbed40c26bde1e04f3952aa6fe67f7c49d2fd4947b5326dce7094afc"
+    },
+    "scheduling": {
+      "path": "config/experiments/assistant-workflow-policy-calendar-slots.json",
+      "sha256": "59a6d4c026f2f2832421b7c44e931e602e22d6dfc9bc9361672866a38984153a"
+    }
+  },
+  "routing": {
+    "drafting": {
+      "route": 1,
+      "base": "U1",
+      "addition": "L3",
+      "parent_fallback": "a2_gate"
+    },
+    "scheduling": {
+      "route": 2,
+      "base": "U1",
+      "addition": "L2"
+    },
+    "selector": "router.json",
+    "feature": "message-mean"
+  }
+}
