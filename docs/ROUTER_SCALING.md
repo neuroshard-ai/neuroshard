@@ -153,10 +153,53 @@ cards, under this encoder, do not substitute for routed examples.
   per-route recall, not only the aggregate. A unit whose addition lowers an earlier route's
   recall beyond a declared margin should not be accepted.
 - **Fallback.** Route low-confidence turns to the parent or ask a clarifying question; at 5%
-  abstention familiar-wording errors fall from 14 to 1.
+  abstention familiar-wording errors fall from 14 to 1. Calibrate the threshold on
+  paraphrased turns (see the packaged router below).
 - **Next measurement.** Re-run with Granite 4.1 3B features on one CPU host before cohort 4
   (the scripts take `--model`), and fit the router on the real accepted units' routing turns
   plus paraphrases, measuring end-to-end episode success rather than labels alone.
+
+## Packaged router
+
+[`assistant_turn_router`](../src/neuroshard/evolution/assistant_turn_router.py) packages the
+findings as a router file any party can verify and recompute: the logistic router over
+`message ⊕ opening`, a fallback route for low-confidence turns, and an admission rule for
+adding a unit. It is not wired into serving. On the study's SmolLM2 features it reproduces
+the study exactly (0.987 `test`, 0.772 `unseen` at 14 routes).
+
+**Calibration on fit folds does not transfer to new wording.** The threshold is chosen on
+held-out folds of the fit conversations as the largest coverage meeting a target kept
+accuracy, with at least half the turns kept:
+
+| target | `test` coverage / kept accuracy / misrouted | `unseen` coverage / kept accuracy / misrouted |
+| --- | --- | --- |
+| none | 1.000 / 0.987 / 14 | 1.000 / 0.772 / 207 |
+| 0.98 | 0.999 / 0.987 / 13 | 0.955 / 0.796 / 177 |
+| 0.99 | 0.988 / 0.990 / 10 | 0.733 / 0.892 / 72 |
+
+At target 0.99 the router meets it on familiar wording and falls to 0.892 on new wording,
+though misroutes fall from 207 to 72. A deployed threshold must be calibrated on paraphrased
+turns, not on the router's own fit data.
+
+**Admission.** A candidate with one more route is refused when an earlier route's recall on
+the paraphrase check set falls by more than 0.05 *and* the turns it lost significantly
+outnumber those it gained (one-sided exact sign test, α = 0.05), or when an earlier route has
+fewer than 30 check turns. With 38–76 `unseen` turns per route, one turn is worth 1.3–2.6
+points, so a plain margin refuses almost every addition on noise; the paired test does not.
+Replaying the twelve additions (each compared with the router before it, whether or not
+that one was admitted), the rule refuses five, each a large one-way displacement:
+
+| added | displaced route | check turns | recall before → after | lost / gained | p |
+| --- | --- | --- | --- | --- | --- |
+| invoices | scheduling | 39 | 1.00 → 0.77 | 9 / 0 | 0.002 |
+| rooms | scheduling | 39 | 0.62 → 0.31 | 12 / 0 | 0.0002 |
+| expenses | invoices | 54 | 0.98 → 0.63 | 19 / 0 | <10⁻⁵ |
+| approvals | drafting | 38 | 0.34 → 0.03 | 12 / 0 | 0.0002 |
+| timesheets | reminders | 68 | 0.96 → 0.74 | 15 / 0 | 3×10⁻⁵ |
+
+These are the confusable pairs the grammars were written to contain; the other seven
+additions pass. A refused unit is not useless: its cohort should add paraphrased routing
+turns for the route it displaced and refit, which the diversity result above suggests will help.
 
 ## Limits
 

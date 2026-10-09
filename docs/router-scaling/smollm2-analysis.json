@@ -515,5 +515,217 @@
    }
   }
  },
- "final_layer": "layer-1"
+ "final_layer": "layer-1",
+ "packaged_router": {
+  "admission": [
+   {
+    "added": "invoices",
+    "added_recall": 1.0,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "scheduling"
+    ],
+    "failing_detail": {
+     "scheduling": {
+      "after": 0.7692307692307693,
+      "before": 1.0,
+      "gained": 0,
+      "lost": 9,
+      "p_value": 0.001953125,
+      "turns": 39
+     }
+    }
+   },
+   {
+    "added": "tickets",
+    "added_recall": 0.98,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "rooms",
+    "added_recall": 1.0,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "scheduling"
+    ],
+    "failing_detail": {
+     "scheduling": {
+      "after": 0.3076923076923077,
+      "before": 0.6153846153846154,
+      "gained": 0,
+      "lost": 12,
+      "p_value": 0.000244140625,
+      "turns": 39
+     }
+    }
+   },
+   {
+    "added": "expenses",
+    "added_recall": 0.9666666666666667,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "invoices"
+    ],
+    "failing_detail": {
+     "invoices": {
+      "after": 0.6296296296296297,
+      "before": 0.9814814814814815,
+      "gained": 0,
+      "lost": 19,
+      "p_value": 1.9073486328125e-06,
+      "turns": 54
+     }
+    }
+   },
+   {
+    "added": "approvals",
+    "added_recall": 0.8727272727272727,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "drafting"
+    ],
+    "failing_detail": {
+     "drafting": {
+      "after": 0.02631578947368421,
+      "before": 0.34210526315789475,
+      "gained": 0,
+      "lost": 12,
+      "p_value": 0.000244140625,
+      "turns": 38
+     }
+    }
+   },
+   {
+    "added": "reminders",
+    "added_recall": 0.9666666666666667,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "summaries",
+    "added_recall": 0.9285714285714286,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "travel",
+    "added_recall": 0.8387096774193549,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "inventory",
+    "added_recall": 0.9841269841269841,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "timesheets",
+    "added_recall": 0.9354838709677419,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "reminders"
+    ],
+    "failing_detail": {
+     "reminders": {
+      "after": 0.7352941176470589,
+      "before": 0.9558823529411765,
+      "gained": 0,
+      "lost": 15,
+      "p_value": 3.0517578125e-05,
+      "turns": 68
+     }
+    }
+   },
+   {
+    "added": "contacts",
+    "added_recall": 0.9393939393939394,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "search",
+    "added_recall": 0.6268656716417911,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   }
+  ],
+  "calibrated": {
+   "0.95": {
+    "held_out": {
+     "held_out_accuracy": 0.9789473684210527,
+     "held_out_coverage": 1.0,
+     "held_out_kept_accuracy": 0.9789473684210527,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.9865384615384616,
+     "misrouted": 14,
+     "turns": 1040
+    },
+    "threshold": 0.0,
+    "unseen": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.7722772277227723,
+     "misrouted": 207,
+     "turns": 909
+    }
+   },
+   "0.98": {
+    "held_out": {
+     "held_out_accuracy": 0.9789473684210527,
+     "held_out_coverage": 0.9956656346749226,
+     "held_out_kept_accuracy": 0.9800995024875622,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 0.9990384615384615,
+     "kept_accuracy": 0.987487969201155,
+     "misrouted": 13,
+     "turns": 1040
+    },
+    "threshold": 0.060866375243614046,
+    "unseen": {
+     "coverage": 0.9548954895489549,
+     "kept_accuracy": 0.7960829493087558,
+     "misrouted": 177,
+     "turns": 909
+    }
+   },
+   "0.99": {
+    "held_out": {
+     "held_out_accuracy": 0.9789473684210527,
+     "held_out_coverage": 0.9715170278637771,
+     "held_out_kept_accuracy": 0.9904397705544933,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 0.9884615384615385,
+     "kept_accuracy": 0.9902723735408561,
+     "misrouted": 10,
+     "turns": 1040
+    },
+    "threshold": 0.42860187161631896,
+    "unseen": {
+     "coverage": 0.7326732673267327,
+     "kept_accuracy": 0.8918918918918919,
+     "misrouted": 72,
+     "turns": 909
+    }
+   }
+  },
+  "uncalibrated": {
+   "test": 0.9865384615384616,
+   "unseen": 0.7722772277227723
+  }
+ }
 }

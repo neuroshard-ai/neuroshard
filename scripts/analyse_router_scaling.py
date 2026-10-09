@@ -42,6 +42,59 @@ def routed(rule, features, fit, cases, strategy, routes=data.ORDER):
     return scaling.decisions(gate, cases, features, routes, strategy)
 
 
+def packaged(fit, sets, everything, vectors, targets=(0.95, 0.98, 0.99)):
+    """The packaged turn router on the study's features: calibrated on fit folds, judged on test and unseen.
+
+    Admission replays the growth order: each added route is checked against the previous
+    router on the ``unseen`` set, the paraphrase check, with a 0.05 margin and 0.6 minimum.
+    """
+    from neuroshard.evolution import assistant_turn_router as turn_router
+
+    per_turn = {}
+    for case in everything:
+        turns = turn_router.conversation_features([vectors[text] for text in case['user_turns']])
+        for t, feature in enumerate(turns):
+            per_turn[f'{case["id"]}#{t}'] = feature
+    rows = scaling.turn_rows(fit, data.ORDER)
+    fitted = turn_router.fit(per_turn, rows, fallback='parent')
+    result = {'uncalibrated': {}, 'calibrated': {}, 'admission': []}
+    for name, cases in sets.items():
+        check = scaling.turn_rows(cases, data.ORDER)
+        chosen = turn_router.route_many(fitted, [per_turn[key] for key in sorted(check)])
+        result['uncalibrated'][name] = sum(c == check[k][0] for c, k in zip(chosen, sorted(check))) / len(check)
+    for target in targets:
+        calibrated, report = turn_router.calibrate(fitted, per_turn, rows, target=target, fallback='parent')
+        entry = {'threshold': calibrated['threshold'], 'held_out': {k: report[k] for k in
+                 ('held_out_coverage', 'held_out_kept_accuracy', 'held_out_accuracy', 'target_reachable')}}
+        for name, cases in sets.items():
+            check = scaling.turn_rows(cases, data.ORDER)
+            keys = sorted(check)
+            chosen = turn_router.route_many(calibrated, [per_turn[key] for key in keys])
+            kept = [(c, check[k][0]) for c, k in zip(chosen, keys) if c != 'parent']
+            entry[name] = {'coverage': len(kept) / len(keys),
+                           'kept_accuracy': sum(c == t for c, t in kept) / len(kept) if kept else None,
+                           'misrouted': sum(c != t for c, t in kept), 'turns': len(keys)}
+        result['calibrated'][str(target)] = entry
+    unseen = sets['unseen']
+    previous = None
+    for size in range(2, len(data.ORDER) + 1):
+        routes = data.ORDER[:size]
+        step_rows = scaling.turn_rows(fit, routes)
+        candidate = turn_router.fit(per_turn, step_rows, fallback='parent')
+        if previous is not None:
+            check = scaling.turn_rows(unseen, routes)
+            decision = turn_router.admit(previous, candidate, per_turn, check, added=routes[-1], margin=0.05, minimum=0.6)
+            result['admission'].append({'added': routes[-1], 'admitted': decision['admitted'],
+                                        'added_recall': decision['added_recall'],
+                                        'earlier_routes_failing': decision['earlier_routes_failing'],
+                                        'failing_detail': {name: {k: decision['routes'][name][k] for k in
+                                                                  ('turns', 'before', 'after', 'lost', 'gained', 'p_value')}
+                                                           for name in decision['earlier_routes_failing']
+                                                           if name in decision['routes']}})
+        previous = candidate
+    return result
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--out', required=True)
@@ -93,7 +146,9 @@ def main(argv=None):
                        'two_templates': scaling.evaluate(broad[s], cases)['turn_accuracy'],
                        'paired': scaling.paired_bootstrap(narrow[s], broad[s], cases)}
                    for s, cases in synthetic.items()}}
+    analysis['packaged_router'] = packaged(fit, sets, everything, layers[final])
     (out / 'analysis.json').write_text(json.dumps(analysis, indent=1, sort_keys=True))
+    print(json.dumps(analysis['packaged_router'], indent=1))
     for label, entry in analysis['comparisons'].items():
         print(f'{label}: ' + '; '.join(f"{s} {v['difference']:+.3f} [{v['interval'][0]:+.3f}, {v['interval'][1]:+.3f}]"
                                         for s, v in entry.items()))
