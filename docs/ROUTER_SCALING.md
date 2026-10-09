@@ -23,7 +23,8 @@ and does routing survive wording the router was not fitted on?**
   turns shared by every capability ("Move that 3 calendar days later"), and every ordered
   pair of synthetic capabilities has one cross conversation.
 - **Real anchors.** Drafting and scheduling turns from the real grammars' `train` and
-  `cross-train` splits (48 sampled cases each) for fitting, and their `integration` and
+  `cross-train` splits (48 sampled cases from each `train` split and all 32 `cross-train`
+  cases) for fitting, and their `integration` and
   `cross-integration` splits for `test`, labelled by the accepted router's own rule
   (a turn needs scheduling if its expected outcome includes a meeting). The code refuses
   any sealed or development split.
@@ -150,8 +151,9 @@ cards, under this encoder, do not substitute for routed examples.
   many phrasings, including paraphrases of every earlier capability; this is the cheapest
   measured lever on new wording. Contributor demonstrations can supply them.
 - **Acceptance.** Re-check every earlier cohort's routing on paraphrased turns, and report
-  per-route recall, not only the aggregate. A unit whose addition lowers an earlier route's
-  recall beyond a declared margin should not be accepted.
+  per-route recall, not only the aggregate. Refuse a unit whose addition significantly
+  displaces an earlier route's turns (the packaged rule below: recall drop beyond a margin
+  and a paired sign test, with enough check turns per route to decide).
 - **Fallback.** Route low-confidence turns to the parent or ask a clarifying question; at 5%
   abstention familiar-wording errors fall from 14 to 1. Calibrate the threshold on
   paraphrased turns (see the packaged router below).
@@ -206,9 +208,11 @@ turns for the route it displaced and refit, which the diversity result above sug
 Authored templates, not real user language; `test` shares templates with `fit`, so `unseen`
 is the meaningful check, and its phrasings are also authored. SmolLM2-135M stands in for the
 parent. Labels say which unit a turn needs; no unit was served, so this measures routing,
-not conversation success. Abstention thresholds are quantiles on the evaluated turns, a
-description of the trade-off rather than a calibrated policy. One fit sample of the real
-grammars; five orders of the synthetic capabilities.
+not conversation success. The study's abstention table abstains on quantiles of the evaluated
+turns, a description of the trade-off; the packaged router's threshold is calibrated on fit
+folds and was then judged on `test` and `unseen`. One fit sample of the real
+grammars; five orders of the synthetic capabilities. Admission was replayed on the same
+`unseen` turns the study reports, so it demonstrates the rule, not a fresh confirmation.
 
 ## Reproduce
 
