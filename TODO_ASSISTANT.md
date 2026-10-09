@@ -494,7 +494,9 @@ No automatic training or admission follows a baseline. This is not a public assi
 
 A1–A4 are complete. A5 needs independently administered operators, and recruitment
 can proceed now with the [operator kit](docs/OPERATOR_KIT.md). A6 requires A1–A5;
-its session contract can be used now, the soak cannot.
+its session contract can be used now, the soak cannot. The
+[public assistant network](docs/ASSISTANT_NETWORK.md) is the path to both: peers host
+shards, users chat through them and pay on the ledger.
 Native 0.4.0 stays separate until a complete candidate passes its activation
 contract.
 
