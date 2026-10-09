@@ -33,7 +33,6 @@ is always empty: a session is not a transaction.
 
 ## What this does not do
 
-It does not open a public endpoint, take payment or complete A6. The
-[local preview](ASSISTANT_PREVIEW.md) runs the same version on your own machine. Quality
+It does not open a public endpoint, take payment or complete A6. Quality
 monitoring, funding and the operating soak wait on A5. Join and recovery for
 operators are in [ASSISTANT_JOIN_RECOVERY.md](ASSISTANT_JOIN_RECOVERY.md).
