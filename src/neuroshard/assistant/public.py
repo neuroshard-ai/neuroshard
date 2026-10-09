@@ -33,7 +33,7 @@ def bind(policy, *, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'))
 
 
 class Session:
-    def __init__(self, policy, world, *, consent=None, name=CURRENT, previous=PREVIOUS):
+    def __init__(self, policy, world, *, consent=None, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3')):
         consent = default_consent() if consent is None else dict(consent)
         extra = set(consent) - set(default_consent())
         missing = set(default_consent()) - set(consent)
@@ -42,7 +42,7 @@ class Session:
         if consent['external_actions']:
             raise ValueError('external actions are not authorized')
         self.policy = policy
-        self.version = bind(policy, name=name, previous=previous)
+        self.version = bind(policy, name=name, previous=previous, modules=modules)
         self.consent = consent
         self.tools = workflow.interface(policy)
         self.world = self.tools.Workspace(copy.deepcopy(world))

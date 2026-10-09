@@ -119,8 +119,9 @@ def main(argv=None):
     common.add_argument('--rpc',help='Use your own native RPC endpoint')
     common.add_argument('--json',action='store_true',help='Machine-readable results')
     sub=parser.add_subparsers(dest='command',required=True)
-    from . import contribution
+    from . import assistant_cli,contribution
     contribution.register(sub,common)
+    assistant_cli.register(sub,runtime.root())
     sub.add_parser('doctor',parents=[common],help='Check your machine, installation, and connection')
     sub.add_parser('setup',parents=[common],help='Install the pinned CPU runtime in a managed environment')
     for name,help_text in [('join','Set up a node, follow the ledger, and contribute'),('start','Start an initialized node'),
@@ -155,6 +156,7 @@ def main(argv=None):
     try:
         if args.command=='contribute':
             contribution.run(args)
+        elif args.command=='assistant':assistant_cli.run(args)
         elif args.command=='doctor':
             value={'client_version':__version__,'python':sys.version.split()[0],'platform':f'{platform.system()} {platform.machine()}',
                 'full_node_supported':runtime.supported(),'cpu_runtime_installed':runtime.ready(),'home':str(args.home),
