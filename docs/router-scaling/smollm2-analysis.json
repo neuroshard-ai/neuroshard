@@ -693,7 +693,7 @@
      "misrouted": 13,
      "turns": 1040
     },
-    "threshold": 0.060866375243614046,
+    "threshold": 0.06086626684217128,
     "unseen": {
      "coverage": 0.9548954895489549,
      "kept_accuracy": 0.7960829493087558,
@@ -714,7 +714,7 @@
      "misrouted": 10,
      "turns": 1040
     },
-    "threshold": 0.42860187161631896,
+    "threshold": 0.4286018195163583,
     "unseen": {
      "coverage": 0.7326732673267327,
      "kept_accuracy": 0.8918918918918919,
@@ -727,5 +727,133 @@
    "test": 0.9865384615384616,
    "unseen": 0.7722772277227723
   }
+ },
+ "paraphrase_augmentation": {
+  "centroids/message": {
+   "paraphrased-real-test": {
+    "paired": {
+     "difference": 0.0,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 0.9230769230769231
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 0.9230769230769231
+    },
+    "with": 0.9607843137254902,
+    "without": 0.9607843137254902
+   },
+   "test": {
+    "paired": {
+     "difference": -0.0028846153846153848,
+     "draws": 2000,
+     "interval": [
+      -0.007583298452176809,
+      0.0009708973742062704
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 0.9230769230769231
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 0.9230769230769231
+    },
+    "with": 0.7663461538461539,
+    "without": 0.7692307692307693
+   },
+   "unseen": {
+    "paired": {
+     "difference": 0.0033003300330033004,
+     "draws": 2000,
+     "interval": [
+      -0.006514657980456026,
+      0.01328977400525809
+     ]
+    },
+    "recall_with": {
+     "drafting": 0.631578947368421,
+     "scheduling": 0.41025641025641024
+    },
+    "recall_without": {
+     "drafting": 0.47368421052631576,
+     "scheduling": 0.41025641025641024
+    },
+    "with": 0.4444444444444444,
+    "without": 0.44114411441144114
+   }
+  },
+  "logistic/with-opening": {
+   "paraphrased-real-test": {
+    "paired": {
+     "difference": 0.0,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 1.0,
+    "without": 1.0
+   },
+   "test": {
+    "paired": {
+     "difference": 0.0009615384615384616,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.0029355646368136286
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 0.9875,
+    "without": 0.9865384615384616
+   },
+   "unseen": {
+    "paired": {
+     "difference": 0.014301430143014302,
+     "draws": 2000,
+     "interval": [
+      0.0033407572383073497,
+      0.02594664794664794
+     ]
+    },
+    "recall_with": {
+     "drafting": 0.3684210526315789,
+     "scheduling": 0.46153846153846156
+    },
+    "recall_without": {
+     "drafting": 0.18421052631578946,
+     "scheduling": 0.38461538461538464
+    },
+    "with": 0.7865786578657866,
+    "without": 0.7722772277227723
+   }
+  },
+  "paraphrased_fit_cases": 128,
+  "paraphrased_test_cases": 136
  }
 }

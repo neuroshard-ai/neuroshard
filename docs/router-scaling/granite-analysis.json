@@ -1,0 +1,718 @@
+{
+ "comparisons": {
+  "layer20 vs final (centroids, message)": {
+   "test": {
+    "difference": -0.016346153846153847,
+    "draws": 2000,
+    "interval": [
+     -0.032351684672729863,
+     -0.0009642275202706401
+    ]
+   },
+   "unseen": {
+    "difference": 0.061606160616061605,
+    "draws": 2000,
+    "interval": [
+     0.03296252927400469,
+     0.0905149207420305
+    ]
+   }
+  },
+  "layer20 vs final (centroids, with-opening)": {
+   "test": {
+    "difference": -0.009615384615384616,
+    "draws": 2000,
+    "interval": [
+     -0.02023366198680536,
+     0.0
+    ]
+   },
+   "unseen": {
+    "difference": 0.036303630363036306,
+    "draws": 2000,
+    "interval": [
+     0.0065917923208456426,
+     0.0664451827242525
+    ]
+   }
+  },
+  "layer20 vs final (logistic, message)": {
+   "test": {
+    "difference": 0.0019230769230769232,
+    "draws": 2000,
+    "interval": [
+     -0.0009930733375319088,
+     0.005838154103967944
+    ]
+   },
+   "unseen": {
+    "difference": 0.0231023102310231,
+    "draws": 2000,
+    "interval": [
+     0.0021138100848968693,
+     0.04444568038561364
+    ]
+   }
+  },
+  "layer20 vs final (logistic, with-opening)": {
+   "test": {
+    "difference": -0.0009615384615384616,
+    "draws": 2000,
+    "interval": [
+     -0.005687338687194798,
+     0.002938367805496341
+    ]
+   },
+   "unseen": {
+    "difference": -0.0517051705170517,
+    "draws": 2000,
+    "interval": [
+     -0.0712781548904659,
+     -0.033514897579143416
+    ]
+   }
+  },
+  "layer30 vs final (centroids, message)": {
+   "test": {
+    "difference": -0.014423076923076924,
+    "draws": 2000,
+    "interval": [
+     -0.02966578214082751,
+     0.0
+    ]
+   },
+   "unseen": {
+    "difference": 0.10231023102310231,
+    "draws": 2000,
+    "interval": [
+     0.07367250377263582,
+     0.1292817679558011
+    ]
+   }
+  },
+  "layer30 vs final (centroids, with-opening)": {
+   "test": {
+    "difference": -0.015384615384615385,
+    "draws": 2000,
+    "interval": [
+     -0.025591204858880303,
+     -0.005791366169861831
+    ]
+   },
+   "unseen": {
+    "difference": 0.07920792079207921,
+    "draws": 2000,
+    "interval": [
+     0.048043139213978056,
+     0.108674774731306
+    ]
+   }
+  },
+  "layer30 vs final (logistic, message)": {
+   "test": {
+    "difference": 0.0019230769230769232,
+    "draws": 2000,
+    "interval": [
+     0.0,
+     0.004840505791893695
+    ]
+   },
+   "unseen": {
+    "difference": 0.05500550055005501,
+    "draws": 2000,
+    "interval": [
+     0.03663694508370142,
+     0.0730937570289195
+    ]
+   }
+  },
+  "layer30 vs final (logistic, with-opening)": {
+   "test": {
+    "difference": 0.0009615384615384616,
+    "draws": 2000,
+    "interval": [
+     -0.0029384399638984655,
+     0.005612985184412376
+    ]
+   },
+   "unseen": {
+    "difference": -0.0165016501650165,
+    "draws": 2000,
+    "interval": [
+     -0.03125,
+     -0.0021761604160685454
+    ]
+   }
+  },
+  "logistic vs centroids (message, final layer)": {
+   "test": {
+    "difference": 0.022115384615384617,
+    "draws": 2000,
+    "interval": [
+     0.009670713128159938,
+     0.03522621488361853
+    ]
+   },
+   "unseen": {
+    "difference": 0.09570957095709572,
+    "draws": 2000,
+    "interval": [
+     0.06492459153749477,
+     0.12829079299183788
+    ]
+   }
+  },
+  "logistic with-opening vs today (centroid message)": {
+   "test": {
+    "difference": 0.11730769230769231,
+    "draws": 2000,
+    "interval": [
+     0.0972074851167566,
+     0.13973666287895342
+    ]
+   },
+   "unseen": {
+    "difference": 0.24532453245324531,
+    "draws": 2000,
+    "interval": [
+     0.20899822534168525,
+     0.27918117751902527
+    ]
+   }
+  },
+  "with-opening vs message (centroids, final layer)": {
+   "test": {
+    "difference": 0.01730769230769231,
+    "draws": 2000,
+    "interval": [
+     -0.01265853628445234,
+     0.04853278685478112
+    ]
+   },
+   "unseen": {
+    "difference": 0.0484048404840484,
+    "draws": 2000,
+    "interval": [
+     0.016608554543161964,
+     0.07942090333523416
+    ]
+   }
+  },
+  "with-opening vs message (logistic, final layer)": {
+   "test": {
+    "difference": 0.09519230769230769,
+    "draws": 2000,
+    "interval": [
+     0.07578367920733878,
+     0.11608160850451343
+    ]
+   },
+   "unseen": {
+    "difference": 0.1496149614961496,
+    "draws": 2000,
+    "interval": [
+     0.11915297503864082,
+     0.17780679441316752
+    ]
+   }
+  }
+ },
+ "diversity": {
+  "layer-1 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.8002392344497608,
+    "paired": {
+     "difference": 0.04784688995215311,
+     "draws": 2000,
+     "interval": [
+      0.030264516147898612,
+      0.06593439534087016
+     ]
+    },
+    "two_templates": 0.8480861244019139
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.7355769230769231,
+    "paired": {
+     "difference": -0.04447115384615385,
+     "draws": 2000,
+     "interval": [
+      -0.06401084377739956,
+      -0.025390692151920878
+     ]
+    },
+    "two_templates": 0.6911057692307693
+   }
+  },
+  "layer-1 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.965311004784689,
+    "paired": {
+     "difference": 0.028708133971291867,
+     "draws": 2000,
+     "interval": [
+      0.0157944345231966,
+      0.04276139938253949
+     ]
+    },
+    "two_templates": 0.9940191387559809
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.921875,
+    "paired": {
+     "difference": 0.036057692307692304,
+     "draws": 2000,
+     "interval": [
+      0.020454221581192897,
+      0.053205963384677535
+     ]
+    },
+    "two_templates": 0.9579326923076923
+   }
+  },
+  "layer20 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.7918660287081339,
+    "paired": {
+     "difference": 0.03588516746411483,
+     "draws": 2000,
+     "interval": [
+      0.02186921703211837,
+      0.05152316086241077
+     ]
+    },
+    "two_templates": 0.8277511961722488
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.734375,
+    "paired": {
+     "difference": 0.028846153846153848,
+     "draws": 2000,
+     "interval": [
+      0.009521563342318065,
+      0.04946016747789836
+     ]
+    },
+    "two_templates": 0.7632211538461539
+   }
+  },
+  "layer20 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.972488038277512,
+    "paired": {
+     "difference": 0.02033492822966507,
+     "draws": 2000,
+     "interval": [
+      0.008484335495218206,
+      0.03268864186660796
+     ]
+    },
+    "two_templates": 0.992822966507177
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.8257211538461539,
+    "paired": {
+     "difference": 0.09975961538461539,
+     "draws": 2000,
+     "interval": [
+      0.07261516563147,
+      0.12799351683154828
+     ]
+    },
+    "two_templates": 0.9254807692307693
+   }
+  },
+  "layer30 centroids/message": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.8241626794258373,
+    "paired": {
+     "difference": 0.005980861244019139,
+     "draws": 2000,
+     "interval": [
+      0.0011890606420927466,
+      0.011990767530033595
+     ]
+    },
+    "two_templates": 0.8301435406698564
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.7908653846153846,
+    "paired": {
+     "difference": 0.01201923076923077,
+     "draws": 2000,
+     "interval": [
+      0.002322439226366344,
+      0.022974607013301087
+     ]
+    },
+    "two_templates": 0.8028846153846154
+   }
+  },
+  "layer30 logistic/with-opening": {
+   "one_template_fit_turns": 858,
+   "test": {
+    "one_template": 0.9700956937799043,
+    "paired": {
+     "difference": 0.025119617224880382,
+     "draws": 2000,
+     "interval": [
+      0.013315586802415477,
+      0.03782617818624365
+     ]
+    },
+    "two_templates": 0.9952153110047847
+   },
+   "two_template_fit_turns": 1615,
+   "unseen": {
+    "one_template": 0.921875,
+    "paired": {
+     "difference": 0.039663461538461536,
+     "draws": 2000,
+     "interval": [
+      0.02303030303030303,
+      0.05806031959563664
+     ]
+    },
+    "two_templates": 0.9615384615384616
+   }
+  }
+ },
+ "final_layer": "layer-1",
+ "packaged_router": {
+  "admission": [
+   {
+    "added": "invoices",
+    "added_recall": 1.0,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "drafting",
+     "scheduling"
+    ],
+    "failing_detail": {
+     "drafting": {
+      "after": 0.3684210526315789,
+      "before": 1.0,
+      "gained": 0,
+      "lost": 24,
+      "p_value": 5.960464477539063e-08,
+      "turns": 38
+     },
+     "scheduling": {
+      "after": 0.5384615384615384,
+      "before": 1.0,
+      "gained": 0,
+      "lost": 18,
+      "p_value": 3.814697265625e-06,
+      "turns": 39
+     }
+    }
+   },
+   {
+    "added": "tickets",
+    "added_recall": 1.0,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "rooms",
+    "added_recall": 1.0,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "scheduling"
+    ],
+    "failing_detail": {
+     "scheduling": {
+      "after": 0.41025641025641024,
+      "before": 0.6410256410256411,
+      "gained": 0,
+      "lost": 9,
+      "p_value": 0.001953125,
+      "turns": 39
+     }
+    }
+   },
+   {
+    "added": "expenses",
+    "added_recall": 1.0,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "approvals",
+    "added_recall": 1.0,
+    "admitted": false,
+    "earlier_routes_failing": [
+     "drafting"
+    ],
+    "failing_detail": {
+     "drafting": {
+      "after": 0.5263157894736842,
+      "before": 0.6842105263157895,
+      "gained": 0,
+      "lost": 6,
+      "p_value": 0.015625,
+      "turns": 38
+     }
+    }
+   },
+   {
+    "added": "reminders",
+    "added_recall": 0.95,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "summaries",
+    "added_recall": 0.9821428571428571,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "travel",
+    "added_recall": 0.8387096774193549,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "inventory",
+    "added_recall": 1.0,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "timesheets",
+    "added_recall": 0.9838709677419355,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "contacts",
+    "added_recall": 1.0,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   },
+   {
+    "added": "search",
+    "added_recall": 0.9402985074626866,
+    "admitted": true,
+    "earlier_routes_failing": [],
+    "failing_detail": {}
+   }
+  ],
+  "calibrated": {
+   "0.95": {
+    "held_out": {
+     "held_out_accuracy": 0.9826625386996904,
+     "held_out_coverage": 1.0,
+     "held_out_kept_accuracy": 0.9826625386996904,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.9951923076923077,
+     "misrouted": 5,
+     "turns": 1040
+    },
+    "threshold": 0.0,
+    "unseen": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.9306930693069307,
+     "misrouted": 63,
+     "turns": 909
+    }
+   },
+   "0.98": {
+    "held_out": {
+     "held_out_accuracy": 0.9826625386996904,
+     "held_out_coverage": 1.0,
+     "held_out_kept_accuracy": 0.9826625386996904,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.9951923076923077,
+     "misrouted": 5,
+     "turns": 1040
+    },
+    "threshold": 0.0,
+    "unseen": {
+     "coverage": 1.0,
+     "kept_accuracy": 0.9306930693069307,
+     "misrouted": 63,
+     "turns": 909
+    }
+   },
+   "0.99": {
+    "held_out": {
+     "held_out_accuracy": 0.9826625386996904,
+     "held_out_coverage": 0.9863777089783282,
+     "held_out_kept_accuracy": 0.9905838041431262,
+     "target_reachable": true
+    },
+    "test": {
+     "coverage": 0.9913461538461539,
+     "kept_accuracy": 0.9990300678952473,
+     "misrouted": 1,
+     "turns": 1040
+    },
+    "threshold": 0.31584400418117425,
+    "unseen": {
+     "coverage": 0.9306930693069307,
+     "kept_accuracy": 0.958628841607565,
+     "misrouted": 35,
+     "turns": 909
+    }
+   }
+  },
+  "uncalibrated": {
+   "test": 0.9951923076923077,
+   "unseen": 0.9306930693069307
+  }
+ },
+ "paraphrase_augmentation": {
+  "centroids/message": {
+   "paraphrased-real-test": {
+    "paired": {
+     "difference": 0.0,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 1.0,
+    "without": 1.0
+   },
+   "test": {
+    "paired": {
+     "difference": 0.004807692307692308,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.01065891472868217
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 0.8826923076923077,
+    "without": 0.8778846153846154
+   },
+   "unseen": {
+    "paired": {
+     "difference": 0.011001100110011002,
+     "draws": 2000,
+     "interval": [
+      0.0011024751868792173,
+      0.02076730668874052
+     ]
+    },
+    "recall_with": {
+     "drafting": 0.631578947368421,
+     "scheduling": 0.5897435897435898
+    },
+    "recall_without": {
+     "drafting": 0.631578947368421,
+     "scheduling": 0.6153846153846154
+    },
+    "with": 0.6963696369636964,
+    "without": 0.6853685368536854
+   }
+  },
+  "logistic/with-opening": {
+   "paraphrased-real-test": {
+    "paired": {
+     "difference": 0.0,
+     "draws": 2000,
+     "interval": [
+      0.0,
+      0.0
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 1.0,
+    "without": 1.0
+   },
+   "test": {
+    "paired": {
+     "difference": -0.0038461538461538464,
+     "draws": 2000,
+     "interval": [
+      -0.007882357522537431,
+      -0.000946969696969697
+     ]
+    },
+    "recall_with": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "recall_without": {
+     "drafting": 1.0,
+     "scheduling": 1.0
+    },
+    "with": 0.9913461538461539,
+    "without": 0.9951923076923077
+   },
+   "unseen": {
+    "paired": {
+     "difference": -0.0044004400440044,
+     "draws": 2000,
+     "interval": [
+      -0.014223194748358862,
+      0.004484430754983819
+     ]
+    },
+    "recall_with": {
+     "drafting": 0.6578947368421053,
+     "scheduling": 0.6410256410256411
+    },
+    "recall_without": {
+     "drafting": 0.4473684210526316,
+     "scheduling": 0.8205128205128205
+    },
+    "with": 0.9262926292629263,
+    "without": 0.9306930693069307
+   }
+  },
+  "paraphrased_fit_cases": 128,
+  "paraphrased_test_cases": 136
+ }
+}

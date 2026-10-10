@@ -1,6 +1,6 @@
 # Router scaling: lm encoder (layer-1)
 
-836 fit cases; evaluation cases {'test': 556, 'unseen': 468}, turns {'test': 1040, 'unseen': 909}; 2646 texts, features in 0 s. Intervals: 1,000 case-level bootstrap draws.
+836 fit cases; evaluation cases {'test': 556, 'unseen': 468}, turns {'test': 1040, 'unseen': 909}; 2910 texts, features in 203 s. Intervals: 1,000 case-level bootstrap draws.
 
 ## centroids-refit, test
 

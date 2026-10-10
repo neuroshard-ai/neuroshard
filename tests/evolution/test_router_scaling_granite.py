@@ -83,3 +83,20 @@ def test_one_cpu_host_within_its_allowance():
     assert granite.PROFILE not in cloud.GPU_PROFILES and granite.PROFILE not in cloud.UPLOAD_PROFILES
     assert cloud.GRANITE_PROFILES[granite.PROFILE][0] == 'router_scaling_granite'
     assert cloud.remote_command(granite.PROFILE)[1].endswith(granite.SCRIPT)
+
+
+def test_the_granite_run_is_recorded_retired_and_within_its_allowance():
+    report = read(ROOT / 'config/experiments/router-scaling-granite-report.json')
+    result = read(ROOT / 'config/experiments/router-scaling-granite-result.json')
+    declaration = read(ROOT / granite.DECLARATION)
+    assert report['execution_completed'] and result['execution_completed'] and not report['error']
+    assert report['accepted_feature_identical'] and report['accepted_feature_checked'] == granite.CHECKED
+    assert report['texts'] == declaration['texts'] and report['layers'] == sorted(declaration['layers'])
+    assert report['features_sha256'] == report['features_file_sha256'] == result['reply']['features_sha256']
+    assert report['source_commit'] == result['binding']['freeze']['commit']
+    finished = report['resources_finished']
+    assert not finished['remaining_instances'] and not finished['remaining_volumes']
+    assert finished['security_group_retired'] and finished['instance_type'] == 'r7i.4xlarge'
+    resources = read(ROOT / 'config/experiments/router-scaling-granite-resources.json')
+    assert finished['conservative_compute_usd'] <= resources['planning_cap_usd']
+    assert not report['checklist_credit'] and not report['sealed_opened']
