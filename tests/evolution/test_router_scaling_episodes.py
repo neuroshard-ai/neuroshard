@@ -111,8 +111,9 @@ def test_the_context_router_is_frozen_and_routes_the_real_turns():
     assert router['threshold'] == 0.0 and router['fallback'] is None
 
 
-def test_execution_pins_cohort_three_units_gates_and_the_canonical_runtime():
-    execution = read(ROOT / episodes.EXECUTION)
+@pytest.mark.parametrize('profile', sorted(episodes.PROFILES))
+def test_execution_pins_cohort_three_units_gates_and_the_canonical_runtime(profile):
+    execution = read(ROOT / episodes.profile_files(profile)[1])
     cohort3 = read(ROOT / 'config/experiments/assistant-growth-cohort3-development-execution.json')
     assert execution['units'] == cohort3['units'] and execution['gates'] == cohort3['gates']
     for name, digest in execution['contracts'].items():
@@ -134,16 +135,40 @@ def test_execution_pins_cohort_three_units_gates_and_the_canonical_runtime():
     assert all(execution[key] == canonical[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment'))
 
 
-def test_one_cpu_host_within_its_allowance():
+@pytest.mark.parametrize('profile', sorted(episodes.PROFILES))
+def test_one_cpu_host_within_its_allowance(profile):
     cloud = cloud_module()
-    resources = cloud.resources(episodes.PROFILE)
-    execution = read(ROOT / episodes.EXECUTION)
+    resources = cloud.resources(profile)
+    execution = read(ROOT / episodes.profile_files(profile)[1])
     assert not resources['gpu'] and resources['instance_type'] == 'r7i.4xlarge'
     assert resources['hours'] * resources['price']['usd_per_hour'] + 3 <= resources['planning_cap_usd'] <= 6.5
     assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
             + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
-    assert cloud.UPLOAD_PROFILES[episodes.PROFILE] == '.units'
+    assert cloud.UPLOAD_PROFILES[profile] == '.units'
     assert set(resources['upload']['files']) == {f'{u}/{f}' for u in episodes.NEEDED
                                                  for f in ('manifest.json', 'trainable.safetensors')} | {
         'a2-integration.json', 'router.json'}
-    assert cloud.remote_command(episodes.PROFILE)[1].endswith(episodes.SCRIPT)
+    command = cloud.remote_command(profile)
+    assert command[1].endswith(episodes.SCRIPT) and command[-2:] == ['--profile', profile]
+
+
+def test_the_originals_run_serves_the_original_wording_of_the_same_cases():
+    first = dict(episodes.sets(read(ROOT / episodes.DECLARATION)))
+    originals = read(ROOT / 'config/experiments/router-scaling-episodes-originals.json')
+    second = dict(episodes.sets(originals))
+    assert list(second) == ['original-scheduling', 'original-cross']
+    for name in ('scheduling', 'cross'):
+        assert [c['reworded_from'] for c in first[f'reworded-{name}']] == [c['id'] for c in second[f'original-{name}']]
+    pinned = originals['pairs_with']
+    assert sha256(ROOT / pinned['path']) == pinned['sha256']
+
+
+def test_the_first_run_is_recorded_rescored_and_retired():
+    report = read(ROOT / 'config/experiments/router-scaling-episodes-report.json')
+    result = read(ROOT / 'config/experiments/router-scaling-episodes-result.json')
+    assert sha256(ROOT / 'config/experiments/router-scaling-episodes-result.json') == report['result_sha256']
+    assert report['execution_completed'] and report['stopped_before'] is None
+    assert episodes.assess(result) == report['sets']
+    finished = report['resources_finished']
+    assert not finished['remaining_instances'] and finished['security_group_retired']
+    assert finished['conservative_compute_usd'] <= read(ROOT / 'config/experiments/router-scaling-episodes-resources.json')['planning_cap_usd']

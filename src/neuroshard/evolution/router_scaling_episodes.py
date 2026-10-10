@@ -34,6 +34,10 @@ EXECUTION = 'config/experiments/router-scaling-episodes-execution.json'
 ROUTER = 'config/experiments/router-scaling-episodes-router.json'
 SCRIPT = 'scripts/run_router_scaling_episodes.py'
 PROFILE = 'router-scaling-episodes'
+# A second, paired run serves the original wording of the reworded scheduling and cross cases.
+PROFILES = {PROFILE: (DECLARATION, EXECUTION),
+            'router-scaling-episodes-originals': ('config/experiments/router-scaling-episodes-originals.json',
+                                                  'config/experiments/router-scaling-episodes-originals-execution.json')}
 UPLOADED = '.units'
 SYSTEM = ('L3', 'L2')
 NEEDED = ('L2', 'L3', 'U1')
@@ -65,8 +69,17 @@ def sets(declaration=None):
     built = {'reworded-drafting': reworded.reworded(drafting, REWORD_SEED),
              'reworded-cross': reworded.reworded(cross, REWORD_SEED),
              'original-drafting': drafting,
-             'reworded-scheduling': reworded.reworded(scheduling, REWORD_SEED)}
+             'reworded-scheduling': reworded.reworded(scheduling, REWORD_SEED),
+             'original-cross': cross,
+             'original-scheduling': scheduling}
     return [(name, built[name]) for name in declaration['priority']]
+
+
+def profile_files(profile):
+    """The declaration and execution of a profile."""
+    if profile not in PROFILES:
+        raise ValueError(f'unknown episodes profile: {profile}')
+    return PROFILES[profile]
 
 
 def route_plans(parent, tokenizer, drafting_policy, pinned_gate, context_router, cases):
@@ -104,8 +117,8 @@ def serve(parent, models, tokenizer, a2_gate, route_policies, case, plan):
     return {**row, 'a2_selected': 'arm' if arm else 'parent', 'a2_selection_seconds': a2_seconds, 'plan': list(plan)}
 
 
-def committed_sources(root=ROOT):
-    execution = read(root / EXECUTION)
+def committed_sources(root=ROOT, profile=PROFILE):
+    execution = read(root / profile_files(profile)[1])
     for name, digest in execution['contracts'].items():
         if sha256(root / name) != digest:
             raise ValueError(f'changed episodes contract: {name}')
@@ -118,21 +131,21 @@ def committed_sources(root=ROOT):
     return {'commit': commit, 'sources': sources}
 
 
-def configure():
+def configure(profile=PROFILE):
     if 'torch' in sys.modules:
         raise ValueError('configure the episodes runtime before importing torch')
-    for key, value in read(ROOT / EXECUTION)['environment'].items():
+    for key, value in read(ROOT / profile_files(profile)[1])['environment'].items():
         if value is None:
             os.environ.pop(key, None)
         else:
             os.environ[key] = value
 
 
-def freeze():
+def freeze(profile=PROFILE):
     from neuroshard.evolution import assistant_workflow_canonical as canonical
 
-    source = committed_sources()
-    execution = read(ROOT / EXECUTION)
+    source = committed_sources(profile=profile)
+    execution = read(ROOT / profile_files(profile)[1])
     pinned = read(ROOT / canonical.EXECUTION)
     if any(execution[key] != pinned[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment')):
         raise ValueError('episodes runtime differs from the canonical parent runtime')
@@ -150,10 +163,11 @@ def freeze():
 
 
 def worker(request_path):
-    configure()
     request_path = Path(request_path)
     request = read(request_path)
-    if freeze() != request['freeze']:
+    profile = request['profile']
+    configure(profile)
+    if freeze(profile) != request['freeze']:
         raise ValueError('episodes worker differs from freeze')
     import torch
 
@@ -164,7 +178,8 @@ def worker(request_path):
     from neuroshard.evolution import granite_reference as reference
     from neuroshard.evolution import granite_tokenizer
 
-    execution = read(ROOT / EXECUTION)
+    declaration_path, execution_path = profile_files(profile)
+    execution = read(ROOT / execution_path)
     phase = request['phase']
     if (request['model'], phase) not in (('baseline', 'prepare'), ('upgrade', 'episodes')):
         raise ValueError('unsupported episodes worker role')
@@ -195,7 +210,7 @@ def worker(request_path):
                                     execution, SYSTEM)
         reply['units'] = {unit: execution['units'][unit]['trainable_sha256'] for unit in NEEDED}
         reply['routers'] = {'pinned': identity(pinned_gate), 'context': context_router['sha256']}
-        declared = sets()
+        declared = sets(read(ROOT / declaration_path))
         begun = time.monotonic()
         everything = [case for _, cases in declared for case in cases]
         reply['plans'] = route_plans(parent, tokenizer, route_policies['drafting'], pinned_gate, context_router,
@@ -232,15 +247,16 @@ def worker(request_path):
         save(request_path.parent / 'reply.json', reply, exclusive=True)
 
 
-def run(home, models):
+def run(home, models, profile=PROFILE):
     from neuroshard.evolution import assistant_growth_confirm as stage1_confirmation
 
-    configure()
-    source = freeze()
+    configure(profile)
+    source = freeze(profile)
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
-    execution = read(ROOT / EXECUTION)
-    binding = {'freeze': source, 'profile': PROFILE, 'declaration_sha256': sha256(ROOT / DECLARATION)}
+    declaration_path, execution_path = profile_files(profile)
+    execution = read(ROOT / execution_path)
+    binding = {'freeze': source, 'profile': profile, 'declaration_sha256': sha256(ROOT / declaration_path)}
     save(home / 'binding.json', binding, exclusive=True)
     result = {'binding': binding, 'execution_completed': False, 'checklist_credit': False,
               'admission_evidence': False, 'development_opened': False, 'confirmation_opened': False}
@@ -262,14 +278,14 @@ def run(home, models):
     return result
 
 
-def assess(result, route_policies=None):
+def assess(result, route_policies=None, declaration=None):
     """Every episode rescored from its transcript; per set, each router's passes and the cases they differ on."""
     from neuroshard.evolution import assistant_growth_cohort3_eval as cohort3
     from neuroshard.evolution import assistant_routing as routing
 
     route_policies = route_policies or cohort3.policies()
     reply = result['reply']
-    by_id = {case['id']: case for _, cases in sets() for case in cases}
+    by_id = {case['id']: case for _, cases in sets(declaration) for case in cases}
     report = {}
     for name, rows in reply['episodes'].items():
         passed = {'pinned': {}, 'context': {}}
