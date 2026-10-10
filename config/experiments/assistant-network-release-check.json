@@ -1,5 +1,5 @@
 {
-  "budget_usd": 30,
+  "budget_usd": 50,
   "contracts": {
     "config/experiments/assistant-growth-cohort3-confirmation-execution.json": "ac0f521dcfe8e4d224991450496a0c10cf176785d7fcce5eb93098170a0708ea",
     "config/experiments/assistant-growth-cohort3-confirmation-upgrade-calendar-result.json": "787e5bb9ccdaf371a22f91442e07f77c81759b01d036cb6b46c1109100a4508c",
@@ -103,7 +103,7 @@
     "src/neuroshard/assistant/audit.py": "656afecb8aa0edc458ba0fdd35c1a04fbd1a86833d66b055314221c09945b3e9",
     "src/neuroshard/assistant/network.py": "bf791a7d225b1bd5e5217ae9bb7b342d10a318680ef41bd508f72ad5edb3aa40",
     "src/neuroshard/assistant/public.py": "89b95a25a58fbb618873a60c1067db276fcee9b59ddb66c998075713eeb2faf5",
-    "src/neuroshard/assistant/release_check.py": "17c57c2b4a939fe774dc8f02dc8f2ce80086dfbf652c245a9610ad304ba88225",
+    "src/neuroshard/assistant/release_check.py": "db2cb6e42e4dae8cd723a1b6b69663f2e1ebdc5a7a75dbf8ca458fe15bd29998",
     "src/neuroshard/cli.py": "ea9a81a93fa3c33e919729bb618e60b71225be8fe62fdee5c4a8e4e3b3781b20",
     "src/neuroshard/client/__init__.py": "aec1aa752bff5a6e41fe235e438798579b29c0da8847d67e775a832466902688",
     "src/neuroshard/client/assistant_cli.py": "5cf6f2e0df80ee83828cd92e555ecd572ae3b1287f243af63b4a9d2722b30697",
@@ -487,5 +487,21 @@
   "temporary_instances": 1,
   "threads": 8,
   "training_authorized": false,
-  "worker_seconds": 57600
+  "worker_seconds": 75600,
+  "attempt": 2,
+  "amendments": [
+    {
+      "date": "2026-10-10",
+      "attempt": 2,
+      "authorized_by": "project owner, October 10, 2026: the project owner made this agent solely responsible for the release",
+      "reason": "Attempt 1 (commit 80f65c8) served 355 of 432 conversations in its 16-hour budget, about 2.53 minutes each, and stopped on time with no reported mismatch; each owner holds 355 signed job logs. The workload needs about 18.2 hours. Its client unit was killed by RuntimeMaxSec 15h45m before the worker could record a result, and the supervisor stopped services before copying evidence, so the per-conversation comparisons were lost.",
+      "changes": [
+        "worker_seconds 57600 -> 75600 (21 hours)",
+        "budget_usd 30 -> 50 cumulative across attempts (attempt 1 about $19.4 at three hosts x 16 h x $0.4032/h)",
+        "release_check.client stops cleanly on SIGTERM between conversations and always records a result",
+        "the supervisor copies evidence before stopping any service, and the client unit outlives the worker budget"
+      ],
+      "unchanged": "workload, pass rule, model root, runtime, policies, modules, ports, positions and price; a fresh shadow chain and a fresh client; no resume of attempt 1"
+    }
+  ]
 }

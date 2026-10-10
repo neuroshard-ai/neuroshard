@@ -70,7 +70,7 @@ def atomic(path, value):
     temporary.replace(path)
 
 
-def client(plan, descriptor, home, binding):
+def client(plan, descriptor, home, binding, stop=None):
     from neuroshard.assistant import network
     from neuroshard.evolution.modular_reference_execution import identity
 
@@ -86,6 +86,8 @@ def client(plan, descriptor, home, binding):
         for name, case, expected in workload:
             if time.monotonic() - started >= plan['worker_seconds']:
                 raise TimeoutError('release reproduction worker budget exhausted')
+            if stop is not None and stop.is_set():
+                raise InterruptedError('release reproduction stopped by its supervisor')
             atomic(home / 'progress.json', {'completed': len(results), 'total': len(workload), 'set': name,
                                            'case': case['id'], 'unix': time.time()})
             conversation = network.Conversation(served, stage, chain, account, case['world'],
@@ -116,7 +118,8 @@ def client(plan, descriptor, home, binding):
                 raise ValueError(f"deployment differs from accepted conversation: {name}/{case['id']}")
     except Exception as error:
         failed = f'{type(error).__name__}: {error}'
-    final = {'binding': binding, 'cases': len(workload), 'completed': len(results), 'results': results,
+    final = {'binding': binding, 'attempt': plan.get('attempt', 1), 'cases': len(workload), 'completed': len(results),
+             'results': results,
              'passed': failed is None and len(results) == len(workload), 'error': failed,
              'wall_seconds': time.monotonic() - started, 'admission_evidence': False,
              'training': False, 'new_final_opened': False, 'independent_operation': False}
@@ -146,7 +149,7 @@ def main():
     stopped = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stopped.set())
     if args.role == 'client':
-        raise SystemExit(client(plan, descriptor, args.home, binding))
+        raise SystemExit(client(plan, descriptor, args.home, binding, stopped))
     if args.role == 'seed':
         config, _, server = network.seed(descriptor, args.home, args.host,
                                          params={**network.PARAMS, 'challenge_blocks': 5, 'proof_blocks': 5},
