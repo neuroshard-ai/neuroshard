@@ -27,6 +27,27 @@ The numerical execution profile still requires PyTorch 2.9.1, Transformers 4.57.
 
 The Go binary scan found no affected imported packages or symbols. Its module-level CometBFT finding GO-2025-3442 does not account for the [0.38.17 backport](https://github.com/cometbft/cometbft/security/advisories/GHSA-22qq-3xwm-r5x4), which is included in 0.38.26. The x/crypto OpenPGP module advisory concerns a package not linked into this binary. Retain raw scan findings and review new advisories; absence of a scanner finding is not a security proof.
 
+## Dependency review for the assistant network runtime
+
+October 10, 2026. The assistant network (`docs/granite-shard-chain-requirements.txt`) pins Python 3.12.12,
+PyTorch 2.10.0, Transformers 5.5.4, setuptools 78.1.0 and no urllib3. Every owner, client, auditor and the
+release qualification replay this runtime bit for bit, so a version change needs a new execution profile and
+requalification. The other files under `docs/` are frozen runtimes of published experiments, whose records
+pin their digests; they are not upgraded in place. The advisories open against these manifests were
+assessed against the served path:
+
+| Advisory | Assessment of the assistant network path |
+| --- | --- |
+| [CVE-2026-80047](https://github.com/advisories/GHSA-x9r9-c232-4q39) (no patched version) | Serving never calls `generate` or downloads generation code: owners and clients build partitions from checksummed safetensors byte ranges of a pinned revision and decode with their own loop. Configuration is read with `local_files_only=True`. |
+| [CVE-2026-9856](https://github.com/advisories/GHSA-xrqw-3rrv-vx5w) | The served path never calls `save_pretrained`; tokenizer files and the chat template are checksum-verified before use. |
+| [CVE-2026-4372](https://github.com/advisories/GHSA-29pf-2h5f-8g72), [CVE-2026-5241](https://github.com/advisories/GHSA-fgcw-684q-jj6r), [CVE-2026-1839](https://github.com/advisories/GHSA-69w3-r845-3855) | Granite configuration and weights are pinned and checked before loading; no remote code, LightGlue or Trainer. Never substitute an unreviewed model, module or descriptor. |
+| [CVE-2025-3000](https://github.com/advisories/GHSA-rrmf-rvhw-rf47), [CVE-2025-3001](https://github.com/advisories/GHSA-qfhq-4f3w-5fph) | No `torch.jit.script` or `torch.lstm_cell`; 2.10.0 already fixes CVE-2025-3001. Peers exchange bounded activation frames, not executable code or checkpoints. |
+| [CVE-2025-47273](https://github.com/advisories/GHSA-5rjg-fvgr-3xxf), [CVE-2026-59890](https://github.com/advisories/GHSA-h35f-9h28-mq5c) | setuptools is only an install-time dependency; `PackageIndex.download` and sdist building are never invoked by any role. Install with the pinned requirements, from the pinned index. |
+| urllib3 [CVE-2026-97687](https://github.com/advisories/GHSA-8988-9cw3-xx77), [CVE-2026-97688](https://github.com/advisories/GHSA-gh4c-6fx4-qh6g), [CVE-2026-97689](https://github.com/advisories/GHSA-vxq7-64xx-v4gw) | Not installed in the assistant runtime. The supported 0.4.0 package already requires urllib3 2.8.0. The frozen experiment runtimes that pin 2.7.0 are for reproducing published results on project hosts, not for serving. |
+
+These are path assessments, not claims that the libraries are safe for other workloads. The assistant runtime
+should move to patched versions in its next execution profile, after a conformance check of every served route.
+
 Historical dependency manifests remain in Git history and the local archive, outside the current source tree and supported package. Archived applications must be reviewed and upgraded before anyone reactivates them. The retained v0.3 reference network is unsupported and exposes a read-only historical API; it is not the joining or inference endpoint. Never publish the ignored archive: it can contain local publishing configuration and operational logs.
 
 ## Model-evolution experiments
