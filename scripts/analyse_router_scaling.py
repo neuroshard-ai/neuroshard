@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 import sys
 
-import numpy as np
 
 from neuroshard.evolution import router_scaling as scaling
 from neuroshard.evolution import router_scaling_data as data
@@ -22,17 +21,39 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_router_scaling as runner  # noqa: E402
 
 
-def load(out, real_limit=48, cross_per_pair=1):
+def load(out, real_limit=48, cross_per_pair=1, features=None):
     fit, sets = runner.build(real_limit, cross_per_pair)
-    everything = fit + [case for cases in sets.values() for case in cases]
-    texts = sorted({text for case in everything for text in case['user_turns']}
-                   | {text for cards in data.DESCRIPTIONS.values() for text in cards})
-    stored = np.load(out / 'features.npz', allow_pickle=False)
-    names = [name for name in stored.files if name != 'digest']
-    if any(stored[name].shape[0] != len(texts) for name in names):
-        raise ValueError('cached features do not match the study texts')
-    layers = {name: dict(zip(texts, stored[name])) for name in names}
-    return fit, sets, everything, layers
+    para_fit, para_test = runner.paraphrase_sets(fit, sets)
+    everything = fit + [case for cases in sets.values() for case in cases] + para_fit + para_test
+    texts = runner.study_texts(real_limit, cross_per_pair)
+    layers = runner.load_vectors(features or out)
+    if not layers or any(t not in vectors for vectors in layers.values() for t in texts):
+        raise ValueError('cached features do not cover the study texts')
+    return fit, sets, everything, layers, para_fit, para_test
+
+
+def augmentation(fit, sets, para_fit, para_test, features):
+    """Fit with and without paraphrased real fit turns; judge on every set and on paraphrased real test turns.
+
+    The held-out reworded turns (``unseen``) share no frame with the paraphrases, so a gain
+    there is generalisation, not memorised wording.
+    """
+    checks = {**sets, 'paraphrased-real-test': para_test}
+    result = {'paraphrased_fit_cases': len(para_fit), 'paraphrased_test_cases': len(para_test)}
+    for rule, strategy in (('centroids', 'message'), ('logistic', 'with-opening')):
+        base = {name: routed(rule, features, fit, cases, strategy) for name, cases in checks.items()}
+        more = {name: routed(rule, features, fit + para_fit, cases, strategy) for name, cases in checks.items()}
+        entry = {}
+        for name, cases in checks.items():
+            before, after = scaling.evaluate(base[name], cases), scaling.evaluate(more[name], cases)
+            entry[name] = {'without': before['turn_accuracy'], 'with': after['turn_accuracy'],
+                           'paired': scaling.paired_bootstrap(base[name], more[name], cases),
+                           'recall_without': {r: before['recall'][r] for r in ('drafting', 'scheduling')
+                                              if r in before['recall']},
+                           'recall_with': {r: after['recall'][r] for r in ('drafting', 'scheduling')
+                                           if r in after['recall']}}
+        result[f'{rule}/{strategy}'] = entry
+    return result
 
 
 def routed(rule, features, fit, cases, strategy, routes=data.ORDER):
@@ -98,9 +119,10 @@ def packaged(fit, sets, everything, vectors, targets=(0.95, 0.98, 0.99)):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--out', required=True)
+    parser.add_argument('--features', help='directory with texts.json and features.npz, if not --out')
     args = parser.parse_args(argv)
     out = Path(args.out)
-    fit, sets, everything, layers = load(out)
+    fit, sets, everything, layers, para_fit, para_test = load(out, features=args.features)
     per_layer = {name: encoders.strategy_features(everything, lambda texts, v=vectors: [v[t] for t in texts])
                  for name, vectors in layers.items()}
     final = 'layer-1' if 'layer-1' in per_layer else next(iter(per_layer))
@@ -147,8 +169,9 @@ def main(argv=None):
                        'paired': scaling.paired_bootstrap(narrow[s], broad[s], cases)}
                    for s, cases in synthetic.items()}}
     analysis['packaged_router'] = packaged(fit, sets, everything, layers[final])
+    analysis['paraphrase_augmentation'] = augmentation(fit, sets, para_fit, para_test, per_layer[final])
     (out / 'analysis.json').write_text(json.dumps(analysis, indent=1, sort_keys=True))
-    print(json.dumps(analysis['packaged_router'], indent=1))
+    print(json.dumps(analysis['paraphrase_augmentation'], indent=1))
     for label, entry in analysis['comparisons'].items():
         print(f'{label}: ' + '; '.join(f"{s} {v['difference']:+.3f} [{v['interval'][0]:+.3f}, {v['interval'][1]:+.3f}]"
                                         for s, v in entry.items()))

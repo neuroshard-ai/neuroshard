@@ -21,33 +21,75 @@ import numpy as np
 from neuroshard.evolution import router_scaling as scaling
 from neuroshard.evolution import router_scaling_data as data
 from neuroshard.evolution import router_scaling_features as encoders
+from neuroshard.evolution import router_scaling_study as study
 from neuroshard.evolution.modular_reference_execution import identity
 
 RULES = (('centroids', 'refit'), ('centroids', 'frozen'), ('logistic', 'refit'))
 
 
 def build(real_limit, cross_per_pair):
-    fit = data.real_cases('fit', limit=real_limit) + data.cases('fit', cross_per_pair=cross_per_pair)
-    test = data.real_cases('test') + data.cases('test', cross_per_pair=cross_per_pair)
-    unseen = data.real_unseen_cases() + data.cases('unseen', cross_per_pair=cross_per_pair)
-    return fit, {'test': test, 'unseen': unseen}
+    return study.build(real_limit, cross_per_pair)
+
+
+def paraphrase_sets(fit, sets):
+    return study.paraphrase_sets(fit, sets)
+
+
+def study_texts(real_limit=48, cross_per_pair=1):
+    return study.texts(real_limit, cross_per_pair)
+
+
+def load_vectors(directory):
+    """``{layer: {text: vector}}`` from ``texts.json`` and ``features.npz`` in ``directory``, or ``{}``."""
+    directory = Path(directory)
+    if not (directory / 'texts.json').exists() or not (directory / 'features.npz').exists():
+        return {}
+    texts = json.loads((directory / 'texts.json').read_text())
+    stored = np.load(directory / 'features.npz', allow_pickle=False)
+    layers = {}
+    for name in stored.files:
+        array = stored[name]
+        if array.shape[0] != len(texts):
+            raise ValueError(f'cached layer {name} does not match its texts')
+        layers[name] = dict(zip(texts, array))
+    return layers
+
+
+def save_vectors(directory, layers, texts):
+    directory = Path(directory)
+    np.savez(directory / 'features.npz', **{name: np.asarray([layers[name][t] for t in texts], dtype=np.float32)
+                                           for name in sorted(layers)})
+    (directory / 'texts.json').write_text(json.dumps(texts))
 
 
 def encoded_texts(texts, args, out):
-    """``{layer_name: {text: vector}}``; LM layers are cached by text digest."""
+    """``{layer_name: {text: vector}}``. LM layers are cached by text; only missing texts are encoded.
+
+    ``--features`` reads layers computed elsewhere (e.g. the Granite host) and must cover every text.
+    """
     if args.encoder == 'hashed':
         return {'hashed': {text: encoders.hashed(text) for text in texts}}
-    cache = out / 'features.npz'
-    digest = identity({'texts': texts, 'model': str(args.model), 'layers': args.layers})
-    if cache.exists():
-        stored = np.load(cache, allow_pickle=False)
-        if str(stored['digest']) == digest:
-            return {name: dict(zip(texts, stored[name].tolist())) for name in stored.files if name != 'digest'}
-    encoder = encoders.LanguageModelEncoder(args.model, threads=args.threads)
-    layers = encoder.encode(texts, layers=args.layers)
-    arrays = {f'layer{layer}': np.asarray(values) for layer, values in layers.items()}
-    np.savez(cache, digest=np.array(digest), **arrays)
-    return {name: dict(zip(texts, array.tolist())) for name, array in arrays.items()}
+    if args.features:
+        layers = load_vectors(args.features)
+        missing = [t for t in texts if any(t not in vectors for vectors in layers.values())]
+        if not layers or missing:
+            raise ValueError(f'--features lacks {len(missing)} study texts')
+        return {name: {t: vectors[t] for t in texts} for name, vectors in layers.items()}
+    names = [f'layer{layer}' for layer in args.layers]
+    cached = load_vectors(out)
+    if cached and set(cached) != set(names):
+        raise ValueError('cached layers differ from --layers; use a fresh --out')
+    missing = [t for t in texts if not cached or t not in cached[names[0]]]
+    if missing:
+        encoder = encoders.LanguageModelEncoder(args.model, threads=args.threads)
+        fresh = encoder.encode(missing, layers=args.layers)
+        merged = {name: dict(cached.get(name, {})) for name in names}
+        for layer, name in zip(args.layers, names):
+            merged[name].update(zip(missing, fresh[layer]))
+        every = sorted(merged[names[0]])
+        save_vectors(out, merged, every)
+        cached = merged
+    return {name: {t: cached[name][t] for t in texts} for name in names}
 
 
 def strategies_from(cases, vectors):
@@ -117,6 +159,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--encoder', choices=('hashed', 'lm'), required=True)
     parser.add_argument('--model', help='local causal LM directory for --encoder lm')
+    parser.add_argument('--features', help='directory with texts.json and features.npz computed elsewhere')
     parser.add_argument('--layers', type=int, nargs='+', default=[8, 15, 22, -1],
                         help='hidden-state indices to capture; -1 is the accepted final-norm feature')
     parser.add_argument('--out', required=True)
@@ -125,20 +168,22 @@ def main(argv=None):
     parser.add_argument('--orders', type=int, default=5)
     parser.add_argument('--threads', type=int, default=2)
     args = parser.parse_args(argv)
-    if args.encoder == 'lm' and not args.model:
-        parser.error('--encoder lm needs --model')
+    if args.encoder == 'lm' and not (args.model or args.features):
+        parser.error('--encoder lm needs --model or --features')
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     fit, sets = build(args.real_limit, args.cross_per_pair)
     everything = fit + [case for cases in sets.values() for case in cases]
-    texts = sorted({text for case in everything for text in case['user_turns']}
-                   | {text for cards in data.DESCRIPTIONS.values() for text in cards})
+    texts = study_texts(args.real_limit, args.cross_per_pair)
     started = time.monotonic()
     layers = encoded_texts(texts, args, out)
     feature_seconds = time.monotonic() - started
     primary = 'hashed' if args.encoder == 'hashed' else 'layer-1'
-    report = {'encoder': args.encoder, 'model': args.model, 'layers': sorted(layers), 'primary': primary,
-              'order': list(data.ORDER), 'fit_cases': len(fit), 'fit_turns': sum(len(c['labels']) for c in fit),
+    if primary not in layers:
+        raise ValueError(f'features lack the accepted final layer {primary}')
+    report = {'encoder': args.encoder, 'model': args.model, 'features': args.features, 'layers': sorted(layers),
+              'primary': primary, 'order': list(data.ORDER), 'fit_cases': len(fit),
+              'fit_turns': sum(len(c['labels']) for c in fit),
               'eval_cases': {name: len(cases) for name, cases in sets.items()},
               'eval_turns': {name: sum(len(c['labels']) for c in cases) for name, cases in sets.items()},
               'cases_sha256': identity([c['sha256'] if 'sha256' in c else c['id'] for c in everything]),

@@ -47,6 +47,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-router": "config/experiments/assistant-growth-router2-resources.json",
                      "assistant-growth-router3": "config/experiments/assistant-growth-router3-resources.json",
                      "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
+                     "router-scaling-granite": "config/experiments/router-scaling-granite-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
                         for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION + (COHORT3_DEVELOPMENT,)
                         + COHORT3_CONFIRMATION},
@@ -85,6 +86,7 @@ GRANITE_PROFILES = {
     "assistant-growth-router": ("assistant_growth_router", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router3": ("assistant_growth_router3", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
+    "router-scaling-granite": ("router_scaling_granite", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
     **{profile: ("assistant_growth_confirm", "docs/granite-reference-requirements.txt") for profile in GROWTH_CONFIRMATION},
     COHORT3_DEVELOPMENT: ("assistant_growth_cohort3_eval", "docs/granite-reference-requirements.txt"),
@@ -184,6 +186,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-router4":
         from neuroshard.evolution.assistant_growth_router4 import committed_sources as shifted_sources
         return shifted_sources()
+    if profile == "router-scaling-granite":
+        from neuroshard.evolution.router_scaling_granite import committed_sources as scaling_sources
+        return scaling_sources()
     if profile in GROWTH_DEVELOPMENT:
         from neuroshard.evolution.assistant_growth_eval import committed_sources as development_sources
         return development_sources()
@@ -639,6 +644,9 @@ def remote_command(profile):
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile == "assistant-growth-router4":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_router4.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "router-scaling-granite":
+        return [PYTHON, REMOTE + "/scripts/run_router_scaling_granite.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
     if profile in GROWTH_DEVELOPMENT:
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_development.py", "run",
