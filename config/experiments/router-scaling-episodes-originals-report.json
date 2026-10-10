@@ -1,0 +1,76 @@
+{
+  "format": "neuroshard-router-scaling-episodes-originals-report/1",
+  "source_commit": "e506a0c1be97ab13e8d09bf3f32a5091d4b500b6",
+  "ci_run": 38035611067,
+  "result_sha256": "e609f983cd6dc2f7e69c24291f513c1cecc1c838c90ed456dfcbdc666b7ec9bd",
+  "execution_completed": true,
+  "error": null,
+  "stopped_before": null,
+  "routers": {
+    "pinned": "3c99097bbf6a0c5ed1ba409e98ed5c26136fe18add10a4f23e689516c571eb0e",
+    "context": "65dce253d46d4d8154ce332e07b499e55d99b00b69e40bf370b358dce888db64"
+  },
+  "sets": {
+    "original-scheduling": {
+      "cases": 32,
+      "pinned": 32,
+      "context": 32,
+      "gained": [],
+      "lost": [],
+      "plans_differ": 0
+    },
+    "original-cross": {
+      "cases": 8,
+      "pinned": 6,
+      "context": 6,
+      "gained": [],
+      "lost": [],
+      "plans_differ": 0
+    }
+  },
+  "paired_with_reworded": {
+    "scheduling": {
+      "cases": 32,
+      "original": 32,
+      "reworded": 27,
+      "original_only": [
+        "schedule-1b62f34b330b",
+        "schedule-3f14ea600054",
+        "schedule-6a0bb99fefa1",
+        "schedule-d65b916fdbe8",
+        "schedule-fd44bb16ab14"
+      ],
+      "reworded_only": []
+    },
+    "cross": {
+      "cases": 8,
+      "original": 6,
+      "reworded": 3,
+      "original_only": [
+        "schedule-461e00a5ee7a",
+        "schedule-e10f759768fc",
+        "schedule-e7562e293eaa"
+      ],
+      "reworded_only": []
+    }
+  },
+  "episodes_served": 40,
+  "wall_seconds": 2149.606155177,
+  "resources_finished": {
+    "finished_utc": "2026-10-10T09:12:57.762649+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-052a92977c9fb6866"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 2325.241542,
+    "conservative_compute_usd": 0.6836210133480001,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.6836210133480001,
+  "checklist_credit": false,
+  "sealed_opened": false,
+  "admission_evidence": false
+}

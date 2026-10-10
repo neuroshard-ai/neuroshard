@@ -172,3 +172,19 @@ def test_the_first_run_is_recorded_rescored_and_retired():
     finished = report['resources_finished']
     assert not finished['remaining_instances'] and finished['security_group_retired']
     assert finished['conservative_compute_usd'] <= read(ROOT / 'config/experiments/router-scaling-episodes-resources.json')['planning_cap_usd']
+
+
+def test_the_originals_run_is_recorded_paired_and_retired():
+    report = read(ROOT / 'config/experiments/router-scaling-episodes-originals-report.json')
+    result = read(ROOT / 'config/experiments/router-scaling-episodes-originals-result.json')
+    declaration = read(ROOT / 'config/experiments/router-scaling-episodes-originals.json')
+    assert sha256(ROOT / 'config/experiments/router-scaling-episodes-originals-result.json') == report['result_sha256']
+    assert report['execution_completed'] and report['stopped_before'] is None
+    assert episodes.assess(result, declaration=declaration) == report['sets']
+    first = read(ROOT / 'config/experiments/router-scaling-episodes-result.json')
+    for name, paired in report['paired_with_reworded'].items():
+        reworded_rows = [r for r in first['reply']['episodes'][f'reworded-{name}'] if 'pinned' in r['routers']]
+        assert paired['reworded'] == sum(r['score']['passed'] for r in reworded_rows)
+        assert paired['original'] == report['sets'][f'original-{name}']['pinned']
+    finished = report['resources_finished']
+    assert not finished['remaining_instances'] and finished['security_group_retired']

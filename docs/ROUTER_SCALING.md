@@ -2,7 +2,8 @@
 
 October 10, 2026. A measurement, not a gate. It trains no unit, opens no sealed or development
 split and grants no checklist credit. Features come from the pinned Granite 4.1 3B parent on one
-canonical CPU host ($0.23), with SmolLM2-135M on a local CPU as a comparison. Every number
+canonical CPU host ($0.23), with SmolLM2-135M on a local CPU as a comparison; two further CPU
+hosts served the accepted A3 system end to end ($2.44). Every number
 below is reproducible from the commands at the end. Intervals are 95% bootstrap intervals that
 resample whole conversations; a difference counts only when its paired interval excludes zero.
 
@@ -137,6 +138,8 @@ logistic router, which cannot use them this way, is better than either.
    from scheduling on any wording, but when a capability with overlapping vocabulary arrives
    (invoices: "draft", "team", "due"), reworded drafting requests move to it. A cohort's sealed
    confirmation re-checks earlier cohorts only on their own grammar, so it would not see this.
+   This is a label-level finding on short rewordings; end to end, with two routes, full-length
+   reworded requests were routed correctly (below).
 4. **The parent's final layer is the right feature for the logistic router.** Middle layers
    rescue the centroid rule (+0.102 at layer 30 on new wording) but make the logistic router
    significantly worse (−0.017 and −0.052). The served feature needs no change.
@@ -184,9 +187,65 @@ can supply and templates cannot.
   cohort should add such turns for the route it displaced and refit.
 - **Fallback.** Send low-confidence turns to the parent or a clarifying question. Calibrate the
   threshold on reworded turns, not the router's own fit data (below).
-- **Next measurement.** Put the router in front of the real accepted units and measure
-  whole-conversation success, not labels. The paraphrased real requests keep their expected
-  outcomes, so they can be served and scored unchanged.
+- **Next measurement.** At two routes the served router is adequate on full-length reworded
+  requests, and the scheduling unit, not routing, is what breaks under rewording (below).
+  Train scheduling on varied phrasings before adding units, and re-run the end-to-end check
+  when a third unit exists, since that is where the routing findings above apply.
+
+## End to end: the accepted A3 system on reworded real requests
+
+Labels say which unit a turn needs, not whether the conversation succeeds. Two runs on one
+canonical CPU host each served the accepted A3 system: A2's per-episode gate, U1+L3 on the
+drafting route, U1+L2 on the scheduling route under the free-slot policy, and prefix-cache
+serving. The cases were real integration cases whose opening request was reworded with new
+content words, every rule clause kept verbatim, so each case keeps its workspace and expected
+outcomes ([`router_scaling_reworded`](../src/neuroshard/evolution/router_scaling_reworded.py),
+[`router_scaling_episodes`](../src/neuroshard/evolution/router_scaling_episodes.py)). Each
+case was planned under both the pinned A3 router and a two-route context router, which was
+fitted on the study's real fit conversations and frozen before the run. Every distinct plan
+was served once. The second run served the original wording of the same scheduling and cross
+cases, so the wording's effect on the units is separated from routing. Every episode was
+rescored from its transcript.
+
+| set (cases) | pinned router | context router | plans that differ |
+| --- | --- | --- | --- |
+| reworded drafting (32) | 32 | 32 | 0 |
+| original drafting, same cases (32) | 32 | 32 | 0 |
+| reworded scheduling (32) | 27 | 27 | 0 |
+| original scheduling, same cases (32) | 32 | 32 | 0 |
+| reworded cross (8) | 3 | 3 | 1 |
+| original cross, same cases (8) | 6 | 6 | 0 |
+
+1. **The pinned router did not misroute these reworded requests.** It sent every reworded
+   drafting turn to drafting and every reworded scheduling turn to scheduling. The study's
+   label-based finding that the pinned router misroutes 33 of 38 reworded drafting turns
+   came from its short held-out rewordings (100–111 characters, rule clauses dropped). The
+   executable rewordings keep the full rule text (266–354 characters), and their mean state
+   stays on the drafting side. **The label result is real for short requests but does not
+   carry over to requests that keep their rule clauses.** Users do write short requests,
+   but those cannot be scored against these workspaces, so their cost in task success is
+   still unmeasured.
+2. **The context router changed one plan in 72 cases and gained nothing.** In that cross case,
+   the pinned plan ran out of model turns on the drafting route and the context plan, which
+   sent the reworded handoff request to scheduling, saved a wrong outcome. Neither router is
+   better on these cases. Its label-level advantage at two routes does not show up end to end
+   here; the K-route results above concern growth beyond two units.
+3. **Rewording costs success in the units themselves, not in routing.** With identical
+   routes, the same cases passed 32/32 scheduling and 6/8 cross in their original wording,
+   and 27/32 and 3/8 reworded. All 8 differences go one way: no case passed only when
+   reworded (one-sided sign test, p = 0.004). The failed reworded scheduling episodes ran out
+   of model turns or saved the wrong meeting. Failures appear under both scheduling frames
+   (3 of 20 and 2 of 12). Drafting was unaffected: 32/32 in both wordings. The scheduling
+   unit L2 learned from solver demonstrations in one phrasing and is brittle to rewording;
+   the drafting units are not, on these cases.
+
+Costs: $1.76 for the first run (105 episodes; 94 min serving, 100 min on the host) and $0.68
+for the second (40 episodes; 36 min serving, 39 min on the host). Both hosts retired with
+nothing remaining. Evidence:
+[first report](../config/experiments/router-scaling-episodes-report.json) and
+[result](../config/experiments/router-scaling-episodes-result.json);
+[second report](../config/experiments/router-scaling-episodes-originals-report.json) and
+[result](../config/experiments/router-scaling-episodes-originals-result.json).
 
 ## Packaged router
 
@@ -234,8 +293,8 @@ expenses (displacing invoices) and timesheets (displacing reminders), which Gran
 - **Templates.** The phrasings are authored templates, not real user language. `test` shares
   templates with `fit`, so `unseen` is the meaningful check, and its phrasings are also
   authored.
-- **Labels, not success.** Labels say which unit a turn needs; no unit was served, so this
-  measures routing, not conversation success.
+- **Labels, not success, except in one section.** Labels say which unit a turn needs. Only
+  the end-to-end section serves units; it covers two routes and 72 reworded cases.
 - **Abstention.** The study's abstention table abstains on quantiles of the evaluated turns,
   which describes the trade-off. The packaged router's threshold is calibrated on fit folds and
   then judged on `test` and `unseen`.
