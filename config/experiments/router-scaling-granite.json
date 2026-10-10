@@ -1,0 +1,18 @@
+{
+  "format": "neuroshard-router-scaling-granite/1",
+  "question": "Do the router scaling findings measured on SmolLM2-135M hold on the pinned Granite 4.1 3B parent, whose state the served router uses?",
+  "texts": 2910,
+  "texts_sha256": "e252cd6f7c2b3703e43ade3c43472445440b10632cc48b762782e7d8e7487aac",
+  "feature": "assistant_routing.message_feature under the A2 drafting policy (mean final-layer state over the user message after the shared prefix), plus the mean at hidden layers 20 and 30 from the same forward pass; the first 8 texts must equal message_feature bit for bit",
+  "layers": [
+    "layer-1",
+    "layer20",
+    "layer30"
+  ],
+  "analysis": "Local, unchanged from the SmolLM2 study: scripts/run_router_scaling.py --encoder lm --features <evidence> and scripts/analyse_router_scaling.py; same cases, orders, intervals and admission rule.",
+  "no_training": true,
+  "no_serving": true,
+  "opens_sealed_or_development_data": false,
+  "checklist_credit": false,
+  "doc": "docs/ROUTER_SCALING.md"
+}

@@ -1,0 +1,23 @@
+{
+  "format": "neuroshard-router-scaling-episodes/1",
+  "question": "Does the pinned A3 router cost task success on reworded real requests, and does the context router recover it?",
+  "system": "the accepted A3 system: A2 per-episode gate, U1+L3 on the drafting route, U1+L2 on the scheduling route under the free-slot policy, prefix-cache serving",
+  "routers": {
+    "pinned": "config/experiments/assistant-growth-cohort3-development-execution.json gates.router (the served router, centroid on message-mean, shifted)",
+    "context": "config/experiments/router-scaling-episodes-router.json"
+  },
+  "rewording": "router_scaling_reworded: integration openings reworded with new content words, every rule clause verbatim; expected outcomes unchanged",
+  "drafting_per_family": 4,
+  "scheduling_per_family": 4,
+  "priority": [
+    "reworded-drafting",
+    "reworded-cross",
+    "original-drafting",
+    "reworded-scheduling"
+  ],
+  "measure": "per set, cases passed under each router; cases gained and lost by the context router; plans that differ. Reported, not a gate.",
+  "no_training": true,
+  "opens_sealed_or_development_data": false,
+  "checklist_credit": false,
+  "doc": "docs/ROUTER_SCALING.md"
+}

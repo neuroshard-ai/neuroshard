@@ -1,0 +1,52 @@
+{
+  "format": "neuroshard-router-scaling-episodes-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 3.25,
+  "planning_cap_usd": 6.5,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "router-scaling-episodes",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 100663296,
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-growth-cohort3-development-inputs",
+    "files": [
+      "L2/manifest.json",
+      "L2/trainable.safetensors",
+      "L3/manifest.json",
+      "L3/trainable.safetensors",
+      "U1/manifest.json",
+      "U1/trainable.safetensors",
+      "a2-integration.json",
+      "router.json"
+    ],
+    "maximum_bytes": 268435456
+  },
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/router-scaling-granite-report.json",
+    "sha256": "b284cd816bb428277878e770fd6fbf02b56c8cec579cf1f3a37894fd9bdd437e"
+  },
+  "budget_scope": "Reworded real requests served end to end by the accepted A3 system on one CPU host, under the pinned and the context router: a preparation worker, then one fresh worker at the canonical eight threads; 3.25-hour expiry and $6.50 allowance. Uploads only U1, L2, L3, A2 gates and the pinned router, as cohort-3 development did. No GPU, training, development or sealed data.",
+  "prior_attempts": []
+}

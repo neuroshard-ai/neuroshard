@@ -1,0 +1,49 @@
+{
+  "format": "neuroshard-router-scaling-granite-report/1",
+  "source_commit": "64fb5428279bb2cac31bc033ec2f4f360d31a481",
+  "ci_run": 38020414989,
+  "execution_completed": true,
+  "error": null,
+  "texts": 2910,
+  "layers": [
+    "layer-1",
+    "layer20",
+    "layer30"
+  ],
+  "accepted_feature_checked": 8,
+  "accepted_feature_identical": true,
+  "features_sha256": "6a05ac38626c59e5c8d135fd2c8ddb71f396f8784b5ba5aea3514eae18e01629",
+  "features_file_sha256": "6a05ac38626c59e5c8d135fd2c8ddb71f396f8784b5ba5aea3514eae18e01629",
+  "feature_seconds": 603.544991385,
+  "wall_seconds": 617.341906106,
+  "peak_rss_bytes": 8414887936,
+  "tokenizer": {
+    "runtime_class": "TokenizersBackend",
+    "pipeline_sha256": "ec4c2b416e534a069952c53d73189be98841422daa3a6c529f1211ce241f9de0",
+    "splitting_sha256": "c0550637596ccb7e70bf2cd4f0e297f1734b29e7eb868a407db8cd6e885d2581",
+    "control_tokens": {},
+    "fixture_count": 16,
+    "fixture_sha256": "57351890555a59a2ec04eed0a71589c2ebbd8a832606e96180c12db56f343bbb",
+    "eos_token_id": 100257,
+    "pad_token_id": 100256,
+    "transformers": "5.5.4",
+    "tokenizers": "0.22.2",
+    "parent_tokenizer_digest": "d7e1714703eb97dcef3435aa50eb1de1cf241d62"
+  },
+  "checked_encodes": 2920,
+  "resources_finished": {
+    "finished_utc": "2026-10-10T04:22:30.452559+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-06375691113313d6f"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 793.211928,
+    "conservative_compute_usd": 0.233204306832,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "checklist_credit": false,
+  "sealed_opened": false
+}
