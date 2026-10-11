@@ -1,0 +1,155 @@
+{
+  "format": "neuroshard-assistant-a3-activation/1",
+  "chain_id": "neuroshard-assistant-1",
+  "promotion": {
+    "height": 205764,
+    "previous": "74cfe2fae994bea25bb3bab7123a4e291516b9963e9ff208a3d650ffc174e7f0",
+    "model_root": "e3aaf34d2a1c2d16f6b0c2bf28b5525cdf720a86d46f2eee809c591da9741a44",
+    "quality_root": "12c31142e9111eb9d8370915310e4927ac5d226dd3768954bed2c7b188ad039d",
+    "authority": "026bb33f79fea403a673492fb339e365680e63714f929210105e649a6adcb9f7f3",
+    "open_jobs_at_promotion": 0
+  },
+  "validators": "the seed validator approves A2 (plain update, for rollback) and A3 (routed bank) and holds both shards",
+  "assets": "https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-a3-cohort3",
+  "smoke": [
+    {
+      "label": "drafting route",
+      "job_id": "735c8c8d824da88604cc6ef773e6c6f6389082d2c9c654d7b6bacebd0cfa0459",
+      "routes": [
+        "drafting"
+      ],
+      "completed": [
+        true
+      ],
+      "final_text": [
+        "Draft saved for Cedar 6581, addressed to the service team, due 2027-05-23, with a total of 67."
+      ],
+      "seconds": [
+        86.7
+      ],
+      "settlement": {
+        "status": "settled",
+        "height": 206718,
+        "paid": [
+          8999,
+          8999
+        ],
+        "positions": [
+          2949,
+          2949
+        ],
+        "refunded": 82002
+      },
+      "audits": [
+        {
+          "valid": true,
+          "entries": 220,
+          "forwards_checked": 213,
+          "first_mismatch": null,
+          "input_mismatch": null
+        },
+        {
+          "valid": true,
+          "entries": 220,
+          "forwards_checked": 213,
+          "first_mismatch": null,
+          "input_mismatch": null
+        }
+      ]
+    },
+    {
+      "label": "scheduling route",
+      "job_id": "6ac1701b6a052af8178e122d58ff063123a9000ef3ac8628fbeb1c5695fb79cb",
+      "routes": [
+        "scheduling"
+      ],
+      "completed": [
+        true
+      ],
+      "final_text": [
+        "Meeting draft saved for Meadow 23280: 90 minutes with the design team and the logistics team on 2027-02-08 at 10:30."
+      ],
+      "seconds": [
+        72.4
+      ],
+      "settlement": {
+        "status": "settled",
+        "height": 207409,
+        "paid": [
+          10034,
+          10034
+        ],
+        "positions": [
+          3288,
+          3288
+        ],
+        "refunded": 79932
+      },
+      "audits": [
+        {
+          "valid": true,
+          "entries": 170,
+          "forwards_checked": 163,
+          "first_mismatch": null,
+          "input_mismatch": null
+        },
+        {
+          "valid": true,
+          "entries": 170,
+          "forwards_checked": 163,
+          "first_mismatch": null,
+          "input_mismatch": null
+        }
+      ]
+    }
+  ],
+  "recovery": [
+    {
+      "label": "after owner restart",
+      "job_id": "6bd81af360cf512319540582d7b3a7c12eb7995c8f6bcd191d900ffc0b3bb0bb",
+      "routes": [
+        "scheduling"
+      ],
+      "completed": [
+        true
+      ],
+      "final_text": [
+        "OK"
+      ],
+      "seconds": [
+        11.9
+      ],
+      "settlement": {
+        "status": "settled",
+        "height": 208599,
+        "paid": [
+          8712,
+          8712
+        ],
+        "positions": [
+          2855,
+          2855
+        ],
+        "refunded": 82576
+      },
+      "audits": [
+        {
+          "valid": true,
+          "entries": 12,
+          "forwards_checked": 5,
+          "first_mismatch": null,
+          "input_mismatch": null
+        },
+        {
+          "valid": true,
+          "entries": 12,
+          "forwards_checked": 5,
+          "first_mismatch": null,
+          "input_mismatch": null
+        }
+      ]
+    }
+  ],
+  "preserved": "accounts, owner bonds, log keys and chain history; owners restarted with their existing keys",
+  "rollback": "model_promote to the A2 root after draining jobs; A2 holdings, descriptor and approval are kept"
+}

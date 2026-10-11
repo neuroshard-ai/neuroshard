@@ -16,11 +16,10 @@ its frozen fictional workspaces it solved 192/192 drafting and 192/192 schedulin
 conversations. These are bounded task results, not general assistant benchmarks.
 See [the growth review](docs/A3_REPEATED_GROWTH_REVIEW.md).
 
-The live assistant chain currently serves the earlier accepted A2 update across
-CPU owners. [PR #85](https://github.com/neuroshard-ai/neuroshard/pull/85) integrates
-A3 routing, audits and native promotion; its [release gate](docs/ASSISTANT_RELEASE_CHECK.md)
-requires all 432 accepted conversations to reproduce across machines before
-activation. Test NEURO has no monetary value. All current network hosts have one
+The live assistant chain serves the accepted A3 system across CPU owners. It was
+promoted on October 11, 2026 after its [release gate](docs/ASSISTANT_RELEASE_CHECK.md)
+reproduced all 432 accepted conversations exactly across machines. Every owner log
+is audited automatically, and A2 is kept for rollback. Test NEURO has no monetary value. All current network hosts have one
 administrator; four independent operators and the public operating soak remain
 open. Peer growth first buys replicas, audits, serving and training capacity.
 Parameters grow only when an admitted candidate improves measured behavior.

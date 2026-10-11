@@ -1,17 +1,19 @@
 # The public assistant network
 
-**Status: live test network `neuroshard-assistant-1`, serving A2's version (`a2-u1`).**
+**Status: live test network `neuroshard-assistant-1`, serving the accepted A3 version (`a3-cohort3`)
+since block 205764 on October 11, 2026.**
 The grown assistant is served across machines that each hold part of it, and
 every conversation is paid and settled on the native ledger. It follows the
 [verifiable network design](VERIFIABLE_NETWORK_DESIGN.md) and the
 [bonded serving ledger](OPTIMISTIC_SERVING.md).
 
 Until peers join, the project runs both owners: shard 1 on the seed and a
-stand-in for shard 2. Automatic auditing and A3 promotion are being qualified in
-[PR #85](https://github.com/neuroshard-ai/neuroshard/pull/85), under the
-[release contract](ASSISTANT_RELEASE_CHECK.md). Until deployment is recorded,
-auditing is not live and users trust the seed's RPC. Test NEURO has no
-value, and the tasks are the fictional drafting workspaces A2 was measured on.
+stand-in for shard 2. A3 was promoted after its [release qualification](ASSISTANT_RELEASE_CHECK.md)
+reproduced all 432 accepted conversations exactly through paid, separately hosted
+shards. A project-funded auditor replays every owner log, and the seed validator
+judges fraud proofs under the served version. Users still trust the seed's RPC,
+and every host has one administrator. Test NEURO has no value. The tasks are the
+fictional drafting and scheduling workspaces A3 was measured on.
 
 ## Who does what
 
@@ -92,6 +94,23 @@ from both owners. It held one two-turn conversation from development sample 0.
   1,000 prompt tokens and about 340 ms per generated token, for layers 0–11 and
   the output head. Running it in FP32 instead of BF16 barely changes that.
 
+## First A3 conversations
+
+After promotion on October 11, 2026, a client on the seed host (8 threads)
+held one paid conversation per route:
+
+- **Drafting route (87 s).** It saved the draft for Cedar 6581 to the service
+  team, due 2027-05-23 with a total of 67: the case's expected outcome. Settled
+  at block 206718; each owner was paid for 2,949 positions.
+- **Scheduling route (72 s).** It saved a 90-minute meeting for Meadow 23280
+  with the design and logistics teams on 2027-02-08 at 10:30: the expected
+  outcome. Settled at block 207409; 3,288 positions per owner.
+- **After an owner restart.** Owner 2 restarted with its existing key and bond,
+  and a further paid job served and settled at block 208599.
+
+Unused escrow was refunded each time, and the auditor replayed every owner
+log of all three jobs without a mismatch.
+
 ## Milestones
 
 1. **Ledger for a public network.** `transfer`, for the faucet, and
@@ -106,17 +125,20 @@ from both owners. It held one two-turn conversation from development sample 0.
 5. **Seed and genesis.** The seed runs on AWS; the descriptor is
    [`assistant-testnet.json`](../src/neuroshard/client/networks/assistant-testnet.json),
    and owners' module files are in the
-   [assistant-testnet-1 release](https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-testnet-1).
+   [assistant-a3-cohort3 release](https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-a3-cohort3).
+   A2's descriptor, [`assistant-testnet-a2.json`](../src/neuroshard/client/networks/assistant-testnet-a2.json),
+   and its [release](https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-testnet-1)
+   are kept for rollback.
 6. **Auditing live.** The seed runs an auditor, and validators hold shards and
    receive proof bundles, so a challenge can land.
 7. **The current version across owners.** Cohort 3's modules (U1, L2, L3) all sit
    in layers 32–39, on the last shard. That owner will switch among them per
-   turn, and every owner will keep one cache per route. The version is promoted
-   once it reproduces its sealed confirmation token for token across owners.
+   turn, and every owner keeps one cache per route. It was promoted after
+   reproducing its 432 confirmation conversations token for token across owners.
 8. **Independent validators and growth through the network.** Validators join
    for A5. Contributions train the next module, its sealed gate promotes it, and
    the network switches version, keeping the previous one for rollback.
 
-Milestones 1–5 are implemented. The whole flow (seed, faucet, two owners, a paid
+Milestones 1–7 are implemented. The whole flow (seed, faucet, two owners, a paid
 conversation and its settlement) is also tested end to end on the tiny fixture
 with a local CometBFT validator.
