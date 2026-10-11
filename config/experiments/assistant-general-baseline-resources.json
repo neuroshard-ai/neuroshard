@@ -1,0 +1,38 @@
+{
+  "format": "neuroshard-assistant-general-baseline-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 4,
+  "planning_cap_usd": 7.5,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-general-baseline",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 268435456,
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/router-scaling-episodes-originals-report.json",
+    "sha256": "55c7ccd7bb1900df14abdf5a0e1abccd114112ea2a5df027c5eddec508e46f93"
+  },
+  "budget_scope": "The general route baseline on one CPU host: a preparation worker, then one fresh worker at the canonical eight threads serving the unchanged parent on 48 chat and 66 documents development cases and computing router features for their train and development turns; 4-hour expiry and $7.50 allowance. No upload, GPU, training or confirmation data.",
+  "prior_attempts": []
+}

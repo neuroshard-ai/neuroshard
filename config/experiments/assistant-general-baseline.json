@@ -1,0 +1,25 @@
+{
+  "format": "neuroshard-assistant-general-baseline/1",
+  "question": "How well does the unchanged Granite 4.1 3B parent already serve a general route: questions over the user's own documents with search/read tools, and general chat with checkable constraints? And can a router separate general turns from drafting and scheduling turns?",
+  "sets": {
+    "documents-development": 66,
+    "chat-development": 48
+  },
+  "features": "the accepted router feature for every train and development turn of both sets: 224 texts",
+  "policies": {
+    "documents": {
+      "path": "config/experiments/assistant-general-policy-documents.json",
+      "sha256": "1cd12c963caace7ce70124c918c3b8b01d5fa36f74bb0ecd0e0cd0a8a08d35f3"
+    },
+    "chat": {
+      "path": "config/experiments/assistant-general-policy-chat.json",
+      "sha256": "47a98bb2919601259d2386ede53818a2ba9e92795649a0383f98bb42a9800839"
+    }
+  },
+  "model": "the parent only: no update, no module; prefix-cache greedy serving on the canonical CPU runtime",
+  "reported_not_gated": true,
+  "opens_confirmation": false,
+  "training": false,
+  "checklist_credit": false,
+  "next": "The result sets the baseline every general-route change is judged against; a learned general unit or router change must beat it on the sealed confirmation splits."
+}
