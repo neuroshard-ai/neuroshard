@@ -30,7 +30,9 @@ POLICIES = {'documents': 'config/experiments/assistant-general-policy-documents.
 # Later runs of the same worker: each declares the sets and policies it serves.
 PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-documents2': ('config/experiments/assistant-general-documents2.json',
-                                             'config/experiments/assistant-general-documents2-execution.json')}
+                                             'config/experiments/assistant-general-documents2-execution.json'),
+            'assistant-general-confirmation': ('config/experiments/assistant-general-confirmation.json',
+                                               'config/experiments/assistant-general-confirmation-execution.json')}
 
 
 def runs(declaration):
