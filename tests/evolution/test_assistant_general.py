@@ -175,3 +175,16 @@ def test_the_published_baseline_rescores_under_version_one():
     assert sha256(ROOT / 'config/experiments/assistant-general-baseline-episodes.json') == report['episodes_sha256']
     assert general.rescore(docs.cases('development'), episodes['documents'], 'documents') == report['documents']['passed'] == 18
     assert general.rescore(chat.cases('development'), episodes['chat'], 'chat') == report['chat']['passed'] == 48
+
+
+def test_the_confirmation_is_recorded_against_its_declared_gate():
+    report = read(ROOT / 'config/experiments/assistant-general-confirmation-report.json')
+    episodes = read(ROOT / 'config/experiments/assistant-general-confirmation-episodes.json')
+    gate = read(ROOT / 'config/experiments/assistant-general-confirmation.json')['gate']
+    assert sha256(ROOT / 'config/experiments/assistant-general-confirmation-episodes.json') == report['episodes_sha256']
+    assert general.rescore(docs.cases('confirmation'), episodes['documents-confirmation'], 'documents') == 118
+    assert general.rescore(chat.cases('confirmation'), episodes['chat-confirmation'], 'chat') == 84
+    assert report['checks'] == {'documents': 118 / 132 >= gate['documents_minimum'],
+                                'chat': 84 / 96 >= gate['chat_minimum'],
+                                'not_found': 21 / 24 >= gate['not_found_minimum']}
+    assert not report['passed']

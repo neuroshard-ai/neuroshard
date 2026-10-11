@@ -1,0 +1,75 @@
+{
+  "format": "neuroshard-assistant-general-confirmation-report/1",
+  "source_commit": "fe5d3547e3049cac1cc55a8ab19b7812970e1a20",
+  "ci_run": 38169669206,
+  "episodes_sha256": "12ae583842bb8482b409b34fee5775ec58764c3dac82f341c49dbff9163ed2ae",
+  "documents": {
+    "passed": 118,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "4/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "10/12",
+      "invoice-sum": "12/12",
+      "leave-days": "11/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "9/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "chat": {
+    "passed": 84,
+    "cases": 96,
+    "families": {
+      "arithmetic": "0/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "12/12",
+      "include": "12/12",
+      "json": "12/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "rates": {
+    "documents": 0.8939393939393939,
+    "chat": 0.875,
+    "not_found": 0.875
+  },
+  "checks": {
+    "documents": true,
+    "chat": false,
+    "not_found": false
+  },
+  "passed": false,
+  "rescored": {
+    "documents": 118,
+    "chat": 84
+  },
+  "failures": {
+    "chat arithmetic": "0/12: no calculator on the chat route; the parent miscomputes multi-step prices",
+    "not-found-return": "3/12 wrong: the outbound flight reported as the return flight",
+    "claim-deadline": "8/12 wrong: the date offset skipped the policy or went backwards",
+    "hotel-code and leave-days": "3 further misses"
+  },
+  "decision": "Not shipped: chat 87.5% and not-found 87.5% are below their 90% minimums; documents 89.4% passes its 85% minimum. The failures define the next version.",
+  "resources_finished": {
+    "finished_utc": "2026-10-11T21:23:17.699179+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-07b619aaf0a7489c9"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 2899.147142,
+    "conservative_compute_usd": 0.8523492597479999,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.8523492597479999,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}
