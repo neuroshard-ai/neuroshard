@@ -1,0 +1,19 @@
+{
+  "format": "neuroshard-assistant-network/1",
+  "chain_id": "neuroshard-assistant-1",
+  "rpc": "http://34.194.51.150:26657",
+  "faucet": "http://34.194.51.150:28780/faucet",
+  "proof_endpoints": ["http://34.194.51.150:28780/proofs"],
+  "version": "a2-u1",
+  "plan": "config/experiments/granite-shard-serving-update.json",
+  "plan_sha256": "8456a131bc5a69595e1dcdca1597025c36e87de557c23e7874a1e1aed4a93fad",
+  "assets": "https://github.com/neuroshard-ai/neuroshard/releases/download/assistant-testnet-1/",
+  "files": {
+    "integration.json": {"asset": "a2-integration.json", "bytes": 184029,
+                         "sha256": "28bfa5fad400af0096461e473e8b463141b97b7d7a4acc0ac64b2fe35d8ae9a7"},
+    "update-checkpoint/manifest.json": {"asset": "U1-manifest.json", "bytes": 2053,
+                                        "sha256": "e586ddf3d14f53cd74fc344a676cf57b4ad19f716d3fa847f318b99749e9da6b"},
+    "update-checkpoint/trainable.safetensors": {"asset": "U1-trainable.safetensors", "bytes": 251660064,
+                                                "sha256": "58eafbfc887917993ac2d6942255e62efbfb48f6f624ef46fc8224c18a8b3865"}
+  }
+}

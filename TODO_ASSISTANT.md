@@ -22,9 +22,13 @@ source, deployed behavior and independent ownership:
 - [x] Implement signed log retrieval, automatic auditing and funded proof delivery.
 - [x] Bound authenticated work, handshakes, connections and proof uploads.
 - [x] Implement stewarded native promotion without resetting accounts or supply.
-- [ ] Reproduce all 432 accepted A3 conversations through three physical shard hosts.
-- [ ] Deploy audits, publish assets, promote A3 and verify native paid chat.
-- [ ] Merge final green PR to main and publish the tested source entry point.
+- [x] Reproduce all 432 accepted A3 conversations through three physical shard hosts.
+  [Attempt 2 passed](docs/ASSISTANT_RELEASE_CHECK.md#attempt-2-passed): every token, route, tool result and
+  snapshot matched, in 18.2 hours. Attempt 1 ran out of time at 355 and recorded no result.
+- [x] Deploy audits, publish assets, promote A3 and verify native paid chat.
+  [Promoted at block 205764](docs/ASSISTANT_RELEASE_CHECK.md#activation); a paid job on each route settled with
+  clean audits, and another after an owner restart.
+- [x] Merge final green PR to main and publish the tested source entry point.
 - [ ] Recruit four independent operators; qualify A5, then the A6 operating soak.
 
 The completed implementation boxes are supported by tests. Deployment boxes need

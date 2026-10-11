@@ -1,0 +1,31 @@
+{
+  "format": "neuroshard-assistant-release-check-report/1",
+  "attempt": 2,
+  "source_commit": "cc24424278db356107a76e34f3862999facfc8f1",
+  "result_sha256": "12c31142e9111eb9d8370915310e4927ac5d226dd3768954bed2c7b188ad039d",
+  "passed": true,
+  "completed": 432,
+  "cases": 432,
+  "sets": {
+    "drafting": 192,
+    "scheduling": 192,
+    "cross": 48
+  },
+  "serving_hours": 18.224,
+  "independent_check": "every stored transcript re-projected and compared with the projection of the committed accepted record, in the declared order: 432 of 432 equal",
+  "resources": {
+    "client_instance": "i-0c12286e00676654c",
+    "client_type": "m7i.2xlarge",
+    "client_hours_upper_bound": 23.0,
+    "client_retired": "terminated by its own OS shutdown timer at 2026-10-11 13:52:57 UTC; the supervisor copied evidence and stopped all shadow units, then failed to call the AWS CLI (not on the user unit PATH)",
+    "shadow_units_hours": 18.34,
+    "usd_per_hour": 0.4032,
+    "attempt2_usd_upper_bound": 24.06,
+    "attempt1_usd_estimate": 19.35
+  },
+  "admission_evidence": false,
+  "training": false,
+  "new_final_opened": false,
+  "independent_operation": false,
+  "cumulative_usd_upper_bound": 43.41
+}

@@ -61,3 +61,49 @@ evidence before stopping anything, and the client unit outlives the worker
 budget. The workload, pass rule, model root, runtime, modules, policies, ports,
 positions and price are unchanged. Attempt 2 uses a fresh shadow chain and a
 fresh client; it does not resume attempt 1.
+
+## Attempt 2: passed
+
+Attempt 2 ran from commit `cc24424`, which passed CI, and served from 14:59 UTC
+on October 10 to 09:13 UTC on October 11 (18.2 hours). **All 432 conversations
+reproduced exactly**: 192 drafting, 192 scheduling and 48 cross. Every input and
+output token, route, tool result, completion and workspace snapshot matched the
+recorded accepted system. A separate check after the run recomputed the
+projection of every committed accepted record and compared it with each stored
+transcript, in the declared order: 432 of 432 were equal. Evidence: the
+[result](../config/experiments/assistant-network-release-check-result.json),
+whose SHA-256 is the quality root validators approve, and the
+[report](../config/experiments/assistant-network-release-check-report.json).
+
+The supervisor copied the evidence and stopped every shadow unit. It then failed
+to call the AWS CLI, which was not on its user unit's path. The temporary client
+terminated itself through its operating-system shutdown timer at 13:52 UTC, as
+designed for this case. Instance time is bounded at $24.06 for attempt 2: the
+client for its full 23-hour limit, plus the two shadow hosts for 18.3 hours.
+Attempt 1 cost about $19.35, so the cumulative total is at most $43.41 of the
+$50 ceiling.
+
+## Activation
+
+After the pass, on October 11, 2026:
+
+1. The eight module files were published as the
+   [`assistant-a3-cohort3` release](https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-a3-cohort3),
+   and each downloaded file was verified against its pin.
+2. The seed validator restarted, approving A2 (plain update, kept for rollback)
+   and A3 (routed bank). It holds both shards, so it can judge fraud under either
+   version.
+3. With no open jobs, the genesis authority's `model_promote` was committed at
+   block 205764. It recorded the A2 root as previous and the result digest above
+   as the quality root.
+4. Both owners and the auditor restarted on the A3 descriptor with their
+   existing keys and bonds; owner 2 loaded L2 and L3 from the release.
+5. A paid conversation on each route answered its development case's expected
+   outcome. Each settled, the unused escrow was refunded, and both owners' logs
+   audited clean. After owner 2 restarted, another paid job served, settled and
+   audited clean.
+
+Evidence: [activation record](../config/experiments/assistant-a3-activation.json).
+Accounts, bonds and chain history were preserved. Rollback is a `model_promote`
+to the A2 root after draining jobs; A2's holdings, descriptor and approval
+remain in place.
