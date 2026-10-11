@@ -39,10 +39,11 @@ def solve(case):
 
 
 def test_every_documents_case_is_solvable_and_scored_from_its_transcript():
-    for split in docs.SPLITS:
+    for split, name in ((s, n) for s in docs.SPLITS for n in ('documents', 'documents2')):
         for case in docs.cases(split):
             texts = iter(solve(case))
-            row = general.documents_episode(case, lambda m, t: reply(next(texts)), policy('documents'))
+            path = baseline.POLICIES['documents'] if name == 'documents' else 'config/experiments/assistant-general-policy-documents2.json'
+            row = general.documents_episode(case, lambda m, t: reply(next(texts)), read(ROOT / path))
             assert row['passed'], case['id']
             assert general.rescore([case], [row], 'documents') == 1
 
@@ -122,8 +123,9 @@ def test_the_general_route_runs_through_the_granite_chat_template(tmp_path):
     del torch
 
 
-def test_execution_pins_sources_and_one_cpu_host_within_its_allowance():
-    execution = read(ROOT / baseline.EXECUTION)
+@pytest.mark.parametrize('profile', sorted(baseline.PROFILES))
+def test_execution_pins_sources_and_one_cpu_host_within_its_allowance(profile):
+    execution = read(ROOT / baseline.PROFILES[profile][1])
     for name, digest in execution['contracts'].items():
         assert sha256(ROOT / name) == digest
     assert baseline.SCRIPT in execution['sources'] and not execution['training_authorized']
@@ -138,11 +140,38 @@ def test_execution_pins_sources_and_one_cpu_host_within_its_allowance():
     imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
                                        env={'PYTHONPATH': str(ROOT / 'src')}).split()
     assert set(imported) <= set(execution['sources']), sorted(set(imported) - set(execution['sources']))
-    for path in baseline.POLICIES.values():
+    declaration = read(ROOT / baseline.PROFILES[profile][0])
+    for _, _, path in baseline.runs(declaration):
         assert path in execution['sources']
     cloud = cloud_module()
-    resources = cloud.resources(baseline.PROFILE)
+    resources = cloud.resources(profile)
     assert not resources['gpu'] and 'upload' not in resources
     assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
             + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
-    assert cloud.remote_command(baseline.PROFILE)[1].endswith(baseline.SCRIPT)
+    command = cloud.remote_command(profile)
+    assert command[1].endswith(baseline.SCRIPT) and command[-2:] == ['--profile', profile]
+
+
+def test_version_two_accepts_cited_prose_and_found_sources_but_still_refuses_guesses():
+    case = next(c for c in docs.cases('development') if c['family'] == 'owner')
+    expected = case['turns'][0]['expected']
+    world = documents.Workspace(case['world'], 2)
+    world.execute({'name': 'search_documents', 'arguments': {'query': case['turns'][0]['user']}})
+    cited = expected['source_ids'][0].replace('-', '\u2011')
+    final = f"The vendor shortlist is owned by **{expected['facts'][0]}** ({cited})."
+    assert documents.score_round(world.snapshot(), expected, True, final)
+    assert not documents.score_round(world.snapshot(), expected, True, final, version=1)
+    assert not documents.score_round(world.snapshot(), expected, True, f"Owned by {expected['facts'][0]}.")
+    unseen = documents.Workspace(case['world'], 2)
+    assert not documents.score_round(unseen.snapshot(), expected, True, final)
+    missing = next(c for c in docs.cases('development') if c['family'] == 'not-found-return')
+    prose = documents.Workspace(missing['world'], 2)
+    assert not documents.score_round(prose.snapshot(), missing['turns'][0]['expected'], True, 'I could not find it.')
+
+
+def test_the_published_baseline_rescores_under_version_one():
+    report = read(ROOT / 'config/experiments/assistant-general-baseline-report.json')
+    episodes = read(ROOT / 'config/experiments/assistant-general-baseline-episodes.json')
+    assert sha256(ROOT / 'config/experiments/assistant-general-baseline-episodes.json') == report['episodes_sha256']
+    assert general.rescore(docs.cases('development'), episodes['documents'], 'documents') == report['documents']['passed'] == 18
+    assert general.rescore(chat.cases('development'), episodes['chat'], 'chat') == report['chat']['passed'] == 48

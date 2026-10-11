@@ -27,6 +27,17 @@ SCRIPT = 'scripts/run_assistant_general_baseline.py'
 PROFILE = 'assistant-general-baseline'
 POLICIES = {'documents': 'config/experiments/assistant-general-policy-documents.json',
             'chat': 'config/experiments/assistant-general-policy-chat.json'}
+# Later runs of the same worker: each declares the sets and policies it serves.
+PROFILES = {PROFILE: (DECLARATION, EXECUTION),
+            'assistant-general-documents2': ('config/experiments/assistant-general-documents2.json',
+                                             'config/experiments/assistant-general-documents2-execution.json')}
+
+
+def runs(declaration):
+    """``[(set name, split, policy path)]``; the first baseline declared none and served both development sets."""
+    if 'runs' in declaration:
+        return [(row['set'], row['split'], row['policy']) for row in declaration['runs']]
+    return [('chat', 'development', POLICIES['chat']), ('documents', 'development', POLICIES['documents'])]
 
 
 def feature_texts():
@@ -38,8 +49,8 @@ def feature_texts():
                    for case in module.cases(split) for turn in case['turns']})
 
 
-def committed_sources(root=ROOT):
-    execution = read(root / EXECUTION)
+def committed_sources(root=ROOT, profile=PROFILE):
+    execution = read(root / PROFILES[profile][1])
     for name, digest in execution['contracts'].items():
         if sha256(root / name) != digest:
             raise ValueError(f'changed general baseline contract: {name}')
@@ -52,22 +63,22 @@ def committed_sources(root=ROOT):
     return {'commit': commit, 'sources': sources}
 
 
-def configure():
+def configure(profile=PROFILE):
     if 'torch' in sys.modules:
         raise ValueError('configure the general baseline runtime before importing torch')
-    for key, value in read(ROOT / EXECUTION)['environment'].items():
+    for key, value in read(ROOT / PROFILES[profile][1])['environment'].items():
         if value is None:
             os.environ.pop(key, None)
         else:
             os.environ[key] = value
 
 
-def freeze():
+def freeze(profile=PROFILE):
     """The canonical parent's CPU runtime, byte for byte in packages and environment."""
     from neuroshard.evolution import assistant_workflow_canonical as canonical
 
-    source = committed_sources()
-    execution = read(ROOT / EXECUTION)
+    source = committed_sources(profile=profile)
+    execution = read(ROOT / PROFILES[profile][1])
     pinned = read(ROOT / canonical.EXECUTION)
     if any(execution[key] != pinned[key] for key in ('packages', 'python', 'required_cpu_flags', 'environment')):
         raise ValueError('general baseline runtime differs from the canonical parent runtime')
@@ -85,10 +96,11 @@ def freeze():
 
 
 def worker(request_path):
-    configure()
     request_path = Path(request_path)
     request = read(request_path)
-    if freeze() != request['freeze']:
+    profile = request['profile']
+    configure(profile)
+    if freeze(profile) != request['freeze']:
         raise ValueError('general baseline worker differs from freeze')
     import numpy as np
     import torch
@@ -103,7 +115,8 @@ def worker(request_path):
     from neuroshard.evolution import router_scaling_granite as features
     from neuroshard.evolution.assistant_serving import cached_responder
 
-    execution = read(ROOT / EXECUTION)
+    declaration_path, execution_path = PROFILES[profile]
+    execution, declaration = read(ROOT / execution_path), read(ROOT / declaration_path)
     phase = request['phase']
     if (request['model'], phase) not in (('baseline', 'prepare'), ('baseline', 'general')):
         raise ValueError('unsupported general baseline worker role')
@@ -124,21 +137,23 @@ def worker(request_path):
         tokenizer, report = granite_tokenizer.load(directory)
         reply['tokenizer'] = report
         parent, _ = reference.load_model(directory, 'baseline')
-        policies = {name: read(ROOT / path) for name, path in POLICIES.items()}
-        _, _, routes = growth.contracts(round4.plan())
-        texts = feature_texts()
-        begun = time.monotonic()
-        computed, _ = features.layer_features(parent, tokenizer, routes['drafting'], texts, layers=())
-        np.savez(home / 'features.npz', **{'layer-1': np.asarray(computed['layer-1'], dtype=np.float32)})
-        (home / 'texts.json').write_text(json.dumps(texts))
-        reply['feature_seconds'], reply['feature_texts'] = time.monotonic() - begun, len(texts)
-        episodes = {'documents': [], 'chat': []}
-        for name, cases, run in (('chat', chat.cases('development'), general.chat_episode),
-                                 ('documents', docs.cases('development'), general.documents_episode)):
+        if declaration.get('features', True):
+            _, _, routes = growth.contracts(round4.plan())
+            texts = feature_texts()
+            begun = time.monotonic()
+            computed, _ = features.layer_features(parent, tokenizer, routes['drafting'], texts, layers=())
+            np.savez(home / 'features.npz', **{'layer-1': np.asarray(computed['layer-1'], dtype=np.float32)})
+            (home / 'texts.json').write_text(json.dumps(texts))
+            reply['feature_seconds'], reply['feature_texts'] = time.monotonic() - begun, len(texts)
+        episodes = {}
+        modules = {'chat': (chat, general.chat_episode), 'documents': (docs, general.documents_episode)}
+        for name, split, path in runs(declaration):
+            module, run = modules[name]
+            policy, cases, key = read(ROOT / path), module.cases(split), f'{name}-{split}'
+            episodes[key] = []
             for case in cases:
-                respond = cached_responder(parent, tokenizer, policies[name])
-                episodes[name].append(run(case, respond, policies[name]))
-                save(home / 'progress.json', {'set': name, 'done': len(episodes[name]), 'cases': len(cases)})
+                episodes[key].append(run(case, cached_responder(parent, tokenizer, policy), policy))
+                save(home / 'progress.json', {'set': key, 'done': len(episodes[key]), 'cases': len(cases)})
         reply['episodes'] = episodes
         reply['summary'] = {name: general.summary(rows) for name, rows in episodes.items()}
         if file_state(directory, inventory) != state:
@@ -153,13 +168,14 @@ def worker(request_path):
         save(request_path.parent / 'reply.json', reply, exclusive=True)
 
 
-def run(home, models):
-    configure()
-    source = freeze()
+def run(home, models, profile=PROFILE):
+    configure(profile)
+    source = freeze(profile)
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
-    execution = read(ROOT / EXECUTION)
-    binding = {'freeze': source, 'profile': PROFILE, 'declaration_sha256': sha256(ROOT / DECLARATION)}
+    declaration_path, execution_path = PROFILES[profile]
+    execution = read(ROOT / execution_path)
+    binding = {'freeze': source, 'profile': profile, 'declaration_sha256': sha256(ROOT / declaration_path)}
     save(home / 'binding.json', binding, exclusive=True)
     result = {'binding': binding, 'execution_completed': False, 'checklist_credit': False,
               'admission_evidence': False, 'confirmation_opened': False}

@@ -1,0 +1,22 @@
+{
+  "format": "neuroshard-assistant-general-documents2/1",
+  "question": "The documents route after its development diagnosis: does the unchanged parent answer questions over the user's documents under workspace-documents/2 and its revised policy?",
+  "diagnosis": "The baseline (workspace-documents/1) passed 18/66: 41 of 48 failures answered correctly or near-correctly in prose without submit_answer, and the interface refused citations of documents only seen in search results. Version 2 accepts a cited prose answer and citations of found documents; not-found must still be reported explicitly; the policy asks to search first and cite IDs.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "development",
+      "policy": "config/experiments/assistant-general-policy-documents2.json"
+    }
+  ],
+  "policy_sha256": "66925067164de52b5729c4d9ec01307c9b26dcab2866aa78fbaba3580150c1cd",
+  "features": false,
+  "reported_not_gated": true,
+  "opens_confirmation": false,
+  "training": false,
+  "checklist_credit": false,
+  "prior": {
+    "path": "config/experiments/assistant-general-baseline.json",
+    "sha256": "5612b3748b37f3e4cd61d56ca130ee6b87731aae4d4b8d0e4a4064e3c273d2bb"
+  }
+}

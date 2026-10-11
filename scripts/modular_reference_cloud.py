@@ -49,6 +49,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
                      "router-scaling-granite": "config/experiments/router-scaling-granite-resources.json",
                      "assistant-general-baseline": "config/experiments/assistant-general-baseline-resources.json",
+                     "assistant-general-documents2": "config/experiments/assistant-general-documents2-resources.json",
                      "router-scaling-episodes": "config/experiments/router-scaling-episodes-resources.json",
                      "router-scaling-episodes-originals": "config/experiments/router-scaling-episodes-originals-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
@@ -91,6 +92,7 @@ GRANITE_PROFILES = {
     "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
     "router-scaling-granite": ("router_scaling_granite", "docs/granite-reference-requirements.txt"),
     "assistant-general-baseline": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
+    "assistant-general-documents2": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
     "router-scaling-episodes": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     "router-scaling-episodes-originals": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
@@ -197,9 +199,9 @@ def source_freeze(profile):
     if profile == "router-scaling-granite":
         from neuroshard.evolution.router_scaling_granite import committed_sources as scaling_sources
         return scaling_sources()
-    if profile == "assistant-general-baseline":
+    if profile in ("assistant-general-baseline", "assistant-general-documents2"):
         from neuroshard.evolution.assistant_general_baseline import committed_sources as general_sources
-        return general_sources()
+        return general_sources(profile=profile)
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):
         from neuroshard.evolution.router_scaling_episodes import committed_sources as episode_sources
         return episode_sources(profile=profile)
@@ -662,9 +664,9 @@ def remote_command(profile):
     if profile == "router-scaling-granite":
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_granite.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
-    if profile == "assistant-general-baseline":
+    if profile in ("assistant-general-baseline", "assistant-general-documents2"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_general_baseline.py", "run",
-                "--home", STUDY, "--models", REMOTE + "/.models"]
+                "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_episodes.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]

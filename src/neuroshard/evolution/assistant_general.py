@@ -16,9 +16,14 @@ from neuroshard.evolution.assistant_documents_data import public_case
 from neuroshard.evolution.modular_reference_execution import identity
 
 
+def version_of(policy):
+    return documents.INTERFACES.index(policy['interface']) + 1
+
+
 def documents_episode(case, respond, policy):
     public = public_case(case)
-    world = documents.Workspace(public['world'])
+    version = version_of(policy)
+    world = documents.Workspace(public['world'], version)
     history = [{'role': 'system', 'content': policy['system_instruction']}]
     calls, rounds, generations = [], [], []
     started = time.monotonic()
@@ -52,10 +57,12 @@ def documents_episode(case, respond, policy):
             failure = 'model-turn budget exhausted'
         snapshot = world.snapshot()
         rounds.append({'completed': completed, 'final_text': final, 'failure': failure, 'snapshot': snapshot,
-                       'passed': documents.score_round(snapshot, case['turns'][turn]['expected'], completed, final)})
+                       'passed': documents.score_round(snapshot, case['turns'][turn]['expected'], completed, final,
+                                                       version)})
         if failure:
             break
-    return {'id': case['id'], 'family': case['family'], 'rounds': rounds, 'calls': calls, 'generations': generations,
+    return {'id': case['id'], 'family': case['family'], 'version': version, 'rounds': rounds, 'calls': calls,
+            'generations': generations,
             'passed': len(rounds) == len(case['turns']) and all(r['passed'] for r in rounds),
             'seconds': time.monotonic() - started, 'tool_calls': len(calls),
             'model_calls': sum(g.get('executed', True) for g in generations)}
@@ -82,11 +89,12 @@ def rescore(cases, rows, kind):
             passed = chat_data.score(case['turns'][0]['expected'], row['final_text'] if row['terminated'] else '',
                                      row['terminated'])
         else:
-            replay = documents.replay_transcript(case['world'], row['calls'])
+            version = row.get('version', 1)
+            replay = documents.replay_transcript(case['world'], row['calls'], version)
             last = row['rounds'][-1]
             passed = (len(row['rounds']) == len(case['turns'])
                       and documents.score_round(replay, case['turns'][-1]['expected'], last['completed'],
-                                                last['final_text']))
+                                                last['final_text'], version))
         if passed != row['passed']:
             raise ValueError(f'rescore differs: {row["id"]}')
     return sum(row['passed'] for row in rows)
