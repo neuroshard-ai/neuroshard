@@ -51,6 +51,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-general-baseline": "config/experiments/assistant-general-baseline-resources.json",
                      "assistant-general-documents2": "config/experiments/assistant-general-documents2-resources.json",
                      "assistant-general-confirmation": "config/experiments/assistant-general-confirmation-resources.json",
+                     **{f"assistant-general-{n}": f"config/experiments/assistant-general-{n}-resources.json"
+                        for n in ("v3-development", "v3-confirmation")},
                      "router-scaling-episodes": "config/experiments/router-scaling-episodes-resources.json",
                      "router-scaling-episodes-originals": "config/experiments/router-scaling-episodes-originals-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
@@ -95,6 +97,8 @@ GRANITE_PROFILES = {
     "assistant-general-baseline": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-general-documents2": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-general-confirmation": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
+    **{f"assistant-general-{n}": ("assistant_general_baseline", "docs/granite-reference-requirements.txt")
+       for n in ("v3-development", "v3-confirmation")},
     "router-scaling-episodes": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     "router-scaling-episodes-originals": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
@@ -141,7 +145,7 @@ LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-grow
                      "assistant-growth-router3": (2, 5.5), "assistant-growth-router4": (2, 5.5),
                      **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION + COHORT3_CONFIRMATION},
                      COHORT3_DEVELOPMENT: (3, 6), "router-scaling-episodes": (3.25, 6.5),
-                     "assistant-general-baseline": (4, 7.5), "assistant-general-confirmation": (3.5, 7),
+                     "assistant-general-baseline": (4, 7.5), "assistant-general-confirmation": (3.5, 7), "assistant-general-v3-confirmation": (3.5, 7),
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8), "granite-shard-serving-update": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
@@ -201,7 +205,7 @@ def source_freeze(profile):
     if profile == "router-scaling-granite":
         from neuroshard.evolution.router_scaling_granite import committed_sources as scaling_sources
         return scaling_sources()
-    if profile in ("assistant-general-baseline", "assistant-general-documents2", "assistant-general-confirmation"):
+    if profile.startswith("assistant-general-"):
         from neuroshard.evolution.assistant_general_baseline import committed_sources as general_sources
         return general_sources(profile=profile)
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):
@@ -666,7 +670,7 @@ def remote_command(profile):
     if profile == "router-scaling-granite":
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_granite.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
-    if profile in ("assistant-general-baseline", "assistant-general-documents2", "assistant-general-confirmation"):
+    if profile.startswith("assistant-general-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_general_baseline.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):

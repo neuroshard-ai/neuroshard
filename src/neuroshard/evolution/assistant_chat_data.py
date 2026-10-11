@@ -11,11 +11,15 @@ import json
 import random
 import re
 
-SPLITS = {'train': (95000, 12), 'development': (93000, 6), 'confirmation': (94000, 12)}
+SPLITS = {'train': (95000, 12), 'development': (93000, 6), 'confirmation': (94000, 12),
+          'confirmation2': (97000, 12)}
 TOPICS = {'train': ('gardening', 'personal finance', 'commuting', 'note taking', 'exercise', 'cooking at home',
                     'focus at work', 'travel packing', 'email habits', 'learning to code', 'board games', 'volunteering'),
           'development': ('remote work', 'composting', 'learning a language', 'saving for a trip', 'team meetings',
                           'cycling to work'),
+          'confirmation2': ('bird watching', 'retirement saving', 'learning guitar', 'time zones', 'bike repair',
+                            'first aid', 'podcasting', 'tea brewing', 'family history', 'recycling', 'chess openings',
+                            'desk ergonomics'),
           'confirmation': ('home networking', 'meal planning', 'public speaking', 'reading habits', 'job interviews',
                            'houseplants', 'budget travel', 'sleep routines', 'code review', 'running a book club',
                            'moving house', 'online privacy')}
@@ -64,7 +68,47 @@ def score(expected, final_text, terminated):
                 and all(check(c, final_text) for c in expected['constraints']))
 
 
+THIRD = {
+    'bullets': 'Using exactly {n} bullet points and no other text, share advice on {topic}.',
+    'short': 'Answer in {n} words or fewer: why might someone care about {topic}?',
+    'json': 'Output a JSON object, nothing else, whose keys are exactly {keys}. Topic: {topic}.',
+    'include': 'Say something brief about {topic}, and work in the word "{w}" somewhere.',
+    'exclude': 'Explain {topic} in three sentences; the word "the" must not appear anywhere.',
+    'ending': 'Cheer me on about {topic} in a short paragraph whose final words are "{phrase}".',
+    'lowercase': 'write four short lines about {topic}. no capital letters anywhere, please.',
+    'arithmetic': 'Tickets cost {b} each. I buy {a} tickets, then return {c} of them for a full refund. '
+                  'How much did I spend in the end? Put the number last.',
+}
+
+
+def _third(kind, rng, topic):
+    w = rng.choice(WORDS)
+    if kind == 'bullets':
+        n = rng.randint(3, 6)
+        return THIRD[kind].format(n=n, topic=topic), [{'kind': 'bullets', 'n': n}]
+    if kind == 'short':
+        n = rng.choice((25, 40, 60))
+        return THIRD[kind].format(n=n, topic=topic), [{'kind': 'max_words', 'n': n}]
+    if kind == 'json':
+        keys = rng.sample(['title', 'summary', 'steps', 'difficulty', 'time_needed'], 3)
+        return THIRD[kind].format(keys=', '.join(keys), topic=topic), [{'kind': 'json_keys', 'keys': keys}]
+    if kind == 'include':
+        return THIRD[kind].format(w=w, topic=topic), [{'kind': 'include', 'word': w}]
+    if kind == 'exclude':
+        return THIRD[kind].format(topic=topic), [{'kind': 'exclude', 'word': 'the'}]
+    if kind == 'ending':
+        phrase = rng.choice(('Keep going', 'You have got this', 'Onward'))
+        return THIRD[kind].format(topic=topic, phrase=phrase), [{'kind': 'ends_with', 'phrase': phrase}]
+    if kind == 'lowercase':
+        return THIRD[kind].format(topic=topic), [{'kind': 'lowercase'}]
+    a, b = rng.randint(4, 15), rng.randint(12, 75)
+    c = rng.randint(1, a - 1)
+    return THIRD[kind].format(a=a, b=b, c=c), [{'kind': 'number', 'value': (a - c) * b}]
+
+
 def _task(kind, rng, topic, split):
+    if split == 'confirmation2':
+        return _third(kind, rng, topic)
     w = rng.choice(WORDS)
     dev = split != 'confirmation'
     if kind == 'bullets':

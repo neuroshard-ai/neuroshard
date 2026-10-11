@@ -32,7 +32,10 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-documents2': ('config/experiments/assistant-general-documents2.json',
                                              'config/experiments/assistant-general-documents2-execution.json'),
             'assistant-general-confirmation': ('config/experiments/assistant-general-confirmation.json',
-                                               'config/experiments/assistant-general-confirmation-execution.json')}
+                                               'config/experiments/assistant-general-confirmation-execution.json'),
+            **{f'assistant-general-{name}': (f'config/experiments/assistant-general-{name}.json',
+                                             f'config/experiments/assistant-general-{name}-execution.json')
+               for name in ('v3-development', 'v3-confirmation')}}
 
 
 def runs(declaration):

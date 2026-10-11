@@ -15,7 +15,8 @@ import random
 
 from neuroshard.evolution.modular_reference_execution import identity
 
-SPLITS = {'train': (90000, 12), 'development': (91000, 6), 'confirmation': (92000, 12)}
+SPLITS = {'train': (90000, 12), 'development': (91000, 6), 'confirmation': (92000, 12),
+          'confirmation2': (96000, 12)}
 CITIES = ('Lisbon', 'Osaka', 'Denver', 'Tallinn', 'Montreal', 'Nairobi', 'Hobart', 'Valparaiso')
 VENDORS = ('Brightline Print', 'Northwind Cleaning', 'Juniper IT', 'Harbor Freight Co', 'Cobalt Catering')
 PEOPLE = ('Ada Brook', 'Ravi Stone', 'Mei Lund', 'Tomas Reyes', 'Ines Varga', 'Kofi Mensah')
@@ -160,6 +161,36 @@ def _kinds(facts):
     }
 
 
+def _phrasings2(facts):
+    """A third phrasing per kind, for the second sealed confirmation; disjoint from every earlier split."""
+    trip, inv, product = facts['trip'], facts['invoices'], facts['product']
+    claim_day = date.fromisoformat(trip['date']) + timedelta(days=2)
+    return {
+        'flight-time': (f'Check my documents: at what hour is my outbound flight to {trip["city"]}?',
+                        f'Looking at my travel docs, what is the scheduled departure time to {trip["city"]}?'),
+        'hotel-code': (f'Please pull up the booking reference for where I am staying in {trip["city"]}.',
+                       f'What reservation code did the {trip["city"]} hotel give me?'),
+        'leave-days': ('Under this year\'s rules, how many days off am I allowed in total?',
+                       'Per my current employer policy, what is the annual leave figure?'),
+        'invoice-sum': (f'Sum the amounts I have not yet paid {inv["vendor"]}.',
+                        f'Across all open invoices from {inv["vendor"]}, what do I owe altogether?'),
+        'claim-deadline': (f'A meal expense from {claim_day.isoformat()}: what is the final date I can still claim it?',
+                           f'Work out my expense claim cutoff for something I paid on {claim_day.isoformat()}.'),
+        'notice': ('To terminate my rental agreement, what notice period applies?',
+                   'How far in advance must I tell my landlord I am leaving?'),
+        'deposit': ('What security deposit is written into my rental agreement?',
+                    'Tell me the deposit figure from my apartment contract.'),
+        'battery': (f'According to the spec sheet, how long does the {product["name"]} last on battery?',
+                    f'What runtime per charge does the {product["name"]} have?'),
+        'owner': ('From the meeting notes, who is responsible for the vendor shortlist?',
+                  'Whose task is the vendor shortlist, per our last meeting?'),
+        'not-found-insurance': ('Look up my auto insurance policy number in my files.',
+                                'Do my documents list a policy number for my car cover?'),
+        'not-found-return': (f'On which date and at what time is my flight home from {trip["city"]}?',
+                             f'When does my return leg from {trip["city"]} depart?'),
+    }
+
+
 KINDS = ('flight-time', 'hotel-code', 'leave-days', 'invoice-sum', 'claim-deadline', 'notice', 'deposit',
          'battery', 'owner', 'not-found-insurance', 'not-found-return')
 
@@ -169,7 +200,8 @@ def make_case(split, kind, index):
     rng = random.Random(f'{seed}:{kind}:{index}')
     world, facts = _world(rng, split, f'{kind}-{index}')
     development, confirmation, expected = _kinds(facts)[kind]
-    templates = confirmation if split == 'confirmation' else development
+    templates = (_phrasings2(facts)[kind] if split == 'confirmation2'
+                 else confirmation if split == 'confirmation' else development)
     case = {'id': f'docs-{split}-{kind}-{index:02d}', 'split': split, 'family': kind, 'world': world,
             'turns': [{'user': templates[index % len(templates)], 'expected': expected}]}
     return case

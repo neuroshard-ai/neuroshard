@@ -68,7 +68,66 @@ def documents_episode(case, respond, policy):
             'model_calls': sum(g.get('executed', True) for g in generations)}
 
 
+class Calculator:
+    """The chat route's only tool: exact integer arithmetic, recorded like any workspace call."""
+
+    TOOLS = [documents.TOOLS[2]]
+    REGISTRY = {item['function']['name']: item['function']['parameters'] for item in TOOLS}
+
+    def __init__(self):
+        self.events = []
+
+    def execute(self, call):
+        from neuroshard.evolution import assistant_workspace as base
+
+        try:
+            if set(call) != {'name', 'arguments'} or call['name'] not in self.REGISTRY:
+                raise ValueError('unknown tool')
+            base._check_value(call['arguments'], self.REGISTRY[call['name']])
+            result = base.Workspace._apply(base.Workspace.__new__(base.Workspace), call['name'], call['arguments'])
+        except (ValueError, KeyError, OverflowError, TypeError):
+            result = {'error': 'invalid tool arguments'}
+        self.events.append({'call': copy.deepcopy(call), 'result': copy.deepcopy(result)})
+        return result
+
+
+def calculator_chat_episode(case, respond, policy):
+    """Chat with a calculator: tool calls until a final reply, scored by the case's constraints."""
+    from neuroshard.evolution import assistant_workspace as base
+
+    started = time.monotonic()
+    tool = Calculator()
+    history = [{'role': 'system', 'content': policy['system_instruction']},
+               {'role': 'user', 'content': case['turns'][0]['user']}]
+    generations, final, terminated, used = [], '', False, 0
+    for _ in range(policy['limits']['model_turns_per_user_turn']):
+        generated = respond(copy.deepcopy(history), copy.deepcopy(Calculator.TOOLS))
+        generations.append(generated)
+        if not generated['terminated']:
+            break
+        history.append({'role': 'assistant', 'content': generated['text']})
+        try:
+            proposed = base.parse_calls(generated['text'], Calculator.REGISTRY)
+        except (ValueError, TypeError, RecursionError):
+            history.append({'role': 'tool', 'content': json.dumps({'error': 'invalid tool-call syntax or schema'})})
+            continue
+        if not proposed:
+            final, terminated = generated['text'], True
+            break
+        if used + len(proposed) > policy['limits']['tool_calls_per_user_turn']:
+            break
+        for call in proposed:
+            used += 1
+            history.append({'role': 'tool', 'content': json.dumps(tool.execute(call), sort_keys=True)})
+    return {'id': case['id'], 'family': case['family'], 'generations': generations, 'final_text': final,
+            'terminated': terminated, 'calls': tool.events,
+            'passed': chat_data.score(case['turns'][0]['expected'], final, terminated),
+            'seconds': time.monotonic() - started}
+
+
 def chat_episode(case, respond, policy):
+    if policy.get('interface') == 'chat-calculator/1':
+        return calculator_chat_episode(case, respond, policy)
     started = time.monotonic()
     messages = [{'role': 'system', 'content': policy['system_instruction']},
                 {'role': 'user', 'content': case['turns'][0]['user']}]

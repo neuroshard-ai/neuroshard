@@ -188,3 +188,17 @@ def test_the_confirmation_is_recorded_against_its_declared_gate():
                                 'chat': 84 / 96 >= gate['chat_minimum'],
                                 'not_found': 21 / 24 >= gate['not_found_minimum']}
     assert not report['passed']
+
+
+def test_chat_with_a_calculator_scores_the_final_reply_after_tool_calls():
+    talk = read(ROOT / 'config/experiments/assistant-general-policy-chat2.json')
+    case = next(c for c in chat.cases('confirmation2') if c['family'] == 'arithmetic')
+    value = case['turns'][0]['expected']['constraints'][0]['value']
+    texts = iter(['<tool_call>{"name": "calculate", "arguments": {"operation": "multiply", "left": %d, "right": 1}}'
+                  '</tool_call>' % value, f'You spent {value}.'])
+    row = general.chat_episode(case, lambda m, t: reply(next(texts)), talk)
+    assert row['passed'] and row['calls'][0]['result'] == {'value': value}
+    assert general.rescore([case], [row], 'chat') == 1
+    other = chat.cases('confirmation2')[0]
+    plain = general.chat_episode(other, lambda m, t: reply('no'), talk)
+    assert not plain['passed'] and plain['calls'] == []
