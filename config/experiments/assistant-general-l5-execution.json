@@ -84,7 +84,7 @@
   },
   "memory_bytes": 30064771072,
   "format": "neuroshard-assistant-general-l5-execution/1",
-  "worker_seconds": 10800,
+  "worker_seconds": 7200,
   "training_authorized": true,
   "gpu_launch_authorized": true,
   "attempts": 1,

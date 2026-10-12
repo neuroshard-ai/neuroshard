@@ -26,7 +26,7 @@
     }
   ],
   "placement": "One GPU host: an A10G (g5.2xlarge) or an L40S (g6e.xlarge), in any controller-VPC subnet whose zone offers it, controller zone first; g5.2xlarge had no capacity in the controller zone on 2026-10-12.",
-  "hours": 4,
+  "hours": 3,
   "planning_cap_usd": 10,
   "disk_gib": 120,
   "disk_type": "gp3",
@@ -50,6 +50,6 @@
     "path": "config/experiments/assistant-general-l4-confirmation-report.json",
     "sha256": "f553eefb4394b61ad1aee39098afe43fb7c212c0064da736183ddf7bbb2931d6"
   },
-  "budget_scope": "L5 on one A10G host: verified demonstrations of 660 generated-train cases and chat replay on 320, training, and generated-development integration of parent and L5; 4-hour expiry and $10 allowance. No upload or sealed data.",
+  "budget_scope": "L5 on one A10G host: verified demonstrations of 660 generated-train cases and chat replay on 320, training, and generated-development integration of parent and L5; 3-hour expiry and $10 allowance. No upload or sealed data.",
   "prior_attempts": []
 }
