@@ -35,14 +35,30 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
                                                'config/experiments/assistant-general-confirmation-execution.json'),
             **{f'assistant-general-{name}': (f'config/experiments/assistant-general-{name}.json',
                                              f'config/experiments/assistant-general-{name}-execution.json')
-               for name in ('v3-development', 'v3-confirmation')}}
+               for name in ('v3-development', 'v3-confirmation', 'l4-confirmation')}}
+UPLOADED = '.units'
 
 
 def runs(declaration):
     """``[(set name, split, policy path)]``; the first baseline declared none and served both development sets."""
     if 'runs' in declaration:
-        return [(row['set'], row['split'], row['policy']) for row in declaration['runs']]
-    return [('chat', 'development', POLICIES['chat']), ('documents', 'development', POLICIES['documents'])]
+        return [(row['set'], row['split'], row['policy'], row.get('module')) for row in declaration['runs']]
+    return [('chat', 'development', POLICIES['chat'], None), ('documents', 'development', POLICIES['documents'], None)]
+
+
+def module_model(load_parent, declaration, name):
+    """The parent with a declared low-rank module attached, checked against its pinned digest."""
+    from neuroshard.evolution import assistant_experience_train as trainer
+    from neuroshard.evolution import assistant_growth_run as growth
+
+    pin = declaration['modules'][name]
+    plan = read(ROOT / growth.PLAN)
+    settings = growth.stage_spec(plan, read(ROOT / read(ROOT / plan['plan'])['cohort1']['learning']))
+    model = load_parent()
+    manifest = trainer.load_trainable(model, 'addition', settings, ROOT / UPLOADED / name)
+    if manifest['trainable_sha256'] != pin['trainable_sha256']:
+        raise ValueError(f'{name} differs from its pinned digest')
+    return model.eval()
 
 
 def feature_texts():
@@ -152,12 +168,17 @@ def worker(request_path):
             reply['feature_seconds'], reply['feature_texts'] = time.monotonic() - begun, len(texts)
         episodes = {}
         modules = {'chat': (chat, general.chat_episode), 'documents': (docs, general.documents_episode)}
-        for name, split, path in runs(declaration):
+        attached = {}
+        for name, split, path, unit in runs(declaration):
             module, run = modules[name]
-            policy, cases, key = read(ROOT / path), module.cases(split), f'{name}-{split}'
+            policy, cases = read(ROOT / path), module.cases(split)
+            key = f'{name}-{split}' + (f'-{unit}' if unit else '')
+            if unit and unit not in attached:
+                attached[unit] = module_model(lambda: reference.load_model(directory, 'baseline')[0], declaration, unit)
+            model = attached[unit] if unit else parent
             episodes[key] = []
             for case in cases:
-                episodes[key].append(run(case, cached_responder(parent, tokenizer, policy), policy))
+                episodes[key].append(run(case, cached_responder(model, tokenizer, policy), policy))
                 save(home / 'progress.json', {'set': key, 'done': len(episodes[key]), 'cases': len(cases)})
         reply['episodes'] = episodes
         reply['summary'] = {name: general.summary(rows) for name, rows in episodes.items()}

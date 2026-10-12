@@ -141,11 +141,17 @@ def test_execution_pins_sources_and_one_cpu_host_within_its_allowance(profile):
                                        env={'PYTHONPATH': str(ROOT / 'src')}).split()
     assert set(imported) <= set(execution['sources']), sorted(set(imported) - set(execution['sources']))
     declaration = read(ROOT / baseline.PROFILES[profile][0])
-    for _, _, path in baseline.runs(declaration):
+    for _, _, path, _ in baseline.runs(declaration):
         assert path in execution['sources']
     cloud = cloud_module()
     resources = cloud.resources(profile)
-    assert not resources['gpu'] and 'upload' not in resources
+    assert not resources['gpu']
+    if 'modules' in declaration:
+        assert set(resources['upload']['files']) == {f'{m}/{f}' for m in declaration['modules']
+                                                     for f in ('manifest.json', 'trainable.safetensors')}
+        assert cloud.UPLOAD_PROFILES[profile] == baseline.UPLOADED
+    else:
+        assert 'upload' not in resources
     assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
             + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
     command = cloud.remote_command(profile)

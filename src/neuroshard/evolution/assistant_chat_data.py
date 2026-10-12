@@ -12,11 +12,14 @@ import random
 import re
 
 SPLITS = {'train': (95000, 12), 'development': (93000, 6), 'confirmation': (94000, 12),
-          'confirmation2': (97000, 12)}
+          'confirmation2': (97000, 12), 'confirmation3': (99000, 12)}
 TOPICS = {'train': ('gardening', 'personal finance', 'commuting', 'note taking', 'exercise', 'cooking at home',
                     'focus at work', 'travel packing', 'email habits', 'learning to code', 'board games', 'volunteering'),
           'development': ('remote work', 'composting', 'learning a language', 'saving for a trip', 'team meetings',
                           'cycling to work'),
+          'confirmation3': ('astronomy', 'baking bread', 'cold showers', 'journaling', 'container gardening',
+                            'learning to swim', 'photography', 'woodworking', 'meditation', 'home brewing coffee',
+                            'sign language', 'rock climbing'),
           'confirmation2': ('bird watching', 'retirement saving', 'learning guitar', 'time zones', 'bike repair',
                             'first aid', 'podcasting', 'tea brewing', 'family history', 'recycling', 'chess openings',
                             'desk ergonomics'),
@@ -106,7 +109,46 @@ def _third(kind, rng, topic):
     return THIRD[kind].format(a=a, b=b, c=c), [{'kind': 'number', 'value': (a - c) * b}]
 
 
+FOURTH = {
+    'bullets': 'Give {n} pointers on {topic} as a bulleted list, with no intro or outro.',
+    'short': 'Briefly, {n} words max: what is the point of {topic}?',
+    'json': 'Describe getting started with {topic} as a JSON object containing only the keys {keys}.',
+    'include': 'One or two lines on {topic}; the word "{w}" has to be in there.',
+    'exclude': 'Tell me about {topic} in three sentences, never using the word "the".',
+    'ending': 'Motivate me to try {topic}, and make "{phrase}" the very last words.',
+    'lowercase': 'describe {topic} in a few sentences using lowercase letters only.',
+    'arithmetic': 'A box of {b} pens costs {a} each box. I order {c} boxes and pay a {d} delivery fee. '
+                  'What is my total? Finish with the number.',
+}
+
+
+def _fourth(kind, rng, topic):
+    w = rng.choice(WORDS)
+    if kind == 'bullets':
+        n = rng.randint(3, 6)
+        return FOURTH[kind].format(n=n, topic=topic), [{'kind': 'bullets', 'n': n}]
+    if kind == 'short':
+        n = rng.choice((25, 40, 60))
+        return FOURTH[kind].format(n=n, topic=topic), [{'kind': 'max_words', 'n': n}]
+    if kind == 'json':
+        keys = rng.sample(['title', 'summary', 'steps', 'difficulty', 'time_needed'], 3)
+        return FOURTH[kind].format(keys=', '.join(keys), topic=topic), [{'kind': 'json_keys', 'keys': keys}]
+    if kind == 'include':
+        return FOURTH[kind].format(w=w, topic=topic), [{'kind': 'include', 'word': w}]
+    if kind == 'exclude':
+        return FOURTH[kind].format(topic=topic), [{'kind': 'exclude', 'word': 'the'}]
+    if kind == 'ending':
+        phrase = rng.choice(('Start today', 'Go for it', 'Enjoy the ride'))
+        return FOURTH[kind].format(topic=topic, phrase=phrase), [{'kind': 'ends_with', 'phrase': phrase}]
+    if kind == 'lowercase':
+        return FOURTH[kind].format(topic=topic), [{'kind': 'lowercase'}]
+    a, b, c, d = rng.randint(6, 40), rng.choice((10, 12, 20, 24)), rng.randint(2, 9), rng.randint(3, 15)
+    return FOURTH[kind].format(a=a, b=b, c=c, d=d), [{'kind': 'number', 'value': a * c + d}]
+
+
 def _task(kind, rng, topic, split):
+    if split == 'confirmation3':
+        return _fourth(kind, rng, topic)
     if split == 'confirmation2':
         return _third(kind, rng, topic)
     w = rng.choice(WORDS)
