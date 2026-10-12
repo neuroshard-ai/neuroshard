@@ -3,8 +3,8 @@
 October 11, 2026. This is the first step toward a useful product: a third route, beside drafting and
 scheduling, for ordinary requests. Requests come in two kinds: questions about the user's own documents,
 answered with search and read tools, and general chat. The route serves the unchanged Granite 4.1 3B
-parent, with no update and no module. Every run used one canonical CPU host. Total compute was $1.76:
-$0.56, $0.35 and $0.85 for the three runs.
+parent, with no update and no module. Runs used one canonical CPU host each, except L4's training on one A10G. Total compute across all seven
+runs was $5.59.
 
 ## What was built
 
@@ -57,6 +57,40 @@ The failures are the model's, and each is specific:
 - **Claim deadlines, 8 of 12 wrong.** The model skipped the policy and assumed 30 days, or shifted the date
   backwards. It made the same errors on development: 1/6.
 - **Three further misses**, in hotel codes and annual leave.
+
+## Versions 3 and 4
+
+The first confirmation's failures were addressed in two steps. Each was judged on a fresh sealed split,
+with new values and a phrasing set used nowhere before, opened once against the same declared minimums.
+
+| version | change | documents | chat | not-found | gate |
+| --- | --- | --- | --- | --- | --- |
+| [v3](../config/experiments/assistant-general-v3-confirmation-report.json), confirmation 2 | calculator on chat; three general rules in the documents policy | 108/132 (81.8%) | 89/96 (92.7%) | 13/24 (54.2%) | fail |
+| [v4](../config/experiments/assistant-general-l4-confirmation-report.json), confirmation 3 | L4, a documents module learned from 132 verified demonstrations | 118/132 (89.4%) | 78/96 (81.3%) | 22/24 (91.7%) | fail |
+| parent alone, confirmation 3 (reported) | v3 policies, no module | 120/132 (90.9%) | — | 21/24 | — |
+
+- **The calculator fixed what it was for.** Chat arithmetic went from 0/12 to 12/12 on confirmation 2.
+- **Prompt rules did not generalise.** On confirmation 2's new wording, return flights fell to 1/12, with the
+  outbound leg reported as the flight home. Claim deadlines fell to 2/12.
+- **L4 learned its templates, not the skill.** On development (GPU) it beat the parent 65 to 64 with chat
+  unchanged, so it advanced as declared ([report](../config/experiments/assistant-general-l4-report.json),
+  $0.45). On confirmation 3's new wording it scored 118 against the parent's 120, gaining 4 cases and
+  losing 6. On claim deadlines it was worse: 3/12 against 8/12. 132 templated demonstrations of eleven
+  families are too narrow; this is the same lesson as the router study.
+- **Two evaluation defects in confirmation 3**, recorded and not rescored:
+  - Six of six "ending" failures ended with the requested words in bold (`**Go for it**.`), and the
+    checker does not strip markdown.
+  - The new arithmetic wording ("a box of 24 pens costs 37 each box") is ambiguous: 8 of 12 replies
+    multiplied pens by box price.
+
+  The declared result stands as a fail; the checker and the wording are fixed for any further
+  confirmation.
+
+Across the three confirmations, the unchanged parent is a consistent general assistant. Under v2/v3
+interfaces it answers 82–91% of document questions with correct citations, and it meets formatting
+requests reliably. Its misses repeat: rule application (claim windows), absent facts that resemble
+present ones (return flights), and emphasis around required endings. The authored grammars are now the
+limit. Training and testing on a few templates per family keeps measuring the templates.
 
 ## Routing
 

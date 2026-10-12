@@ -1,0 +1,97 @@
+{
+  "format": "neuroshard-assistant-general-l4-confirmation-report/1",
+  "source_commit": "ecebd8a563f9d77ac6febb562227fa73789ddf9e",
+  "ci_run": 38201618895,
+  "episodes_sha256": "6c757d310246b6744e8aaf9cc8e2f1195355a7de1961bf016c13def963fa4994",
+  "documents_L4": {
+    "passed": 118,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "3/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "9/12",
+      "invoice-sum": "12/12",
+      "leave-days": "12/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "10/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "documents_parent": {
+    "passed": 120,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "8/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "7/12",
+      "invoice-sum": "12/12",
+      "leave-days": "12/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "9/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "chat": {
+    "passed": 78,
+    "cases": 96,
+    "families": {
+      "arithmetic": "4/12",
+      "bullets": "12/12",
+      "ending": "6/12",
+      "exclude": "8/12",
+      "include": "12/12",
+      "json": "12/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "rescored": {
+    "documents_L4": 118,
+    "documents_parent": 120,
+    "chat": 78
+  },
+  "rates": {
+    "documents": 0.8939393939393939,
+    "chat": 0.8125,
+    "not_found": 0.9166666666666666
+  },
+  "checks": {
+    "documents": true,
+    "chat": false,
+    "not_found": true
+  },
+  "passed": false,
+  "L4_against_parent": {
+    "gained": 4,
+    "lost": 6
+  },
+  "findings": {
+    "L4": "does not generalise to new wording: 118 against the parent's 120; claim deadlines 3/12 against 8/12. 132 templated demonstrations taught templates.",
+    "chat ending (evaluation defect)": "6 of 6 failures ended with the requested words in markdown bold, e.g. \"**Go for it**.\"; the checker does not strip emphasis",
+    "chat arithmetic (task wording)": "8 of 12 multiplied pens by box price; the template \"A box of N pens costs P each box\" invites that reading",
+    "chat exclude": "4 of 12 used \"the\""
+  },
+  "decision": "Not shipped, as declared: chat 81.3% is below 90%. Two evaluation defects are recorded, not rescored; they are fixed prospectively for any further confirmation.",
+  "resources_finished": {
+    "finished_utc": "2026-10-12T06:37:36.698727+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0cedde9e9bdce5221"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 6992.57026,
+    "conservative_compute_usd": 2.05581565644,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 2.05581565644,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}
