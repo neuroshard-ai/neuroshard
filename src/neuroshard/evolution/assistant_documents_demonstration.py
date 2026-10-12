@@ -25,7 +25,7 @@ def _find(world, needle):
 
 def texts(case):
     """The assistant replies, in order, that solve one training case."""
-    if case['split'] not in ('train', 'generated-train'):
+    if case['split'] not in ('train', 'generated-train', 'generated-train-extra'):
         raise ValueError('demonstrations are written for training cases only')
     world, turn = case['world'], case['turns'][0]
     question, expected, family = turn['user'], turn['expected'], case['family']

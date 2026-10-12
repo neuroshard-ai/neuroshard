@@ -88,12 +88,13 @@ def test_every_generated_training_case_has_a_verified_demonstration():
             demo.texts(docs.cases(split)[0])
 
 
-@pytest.mark.parametrize('profile', ['assistant-general-l5-gpu', 'assistant-general-l6-gpu'])
+@pytest.mark.parametrize('profile', ['assistant-general-l5-gpu', 'assistant-general-l6-gpu', 'assistant-general-l7-gpu'])
 def test_generated_units_declare_generated_splits_and_pin_their_contract(profile):
     declaration_path, execution_path = l4.PROFILES[profile]
     declaration, execution = read(ROOT / declaration_path), read(ROOT / execution_path)
-    assert l4.splits(declaration) == ('generated-train', 'generated-train',
-                                      {'documents': 'generated-development', 'chat': 'generated-development'})
+    development = 'generated-development2' if profile.endswith('l7-gpu') else 'generated-development'
+    experience = ['generated-train', 'generated-train-extra'] if profile.endswith('l7-gpu') else 'generated-train'
+    assert l4.splits(declaration) == (experience, 'generated-train', {'documents': development, 'chat': development})
     assert l4.splits(l4.declared()) == ('train', 'train', {'documents': 'development', 'chat': 'development'})
     assert all(sha256(ROOT / name) == digest for name, digest in execution['contracts'].items())
     assert phrasings.FILE in execution['sources'] and 'src/neuroshard/evolution/assistant_phrasings.py' in execution['sources']
@@ -154,3 +155,23 @@ def test_generated_chat_values_are_always_quoted(split):
             if value:
                 text = case['turns'][0]['user']
                 assert re.search(r'["“\'‘]' + re.escape(value) + r'[.!]?["”\'’]', text), text
+
+
+def test_development2_is_new_to_every_unit_and_extra_cases_are_verified():
+    known = {' '.join(t.lower().split()) for by in committed()['sets'].values() for rows in by.values()
+             for ts in rows.values() for t in ts}
+    fresh = read(ROOT / phrasings.FILE2)['sets']
+    assert all(' '.join(t.lower().split()) not in known for by in fresh.values() for ts in by['development2'].values()
+               for t in ts)
+    for module, n in ((docs, 66), (chat, 48)):
+        cases = module.cases('generated-development2')
+        assert len(cases) == n and len({c['turns'][0]['user'] for c in cases}) == n
+    extra = docs.cases('generated-train-extra')
+    assert [c['family'] for c in extra].count('not-found-return') == 60 and len(extra) == 90
+    policy = l4.policies(l4.declared('assistant-general-l7-gpu'))['documents']
+    assert all(demo.demonstration(case, policy)['passed'] for case in extra)
+    # Extra workspaces are new (own seed); templates are training templates, so a request may coincide
+    # with a generated-train request only when the same city is drawn; it is still a different workspace.
+    worlds = {json.dumps(c['world'], sort_keys=True) for c in docs.cases('generated-train')}
+    assert not {json.dumps(c['world'], sort_keys=True) for c in extra} & worlds
+    assert len({c['turns'][0]['user'] for c in extra}) >= 85

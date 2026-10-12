@@ -20,7 +20,11 @@ from neuroshard.evolution.modular_reference_execution import identity
 
 SPLITS = {'train': (90000, 12), 'development': (91000, 6), 'confirmation': (92000, 12),
           'confirmation2': (96000, 12), 'confirmation3': (98000, 12),
-          'generated-train': (93000, 60), 'generated-development': (93500, 6), 'confirmation4': (99000, 12)}
+          'generated-train': (93000, 60), 'generated-development': (93500, 6), 'confirmation4': (99000, 12),
+          'generated-train-extra': (93900, 0), 'generated-development2': (93600, 6)}
+# Further training workspaces for chosen families (L7): return-flight not-found with outbound lookups
+# beside it, so the extra experience contrasts the two rather than teaching not-found alone.
+EXTRA = {'generated-train-extra': {'not-found-return': 60, 'flight-time': 30}}
 CITIES = ('Lisbon', 'Osaka', 'Denver', 'Tallinn', 'Montreal', 'Nairobi', 'Hobart', 'Valparaiso')
 VENDORS = ('Brightline Print', 'Northwind Cleaning', 'Juniper IT', 'Harbor Freight Co', 'Cobalt Catering')
 PEOPLE = ('Ada Brook', 'Ravi Stone', 'Mei Lund', 'Tomas Reyes', 'Ines Varga', 'Kofi Mensah')
@@ -241,12 +245,14 @@ def make_case(split, kind, index):
     rng = random.Random(f'{seed}:{kind}:{index}')
     world, facts = _world(rng, split, f'{kind}-{index}')
     development, confirmation, expected = _kinds(facts)[kind]
-    if split in ('generated-train', 'generated-development', 'confirmation4'):
+    if split in ('generated-train', 'generated-development', 'confirmation4', 'generated-train-extra',
+                 'generated-development2'):
         from neuroshard.evolution import assistant_phrasings as phrasings  # only the generated splits need it
 
         rows = phrasings.load('documents', split)[kind]
+        index_in_rows = index + (60 if split == 'generated-train-extra' else 0)  # templates generated-train used least
         return {'id': f'docs-{split}-{kind}-{index:02d}', 'split': split, 'family': kind, 'world': world,
-                'turns': [{'user': _fill(rows[index % len(rows)], facts), 'expected': expected}]}
+                'turns': [{'user': _fill(rows[index_in_rows % len(rows)], facts), 'expected': expected}]}
     templates = (_phrasings3(facts)[kind] if split == 'confirmation3' else _phrasings2(facts)[kind] if split == 'confirmation2'
                  else confirmation if split == 'confirmation' else development)
     case = {'id': f'docs-{split}-{kind}-{index:02d}', 'split': split, 'family': kind, 'world': world,
@@ -257,6 +263,8 @@ def make_case(split, kind, index):
 def cases(split):
     if split not in SPLITS:
         raise ValueError('unknown documents split')
+    if split in EXTRA:
+        return [make_case(split, kind, index) for kind, count in EXTRA[split].items() for index in range(count)]
     return [make_case(split, kind, index) for kind in KINDS for index in range(SPLITS[split][1])]
 
 

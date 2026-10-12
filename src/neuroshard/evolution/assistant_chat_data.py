@@ -207,9 +207,11 @@ GENERATED_TOPICS = {
                         'home workouts', 'speed reading', 'digital decluttering'),
     'generated-development': ('sailing', 'jigsaw puzzles', 'herb drying', 'fountain pens', 'skateboarding',
                               'mushroom foraging'),
+    'generated-development2': ('canoeing', 'embroidery', 'tide pooling', 'chess puzzles', 'composting worms',
+                               'paper marbling'),
     'confirmation4': ('ice skating', 'puppetry', 'cheese making', 'model trains', 'orienteering', 'quilting',
                       'scuba diving', 'bonsai', 'improv theatre', 'map reading', 'candle making', 'fly fishing')}
-GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12}
+GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12, 'generated-development2': 6}
 EXCLUDED = ('the', 'and', 'very', 'really')
 PHRASES = ('Keep at it', 'You can do this', 'One step at a time', 'Make it happen', 'See you out there')
 
@@ -260,7 +262,7 @@ def generated_cases(split):
     from neuroshard.evolution import assistant_phrasings as phrasings
 
     rows, seed = phrasings.load('chat', split), {'generated-train': 95500, 'generated-development': 93700,
-                                                 'confirmation4': 99500}[split]
+                                                 'confirmation4': 99500, 'generated-development2': 93800}[split]
     out = []
     for kind in KINDS:
         for index in range(GENERATED_COUNTS[split]):

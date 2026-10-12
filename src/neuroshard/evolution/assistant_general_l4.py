@@ -33,7 +33,9 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-l5-gpu': ('config/experiments/assistant-general-l5.json',
                                          'config/experiments/assistant-general-l5-execution.json'),
             'assistant-general-l6-gpu': ('config/experiments/assistant-general-l6.json',
-                                         'config/experiments/assistant-general-l6-execution.json')}
+                                         'config/experiments/assistant-general-l6-execution.json'),
+            'assistant-general-l7-gpu': ('config/experiments/assistant-general-l7.json',
+                                         'config/experiments/assistant-general-l7-execution.json')}
 
 
 def declared(profile=PROFILE):
@@ -73,7 +75,7 @@ def demonstrations(tokenizer, policy, home, split='train'):
     from neuroshard.evolution import assistant_growth_run as growth
 
     items = []
-    for case in data.cases(split):
+    for case in [c for name in ([split] if isinstance(split, str) else split) for c in data.cases(name)]:
         row = demo.demonstration(case, policy)
         items.append(demo.trajectory(case, row, policy))
     report = {'cases': len(items), 'by_family': dict(collections.Counter(t['family'] for t in items)),

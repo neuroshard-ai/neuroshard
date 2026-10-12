@@ -60,16 +60,22 @@ STYLES = {'train': 'casual, indirect, chatty, multi-clause, with everyday wordin
           'confirmation4': 'terse, formal, imperative, or starting with context before the request'}
 PLACEHOLDER = re.compile(r'\{([a-z]+)\}')
 FILE = 'config/experiments/assistant-general-phrasings.json'
-# Case splits built from the generated sets: split name -> set name in FILE.
-SPLITS = {'generated-train': 'train', 'generated-development': 'development', 'confirmation4': 'confirmation4'}
+# A second development set, generated after generated-development had judged two units (L5, L6).
+FILE2 = 'config/experiments/assistant-general-phrasings-development2.json'
+# Case splits built from the generated sets: split name -> (file, set name). generated-train-extra
+# draws further workspaces for chosen families from the training templates.
+SPLITS = {'generated-train': (FILE, 'train'), 'generated-train-extra': (FILE, 'train'),
+          'generated-development': (FILE, 'development'), 'confirmation4': (FILE, 'confirmation4'),
+          'generated-development2': (FILE2, 'development2')}
 
 
 def load(route, split):
     """The committed templates of one route and case split, by kind."""
     from pathlib import Path
 
-    data = json.loads((Path(__file__).resolve().parents[3] / FILE).read_text())
-    return data['sets'][route][SPLITS[split]]
+    path, name = SPLITS[split]
+    data = json.loads((Path(__file__).resolve().parents[3] / path).read_text())
+    return data['sets'][route][name]
 
 
 def table(route):
