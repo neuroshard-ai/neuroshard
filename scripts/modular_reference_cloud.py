@@ -361,15 +361,18 @@ def retire(home, ec2=None):
 
 
 def placement_subnets(ec2, source, instance_type):
-    """The controller's subnet when its zone offers the type; otherwise offering subnets in its VPC."""
+    """The controller's subnet first when its zone offers the type, then the other offering subnets in its VPC.
+
+    A capacity refusal in one zone is common for single GPUs; the next zone is tried before the next type.
+    """
     offered = {row["Location"] for row in ec2.describe_instance_type_offerings(
         LocationType="availability-zone", Filters=[{"Name": "instance-type", "Values": [instance_type]}]
     )["InstanceTypeOfferings"]}
-    if source["Placement"]["AvailabilityZone"] in offered:
-        return [source["SubnetId"]]
     subnets = sorted(ec2.describe_subnets(Filters=[{"Name": "vpc-id", "Values": [source["VpcId"]]}])["Subnets"],
                      key=lambda row: (row["AvailabilityZone"], row["SubnetId"]))
     candidates = [row["SubnetId"] for row in subnets if row["AvailabilityZone"] in offered and row["State"] == "available"]
+    if source["Placement"]["AvailabilityZone"] in offered:
+        candidates = [source["SubnetId"]] + [subnet for subnet in candidates if subnet != source["SubnetId"]]
     if not candidates:
         raise ValueError(f"{instance_type} is not offered in any subnet of the controller VPC")
     return candidates

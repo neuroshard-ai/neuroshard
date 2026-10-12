@@ -4,6 +4,16 @@
   "instances": 1,
   "candidates": [
     {
+      "instance_type": "g6e.xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "HEU7PA78QPB8SDYY",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.861
+      }
+    },
+    {
       "instance_type": "g5.2xlarge",
       "gpu_name": "NVIDIA A10G",
       "price": {
@@ -15,7 +25,7 @@
       }
     }
   ],
-  "placement": "One A10G host (g5.2xlarge) in any controller-VPC subnet whose zone offers it.",
+  "placement": "One GPU host: an A10G (g5.2xlarge) or an L40S (g6e.xlarge), in any controller-VPC subnet whose zone offers it, controller zone first; g5.2xlarge had no capacity in the controller zone on 2026-10-12.",
   "hours": 4,
   "planning_cap_usd": 10,
   "disk_gib": 120,

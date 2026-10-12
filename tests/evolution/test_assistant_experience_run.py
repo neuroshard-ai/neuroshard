@@ -107,7 +107,7 @@ def test_gpu_placement_leaves_the_controller_zone_only_when_it_lacks_the_instanc
                                 for z in ('us-east-1f', 'us-east-1c', 'us-east-1a', 'us-east-1e')]}
 
     source = {'SubnetId': 'subnet-f', 'VpcId': 'vpc-1', 'Placement': {'AvailabilityZone': 'us-east-1f'}}
-    assert cloud.placement_subnets(EC2({'us-east-1f', 'us-east-1a'}), source, 'r7i.4xlarge') == ['subnet-f']
+    assert cloud.placement_subnets(EC2({'us-east-1f', 'us-east-1a'}), source, 'r7i.4xlarge') == ['subnet-f', 'subnet-a']
     assert cloud.placement_subnets(EC2({'us-east-1a', 'us-east-1c'}), source, 'g6e.xlarge') == ['subnet-a', 'subnet-c']
     with pytest.raises(ValueError, match='not offered'):
         cloud.placement_subnets(EC2({'us-west-2a'}), source, 'g6e.xlarge')
