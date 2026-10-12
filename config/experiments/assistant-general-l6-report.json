@@ -1,0 +1,182 @@
+{
+  "format": "neuroshard-assistant-general-l6-report/1",
+  "source_commit": "fd8878c6abc9ad3fa4d19435d56b2244015e9bde",
+  "ci_run": 38315988653,
+  "gpu": "NVIDIA A10G",
+  "demonstrations": {
+    "cases": 660,
+    "by_family": {
+      "flight-time": 60,
+      "hotel-code": 60,
+      "leave-days": 60,
+      "invoice-sum": 60,
+      "claim-deadline": 60,
+      "notice": 60,
+      "deposit": 60,
+      "battery": 60,
+      "owner": 60,
+      "not-found-insurance": 60,
+      "not-found-return": 60
+    },
+    "trajectories_sha256": "52ce561031854c5d9fb61c5bd0094ab05b388b052087dd8157437ebbad63a043"
+  },
+  "chat_replay": {
+    "cases": 320,
+    "passed": 297,
+    "by_family": {
+      "bullets": 40,
+      "short": 40,
+      "json": 37,
+      "include": 38,
+      "exclude": 29,
+      "ending": 40,
+      "lowercase": 40,
+      "arithmetic": 33
+    },
+    "replay_sha256": "ea354c8923eff5919b20a07d5483503b13d9270df29f0472e9b8b2f0313fe621"
+  },
+  "phases": {
+    "demonstrate": 6.784144579000014,
+    "replay": 133.145546879,
+    "train": 521.194473776,
+    "integrate": 260.9494158619999
+  },
+  "training": {
+    "trainable_sha256": "c962d657f6d79b45da449e267deb29323277e8f32118c43870dca5a9b15f5ecf",
+    "tokens_processed": 2430491,
+    "final_losses": [
+      0.03041634427995632,
+      0.04700680616133468,
+      0.009485010444223008,
+      0.0024851706871231727,
+      0.010456959818839096,
+      0.015324593977993572,
+      0.012460715201996209,
+      0.03854435075868423
+    ]
+  },
+  "module": {
+    "trainable_sha256": "c962d657f6d79b45da449e267deb29323277e8f32118c43870dca5a9b15f5ecf",
+    "file_sha256": "c962d657f6d79b45da449e267deb29323277e8f32118c43870dca5a9b15f5ecf",
+    "bytes": 4197776
+  },
+  "integration_file": "config/experiments/assistant-general-l6-integration.json.gz",
+  "integration_sha256": "07ccc4436e1b5b2223b63d98024c6ab7f361783e2ad26c0249de232afba1e6ad",
+  "integration_gz_sha256": "daef7444ec8d76afd71bba2294df1774820e0e8d0c1324c78c9dceca64159aca",
+  "integration": {
+    "parent": {
+      "documents": {
+        "passed": 60,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "4/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "6/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "2/6",
+          "notice": "6/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 45,
+        "cases": 48,
+        "families": {
+          "arithmetic": "6/6",
+          "bullets": "5/6",
+          "ending": "6/6",
+          "exclude": "4/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    },
+    "L6": {
+      "documents": {
+        "passed": 62,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "5/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "6/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "4/6",
+          "notice": "5/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 46,
+        "cases": 48,
+        "families": {
+          "arithmetic": "6/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "4/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    }
+  },
+  "rates": {
+    "L6": {
+      "documents": 0.9393939393939394,
+      "chat": 0.9583333333333334,
+      "not_found": 0.8333333333333334
+    },
+    "parent": {
+      "documents": 0.9090909090909091,
+      "chat": 0.9375,
+      "not_found": 0.6666666666666666
+    }
+  },
+  "L6_against_parent": {
+    "documents_gained": 4,
+    "documents_lost": 2,
+    "chat_gained": 1,
+    "chat_lost": 0
+  },
+  "checks": {
+    "more_documents_than_parent": true,
+    "chat_loses_at_most_one": true,
+    "documents_minimum": true,
+    "chat_minimum": true,
+    "not_found_minimum": false
+  },
+  "advances": false,
+  "findings": {
+    "chat": "Quoting the constrained value fixed endings: 6/6 for parent and L6 (L5: 2/6). L6 46/48, losing no case. The two exclude misses (parent too) use the forbidden word.",
+    "documents": "Same as L5: 62/66 against 60/66; return flights 4/6 against 2/6.",
+    "not-found": "10/12. Both misses are requests of the form \"do my files have anything about flying back from X\" / \"find the bit about flying home from X\"; L6 answers with the outbound itinerary instead of reporting that no return flight exists."
+  },
+  "decision": "Not advanced, as declared: not-found 10/12 (83.3%) is below 90%. confirmation4 stays sealed. generated-development has now judged two units; its 12 not-found cases are too few to separate 10 from 11.",
+  "resources_finished": {
+    "finished_utc": "2026-10-12T23:30:43.065745+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-006667ff490d8ab67"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 1576.721486,
+    "conservative_compute_usd": 0.5308295669533333,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.5308295669533333,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

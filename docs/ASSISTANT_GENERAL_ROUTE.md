@@ -172,3 +172,22 @@ $0.52.
 
 Next: L6 is the same recipe on the corrected chat wording, judged by the same rule on generated-development.
 The remaining not-found misses are two answers that give the outbound flight as the flight home.
+
+## Version 6: quoted chat values (L6)
+
+L6 is L5 with one change: generated chat cases quote the word or phrase they constrain
+([declaration](../config/experiments/assistant-general-l6.json),
+[report](../config/experiments/assistant-general-l6-report.json); one A10G, $0.53).
+
+| generated-development | parent | L6 | minimum |
+| --- | --- | --- | --- |
+| documents | 60/66 | 62/66 (93.9%) | 85% |
+| chat | 45/48 | 46/48 (95.8%), none lost | 90% |
+| not-found | 8/12 | 10/12 (83.3%) | 90% |
+
+- **Quoting fixed endings:** 6/6 for both the parent and L6, against 2/6 for L5.
+- **L6 does not advance, as declared.** Not-found is one case short, so `confirmation4` stays sealed. Both
+  misses are requests like "do my files have anything about flying back from Hobart". L6 answers with the
+  outbound itinerary.
+- generated-development has now judged two units, and its two not-found misses were read to design the
+  next one. The next unit is therefore judged on a fresh development set.
