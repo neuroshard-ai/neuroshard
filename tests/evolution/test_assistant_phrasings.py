@@ -124,3 +124,21 @@ def test_parse_and_judge_reject_malformed_or_wrong_answers():
     assert ok
     empty = type('E', (), {'converse': lambda self, **_: {'output': {'message': {'content': []}}, 'usage': {}}})()
     assert not phrasings.judge('chat', 'ending', 'Cheer me on about {topic}, ending with "{phrase}".', empty, 1)[0]
+
+
+def test_remote_bootstrap_freezes_under_the_selected_profile(monkeypatch):
+    from test_assistant_growth_baseline import cloud_module
+
+    cloud = cloud_module()
+    calls = []
+    import neuroshard.evolution.assistant_general_l4 as module
+    monkeypatch.setattr(module, 'configure', lambda *args: calls.append(('configure', args)))
+    monkeypatch.setattr(module, 'freeze', lambda profile=module.PROFILE: calls.append(('freeze', profile)) or {'commit': 'c'})
+    exec(cloud.remote_freeze('assistant_general_l4', 'assistant-general-l5-gpu'), {})
+    assert calls == [('configure', ('assistant-general-l5-gpu',)), ('freeze', 'assistant-general-l5-gpu')]
+    calls.clear()
+    import neuroshard.evolution.assistant_growth_eval as plain
+    monkeypatch.setattr(plain, 'configure', lambda *args: calls.append(('configure', args)))
+    monkeypatch.setattr(plain, 'freeze', lambda: calls.append(('freeze',)) or {'commit': 'c'})
+    exec(cloud.remote_freeze('assistant_growth_eval', 'assistant-growth-development-shared'), {})
+    assert calls == [('configure', ()), ('freeze',)]

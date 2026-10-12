@@ -469,6 +469,14 @@ def ssh(home, allocation, args, *, data=None, timeout=60):
         input=data, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, timeout=timeout)
 
 
+def remote_freeze(module, profile):
+    """The host's first check: the profile's own freeze, where its module serves several profiles."""
+    return (f"import inspect, neuroshard.evolution.{module} as m; "
+            f"args = ({profile!r},) if 'profile' in inspect.signature(m.freeze).parameters and "
+            f"{profile!r} in getattr(m, 'PROFILES', {{}}) else (); "
+            "m.configure(*args); print(m.freeze(*args)['commit'])")
+
+
 def bootstrap(home, allocation, source, profile=PROFILE):
     stop = time.monotonic() + 300
     while True:
@@ -505,9 +513,7 @@ def bootstrap(home, allocation, source, profile=PROFILE):
             shlex.join(["git", "-C", ".upstream/granite-switch", "remote", "add", "origin", upstream["repo"]]),
             shlex.join(["git", "-C", ".upstream/granite-switch", "fetch", "--depth=1", "origin", upstream["commit"]]),
             "git -C .upstream/granite-switch checkout --detach FETCH_HEAD",
-            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
-                f"from neuroshard.evolution.{module} import configure,freeze; "
-                "configure(); print(freeze()['commit'])")]
+            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(remote_freeze(module, profile))]
     else:
         setup_lines += ["python3 -m venv .venv",
             ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
