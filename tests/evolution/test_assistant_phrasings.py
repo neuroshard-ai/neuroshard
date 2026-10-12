@@ -88,8 +88,8 @@ def test_every_generated_training_case_has_a_verified_demonstration():
             demo.texts(docs.cases(split)[0])
 
 
-def test_l5_declares_generated_splits_and_pins_its_contract():
-    profile = 'assistant-general-l5-gpu'
+@pytest.mark.parametrize('profile', ['assistant-general-l5-gpu', 'assistant-general-l6-gpu'])
+def test_generated_units_declare_generated_splits_and_pin_their_contract(profile):
     declaration_path, execution_path = l4.PROFILES[profile]
     declaration, execution = read(ROOT / declaration_path), read(ROOT / execution_path)
     assert l4.splits(declaration) == ('generated-train', 'generated-train',

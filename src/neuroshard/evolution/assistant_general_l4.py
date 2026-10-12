@@ -31,7 +31,9 @@ CHECKPOINT = 'module-checkpoint'
 # Later documents units on the same worker: each declares its experience, replay and development splits.
 PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-l5-gpu': ('config/experiments/assistant-general-l5.json',
-                                         'config/experiments/assistant-general-l5-execution.json')}
+                                         'config/experiments/assistant-general-l5-execution.json'),
+            'assistant-general-l6-gpu': ('config/experiments/assistant-general-l6.json',
+                                         'config/experiments/assistant-general-l6-execution.json')}
 
 
 def declared(profile=PROFILE):

@@ -1,0 +1,45 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Does L5's recipe advance once the generated chat requests quote the word or phrase they constrain?",
+  "why": "L5 beat the parent on held-out documents wording (62 vs 60 of 66) but did not advance: chat 42/48 and not-found 10/12. All 267 casual-style ending, include and exclude templates left the constrained value unquoted, and all four L5 ending failures copied the trailing instruction. L6 changes only that: generated chat cases quote the value. Documents experience, steps, mixture, layers and the advancement rule are L5's.",
+  "unit": {
+    "name": "L6",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "the documents solver's verified demonstration of every one of the 660 generated-train cases",
+    "replay": "the parent's own greedy chat replies on the 320 generated-train chat cases (values quoted) under the chat2 policy, replayed only where they pass"
+  },
+  "splits": {
+    "experience": "generated-train",
+    "replay": "generated-train",
+    "documents_development": "generated-development",
+    "chat_development": "generated-development"
+  },
+  "phrasings": "config/experiments/assistant-general-phrasings.json",
+  "training": {
+    "steps": 256,
+    "seed": 27101212,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection. Same steps, mixture and documents experience as L5."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents3.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L6 greedily on the 66 documents and 48 chat generated-development cases (templates held out of training, values quoted) on the same GPU",
+  "next_gate": "L6 advances to the sealed confirmation4 on the canonical CPU runtime only if, on generated-development, it solves more documents cases than the parent, loses no more than one chat case, and every minimum (documents 85%, chat 90%, not-found 90%) holds.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10,
+  "prior": {
+    "path": "config/experiments/assistant-general-l5-report.json",
+    "sha256": "40127802b286f17f271d5291951f3c4f7aaed14da73f0337aae4d1ff66dd82c5"
+  }
+}
