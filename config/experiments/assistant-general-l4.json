@@ -1,0 +1,34 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Can a low-rank module on the unchanged parent learn the documents route from verified demonstrations, keeping the parent's chat behaviour, where prompt rules failed to generalise?",
+  "why": "The second sealed confirmation (v3) failed on new wording: return flights 1/12 (outbound reported as home), claim deadlines 2/12 (policy not applied). Rules in the policy did not transfer; this is the learning the route needs.",
+  "unit": {
+    "name": "L4",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "the documents solver's verified demonstration of every one of the 132 training cases",
+    "replay": "the parent's own greedy chat replies on the 96 chat training cases under the chat2 policy, replayed only where they pass"
+  },
+  "training": {
+    "steps": 256,
+    "seed": 27101101,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 48,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents3.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L4 greedily on the 66 documents and 48 chat development cases on the same GPU",
+  "next_gate": "L4 advances to a third fresh sealed split on the canonical CPU runtime only if, on development, it solves more documents cases than the parent, loses no more than one chat case, and every minimum (documents 85%, chat 90%, not-found 90%) holds.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10
+}
