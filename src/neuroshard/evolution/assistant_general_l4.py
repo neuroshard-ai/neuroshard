@@ -28,10 +28,22 @@ EXECUTION = 'config/experiments/assistant-general-l4-execution.json'
 SCRIPT = 'scripts/run_assistant_general_l4.py'
 PROFILE = 'assistant-general-l4-gpu'
 CHECKPOINT = 'module-checkpoint'
+# Later documents units on the same worker: each declares its experience, replay and development splits.
+PROFILES = {PROFILE: (DECLARATION, EXECUTION),
+            'assistant-general-l5-gpu': ('config/experiments/assistant-general-l5.json',
+                                         'config/experiments/assistant-general-l5-execution.json')}
 
 
-def declared():
-    return read(ROOT / DECLARATION)
+def declared(profile=PROFILE):
+    return read(ROOT / PROFILES[profile][0])
+
+
+def splits(declaration):
+    """(documents experience, chat replay, development) splits; L4 declared none and used the authored ones."""
+    rows = declaration.get('splits', {})
+    return (rows.get('experience', 'train'), rows.get('replay', 'train'),
+            {'documents': rows.get('documents_development', 'development'),
+             'chat': rows.get('chat_development', 'development')})
 
 
 def policies(declaration=None):
@@ -50,7 +62,7 @@ def spec(declaration=None):
     return {**base, 'steps': training['steps'], 'seed': training['seed'], 'mixture': training['mixture']}
 
 
-def demonstrations(tokenizer, policy, home):
+def demonstrations(tokenizer, policy, home, split='train'):
     """Every documents training case's verified demonstration, encoded under the documents tools."""
     from neuroshard.evolution import assistant_documents as documents
     from neuroshard.evolution import assistant_documents_data as data
@@ -59,7 +71,7 @@ def demonstrations(tokenizer, policy, home):
     from neuroshard.evolution import assistant_growth_run as growth
 
     items = []
-    for case in data.cases('train'):
+    for case in data.cases(split):
         row = demo.demonstration(case, policy)
         items.append(demo.trajectory(case, row, policy))
     report = {'cases': len(items), 'by_family': dict(collections.Counter(t['family'] for t in items)),
@@ -67,7 +79,7 @@ def demonstrations(tokenizer, policy, home):
     return [trainer.encode(tokenizer, t, documents.TOOLS) for t in items], report
 
 
-def chat_replay(model, tokenizer, policy, parameters, home):
+def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=None):
     """The parent's greedy chat replies on the chat training split; only those that pass are replayed."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -77,9 +89,9 @@ def chat_replay(model, tokenizer, policy, parameters, home):
     from neuroshard.evolution import assistant_growth_run as growth
     from neuroshard.evolution import assistant_rollout as rollout
 
-    cases = chat.cases('train')
+    cases = chat.cases(split)
     batcher = rollout.Batcher(model, tokenizer, growth.sampling(policy, 0, 1.0), max_batch=parameters['max_batch'],
-                              device=parameters['device'], seed=declared()['training']['seed'])
+                              device=parameters['device'], seed=declared()['training']['seed'] if seed is None else seed)
     try:
         with ThreadPoolExecutor(max_workers=parameters['workers']) as pool:
             rows = list(pool.map(lambda case: general.chat_episode(case, batcher.respond, policy), cases))
@@ -130,7 +142,7 @@ def integrate(models, tokenizer, declaration, parameters, home):
         model = load()
         out[name] = {}
         for kind, module, run in (('documents', docs, general.documents_episode), ('chat', chat, general.chat_episode)):
-            policy, cases = routes[kind], module.cases('development')
+            policy, cases = routes[kind], module.cases(splits(declaration)[2][kind])
             batcher = rollout.Batcher(model, tokenizer, growth.sampling(policy, 0, 1.0),
                                       max_batch=parameters['max_batch'], device=parameters['device'],
                                       seed=declaration['training']['seed'])
@@ -148,8 +160,8 @@ def integrate(models, tokenizer, declaration, parameters, home):
     return summary
 
 
-def committed_sources(root=ROOT):
-    execution = read(root / EXECUTION)
+def committed_sources(root=ROOT, profile=PROFILE):
+    execution = read(root / PROFILES[profile][1])
     for name, digest in execution['contracts'].items():
         if sha256(root / name) != digest:
             raise ValueError(f'changed L4 contract: {name}')
@@ -162,23 +174,23 @@ def committed_sources(root=ROOT):
     return {'commit': commit, 'sources': sources}
 
 
-def configure():
+def configure(profile=PROFILE):
     if 'torch' in sys.modules:
         raise ValueError('configure the accelerator runtime before importing torch')
-    for key, value in read(ROOT / EXECUTION)['environment'].items():
+    for key, value in read(ROOT / PROFILES[profile][1])['environment'].items():
         if value is None:
             os.environ.pop(key, None)
         else:
             os.environ[key] = value
 
 
-def freeze():
+def freeze(profile=PROFILE):
     """The stage-1 GPU runtime, byte for byte in packages, GPUs and environment."""
     from neuroshard.evolution import assistant_experience_run as run
     from neuroshard.evolution import assistant_growth_run as growth
 
-    source = committed_sources()
-    execution = read(ROOT / EXECUTION)
+    source = committed_sources(profile=profile)
+    execution = read(ROOT / PROFILES[profile][1])
     pinned = read(ROOT / growth.EXECUTION)
     keys = ('packages', 'python', 'gpus', 'environment', 'worker_environment', 'tokenizer_pipeline_sha256', 'execution')
     if any(execution[key] != pinned[key] for key in keys):
@@ -197,10 +209,11 @@ def freeze():
 
 
 def worker(request_path):
-    configure()
     request_path = Path(request_path)
     request = read(request_path)
-    if freeze() != request['freeze']:
+    profile = request['profile'] if request['profile'] in PROFILES else PROFILE
+    configure(profile)
+    if freeze(profile) != request['freeze']:
         raise ValueError('L4 worker differs from freeze')
     import torch
     from transformers import AutoModelForCausalLM
@@ -209,7 +222,9 @@ def worker(request_path):
     from neuroshard.evolution import assistant_growth_run as growth
     from neuroshard.evolution import granite_tokenizer
 
-    execution, declaration = read(ROOT / EXECUTION), declared()
+    declaration_path, execution_path = PROFILES[profile]
+    execution, declaration = read(ROOT / execution_path), read(ROOT / declaration_path)
+    experience_split, replay_split, _ = splits(declaration)
     gpu = request['freeze']['gpus'][0]
     parameters = {**execution['execution'], **execution['gpus'][gpu]}
     home = request_path.parent
@@ -234,11 +249,12 @@ def worker(request_path):
 
         routes, settings = policies(declaration), spec(declaration)
         begun = time.monotonic()
-        experience, reply['demonstrations'] = demonstrations(tokenizer, routes['documents'], home)
+        experience, reply['demonstrations'] = demonstrations(tokenizer, routes['documents'], home, experience_split)
         reply['phases']['demonstrate'] = time.monotonic() - begun
         begun = time.monotonic()
         parent = load_parent()
-        replay, reply['chat_replay'] = chat_replay(parent, tokenizer, routes['chat'], parameters, home)
+        replay, reply['chat_replay'] = chat_replay(parent, tokenizer, routes['chat'], parameters, home, replay_split,
+                                                   declaration['training']['seed'])
         del parent
         growth.release_accelerator()
         reply['phases']['replay'] = time.monotonic() - begun
@@ -250,7 +266,7 @@ def worker(request_path):
         manifest = trainer.checkpoint(home / CHECKPOINT, trained, receipt,
                                       {'experience': identity([r['sha256'] for r in experience]),
                                        'replay': identity([r['sha256'] for r in replay]),
-                                       'declaration': sha256(ROOT / DECLARATION)})
+                                       'declaration': sha256(ROOT / declaration_path)})
         reply['training'] = {**manifest, 'tokens_processed': receipt['tokens_processed'],
                              'final_losses': receipt['losses'][-8:]}
         del model, trained
@@ -280,13 +296,14 @@ def worker(request_path):
         save(request_path.parent / 'reply.json', reply, exclusive=True)
 
 
-def run(home, models):
-    configure()
-    source = freeze()
+def run(home, models, profile=PROFILE):
+    configure(profile)
+    source = freeze(profile)
     home = Path(home)
     home.mkdir(parents=True, exist_ok=True)
-    execution = read(ROOT / EXECUTION)
-    binding = {'freeze': source, 'profile': PROFILE, 'declaration_sha256': sha256(ROOT / DECLARATION)}
+    declaration_path, execution_path = PROFILES[profile]
+    execution = read(ROOT / execution_path)
+    binding = {'freeze': source, 'profile': profile, 'declaration_sha256': sha256(ROOT / declaration_path)}
     save(home / 'binding.json', binding, exclusive=True)
     result = {'binding': binding, 'execution_completed': False, 'checklist_credit': False,
               'admission_evidence': False, 'confirmation_opened': False}

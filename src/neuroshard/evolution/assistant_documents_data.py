@@ -8,6 +8,9 @@ across documents, date offsets, and questions the documents cannot answer. Expec
 
 Phrasings: ``train`` (router fitting and future learning) and ``development`` share templates with new
 values; the sealed ``confirmation`` uses templates disjoint from both, so it measures new wording too.
+``generated-train``, ``generated-development`` and the sealed ``confirmation4`` take their wording from
+the Bedrock-written sets in ``assistant_phrasings`` (three disjoint template sets); the workspace, the
+facts and the expected outcome are built here exactly as for every other split.
 """
 
 from datetime import date, timedelta
@@ -16,7 +19,8 @@ import random
 from neuroshard.evolution.modular_reference_execution import identity
 
 SPLITS = {'train': (90000, 12), 'development': (91000, 6), 'confirmation': (92000, 12),
-          'confirmation2': (96000, 12), 'confirmation3': (98000, 12)}
+          'confirmation2': (96000, 12), 'confirmation3': (98000, 12),
+          'generated-train': (93000, 60), 'generated-development': (93500, 6), 'confirmation4': (99000, 12)}
 CITIES = ('Lisbon', 'Osaka', 'Denver', 'Tallinn', 'Montreal', 'Nairobi', 'Hobart', 'Valparaiso')
 VENDORS = ('Brightline Print', 'Northwind Cleaning', 'Juniper IT', 'Harbor Freight Co', 'Cobalt Catering')
 PEOPLE = ('Ada Brook', 'Ravi Stone', 'Mei Lund', 'Tomas Reyes', 'Ines Varga', 'Kofi Mensah')
@@ -225,11 +229,24 @@ KINDS = ('flight-time', 'hotel-code', 'leave-days', 'invoice-sum', 'claim-deadli
          'battery', 'owner', 'not-found-insurance', 'not-found-return')
 
 
+def _fill(template, facts):
+    """A generated template with this workspace's values; only placeholders the kind declares appear."""
+    claim_day = date.fromisoformat(facts['trip']['date']) + timedelta(days=2)
+    return template.format(city=facts['trip']['city'], vendor=facts['invoices']['vendor'], day=claim_day.isoformat(),
+                           product=facts['product']['name'])
+
+
 def make_case(split, kind, index):
     seed, _ = SPLITS[split]
     rng = random.Random(f'{seed}:{kind}:{index}')
     world, facts = _world(rng, split, f'{kind}-{index}')
     development, confirmation, expected = _kinds(facts)[kind]
+    if split in ('generated-train', 'generated-development', 'confirmation4'):
+        from neuroshard.evolution import assistant_phrasings as phrasings  # only the generated splits need it
+
+        rows = phrasings.load('documents', split)[kind]
+        return {'id': f'docs-{split}-{kind}-{index:02d}', 'split': split, 'family': kind, 'world': world,
+                'turns': [{'user': _fill(rows[index % len(rows)], facts), 'expected': expected}]}
     templates = (_phrasings3(facts)[kind] if split == 'confirmation3' else _phrasings2(facts)[kind] if split == 'confirmation2'
                  else confirmation if split == 'confirmation' else development)
     case = {'id': f'docs-{split}-{kind}-{index:02d}', 'split': split, 'family': kind, 'world': world,

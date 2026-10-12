@@ -56,6 +56,9 @@ def check(constraint, text):
     if kind == 'exclude':
         return re.search(rf'\b{re.escape(constraint["word"])}\b', text, re.IGNORECASE) is None
     if kind == 'ends_with':
+        if constraint.get('markup') == 'strip':
+            # Emphasis around the closing words is not a different ending (confirmation 3's six failures).
+            text = re.sub(r'[*_`"\'“”]+', '', text)
         return text.strip().rstrip('.!').lower().endswith(constraint['phrase'].lower().rstrip('.!'))
     if kind == 'lowercase':
         letters = [c for c in text if c.isalpha()]
@@ -197,9 +200,76 @@ def _task(kind, rng, topic, split):
 
 
 KINDS = ('bullets', 'short', 'json', 'include', 'exclude', 'ending', 'lowercase', 'arithmetic')
+GENERATED_TOPICS = {
+    'generated-train': ('kayaking', 'bookbinding', 'urban cycling', 'pottery', 'birdhouse building', 'beekeeping',
+                        'stargazing apps', 'thrift shopping', 'pickling vegetables', 'trail running', 'calligraphy',
+                        'origami', 'knitting', 'museum visits', 'language exchange', 'camping gear', 'sourdough',
+                        'home workouts', 'speed reading', 'digital decluttering'),
+    'generated-development': ('sailing', 'jigsaw puzzles', 'herb drying', 'fountain pens', 'skateboarding',
+                              'mushroom foraging'),
+    'confirmation4': ('ice skating', 'puppetry', 'cheese making', 'model trains', 'orienteering', 'quilting',
+                      'scuba diving', 'bonsai', 'improv theatre', 'map reading', 'candle making', 'fly fishing')}
+GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12}
+EXCLUDED = ('the', 'and', 'very', 'really')
+PHRASES = ('Keep at it', 'You can do this', 'One step at a time', 'Make it happen', 'See you out there')
+
+
+def _generated_task(kind, rng, topic, template_rows, index):
+    """A Bedrock-written request filled with our values; the constraint and any answer are ours."""
+    from neuroshard.evolution import assistant_phrasings as phrasings
+
+    if kind == 'arithmetic':
+        sub = ('arith-refund', 'arith-fee', 'arith-coupon')[index % 3]
+        rows = template_rows[sub]
+        a, b = rng.randint(4, 15), rng.randint(12, 75)
+        values = {'a': a, 'b': b, 'c': rng.randint(1, a - 1) if sub == 'arith-refund' else rng.randint(2, 9),
+                  'd': rng.randint(3, 15)}
+        template = rows[(index // 3) % len(rows)]
+        return template.format(**values), [{'kind': 'number', 'value': phrasings.ARITHMETIC[sub](values)}]
+    rows = template_rows[kind]
+    template = rows[index % len(rows)]
+    if kind == 'bullets':
+        n = rng.randint(3, 6)
+        return template.format(n=n, topic=topic), [{'kind': 'bullets', 'n': n}]
+    if kind == 'short':
+        n = rng.choice((25, 40, 60))
+        return template.format(n=n, topic=topic), [{'kind': 'max_words', 'n': n}]
+    if kind == 'json':
+        keys = rng.sample(['title', 'summary', 'steps', 'difficulty', 'time_needed'], 3)
+        return template.format(keys=', '.join(keys), topic=topic), [{'kind': 'json_keys', 'keys': keys}]
+    if kind == 'include':
+        word = rng.choice(WORDS)
+        return template.format(word=word, topic=topic), [{'kind': 'include', 'word': word}]
+    if kind == 'exclude':
+        word = rng.choice(EXCLUDED)
+        return template.format(word=word, topic=topic), [{'kind': 'exclude', 'word': word}]
+    if kind == 'ending':
+        phrase = rng.choice(PHRASES)
+        return template.format(phrase=phrase, topic=topic), [{'kind': 'ends_with', 'phrase': phrase, 'markup': 'strip'}]
+    if kind == 'lowercase':
+        return template.format(topic=topic), [{'kind': 'lowercase'}]
+    raise ValueError(kind)
+
+
+def generated_cases(split):
+    from neuroshard.evolution import assistant_phrasings as phrasings
+
+    rows, seed = phrasings.load('chat', split), {'generated-train': 95500, 'generated-development': 93700,
+                                                 'confirmation4': 99500}[split]
+    out = []
+    for kind in KINDS:
+        for index in range(GENERATED_COUNTS[split]):
+            rng = random.Random(f'{seed}:{kind}:{index}')
+            topic = GENERATED_TOPICS[split][index % len(GENERATED_TOPICS[split])]
+            text, constraints = _generated_task(kind, rng, topic, rows, index)
+            out.append({'id': f'chat-{split}-{kind}-{index:02d}', 'split': split, 'family': kind,
+                        'turns': [{'user': text, 'expected': {'constraints': constraints}}]})
+    return out
 
 
 def cases(split):
+    if split in GENERATED_COUNTS:
+        return generated_cases(split)
     if split not in SPLITS:
         raise ValueError('unknown chat split')
     seed, count = SPLITS[split]

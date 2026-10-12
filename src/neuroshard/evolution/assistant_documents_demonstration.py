@@ -8,6 +8,7 @@ replayed through the workspace and must pass the scorer, or the job stops.
 """
 
 import json
+import re
 
 from neuroshard.evolution import assistant_documents as documents
 from neuroshard.evolution import assistant_documents_data as data
@@ -24,7 +25,7 @@ def _find(world, needle):
 
 def texts(case):
     """The assistant replies, in order, that solve one training case."""
-    if case['split'] != 'train':
+    if case['split'] not in ('train', 'generated-train'):
         raise ValueError('demonstrations are written for training cases only')
     world, turn = case['world'], case['turns'][0]
     question, expected, family = turn['user'], turn['expected'], case['family']
@@ -46,8 +47,10 @@ def texts(case):
     if family == 'claim-deadline':
         policy = _find(world, lambda d: d['id'] == sources[0])
         window = int(policy['content'].split('within ')[1].split(' days')[0])
-        day = question.split('dated ')[-1].split(' ')[0].rstrip('?.') if 'dated' in question else question.split(
-            'on ')[1].split('.')[0]
+        days = re.findall(r'\d{4}-\d{2}-\d{2}', question)
+        if len(days) != 1:
+            raise ValueError(f"expected one expense date in {case['id']}")
+        day = days[0]
         out.append(call('shift_date', start_date=day, days=window))
         answer = f'File the claim by {fact}: the current policy allows {window} days from the expense date.'
     elif family == 'invoice-sum':
@@ -101,6 +104,6 @@ def documents_messages(case, row):
     return messages
 
 
-def all_demonstrations(policy):
-    cases = data.cases('train')
+def all_demonstrations(policy, split='train'):
+    cases = data.cases(split)
     return [(case, demonstration(case, policy)) for case in cases]

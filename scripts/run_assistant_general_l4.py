@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""General route documents unit L4 on one GPU host."""
+"""General route documents units (L4, L5) on one GPU host."""
 
 import argparse
 from pathlib import Path
 
-from neuroshard.evolution.assistant_general_l4 import run, worker
+from neuroshard.evolution.assistant_general_l4 import PROFILE, PROFILES, run, worker
 
 
 if __name__ == "__main__":
@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--home", type=Path)
     parser.add_argument("--models", type=Path)
     parser.add_argument("--request", type=Path)
+    parser.add_argument("--profile", choices=sorted(PROFILES), default=PROFILE)
     args = parser.parse_args()
     if args.command == "worker":
         if args.request is None:
@@ -21,5 +22,5 @@ if __name__ == "__main__":
     else:
         if args.home is None or args.models is None:
             parser.error("run requires --home and --models")
-        if not run(args.home, args.models)["execution_completed"]:
+        if not run(args.home, args.models, args.profile)["execution_completed"]:
             raise SystemExit(1)
