@@ -228,6 +228,11 @@ def _generated_task(kind, rng, topic, template_rows, index):
         return template.format(**values), [{'kind': 'number', 'value': phrasings.ARITHMETIC[sub](values)}]
     rows = template_rows[kind]
     template = rows[index % len(rows)]
+    for name in ('word', 'phrase'):
+        # A bare value reads as part of the sentence ("end with Keep at it as the final words"); L5's
+        # development failures copied the trailing instruction. Quote it unless the template already does.
+        if '{' + name + '}' in template and not re.search(r'["“\'‘]\{' + name + r'\}', template):
+            template = template.replace('{' + name + '}', '"{' + name + '}"')
     if kind == 'bullets':
         n = rng.randint(3, 6)
         return template.format(n=n, topic=topic), [{'kind': 'bullets', 'n': n}]

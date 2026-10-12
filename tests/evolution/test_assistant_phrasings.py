@@ -142,3 +142,15 @@ def test_remote_bootstrap_freezes_under_the_selected_profile(monkeypatch):
     monkeypatch.setattr(plain, 'freeze', lambda: calls.append(('freeze',)) or {'commit': 'c'})
     exec(cloud.remote_freeze('assistant_growth_eval', 'assistant-growth-development-shared'), {})
     assert calls == [('configure', ()), ('freeze',)]
+
+
+@pytest.mark.parametrize('split', ['generated-train', 'generated-development', 'confirmation4'])
+def test_generated_chat_values_are_always_quoted(split):
+    import re
+
+    for case in chat.cases(split):
+        for constraint in case['turns'][0]['expected']['constraints']:
+            value = constraint.get('word') or constraint.get('phrase')
+            if value:
+                text = case['turns'][0]['user']
+                assert re.search(r'["“\'‘]' + re.escape(value) + r'[.!]?["”\'’]', text), text
