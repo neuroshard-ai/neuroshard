@@ -3,8 +3,9 @@
 October 11, 2026. This is the first step toward a useful product: a third route, beside drafting and
 scheduling, for ordinary requests. Requests come in two kinds: questions about the user's own documents,
 answered with search and read tools, and general chat. The route serves the unchanged Granite 4.1 3B
-parent, with no update and no module. Runs used one canonical CPU host each, except L4's training on one A10G. Total compute across all seven
-runs was $5.59.
+parent, with no update and no module. Runs used one canonical CPU host each, except L4's and L5's training on one A10G. Compute
+across the first seven runs was $5.59; L5 added $0.52, plus $0.19 for a host retired after a setup defect,
+and its Bedrock data generation cost about $6.
 
 ## What was built
 
@@ -116,3 +117,58 @@ enough to ship by the bar set in advance. The fixes are concrete:
    sealed split, which this run did not touch because the confirmation is now spent.
 3. **Then serve it.** The general route needs owners to keep the parent's cache separate from the
    units'. That is a new served version and needs its own release qualification, as A3 did.
+
+## Version 5: varied wording from a larger model (L5)
+
+Confirmation 3 showed that the authored grammars were the limit, so L5 changes the data and nothing else.
+
+**Data.** Claude Sonnet 4.6 on Amazon Bedrock wrote only the *user's* side: natural ways to ask each of the
+eleven document questions and each chat request
+([`assistant_phrasings`](../src/neuroshard/evolution/assistant_phrasings.py),
+[script](../scripts/generate_general_phrasings.py),
+[sets](../config/experiments/assistant-general-phrasings.json), every response recorded in the
+`.responses.json.gz` beside it). It never saw a workspace, a fact or an answer. Workspaces, facts,
+constraints and expected values are built by our code as before. Every assistant message trained on is
+our verified solver's demonstration or the parent's own reply that passed the checker. Each template:
+
+- must keep its placeholders and contain no digits, names or document IDs;
+- was filled with values and judged by a separate call that sees only the request and the intended task
+  (arithmetic also had to be solved independently twice and match our formula, which removes
+  confirmation 3's ambiguous pens-per-box wording);
+- belongs to exactly one of three disjoint sets: training (casual style), development (15% of training
+  templates held out), and the sealed `confirmation4` (terse/formal style). `confirmation4` shares no
+  normalised six-word span with training or with any authored phrasing of an earlier split.
+
+| route | train templates | development | confirmation4 | judged and kept |
+| --- | --- | --- | --- | --- |
+| documents | 831 | 146 | 279 | 1,397 of 1,415 |
+| chat | 757 | 134 | 297 | 1,284 of 1,290 |
+
+Generation and judging used 582k input and 250k output tokens (about $6). For new splits only, the ending
+check also strips markdown emphasis and quotes, which fixes confirmation 3's other defect
+without rescoring any recorded result.
+
+**L5** is L4's recipe (A2 layers and rank, 256 steps, mixture 6:2) on the 660 `generated-train`
+demonstrations, all of which pass the scorer. The replay is 283 of the parent's 320 chat replies that
+passed ([declaration](../config/experiments/assistant-general-l5.json),
+[report](../config/experiments/assistant-general-l5-report.json)). It ran on one A10G in 17 minutes for
+$0.52.
+
+| generated-development (held-out wording) | parent | L5 | minimum |
+| --- | --- | --- | --- |
+| documents | 60/66 | 62/66 (93.9%) | 85% |
+| chat | 43/48 | 42/48 (87.5%) | 90% |
+| not-found | 8/12 | 10/12 (83.3%) | 90% |
+
+- **Varied wording helped documents on wording it never saw.** L5 gained 4 cases and lost 2, against
+  L4's net loss on new wording. Return flights went from 2/6 to 4/6 and claim deadlines from 4/6 to 5/6.
+- **It does not advance, as declared:** chat and not-found are below their minimums, and it lost two
+  chat cases. `confirmation4` stays sealed.
+- **A data defect.** Every casual-style ending, include and exclude template (267 of 267) leaves the value
+  unquoted ("wrap up with Keep at it as literally the final words"). All four L5 ending failures copied
+  the trailing instruction. Both exclude failures ("leave the word and out") are failed by the parent too.
+  The judge passed these templates. It is fixed prospectively by quoting the value when a case is built.
+  L5 is not rescored.
+
+Next: L6 is the same recipe on the corrected chat wording, judged by the same rule on generated-development.
+The remaining not-found misses are two answers that give the outbound flight as the flight home.
