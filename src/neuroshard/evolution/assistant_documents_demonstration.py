@@ -42,13 +42,34 @@ def evidence(document, needles):
     raise ValueError(f"no sentence of {document['id']} states {needles}")
 
 
-def texts(case, version=2):
-    """The assistant replies, in order, that solve one training case."""
+def keywords(case):
+    """A focused search for one request: the subject it asks about and the names it gives (place, vendor,
+    product), each copied from the request itself, never the surrounding chatter."""
+    question, family = case['turns'][0]['user'], case['family']
+    named = [name for name in data.CITIES + data.VENDORS + data.PRODUCTS if name in question]
+    subject = {'flight-time': 'flight itinerary departure', 'hotel-code': 'hotel confirmation code',
+               'leave-days': 'annual leave policy', 'invoice-sum': 'invoice unpaid amount due',
+               'claim-deadline': 'expense claims policy', 'notice': 'apartment lease notice',
+               'deposit': 'apartment lease deposit', 'battery': 'battery life specification',
+               'owner': 'meeting notes vendor shortlist', 'not-found-insurance': 'car insurance policy number',
+               'not-found-return': 'return flight itinerary'}[family]
+    return ' '.join(named + [subject])
+
+
+TRAINING = TRAINING + ('generated-train-styles3',)
+
+
+def texts(case, version=2, query='message'):
+    """The assistant replies, in order, that solve one training case.
+
+    ``query='keywords'`` searches with the request's key terms (``keywords``) instead of its whole text,
+    so a request wrapped in unrelated sentences is searched for what it asks.
+    """
     if case['split'] not in TRAINING:
         raise ValueError('demonstrations are written for training cases only')
     world, turn = case['world'], case['turns'][0]
     question, expected, family = turn['user'], turn['expected'], case['family']
-    out = [call('search_documents', query=question)]
+    out = [call('search_documents', query=keywords(case) if query == 'keywords' else question)]
     if expected.get('not_found'):
         if family == 'not-found-return':
             itinerary = _find(world, lambda d: d['title'].startswith('Itinerary ') and 'superseded' not in d['title'])
@@ -102,7 +123,7 @@ def demonstration(case, policy):
     """Run one demonstration through the documents workspace; it must pass the scorer."""
     from neuroshard.evolution import assistant_general as general
 
-    replies = iter(texts(case, general.version_of(policy)))
+    replies = iter(texts(case, general.version_of(policy), policy.get('search_query', 'message')))
 
     def respond(messages, tools):
         return {'text': next(replies), 'terminated': True, 'executed': True, 'token_ids': [], 'input_token_ids': [],

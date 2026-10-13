@@ -175,3 +175,24 @@ def test_development2_is_new_to_every_unit_and_extra_cases_are_verified():
     worlds = {json.dumps(c['world'], sort_keys=True) for c in docs.cases('generated-train')}
     assert not {json.dumps(c['world'], sort_keys=True) for c in extra} & worlds
     assert len({c['turns'][0]['user'] for c in extra}) >= 85
+
+
+def test_keyword_search_demonstrations_search_for_the_request_not_its_opening():
+    from neuroshard.evolution import assistant_documents_demonstration as demo
+
+    policy = read(ROOT / 'config/experiments/assistant-general-policy-documents5.json')
+    assert policy['search_query'] == 'keywords' and 'never with the whole message' in policy['system_instruction']
+    cases = docs.cases('generated-train-styles3')
+    assert len(cases) == 440 and len({c['turns'][0]['user'] for c in cases}) == 440
+    for case in cases[:40]:
+        query = json.loads(demo.texts(case, 2, 'keywords')[0].split('\n')[1])['arguments']['query']
+        assert len(query.split()) <= 8 and all(word.lower() in (case['turns'][0]['user'] + ' ' + query).lower()
+                                               for word in query.split()[:1])
+        assert demo.demonstration(case, policy)['passed']
+    norm = lambda t: ' '.join(t.lower().split())  # noqa: E731
+    earlier = [read(ROOT / f)['sets'] for f in (phrasings.FILE, phrasings.FILE2, phrasings.FILE3, phrasings.FILE4)]
+    known = {norm(t) for sets in earlier for by in sets.values() for rows in by.values() for ts in rows.values()
+             for t in ts}
+    fresh = read(ROOT / phrasings.FILE5)['sets']
+    assert all(norm(t) not in known for by in fresh.values() for rows in by.values() for ts in rows.values()
+               for t in ts)

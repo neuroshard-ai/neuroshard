@@ -219,11 +219,18 @@ GENERATED_TOPICS = {
     'confirmation6': ('curling', 'pinhole cameras', 'falafel making', 'ham radio', 'trapeze', 'basket weaving',
                       'mosaic tiling', 'kitesurfing', 'perfume blending', 'hula hooping', 'calligraphy brushes',
                       'sand sculpture'),
+    'generated-train-styles3': ('pottery glazes', 'birding apps', 'film photography', 'marathon training',
+                                'balcony gardens', 'board game design', 'bike commuting', 'jam making',
+                                'stand-up comedy', 'scale models'),
+    'generated-development5': ('fencing', 'quilting bees', 'tide tables', 'harmonica', 'ant farms', 'kayak rolls'),
+    'confirmation7': ('beekeeping suits', 'shadow puppets', 'gelato', 'radio drama', 'dog agility', 'lockpicking sport',
+                      'pressed flowers', 'trail maps', 'tin whistle', 'mead', 'ice fishing', 'zines'),
     'confirmation4': ('ice skating', 'puppetry', 'cheese making', 'model trains', 'orienteering', 'quilting',
                       'scuba diving', 'bonsai', 'improv theatre', 'map reading', 'candle making', 'fly fishing')}
 GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12, 'generated-development2': 6,
                     'generated-development3': 6, 'confirmation5': 12, 'generated-train-styles2': 30,
-                    'generated-development4': 6, 'confirmation6': 12}
+                    'generated-development4': 6, 'confirmation6': 12, 'generated-train-styles3': 30,
+                    'generated-development5': 6, 'confirmation7': 12}
 EXCLUDED = ('the', 'and', 'very', 'really')
 PHRASES = ('Keep at it', 'You can do this', 'One step at a time', 'Make it happen', 'See you out there')
 
@@ -277,7 +284,8 @@ def generated_cases(split):
                                                  'confirmation4': 99500, 'generated-development2': 93800,
                                                  'generated-development3': 94300, 'confirmation5': 99800,
                                                  'generated-train-styles2': 95700, 'generated-development4': 94400,
-                                                 'confirmation6': 99900}[split]
+                                                 'confirmation6': 99900, 'generated-train-styles3': 95800,
+                                                 'generated-development5': 94500, 'confirmation7': 99300}[split]
     out = []
     for kind in KINDS:
         for index in range(GENERATED_COUNTS[split]):

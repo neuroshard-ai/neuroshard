@@ -66,6 +66,8 @@ FILE2 = 'config/experiments/assistant-general-phrasings-development2.json'
 FILE3 = 'config/experiments/assistant-general-phrasings-round3.json'
 # Round 4: development4 (judges C1) and the sealed confirmation6.
 FILE4 = 'config/experiments/assistant-general-phrasings-round4.json'
+# Round 5: development5 (judges L9) and the sealed confirmation7.
+FILE5 = 'config/experiments/assistant-general-phrasings-round5.json'
 # Case splits built from the generated sets: split name -> (file, set name). generated-train-extra
 # draws further workspaces for chosen families from the training templates.
 SPLITS = {'generated-train': (FILE, 'train'), 'generated-train-extra': (FILE, 'train'),
@@ -73,13 +75,18 @@ SPLITS = {'generated-train': (FILE, 'train'), 'generated-train-extra': (FILE, 't
           'generated-development2': (FILE2, 'development2'),
           'generated-development3': (FILE3, 'development3'), 'confirmation5': (FILE3, 'confirmation5'),
           'generated-train-styles': (None, None), 'generated-train-styles2': (None, None),
-          'generated-development4': (FILE4, 'development4'), 'confirmation6': (FILE4, 'confirmation6')}
+          'generated-development4': (FILE4, 'development4'), 'confirmation6': (FILE4, 'confirmation6'),
+          'generated-train-styles3': (None, None),
+          'generated-development5': (FILE5, 'development5'), 'confirmation7': (FILE5, 'confirmation7')}
 
 
 # Spent sets (they judged units or were opened) become training wording for later units.
 STYLES_TRAIN = ((FILE, 'development'), (FILE2, 'development2'), (FILE, 'confirmation4'))
 # After confirmation5 opened: every spent set (C1 onward).
 STYLES_TRAIN2 = STYLES_TRAIN + ((FILE3, 'development3'), (FILE3, 'confirmation5'))
+# After confirmation6 opened (L9 onward): every spent set, including wrapped requests.
+STYLES_TRAIN3 = STYLES_TRAIN2 + (('config/experiments/assistant-general-phrasings-round4.json', 'development4'),
+                                 ('config/experiments/assistant-general-phrasings-round4.json', 'confirmation6'))
 
 
 def load(route, split):
@@ -87,9 +94,10 @@ def load(route, split):
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[3]
-    if split in ('generated-train-styles', 'generated-train-styles2'):
+    if split in ('generated-train-styles', 'generated-train-styles2', 'generated-train-styles3'):
         merged = {}
-        for path, name in (STYLES_TRAIN if split == 'generated-train-styles' else STYLES_TRAIN2):
+        for path, name in {'generated-train-styles': STYLES_TRAIN, 'generated-train-styles2': STYLES_TRAIN2,
+                           'generated-train-styles3': STYLES_TRAIN3}[split]:
             for kind, rows in json.loads((root / path).read_text())['sets'][route][name].items():
                 merged.setdefault(kind, []).extend(rows)
         return merged

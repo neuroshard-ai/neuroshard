@@ -39,7 +39,9 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-l8-gpu': ('config/experiments/assistant-general-l8.json',
                                          'config/experiments/assistant-general-l8-execution.json'),
             'assistant-general-c1-gpu': ('config/experiments/assistant-general-c1.json',
-                                         'config/experiments/assistant-general-c1-execution.json')}
+                                         'config/experiments/assistant-general-c1-execution.json'),
+            'assistant-general-l9-gpu': ('config/experiments/assistant-general-l9.json',
+                                         'config/experiments/assistant-general-l9-execution.json')}
 
 
 def declared(profile=PROFILE):
