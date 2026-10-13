@@ -82,6 +82,8 @@ def version(network):
     served = Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
                      plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None)
     served.routes = route_table(network.get('routing'))
+    served.route_names = {name: row['route'] for name, row in (network.get('routing') or {}).items()
+                          if isinstance(row, dict) and 'route' in row}
     if served.policies and not served.routes:
         raise ValueError('a routed version names its routes')
     for unit, _ in served.routes.values():
@@ -773,6 +775,25 @@ def choose_owners(state, served, rng=None, probe=reachable):
     return chosen
 
 
+def choose_route(router, served, feature, opening):
+    """(route name, route index) for one turn.
+
+    A K-route router (``logistic-context``) reads the message state with the opening message's state and
+    sends a low-confidence turn to its fallback; A3's binary router chooses scheduling or drafting.
+    """
+    from neuroshard.evolution import assistant_selector as selector
+
+    if router.get('rule') == 'logistic-context':
+        from neuroshard.evolution import assistant_turn_router as turn_router
+
+        route = turn_router.route(turn_router.verify(router), turn_router.context_feature(feature, opening))
+        if route not in served.route_names:
+            raise ValueError(f'the router chose {route}, which this version does not serve')
+        return route, served.route_names[route]
+    route = 'scheduling' if selector.choose(router, feature) else 'drafting'
+    return route, served.route_names.get(route, 2 if route == 'scheduling' else 1)
+
+
 class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
@@ -818,11 +839,13 @@ class Conversation:
         ring = relay.DriverRelay(self.sockets, served.world, config.hidden_size, served.max_tokens, signed=True,
                                  budget=self.budget)
         self.driver = serving.ServingDriver(partition, ring, self.link)
+        units = sorted({unit for unit, _ in served.routes.values()})
         self.session = Session(served.policy, world, name=served.name, previous='a2-u1' if served.policies else None,
-                               modules=('U1', 'L2', 'L3') if served.policies else ('U1',),
+                               modules=('U1', *units) if served.policies else ('U1',),
                                route_policies=served.policies)
         self.router, self.responses = stage.get('router'), {}
         self.respond = self.arm = None
+        self.opening = None  # the first message's feature, for a K-route router's context
 
     def say(self, text):
         """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
@@ -838,8 +861,9 @@ class Conversation:
             self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids)
         if self.router is not None:
             feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
-            route = 'scheduling' if selector.choose(self.router, feature) else 'drafting'
-            self.driver.route(2 if route == 'scheduling' else 1, self.arm if route == 'drafting' else True)
+            self.opening = feature if self.opening is None else self.opening
+            route, index = choose_route(self.router, self.served, feature, self.opening)
+            self.driver.route(index, self.arm if route == 'drafting' else True)
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
                                                          self.served.eos_ids)

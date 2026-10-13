@@ -8,7 +8,7 @@ import copy
 import json
 import time
 
-from neuroshard.evolution import assistant_workflow as workflow
+from neuroshard.assistant import interfaces
 from neuroshard.evolution.modular_reference_execution import identity
 
 FORMAT = 'neuroshard-assistant-public/1'
@@ -27,13 +27,13 @@ def bind(policy, *, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'),
         raise ValueError('public session refuses external effects')
     body = {'format': FORMAT, 'name': name, 'previous': previous,
             'policy_sha256': identity(policy),
-            'tools_sha256': identity(workflow.interface(policy).TOOLS),
+            'tools_sha256': identity(interfaces.interface(policy).TOOLS),
             'modules': list(modules), 'limits': copy.deepcopy(policy['limits'])}
     if route_policies:
         if any(item.get('external_effects') for item in route_policies.values()):
             raise ValueError('public routes refuse external effects')
         body['routes'] = {name: {'policy_sha256': identity(item),
-                                'tools_sha256': identity(workflow.interface(item).TOOLS)}
+                                'tools_sha256': identity(interfaces.interface(item).TOOLS)}
                           for name, item in sorted(route_policies.items())}
     return {**body, 'version_sha256': identity(body)}
 
@@ -52,12 +52,23 @@ class Session:
         self.route_policies = route_policies
         self.version = bind(policy, name=name, previous=previous, modules=modules, route_policies=route_policies)
         self.consent = consent
-        self.tools = workflow.interface(policy)
+        self.tools = interfaces.interface(policy)
+        self.worlds = {}
         if route_policies:
             from neuroshard.evolution import assistant_routing
-            self.world = assistant_routing.workspace(route_policies.values()).Workspace(copy.deepcopy(world))
+            # Drafting and scheduling share one calendar workspace, as served since A3; the documents and chat
+            # routes each have their own, built from the same files on this device.
+            calendar = [item for item in route_policies.values() if interfaces.interface(item).group == 'calendar']
+            if calendar:
+                self.worlds['calendar'] = assistant_routing.workspace(calendar).Workspace(copy.deepcopy(world))
+            for item in route_policies.values():
+                kind = interfaces.interface(item)
+                if kind.group != 'calendar' and kind.group not in self.worlds:
+                    self.worlds[kind.group] = kind.Workspace(copy.deepcopy(world))
+            self.world = self.worlds.get('calendar') or next(iter(self.worlds.values()))
         else:
             self.world = self.tools.Workspace(copy.deepcopy(world))
+            self.worlds[self.tools.group] = self.world
         self.messages = [{'role': 'system', 'content': policy['system_instruction']}]
         self.calls = []
         self.memory = {}
@@ -94,7 +105,8 @@ class Session:
             raise ValueError('user turn must be non-empty text')
         if route is not None:
             self.policy = self.route_policies[route]
-            self.tools = workflow.interface(self.policy)
+            self.tools = interfaces.interface(self.policy)
+            self.world = self.worlds[self.tools.group]
             self.messages[0] = {'role': 'system', 'content': self.policy['system_instruction']}
         self.messages.append({'role': 'user', 'content': user})
         used, final, completed, failure = 0, '', False, None
