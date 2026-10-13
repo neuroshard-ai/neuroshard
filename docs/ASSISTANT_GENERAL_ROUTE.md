@@ -212,3 +212,31 @@ same way, and contains no template from any earlier set.
 two (an invoice sum and a notice period). Its digest `5c4e428b…` is pinned in the
 [sealed confirmation4 declaration](../config/experiments/assistant-general-l7-confirmation.json), which
 also freezes the case IDs and contents before opening.
+
+### Confirmation 4 (sealed, opened once)
+
+One canonical CPU host, 2.0 hours, $2.11
+([report](../config/experiments/assistant-general-l7-confirmation-report.json)). The frozen case hashes
+matched, and every episode rescored identically.
+
+| confirmation4 (terse/formal wording) | result | minimum |
+| --- | --- | --- |
+| documents, parent + L7 | 127/132 (96.2%) | 85% |
+| chat, parent + calculator | 90/96 (93.8%) | 90% |
+| not-found | 20/24 (83.3%) | 90% |
+| *documents, parent alone (reported)* | *118/132; not-found 16/24* | — |
+
+**Not shipped, as declared:** not-found is below its minimum. It is still the best general route so far.
+On wording in a style no training or development set used, L7 gained 10 document cases over the parent
+and lost 1. Documents and chat clear their bars with margin.
+
+The four not-found misses are one form: terse requests that presuppose the flight ("I have a flight home
+from Osaka; tell me when it departs"). L7 answers each with the outbound departure time. Training was
+casual and development2 opened with background, so neither contained this presupposing imperative. The
+chat misses are "exclude" (8/12, the forbidden word used anyway, as for the parent in every split) and
+one each of include and JSON.
+
+Next: an absent fact must not be answerable by a present one that resembles it. This is now the general
+route's one failing family. Neither more templates of the same styles nor more passes over them will
+settle it. The next round gives experience in every style to date, adds a sealed confirmation5, and
+considers a check in the workspace itself.

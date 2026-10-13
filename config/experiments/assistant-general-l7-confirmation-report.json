@@ -1,0 +1,100 @@
+{
+  "format": "neuroshard-assistant-general-l7-confirmation-report/1",
+  "source_commit": "75877a3253253748f05511355ee11071fe8f08c9",
+  "ci_run": 38342531667,
+  "episodes_file": "config/experiments/assistant-general-l7-confirmation-episodes.json.gz",
+  "episodes_gz_sha256": "555a786d7fe9891edff6a33671f0c37be8851f3256e0657e6b3a8840b73c74b7",
+  "documents_L7": {
+    "passed": 127,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "11/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "12/12",
+      "leave-days": "12/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "8/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "documents_parent": {
+    "passed": 118,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "9/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "11/12",
+      "leave-days": "11/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "4/12",
+      "notice": "11/12",
+      "owner": "12/12"
+    }
+  },
+  "chat": {
+    "passed": 90,
+    "cases": 96,
+    "families": {
+      "arithmetic": "12/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "8/12",
+      "include": "11/12",
+      "json": "11/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "rescored": {
+    "documents_L7": 127,
+    "documents_parent": 118,
+    "chat": 90
+  },
+  "frozen_cases_matched": true,
+  "rates": {
+    "documents": 0.9621212121212122,
+    "chat": 0.9375,
+    "not_found": 0.8333333333333334
+  },
+  "checks": {
+    "documents": true,
+    "chat": true,
+    "not_found": false
+  },
+  "passed": false,
+  "L7_against_parent": {
+    "gained": 10,
+    "lost": 1
+  },
+  "not_found_parent": 0.6666666666666666,
+  "findings": {
+    "return flights": "8/12 (parent 4/12). All four misses are terse, formal requests that presuppose the flight (\"I have a flight home from Osaka; tell me when it departs\", \"extract the departure time of the flight bringing me home from Montreal\"); L7 answers with the outbound departure time. Training was casual and development2 background-first; neither had this presupposing imperative form.",
+    "claim deadline": "11/12; one reply restated the 14-day rule instead of the date.",
+    "chat exclude": "8/12; all four misses use the forbidden word (\"and\" three times, \"the\" once). The parent fails the same family in every split.",
+    "documents": "127/132 against the parent 118/132: L7 gained 10 and lost 1 on wording written in a style no training or development set used."
+  },
+  "decision": "Not shipped, as declared: not-found 20/24 (83.3%) is below 90%. Documents (96.2%) and chat (93.8%) meet their minimums. confirmation4 is spent.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T06:11:08.581167+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0f9030201bfdaf5f5"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 7169.587137,
+    "conservative_compute_usd": 2.107858618278,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 2.107858618278,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}

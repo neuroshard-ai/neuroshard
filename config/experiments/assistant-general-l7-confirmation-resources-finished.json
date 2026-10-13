@@ -1,0 +1,13 @@
+{
+  "finished_utc": "2026-10-13T06:11:08.581167+00:00",
+  "remaining_instances": [],
+  "remaining_volumes": [],
+  "security_group_retired": true,
+  "instance_ids": [
+    "i-0f9030201bfdaf5f5"
+  ],
+  "instance_type": "r7i.4xlarge",
+  "conservative_instance_seconds": 7169.587137,
+  "conservative_compute_usd": 2.107858618278,
+  "storage_and_transfer_invoice_not_in_compute_total": true
+}
