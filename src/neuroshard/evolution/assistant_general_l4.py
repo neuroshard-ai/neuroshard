@@ -37,7 +37,9 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-l7-gpu': ('config/experiments/assistant-general-l7.json',
                                          'config/experiments/assistant-general-l7-execution.json'),
             'assistant-general-l8-gpu': ('config/experiments/assistant-general-l8.json',
-                                         'config/experiments/assistant-general-l8-execution.json')}
+                                         'config/experiments/assistant-general-l8-execution.json'),
+            'assistant-general-c1-gpu': ('config/experiments/assistant-general-c1.json',
+                                         'config/experiments/assistant-general-c1-execution.json')}
 
 
 def declared(profile=PROFILE):
@@ -88,8 +90,13 @@ def demonstrations(tokenizer, policy, home, split='train'):
     return [trainer.encode(tokenizer, t, tools) for t in items], report
 
 
-def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=None):
-    """The parent's greedy chat replies on the chat training split; only those that pass are replayed."""
+def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=None, temperature=0.0, attempts=1,
+                name='chat-replay'):
+    """The parent's chat replies on the chat training split(s); only those that pass are kept.
+
+    The first attempt is greedy. With ``attempts > 1`` each case that has not passed is sampled again at
+    ``temperature`` (fresh seed per attempt) and its first passing reply is kept: verified experience from
+    the parent's own distribution, never from another model."""
     from concurrent.futures import ThreadPoolExecutor
 
     from neuroshard.evolution import assistant_chat_data as chat
@@ -98,17 +105,27 @@ def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=
     from neuroshard.evolution import assistant_growth_run as growth
     from neuroshard.evolution import assistant_rollout as rollout
 
-    cases = chat.cases(split)
-    batcher = rollout.Batcher(model, tokenizer, growth.sampling(policy, 0, 1.0), max_batch=parameters['max_batch'],
-                              device=parameters['device'], seed=declared()['training']['seed'] if seed is None else seed)
-    try:
-        with ThreadPoolExecutor(max_workers=parameters['workers']) as pool:
-            rows = list(pool.map(lambda case: general.chat_episode(case, batcher.respond, policy), cases))
-    finally:
-        batcher.close()
+    cases = [c for split_name in ([split] if isinstance(split, str) else split) for c in chat.cases(split_name)]
+    seed = declared()['training']['seed'] if seed is None else seed
+    rows, attempt_of = [None] * len(cases), [None] * len(cases)
+    for attempt in range(attempts):
+        pending = [i for i, row in enumerate(rows) if row is None or not row['passed']]
+        if not pending:
+            break
+        batcher = rollout.Batcher(model, tokenizer, growth.sampling(policy, temperature if attempt else 0, 0.95 if attempt
+                                                                    else 1.0), max_batch=parameters['max_batch'],
+                                  device=parameters['device'], seed=seed + attempt)
+        try:
+            with ThreadPoolExecutor(max_workers=parameters['workers']) as pool:
+                fresh = list(pool.map(lambda i: general.chat_episode(cases[i], batcher.respond, policy), pending))
+        finally:
+            batcher.close()
+        for i, row in zip(pending, fresh):
+            rows[i], attempt_of[i] = row, attempt
     from neuroshard.evolution import assistant_workspace as base
 
-    tools = general.Calculator.TOOLS
+    kit = general.ChatTools if policy.get('interface') == 'chat-tools/1' else general.Calculator
+    tools = kit.TOOLS
     items = []
     for case, row in zip(cases, rows):
         if not row['passed']:
@@ -119,7 +136,7 @@ def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=
         for generated in row['generations']:
             messages.append({'role': 'assistant', 'content': generated['text']})
             try:
-                proposed = base.parse_calls(generated['text'], general.Calculator.REGISTRY)
+                proposed = base.parse_calls(generated['text'], kit.REGISTRY)
             except (ValueError, TypeError, RecursionError):
                 clean = False
                 break
@@ -131,7 +148,8 @@ def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=
                       'trainable': [m['role'] == 'assistant' for m in messages]})
     report = {'cases': len(cases), 'passed': len(items),
               'by_family': dict(collections.Counter(t['family'] for t in items)),
-              'replay_sha256': growth.write_rows(home / 'chat-replay.jsonl.gz', items)}
+              'by_attempt': dict(collections.Counter(attempt_of[i] for i, row in enumerate(rows) if row['passed'])),
+              'replay_sha256': growth.write_rows(home / f'{name}.jsonl.gz', items)}
     return [trainer.encode(tokenizer, t, tools) for t in items], report
 
 
@@ -150,7 +168,10 @@ def integrate(models, tokenizer, declaration, parameters, home):
     for name, load in models.items():
         model = load()
         out[name] = {}
+        kinds = declaration.get('integrate', ['documents', 'chat'])
         for kind, module, run in (('documents', docs, general.documents_episode), ('chat', chat, general.chat_episode)):
+            if kind not in kinds:
+                continue
             policy, cases = routes[kind], module.cases(splits(declaration)[2][kind])
             batcher = rollout.Batcher(model, tokenizer, growth.sampling(policy, 0, 1.0),
                                       max_batch=parameters['max_batch'], device=parameters['device'],
@@ -258,7 +279,19 @@ def worker(request_path):
 
         routes, settings = policies(declaration), spec(declaration)
         begun = time.monotonic()
-        experience, reply['demonstrations'] = demonstrations(tokenizer, routes['documents'], home, experience_split)
+        if declaration.get('route') == 'chat':
+            # A chat unit: its experience is the parent's own verified chat replies, rejection-sampled.
+            sampling = declaration['experience']['sampling']
+            parent = load_parent()
+            experience, reply['chat_experience'] = chat_replay(
+                parent, tokenizer, routes['chat'], parameters, home, experience_split,
+                declaration['training']['seed'] + 1000, sampling['temperature'], sampling['attempts'], 'chat-experience')
+            del parent
+            growth.release_accelerator()
+            if reply['chat_experience']['passed'] < declaration['training']['minimum_experience']:
+                raise ValueError('too few verified chat replies to learn from')
+        else:
+            experience, reply['demonstrations'] = demonstrations(tokenizer, routes['documents'], home, experience_split)
         reply['phases']['demonstrate'] = time.monotonic() - begun
         begun = time.monotonic()
         parent = load_parent()

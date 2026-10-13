@@ -27,7 +27,7 @@ def _find(world, needle):
     return next(d for d in world['documents'] if needle(d))
 
 
-TRAINING = ('train', 'generated-train', 'generated-train-extra', 'generated-train-styles')
+TRAINING = ('train', 'generated-train', 'generated-train-extra', 'generated-train-styles', 'generated-train-styles2')
 
 
 def sentences(text):

@@ -64,17 +64,22 @@ FILE = 'config/experiments/assistant-general-phrasings.json'
 FILE2 = 'config/experiments/assistant-general-phrasings-development2.json'
 # Round 3: development3 (judges L8) and the sealed confirmation5, in two further styles.
 FILE3 = 'config/experiments/assistant-general-phrasings-round3.json'
+# Round 4: development4 (judges C1) and the sealed confirmation6.
+FILE4 = 'config/experiments/assistant-general-phrasings-round4.json'
 # Case splits built from the generated sets: split name -> (file, set name). generated-train-extra
 # draws further workspaces for chosen families from the training templates.
 SPLITS = {'generated-train': (FILE, 'train'), 'generated-train-extra': (FILE, 'train'),
           'generated-development': (FILE, 'development'), 'confirmation4': (FILE, 'confirmation4'),
           'generated-development2': (FILE2, 'development2'),
           'generated-development3': (FILE3, 'development3'), 'confirmation5': (FILE3, 'confirmation5'),
-          'generated-train-styles': (None, None)}
+          'generated-train-styles': (None, None), 'generated-train-styles2': (None, None),
+          'generated-development4': (FILE4, 'development4'), 'confirmation6': (FILE4, 'confirmation6')}
 
 
 # Spent sets (they judged units or were opened) become training wording for later units.
 STYLES_TRAIN = ((FILE, 'development'), (FILE2, 'development2'), (FILE, 'confirmation4'))
+# After confirmation5 opened: every spent set (C1 onward).
+STYLES_TRAIN2 = STYLES_TRAIN + ((FILE3, 'development3'), (FILE3, 'confirmation5'))
 
 
 def load(route, split):
@@ -82,9 +87,9 @@ def load(route, split):
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[3]
-    if split == 'generated-train-styles':
+    if split in ('generated-train-styles', 'generated-train-styles2'):
         merged = {}
-        for path, name in STYLES_TRAIN:
+        for path, name in (STYLES_TRAIN if split == 'generated-train-styles' else STYLES_TRAIN2):
             for kind, rows in json.loads((root / path).read_text())['sets'][route][name].items():
                 merged.setdefault(kind, []).extend(rows)
         return merged
@@ -109,13 +114,13 @@ def prompt(description, names, count, style, route='documents'):
             'Return only a JSON array of strings.')
 
 
-def valid(template, names):
-    return (isinstance(template, str) and 12 <= len(template) <= 280 and sorted(PLACEHOLDER.findall(template)) ==
+def valid(template, names, limit=280):
+    return (isinstance(template, str) and 12 <= len(template) <= limit and sorted(PLACEHOLDER.findall(template)) ==
             sorted(names) and not re.search(r'\d', template) and 'doc-' not in template.lower()
             and template.count('{') == template.count('}') == len(names))
 
 
-def parse(text, names):
+def parse(text, names, limit=280):
     start, end = text.find('['), text.rfind(']')
     try:
         values = json.loads(text[start:end + 1]) if 0 <= start < end else []
@@ -124,7 +129,7 @@ def parse(text, names):
     seen, out = set(), []
     for value in values:
         key = ' '.join(value.lower().split()) if isinstance(value, str) else None
-        if key and key not in seen and valid(value, names):
+        if key and key not in seen and valid(value, names, limit):
             seen.add(key)
             out.append(' '.join(value.split()))
     return out
@@ -145,11 +150,11 @@ def converse(text, bedrock, max_tokens=4096, temperature=1.0):
     return content[0].get('text', ''), response.get('usage', {})
 
 
-def generate(kind, count, style, bedrock=None, route='documents'):
+def generate(kind, count, style, bedrock=None, route='documents', limit=280):
     """One generation call; returns the valid, deduplicated templates and the raw response for the record."""
     description, names = table(route)[kind]
     text, usage = converse(prompt(description, names, count, style, route), bedrock or client())
-    return parse(text, names), {'text': text, 'usage': usage}
+    return parse(text, names, limit), {'text': text, 'usage': usage}
 
 
 def sample_values(route, kind, rng):
