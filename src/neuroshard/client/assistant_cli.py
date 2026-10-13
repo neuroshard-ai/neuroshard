@@ -48,6 +48,17 @@ def register(subcommands, root):
     govern.add_argument('--reject', action='store_true', help='vote: vote no')
     govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
     govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
+    grow = actions.add_parser('grow', parents=[common],
+                              help='Grow the assistant on the network: open, train, challenge or prove a growth job')
+    grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove'))
+    grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
+    grow.add_argument('--job', help='train/challenge/prove: the growth job ID')
+    grow.add_argument('--segment', type=int, help='train/challenge: the segment index')
+    grow.add_argument('--step', type=int, help='challenge: the step within the segment')
+    grow.add_argument('--steps', type=int, help='open: optimizer steps')
+    grow.add_argument('--segment-steps', type=int, default=8, help='open: steps per segment')
+    grow.add_argument('--reward', default='10', help='open: NEURO escrowed for contributors')
+    grow.add_argument('--challenge', help='prove: the challenge ID')
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
     seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
@@ -154,6 +165,9 @@ def run(args):
     if args.assistant_action == 'govern':
         govern(args, chain, network)
         return
+    if args.assistant_action == 'grow':
+        grow(args, chain, network)
+        return
     if args.assistant_action == 'status':
         state = chain.state()
         served = network.version(descriptor)[0]
@@ -253,4 +267,87 @@ def govern(args, chain, network):
         if not args.proposal:
             raise ValueError('enact needs --proposal')
         chain.submit(account, 'model_enact', proposal_id=args.proposal)
+    print('committed')
+
+
+def grow(args, chain, network):
+    """Contributors train growth jobs segment by segment from their own keys; anyone may check a step.
+
+    Training state is kept under ``--home/growth/<job>``: ``segment-<i>.state`` after each committed
+    segment, so the next contributor (or a challenger building a proof) starts from committed bytes.
+    """
+    import hashlib
+
+    from neuroshard.evolution import growth_replay
+    from neuroshard.evolution.growth_model import model_factory
+    from neuroshard.inference import growth as ledger_growth
+    from neuroshard.inference import optimistic as ledger
+
+    state = chain.state()
+    if args.grow_action == 'list':
+        for job_id, job in sorted(state.get('growth', {}).items()):
+            print(f"{job_id}: recipe {job['recipe_root'][:16]}, {job['steps']} steps in "
+                  f"{ledger_growth.segments(job)} segments, {len(job['commits'])} committed, "
+                  f"{len(job['challenges'])} challenged, reward {job['reward']}")
+        return
+    account = network.Account(args.home / 'account.key')
+    recipe = json.loads(args.recipe.read_text()) if args.recipe else None
+    if args.grow_action == 'open':
+        if not (recipe and args.steps):
+            raise ValueError('open needs --recipe and --steps')
+        make = model_factory(recipe)
+        model = make()
+        trainable, optimizer = growth_replay.start(model, recipe)
+        envelope = chain.submit(account, 'growth_open', recipe_root=growth_replay.recipe_root(recipe, recipe['model_root']),
+                                start_root=growth_replay.state_root(trainable, optimizer), steps=args.steps,
+                                segment_steps=args.segment_steps, reward=atoms(args.reward))
+        print(f'growth job {ledger.transaction_id(envelope)}')
+        return
+    job = state.get('growth', {}).get(args.job)
+    if job is None:
+        raise ValueError('no such open growth job')
+    store = args.home / 'growth' / args.job
+    store.mkdir(parents=True, exist_ok=True)
+    if args.grow_action == 'train':
+        if recipe is None or args.segment is None:
+            raise ValueError('train needs --recipe and --segment')
+        if growth_replay.recipe_root(recipe, recipe['model_root']) != job['recipe_root']:
+            raise ValueError('this recipe is not the job\'s recipe')
+        model = model_factory(recipe)()
+        if args.segment == 0:
+            trainable, optimizer = growth_replay.start(model, recipe)
+        else:
+            trainable, optimizer = growth_replay.load(model, recipe, (store / f'segment-{args.segment - 1}.state').read_bytes())
+        if growth_replay.state_root(trainable, optimizer) != ledger_growth.previous_root(job, args.segment):
+            raise ValueError('local state differs from the committed root this segment starts from')
+        first = args.segment * job['segment_steps']
+        roots = growth_replay.train_segment(model, trainable, optimizer, recipe, first,
+                                            first + ledger_growth.segment_length(job, args.segment))
+        (store / f'segment-{args.segment}.state').write_bytes(growth_replay.save(trainable, optimizer))
+        chain.submit(account, 'growth_commit', job_id=args.job, segment=args.segment, step_roots=roots)
+    elif args.grow_action == 'challenge':
+        # Rebuild the state before the disputed step from committed bytes, check it, and publish the bundle
+        # first, so validators hold it before the proof is submitted.
+        if recipe is None or args.segment is None or args.step is None:
+            raise ValueError('challenge needs --recipe, --segment and --step')
+        model = model_factory(recipe)()
+        segment, step = args.segment, args.step
+        trainable, optimizer = (growth_replay.start(model, recipe) if segment == 0 else growth_replay.load(
+            model, recipe, (store / f'segment-{segment - 1}.state').read_bytes()))
+        first = segment * job['segment_steps']
+        if step:
+            growth_replay.train_segment(model, trainable, optimizer, recipe, first, first + step)
+        payload = growth_replay.bundle(growth_replay.save(trainable, optimizer), first + step)
+        proof_root = hashlib.sha256(payload).hexdigest()
+        (store / f'proof-{proof_root}').write_bytes(payload)
+        chain.submit(account, 'growth_challenge', job_id=args.job, segment=segment, step=step, proof_root=proof_root)
+        from neuroshard.assistant import audit
+        for endpoint in network.get('proof_endpoints', []):
+            audit.post_proof(endpoint, proof_root, payload)
+        print(f'challenge posted with proof {proof_root}; prove it after the next block')
+        return
+    else:
+        if not args.challenge:
+            raise ValueError('prove needs --challenge')
+        chain.submit(account, 'growth_prove', job_id=args.job, challenge_id=args.challenge)
     print('committed')

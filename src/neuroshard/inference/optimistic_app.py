@@ -348,8 +348,35 @@ def promotion_or_fraud(node, replay):
                         and request['quality_root'] == approved['quality_root'])
         if request.get('kind') == 'governance_handover':
             return bool(node.get('promotion_authority')) and request['signer'] == node.get('promotion_authority')
+        if request.get('kind') == 'growth_step':
+            return growth_check(node, request)
         return replay(state, request)
     return check
+
+
+def growth_check(node, request):
+    """Judge a disputed growth step: re-execute it from the proof bundle's committed state.
+
+    The validator needs the recipe (named by ``recipe_root``) and the bundle in its stores, and the
+    pinned execution class; without them it gives no verdict, never a rejection.
+    """
+    from pathlib import Path
+
+    recipes, bundles = node.get('growth_recipes'), node.get('bundles')
+    if not recipes or not bundles:
+        raise ledger.NoVerdict('this validator holds no growth recipes')
+    recipe_path = Path(recipes) / f"{request['recipe_root']}.json"
+    proof_path = Path(bundles) / request['proof_root']
+    if not recipe_path.exists() or not proof_path.exists():
+        raise ledger.ProofUnavailable('growth recipe or proof bundle not held')
+    from neuroshard.evolution import growth_replay
+    from neuroshard.evolution.growth_model import model_factory
+
+    recipe = json.loads(recipe_path.read_text())
+    make_model = model_factory(recipe)
+    if growth_replay.recipe_root(recipe, recipe['model_root']) != request['recipe_root']:
+        raise ledger.ProofUnavailable('held recipe differs from the job')
+    return growth_replay.judge(make_model, recipe, proof_path.read_bytes(), request)
 
 
 def shard_checker(node):
