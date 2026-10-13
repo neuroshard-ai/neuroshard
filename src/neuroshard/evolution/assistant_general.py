@@ -24,6 +24,7 @@ def documents_episode(case, respond, policy):
     public = public_case(case)
     version = version_of(policy)
     world = documents.Workspace(public['world'], version)
+    tools = documents.tools(version)
     history = [{'role': 'system', 'content': policy['system_instruction']}]
     calls, rounds, generations = [], [], []
     started = time.monotonic()
@@ -31,14 +32,14 @@ def documents_episode(case, respond, policy):
         history.append({'role': 'user', 'content': user})
         final, completed, failure, used = '', False, None, 0
         for _ in range(policy['limits']['model_turns_per_user_turn']):
-            generated = respond(copy.deepcopy(history), copy.deepcopy(documents.TOOLS))
-            generations.append({**generated, 'request_sha256': identity({'messages': history, 'tools': documents.TOOLS})})
+            generated = respond(copy.deepcopy(history), copy.deepcopy(tools))
+            generations.append({**generated, 'request_sha256': identity({'messages': history, 'tools': tools})})
             if not generated['terminated']:
                 failure = 'generation did not terminate within its token/input budget'
                 break
             history.append({'role': 'assistant', 'content': generated['text']})
             try:
-                proposed = documents.parse_calls(generated['text'])
+                proposed = documents.parse_calls(generated['text'], version)
             except (ValueError, TypeError, RecursionError):
                 history.append({'role': 'tool', 'content': json.dumps({'error': 'invalid tool-call syntax or schema'})})
                 continue

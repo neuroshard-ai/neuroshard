@@ -5,6 +5,10 @@ a document decides the answer, reads that rule and applies it with the declared 
 For a question the documents cannot answer, it searches, reads the closest match, and reports not-found
 with the reason (for a return flight: the itinerary only has the outbound leg). Every demonstration is
 replayed through the workspace and must pass the scorer, or the job stops.
+
+Under the evidence interface (version 3) an answer quotes, word for word, the sentence of each cited
+document that states it or the rule it applies. A not-found reason quotes what the closest document
+does contain and says why that is not what was asked.
 """
 
 import json
@@ -23,9 +27,24 @@ def _find(world, needle):
     return next(d for d in world['documents'] if needle(d))
 
 
-def texts(case):
+TRAINING = ('train', 'generated-train', 'generated-train-extra', 'generated-train-styles')
+
+
+def sentences(text):
+    return [part.strip() for part in re.split(r'(?<=\.)\s+', text) if part.strip()]
+
+
+def evidence(document, needles):
+    """The first sentence of a document containing any needle, without its full stop, as a verbatim quote."""
+    for sentence in sentences(document['content']):
+        if any(needle in sentence for needle in needles):
+            return sentence.rstrip('.')
+    raise ValueError(f"no sentence of {document['id']} states {needles}")
+
+
+def texts(case, version=2):
     """The assistant replies, in order, that solve one training case."""
-    if case['split'] not in ('train', 'generated-train', 'generated-train-extra'):
+    if case['split'] not in TRAINING:
         raise ValueError('demonstrations are written for training cases only')
     world, turn = case['world'], case['turns'][0]
     question, expected, family = turn['user'], turn['expected'], case['family']
@@ -35,8 +54,15 @@ def texts(case):
             itinerary = _find(world, lambda d: d['title'].startswith('Itinerary ') and 'superseded' not in d['title'])
             out.append(call('read_document', document_id=itinerary['id']))
             reason = 'The current itinerary only lists the outbound flight; no return flight is in the documents.'
+            if version == 3:
+                leg = evidence(itinerary, ['Flight '])
+                reason = (f'The current itinerary only has the outbound flight ("{leg}"); it has no return flight '
+                          'home, so its departure time is not in the documents.')
         else:
             reason = 'No document mentions a car insurance policy number.'
+            if version == 3:
+                reason = ('No document mentions car or vehicle insurance or a policy number; the closest is the '
+                          'leave and expenses policy, which is an employer policy.')
         out.append(call('report_not_found', reason=reason))
         out.append('I could not find that in your documents: ' + reason[0].lower() + reason[1:])
         return out
@@ -61,7 +87,13 @@ def texts(case):
     else:
         answer = f'{fact}.'
     cited = ', '.join(sources)
-    out.append(call('submit_answer', answer=answer, source_ids=sources))
+    if version == 3:
+        needles = (['within '] if family == 'claim-deadline' else ['Amount due: '] if family == 'invoice-sum'
+                   else expected['facts'])
+        quotes = [evidence(_find(world, lambda d, k=k: d['id'] == k), needles) for k in sources]
+        out.append(call('submit_answer', answer=answer, source_ids=sources, evidence=quotes))
+    else:
+        out.append(call('submit_answer', answer=answer, source_ids=sources))
     out.append(f'{answer} (Sources: {cited})')
     return out
 
@@ -70,7 +102,7 @@ def demonstration(case, policy):
     """Run one demonstration through the documents workspace; it must pass the scorer."""
     from neuroshard.evolution import assistant_general as general
 
-    replies = iter(texts(case))
+    replies = iter(texts(case, general.version_of(policy)))
 
     def respond(messages, tools):
         return {'text': next(replies), 'terminated': True, 'executed': True, 'token_ids': [], 'input_token_ids': [],
@@ -86,24 +118,24 @@ def demonstration(case, policy):
 def trajectory(case, row, policy):
     """The trainer's item: the full conversation, with loss on every assistant reply."""
     messages = [{'role': 'system', 'content': policy['system_instruction']}]
-    history = documents_messages(case, row)
+    history = documents_messages(case, row, row.get('version', 2))
     messages += history
     return {'case_id': case['id'], 'family': case['family'], 'split': case['split'], 'messages': messages,
             'trainable': [m['role'] == 'assistant' for m in messages], 'complete': True, 'rounds': 1}
 
 
-def documents_messages(case, row):
+def documents_messages(case, row, version=2):
     """User, assistant and tool messages of a recorded episode, in order."""
     messages = [{'role': 'user', 'content': case['turns'][0]['user']}]
     calls = iter(row['calls'])
     for generated in row['generations']:
         messages.append({'role': 'assistant', 'content': generated['text']})
-        for _ in documents.parse_calls(generated['text']):
+        for _ in documents.parse_calls(generated['text'], version):
             messages.append({'role': 'tool', 'content': json.dumps(next(calls)['result'], ensure_ascii=False,
                                                                      sort_keys=True)})
     return messages
 
 
 def all_demonstrations(policy, split='train'):
-    cases = data.cases(split)
+    cases = [c for name in ([split] if isinstance(split, str) else split) for c in data.cases(name)]
     return [(case, demonstration(case, policy)) for case in cases]

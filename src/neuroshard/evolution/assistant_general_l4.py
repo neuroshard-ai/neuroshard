@@ -35,7 +35,9 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
             'assistant-general-l6-gpu': ('config/experiments/assistant-general-l6.json',
                                          'config/experiments/assistant-general-l6-execution.json'),
             'assistant-general-l7-gpu': ('config/experiments/assistant-general-l7.json',
-                                         'config/experiments/assistant-general-l7-execution.json')}
+                                         'config/experiments/assistant-general-l7-execution.json'),
+            'assistant-general-l8-gpu': ('config/experiments/assistant-general-l8.json',
+                                         'config/experiments/assistant-general-l8-execution.json')}
 
 
 def declared(profile=PROFILE):
@@ -80,7 +82,10 @@ def demonstrations(tokenizer, policy, home, split='train'):
         items.append(demo.trajectory(case, row, policy))
     report = {'cases': len(items), 'by_family': dict(collections.Counter(t['family'] for t in items)),
               'trajectories_sha256': growth.write_rows(home / 'documents-demonstrations.jsonl.gz', items)}
-    return [trainer.encode(tokenizer, t, documents.TOOLS) for t in items], report
+    from neuroshard.evolution import assistant_general as general
+
+    tools = documents.tools(general.version_of(policy))
+    return [trainer.encode(tokenizer, t, tools) for t in items], report
 
 
 def chat_replay(model, tokenizer, policy, parameters, home, split='train', seed=None):

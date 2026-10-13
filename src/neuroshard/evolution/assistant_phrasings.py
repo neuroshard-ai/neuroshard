@@ -62,19 +62,34 @@ PLACEHOLDER = re.compile(r'\{([a-z]+)\}')
 FILE = 'config/experiments/assistant-general-phrasings.json'
 # A second development set, generated after generated-development had judged two units (L5, L6).
 FILE2 = 'config/experiments/assistant-general-phrasings-development2.json'
+# Round 3: development3 (judges L8) and the sealed confirmation5, in two further styles.
+FILE3 = 'config/experiments/assistant-general-phrasings-round3.json'
 # Case splits built from the generated sets: split name -> (file, set name). generated-train-extra
 # draws further workspaces for chosen families from the training templates.
 SPLITS = {'generated-train': (FILE, 'train'), 'generated-train-extra': (FILE, 'train'),
           'generated-development': (FILE, 'development'), 'confirmation4': (FILE, 'confirmation4'),
-          'generated-development2': (FILE2, 'development2')}
+          'generated-development2': (FILE2, 'development2'),
+          'generated-development3': (FILE3, 'development3'), 'confirmation5': (FILE3, 'confirmation5'),
+          'generated-train-styles': (None, None)}
+
+
+# Spent sets (they judged units or were opened) become training wording for later units.
+STYLES_TRAIN = ((FILE, 'development'), (FILE2, 'development2'), (FILE, 'confirmation4'))
 
 
 def load(route, split):
     """The committed templates of one route and case split, by kind."""
     from pathlib import Path
 
+    root = Path(__file__).resolve().parents[3]
+    if split == 'generated-train-styles':
+        merged = {}
+        for path, name in STYLES_TRAIN:
+            for kind, rows in json.loads((root / path).read_text())['sets'][route][name].items():
+                merged.setdefault(kind, []).extend(rows)
+        return merged
     path, name = SPLITS[split]
-    data = json.loads((Path(__file__).resolve().parents[3] / path).read_text())
+    data = json.loads((root / path).read_text())
     return data['sets'][route][name]
 
 

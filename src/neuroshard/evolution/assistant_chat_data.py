@@ -209,9 +209,14 @@ GENERATED_TOPICS = {
                               'mushroom foraging'),
     'generated-development2': ('canoeing', 'embroidery', 'tide pooling', 'chess puzzles', 'composting worms',
                                'paper marbling'),
+    'generated-development3': ('rowing', 'beadwork', 'kite flying', 'crossword solving', 'seed saving',
+                               'glass etching'),
+    'confirmation5': ('falconry', 'letterpress printing', 'geocaching', 'soap making', 'tango', 'snorkelling',
+                      'wood carving', 'telescope making', 'bread kvass', 'archery', 'macrame', 'cave exploring'),
     'confirmation4': ('ice skating', 'puppetry', 'cheese making', 'model trains', 'orienteering', 'quilting',
                       'scuba diving', 'bonsai', 'improv theatre', 'map reading', 'candle making', 'fly fishing')}
-GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12, 'generated-development2': 6}
+GENERATED_COUNTS = {'generated-train': 40, 'generated-development': 6, 'confirmation4': 12, 'generated-development2': 6,
+                    'generated-development3': 6, 'confirmation5': 12}
 EXCLUDED = ('the', 'and', 'very', 'really')
 PHRASES = ('Keep at it', 'You can do this', 'One step at a time', 'Make it happen', 'See you out there')
 
@@ -262,7 +267,8 @@ def generated_cases(split):
     from neuroshard.evolution import assistant_phrasings as phrasings
 
     rows, seed = phrasings.load('chat', split), {'generated-train': 95500, 'generated-development': 93700,
-                                                 'confirmation4': 99500, 'generated-development2': 93800}[split]
+                                                 'confirmation4': 99500, 'generated-development2': 93800,
+                                                 'generated-development3': 94300, 'confirmation5': 99800}[split]
     out = []
     for kind in KINDS:
         for index in range(GENERATED_COUNTS[split]):

@@ -6,6 +6,11 @@ can check: the answer text and the IDs of the documents it relies on, or a state
 documents do not contain the answer. Nothing leaves the in-memory workspace.
 
 Only this module and its scorer know the interface; release-pinned modules are not changed.
+
+Version 3 (``workspace-documents/3``) requires evidence: ``submit_answer`` carries one to four quotes,
+each copied verbatim from a document it cites and has read, and the workspace refuses a quote it cannot
+find there. Only a submitted answer counts. Versions 1 and 2 are unchanged, so every recorded episode
+rescores as it was scored.
 """
 
 import copy
@@ -16,8 +21,8 @@ import unicodedata
 from neuroshard.evolution import assistant_workspace as base
 from neuroshard.evolution.modular_reference_execution import identity
 
-INTERFACES = ('workspace-documents/1', 'workspace-documents/2')
-INTERFACE = INTERFACES[-1]
+INTERFACES = ('workspace-documents/1', 'workspace-documents/2', 'workspace-documents/3')
+INTERFACE = INTERFACES[1]
 STRING, INTEGER = base.STRING, base.INTEGER
 MAX_DOCUMENTS, MAX_BYTES, TOP = 64, 16384, 5
 TOOLS = [
@@ -33,13 +38,33 @@ TOOLS = [
               {'reason': STRING}),
 ]
 REGISTRY = {item['function']['name']: item['function']['parameters'] for item in TOOLS}
+TOOLS_V3 = TOOLS[:4] + [
+    base.tool('submit_answer', 'Give the final answer to exactly what was asked. Cite the IDs of the documents it '
+              'relies on (each read in this conversation) and copy, word for word, one to four short quotes from '
+              'them that state it. If no quote states the exact thing asked, call report_not_found instead.',
+              {'answer': STRING, 'source_ids': {'type': 'array', 'items': STRING},
+               'evidence': {'type': 'array', 'items': STRING}}),
+    base.tool('report_not_found', 'Say that the documents do not contain the exact thing asked, after searching '
+              'and reading the closest document; the reason names what they contain instead.', {'reason': STRING}),
+]
+REGISTRY_V3 = {item['function']['name']: item['function']['parameters'] for item in TOOLS_V3}
+MIN_QUOTE, MAX_QUOTE = 8, 300
 WORD = re.compile(r'[a-z0-9]+')
 CITATION = re.compile(r'doc-[0-9a-f]{8}')
 HYPHENS = dict.fromkeys(map(ord, '\u2010\u2011\u2012\u2013\u2014\u2212'), '-')
 
 
-def parse_calls(text):
-    return base.parse_calls(text, REGISTRY)
+def tools(version=2):
+    return TOOLS_V3 if version == 3 else TOOLS
+
+
+def parse_calls(text, version=2):
+    return base.parse_calls(text, REGISTRY_V3 if version == 3 else REGISTRY)
+
+
+def quoted(quote, content):
+    """A quote appears in a document, compared as normalised words (case, punctuation, hyphens, commas)."""
+    return bool(normalize(quote)) and f' {normalize(quote)} ' in f' {normalize(content)} '
 
 
 def words(text):
@@ -50,9 +75,10 @@ class Workspace:
     registry = REGISTRY
 
     def __init__(self, public_world, version=2):
-        if version not in (1, 2):
+        if version not in (1, 2, 3):
             raise ValueError('unknown documents workspace version')
         self.version = version
+        self.registry = REGISTRY_V3 if version == 3 else REGISTRY
         if set(public_world) != {'documents'}:
             raise ValueError('workspace accepts public documents only, not scoring metadata')
         self.documents = {}
@@ -132,6 +158,20 @@ class Workspace:
         if name in ('calculate', 'shift_date'):
             helper = base.Workspace.__new__(base.Workspace)
             return base.Workspace._apply(helper, name, args)
+        if name == 'submit_answer' and self.version == 3:
+            ids, quotes = args['source_ids'], args['evidence']
+            if (not 1 <= len(args['answer']) <= 2000 or not 1 <= len(ids) <= 4 or len(set(ids)) != len(ids)
+                    or not set(ids) <= self.read_ids):
+                raise ValueError('an answer needs text and distinct sources read here')
+            if not 1 <= len(quotes) <= 4 or any(not MIN_QUOTE <= len(q) <= MAX_QUOTE for q in quotes):
+                raise ValueError('an answer needs one to four short quotes')
+            missing = [q for q in quotes if not any(quoted(q, self.documents[i]['content']) for i in ids)]
+            if missing:
+                return {'error': 'evidence not found in the cited documents; quote them word for word, or report '
+                                 'not found', 'unquoted': missing}
+            self.answer = {'answer': args['answer'], 'source_ids': sorted(ids), 'evidence': list(quotes)}
+            self.not_found = None
+            return {'submitted': True}
         if name == 'submit_answer':
             ids = args['source_ids']
             if (not 1 <= len(args['answer']) <= 2000 or not 1 <= len(ids) <= 4 or len(set(ids)) != len(ids)
@@ -182,6 +222,8 @@ def score_round(snapshot, expected, terminated, final_text, version=2):
     """
     if version == 1:
         return score_round_v1(snapshot, expected, terminated, final_text)
+    if version == 3 and not expected.get('not_found') and snapshot['answer'] is None:
+        return False  # version 3 counts only a submitted, evidenced answer
     if not terminated or not isinstance(final_text, str) or not final_text.strip():
         return False
     if expected.get('not_found'):

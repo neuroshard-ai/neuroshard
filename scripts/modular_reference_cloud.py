@@ -48,6 +48,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-general-l5-gpu": "config/experiments/assistant-general-l5-resources.json",
                      "assistant-general-l6-gpu": "config/experiments/assistant-general-l6-resources.json",
                      "assistant-general-l7-gpu": "config/experiments/assistant-general-l7-resources.json",
+                     "assistant-general-l8-gpu": "config/experiments/assistant-general-l8-resources.json",
                      "assistant-growth-router": "config/experiments/assistant-growth-router2-resources.json",
                      "assistant-growth-router3": "config/experiments/assistant-growth-router3-resources.json",
                      "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
@@ -98,6 +99,7 @@ GRANITE_PROFILES = {
     "assistant-general-l5-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
     "assistant-general-l6-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
     "assistant-general-l7-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l8-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-router": ("assistant_growth_router", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router3": ("assistant_growth_router3", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
@@ -136,7 +138,7 @@ GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile
     "assistant-experience-compose-compose1", "assistant-experience-compose-compose2", "assistant-growth-gpu",
     "assistant-growth-resume-gpu", "assistant-growth-round2-gpu", "assistant-growth-round3-gpu",
     "assistant-growth-round4-gpu", "assistant-growth-round5-gpu", "assistant-growth-cohort3-gpu",
-    "assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu")}
+    "assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
                    "assistant-growth-gpu": ".growth", "assistant-growth-resume-gpu": ".growth",
                    "assistant-growth-round2-gpu": ".growth", "assistant-growth-round3-gpu": ".growth",
@@ -204,7 +206,7 @@ def source_freeze(profile):
     if profile == "assistant-growth-cohort3-gpu":
         from neuroshard.evolution.assistant_growth_cohort3 import committed_sources as upgrade_sources
         return upgrade_sources()
-    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu"):
+    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu"):
         from neuroshard.evolution.assistant_general_l4 import committed_sources as l4_sources
         return l4_sources(profile=profile)
     if profile == "assistant-growth-router":
@@ -681,7 +683,7 @@ def remote_command(profile):
     if profile == "assistant-growth-cohort3-gpu":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_cohort3.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
-    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu"):
+    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_general_l4.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile == "assistant-growth-router":

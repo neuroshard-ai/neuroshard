@@ -21,7 +21,8 @@ from neuroshard.evolution.modular_reference_execution import identity
 SPLITS = {'train': (90000, 12), 'development': (91000, 6), 'confirmation': (92000, 12),
           'confirmation2': (96000, 12), 'confirmation3': (98000, 12),
           'generated-train': (93000, 60), 'generated-development': (93500, 6), 'confirmation4': (99000, 12),
-          'generated-train-extra': (93900, 0), 'generated-development2': (93600, 6)}
+          'generated-train-extra': (93900, 0), 'generated-development2': (93600, 6),
+          'generated-train-styles': (94100, 30), 'generated-development3': (94200, 6), 'confirmation5': (99700, 12)}
 # Further training workspaces for chosen families (L7): return-flight not-found with outbound lookups
 # beside it, so the extra experience contrasts the two rather than teaching not-found alone.
 EXTRA = {'generated-train-extra': {'not-found-return': 60, 'flight-time': 30}}
@@ -246,7 +247,7 @@ def make_case(split, kind, index):
     world, facts = _world(rng, split, f'{kind}-{index}')
     development, confirmation, expected = _kinds(facts)[kind]
     if split in ('generated-train', 'generated-development', 'confirmation4', 'generated-train-extra',
-                 'generated-development2'):
+                 'generated-development2', 'generated-train-styles', 'generated-development3', 'confirmation5'):
         from neuroshard.evolution import assistant_phrasings as phrasings  # only the generated splits need it
 
         rows = phrasings.load('documents', split)[kind]
