@@ -317,3 +317,27 @@ C1 advances, as declared. Recorded before opening: in one exclude case C1 wrote 
 (`include:and`), and in another it revised eight times and ran out of turns. The
 [sealed confirmation6](../config/experiments/assistant-general-c1-confirmation.json) wraps each request in a
 longer message and runs L7 and C1 as judged, with version 5's chat for comparison.
+
+### Confirmation 6 (sealed, opened once)
+
+One canonical CPU host, $2.29 ([report](../config/experiments/assistant-general-c1-confirmation-report.json)).
+The frozen case hashes matched, and every episode rescored identically.
+
+| confirmation6 (requests inside longer messages) | result | minimum |
+| --- | --- | --- |
+| documents, parent + L7 | 110/132 (83.3%) | 85% |
+| chat, parent + C1 | **92/96 (95.8%)** | 90% |
+| not-found | **24/24** | 90% |
+| *chat, version 5 (parent + calculator), reported* | *91/96* | — |
+
+**Not shipped, as declared:** documents are two cases short. C1 fixed chat, which now passes on its first
+sealed test.
+
+The document misses have one cause, which this style was the first to expose. In 21 of 22, the request
+opens with unrelated sentences ("I have a big presentation tomorrow ..."). L7 searches with only that
+opening sentence, BM25 returns unrelated documents, and L7 reports not found. No training wording put
+the request after unrelated context.
+
+The fix is in the search step. Demonstrations and the policy must search for the request itself, not
+its opening sentence. Training must include wrapped requests from the now-spent confirmation6 wording.
+The next unit is judged on a fresh development set and a confirmation7.

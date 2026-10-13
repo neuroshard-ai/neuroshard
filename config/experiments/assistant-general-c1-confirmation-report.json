@@ -1,0 +1,91 @@
+{
+  "format": "neuroshard-assistant-general-c1-confirmation-report/1",
+  "source_commit": "1e59b3cbe95da357cecb55f387ed62199287ae75",
+  "ci_run": 38439281853,
+  "episodes_file": "config/experiments/assistant-general-c1-confirmation-episodes.json.gz",
+  "episodes_gz_sha256": "b773d8d9cc5b6561f6c97d667a04fc271949a541971a3aa79740c3aee58a171d",
+  "documents_L7": {
+    "passed": 110,
+    "cases": 132,
+    "families": {
+      "battery": "7/12",
+      "claim-deadline": "11/12",
+      "deposit": "9/12",
+      "flight-time": "11/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "6/12",
+      "leave-days": "11/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "12/12",
+      "notice": "8/12",
+      "owner": "11/12"
+    }
+  },
+  "chat_C1": {
+    "passed": 92,
+    "cases": 96,
+    "families": {
+      "arithmetic": "12/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "9/12",
+      "include": "12/12",
+      "json": "11/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "chat_v5_comparison": {
+    "passed": 91,
+    "cases": 96,
+    "families": {
+      "arithmetic": "11/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "9/12",
+      "include": "12/12",
+      "json": "11/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "rescored": {
+    "documents_L7": 110,
+    "chat_C1": 92,
+    "chat_v5": 91
+  },
+  "frozen_cases_matched": true,
+  "rates": {
+    "documents": 0.8333333333333334,
+    "chat": 0.9583333333333334,
+    "not_found": 1.0
+  },
+  "checks": {
+    "documents": false,
+    "chat": true,
+    "not_found": true
+  },
+  "passed": false,
+  "findings": {
+    "chat": "C1 92/96 (95.8%) passes; version 5 chat (parent with calculator) scored 91/96 on the same cases. Exclude 9/12 for both.",
+    "not-found": "24/24.",
+    "documents": "L7 110/132 (83.3%) fails by two cases. 21 of 22 misses are found-but-reported-missing: the request opens with one or two unrelated sentences (\"I have a big presentation tomorrow...\"), L7 searches with only that opening sentence, BM25 returns unrelated documents, and L7 reports not found. Its training wording never put the request after unrelated context; this style (confirmation6) is the first that did."
+  },
+  "decision": "Not shipped, as declared: documents 83.3% is below 85%. Chat and not-found pass. confirmation6 is spent.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T20:26:24.969355+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0574fa5d2fdb787aa"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 7789.339908,
+    "conservative_compute_usd": 2.2900659329520003,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 2.2900659329520003,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}
