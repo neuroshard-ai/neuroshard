@@ -32,7 +32,7 @@ NEURO = 1_000_000
 SUPPLY = 1_000_000 * NEURO
 PARAMS = {**ledger.PARAMS, 'job_blocks': 3600, 'challenge_blocks': 600, 'proof_blocks': 300, 'max_jobs': 256,
           'max_results': 1024}
-PORTS = {'p2p': 26656, 'rpc': 26657, 'owner': 28700, 'faucet': 28780}
+PORTS = {'p2p': 26656, 'rpc': 26657, 'owner': 28700, 'faucet': 28780, 'artifacts': 28790}
 PEER_TIMEOUT = 600
 HANDSHAKE_SECONDS = 5
 MAX_HANDSHAKES = 16
@@ -121,6 +121,72 @@ def download(url, path, pin, opener=urllib.request.urlopen):
         partial.unlink(missing_ok=True)
 
 
+def sources(network):
+    """Every base URL a released file may come from: the descriptor's ``assets`` and its ``mirrors``.
+
+    Each file is pinned by size and SHA-256, so any source is safe; one that serves different bytes is
+    refused and the next is tried. A peer running ``serve_artifacts`` is a mirror like any other.
+    """
+    listed = ([network['assets']] if isinstance(network.get('assets'), str) else list(network.get('assets', [])))
+    listed += list(network.get('mirrors', []))
+    if not listed or not all(isinstance(url, str) and url.startswith(('http://', 'https://')) and url.endswith('/')
+                             for url in listed):
+        raise ValueError('a network names at least one http(s) artifact source ending in /')
+    return list(dict.fromkeys(listed))
+
+
+def fetch(network, name, path, progress=print, opener=urllib.request.urlopen):
+    """One pinned released file from the first source that serves exactly its bytes."""
+    pin, failures = network['files'][name], []
+    for base in sources(network):
+        try:
+            download(base + pin['asset'], path, pin, opener)
+            return base
+        except (OSError, ValueError) as error:
+            failures.append(f'{base}: {error}')
+            progress(f'  {base} failed for {name}; trying the next source')
+    raise ValueError(f'no source served {name} with its pinned digest: ' + '; '.join(failures))
+
+
+def serve_artifacts(network, home, host, port):
+    """Serve this machine's verified copies of the released files to peers, by asset name, read-only.
+
+    Only files whose size and digest match the descriptor's pins are offered, so a peer cannot be handed
+    anything the network did not pin, and an owner can mirror without being trusted.
+    """
+    store = Path(home) / network['version']
+    offered = {}
+    for name, pin in network['files'].items():
+        for rank in range(0, 64):
+            path = store / f'stage-{rank}' / name
+            if path.is_file() and matches(path, pin):
+                offered[pin['asset']] = (path, pin)
+                break
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            item = offered.get(self.path.lstrip('/'))
+            if item is None:
+                self.send_response(404)
+                self.end_headers()
+                return
+            path, pin = item
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/octet-stream')
+            self.send_header('Content-Length', str(pin['bytes']))
+            self.end_headers()
+            with path.open('rb') as handle:
+                for block in iter(lambda: handle.read(CHUNK), b''):
+                    self.wfile.write(block)
+
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer((host, port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, sorted(offered)
+
+
 def stage_files(served, rank):
     if rank == 0:
         return ['integration.json'] + (['router.json'] if served.policies else [])
@@ -148,7 +214,7 @@ def fetch_stage(network, rank, home, progress=print):
         pin, path = network['files'][name], local_path(store, name)
         if not matches(path, pin):
             progress(f'Downloading {name} ({pin["bytes"] / 2 ** 20:.1f} MiB)')
-            download(network['assets'] + pin['asset'], path, pin)
+            fetch(network, name, path, progress)
     stage = {'config': store / 'config', 'shard': store / 'shard'}
     if rank == 0:
         stage.update(tokenizer=store / 'config', gate=read(store / 'integration.json')['arms']['update']['gate'])

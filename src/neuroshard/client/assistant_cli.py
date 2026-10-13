@@ -23,6 +23,8 @@ def register(subcommands, root):
     host.add_argument('--endpoint', required=True, help='host:port where users reach this machine')
     host.add_argument('--listen', default='0.0.0.0', help='Local address to listen on')
     host.add_argument('--threads', type=int)
+    host.add_argument('--mirror-port', type=int,
+                      help='Also serve your verified copies of the released files to peers on this port')
     audit = actions.add_parser('audit', parents=[common], help='Replay committed owner logs and prove faults on chain')
     audit.add_argument('--shard', type=int, action='append', required=True, help='Shard to audit; may be repeated')
     audit.add_argument('--once', action='store_true', help='Audit the currently open jobs and exit')
@@ -168,6 +170,9 @@ def run(args):
         owner = network.Owner(served, stage, args.shard, chain, network.Account(args.home / 'account.key'),
                               network.signing_key(args.home / f'log-{args.shard}.key'), args.home, args.threads or 8)
         owner.register(args.endpoint, descriptor.get('faucet'))
+        if args.mirror_port:
+            _, offered = network.serve_artifacts(descriptor, args.home, args.listen, args.mirror_port)
+            print(f'Mirroring {len(offered)} pinned file(s) on port {args.mirror_port}')
         owner.run(args.listen, int(args.endpoint.rsplit(':', 1)[1]))
         return
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:

@@ -148,3 +148,51 @@ def test_chain_reads_verify_roots_and_cross_check_every_rpc(monkeypatch):
     assert network.endpoints({'rpc': 'http://a', 'rpcs': ['http://b', 'http://a']}) == ['http://a', 'http://b']
     with pytest.raises(ValueError):
         network.endpoints({'rpc': []})
+
+
+def test_any_mirror_serves_pinned_files_and_a_wrong_one_is_refused(tmp_path):
+    import hashlib
+    import urllib.request
+
+    from neuroshard.assistant import network
+
+    content = b'unit weights' * 1000
+    pin = {'asset': 'unit.safetensors', 'bytes': len(content), 'sha256': hashlib.sha256(content).hexdigest()}
+    descriptor = {'version': 'v', 'files': {'L7/trainable.safetensors': pin}, 'assets': 'http://127.0.0.1:1/'}
+    holder = tmp_path / 'holder' / 'v' / 'stage-2' / 'L7'
+    holder.mkdir(parents=True)
+    (holder / 'trainable.safetensors').write_bytes(content)
+    server, offered = network.serve_artifacts(descriptor, tmp_path / 'holder', '127.0.0.1', 0)
+    try:
+        port = server.server_address[1]
+        assert offered == ['unit.safetensors']
+        evil = tmp_path / 'evil' / 'v' / 'stage-2' / 'L7'
+        evil.mkdir(parents=True)
+        (evil / 'trainable.safetensors').write_bytes(b'x' * len(content))
+        bad_server, bad_offered = network.serve_artifacts(descriptor, tmp_path / 'evil', '127.0.0.1', 0)
+        assert bad_offered == []  # a holder never offers bytes that differ from the pin
+        bad_server.shutdown()
+
+        def opener(url, timeout):
+            if url.startswith('http://lying/'):
+                class Lying:
+                    def __enter__(self):
+                        return self
+
+                    def __exit__(self, *a):
+                        return False
+
+                    def read(self, n, done=[False]):
+                        if done[0]:
+                            return b''
+                        done[0] = True
+                        return b'y' * len(content)
+                return Lying()
+            return urllib.request.urlopen(url, timeout=timeout)
+
+        mirrored = {**descriptor, 'mirrors': ['http://lying/', f'http://127.0.0.1:{port}/']}
+        target = tmp_path / 'client' / 'trainable.safetensors'
+        used = network.fetch(mirrored, 'L7/trainable.safetensors', target, progress=lambda *_: None, opener=opener)
+        assert used == f'http://127.0.0.1:{port}/' and target.read_bytes() == content
+    finally:
+        server.shutdown()
