@@ -78,7 +78,7 @@ def client(plan, descriptor, home, binding, stop=None):
     if (home / 'result.json').exists():
         raise ValueError('this attempt already ended; it may not be resumed')
     account = network.Account(home / 'account.key')
-    chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+    chain = network.Chain(descriptor['rpc'], descriptor['chain_id'])
     served, stage = network.fetch_stage(descriptor, 0, home / 'holdings')
     started, results, failed = time.monotonic(), [], None
     atomic(home / 'binding.json', binding)
@@ -161,7 +161,7 @@ def main():
             network.chain_network.stop(config)
     else:
         served, stage = network.fetch_stage(descriptor, args.shard, args.home / 'holdings')
-        owner = network.Owner(served, stage, args.shard, network.Chain(network.endpoints(descriptor), descriptor['chain_id']),
+        owner = network.Owner(served, stage, args.shard, network.Chain(descriptor['rpc'], descriptor['chain_id']),
                               network.Account(args.home / 'account.key'),
                               network.signing_key(args.home / f'log-{args.shard}.key'), args.home, plan['threads'])
         owner.register(f"{args.host}:{plan['ports']['owner']}", descriptor['faucet'])
