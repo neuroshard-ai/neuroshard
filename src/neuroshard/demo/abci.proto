@@ -58,4 +58,7 @@ message RequestVerifyVoteExtension {}
 message ResponseVerifyVoteExtension { int32 status = 1; }
 message RequestFinalizeBlock { repeated bytes txs = 1; bytes hash = 4; int64 height = 5; }
 message ExecTxResult { uint32 code = 1; string log = 3; }
-message ResponseFinalizeBlock { repeated ExecTxResult tx_results = 2; bytes app_hash = 5; }
+// CometBFT 0.38 field numbers: crypto.PublicKey and abci.ValidatorUpdate are wire-identical here.
+message PublicKey { oneof sum { bytes ed25519 = 1; bytes secp256k1 = 2; } }
+message ValidatorUpdate { PublicKey pub_key = 1; int64 power = 2; }
+message ResponseFinalizeBlock { repeated ExecTxResult tx_results = 2; repeated ValidatorUpdate validator_updates = 3; bytes app_hash = 5; }

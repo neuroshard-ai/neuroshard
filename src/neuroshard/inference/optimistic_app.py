@@ -288,6 +288,7 @@ class Application(rpc.ABCIServicer):
             if not self.state or request.height != self.state['height'] + 1:
                 raise ValueError('Unexpected block height')
             state, results = ledger.advance(self.state, request.height), []
+            before = dict(self.state.get('validators', {}))
             for raw in request.txs:
                 try:
                     state = self.apply(state, raw, self.committed)
@@ -298,7 +299,8 @@ class Application(rpc.ABCIServicer):
                     LOG.exception('FinalizeBlock recorded a transaction that failed unexpectedly')
                     results.append(pb.ExecTxResult(code=2, log=f'internal error: {type(exc).__name__}'))
             self.pending = state
-            return pb.ResponseFinalizeBlock(tx_results=results, app_hash=self.app_hash(state))
+            return pb.ResponseFinalizeBlock(tx_results=results, app_hash=self.app_hash(state),
+                                            validator_updates=validator_updates(before, state.get('validators', {})))
 
     def Commit(self, request, context):
         with self.lock:
@@ -325,6 +327,12 @@ class Application(rpc.ABCIServicer):
 
     def VerifyVoteExtension(self, request, context):
         return pb.ResponseVerifyVoteExtension(status=1)
+
+
+def validator_updates(before, after):
+    """CometBFT updates for every validator whose enacted power changed in this block, in key order."""
+    return [pb.ValidatorUpdate(pub_key=pb.PublicKey(ed25519=bytes.fromhex(key)), power=power)
+            for key, power in sorted(after.items()) if before.get(key) != power]
 
 
 def promotion_or_fraud(node, replay):
