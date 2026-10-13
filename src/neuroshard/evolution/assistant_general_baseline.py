@@ -35,7 +35,7 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
                                                'config/experiments/assistant-general-confirmation-execution.json'),
             **{f'assistant-general-{name}': (f'config/experiments/assistant-general-{name}.json',
                                              f'config/experiments/assistant-general-{name}-execution.json')
-               for name in ('v3-development', 'v3-confirmation', 'l4-confirmation', 'l7-confirmation', 'l8-confirmation')}}
+               for name in ('v3-development', 'v3-confirmation', 'l4-confirmation', 'l7-confirmation', 'l8-confirmation', 'c1-confirmation')}}
 UPLOADED = '.units'
 
 

@@ -295,3 +295,25 @@ The frozen case hashes matched, and every episode rescored identically.
   opening: a request that carries a belief to check ("I believe I booked a morning departure") gets
   not-found although the fact is present. Version 3 fixed confirmation 4's presupposing requests on
   development, but the two sealed results together do not show it to be better than L7.
+
+## Version 7: a chat check and a chat unit (C1)
+
+Documents stay on L7 under version 2, which matched or beat L8 on confirmation 5. Chat gets its first two
+changes ([declaration](../config/experiments/assistant-general-c1.json),
+[report](../config/experiments/assistant-general-c1-report.json); one A10G, $1.03):
+
+- **`chat-tools/1` adds `check_text`.** The model checks a draft against the rules it reads in the request
+  (include, exclude, ending, word limit, bullets, JSON keys, lowercase), sees each violation, and revises.
+  It never receives the hidden constraints, and the scorer is unchanged.
+- **C1 is a low-rank chat unit** learned from the parent's own replies that pass the checker. These were
+  rejection-sampled on 560 cases in every spent wording: 548 passed, 533 of them greedy. No other model
+  writes an assistant message.
+
+| generated-development4 (non-native English) | parent (chat-tools/1) | C1 | minimum |
+| --- | --- | --- | --- |
+| chat | 42/48 | 45/48 (93.8%), none lost | 90% |
+
+C1 advances, as declared. Recorded before opening: in one exclude case C1 wrote the opposite rule
+(`include:and`), and in another it revised eight times and ran out of turns. The
+[sealed confirmation6](../config/experiments/assistant-general-c1-confirmation.json) wraps each request in a
+longer message and runs L7 and C1 as judged, with version 5's chat for comparison.
