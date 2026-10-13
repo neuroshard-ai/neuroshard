@@ -222,16 +222,57 @@ def public_hex(key):
     return key.public_key().public_bytes_raw().hex()
 
 
+def endpoints(descriptor):
+    """Every ledger RPC a descriptor names: ``rpc`` (one address or a list) followed by any ``rpcs``."""
+    value = descriptor['rpc']
+    listed = ([value] if isinstance(value, str) else list(value)) + list(descriptor.get('rpcs', []))
+    if not listed or not all(isinstance(item, str) and item.startswith(('http://', 'https://')) for item in listed):
+        raise ValueError('a network names at least one http(s) ledger RPC')
+    return list(dict.fromkeys(listed))
+
+
+class Divergence(ValueError):
+    """Two ledger RPCs report different states at the same height: at least one of them is lying or forked."""
+
+
 class Chain:
-    """A ledger RPC: reads state and submits transactions, waiting until a block includes each."""
+    """Ledger RPCs: reads state and submits transactions, waiting until a block includes each.
+
+    With several RPCs, a read checks each reply against its own state root and requires every RPC that
+    reports the same height to agree on it, so one honest RPC exposes a dishonest one. Submissions fail
+    over to the next RPC when one is unreachable.
+    """
 
     def __init__(self, rpc, chain_id):
-        self.rpc, self.chain_id = rpc, chain_id
+        self.rpcs = [rpc] if isinstance(rpc, str) else list(rpc)
+        if not self.rpcs:
+            raise ValueError('at least one ledger RPC')
+        self.rpc, self.chain_id = self.rpcs[0], chain_id
 
     def state(self):
-        value = chain_network.state(self.rpc)
-        if value['chain_id'] != self.chain_id:
-            raise ValueError('the RPC serves another chain')
+        replies, errors = {}, []
+        for address in self.rpcs:
+            try:
+                value = chain_network.state(address)
+            except (OSError, chain_network.Rejected, ValueError) as error:
+                errors.append(f'{address}: {error}')
+                continue
+            if value.get('chain_id') != self.chain_id:
+                raise ValueError(f'{address} serves another chain')
+            body = {key: item for key, item in value.items() if key != 'root'}
+            if 'root' in value and ledger.root(body) != value['root']:
+                raise Divergence(f'{address} returned a state that does not match its own root')
+            root = value.get('root') or ledger.root(body)
+            seen = replies.setdefault(value['height'], {})
+            seen.setdefault(root, (address, value))
+            if len(seen) > 1:
+                raise Divergence(f"ledger RPCs disagree at height {value['height']}: "
+                                 + ', '.join(f'{a} has {r[:16]}' for r, (a, _) in sorted(seen.items())))
+        if not replies:
+            raise OSError('no ledger RPC reachable: ' + '; '.join(errors))
+        height = max(replies)
+        address, value = next(iter(replies[height].values()))
+        self.rpc = address
         return value
 
     def balance(self, account):
@@ -240,9 +281,23 @@ class Chain:
     def nonce(self, account):
         return self.state()['accounts'].get(account.public, {'nonce': 0})['nonce']
 
+    def broadcast(self, envelope):
+        """Admission through the first reachable RPC, starting with the one that answered last."""
+        order = [self.rpc] + [address for address in self.rpcs if address != self.rpc]
+        failures = []
+        for address in order:
+            try:
+                admitted = chain_network.broadcast(address, envelope)
+            except OSError as error:
+                failures.append(f'{address}: {error}')
+                continue
+            self.rpc = address
+            return admitted
+        raise OSError('no ledger RPC accepted the transaction: ' + '; '.join(failures))
+
     def submit(self, account, kind, nonce=None, timeout=180, **fields):
         envelope = account.sign(self.chain_id, self.nonce(account) if nonce is None else nonce, kind, **fields)
-        admitted = chain_network.broadcast(self.rpc, envelope)
+        admitted = self.broadcast(envelope)
         if admitted['code']:
             raise chain_network.Rejected(admitted['log'])
         key = base64.b64encode(hashlib.sha256(ledger.canonical(envelope)).digest()).decode()

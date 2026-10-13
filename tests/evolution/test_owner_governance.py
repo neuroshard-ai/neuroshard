@@ -119,3 +119,32 @@ def test_a_rejected_proposal_forfeits_its_deposit_after_the_window_and_jobs_bloc
 def test_ungoverned_state_root_is_unchanged_by_this_feature():
     state, *_ = network()
     assert 'governance' not in state
+
+
+def test_chain_reads_verify_roots_and_cross_check_every_rpc(monkeypatch):
+    from neuroshard.assistant import network
+
+    state = ledger.genesis(CHAIN, MODEL, 3, {Account('x').public: 10}, PARAMS)
+    honest = {**state, 'root': ledger.root(state)}
+    forged_body = {**state, 'model_root': NEXT}
+    forged = {**forged_body, 'root': ledger.root(forged_body)}
+    replies = {'http://a': honest, 'http://b': honest}
+    monkeypatch.setattr(network.chain_network, 'state', lambda address: replies[address])
+    chain = network.Chain(['http://a', 'http://b'], CHAIN)
+    assert chain.state()['model_root'] == MODEL
+    replies['http://b'] = forged
+    with pytest.raises(network.Divergence, match='disagree at height 0'):
+        chain.state()
+    replies['http://b'] = {**forged_body, 'root': ledger.root(state)}
+    with pytest.raises(network.Divergence, match='does not match its own root'):
+        chain.state()
+
+    def down(address):
+        if address == 'http://a':
+            raise OSError('unreachable')
+        return honest
+    monkeypatch.setattr(network.chain_network, 'state', down)
+    assert chain.state()['height'] == 0 and chain.rpc == 'http://b'
+    assert network.endpoints({'rpc': 'http://a', 'rpcs': ['http://b', 'http://a']}) == ['http://a', 'http://b']
+    with pytest.raises(ValueError):
+        network.endpoints({'rpc': []})

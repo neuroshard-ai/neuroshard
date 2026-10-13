@@ -120,7 +120,7 @@ def run(args):
 
             optimistic_network.stop(config)
         return
-    chain = network.Chain(descriptor['rpc'], descriptor['chain_id'])
+    chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
     if args.assistant_action == 'audit':
         import torch
         from neuroshard.assistant.audit import Auditor
