@@ -272,3 +272,26 @@ wrong answer and had no quote refused. The unchanged parent rarely completes the
 The [sealed confirmation5](../config/experiments/assistant-general-l8-confirmation.json) is written in a
 sixth style: half-remembered checks and requests relayed for someone else. It shares no eight-word span
 with any training wording. It runs L8 as judged and, for comparison, L7 under version 2.
+
+### Confirmation 5 (sealed, opened once)
+
+One canonical CPU host, $2.74 ([report](../config/experiments/assistant-general-l8-confirmation-report.json)).
+The frozen case hashes matched, and every episode rescored identically.
+
+| confirmation5 (half-remembered and relayed requests) | result | minimum |
+| --- | --- | --- |
+| documents, parent + L8 (v3) | 123/132 (93.2%) | 85% |
+| chat, parent + calculator | 86/96 (89.6%) | 90% |
+| not-found | 22/24 (91.7%) | 90% |
+| *documents, parent + L7 (v2), reported* | *126/132; not-found 23/24* | — |
+
+**Not shipped, as declared:** chat is one case below its minimum. Documents and not-found pass.
+
+- **Chat is now the failing route.** "Exclude" scored 6/12, and every miss uses the forbidden word. The chat
+  route is still the unchanged parent with a calculator. It has never had a learned unit or a check of its
+  own, and "exclude" has failed in every split.
+- **The evidence interface did not earn its place.** On the same cases L7 under version 2 solved
+  everything L8 solved, plus three more. Four of L8's nine misses are the over-caution recorded before
+  opening: a request that carries a belief to check ("I believe I booked a morning departure") gets
+  not-found although the fact is present. Version 3 fixed confirmation 4's presupposing requests on
+  development, but the two sealed results together do not show it to be better than L7.
