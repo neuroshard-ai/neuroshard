@@ -25,7 +25,7 @@ from pathlib import Path
 import torch
 
 from .granite_pipeline import FORWARD, RESET
-from .granite_serving import ADAPTER, CROP, FEATURE, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET
+from .granite_serving import ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET
 
 LOG_FORMAT = 'neuroshard-granite-owner-log/1'
 PROOF_FORMAT = 'neuroshard-granite-fraud-proof/1'
@@ -465,7 +465,7 @@ def replay(partition, record, payloads, adapter=None):
             if adapter is not None:
                 adapter.set(bool(value))
         elif op == ROUTE:
-            if value not in (1, 2):
+            if type(value) is not int or not 1 <= value <= MAX_ROUTES:
                 raise ValueError('unknown logged route')
             route = value
             cache = caches.setdefault(route, DynamicCache())

@@ -23,6 +23,8 @@ from .granite_pipeline import FORWARD, RESET, STOP
 
 CROP, ADAPTER, FEATURE = 9, 10, 11
 ROUTER_FEATURE, ROUTER_CROP, ROUTER_RESET, ROUTE = 12, 13, 14, 15
+# Route indices a logged ROUTE command may name; which exist is decided by the served bank.
+MAX_ROUTES = 8
 
 
 def plain(master, dtype):
@@ -80,16 +82,28 @@ class Adapter:
 
 
 class AdapterBank:
-    """Accepted additions on the accepted update, retaining the unchanged parent for fallback."""
+    """Accepted additions, retaining the unchanged parent for fallback.
 
-    def __init__(self, partition, spec, base, additions):
+    A route is an addition on the accepted update (its base is U1, as for drafting and scheduling)
+    or, if its index is in ``parent_routes``, an addition on the unchanged parent (as for the general
+    route's documents and chat units). A parent-based route is attached while the update is off, so it
+    wraps the parent's own projections, and enabling it leaves the update off.
+    """
+
+    def __init__(self, partition, spec, base, additions, parent_routes=()):
+        self.routes, self.parent_routes = {}, {int(index) for index in parent_routes}
+        if not self.parent_routes <= {int(index) for index in additions}:
+            raise ValueError('a parent-based route must be one of the additions')
         self.update = Adapter(partition, spec, base)
-        self.routes = {}
         for index, directory in sorted(additions.items(), key=lambda row: int(row[0])):
+            index = int(index)
+            if not 1 <= index <= MAX_ROUTES:
+                raise ValueError('route index outside the protocol range')
+            self.update.set(index not in self.parent_routes)
             added = Adapter(partition, spec, directory)
             if added.manifest['arm'] != 'addition':
-                raise ValueError('a route must be an addition on the accepted update')
-            self.routes[int(index)] = added
+                raise ValueError('a route must be an addition')
+            self.routes[index] = added
             added.set(False)
         if not self.routes:
             raise ValueError('an adapter bank needs at least one route')
@@ -103,7 +117,11 @@ class AdapterBank:
         self.set(self.enabled)
 
     def set(self, enabled):
-        self.update.set(bool(enabled))
+        for index, added in self.routes.items():
+            if index != self.route:
+                added.set(False)
+        self.routes[self.route].set(False)
+        self.update.set(bool(enabled) and self.route not in self.parent_routes)
         if enabled:
             self.routes[self.route].set(True)
         self.enabled = bool(enabled)
@@ -140,7 +158,7 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
             if adapter is not None:
                 adapter.set(bool(value))
         elif op == ROUTE:
-            if value not in (1, 2):
+            if type(value) is not int or not 1 <= value <= MAX_ROUTES:
                 raise ValueError('unknown accepted route')
             route = value
             cache = caches.setdefault(route, DynamicCache())

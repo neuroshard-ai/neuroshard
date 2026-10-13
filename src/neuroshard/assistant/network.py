@@ -64,6 +64,7 @@ class Version:
         self.world = len(self.boundaries) - 1
         self.arm_rank = self.world - 1
         self.policies = policies
+        self.routes = {}
 
 
 def version(network):
@@ -78,8 +79,16 @@ def version(network):
     for name, pin in network.get('policies', {}).items():
         if sha256(ROOT / pin['path']) != pin['sha256']:
             raise ValueError(f'the {name} policy differs from the accepted version')
-    return Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
-                   plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None), plan
+    served = Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
+                     plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None)
+    served.routes = route_table(network.get('routing'))
+    if served.policies and not served.routes:
+        raise ValueError('a routed version names its routes')
+    for unit, _ in served.routes.values():
+        for name in ('manifest.json', 'trainable.safetensors'):
+            if f'{unit}/{name}' not in network['files']:
+                raise ValueError(f'route unit {unit} has no pinned {name}')
+    return served, plan
 
 
 def digest_file(path):
@@ -187,12 +196,34 @@ def serve_artifacts(network, home, host, port):
     return server, sorted(offered)
 
 
+def route_table(routing):
+    """``{route index: (unit, base)}`` from a descriptor's ``routing``; base is ``U1`` or ``parent``.
+
+    Every named route (any key whose value has a ``route`` index) is served; A3 names drafting (1, L3)
+    and scheduling (2, L2) on U1. Indices must be distinct and in the protocol range.
+    """
+    from neuroshard.evolution.sharded.granite_serving import MAX_ROUTES
+
+    table = {}
+    for name, row in sorted((routing or {}).items()):
+        if not isinstance(row, dict) or 'route' not in row:
+            continue
+        index, unit, base = row['route'], row['addition'], row.get('base', 'U1')
+        if type(index) is not int or not 1 <= index <= MAX_ROUTES or index in table:
+            raise ValueError(f'route {name} needs a distinct index from 1 to {MAX_ROUTES}')
+        if base not in ('U1', 'parent') or not isinstance(unit, str) or '/' in unit or unit in ('', '.', '..'):
+            raise ValueError(f'route {name} names an invalid unit or base')
+        table[index] = (unit, base)
+    return table
+
+
 def stage_files(served, rank):
     if rank == 0:
         return ['integration.json'] + (['router.json'] if served.policies else [])
     if rank == served.arm_rank:
+        units = sorted({unit for unit, _ in served.routes.values()})
         return (['update-checkpoint/manifest.json', 'update-checkpoint/trainable.safetensors']
-                + ([f'{unit}/{name}' for unit in ('L2', 'L3') for name in ('manifest.json', 'trainable.safetensors')]
+                + ([f'{unit}/{name}' for unit in units for name in ('manifest.json', 'trainable.safetensors')]
                    if served.policies else []))
     return []
 
@@ -223,7 +254,8 @@ def fetch_stage(network, rank, home, progress=print):
     if rank == served.arm_rank:
         stage['arm'] = store / 'update-checkpoint'
         if served.policies:
-            stage['additions'] = {1: store / 'L3', 2: store / 'L2'}
+            stage['additions'] = {index: store / unit for index, (unit, _) in served.routes.items()}
+            stage['parent_routes'] = sorted(index for index, (_, base) in served.routes.items() if base == 'parent')
     return served, stage
 
 
@@ -233,7 +265,8 @@ def load_adapter(partition, served, stage):
     if partition.rank != served.arm_rank:
         return None
     if stage.get('additions'):
-        return serving.AdapterBank(partition, served.spec, stage['arm'], stage['additions'])
+        return serving.AdapterBank(partition, served.spec, stage['arm'], stage['additions'],
+                                   stage.get('parent_routes', ()))
     return serving.Adapter(partition, served.spec, stage['arm'])
 
 
@@ -860,6 +893,7 @@ def seed(network, home, public_host, served=None, block_seconds=1.0, params=None
                 paths.update(arm=str(stage['arm']), spec=served.spec)
                 if 'additions' in stage:
                     paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
+                    paths['parent_routes'] = list(stage.get('parent_routes', []))
             shards[str(rank)] = paths
         for node in config['validators']:
             path = Path(node['home']) / 'settlement.json'

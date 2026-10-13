@@ -74,7 +74,7 @@ class WorkBudget:
     def accept(self, op, value):
         from neuroshard.evolution.sharded.granite_pipeline import FORWARD, RESET, STOP
         from neuroshard.evolution.sharded.granite_serving import (
-            ADAPTER, CROP, FEATURE, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET,
+            ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET,
         )
 
         if self.alive is not None:
@@ -100,7 +100,7 @@ class WorkBudget:
         elif op == CROP and 0 <= value <= self.cache:
             self.cache = value
             self.caches[self.route] = value
-        elif op == ROUTE and value in (1, 2):
+        elif op == ROUTE and type(value) is int and 1 <= value <= MAX_ROUTES:
             self.route, self.cache = value, self.caches.setdefault(value, 0)
         elif op == ROUTER_RESET and value == 0:
             self.router_cache = 0

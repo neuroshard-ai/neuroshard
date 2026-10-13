@@ -373,7 +373,8 @@ def shard_checker(node):
             update = granite_serving.Adapter(partition, paths['spec'], paths['arm'])
             update.set(False)
             update_adapters[int(rank)] = update
-            adapter = (granite_serving.AdapterBank(partition, paths['spec'], paths['arm'], paths['additions'])
+            adapter = (granite_serving.AdapterBank(partition, paths['spec'], paths['arm'], paths['additions'],
+                                                   paths.get('parent_routes', ()))
                        if paths.get('additions') else update)
         if node.get('warm_up_lengths') and adapter is None:
             partition.warm_up(lengths=tuple(node['warm_up_lengths']))

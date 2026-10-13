@@ -87,3 +87,89 @@ def test_route_modules_features_caches_and_audits_match_the_complete_models(upda
     finally:
         for connection in sockets.values():
             connection.close()
+
+
+def test_a_parent_based_route_serves_and_replays_beside_update_based_routes(update_world, tmp_path):
+    """Route 3 is an addition on the unchanged parent (the general route); routes 1 and 2 stay on U1."""
+    torch.set_num_threads(1)
+    references, additions = {}, {}
+    for index in (1, 3):
+        model = load(update_world['checkpoint'])
+        if index == 1:
+            trainer.load_trainable(model, 'update', SPEC, update_world['arm'])
+            trainer.serving(model, SPEC)
+        parameters = trainer.prepare(model, 'addition', SPEC)
+        generator = torch.Generator().manual_seed(40 + index)
+        with torch.no_grad():
+            for name, value in parameters.items():
+                if name.endswith('lora_b'):
+                    value.copy_(torch.randn(value.shape, generator=generator))
+        directory = tmp_path / f'route-{index}'
+        trainer.checkpoint(directory, parameters,
+                           {'arm': 'addition', 'optimizer_state': {}, 'trainable_parameters': 1,
+                            'steps': 0, 'schedule_sha256': '', 'losses': [0.0]}, {})
+        references[index], additions[index] = model.eval(), directory
+    parent = load(update_world['checkpoint']).eval()
+    config = granite.load_config(update_world['config'])
+    partitions = {rank: granite.load_partition(config, update_world['shards'], rank)[0] for rank in (0, 1, 2)}
+    bank = serving.AdapterBank(partitions[2], SPEC, update_world['arm'], additions, parent_routes=(3,))
+    import pytest
+    with pytest.raises(ValueError, match='parent-based route must be one of'):
+        serving.AdapterBank(partitions[1], SPEC, update_world['arm'], additions, parent_routes=(5,))
+    keys = {rank: Ed25519PrivateKey.generate() for rank in (0, 1, 2)}
+    public = {rank: key.public_key().public_bytes_raw().hex() for rank, key in keys.items()}
+    session = {'chain_id': 'test', 'job_id': 'ef' * 32, 'request_root': 'cd' * 32,
+               'session_key': public[0], 'log_keys': [public[1], public[2]]}
+    sockets, logs, threads, errors = {}, {}, [], []
+
+    def owner(rank, connection):
+        try:
+            ring = relay.OwnerRelay(connection, rank, 3, config.hidden_size, 100000,
+                                    relay.WorkBudget(65536, config.max_position_embeddings))
+            log = logs[rank] = granite_audit.OwnerLog(rank)
+            link = granite_audit.Link(session, rank, 3, keys[rank], public[rank - 1])
+            serving.serve(partitions[rank], ring, bank if rank == 2 else None, log, None, link)
+            log.save(tmp_path / f'plog-{rank}', keys[rank], session)
+        except Exception as error:
+            errors.append(error)
+        finally:
+            connection.close()
+    for rank in (1, 2):
+        sockets[rank], connection = socket.socketpair()
+        sockets[rank].settimeout(30)
+        thread = threading.Thread(target=owner, args=(rank, connection), daemon=True)
+        thread.start()
+        threads.append(thread)
+    ring = relay.DriverRelay(sockets, 3, config.hidden_size, 100000, True,
+                             relay.WorkBudget(65536, config.max_position_embeddings))
+    link = granite_audit.Link(session, 0, 3, keys[0], public[2])
+    driver = serving.ServingDriver(partitions[0], ring, link)
+    try:
+        caches = {}
+        for index in (3, 1, 3):
+            driver.route(index)
+            tokens = torch.tensor([[1, 2, 3]] if index not in caches else [[7]])
+            past = caches.get(index)
+            mask = torch.ones((1, (past.get_seq_length() if past is not None else 0) + tokens.shape[1]),
+                              dtype=torch.long)
+            with torch.inference_mode():
+                expected = references[index](input_ids=tokens, attention_mask=mask, past_key_values=past,
+                                             use_cache=True)
+                caches[index] = expected.past_key_values
+                assert torch.equal(driver.step(tokens, mask), expected.logits[:, -1:]), index
+        driver.route(3, arm=False)  # the parent itself, on route 3's cache
+        driver.episode(False)
+        tokens = torch.tensor([[4, 5]])
+        with torch.inference_mode():
+            expected = parent(input_ids=tokens, attention_mask=torch.ones((1, 2), dtype=torch.long), use_cache=True)
+            assert torch.equal(driver.step(tokens, torch.ones((1, 2), dtype=torch.long)), expected.logits[:, -1:])
+        driver.stop()
+        for thread in threads:
+            thread.join(30)
+        assert not errors and not any(thread.is_alive() for thread in threads)
+        for rank in (1, 2):
+            record, inputs = granite_audit.load(tmp_path / f'plog-{rank}')
+            assert granite_audit.replay(partitions[rank], record, inputs, bank if rank == 2 else None)['valid']
+    finally:
+        for connection in sockets.values():
+            connection.close()
