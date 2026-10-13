@@ -1,0 +1,63 @@
+{
+  "format": "neuroshard-assistant-general-l8-confirmation/1",
+  "question": "Version 6 of the general route (documents with L8 under the evidence interface, chat with a calculator on the parent) on the sealed confirmation5, opened once: wording in a sixth style.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation5",
+      "policy": "config/experiments/assistant-general-policy-documents4.json",
+      "module": "L8"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation5",
+      "policy": "config/experiments/assistant-general-policy-chat2.json"
+    },
+    {
+      "set": "documents",
+      "split": "confirmation5",
+      "policy": "config/experiments/assistant-general-policy-documents3.json",
+      "module": "L7"
+    }
+  ],
+  "modules": {
+    "L8": {
+      "trainable_sha256": "6fa18d515b7228014b5844e7cca65ca8c5e50264024e5609f4e47e01639abedd",
+      "report": {
+        "path": "config/experiments/assistant-general-l8-report.json",
+        "sha256": "05a913da35ac8eea2839cd71e800d03808d5ae1bb82cb0c89d76d4ee190fc033"
+      }
+    },
+    "L7": {
+      "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+      "report": {
+        "path": "config/experiments/assistant-general-l7-report.json",
+        "sha256": "d26b486b8dd5fb96ca40b69ea23179b4fdd4c6953071d86c134f4dab86de457e"
+      }
+    }
+  },
+  "judged": {
+    "documents": "documents-confirmation5-L8",
+    "chat": "chat-confirmation5",
+    "comparison": "documents-confirmation5-L7 (version 5, reported)"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "3ad349ae8ec22fef77e2b80828ff5f6dadd367d1baaaf468c0bfaf80a51c2952",
+    "chat_case_ids_sha256": "adb547f56afe900c36f94a06af002d1c49fa8da0590dbdc614e6ff753da30727",
+    "documents_cases_sha256": "9574b594bd42934ad872477c8b2edd4e8c90ec4eefd19064e46cd3f5d8e0feea",
+    "chat_cases_sha256": "612f761f8c9b69b22e380fbeab4bf40c38428a8b4df640be0edbc3f2e7e0f756",
+    "phrasings_sha256": "d98388a461db0351ed7ebd1c7e438ead5d024bacacc2ca8b39c89440ac5331a2"
+  },
+  "meaning": "If every minimum holds for the judged sets, version 6 is the general route the next served version ships; otherwise its failures define the next round.",
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false,
+  "chat_checker": "Generated chat cases quote the constrained value and strip emphasis around a required ending (declared in L5/L6, before this opening).",
+  "known_risk": "On development3, L8's six misses were over-cautious not-found reports for present facts; recorded before opening."
+}

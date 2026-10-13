@@ -1,0 +1,191 @@
+{
+  "format": "neuroshard-assistant-general-l8-report/1",
+  "source_commit": "582bcffbcb891ca178eb136a6900a89a0276796e",
+  "ci_run": 38357076270,
+  "gpu": "NVIDIA A10G",
+  "demonstrations": {
+    "cases": 1080,
+    "by_family": {
+      "flight-time": 120,
+      "hotel-code": 90,
+      "leave-days": 90,
+      "invoice-sum": 90,
+      "claim-deadline": 90,
+      "notice": 90,
+      "deposit": 90,
+      "battery": 90,
+      "owner": 90,
+      "not-found-insurance": 90,
+      "not-found-return": 150
+    },
+    "trajectories_sha256": "37e90d81f6a1ac33220339c6fa13af9e9b4a1745892734a1fd532f97dfd3113f"
+  },
+  "chat_replay": {
+    "cases": 320,
+    "passed": 296,
+    "by_family": {
+      "bullets": 40,
+      "short": 40,
+      "json": 37,
+      "include": 38,
+      "exclude": 29,
+      "ending": 40,
+      "lowercase": 40,
+      "arithmetic": 32
+    },
+    "replay_sha256": "ff1ceed17079574b83f5d1d3e46b7e46f789be81b904db8ab638e44514076f69"
+  },
+  "phases": {
+    "demonstrate": 12.194311839999955,
+    "replay": 132.32576373200004,
+    "train": 678.9953340670002,
+    "integrate": 371.386478848
+  },
+  "training": {
+    "trainable_sha256": "6fa18d515b7228014b5844e7cca65ca8c5e50264024e5609f4e47e01639abedd",
+    "tokens_processed": 3237348,
+    "final_losses": [
+      0.014867624477574282,
+      0.007602173527857303,
+      0.020528443821604014,
+      0.006880874752141608,
+      0.019158665500071947,
+      0.017975155411932064,
+      0.00926115905849656,
+      0.030705661064075684
+    ]
+  },
+  "module": {
+    "trainable_sha256": "6fa18d515b7228014b5844e7cca65ca8c5e50264024e5609f4e47e01639abedd",
+    "file_sha256": "6fa18d515b7228014b5844e7cca65ca8c5e50264024e5609f4e47e01639abedd",
+    "bytes": 4197776
+  },
+  "integration_file": "config/experiments/assistant-general-l8-integration.json.gz",
+  "integration_sha256": "d7fb58c6b817646fa81ca36f512b3d1cbff442ec09565e6b1f73eb7d70a9b04b",
+  "integration_gz_sha256": "c5ebc4727838bba1e0cfb45960c77caf17d2b7985ff5273f948709806c86edef",
+  "integration": {
+    "parent": {
+      "documents": {
+        "passed": 34,
+        "cases": 66,
+        "families": {
+          "battery": "1/6",
+          "claim-deadline": "2/6",
+          "deposit": "6/6",
+          "flight-time": "3/6",
+          "hotel-code": "5/6",
+          "invoice-sum": "0/6",
+          "leave-days": "3/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "1/6",
+          "notice": "3/6",
+          "owner": "4/6"
+        }
+      },
+      "chat": {
+        "passed": 46,
+        "cases": 48,
+        "families": {
+          "arithmetic": "5/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "6/6",
+          "include": "6/6",
+          "json": "5/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    },
+    "L8": {
+      "documents": {
+        "passed": 60,
+        "cases": 66,
+        "families": {
+          "battery": "5/6",
+          "claim-deadline": "4/6",
+          "deposit": "6/6",
+          "flight-time": "5/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "6/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "6/6",
+          "notice": "4/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 47,
+        "cases": 48,
+        "families": {
+          "arithmetic": "6/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "5/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    }
+  },
+  "rates": {
+    "L8": {
+      "documents": 0.9090909090909091,
+      "chat": 0.9791666666666666,
+      "not_found": 1.0
+    },
+    "parent": {
+      "documents": 0.5151515151515151,
+      "chat": 0.9583333333333334,
+      "not_found": 0.5833333333333334
+    }
+  },
+  "L8_against_parent": {
+    "documents_gained": 28,
+    "documents_lost": [
+      "docs-generated-development3-claim-deadline-02",
+      "docs-generated-development3-notice-04"
+    ],
+    "chat_gained": [
+      "chat-generated-development3-json-03",
+      "chat-generated-development3-arithmetic-03"
+    ],
+    "chat_lost": [
+      "chat-generated-development3-exclude-02"
+    ]
+  },
+  "checks": {
+    "more_documents_than_parent": true,
+    "chat_loses_at_most_one": true,
+    "documents_minimum": true,
+    "chat_minimum": true,
+    "not_found_minimum": true
+  },
+  "advances": true,
+  "findings": {
+    "not-found": "12/12 (parent 7/12): every return-flight request in the new phone-typed style is reported not found.",
+    "documents": "60/66 (90.9%). All six misses are over-cautious: L8 reports not-found for a fact that is present (a flight time, two claim deadlines, two notice periods, a battery life), usually on the shortest phone-typed requests (\"check my Tallinn flight time\"). No answer was wrong and no quote was refused.",
+    "parent under version 3": "34/66: the unchanged parent rarely completes the evidenced submit_answer (11 cases end with no answer, 16 with a wrong not-found). The interface needs the learned unit.",
+    "chat": "47/48; lost one exclude case."
+  },
+  "decision": "Advances, as declared: every check holds on generated-development3. L8 is pinned and goes to the sealed confirmation5 on the canonical CPU runtime. The cost of the evidence interface is over-caution, recorded here before opening.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T07:37:32.988515+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-089afd5076a2bd30d"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 1906.508063,
+    "conservative_compute_usd": 0.6418577145433333,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.6418577145433333,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

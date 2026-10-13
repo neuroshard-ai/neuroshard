@@ -240,3 +240,35 @@ Next: an absent fact must not be answerable by a present one that resembles it. 
 route's one failing family. Neither more templates of the same styles nor more passes over them will
 settle it. The next round gives experience in every style to date, adds a sealed confirmation5, and
 considers a check in the workspace itself.
+
+## Version 6: evidence interface (L8)
+
+Two changes, judged on `generated-development3`, a fifth style (typed on a phone, mostly lowercase) that no
+unit has seen ([declaration](../config/experiments/assistant-general-l8.json),
+[report](../config/experiments/assistant-general-l8-report.json); one A10G, $0.64):
+
+- **`workspace-documents/3`.** `submit_answer` must carry one to four quotes, copied word for word from
+  the documents it cites and has read. The workspace refuses any quote it cannot find there, and only a
+  submitted answer counts. A request that presupposes a return flight therefore cannot be answered from
+  the outbound one, because no quote says "return". The policy states that a request may assume
+  something the documents do not contain. Versions 1 and 2 are unchanged, so all earlier episodes
+  rescore as recorded.
+- **Experience in every style:** 1,080 verified version-3 demonstrations. These cover generated-train, the
+  90 contrasting flight cases, and 330 cases on new workspaces in the three spent wordings (development,
+  development2 and confirmation4).
+
+| generated-development3 | parent (v3 policy) | L8 | minimum |
+| --- | --- | --- | --- |
+| documents | 34/66 | 60/66 (90.9%) | 85% |
+| chat | 46/48 | 47/48 (97.9%) | 90% |
+| not-found | 7/12 | **12/12** | 90% |
+
+L8 advances, as declared. Every return-flight request is now reported not found. The cost was recorded
+before the sealed set opens: all six document misses are over-cautious. L8 reports not-found for a fact
+that is present, mostly on the shortest phone-typed requests ("check my Tallinn flight time"). It gave no
+wrong answer and had no quote refused. The unchanged parent rarely completes the evidenced answer
+(34/66), so the interface needs the learned unit.
+
+The [sealed confirmation5](../config/experiments/assistant-general-l8-confirmation.json) is written in a
+sixth style: half-remembered checks and requests relayed for someone else. It shares no eight-word span
+with any training wording. It runs L8 as judged and, for comparison, L7 under version 2.
