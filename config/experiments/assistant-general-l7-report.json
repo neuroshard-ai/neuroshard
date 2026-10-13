@@ -1,0 +1,190 @@
+{
+  "format": "neuroshard-assistant-general-l7-report/1",
+  "source_commit": "c2c02906b2cf629330698b68fe5da8a06d35c7ac",
+  "ci_run": 38323559318,
+  "gpu": "NVIDIA A10G",
+  "demonstrations": {
+    "cases": 750,
+    "by_family": {
+      "flight-time": 90,
+      "hotel-code": 60,
+      "leave-days": 60,
+      "invoice-sum": 60,
+      "claim-deadline": 60,
+      "notice": 60,
+      "deposit": 60,
+      "battery": 60,
+      "owner": 60,
+      "not-found-insurance": 60,
+      "not-found-return": 120
+    },
+    "trajectories_sha256": "3540effa56ceed5bde20c39eb936ce8023d01b225d6dac85bf9dc02119ac962a"
+  },
+  "chat_replay": {
+    "cases": 320,
+    "passed": 296,
+    "by_family": {
+      "bullets": 40,
+      "short": 40,
+      "json": 37,
+      "include": 38,
+      "exclude": 29,
+      "ending": 40,
+      "lowercase": 40,
+      "arithmetic": 32
+    },
+    "replay_sha256": "7ef6ca01894510d0e4c9f660c8f076cfd38b12b96d778211812d53f6b0dbe169"
+  },
+  "phases": {
+    "demonstrate": 7.7259946579999905,
+    "replay": 132.05591119999997,
+    "train": 520.9148022730001,
+    "integrate": 241.2438519850001
+  },
+  "training": {
+    "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+    "tokens_processed": 2430675,
+    "final_losses": [
+      0.01905686670374962,
+      0.039345103641380774,
+      0.02191324332034128,
+      0.01070403940138931,
+      0.011875385889652534,
+      0.02422121837435043,
+      0.037184294226335624,
+      0.019616834483031198
+    ]
+  },
+  "module": {
+    "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+    "file_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+    "bytes": 4197776
+  },
+  "integration_file": "config/experiments/assistant-general-l7-integration.json.gz",
+  "integration_sha256": "22041c0a8304fe038011538595da75d8cb151bc8b32c7e6eefa1545b0fbe1a31",
+  "integration_gz_sha256": "9e28527a955c6304d32175bcb17d1f91601fd962b38a9cf88a48e159413ce183",
+  "integration": {
+    "parent": {
+      "documents": {
+        "passed": 61,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "6/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "5/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "2/6",
+          "notice": "6/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 46,
+        "cases": 48,
+        "families": {
+          "arithmetic": "5/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "5/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    },
+    "L7": {
+      "documents": {
+        "passed": 63,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "6/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "5/6",
+          "leave-days": "6/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "5/6",
+          "notice": "5/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 46,
+        "cases": 48,
+        "families": {
+          "arithmetic": "5/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "5/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    }
+  },
+  "rates": {
+    "L7": {
+      "documents": 0.9545454545454546,
+      "chat": 0.9583333333333334,
+      "not_found": 0.9166666666666666
+    },
+    "parent": {
+      "documents": 0.9242424242424242,
+      "chat": 0.9583333333333334,
+      "not_found": 0.6666666666666666
+    }
+  },
+  "L7_against_parent": {
+    "documents_gained": [
+      "docs-generated-development2-leave-days-04",
+      "docs-generated-development2-not-found-return-02",
+      "docs-generated-development2-not-found-return-04",
+      "docs-generated-development2-not-found-return-05"
+    ],
+    "documents_lost": [
+      "docs-generated-development2-invoice-sum-05",
+      "docs-generated-development2-notice-03"
+    ],
+    "chat_gained": [],
+    "chat_lost": []
+  },
+  "checks": {
+    "more_documents_than_parent": true,
+    "chat_loses_at_most_one": true,
+    "documents_minimum": true,
+    "chat_minimum": true,
+    "not_found_minimum": true
+  },
+  "advances": true,
+  "findings": {
+    "not-found": "11/12 on development2 (return flights 5/6 against the parent 2/6).",
+    "documents": "63/66 against 61/66; gained three return flights and one leave-days, lost one invoice sum and one notice period.",
+    "chat": "46/48, identical case for case to the parent."
+  },
+  "decision": "Advances, as declared: every check holds on generated-development2. L7 is pinned by this digest and goes to the sealed confirmation4 on the canonical CPU runtime.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T00:54:26.875263+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0ef00d5f6696ee391"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 1541.296784,
+    "conservative_compute_usd": 0.5189032506133333,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.5189032506133333,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

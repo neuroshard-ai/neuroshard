@@ -191,3 +191,24 @@ L6 is L5 with one change: generated chat cases quote the word or phrase they con
   outbound itinerary.
 - generated-development has now judged two units, and its two not-found misses were read to design the
   next one. The next unit is therefore judged on a fresh development set.
+
+## Version 7: contrasting flight experience (L7), judged on fresh wording
+
+L7 is L6 plus 90 further verified demonstrations on new workspaces: 60 return-flight not-found and
+30 outbound flight-time, so the extra experience contrasts the two
+([declaration](../config/experiments/assistant-general-l7.json),
+[report](../config/experiments/assistant-general-l7-report.json); one A10G, $0.52). It is judged on
+`generated-development2` ([sets](../config/experiments/assistant-general-phrasings-development2.json)).
+That set was written after L6 in a third style (one line of background, then the request), judged the
+same way, and contains no template from any earlier set.
+
+| generated-development2 | parent | L7 | minimum |
+| --- | --- | --- | --- |
+| documents | 61/66 | 63/66 (95.5%) | 85% |
+| chat | 46/48 | 46/48 (95.8%), identical case for case | 90% |
+| not-found | 8/12 | 11/12 (91.7%) | 90% |
+
+**L7 advances, as declared.** Return flights went from 2/6 to 5/6. It gained four document cases and lost
+two (an invoice sum and a notice period). Its digest `5c4e428b…` is pinned in the
+[sealed confirmation4 declaration](../config/experiments/assistant-general-l7-confirmation.json), which
+also freezes the case IDs and contents before opening.

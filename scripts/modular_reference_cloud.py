@@ -56,7 +56,7 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-general-documents2": "config/experiments/assistant-general-documents2-resources.json",
                      "assistant-general-confirmation": "config/experiments/assistant-general-confirmation-resources.json",
                      **{f"assistant-general-{n}": f"config/experiments/assistant-general-{n}-resources.json"
-                        for n in ("v3-development", "v3-confirmation", "l4-confirmation")},
+                        for n in ("v3-development", "v3-confirmation", "l4-confirmation", "l7-confirmation")},
                      "router-scaling-episodes": "config/experiments/router-scaling-episodes-resources.json",
                      "router-scaling-episodes-originals": "config/experiments/router-scaling-episodes-originals-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
@@ -106,7 +106,7 @@ GRANITE_PROFILES = {
     "assistant-general-documents2": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-general-confirmation": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
     **{f"assistant-general-{n}": ("assistant_general_baseline", "docs/granite-reference-requirements.txt")
-       for n in ("v3-development", "v3-confirmation", "l4-confirmation")},
+       for n in ("v3-development", "v3-confirmation", "l4-confirmation", "l7-confirmation")},
     "router-scaling-episodes": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     "router-scaling-episodes-originals": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
@@ -143,7 +143,7 @@ UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growt
                    "assistant-growth-round4-gpu": ".growth", "assistant-growth-round5-gpu": ".growth",
                    "assistant-growth-cohort3-gpu": ".growth", "router-scaling-episodes": ".units",
                    "router-scaling-episodes-originals": ".units",
-                   "assistant-general-l4-confirmation": ".units",
+                   "assistant-general-l4-confirmation": ".units", "assistant-general-l7-confirmation": ".units",
                    **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION
                       + (COHORT3_DEVELOPMENT,) + COHORT3_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
@@ -156,7 +156,7 @@ LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-grow
                      **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION + COHORT3_CONFIRMATION},
                      COHORT3_DEVELOPMENT: (3, 6), "router-scaling-episodes": (3.25, 6.5),
                      "assistant-general-baseline": (4, 7.5), "assistant-general-confirmation": (3.5, 7), "assistant-general-v3-confirmation": (3.5, 7),
-                     "assistant-general-l4-confirmation": (5, 8.5),
+                     "assistant-general-l4-confirmation": (5, 8.5), "assistant-general-l7-confirmation": (5, 8.5),
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8), "granite-shard-serving-update": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
