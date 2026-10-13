@@ -34,6 +34,16 @@ def register(subcommands, root):
     chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
     chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
     chat.add_argument('--threads', type=int)
+    govern = actions.add_parser('govern', parents=[common],
+                                help='Owner governance of the served version: propose, vote, enact, or list proposals')
+    govern.add_argument('govern_action', choices=('list', 'propose', 'vote', 'enact', 'handover'))
+    govern.add_argument('--model-root', help='propose: the version to serve, as its model root')
+    govern.add_argument('--quality-root', help='propose: digest of the published release-check evidence')
+    govern.add_argument('--proposal', help='vote/enact: the proposal ID')
+    govern.add_argument('--shard', type=int, help='vote: the shard whose owner log key votes')
+    govern.add_argument('--reject', action='store_true', help='vote: vote no')
+    govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
+    govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
     seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
@@ -137,6 +147,9 @@ def run(args):
         else:
             auditor.run(args.interval)
         return
+    if args.assistant_action == 'govern':
+        govern(args, chain, network)
+        return
     if args.assistant_action == 'status':
         state = chain.state()
         served = network.version(descriptor)[0]
@@ -186,3 +199,41 @@ def run(args):
         conversation.close()
     print(f'The owners commit their logs now; the job settles after its challenge window. '
           f'Check it with: neuroshard assistant status --job {conversation.job_id}')
+
+
+def govern(args, chain, network):
+    """Every governance step is a signed transaction from this machine's own keys; no operator is involved."""
+    from neuroshard.inference import optimistic as ledger
+
+    state = chain.state()
+    governance = state.get('governance')
+    if args.govern_action == 'list':
+        if not ledger.governed(state):
+            print('The serving model is stewarded (one promotion key); owners do not govern it yet.')
+            return
+        print(f"Owner governance since block {governance['handed_over']['height']}: a proposal passes with "
+              f"{governance['approval_ppm'] / 10_000:.4g}% of the bonded weight snapshotted when it opened.")
+        for pid, proposal in sorted(governance['proposals'].items()):
+            approving, total = ledger.tally(proposal)
+            print(f"  {pid}: model {proposal['model_root'][:16]}, quality {proposal['quality_root'][:16]}, "
+                  f"{approving}/{total} approving, open until block {proposal['deadline']}")
+        return
+    account = network.Account(args.home / 'account.key')
+    if args.govern_action == 'handover':
+        chain.submit(account, 'governance_handover', approval_ppm=args.approval_ppm, vote_blocks=args.vote_blocks)
+    elif args.govern_action == 'propose':
+        if not (args.model_root and args.quality_root):
+            raise ValueError('propose needs --model-root and --quality-root')
+        envelope = chain.submit(account, 'model_propose', model_root=args.model_root, quality_root=args.quality_root)
+        print(f'proposal {ledger.transaction_id(envelope)}')
+        return
+    elif args.govern_action == 'vote':
+        if not (args.proposal and args.shard):
+            raise ValueError('vote needs --proposal and --shard')
+        key = network.public_hex(network.signing_key(args.home / f'log-{args.shard}.key'))
+        chain.submit(account, 'model_vote', proposal_id=args.proposal, log_key=key, approve=not args.reject)
+    else:
+        if not args.proposal:
+            raise ValueError('enact needs --proposal')
+        chain.submit(account, 'model_enact', proposal_id=args.proposal)
+    print('committed')

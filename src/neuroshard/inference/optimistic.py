@@ -46,7 +46,13 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'log_commit': {'job_id', 'statement_root', 'entries_root', 'header', 'log_signature'},
           'challenge': {'job_id', 'log_key', 'proof_root'}, 'prove': {'job_id', 'challenge_id'},
           'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'},
-          'model_promote': {'model_root', 'quality_root'}}
+          'model_promote': {'model_root', 'quality_root'}, 'governance_handover': {'approval_ppm', 'vote_blocks'},
+          'model_propose': {'model_root', 'quality_root'}, 'model_vote': {'proposal_id', 'log_key', 'approve'},
+          'model_enact': {'proposal_id'}}
+# Owner governance of the serving model (created lazily by the first governance transaction, so earlier
+# state roots are unchanged). Proposals are weighted by the bonds of owners active when they open.
+GOVERNANCE = {'proposal_deposit': 2_000_000, 'max_proposals': 4, 'minimum_vote_blocks': 20,
+              'minimum_approval_ppm': 500_001}
 ENDPOINT = re.compile(r'[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?:[1-9][0-9]{0,4}')
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
 HEADER_FIELDS = {'format', 'rank', 'public_key', 'session', 'upstream'}
@@ -181,6 +187,7 @@ def invariant(state):
     liquid = sum(a['balance'] for a in state['accounts'].values())
     bonded = sum(o['amount'] for o in state['owners'].values())
     escrow = sum(j['price'] + sum(c['deposit'] for c in j['challenges'].values()) for j in state['jobs'].values())
+    escrow += sum(p['deposit'] for p in state.get('governance', {}).get('proposals', {}).values())
     assert all(a['balance'] >= 0 and a['nonce'] >= 0 for a in state['accounts'].values())
     assert all(o['amount'] >= 0 for o in state['owners'].values())
     assert state['initial_supply'] == liquid + bonded + escrow + state['burned']
@@ -307,6 +314,8 @@ def admit(previous, envelope):
     if kind == 'challenge':
         opening(previous, body)
     if kind == 'model_promote':
+        if governed(previous):
+            raise ValueError('The serving model is governed by owners; propose it instead')
         if previous['jobs']:
             raise ValueError('Drain every open job before changing the serving model')
         if hex_digest(body['model_root']) == previous['model_root']:
@@ -314,7 +323,27 @@ def admit(previous, envelope):
         hex_digest(body['quality_root'])
         return body, sender, {'kind': 'model_promotion', 'chain_id': previous['chain_id'], 'signer': sender,
                               'model_root': body['model_root'], 'quality_root': body['quality_root']}
+    if kind == 'governance_handover':
+        if governed(previous):
+            raise ValueError('Owners already govern the serving model')
+        approval = integer(body['approval_ppm'], GOVERNANCE['minimum_approval_ppm'], 1_000_000)
+        blocks = integer(body['vote_blocks'], GOVERNANCE['minimum_vote_blocks'], 1_000_000)
+        return body, sender, {'kind': 'governance_handover', 'chain_id': previous['chain_id'], 'signer': sender,
+                              'approval_ppm': approval, 'vote_blocks': blocks}
+    if kind in ('model_propose', 'model_vote', 'model_enact') and not governed(previous):
+        raise ValueError('Owner governance has not been handed over')
     return body, sender, proving(previous, body) if kind == 'prove' else None
+
+
+def governed(state):
+    """Whether owners, not the steward key, decide the serving model. Irreversible once true."""
+    return state.get('governance', {}).get('mode') == 'owners'
+
+
+def tally(proposal):
+    """(approving weight, total weight) of a proposal, from the bonds snapshotted when it opened."""
+    weights = proposal['weights']
+    return sum(weights[key] for key, vote in proposal['votes'].items() if vote), sum(weights.values())
 
 
 def upstream_key(job, shard):
@@ -458,6 +487,62 @@ def transition(previous, envelope, execute):
         state.setdefault('model_history', []).append({'previous': old, 'model_root': body['model_root'],
                                                     'quality_root': body['quality_root'], 'height': state['height'],
                                                     'authority': sender})
+    elif kind == 'governance_handover':
+        if execute is None or execute(previous, request) is not True:
+            raise ValueError('Only the steward key can hand the serving model over to owners')
+        state['governance'] = {'mode': 'owners', 'approval_ppm': request['approval_ppm'],
+                               'vote_blocks': request['vote_blocks'], 'proposals': {},
+                               'handed_over': {'height': state['height'], 'by': sender}}
+    elif kind == 'model_propose':
+        governance = state['governance']
+        if len(governance['proposals']) >= GOVERNANCE['max_proposals']:
+            raise ValueError('Too many open model proposals')
+        model, quality = hex_digest(body['model_root']), hex_digest(body['quality_root'])
+        if model == state['model_root']:
+            raise ValueError('The proposed model is already serving')
+        weights = {key: owner['amount'] for key, owner in sorted(state['owners'].items())
+                   if owner['status'] == 'active' and owner['amount'] > 0}
+        if not weights:
+            raise ValueError('No bonded owner can vote')
+        debit(GOVERNANCE['proposal_deposit'])
+        governance['proposals'][transaction_id(envelope)] = {
+            'proposer': sender, 'model_root': model, 'quality_root': quality, 'deposit': GOVERNANCE['proposal_deposit'],
+            'opened': state['height'], 'deadline': state['height'] + governance['vote_blocks'], 'weights': weights,
+            'votes': {}}
+    elif kind == 'model_vote':
+        proposal = state['governance']['proposals'].get(body['proposal_id'])
+        key = body['log_key']
+        if proposal is None or state['height'] > proposal['deadline']:
+            raise ValueError('No open model proposal')
+        if key not in proposal['weights'] or state['owners'][key]['account'] != sender:
+            raise ValueError('Only an owner bonded when the proposal opened votes, from its own account')
+        if key in proposal['votes'] or type(body['approve']) is not bool:
+            raise ValueError('One yes-or-no vote per owner')
+        proposal['votes'][key] = body['approve']
+    elif kind == 'model_enact':
+        governance = state['governance']
+        proposal = governance['proposals'].get(body['proposal_id'])
+        if proposal is None:
+            raise ValueError('No such model proposal')
+        approving, total = tally(proposal)
+        passed = approving * 1_000_000 >= governance['approval_ppm'] * total
+        if passed:
+            if state['jobs']:
+                raise ValueError('Drain every open job before changing the serving model')
+            if proposal['model_root'] == state['model_root']:
+                raise ValueError('The proposed model is already serving')
+            old = state['model_root']
+            state['model_root'] = proposal['model_root']
+            state.setdefault('model_history', []).append({
+                'previous': old, 'model_root': proposal['model_root'], 'quality_root': proposal['quality_root'],
+                'height': state['height'], 'authority': 'owners', 'proposal_id': body['proposal_id'],
+                'approving_weight': approving, 'total_weight': total})
+            account(state, proposal['proposer'])['balance'] += proposal['deposit']
+        elif state['height'] > proposal['deadline']:
+            state['burned'] += proposal['deposit']  # a rejected proposal forfeits its deposit
+        else:
+            raise ValueError('The proposal has neither passed nor closed')
+        del governance['proposals'][body['proposal_id']]
     elif kind == 'challenge':
         debit(params['challenge_deposit'])
         state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {

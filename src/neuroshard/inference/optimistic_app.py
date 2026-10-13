@@ -328,12 +328,18 @@ class Application(rpc.ABCIServicer):
 
 
 def promotion_or_fraud(node, replay):
-    """Stewarded testnet admission: signed by the genesis authority, with an approved quality digest."""
+    """Stewarded testnet admission: signed by the genesis authority, with an approved quality digest.
+
+    The same authority may hand the serving model over to owner governance, once; after that no
+    configured authority or allowlist can change it (see ``optimistic.governed``).
+    """
     def check(state, request):
         if request.get('kind') == 'model_promotion':
             approved = node.get('approved_models', {}).get(request['model_root'])
             return bool(approved and request['signer'] == node.get('promotion_authority')
                         and request['quality_root'] == approved['quality_root'])
+        if request.get('kind') == 'governance_handover':
+            return bool(node.get('promotion_authority')) and request['signer'] == node.get('promotion_authority')
         return replay(state, request)
     return check
 
