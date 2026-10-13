@@ -291,9 +291,10 @@ Tests on the small Granite-shaped checkpoints
 
 - **Validators hold every audited shard.** A validator missing the challenged
   shard cannot judge a replay claim and gives no verdict. Replaying the shard that
-  carries the learned arm also needs the arm, which validator configuration does
-  not load yet; the published runs audited shard 1 only. Committees of shard
-  holders are future work.
+  carries the learned modules also needs them. Validator configuration now loads the
+  arm and its route additions (`shard_checker`), including parent-based routes. The
+  published runs of this ledger audited shard 1 only. Committees of shard holders
+  are future work.
 - **Proof delivery.** Bundles reach validators' stores out of band; validators do
   not fetch them from one another or from challengers. A proof commits only if
   validators with more than two thirds of the voting power hold its bundle within

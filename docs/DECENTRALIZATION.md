@@ -47,6 +47,14 @@ These are true of the live network today, in the order they should be removed.
 8. **Stage 0, routing and tools are unaudited.** They run on the user's device, which protects the
    user's documents. No owner computes them, so there is nothing to slash. Owners' shard
    computation is what replay covers.
+9. **One party decides releases.** A3's release-check amendment records that the project owner made
+   one agent solely responsible for the release, and the promotion key signed it. Owner governance
+   replaces the signature once handed over. The decision to propose a version, and the review of its
+   evidence, still rest with whoever runs the release check, until owners review it themselves.
+10. **The live validator allowlist is not in the repository.** The seed's `settlement.json`
+    allowlist of approved versions was written on the host. The bundled descriptors carry no
+    `approved_versions`, so the repository alone cannot show what the validator accepts. Owner
+    governance moves that decision into chain state.
 
 ## Order of activation
 
