@@ -23,19 +23,21 @@ unchanged, and its release-check pins are now verified against the commit it was
 These are true of the live network today, in the order they should be removed.
 
 1. **One validator.** The seed is the only CometBFT validator, so it orders every transaction,
-   including governance votes. Owner governance cannot be censorship-resistant until A5: four
-   operators run validators, and none holds a third of the voting power. The ledger has no
-   validator-set update path yet. That is the next protocol change.
+   including governance votes. The validator-set update path now exists in code (`validator_propose`:
+   owners vote validators in and out, and CometBFT applies the updates; tested on real CometBFT).
+   A5 still needs four independent operators to run validators, with none holding a third of the
+   voting power.
 2. **The steward key still governs.** The handover is in code, not on chain. It takes effect when
    validators run software with the new transitions and the steward submits `governance_handover`.
 3. **One operator runs every host.** That covers the seed, both owners, the auditor and the proof
    store (`ASSISTANT_NETWORK.md`). Peers can bond and host a shard today. None has yet.
 4. **The faucet holds the whole supply.** Test NEURO has no value. A valued token would need a
    different genesis.
-5. **Units are trained and evaluated on project-run cloud hosts.** Every general-route unit (L4–L8,
-   C1) was trained on one A10G and judged on one CPU host. The network-native path, where
-   contributions train the next module, is milestone 8 and is not built. Training on the network
-   would need the same bit-exact replay and receipts that serving has.
+5. **Units are trained and evaluated on project-run cloud hosts.** Every general-route unit (L4–L9,
+   C1) was trained on one A10G and judged on one CPU host. The network-native path is now in code
+   ([growth on the network](NETWORK_GROWTH.md)): sponsors escrow a reward against a recipe,
+   contributors train bonded segments, any step can be proven wrong on chain, and contributors are
+   paid per step. It is not deployed, and no unit has been grown this way yet.
 6. **Synthetic phrasings come from one hosted model.** Claude on Amazon Bedrock wrote only the
    user-side wording of the general route's training and evaluation sets. Every assistant message
    learned from is the parent's own or our verified solver's. The prompts, every response and

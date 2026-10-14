@@ -196,3 +196,48 @@ def test_any_mirror_serves_pinned_files_and_a_wrong_one_is_refused(tmp_path):
         assert used == f'http://127.0.0.1:{port}/' and target.read_bytes() == content
     finally:
         server.shutdown()
+
+
+def test_owners_admit_and_retire_validators_and_finalize_block_emits_the_updates(tmp_path):
+    from neuroshard.demo import abci_pb2 as pb
+    from neuroshard.inference.optimistic_app import Application, validator_updates
+
+    state, checker, (steward, alice, bob, carol, user), keys = network()
+    with pytest.raises(ValueError, match='not been handed'):
+        step(state, user.sign('validator_propose', consensus_key='aa' * 32, power=1), checker)
+    user.nonce = state['accounts'][user.public]['nonce']
+    state = handed(state, checker, steward)
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    new_key = Ed25519PrivateKey.generate().public_key().public_bytes_raw().hex()
+    proposal = user.sign('validator_propose', consensus_key=new_key, power=10)
+    pid = ledger.transaction_id(proposal)
+    state = step(state, proposal, checker)
+    for account, name in ((alice, 'alice-log'), (bob, 'bob-log')):
+        state = step(state, account.sign('model_vote', proposal_id=pid, log_key=keys[name], approve=True), checker)
+    enacted = step(state, carol.sign('model_enact', proposal_id=pid), checker)
+    assert enacted['validators'] == {new_key: 10} and enacted['validator_history'][-1]['power'] == 10
+    assert enacted['model_root'] == MODEL
+    ledger.invariant(enacted)
+    updates = validator_updates(state.get('validators', {}), enacted['validators'])
+    assert [(u.pub_key.ed25519.hex(), u.power) for u in updates] == [(new_key, 10)]
+    assert validator_updates(enacted['validators'], enacted['validators']) == []
+    retire = user.sign('validator_propose', consensus_key=new_key, power=0)
+    rid = ledger.transaction_id(retire)
+    pending = step(enacted, retire, checker)
+    for account, name in ((alice, 'alice-log'), (bob, 'bob-log')):
+        pending = step(pending, account.sign('model_vote', proposal_id=rid, log_key=keys[name], approve=True), checker)
+    with pytest.raises(ValueError, match='at least one admitted validator'):
+        step(pending, carol.sign('model_enact', proposal_id=rid), checker)
+
+    app = Application(tmp_path / 'chain.sqlite', checker)
+    app.state = state
+    raw = ledger.canonical(carol.sign('model_enact', proposal_id=pid))
+    carol.nonce = state['accounts'][carol.public]['nonce']
+    raw = ledger.canonical(carol.sign('model_enact', proposal_id=pid))
+    try:
+        response = app.FinalizeBlock(pb.RequestFinalizeBlock(height=state['height'] + 1, txs=[raw]), None)
+        assert response.tx_results[0].code == 0
+        assert [(u.pub_key.ed25519.hex(), u.power) for u in response.validator_updates] == [(new_key, 10)]
+    finally:
+        app.check.worker.shutdown(wait=True)
+        app.db.close()

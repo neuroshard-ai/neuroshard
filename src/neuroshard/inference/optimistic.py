@@ -31,6 +31,7 @@ import copy
 import hashlib
 import json
 import re
+import sys
 
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -48,7 +49,11 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'},
           'model_promote': {'model_root', 'quality_root'}, 'governance_handover': {'approval_ppm', 'vote_blocks'},
           'model_propose': {'model_root', 'quality_root'}, 'model_vote': {'proposal_id', 'log_key', 'approve'},
-          'model_enact': {'proposal_id'}}
+          'model_enact': {'proposal_id'}, 'validator_propose': {'consensus_key', 'power'}}
+MAX_VALIDATOR_POWER = 100
+from neuroshard.inference import growth as _growth  # noqa: E402  (growth jobs: contributors train units)
+
+FIELDS.update(_growth.FIELDS)
 # Owner governance of the serving model (created lazily by the first governance transaction, so earlier
 # state roots are unchanged). Proposals are weighted by the bonds of owners active when they open.
 GOVERNANCE = {'proposal_deposit': 2_000_000, 'max_proposals': 4, 'minimum_vote_blocks': 20,
@@ -188,6 +193,7 @@ def invariant(state):
     bonded = sum(o['amount'] for o in state['owners'].values())
     escrow = sum(j['price'] + sum(c['deposit'] for c in j['challenges'].values()) for j in state['jobs'].values())
     escrow += sum(p['deposit'] for p in state.get('governance', {}).get('proposals', {}).values())
+    escrow += _growth.escrow(state)
     assert all(a['balance'] >= 0 and a['nonce'] >= 0 for a in state['accounts'].values())
     assert all(o['amount'] >= 0 for o in state['owners'].values())
     assert state['initial_supply'] == liquid + bonded + escrow + state['burned']
@@ -253,6 +259,8 @@ def advance(previous, height):
             remember(state, job_id, {'status': 'expired', 'user': job['user'], 'owners': job['owners'],
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
+    if 'growth' in state:
+        _growth.advance(sys.modules[__name__], state)
     invariant(state)
     return state
 
@@ -330,8 +338,10 @@ def admit(previous, envelope):
         blocks = integer(body['vote_blocks'], GOVERNANCE['minimum_vote_blocks'], 1_000_000)
         return body, sender, {'kind': 'governance_handover', 'chain_id': previous['chain_id'], 'signer': sender,
                               'approval_ppm': approval, 'vote_blocks': blocks}
-    if kind in ('model_propose', 'model_vote', 'model_enact') and not governed(previous):
+    if kind in ('model_propose', 'model_vote', 'model_enact', 'validator_propose') and not governed(previous):
         raise ValueError('Owner governance has not been handed over')
+    if kind.startswith('growth_'):
+        return body, sender, _growth.admit(sys.modules[__name__], previous, body, sender)
     return body, sender, proving(previous, body) if kind == 'prove' else None
 
 
@@ -509,6 +519,24 @@ def transition(previous, envelope, execute):
             'proposer': sender, 'model_root': model, 'quality_root': quality, 'deposit': GOVERNANCE['proposal_deposit'],
             'opened': state['height'], 'deadline': state['height'] + governance['vote_blocks'], 'weights': weights,
             'votes': {}}
+    elif kind == 'validator_propose':
+        # Who orders transactions is decided like the served model: by an owner vote. Power 0 retires a
+        # validator, including a genesis one; the chain must keep at least one admitted validator.
+        governance = state['governance']
+        if len(governance['proposals']) >= GOVERNANCE['max_proposals']:
+            raise ValueError('Too many open proposals')
+        key, power = ed25519_key(body['consensus_key']), integer(body['power'], 0, MAX_VALIDATOR_POWER)
+        if state.get('validators', {}).get(key, None) == power:
+            raise ValueError('The validator already has that power')
+        weights = {k: owner['amount'] for k, owner in sorted(state['owners'].items())
+                   if owner['status'] == 'active' and owner['amount'] > 0}
+        if not weights:
+            raise ValueError('No bonded owner can vote')
+        debit(GOVERNANCE['proposal_deposit'])
+        governance['proposals'][transaction_id(envelope)] = {
+            'kind': 'validator', 'proposer': sender, 'consensus_key': key, 'power': power,
+            'deposit': GOVERNANCE['proposal_deposit'], 'opened': state['height'],
+            'deadline': state['height'] + governance['vote_blocks'], 'weights': weights, 'votes': {}}
     elif kind == 'model_vote':
         proposal = state['governance']['proposals'].get(body['proposal_id'])
         key = body['log_key']
@@ -523,10 +551,21 @@ def transition(previous, envelope, execute):
         governance = state['governance']
         proposal = governance['proposals'].get(body['proposal_id'])
         if proposal is None:
-            raise ValueError('No such model proposal')
+            raise ValueError('No such proposal')
         approving, total = tally(proposal)
         passed = approving * 1_000_000 >= governance['approval_ppm'] * total
-        if passed:
+        if passed and proposal.get('kind') == 'validator':
+            validators = state.setdefault('validators', {})
+            key, power = proposal['consensus_key'], proposal['power']
+            remaining = {k: v for k, v in validators.items() if k != key and v > 0}
+            if power == 0 and not remaining:
+                raise ValueError('The chain must keep at least one admitted validator')
+            validators[key] = power
+            state.setdefault('validator_history', []).append({
+                'consensus_key': key, 'power': power, 'height': state['height'], 'proposal_id': body['proposal_id'],
+                'approving_weight': approving, 'total_weight': total})
+            account(state, proposal['proposer'])['balance'] += proposal['deposit']
+        elif passed:
             if state['jobs']:
                 raise ValueError('Drain every open job before changing the serving model')
             if proposal['model_root'] == state['model_root']:
@@ -543,6 +582,8 @@ def transition(previous, envelope, execute):
         else:
             raise ValueError('The proposal has neither passed nor closed')
         del governance['proposals'][body['proposal_id']]
+    elif kind.startswith('growth_'):
+        _growth.apply(sys.modules[__name__], state, envelope, body, sender, debit, execute, request)
     elif kind == 'challenge':
         debit(params['challenge_deposit'])
         state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {
