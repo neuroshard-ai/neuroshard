@@ -51,9 +51,19 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'model_propose': {'model_root', 'quality_root'}, 'model_vote': {'proposal_id', 'log_key', 'approve'},
           'model_enact': {'proposal_id'}, 'validator_propose': {'consensus_key', 'power'}}
 MAX_VALIDATOR_POWER = 100
-from neuroshard.inference import growth as _growth  # noqa: E402  (growth jobs: contributors train units)
+# Growth jobs (contributors train units; see ``growth``). Their schema is declared here, and the module is
+# imported only when a growth transaction or growth state appears, so published profiles that pin the
+# ledger's imports are unchanged.
+FIELDS.update({'growth_open': {'recipe_root', 'start_root', 'steps', 'segment_steps', 'reward'},
+               'growth_commit': {'job_id', 'segment', 'step_roots'},
+               'growth_challenge': {'job_id', 'segment', 'step', 'proof_root'},
+               'growth_prove': {'job_id', 'challenge_id'}})
 
-FIELDS.update(_growth.FIELDS)
+
+def _growth():
+    from neuroshard.inference import growth
+
+    return growth
 # Owner governance of the serving model (created lazily by the first governance transaction, so earlier
 # state roots are unchanged). Proposals are weighted by the bonds of owners active when they open.
 GOVERNANCE = {'proposal_deposit': 2_000_000, 'max_proposals': 4, 'minimum_vote_blocks': 20,
@@ -193,7 +203,8 @@ def invariant(state):
     bonded = sum(o['amount'] for o in state['owners'].values())
     escrow = sum(j['price'] + sum(c['deposit'] for c in j['challenges'].values()) for j in state['jobs'].values())
     escrow += sum(p['deposit'] for p in state.get('governance', {}).get('proposals', {}).values())
-    escrow += _growth.escrow(state)
+    if state.get('growth'):
+        escrow += _growth().escrow(state)
     assert all(a['balance'] >= 0 and a['nonce'] >= 0 for a in state['accounts'].values())
     assert all(o['amount'] >= 0 for o in state['owners'].values())
     assert state['initial_supply'] == liquid + bonded + escrow + state['burned']
@@ -260,7 +271,7 @@ def advance(previous, height):
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
     if 'growth' in state:
-        _growth.advance(sys.modules[__name__], state)
+        _growth().advance(sys.modules[__name__], state)
     invariant(state)
     return state
 
@@ -341,7 +352,7 @@ def admit(previous, envelope):
     if kind in ('model_propose', 'model_vote', 'model_enact', 'validator_propose') and not governed(previous):
         raise ValueError('Owner governance has not been handed over')
     if kind.startswith('growth_'):
-        return body, sender, _growth.admit(sys.modules[__name__], previous, body, sender)
+        return body, sender, _growth().admit(sys.modules[__name__], previous, body, sender)
     return body, sender, proving(previous, body) if kind == 'prove' else None
 
 
@@ -583,7 +594,7 @@ def transition(previous, envelope, execute):
             raise ValueError('The proposal has neither passed nor closed')
         del governance['proposals'][body['proposal_id']]
     elif kind.startswith('growth_'):
-        _growth.apply(sys.modules[__name__], state, envelope, body, sender, debit, execute, request)
+        _growth().apply(sys.modules[__name__], state, envelope, body, sender, debit, execute, request)
     elif kind == 'challenge':
         debit(params['challenge_deposit'])
         state['jobs'][body['job_id']]['challenges'][transaction_id(envelope)] = {

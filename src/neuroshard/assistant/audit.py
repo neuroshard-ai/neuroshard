@@ -118,9 +118,7 @@ def receive_proof(payload, root, state, store):
     from neuroshard.evolution.sharded import granite_audit
 
     ledger.hex_digest(root)
-    from neuroshard.inference import growth
-
-    if growth.open_proof(state, root):
+    if state.get('growth') and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(state, root):
         # A growth proof is one content-addressed file: the state before the disputed step.
         if len(payload) > MAX_PROOF_BYTES or hashlib.sha256(payload).hexdigest() != root:
             raise ValueError('growth proof bytes differ from their content address or bound')

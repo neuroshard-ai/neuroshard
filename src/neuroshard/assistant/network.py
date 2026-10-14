@@ -465,8 +465,9 @@ def serve_faucet(faucet, host, port, proof_store=None):
                     root = self.path.removeprefix('/proofs/')
                     state = faucet.chain.state()
                     ledger.hex_digest(root)
-                    from neuroshard.inference import growth
-                    if not (growth.open_proof(state, root) or any(
+                    growing = state.get('growth')
+                    if not ((growing and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(
+                            state, root)) or any(
                             c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values())):
                         raise ValueError('no funded open challenge names this proof')
                 deadline, content = time.monotonic() + 30, bytearray()
