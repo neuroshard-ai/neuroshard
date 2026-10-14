@@ -341,3 +341,22 @@ the request after unrelated context.
 The fix is in the search step. Demonstrations and the policy must search for the request itself, not
 its opening sentence. Training must include wrapped requests from the now-spent confirmation6 wording.
 The next unit is judged on a fresh development set and a confirmation7.
+
+## Version 8: searching by key terms (L9)
+
+L9 keeps L7's recipe and changes the search step, which confirmation 6 showed was failing
+([declaration](../config/experiments/assistant-general-l9.json),
+[report](../config/experiments/assistant-general-l9-report.json); one A10G, $0.57). Demonstrations
+search with the request's key terms (its subject and the names, places or products it gives), not
+the whole message. The policy says so, and the experience covers every spent wording, including
+confirmation 6's wrapped requests: 1,190 verified demonstrations.
+
+| generated-development5 (replies in an ongoing thread) | parent (same policy) | L9 | minimum |
+| --- | --- | --- | --- |
+| documents | 60/66 | 63/66 (95.5%) | 85% |
+| not-found | 10/12 | 11/12 | 90% |
+
+L9 advances, as declared. Every search it made was a short key-term query. Recorded before opening:
+twice it applied a claim window as a duration rather than a date, and once it answered a return
+flight with the outbound time. The [sealed confirmation7](../config/experiments/assistant-general-l9-confirmation.json)
+(transcribed voice messages) runs L9 and C1 as judged, with L7 for comparison.

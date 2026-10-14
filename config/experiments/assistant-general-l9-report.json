@@ -1,0 +1,147 @@
+{
+  "format": "neuroshard-assistant-general-l9-report/1",
+  "source_commit": "21f731985a09be58235f4c94c865b7543ea82fe7",
+  "ci_run": 38480813253,
+  "gpu": "NVIDIA L40S",
+  "demonstrations": {
+    "cases": 1190,
+    "by_family": {
+      "flight-time": 130,
+      "hotel-code": 100,
+      "leave-days": 100,
+      "invoice-sum": 100,
+      "claim-deadline": 100,
+      "notice": 100,
+      "deposit": 100,
+      "battery": 100,
+      "owner": 100,
+      "not-found-insurance": 100,
+      "not-found-return": 160
+    },
+    "trajectories_sha256": "b5ee450e83db6ed41cd3d24fe70eaab1d4ab37fe2e997e7f2e924c6658d66670"
+  },
+  "chat_replay": {
+    "cases": 320,
+    "passed": 297,
+    "by_family": {
+      "bullets": 40,
+      "short": 40,
+      "json": 37,
+      "include": 39,
+      "exclude": 29,
+      "ending": 40,
+      "lowercase": 40,
+      "arithmetic": 32
+    },
+    "by_attempt": {
+      "0": 300
+    },
+    "replay_sha256": "9de4075d5015115b35ec0acded298872df409740ac8c15a4da6512b344d13c65"
+  },
+  "phases": {
+    "demonstrate": 10.774743015000013,
+    "replay": 70.82013338100003,
+    "train": 193.29073265599993,
+    "integrate": 120.99820140500003
+  },
+  "training": {
+    "trainable_sha256": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08",
+    "tokens_processed": 2755546,
+    "final_losses": [
+      0.018522687137192406,
+      0.017136110596311482,
+      0.0053941593755553185,
+      0.026663272551104455,
+      0.018589622793570015,
+      0.019353416992544226,
+      0.020635282136026944,
+      0.01493467432237594
+    ]
+  },
+  "module": {
+    "trainable_sha256": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08",
+    "file_sha256": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08",
+    "bytes": 4197776
+  },
+  "integration_file": "config/experiments/assistant-general-l9-integration.json.gz",
+  "integration_sha256": "3573b714ed9d5c6f83cdaf14f53ceb657fc255326c73f774dc8b403e376753e3",
+  "integration_gz_sha256": "4b96abec2fcdd310ef8ea9d21a119ef2f6e1fc89a95cbb0616f465f0c8434f7f",
+  "integration": {
+    "parent": {
+      "passed": 60,
+      "cases": 66,
+      "families": {
+        "battery": "6/6",
+        "claim-deadline": "3/6",
+        "deposit": "6/6",
+        "flight-time": "6/6",
+        "hotel-code": "6/6",
+        "invoice-sum": "6/6",
+        "leave-days": "5/6",
+        "not-found-insurance": "6/6",
+        "not-found-return": "4/6",
+        "notice": "6/6",
+        "owner": "6/6"
+      }
+    },
+    "L9": {
+      "passed": 63,
+      "cases": 66,
+      "families": {
+        "battery": "6/6",
+        "claim-deadline": "4/6",
+        "deposit": "6/6",
+        "flight-time": "6/6",
+        "hotel-code": "6/6",
+        "invoice-sum": "6/6",
+        "leave-days": "6/6",
+        "not-found-insurance": "6/6",
+        "not-found-return": "5/6",
+        "notice": "6/6",
+        "owner": "6/6"
+      }
+    }
+  },
+  "rates": {
+    "L9": {
+      "documents": 0.9545454545454546,
+      "not_found": 0.9166666666666666
+    },
+    "parent": {
+      "documents": 0.9090909090909091,
+      "not_found": 0.8333333333333334
+    }
+  },
+  "L9_against_parent": {
+    "gained": 4,
+    "lost": [
+      "claim-deadline-04"
+    ]
+  },
+  "checks": {
+    "more_documents_than_parent": true,
+    "documents_minimum": true,
+    "not_found_minimum": true
+  },
+  "advances": true,
+  "findings": {
+    "search": "Every L9 search is a short key-term query; the three misses are a wrong claim rule (twice) and one return flight answered with the outbound time."
+  },
+  "decision": "Advances, as declared. L9 is pinned and goes to the sealed confirmation7 with C1 for chat.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T23:58:15.752739+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-04cf86f584cee05fa"
+    ],
+    "instance_type": "g6e.xlarge",
+    "conservative_instance_seconds": 1095.91486,
+    "conservative_compute_usd": 0.5665270984611112,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.5665270984611112,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

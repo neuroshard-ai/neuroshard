@@ -1,0 +1,71 @@
+{
+  "format": "neuroshard-assistant-general-l9-confirmation/1",
+  "question": "Version 8 of the general route (documents with L9 searching by key terms; chat with C1 under chat-tools/1) on the sealed confirmation7, opened once: transcribed voice messages, an eighth style.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation7",
+      "policy": "config/experiments/assistant-general-policy-documents5.json",
+      "module": "L9"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation7",
+      "policy": "config/experiments/assistant-general-policy-chat3.json",
+      "module": "C1"
+    },
+    {
+      "set": "documents",
+      "split": "confirmation7",
+      "policy": "config/experiments/assistant-general-policy-documents3.json",
+      "module": "L7"
+    }
+  ],
+  "modules": {
+    "L9": {
+      "trainable_sha256": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08",
+      "report": {
+        "path": "config/experiments/assistant-general-l9-report.json",
+        "sha256": "243c5b616b8dc3e26ab7c02aab384bb0573e4059ab5f67202bccd167fdc62478"
+      }
+    },
+    "C1": {
+      "trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f",
+      "report": {
+        "path": "config/experiments/assistant-general-c1-report.json",
+        "sha256": "f8eead9186544fada336457b515fa6d3a496d2f518c42eda8ce20b160439197b"
+      }
+    },
+    "L7": {
+      "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+      "report": {
+        "path": "config/experiments/assistant-general-l7-report.json",
+        "sha256": "d26b486b8dd5fb96ca40b69ea23179b4fdd4c6953071d86c134f4dab86de457e"
+      }
+    }
+  },
+  "judged": {
+    "documents": "documents-confirmation7-L9",
+    "chat": "chat-confirmation7-C1",
+    "comparison": "documents-confirmation7-L7 (version 7 documents, reported)"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "fbe251dc0a10a4caddc095377ca4ead993b92cdfdfc6222c3475c0391cd015a7",
+    "chat_case_ids_sha256": "2a9a2716646680d001557d00c49046f724fc39c9c362b91b2e391f61b312fb06",
+    "documents_cases_sha256": "d0358d5ee3daaf3d0ad440b09f294ac76652adbd0cd2bd196f2835d633381c1d",
+    "chat_cases_sha256": "aafcfb9b291043babc3638a1b58cd357f97c165e73d1b509a2cdd1d4b6c96725",
+    "phrasings_sha256": "7be6ff82aebdf0f649137de0fc9f12c766ac80343cbb0211d2f8c7a1b116dd62"
+  },
+  "meaning": "If every minimum holds for the judged sets, version 8 is the general route the next served version ships, after its own release qualification; otherwise its failures define the next round.",
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false,
+  "chat_checker": "Generated chat cases quote the constrained value and strip emphasis around a required ending (declared in L5/L6, before this opening).",
+  "known_risk": "On development5, L9 twice applied a claim window as a duration rather than a date, and once answered a return flight with the outbound time; recorded before opening."
+}
