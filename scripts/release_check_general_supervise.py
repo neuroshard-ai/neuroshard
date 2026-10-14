@@ -25,7 +25,10 @@ STATE = '/home/ubuntu/.neuroshard/assistant-release-check-general'
 CLIENT_MAX, SHADOW_MAX = '16h45min', '17h15min'
 MAX_SECONDS = 17 * 3600 + 1800        # supervisor retirement after launch
 OS_SHUTDOWN_SECONDS = 18 * 3600       # independent guard on the client itself
-PYTHON = '/home/ubuntu/.venvs/neuroshard-release/bin/python -m neuroshard.assistant.release_check_general'
+# Shadow services run from their own checkout and venv: the live seed, owners and auditor run from
+# /home/ubuntu/neuroshard-release and its venv, which this supervisor never touches.
+CHECKOUT, VENV = '/home/ubuntu/neuroshard-release-general', '/home/ubuntu/.venvs/neuroshard-release-general'
+PYTHON = f'{VENV}/bin/python -m neuroshard.assistant.release_check_general'
 SSH = ['ssh', '-i', KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', '-o', 'ServerAliveInterval=30',
        '-o', 'StrictHostKeyChecking=accept-new']
 
@@ -55,8 +58,8 @@ def aws(*args, timeout=120):
 
 def unit(description, command, maximum):
     return '\n'.join(['[Unit]', f'Description={description}', 'After=network-online.target', '[Service]',
-                      'Type=simple', 'User=ubuntu', 'WorkingDirectory=/home/ubuntu/neuroshard-release',
-                      'Environment=PYTHONPATH=/home/ubuntu/neuroshard-release/src',
+                      'Type=simple', 'User=ubuntu', f'WorkingDirectory={CHECKOUT}',
+                      f'Environment=PYTHONPATH={CHECKOUT}/src',
                       'Environment=COMETBFT_BINARY=/home/ubuntu/neuroshard-tools/cometbft',
                       f'ExecStart={command}', f'RuntimeMaxSec={maximum}', 'TimeoutStopSec=30s',
                       'KillMode=control-group', 'Restart=no', ''])
@@ -103,7 +106,7 @@ def wait_ssh(host, seconds=900):
 
 
 def install(host, commit, fresh):
-    """The frozen commit in a detached checkout and the pinned runtime; protected hosts reuse their venv."""
+    """The frozen commit in a detached checkout and the pinned runtime, separate from anything live."""
     steps = ['set -euo pipefail']
     if fresh:
         uv = '/home/ubuntu/.venvs/bootstrap/bin/uv'
@@ -112,22 +115,19 @@ def install(host, commit, fresh):
                   'sudo apt-get -o DPkg::Lock::Timeout=300 install -y -qq python3-venv git',
                   'python3 -m venv /home/ubuntu/.venvs/bootstrap',
                   '/home/ubuntu/.venvs/bootstrap/bin/python -m pip install -q uv==0.12.24',
-                  f'{uv} python install 3.12.12',
-                  f'{uv} venv --python 3.12.12 /home/ubuntu/.venvs/neuroshard-release',
-                  'rm -rf /home/ubuntu/neuroshard-release',
-                  'git clone -q https://github.com/neuroshard-ai/neuroshard.git /home/ubuntu/neuroshard-release',
-                  f'git -C /home/ubuntu/neuroshard-release fetch -q origin {commit}',
-                  f'git -C /home/ubuntu/neuroshard-release checkout -q --detach {commit}',
-                  f'{uv} pip install -q --python /home/ubuntu/.venvs/neuroshard-release/bin/python '
-                  '-r /home/ubuntu/neuroshard-release/docs/granite-shard-chain-requirements.txt']
+                  f'{uv} python install 3.12.12']
     else:
         uv = '/home/ubuntu/.local/neuroshard-bootstrap/bin/uv'
-        steps += [f'git -C /home/ubuntu/neuroshard fetch -q https://github.com/neuroshard-ai/neuroshard.git {commit}',
-                  f'git -C /home/ubuntu/neuroshard-release checkout -q --detach {commit}',
-                  f'{uv} pip install -q --python /home/ubuntu/.venvs/neuroshard-release/bin/python '
-                  '-r /home/ubuntu/neuroshard-release/docs/granite-shard-chain-requirements.txt']
-    steps += [f'test "$(git -C /home/ubuntu/neuroshard-release rev-parse HEAD)" = {commit}',
-              'test -z "$(git -C /home/ubuntu/neuroshard-release status --porcelain)"']
+    steps += [f'[ -x {VENV}/bin/python ] || {uv} venv --python 3.12.12 {VENV}',
+              f'rm -rf {CHECKOUT}',
+              f'git clone -q https://github.com/neuroshard-ai/neuroshard.git {CHECKOUT}',
+              f'git -C {CHECKOUT} fetch -q origin {commit}',
+              f'git -C {CHECKOUT} checkout -q --detach {commit}',
+              f'{uv} pip install -q --python {VENV}/bin/python -r {CHECKOUT}/docs/granite-shard-chain-requirements.txt',
+              f'test "$(git -C {CHECKOUT} rev-parse HEAD)" = {commit}',
+              f'test -z "$(git -C {CHECKOUT} status --porcelain)"',
+              # The live checkout is untouched.
+              'test -d /home/ubuntu/neuroshard-release']
     result = ssh(host, 'bash -s', timeout=2400, input='\n'.join(steps), capture_output=True, text=True)
     (HOME / f'install-{host}.log').write_text(result.stdout + result.stderr)
     if result.returncode != 0:

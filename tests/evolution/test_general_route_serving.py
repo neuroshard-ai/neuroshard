@@ -124,3 +124,24 @@ def test_the_general_router_sends_a3_turns_to_a3s_unchanged_router():
     assert network.choose_route(a3_router, Served, basis['a3'], basis['a3'], general) == ('scheduling', 2)
     assert network.choose_route({'rule': 'constant-parent', 'counts': {}}, Served, basis['a3'], basis['a3'],
                                 general) == ('drafting', 1)
+
+
+def test_the_general_release_contract_pins_its_sources_workload_and_model():
+    from neuroshard.assistant import release_check_general as general
+    from neuroshard.evolution.modular_reference_execution import sha256
+
+    plan = read(ROOT / general.CONTRACT)
+    for name, digest in {**plan['sources'], **plan['contracts']}.items():
+        assert sha256(ROOT / name) == digest, name
+    descriptor = network.descriptor(ROOT / 'src/neuroshard/client/networks/assistant-release-general.json')
+    assert network.model_root(descriptor) == plan['model_root']
+    served, _ = network.version(descriptor)
+    assert served.routes == {1: ('L3', 'U1'), 2: ('L2', 'U1'), 3: ('L9', 'parent'), 4: ('C1', 'parent')}
+    work = general.checked_workload(plan)
+    assert len(work) == 324 and {name for name, _, _ in work[:10]} == {'documents', 'chat', 'a3-cross', 'a3-drafting',
+                                                                        'a3-scheduling'}
+    assert not plan['training_authorized'] and not plan['new_final_authorized'] and plan['budget_usd'] <= 40
+    router = read(ROOT / 'config/experiments/assistant-general-router-a4.json')
+    report = read(ROOT / 'config/experiments/assistant-general-router-a4-report.json')
+    assert router['routes'] == ['a3', 'chat', 'documents'] and report['router_sha256'] == router['sha256']
+    assert report['development']['misrouted_count'] == 0 and report['workload']['misrouted_count'] == 0
