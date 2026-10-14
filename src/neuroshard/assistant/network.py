@@ -64,7 +64,7 @@ class Version:
         self.world = len(self.boundaries) - 1
         self.arm_rank = self.world - 1
         self.policies = policies
-        self.routes = {}
+        self.routes, self.files = {}, set()
 
 
 def version(network):
@@ -81,6 +81,7 @@ def version(network):
             raise ValueError(f'the {name} policy differs from the accepted version')
     served = Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
                      plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None)
+    served.files = set(network['files'])
     served.routes = route_table(network.get('routing'))
     served.route_names = {name: row['route'] for name, row in (network.get('routing') or {}).items()
                           if isinstance(row, dict) and 'route' in row}
@@ -140,9 +141,9 @@ def sources(network):
     """
     listed = ([network['assets']] if isinstance(network.get('assets'), str) else list(network.get('assets', [])))
     listed += list(network.get('mirrors', []))
-    if not listed or not all(isinstance(url, str) and url.startswith(('http://', 'https://')) and url.endswith('/')
-                             for url in listed):
-        raise ValueError('a network names at least one http(s) artifact source ending in /')
+    if not listed or not all(isinstance(url, str) and url.startswith(('http://', 'https://', 'file:///'))
+                             and url.endswith('/') for url in listed):
+        raise ValueError('a network names at least one http(s) or file artifact source ending in /')
     return list(dict.fromkeys(listed))
 
 
@@ -221,7 +222,8 @@ def route_table(routing):
 
 def stage_files(served, rank):
     if rank == 0:
-        return ['integration.json'] + (['router.json'] if served.policies else [])
+        extra = ['general-router.json'] if 'general-router.json' in served.files else []
+        return ['integration.json'] + (['router.json'] + extra if served.policies else [])
     if rank == served.arm_rank:
         units = sorted({unit for unit, _ in served.routes.values()})
         return (['update-checkpoint/manifest.json', 'update-checkpoint/trainable.safetensors']
@@ -253,6 +255,8 @@ def fetch_stage(network, rank, home, progress=print):
         stage.update(tokenizer=store / 'config', gate=read(store / 'integration.json')['arms']['update']['gate'])
         if served.policies:
             stage['router'] = read(store / 'router.json')['gate']
+            if 'general-router.json' in served.files:
+                stage['general_router'] = read(store / 'general-router.json')
     if rank == served.arm_rank:
         stage['arm'] = store / 'update-checkpoint'
         if served.policies:
@@ -778,14 +782,25 @@ def choose_owners(state, served, rng=None, probe=reachable):
     return chosen
 
 
-def choose_route(router, served, feature, opening):
+def choose_route(router, served, feature, opening, general=None):
     """(route name, route index) for one turn.
 
-    A K-route router (``logistic-context``) reads the message state with the opening message's state and
-    sends a low-confidence turn to its fallback; A3's binary router chooses scheduling or drafting.
+    With a ``general`` router (the general-route version), it first decides whether a turn belongs to A3's
+    workspace routes (``a3``) or to a general route (``documents``, ``chat``), from the message state with the
+    opening message's state; A3 turns then go to A3's own router, unchanged, so A3's routing does not move.
+    A K-route router (``logistic-context``) reads the same context and sends a low-confidence turn to its
+    fallback; A3's binary router chooses scheduling or drafting.
     """
     from neuroshard.evolution import assistant_selector as selector
 
+    if general is not None:
+        from neuroshard.evolution import assistant_turn_router as turn_router
+
+        top = turn_router.route(turn_router.verify(general), turn_router.context_feature(feature, opening))
+        if top != 'a3':
+            if top not in served.route_names:
+                raise ValueError(f'the router chose {top}, which this version does not serve')
+            return top, served.route_names[top]
     if router.get('rule') == 'logistic-context':
         from neuroshard.evolution import assistant_turn_router as turn_router
 
@@ -847,6 +862,7 @@ class Conversation:
                                modules=('U1', *units) if served.policies else ('U1',),
                                route_policies=served.policies)
         self.router, self.responses = stage.get('router'), {}
+        self.general_router = stage.get('general_router')
         self.respond = self.arm = None
         self.opening = None  # the first message's feature, for a K-route router's context
 
@@ -865,7 +881,7 @@ class Conversation:
         if self.router is not None:
             feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
             self.opening = feature if self.opening is None else self.opening
-            route, index = choose_route(self.router, self.served, feature, self.opening)
+            route, index = choose_route(self.router, self.served, feature, self.opening, self.general_router)
             self.driver.route(index, self.arm if route == 'drafting' else True)
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],

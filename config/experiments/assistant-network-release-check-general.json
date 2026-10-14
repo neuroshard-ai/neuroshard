@@ -1,0 +1,101 @@
+{
+ "a3_regression": {
+  "cross": 48,
+  "drafting": 24,
+  "scheduling": 24
+ },
+ "attempt": 1,
+ "authorized_by": "project owner, October 14, 2026: \"Yes start\" (release qualification of the general-route version)",
+ "budget_usd": 40,
+ "contracts": {},
+ "environment": {
+  "ATEN_CPU_CAPABILITY": null,
+  "MKL_ENABLE_INSTRUCTIONS": null,
+  "MKL_NUM_THREADS": "8",
+  "OMP_NUM_THREADS": "8",
+  "OPENBLAS_NUM_THREADS": "8",
+  "TOKENIZERS_PARALLELISM": "false"
+ },
+ "format": "neuroshard-assistant-release-check-general/1",
+ "general": {
+  "cases": {
+   "chat": 96,
+   "documents": 132
+  },
+  "chat": "chat-confirmation7-C1",
+  "documents": "documents-confirmation7-L9",
+  "episodes": "config/experiments/assistant-general-l9-confirmation-episodes.json.gz",
+  "split": "confirmation7"
+ },
+ "gpu_launch_authorized": false,
+ "instance_type": "m7i.2xlarge",
+ "model_root": null,
+ "new_final_authorized": false,
+ "packages": {
+  "Jinja2": "3.1.6",
+  "MarkupSafe": "3.0.3",
+  "PyYAML": "6.0.3",
+  "Pygments": "2.21.0",
+  "annotated-doc": "0.0.5",
+  "anyio": "4.15.1",
+  "certifi": "2026.7.22",
+  "click": "8.5.0",
+  "filelock": "3.32.3",
+  "fsspec": "2026.7.0",
+  "h11": "0.16.0",
+  "hf-xet": "1.6.0",
+  "httpcore": "1.0.9",
+  "httpx": "0.28.1",
+  "huggingface_hub": "1.33.0",
+  "idna": "3.20",
+  "markdown-it-py": "4.2.0",
+  "mdurl": "0.1.2",
+  "mpmath": "1.3.0",
+  "networkx": "3.6.1",
+  "numpy": "2.2.6",
+  "packaging": "26.3",
+  "regex": "2026.9.10",
+  "rich": "15.0.0",
+  "safetensors": "0.7.0",
+  "setuptools": "78.1.0",
+  "shellingham": "1.5.4",
+  "sympy": "1.14.0",
+  "tokenizers": "0.22.2",
+  "torch": "2.10.0+cpu",
+  "tqdm": "4.70.1",
+  "transformers": "5.5.4",
+  "typer": "0.27.2",
+  "typing_extensions": "4.16.0"
+ },
+ "pass_rule": "All 228 general conversations (132 documents, 96 chat) and 96 A3 conversations (48 cross, 24 drafting, 24 scheduling) match their accepted runs in every generated input and output token, tool call and result, final reply and workspace snapshot, and each is served under the route it was accepted under. Stop at the first mismatch or execution error. No new learning or independent-operation credit.",
+ "ports": {
+  "faucet": 28781,
+  "owner": 28701,
+  "p2p": 28660
+ },
+ "positions": 65536,
+ "price": 100000,
+ "protected_instances": [
+  "i-0d681a8ef83f72619",
+  "i-06bf7f1f01e6228bb",
+  "i-0515351dfce90dbd7",
+  "i-08b8035d33b53c0b7"
+ ],
+ "python": "3.12.12",
+ "question": "Does the general-route version, served through paid, separately hosted shards, reproduce every accepted conversation of its sealed confirmation and of A3, token for token?",
+ "required_cpu_flags": [
+  "amx_bf16",
+  "avx512_bf16"
+ ],
+ "sources": {},
+ "status": "frozen-prospective-deployment-equivalence",
+ "temporary_instances": 1,
+ "threads": 8,
+ "training_authorized": false,
+ "units": {
+  "C1": "chat, route 4, addition on the parent",
+  "L9": "documents, route 3, addition on the parent"
+ },
+ "version": "a4-general",
+ "worker_seconds": 57600
+}

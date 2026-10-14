@@ -53,25 +53,30 @@ class Session:
         self.version = bind(policy, name=name, previous=previous, modules=modules, route_policies=route_policies)
         self.consent = consent
         self.tools = interfaces.interface(policy)
-        self.worlds = {}
+        self.files, self.worlds = copy.deepcopy(world), {}
         if route_policies:
-            from neuroshard.evolution import assistant_routing
             # Drafting and scheduling share one calendar workspace, as served since A3; the documents and chat
-            # routes each have their own, built from the same files on this device.
-            calendar = [item for item in route_policies.values() if interfaces.interface(item).group == 'calendar']
-            if calendar:
-                self.worlds['calendar'] = assistant_routing.workspace(calendar).Workspace(copy.deepcopy(world))
-            for item in route_policies.values():
-                kind = interfaces.interface(item)
-                if kind.group != 'calendar' and kind.group not in self.worlds:
-                    self.worlds[kind.group] = kind.Workspace(copy.deepcopy(world))
-            self.world = self.worlds.get('calendar') or next(iter(self.worlds.values()))
+            # routes each have their own, built from the same files on this device when a route first needs it,
+            # so a documents-only workspace never has to satisfy the drafting schema and vice versa.
+            self.world = None
         else:
             self.world = self.tools.Workspace(copy.deepcopy(world))
             self.worlds[self.tools.group] = self.world
         self.messages = [{'role': 'system', 'content': policy['system_instruction']}]
         self.calls = []
         self.memory = {}
+
+    def workspace(self, tools):
+        """The route group's workspace, created from this session's files on first use."""
+        if tools.group not in self.worlds:
+            if tools.group == 'calendar':
+                from neuroshard.evolution import assistant_routing
+                calendar = [item for item in self.route_policies.values()
+                            if interfaces.interface(item).group == 'calendar']
+                self.worlds['calendar'] = assistant_routing.workspace(calendar).Workspace(copy.deepcopy(self.files))
+            else:
+                self.worlds[tools.group] = tools.Workspace(copy.deepcopy(self.files))
+        return self.worlds[tools.group]
 
     def note(self, key, value):
         if not isinstance(key, str) or not isinstance(value, str) or not key or not value:
@@ -103,10 +108,12 @@ class Session:
     def turn(self, user, respond, route=None):
         if not isinstance(user, str) or not user.strip():
             raise ValueError('user turn must be non-empty text')
+        if route is None and self.world is None:
+            raise ValueError('a routed session needs a route for every turn')
         if route is not None:
             self.policy = self.route_policies[route]
             self.tools = interfaces.interface(self.policy)
-            self.world = self.worlds[self.tools.group]
+            self.world = self.workspace(self.tools)
             self.messages[0] = {'role': 'system', 'content': self.policy['system_instruction']}
         self.messages.append({'role': 'user', 'content': user})
         used, final, completed, failure = 0, '', False, None
@@ -140,8 +147,7 @@ class Session:
                 response = self.world.execute(call)
                 self.calls.append({'call': call, 'result': response})
                 used += 1
-                self.messages.append({'role': 'tool',
-                                      'content': json.dumps(response, ensure_ascii=False, sort_keys=True)})
+                self.messages.append({'role': 'tool', 'content': self.tools.result_text(response)})
         if not completed and failure is None:
             failure = 'model-turn budget exhausted'
         return {'completed': completed, 'final_text': final, 'failure': failure,

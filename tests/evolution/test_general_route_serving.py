@@ -43,13 +43,12 @@ def test_a_session_keeps_one_workspace_per_route_group_and_switches_by_route():
     first = files['documents'][0]
     session = Session(POLICIES['drafting'], files, name='a4-general', modules=('U1', 'L2', 'L3', 'L7', 'C1'),
                       route_policies=POLICIES)
-    assert set(session.worlds) == {'calendar', 'documents', 'chat'}
+    assert session.worlds == {}  # each route group's workspace is built when the route is first used
     result = session.turn('What does my first document say?', scripted([
         call('read_document', document_id=first['id']), f"It is {first['title']} ({first['id']})."]),
         route='documents')
     assert result['completed'] and result['snapshot']['read_ids'] == [first['id']]
-    assert session.worlds['calendar'].snapshot() == Session(POLICIES['drafting'], files,
-                                                            route_policies=POLICIES).worlds['calendar'].snapshot()
+    assert set(session.worlds) == {'documents'}
     result = session.turn('What is 6 times 7?', scripted([call('calculate', operation='multiply', left=6, right=7),
                                                            'It is 42.']), route='chat')
     assert result['final_text'] == 'It is 42.' and result['snapshot']['events'][0]['result'] == {'value': 42}
@@ -89,3 +88,39 @@ def test_route_tables_reject_bad_rows_and_keep_a3():
     served, _ = network.version(network.descriptor())
     assert served.routes == {1: ('L3', 'U1'), 2: ('L2', 'U1')} and served.route_names == {'drafting': 1,
                                                                                           'scheduling': 2}
+
+
+def test_chat_results_render_as_the_accepted_chat_runner_did_and_documents_alone_need_no_drafting_schema():
+    from neuroshard.evolution import assistant_chat_data as chat
+    from neuroshard.evolution import assistant_documents_data as docs
+    from neuroshard.evolution import assistant_general as general
+
+    rule = 'ends_with:\u201cKeep at it\u201d'
+    case = chat.cases('confirmation7')[0]
+    reply = call('check_text', text='Keep at it.', rules=[rule])
+    recorded = general.chat_episode(case, scripted([reply, 'Keep at it.']), POLICIES['chat'])
+    session = Session(POLICIES['drafting'], {'documents': []}, route_policies=POLICIES)
+    served = session.turn(case['turns'][0]['user'], scripted([reply, 'Keep at it.']), route='chat')
+    tool_messages = [m['content'] for m in session.messages if m['role'] == 'tool']
+    assert tool_messages and all(message.isascii() for message in tool_messages)
+    assert served['final_text'] == recorded['final_text'] and session.calls == recorded['calls']
+    documents_case = docs.cases('confirmation7')[0]
+    session = Session(POLICIES['drafting'], documents_case['world'], route_policies=POLICIES)
+    first = documents_case['world']['documents'][0]['id']
+    out = session.turn('x', scripted([call('read_document', document_id=first), f'ok ({first})']), route='documents')
+    assert out['completed'] and set(session.worlds) == {'documents'}
+
+
+def test_the_general_router_sends_a3_turns_to_a3s_unchanged_router():
+    class Served:
+        route_names = {'drafting': 1, 'scheduling': 2, 'documents': 3, 'chat': 4}
+
+    basis = {'a3': [1, 0, 0], 'documents': [0, 1, 0], 'chat': [0, 0, 1]}
+    rows = {f'{route}-{i}': (route, 1.0) for route in basis for i in range(3)}
+    features = {key: turn_router.context_feature(basis[route], basis[route]) for key, (route, _) in rows.items()}
+    general = turn_router.fit(features, rows, steps=200)
+    a3_router = {'rule': 'constant-arm', 'counts': {}}
+    assert network.choose_route(a3_router, Served, basis['documents'], basis['documents'], general) == ('documents', 3)
+    assert network.choose_route(a3_router, Served, basis['a3'], basis['a3'], general) == ('scheduling', 2)
+    assert network.choose_route({'rule': 'constant-parent', 'counts': {}}, Served, basis['a3'], basis['a3'],
+                                general) == ('drafting', 1)

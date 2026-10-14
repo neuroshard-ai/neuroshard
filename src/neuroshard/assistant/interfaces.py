@@ -15,9 +15,15 @@ CHAT = ('chat-calculator/1', 'chat-tools/1')
 
 
 class Interface:
-    def __init__(self, name, group, tools, parse, factory):
+    def __init__(self, name, group, tools, parse, factory, ascii_results=False):
         self.name, self.group, self.TOOLS = name, group, tools
-        self._parse, self._factory = parse, factory
+        self._parse, self._factory, self.ascii_results = parse, factory, ascii_results
+
+    def result_text(self, result):
+        """A tool result as the model sees it, byte for byte as the route's accepted runner rendered it."""
+        import json
+
+        return json.dumps(result, ensure_ascii=self.ascii_results, sort_keys=True)
 
     def parse_calls(self, text):
         return self._parse(text)
@@ -66,7 +72,8 @@ def interface(policy):
         from neuroshard.evolution import assistant_workspace as base
 
         kit = general.ChatTools if name == 'chat-tools/1' else general.Calculator
+        # The accepted chat runner (assistant_general.calculator_chat_episode) renders results ASCII-escaped.
         return Interface(name, 'chat', kit.TOOLS, lambda text: base.parse_calls(text, kit.REGISTRY),
-                         lambda world: ChatWorkspace(kit))
+                         lambda world: ChatWorkspace(kit), ascii_results=True)
     module = workflow.interface(policy)
     return Interface(name, 'calendar', module.TOOLS, module.parse_calls, module.Workspace)
