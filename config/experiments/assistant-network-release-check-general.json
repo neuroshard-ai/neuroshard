@@ -116,7 +116,7 @@
   "config/experiments/assistant-general-router-a4-report.json": "9385ffbd01cf39a809e7b5554081c3bc412d84b708c0223c372e45a603fbcf2e",
   "config/experiments/assistant-general-router-a4.json": "8c2615c8ed6917969c0e9af1154f5bde7dd6b6fbaa62388c67753c947177e121",
   "docs/ASSISTANT_RELEASE_CHECK_GENERAL.md": "3d6b7b163be5dd6a716628da5b617fc8ed600f35edc63babb356c93e4bbbcb02",
-  "scripts/release_check_general_supervise.py": "eefc7b71ff2380149dd2969a373f45d73cf64d0d6bdcc53dc92d2731c4c523d6",
+  "scripts/release_check_general_supervise.py": "5b88f5b68c4230765f8af9e0d932f6eba59565a30f4c3d1c0b9c6b5935fab0a7",
   "src/neuroshard/__init__.py": "4ed35ca7a44e55cdd74e6a10b6e3cc3523258456a21aee45159b2dea3a0c0266",
   "src/neuroshard/__main__.py": "f0baffbd04570b9bb1c65fa2394a6d91c369993cc1b2937b200805f231ae4ae6",
   "src/neuroshard/assistant/__init__.py": "c34aadbac9771c38fdffb2220e3a171143588e37e52a857e5cdb5c38f425f627",

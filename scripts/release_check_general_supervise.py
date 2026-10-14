@@ -125,9 +125,9 @@ def install(host, commit, fresh):
               f'git -C {CHECKOUT} checkout -q --detach {commit}',
               f'{uv} pip install -q --python {VENV}/bin/python -r {CHECKOUT}/docs/granite-shard-chain-requirements.txt',
               f'test "$(git -C {CHECKOUT} rev-parse HEAD)" = {commit}',
-              f'test -z "$(git -C {CHECKOUT} status --porcelain)"',
-              # The live checkout is untouched.
-              'test -d /home/ubuntu/neuroshard-release']
+              f'test -z "$(git -C {CHECKOUT} status --porcelain)"']
+    if not fresh:
+        steps.append('test -d /home/ubuntu/neuroshard-release')  # the live checkout on protected hosts is untouched
     result = ssh(host, 'bash -s', timeout=2400, input='\n'.join(steps), capture_output=True, text=True)
     (HOME / f'install-{host}.log').write_text(result.stdout + result.stderr)
     if result.returncode != 0:
