@@ -360,3 +360,26 @@ L9 advances, as declared. Every search it made was a short key-term query. Recor
 twice it applied a claim window as a duration rather than a date, and once it answered a return
 flight with the outbound time. The [sealed confirmation7](../config/experiments/assistant-general-l9-confirmation.json)
 (transcribed voice messages) runs L9 and C1 as judged, with L7 for comparison.
+
+### Confirmation 7 (sealed, opened once): passed
+
+One canonical CPU host, $2.92 ([report](../config/experiments/assistant-general-l9-confirmation-report.json)).
+The frozen case hashes matched, and every episode rescored identically.
+
+| confirmation7 (transcribed voice messages) | result | minimum |
+| --- | --- | --- |
+| documents, parent + L9 | **132/132 (100%)** | 85% |
+| chat, parent + C1 | **93/96 (96.9%)** | 90% |
+| not-found | **24/24** | 90% |
+| *documents, parent + L7, reported* | *131/132* | — |
+
+**Version 8 passes every declared minimum** on wording in a style that no training or development set
+used. It is the general route the next served version ships:
+
+- documents: L9 under `documents5`;
+- chat: C1 under `chat-tools/1`;
+- both as additions on the unchanged parent, beside A3's drafting and scheduling units.
+
+Serving it needs its own release qualification, as A3 did. Every confirmation conversation must
+reproduce token for token through paid, separately hosted shards. Then it goes to the owners' vote,
+not to the steward key.

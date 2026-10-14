@@ -1,0 +1,94 @@
+{
+  "format": "neuroshard-assistant-general-l9-confirmation-report/1",
+  "source_commit": "f877b8ce3b1f2d6e14754dd3a434b2e57c993e4d",
+  "ci_run": 38496148169,
+  "episodes_file": "config/experiments/assistant-general-l9-confirmation-episodes.json.gz",
+  "episodes_gz_sha256": "3abf9e95b7ddc6b3975035cfcdee09b3d56dcf1fe5034e6063be78a7c18c5cd5",
+  "documents_L9": {
+    "passed": 132,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "12/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "12/12",
+      "leave-days": "12/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "12/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "chat_C1": {
+    "passed": 93,
+    "cases": 96,
+    "families": {
+      "arithmetic": "12/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "9/12",
+      "include": "12/12",
+      "json": "12/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "documents_L7_comparison": {
+    "passed": 131,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "12/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "11/12",
+      "leave-days": "12/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "12/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "rescored": {
+    "documents_L9": 132,
+    "chat_C1": 93,
+    "documents_L7": 131
+  },
+  "frozen_cases_matched": true,
+  "rates": {
+    "documents": 1.0,
+    "chat": 0.96875,
+    "not_found": 1.0
+  },
+  "checks": {
+    "documents": true,
+    "chat": true,
+    "not_found": true
+  },
+  "passed": true,
+  "findings": {
+    "documents": "L9 132/132 on transcribed voice messages, a style no training or development set used; L7 131/132 on the same cases.",
+    "not-found": "24/24.",
+    "chat": "C1 93/96; the three misses are exclude (one used the word, two ran out of turns revising)."
+  },
+  "decision": "Passed, as declared: every minimum holds. Version 8 (documents L9 under documents5, chat C1 under chat-tools/1, both on the unchanged parent) is the general route the next served version ships, after its own release qualification through paid, separately hosted shards.",
+  "resources_finished": {
+    "finished_utc": "2026-10-14T05:01:24.433491+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-049f23bc97cb826b0"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 9929.252025,
+    "conservative_compute_usd": 2.91920009535,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 2.91920009535,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}
