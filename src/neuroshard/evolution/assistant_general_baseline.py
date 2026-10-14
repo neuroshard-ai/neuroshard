@@ -35,7 +35,7 @@ PROFILES = {PROFILE: (DECLARATION, EXECUTION),
                                                'config/experiments/assistant-general-confirmation-execution.json'),
             **{f'assistant-general-{name}': (f'config/experiments/assistant-general-{name}.json',
                                              f'config/experiments/assistant-general-{name}-execution.json')
-               for name in ('v3-development', 'v3-confirmation', 'l4-confirmation', 'l7-confirmation', 'l8-confirmation', 'c1-confirmation', 'l9-confirmation')}}
+               for name in ('v3-development', 'v3-confirmation', 'l4-confirmation', 'l7-confirmation', 'l8-confirmation', 'c1-confirmation', 'l9-confirmation', 'router-features')}}
 UPLOADED = '.units'
 
 
@@ -61,13 +61,22 @@ def module_model(load_parent, declaration, name):
     return model.eval()
 
 
-def feature_texts():
-    """Every train and development user turn of both general sets, sorted."""
+def feature_texts(declaration=None):
+    """The user turns whose router features a run computes, sorted: by default every train and development
+    turn of both general sets; a declaration may list ``feature_sets`` of (module, split) instead."""
     from neuroshard.evolution import assistant_chat_data as chat
     from neuroshard.evolution import assistant_documents_data as docs
 
-    return sorted({turn['user'] for module in (docs, chat) for split in ('train', 'development')
-                   for case in module.cases(split) for turn in case['turns']})
+    sets = (declaration or {}).get('feature_sets')
+    if not sets:
+        return sorted({turn['user'] for module in (docs, chat) for split in ('train', 'development')
+                       for case in module.cases(split) for turn in case['turns']})
+    from neuroshard.evolution import assistant_schedule_data as schedule
+    from neuroshard.evolution import assistant_workflow_data as drafting
+
+    modules = {'documents': docs, 'chat': chat, 'drafting': drafting, 'scheduling': schedule}
+    return sorted({turn['user'] for name, split in sets for case in modules[name].cases(split)
+                   for turn in case['turns']})
 
 
 def committed_sources(root=ROOT, profile=PROFILE):
@@ -160,7 +169,7 @@ def worker(request_path):
         parent, _ = reference.load_model(directory, 'baseline')
         if declaration.get('features', True):
             _, _, routes = growth.contracts(round4.plan())
-            texts = feature_texts()
+            texts = feature_texts(declaration)
             begun = time.monotonic()
             computed, _ = features.layer_features(parent, tokenizer, routes['drafting'], texts, layers=())
             np.savez(home / 'features.npz', **{'layer-1': np.asarray(computed['layer-1'], dtype=np.float32)})
