@@ -137,3 +137,121 @@ trainer and recorded drand rounds that the test verifies:
 - Two consensus-rule changes came with this. Block time feeds the growth seal, and a model already in an
   open proposal cannot be proposed again until it closes. Validators must run this software before either
   rule matters on chain.
+
+## Growth driven by users and nodes
+
+October 15, 2026. In code and tested; not yet run live.
+
+**The problem it removes.** Until now, a growth job started only when someone chose to: a sponsor wrote
+a recipe, funded it, and opened it. The network grew only as fast as that person acted.
+
+**How it works now.** Growth starts from the network's own activity:
+
+1. **Usage pays.** After handover, owners vote a growth levy (`growth_levy`, at most 30%). Each settled
+   conversation then sends that share of the owners' payment into `growth_pool`. The ledger holds the
+   pool and counts it in its conservation invariant. No one can withdraw it; only growth jobs spend it.
+2. **The network measures itself.** Any agent with a planner probes the serving version on a
+   beacon-sealed set (`evolution/growth_planner.py`), finds the families below target, and builds one
+   recipe per weak family. Each recipe holds fresh beacon-seeded cases of that family, every one solved
+   and checked by the reference solver, mixed with replay of the serving model's behaviour. The probe's
+   cases, the recipe's cases, and the job's eventual seal come from different seeds, so a recipe never
+   trains on what measured or will judge it.
+3. **Owners admit what is learned.** The agent submits `recipe_propose`. Every owner's agent fetches the
+   recipe from any store, checks that it hashes to the root on chain, re-verifies it, and votes. An
+   admitted recipe joins `growth_queue`.
+4. **The chain opens jobs itself.** At every block, the ledger opens the oldest queued recipe whose reward
+   the pool covers. The job has no sponsor, and any unspent reward returns to the pool.
+5. **Nodes do the work.** Every contributor agent trains the next segment of any open job, including
+   recipes it first saw on the network, and checks the others' steps. From there the loop is the one
+   above: settle, seal, evaluate, propose, recompute, vote, enact.
+6. **Repeat.** An agent plans again only when no recipe is pending, queued, or open, so each probe
+   measures the version the last round produced. If no family is below target, it proposes nothing.
+
+Recipes travel like proofs: a store accepts one only while a proposal, queue entry, or job names its
+root, accepts it only if the bytes hash to that root, and serves it to anyone.
+
+**Measured** (`tests/evolution/test_usage_driven_growth.py`). These runs use the real ledger, the real
+agents, and the real protocol trainer on the tiny Granite model, with three weak families found. In
+each round, every user's conversation settles and every node acts once:
+
+| Users per round | Contributor nodes | Rounds until the first job is funded | Rounds to train all 3 units | Contributors paid |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | 15 | 76 | 1 |
+| 4 | 1 | 4 | 54 | 1 |
+| 1 | 3 | 15 | 72 | 3 |
+| 4 | 3 | 4 | 50 | 3 |
+| 8 | 6 | 2 | 45 | 6 |
+
+More users fill the pool faster, so growth starts sooner. More nodes train separate jobs in parallel.
+No step needs a person after the owners vote the levy and admit recipes, and their agents cast those
+votes by re-verifying.
+
+**Limits.**
+- Inside one job, segments are sequential: each starts from the previous committed state. Extra nodes
+  speed up growth across jobs (one per weak family), not within one job.
+- The planner proposes, and owners still decide. A planner can propose a poor recipe; owners' agents
+  re-verify its data, and the sealed evaluation judges its result.
+- Rewards and the levy are owner choices. This change sets the mechanism, not the prices.
+- Only the documents route has a planner so far. Chat and the other routes need their own probe
+  builders.
+- **Not deployed.** The live chain runs neither the levy nor the queue yet. With no levy set,
+  settlement records are byte-identical to the current ledger's.
+
+## Growth driven by users and nodes
+
+October 15, 2026. In code and tested; not yet run live.
+
+**The problem it removes.** Until now, a growth job started only when someone chose to: a sponsor wrote
+a recipe, funded it, and opened it. The network grew only as fast as that person acted.
+
+**How it works now.** Growth starts from the network's own activity:
+
+1. **Usage pays.** After handover, owners vote a growth levy (`growth_levy`, at most 30%). Each settled
+   conversation then sends that share of the owners' payment into `growth_pool`. The ledger holds the
+   pool and counts it in its conservation invariant. No one can withdraw it; only growth jobs spend it.
+2. **The network measures itself.** Any agent with a planner probes the serving version on a
+   beacon-sealed set (`evolution/growth_planner.py`), finds the families below target, and builds one
+   recipe per weak family. Each recipe holds fresh beacon-seeded cases of that family, every one solved
+   and checked by the reference solver, mixed with replay of the serving model's behaviour. The probe's
+   cases, the recipe's cases, and the job's eventual seal come from different seeds, so a recipe never
+   trains on what measured or will judge it.
+3. **Owners admit what is learned.** The agent submits `recipe_propose`. Every owner's agent fetches the
+   recipe from any store, checks that it hashes to the root on chain, re-verifies it, and votes. An
+   admitted recipe joins `growth_queue`.
+4. **The chain opens jobs itself.** At every block, the ledger opens the oldest queued recipe whose reward
+   the pool covers. The job has no sponsor, and any unspent reward returns to the pool.
+5. **Nodes do the work.** Every contributor agent trains the next segment of any open job, including
+   recipes it first saw on the network, and checks the others' steps. From there the loop is the one
+   above: settle, seal, evaluate, propose, recompute, vote, enact.
+6. **Repeat.** An agent plans again only when no recipe is pending, queued, or open, so each probe
+   measures the version the last round produced. If no family is below target, it proposes nothing.
+
+Recipes travel like proofs: a store accepts one only while a proposal, queue entry, or job names its
+root, accepts it only if the bytes hash to that root, and serves it to anyone.
+
+**Measured** (`tests/evolution/test_usage_driven_growth.py`). These runs use the real ledger, the real
+agents, and the real protocol trainer on the tiny Granite model, with three weak families found. In
+each round, every user's conversation settles and every node acts once:
+
+| Users per round | Contributor nodes | Rounds until the first job is funded | Rounds to train all 3 units | Contributors paid |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | 15 | 76 | 1 |
+| 4 | 1 | 4 | 54 | 1 |
+| 1 | 3 | 15 | 72 | 3 |
+| 4 | 3 | 4 | 50 | 3 |
+| 8 | 6 | 2 | 45 | 6 |
+
+More users fill the pool faster, so growth starts sooner. More nodes train separate jobs in parallel.
+No step needs a person after the owners vote the levy and admit recipes, and their agents cast those
+votes by re-verifying.
+
+**Limits.**
+- Inside one job, segments are sequential: each starts from the previous committed state. Extra nodes
+  speed up growth across jobs (one per weak family), not within one job.
+- The planner proposes, and owners still decide. A planner can propose a poor recipe; owners' agents
+  re-verify its data, and the sealed evaluation judges its result.
+- Rewards and the levy are owner choices. This change sets the mechanism, not the prices.
+- Only the documents route has a planner so far. Chat and the other routes need their own probe
+  builders.
+- **Not deployed.** The live chain runs neither the levy nor the queue yet. With no levy set,
+  settlement records are byte-identical to the current ledger's.

@@ -456,6 +456,24 @@ class Faucet:
 
 def serve_faucet(faucet, host, port, proof_store=None):
     class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            # Published recipes are public: any agent fetches one by root and checks its hash itself.
+            name = self.path.removeprefix('/proofs/')
+            path = Path(proof_store) / name if proof_store is not None else None
+            valid = (self.path.startswith('/proofs/') and name.endswith('.json') and len(name) == 69
+                     and all(c in '0123456789abcdef' for c in name[:64]))
+            if not valid or not path.is_file():
+                self.send_response(404)
+                self.send_header('Content-Length', '0')
+                self.end_headers()
+                return
+            payload = path.read_bytes()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
         def do_POST(self):
             try:
                 proof = self.path.startswith('/proofs/') and proof_store is not None
@@ -471,7 +489,7 @@ def serve_faucet(faucet, host, port, proof_store=None):
                     ledger.hex_digest(root)
                     growing = state.get('growth')
                     if not ((growing and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(
-                            state, root)) or any(
+                            state, root)) or audit.named_recipe(state, root) or any(
                             c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values())):
                         raise ValueError('no funded open challenge names this proof')
                 deadline, content = time.monotonic() + 30, bytearray()

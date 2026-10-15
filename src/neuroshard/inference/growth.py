@@ -144,8 +144,33 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         raise ValueError('unsupported growth transaction')
 
 
+def fund(ledger, state):
+    """Open queued recipes, oldest first, while the growth pool can pay their reward: growth starts itself.
+
+    The pool fills from usage (a governed share of every owner payment), so the more the network is used, the
+    sooner and the more often it grows; the more contributors run agents, the faster each job's segments train.
+    A job opened this way has no sponsor: its unused reward and its result belong to the pool.
+    """
+    queue, settings = state.get('growth_queue', []), params(state)
+    growth = state.setdefault('growth', {})
+    while queue and state.get('growth_pool', 0) >= queue[0]['reward'] and len(growth) < settings['max_growth_jobs']:
+        item = queue.pop(0)
+        state['growth_pool'] -= item['reward']
+        job_id = ledger.digest({'domain': 'neuroshard/growth-job/v1', 'proposal_id': item['proposal_id'],
+                                'height': state['height']})
+        growth[job_id] = {'sponsor': None, 'recipe_root': item['recipe_root'], 'start_root': item['start_root'],
+                          'steps': item['steps'], 'segment_steps': item['segment_steps'], 'reward': item['reward'],
+                          'opened': state['height'], 'commits': [], 'challenges': {}, 'funded_by': 'pool',
+                          'proposal_id': item['proposal_id']}
+    if not queue and 'growth_queue' in state:
+        del state['growth_queue']
+    if not growth:
+        del state['growth']
+
+
 def advance(ledger, state, time=None):
-    """Block boundary: forfeit lapsed growth challenges and settle complete, unchallenged jobs.
+    """Block boundary: forfeit lapsed growth challenges, settle complete unchallenged jobs, then open queued
+    recipes the growth pool can pay for.
 
     ``time`` is the block's BFT time (validator-agreed, as CometBFT computes it). A settled job records it
     and the first drand round after it plus ``SEAL_MARGIN``: that round's randomness seals the job's
@@ -165,7 +190,10 @@ def advance(ledger, state, time=None):
             share = job['reward'] * len(commit['step_roots']) // job['steps']
             ledger.account(state, commit['contributor'])['balance'] += share + commit['bond']
             paid += share
-        ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid
+        if job['sponsor'] is None:
+            state['growth_pool'] = state.get('growth_pool', 0) + job['reward'] - paid
+        else:
+            ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid
         final = job['commits'][-1]['step_roots'][-1]
         record = {'status': 'grown', 'recipe_root': job['recipe_root'], 'start_root': job['start_root'],
                   'final_root': final, 'steps': job['steps'],
@@ -176,8 +204,7 @@ def advance(ledger, state, time=None):
             record.update(settled_unix=int(time), seal_round=beacon.round_at(int(time)) + SEAL_MARGIN)
         ledger.remember(state, job_id, record)
         del state['growth'][job_id]
-    if 'growth' in state and not state['growth']:
-        del state['growth']
+    fund(ledger, state)
 
 
 def escrow(state):
