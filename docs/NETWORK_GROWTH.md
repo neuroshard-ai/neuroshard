@@ -192,10 +192,59 @@ votes by re-verifying.
 - The planner proposes, and owners still decide. A planner can propose a poor recipe; owners' agents
   re-verify its data, and the sealed evaluation judges its result.
 - Rewards and the levy are owner choices. This change sets the mechanism, not the prices.
-- Only the documents route has a planner so far. Chat and the other routes need their own probe
-  builders.
 - **Not deployed.** The live chain runs neither the levy nor the queue yet. With no levy set,
   settlement records are byte-identical to the current ledger's.
+
+## Both routes plan themselves, and owners follow without a release
+
+October 15, 2026. In code and tested; not yet run live.
+
+**Chat planning** (`growth_planner.chat_recipe`). A chat reply has no reference solver, so the chat
+recipe is built from the serving model's own replies on fresh beacon-seeded cases. Each case gets a
+greedy reply and then up to two sampled ones. A reply is kept only if the deterministic constraint
+checker passes it and every tool result recomputes. Weak kinds become experience; the other kinds
+become replay, so the unit keeps what already works. The recipe carries its evidence unencoded. An
+owner's agent (`verify_chat`) regenerates each case from the beacon, re-executes every tool call,
+rescores every final reply, and re-encodes each conversation to the exact training sequence. If any
+item fails, it votes no. In the tests, a forged tool result, a wrong answer, swapped training bytes,
+a changed request, extra replay, a duplicate, and a different beacon are each refused.
+
+**Documents replay** (`growth_planner.recipe`). Documents recipes now also carry solver-checked replay
+of the strong families. An owner rebuilds both experience and replay from the beacon
+(`verify_documents`) before voting.
+
+**Growth builds on what is served** (`continue_from`). A recipe can name the `trainable_sha256` of the
+unit it would replace. Training then starts from that unit's weights, and the digest is bound into
+the recipe root.
+
+**Runtime** (`growth_runtime.Served`, `RoutePlanner`, `Evaluators`). `neuroshard assistant grow agent`
+takes `--plan` (probe both routes and propose recipes), `--evaluate` (sealed evaluation and
+proposal), and `--vote-shards` (vote as those owners, after re-verifying). Each needs the pinned
+parent locally.
+
+**States travel without a coordinator.** A training state's file now records its optimizer order, so
+`growth_replay.bytes_root` recomputes the committed root from the bytes alone, with no model. After
+each commit, contributors publish the segment's state to the network's stores. A store accepts a
+state only while the chain names it, and only if its bytes recompute to that root. A contributor
+continuing a job fetches the state from any store and checks it the same way.
+
+**Owners follow enacted versions** (`growth_runtime.follow`, `assistant host`). When owners enact a
+grown unit, no one publishes a release. Every machine rebuilds the new version from the chain: the
+grown result, its recipe and its committed final state determine the unit's files. A machine keeps
+the rebuilt version only if its model root equals the chain's. A hosting owner checks the served
+version every 30 seconds. When it changes, the owner finishes and commits its open work, rebuilds,
+reloads its stage and keeps serving.
+
+**Enactment no longer waits for a person to drain jobs.** Before, `model_enact` failed while any job
+was open. Now an enacted version waits as `pending_model`: new jobs pause, open jobs finish (they are
+bounded by their expiry), and the version switches at the first block with none open.
+
+**Limits.**
+- Planning, evaluation and voting need the whole parent on one machine (about 6 GB in BF16). Serving
+  is sharded, but these three roles are not.
+- A chat recipe learns only replies the serving model can already produce sometimes. A kind it never
+  gets right yields no experience, and the planner waits.
+- **Not deployed.** The live chain still runs the previous release.
 
 ## Growth driven by users and nodes
 
@@ -251,7 +300,56 @@ votes by re-verifying.
 - The planner proposes, and owners still decide. A planner can propose a poor recipe; owners' agents
   re-verify its data, and the sealed evaluation judges its result.
 - Rewards and the levy are owner choices. This change sets the mechanism, not the prices.
-- Only the documents route has a planner so far. Chat and the other routes need their own probe
-  builders.
 - **Not deployed.** The live chain runs neither the levy nor the queue yet. With no levy set,
   settlement records are byte-identical to the current ledger's.
+
+## Both routes plan themselves, and owners follow without a release
+
+October 15, 2026. In code and tested; not yet run live.
+
+**Chat planning** (`growth_planner.chat_recipe`). A chat reply has no reference solver, so the chat
+recipe is built from the serving model's own replies on fresh beacon-seeded cases. Each case gets a
+greedy reply and then up to two sampled ones. A reply is kept only if the deterministic constraint
+checker passes it and every tool result recomputes. Weak kinds become experience; the other kinds
+become replay, so the unit keeps what already works. The recipe carries its evidence unencoded. An
+owner's agent (`verify_chat`) regenerates each case from the beacon, re-executes every tool call,
+rescores every final reply, and re-encodes each conversation to the exact training sequence. If any
+item fails, it votes no. In the tests, a forged tool result, a wrong answer, swapped training bytes,
+a changed request, extra replay, a duplicate, and a different beacon are each refused.
+
+**Documents replay** (`growth_planner.recipe`). Documents recipes now also carry solver-checked replay
+of the strong families. An owner rebuilds both experience and replay from the beacon
+(`verify_documents`) before voting.
+
+**Growth builds on what is served** (`continue_from`). A recipe can name the `trainable_sha256` of the
+unit it would replace. Training then starts from that unit's weights, and the digest is bound into
+the recipe root.
+
+**Runtime** (`growth_runtime.Served`, `RoutePlanner`, `Evaluators`). `neuroshard assistant grow agent`
+takes `--plan` (probe both routes and propose recipes), `--evaluate` (sealed evaluation and
+proposal), and `--vote-shards` (vote as those owners, after re-verifying). Each needs the pinned
+parent locally.
+
+**States travel without a coordinator.** A training state's file now records its optimizer order, so
+`growth_replay.bytes_root` recomputes the committed root from the bytes alone, with no model. After
+each commit, contributors publish the segment's state to the network's stores. A store accepts a
+state only while the chain names it, and only if its bytes recompute to that root. A contributor
+continuing a job fetches the state from any store and checks it the same way.
+
+**Owners follow enacted versions** (`growth_runtime.follow`, `assistant host`). When owners enact a
+grown unit, no one publishes a release. Every machine rebuilds the new version from the chain: the
+grown result, its recipe and its committed final state determine the unit's files. A machine keeps
+the rebuilt version only if its model root equals the chain's. A hosting owner checks the served
+version every 30 seconds. When it changes, the owner finishes and commits its open work, rebuilds,
+reloads its stage and keeps serving.
+
+**Enactment no longer waits for a person to drain jobs.** Before, `model_enact` failed while any job
+was open. Now an enacted version waits as `pending_model`: new jobs pause, open jobs finish (they are
+bounded by their expiry), and the version switches at the first block with none open.
+
+**Limits.**
+- Planning, evaluation and voting need the whole parent on one machine (about 6 GB in BF16). Serving
+  is sharded, but these three roles are not.
+- A chat recipe learns only replies the serving model can already produce sometimes. A kind it never
+  gets right yields no experience, and the planner waits.
+- **Not deployed.** The live chain still runs the previous release.

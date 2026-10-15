@@ -106,6 +106,7 @@ def proof_archive(directory):
 
 
 MAX_RECIPE_BYTES = 64 * 1024 * 1024
+MAX_STATE_BYTES = 1024 * 1024 * 1024  # a unit's tensors and optimizer moments
 
 
 def post_proof(endpoint, root, payload, timeout=60):
@@ -123,11 +124,29 @@ def named_recipe(state, root):
                     | {j['recipe_root'] for j in state.get('growth', {}).values()})
 
 
+def named_state(state, root):
+    """Whether the chain committed this training state: a segment's last root of an open job, or a grown result."""
+    return root in ({c['step_roots'][-1] for j in state.get('growth', {}).values() for c in j['commits']}
+                    | {r['final_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
+
+
 def receive_proof(payload, root, state, store):
     """Accept bounded content-addressed bytes only after their challenge deposit is committed."""
     from neuroshard.evolution.sharded import granite_audit
 
     ledger.hex_digest(root)
+    if named_state(state, root):
+        # A committed training state: accepted only if its bytes recompute to the root (no model needed).
+        from neuroshard.evolution import growth_replay
+
+        if len(payload) > MAX_STATE_BYTES or growth_replay.bytes_root(bytes(payload)) != root:
+            raise ValueError('training state differs from its committed root or bound')
+        store = Path(store)
+        store.mkdir(parents=True, exist_ok=True)
+        partial = store / f'.{root}.partial'
+        partial.write_bytes(payload)
+        partial.replace(store / f'{root}.state')
+        return root
     if named_recipe(state, root):
         # A recipe is JSON whose growth root is the address: what a funded recipe proposal or queued job names.
         from neuroshard.evolution import growth_replay

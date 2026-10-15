@@ -282,10 +282,23 @@ def advance(previous, height, time=None):
             remember(state, job_id, {'status': 'expired', 'user': job['user'], 'owners': job['owners'],
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
+    pending = state.get('governance', {}).get('pending_model')
+    if pending and not state['jobs']:
+        switch_model(state, pending)
+        del state['governance']['pending_model']
     if 'growth' in state or state.get('growth_queue'):
         _growth().advance(sys.modules[__name__], state, time)
     invariant(state)
     return state
+
+
+def switch_model(state, change):
+    old = state['model_root']
+    state['model_root'] = change['model_root']
+    state.setdefault('model_history', []).append({
+        'previous': old, 'model_root': change['model_root'], 'quality_root': change['quality_root'],
+        'height': state['height'], 'authority': change['authority'], 'proposal_id': change['proposal_id'],
+        'approving_weight': change['approving_weight'], 'total_weight': change['total_weight']})
 
 
 def open_jobs(state, key):
@@ -464,6 +477,8 @@ def transition(previous, envelope, execute):
             payer['balance'] += owner['amount']
             owner.update(amount=0, status='withdrawn')
     elif kind == 'serve_open':
+        if state.get('governance', {}).get('pending_model'):
+            raise ValueError('The served version is changing; open the job on the new version shortly')
         owners = body['owners']
         if body['model_root'] != state['model_root'] or not isinstance(owners, list) or len(owners) != state['shards'] - 1:
             raise ValueError('A job names one bonded owner per audited shard of the current model')
@@ -624,16 +639,19 @@ def transition(previous, envelope, execute):
                 governance['growth_levy_ppm'] = proposal['levy_ppm']
             account(state, proposal['proposer'])['balance'] += proposal['deposit']
         elif passed:
-            if state['jobs']:
-                raise ValueError('Drain every open job before changing the serving model')
             if proposal['model_root'] == state['model_root']:
                 raise ValueError('The proposed model is already serving')
-            old = state['model_root']
-            state['model_root'] = proposal['model_root']
-            state.setdefault('model_history', []).append({
-                'previous': old, 'model_root': proposal['model_root'], 'quality_root': proposal['quality_root'],
-                'height': state['height'], 'authority': 'owners', 'proposal_id': body['proposal_id'],
-                'approving_weight': approving, 'total_weight': total})
+            if governance.get('pending_model'):
+                raise ValueError('Another enacted version is waiting for open jobs to finish')
+            change = {'model_root': proposal['model_root'], 'quality_root': proposal['quality_root'],
+                      'enacted': state['height'], 'authority': 'owners', 'proposal_id': body['proposal_id'],
+                      'approving_weight': approving, 'total_weight': total}
+            if state['jobs']:
+                # Users never wait on a person to drain the network: new jobs pause, open ones finish (they are
+                # bounded by their expiry), and the version switches at the first block with none open.
+                governance['pending_model'] = change
+            else:
+                switch_model(state, change)
             account(state, proposal['proposer'])['balance'] += proposal['deposit']
         elif state['height'] > proposal['deadline']:
             state['burned'] += proposal['deposit']  # a rejected proposal forfeits its deposit

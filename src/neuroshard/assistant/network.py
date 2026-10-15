@@ -16,6 +16,7 @@ import os
 from pathlib import Path, PurePosixPath
 import random
 import secrets
+import shutil
 import socket
 import tempfile
 import threading
@@ -147,9 +148,18 @@ def sources(network):
     return list(dict.fromkeys(listed))
 
 
+LOCAL_SOURCES = []  # directories of rebuilt files (grown units the chain enacted); checked before any download
+
+
 def fetch(network, name, path, progress=print, opener=urllib.request.urlopen):
     """One pinned released file from the first source that serves exactly its bytes."""
     pin, failures = network['files'][name], []
+    for directory in LOCAL_SOURCES:
+        local = local_path(directory, name)
+        if matches(local, pin):
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(local, path)
+            return directory
     for base in sources(network):
         try:
             download(base + pin['asset'], path, pin, opener)
@@ -460,7 +470,7 @@ def serve_faucet(faucet, host, port, proof_store=None):
             # Published recipes are public: any agent fetches one by root and checks its hash itself.
             name = self.path.removeprefix('/proofs/')
             path = Path(proof_store) / name if proof_store is not None else None
-            valid = (self.path.startswith('/proofs/') and name.endswith('.json') and len(name) == 69
+            valid = (self.path.startswith('/proofs/') and len(name) in (69, 70) and name[64:] in ('.json', '.state')
                      and all(c in '0123456789abcdef' for c in name[:64]))
             if not valid or not path.is_file():
                 self.send_response(404)
@@ -469,7 +479,7 @@ def serve_faucet(faucet, host, port, proof_store=None):
                 return
             payload = path.read_bytes()
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Type', 'application/json' if name.endswith('.json') else 'application/octet-stream')
             self.send_header('Content-Length', str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
@@ -481,7 +491,7 @@ def serve_faucet(faucet, host, port, proof_store=None):
                     raise KeyError('unknown path')
                 size = int(self.headers.get('Content-Length', 0))
                 from neuroshard.assistant import audit
-                if not 0 < size <= (audit.MAX_PROOF_BYTES if proof else 1024):
+                if not 0 < size <= (max(audit.MAX_PROOF_BYTES, audit.MAX_STATE_BYTES) if proof else 1024):
                     raise ValueError('invalid request size')
                 if proof:
                     root = self.path.removeprefix('/proofs/')
@@ -489,7 +499,7 @@ def serve_faucet(faucet, host, port, proof_store=None):
                     ledger.hex_digest(root)
                     growing = state.get('growth')
                     if not ((growing and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(
-                            state, root)) or audit.named_recipe(state, root) or any(
+                            state, root)) or audit.named_recipe(state, root) or audit.named_state(state, root) or any(
                             c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values())):
                         raise ValueError('no funded open challenge names this proof')
                 deadline, content = time.monotonic() + 30, bytearray()

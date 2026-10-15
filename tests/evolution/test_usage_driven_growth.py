@@ -16,7 +16,7 @@ from pathlib import Path
 import torch
 
 from neuroshard.evolution import growth_agent, growth_replay
-from neuroshard.inference import beacon, growth as ledger_growth, optimistic as ledger
+from neuroshard.inference import beacon, optimistic as ledger
 from neuroshard.inference.optimistic_app import promotion_or_fraud
 from test_growth_loop import BASE, ROUNDS, Chain, Evaluator, Trainer, RECIPE, tiny
 from test_owner_governance import bond_at
@@ -223,3 +223,96 @@ def test_recipes_travel_through_any_store_and_are_checked_against_the_chain(tmp_
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_committed_states_travel_through_stores_and_are_checked_from_their_bytes(tmp_path):
+    import pytest
+
+    from neuroshard.assistant import audit
+    from neuroshard.evolution.growth_runtime import StateTrainer
+
+    model = tiny()
+    trainable, optimizer = growth_replay.start(model, RECIPE)
+    growth_replay.train_segment(model, trainable, optimizer, RECIPE, 0, 1)
+    payload, root = growth_replay.save(trainable, optimizer), growth_replay.state_root(trainable, optimizer)
+    assert growth_replay.bytes_root(payload) == root
+    committed = {'growth': {'j': {'commits': [{'step_roots': [root]}]}}, 'jobs': {}, 'results': {}}
+    with pytest.raises(ValueError):
+        audit.receive_proof(payload, root, {'jobs': {}, 'results': {}}, tmp_path / 'store')   # nothing committed it
+    other = growth_replay.save(*growth_replay.start(tiny(), RECIPE))
+    with pytest.raises(ValueError, match='committed root'):
+        audit.receive_proof(other, root, committed, tmp_path / 'store')                       # other bytes
+    assert audit.receive_proof(payload, root, committed, tmp_path / 'store') == root
+
+    class Faucet:
+        class chain:  # noqa: N801
+            @staticmethod
+            def state():
+                return committed
+
+    from neuroshard.assistant import network as client
+
+    server = client.serve_faucet(Faucet, '127.0.0.1', 0, tmp_path / 'store')
+    try:
+        trainer = StateTrainer(tmp_path / 'contributor', tiny, [f'http://127.0.0.1:{server.server_port}/proofs'])
+        assert trainer.fetch(root) == payload                              # a second contributor continues from it
+        _, loaded, loaded_optimizer = trainer.state(RECIPE, root)
+        assert growth_replay.state_root(loaded, loaded_optimizer) == root
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_owners_rebuild_the_enacted_version_from_what_the_chain_committed():
+    from neuroshard.assistant import network as client
+    from neuroshard.evolution import growth_runtime
+
+    descriptor = json.loads((Path(__file__).resolve().parents[2]
+                             / 'src/neuroshard/client/networks/assistant-testnet-a4.json').read_text())
+    recipe = {**RECIPE, 'route': 'documents', 'model_root': client.model_root(descriptor)}
+    model = tiny()
+    trainable, optimizer = growth_replay.start(model, recipe)
+    growth_replay.train_segment(model, trainable, optimizer, recipe, 0, 2)
+    payload, final = growth_replay.save(trainable, optimizer), growth_replay.state_root(trainable, optimizer)
+    manifest, tensors = growth_runtime.unit_files(payload, recipe, final)
+    enacted = growth_runtime.candidate(descriptor, 'L9', final, manifest, tensors)
+    root = growth_replay.recipe_root(recipe, recipe['model_root'])
+    state = {'model_root': client.model_root(enacted),
+             'results': {'old': {'status': 'grown', 'recipe_root': 'ee' * 32, 'final_root': 'ff' * 32},
+                         'job': {'status': 'grown', 'recipe_root': root, 'final_root': final, 'settled_unix': 5}}}
+    upgraded, files = growth_runtime.upgrade(descriptor, state, {root: recipe}, lambda r, f: payload)
+    assert client.model_root(upgraded) == state['model_root'] and set(files) == {'L9/manifest.json',
+                                                                                  'L9/trainable.safetensors'}
+    assert upgraded['files']['C1/manifest.json'] == descriptor['files']['C1/manifest.json']  # only L9 changed
+    assert growth_runtime.upgrade(descriptor, {**state, 'model_root': 'ab' * 32}, {root: recipe},
+                                  lambda r, f: payload) is None                                # nothing explains it
+    assert growth_runtime.upgrade(descriptor, {'model_root': client.model_root(descriptor)}, {}, None) == (
+        descriptor, {})
+
+
+def test_an_enacted_version_waits_for_open_jobs_instead_of_for_a_person(tmp_path):
+    import pytest
+
+    chain, user, keys, planner, owners, workers, roots, seal = network(tmp_path, 1)
+    owner1 = next(iter(keys.values()))
+    state = chain.state_value
+    state['jobs']['busy'] = {
+        'user': user.public, 'owners': list(keys), 'request_root': 'aa' * 32, 'session_key': 'bb' * 32,
+        'price': 1_000_000, 'positions': 100, 'opened': state['height'], 'expires': state['height'] + 10,
+        'commits': {}, 'served': {}, 'challenges': {}, 'deadline': None}
+    state['accounts'][user.public]['balance'] -= 1_000_000
+    proposal = chain.submit(owner1, 'model_propose', model_root='cd' * 32, quality_root='ef' * 32)
+    pid = ledger.transaction_id(proposal)
+    for key, account in keys.items():
+        chain.submit(account, 'model_vote', proposal_id=pid, log_key=key, approve=True)
+    chain.submit(owner1, 'model_enact', proposal_id=pid)
+    assert chain.state_value['model_root'] == 'ab' * 32 and chain.state_value['governance']['pending_model']
+    with pytest.raises(ValueError, match='changing'):
+        chain.submit(user, 'serve_open', model_root='ab' * 32, owners=list(keys), request_root='aa' * 32,
+                     session_key='bb' * 32, price=1, positions=1)
+    for _ in range(12):
+        chain.block()
+    final = chain.state_value
+    assert final['model_root'] == 'cd' * 32 and 'pending_model' not in final['governance'] and not final['jobs']
+    assert final['model_history'][-1]['proposal_id'] == pid
+    ledger.invariant(final)

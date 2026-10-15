@@ -11,8 +11,10 @@ import time
 from neuroshard.evolution.modular_reference_execution import identity
 
 
-def cached_responder(model, tokenizer, policy):
-    """One responder per episode; a new episode needs a new responder and an empty cache."""
+def cached_responder(model, tokenizer, policy, sample=None):
+    """One responder per episode; a new episode needs a new responder and an empty cache.
+
+    ``sample=(seed, temperature)`` samples instead of decoding greedily (used to gather more checked experience)."""
     import torch
     from transformers import DynamicCache, LogitsProcessor, LogitsProcessorList, StoppingCriteria, StoppingCriteriaList
 
@@ -52,9 +54,13 @@ def cached_responder(model, tokenizer, policy):
                     raise ValueError('nonfinite model logits')
                 return scores
 
+        decoding = {'do_sample': False}
+        if sample is not None:
+            torch.manual_seed(sample[0] + len(ids))
+            decoding = {'do_sample': True, 'temperature': sample[1], 'top_p': 0.95, 'top_k': 0}
         with torch.inference_mode():
             output = model.generate(input_ids=torch.tensor([ids]), attention_mask=torch.ones(1, len(ids), dtype=torch.long),
-                                    past_key_values=state['cache'], do_sample=False, num_beams=1, use_cache=True,
+                                    past_key_values=state['cache'], num_beams=1, use_cache=True, **decoding,
                                     max_new_tokens=generation['max_new_tokens'],
                                     stopping_criteria=StoppingCriteriaList([Observe()]),
                                     logits_processor=LogitsProcessorList([CheckLogits()]))
