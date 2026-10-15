@@ -187,3 +187,16 @@ def torch_equal(a, b):
     import torch
 
     return torch.equal(a, b.to(a.dtype))
+
+
+def test_the_agent_command_line_parses_every_role():
+    import argparse
+
+    from neuroshard.client import assistant_cli
+
+    parser = argparse.ArgumentParser()
+    assistant_cli.register(parser.add_subparsers(dest='command'), __import__('pathlib').Path('.'))
+    args = parser.parse_args(['assistant', 'grow', 'agent', '--plan', '--evaluate', '--vote-shards', '1',
+                              '--no-contribute', '--segment-steps', '8', '--per-family', '24', '--minimum', '0.85',
+                              '--reward-per-step', '500', '--growth-steps', '32', '--probe-every', '60'])
+    assert args.plan and args.evaluate and args.vote_shards == [1] and args.no_contribute and args.segment_steps == 8
