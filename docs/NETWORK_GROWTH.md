@@ -244,7 +244,24 @@ bounded by their expiry), and the version switches at the first block with none 
   is sharded, but these three roles are not.
 - A chat recipe learns only replies the serving model can already produce sometimes. A kind it never
   gets right yields no experience, and the planner waits.
-- **Not deployed.** The live chain still runs the previous release.
+- **Partly live.** See the next section.
+
+## Live on neuroshard-assistant-1
+
+October 15, 2026 (`config/experiments/assistant-growth-activation.json`).
+
+- **Upgrade without a fork.** The live ledger state and 2000 blocks advanced from it give identical
+  state roots under the old release (`e615d0e`) and this one (`537a482`). The seed validator, both
+  owners and the auditor were upgraded in place, after a chain backup, and blocks continued from
+  height 543,289.
+- **The owners voted the levy.** Owner 1 proposed 10%. Both owners voted yes from their own machines,
+  and it was enacted by height 543,458.
+- **Usage funds growth.** The first paid conversation after the vote ran on both owners through the
+  documents route. It settled at height 544,219: each owner received 82,535 atoms, and 18,340 went to
+  the growth pool.
+- **Not yet running live:** planner, evaluator and voting agents. They need the whole parent on one
+  machine and many CPU hours per probe, and the two owner hosts are serving. At 18,340 atoms per
+  conversation, a 32-step recipe (1.28 million atoms) is funded after about 70 conversations.
 
 ## Growth driven by users and nodes
 
@@ -352,4 +369,21 @@ bounded by their expiry), and the version switches at the first block with none 
   is sharded, but these three roles are not.
 - A chat recipe learns only replies the serving model can already produce sometimes. A kind it never
   gets right yields no experience, and the planner waits.
-- **Not deployed.** The live chain still runs the previous release.
+- **Partly live.** See the next section.
+
+## Live on neuroshard-assistant-1
+
+October 15, 2026 (`config/experiments/assistant-growth-activation.json`).
+
+- **Upgrade without a fork.** The live ledger state and 2000 blocks advanced from it give identical
+  state roots under the old release (`e615d0e`) and this one (`537a482`). The seed validator, both
+  owners and the auditor were upgraded in place, after a chain backup, and blocks continued from
+  height 543,289.
+- **The owners voted the levy.** Owner 1 proposed 10%. Both owners voted yes from their own machines,
+  and it was enacted by height 543,458.
+- **Usage funds growth.** The first paid conversation after the vote ran on both owners through the
+  documents route. It settled at height 544,219: each owner received 82,535 atoms, and 18,340 went to
+  the growth pool.
+- **Not yet running live:** planner, evaluator and voting agents. They need the whole parent on one
+  machine and many CPU hours per probe, and the two owner hosts are serving. At 18,340 atoms per
+  conversation, a 32-step recipe (1.28 million atoms) is funded after about 70 conversations.
