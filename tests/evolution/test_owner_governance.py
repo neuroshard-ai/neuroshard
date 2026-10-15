@@ -113,9 +113,13 @@ def test_a_rejected_proposal_forfeits_its_deposit_after_the_window_and_jobs_bloc
     state = step(state, second, checker)
     for account, name in ((alice, 'alice-log'), (bob, 'bob-log')):
         state = step(state, account.sign('model_vote', proposal_id=sid, log_key=keys[name], approve=True), checker)
-    state['jobs']['open'] = {'price': 0, 'challenges': {}}
-    with pytest.raises(ValueError, match='Drain'):
-        step(state, carol.sign('model_enact', proposal_id=sid), checker)
+    state['jobs']['open'] = {'price': 0, 'challenges': {}, 'deadline': None, 'expires': 10 ** 9}
+    # An open job no longer blocks an enacted version: it waits for the job, and new jobs pause meanwhile.
+    pending = step(state, carol.sign('model_enact', proposal_id=sid), checker)
+    assert pending['model_root'] == MODEL and pending['governance']['pending_model']['model_root'] == NEXT
+    del pending['jobs']['open']
+    switched = ledger.advance(pending, pending['height'] + 1)
+    assert switched['model_root'] == NEXT and 'pending_model' not in switched['governance']
 
 
 def test_ungoverned_state_root_is_unchanged_by_this_feature():

@@ -31,10 +31,40 @@ def _optimizer(trainable, spec, arm):
                              betas=tuple(spec['betas']), eps=spec['epsilon'], weight_decay=spec['weight_decay'])
 
 
+UNIT_STORE = None  # directory of published unit tensors, ``<sha256>.safetensors``; default $NEUROSHARD_UNITS or .units
+
+
+def unit_tensors(sha256):
+    """A published unit's trainable tensors, accepted only if the file hashes to the pinned digest."""
+    import os
+    from pathlib import Path
+
+    from safetensors.torch import load as load_tensors
+
+    store = Path(UNIT_STORE or os.environ.get('NEUROSHARD_UNITS', '.units'))
+    for path in [store / f'{sha256}.safetensors', *sorted(store.glob('*/trainable.safetensors'))]:
+        if path.is_file():
+            payload = path.read_bytes()
+            if hashlib.sha256(payload).hexdigest() == sha256:
+                return load_tensors(payload)
+    raise FileNotFoundError(f'no published unit with trainable_sha256 {sha256}')
+
+
 def start(model, recipe):
-    """The job's start state: the arm attached from the recipe's seed, and a fresh optimizer."""
+    """The job's start state: the arm attached from the recipe's seed, and a fresh optimizer.
+
+    With ``continue_from`` (a published unit's ``trainable_sha256``) the arm starts from that unit's weights,
+    so a growth round builds on the unit it would replace instead of starting over.
+    """
     torch.manual_seed(recipe['spec']['seed'])
     trainable = trainer.prepare(model, recipe['arm'], recipe['spec'])
+    if recipe.get('continue_from'):
+        saved = unit_tensors(recipe['continue_from'])
+        if set(saved) != set(trainable):
+            raise ValueError('the continued unit names other tensors than the recipe attaches')
+        with torch.no_grad():
+            for name, value in trainable.items():
+                value.copy_(saved[name].to(value.dtype))
     model.train()
     return trainable, _optimizer(trainable, recipe['spec'], recipe['arm'])
 
@@ -88,11 +118,34 @@ def train_segment(model, trainable, optimizer, recipe, first, last):
 
 
 def save(trainable, optimizer):
-    """The training state as bytes (a proof bundle's ``before``); ``load`` restores it exactly."""
+    """The training state as bytes (a proof bundle's ``before``); ``load`` restores it exactly.
+
+    ``order`` names the optimizer's parameters in its own order, so ``bytes_root`` can recompute the state root
+    from the bytes alone, without a model: any store can check a state before accepting or serving it."""
     buffer = io.BytesIO()
+    index = {id(value): name for name, value in trainable.items()}
+    order = [index[id(p)] for group in optimizer.param_groups for p in group['params']]
     torch.save({'trainable': {name: value.detach().clone() for name, value in sorted(trainable.items())},
-                'optimizer': optimizer.state_dict()}, buffer)
+                'optimizer': optimizer.state_dict(), 'order': order}, buffer)
     return buffer.getvalue()
+
+
+def bytes_root(payload):
+    """The state root of saved state bytes, computed exactly as ``state_root`` does from live tensors."""
+    saved = torch.load(io.BytesIO(payload), weights_only=True)
+    trainable, order = saved['trainable'], saved['order']
+    if sorted(order) != sorted(trainable):
+        raise ValueError('state order names other tensors')
+    value = hashlib.sha256()
+    for name in sorted(trainable):
+        value.update(name.encode() + b'\0' + _bytes(trainable[name]))
+    states = saved['optimizer']['state']
+    for name, state in sorted(((order[i], s) for i, s in states.items()), key=lambda row: row[0]):
+        for key in sorted(state):
+            item = state[key]
+            payload_bytes = _bytes(item) if torch.is_tensor(item) else json.dumps(item).encode()
+            value.update(f'{name}/{key}'.encode() + b'\0' + payload_bytes)
+    return value.hexdigest()
 
 
 def load(model, recipe, payload):
@@ -135,5 +188,7 @@ def judge(make_model, recipe, payload, request):
 
 def recipe_root(recipe, model_root):
     """What a ``growth_open`` names: the recipe's arm, spec and data, and the model it trains."""
-    return hashlib.sha256(json.dumps({'model_root': model_root, 'arm': recipe['arm'], 'spec': recipe['spec'],
-                                      'sources': recipe['sources']}, sort_keys=True).encode()).hexdigest()
+    bound = {'model_root': model_root, 'arm': recipe['arm'], 'spec': recipe['spec'], 'sources': recipe['sources']}
+    if recipe.get('continue_from'):
+        bound['continue_from'] = recipe['continue_from']  # bound only when present: earlier roots are unchanged
+    return hashlib.sha256(json.dumps(bound, sort_keys=True).encode()).hexdigest()

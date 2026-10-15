@@ -128,6 +128,12 @@ class Agent:
         except (AssertionError, ValueError, FileNotFoundError):
             return []  # the committed start state does not reproduce here, or its bytes are not available yet
         self.chain.submit(self.account, 'growth_commit', job_id=job_id, segment=index, step_roots=roots)
+        publish = getattr(self.trainer, 'state_bytes', None)
+        if self.deliver and publish:  # once committed, the state is what the next contributor continues from
+            try:
+                self.deliver(roots[-1], publish(recipe, roots[-1]))
+            except Exception:  # noqa: BLE001 - another store, or this agent's next pass, can serve it
+                pass
         action = {'kind': 'commit', 'job_id': job_id, 'segment': index}
         self.remember(action)
         return [action]

@@ -57,6 +57,14 @@ def register(subcommands, root):
     grow.add_argument('--state-stores', nargs='*', default=[], help='agent: HTTP stores of committed training states')
     grow.add_argument('--recipe-stores', nargs='*', default=[],
                       help='agent: HTTP stores of proposed recipes (default: the network proof stores)')
+    grow.add_argument('--plan', action='store_true',
+                      help='agent: probe the served routes on fresh beacon cases and propose recipes for weak families')
+    grow.add_argument('--evaluate', action='store_true',
+                      help='agent: run sealed evaluations of grown units and propose the ones that earn it')
+    grow.add_argument('--vote-shards', type=int, nargs='*', default=[],
+                      help='agent: vote as the owners of these shards (their log keys in --home), after re-verifying')
+    grow.add_argument('--probe-every', type=float, default=6 * 3600, help='agent --plan: seconds between probes')
+    grow.add_argument('--growth-steps', type=int, default=32, help='agent --plan: optimizer steps per recipe')
     grow.add_argument('--interval', type=float, default=30, help='agent: seconds between ledger passes')
     grow.add_argument('--once', action='store_true', help='agent: one pass, then exit')
     grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
@@ -148,6 +156,7 @@ def run(args):
             optimistic_network.stop(config)
         return
     chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+    descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
         import torch
         from neuroshard.assistant.audit import Auditor
@@ -178,7 +187,7 @@ def run(args):
         govern(args, chain, network)
         return
     if args.assistant_action == 'grow':
-        grow(args, chain, network)
+        grow(args, chain, network, descriptor)
         return
     if args.assistant_action == 'status':
         state = chain.state()
@@ -194,14 +203,7 @@ def run(args):
             print(json.dumps(state['results'].get(args.job) or state['jobs'].get(args.job) or 'unknown job', indent=2))
         return
     if args.assistant_action == 'host':
-        served, stage = network.fetch_stage(descriptor, args.shard, args.home)
-        owner = network.Owner(served, stage, args.shard, chain, network.Account(args.home / 'account.key'),
-                              network.signing_key(args.home / f'log-{args.shard}.key'), args.home, args.threads or 8)
-        owner.register(args.endpoint, descriptor.get('faucet'))
-        if args.mirror_port:
-            _, offered = network.serve_artifacts(descriptor, args.home, args.listen, args.mirror_port)
-            print(f'Mirroring {len(offered)} pinned file(s) on port {args.mirror_port}')
-        owner.run(args.listen, int(args.endpoint.rsplit(':', 1)[1]))
+        host_following(args, chain, network, descriptor)
         return
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
         raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
@@ -232,6 +234,59 @@ def run(args):
         conversation.close()
     print(f'The owners commit their logs now; the job settles after its challenge window. '
           f'Check it with: neuroshard assistant status --job {conversation.job_id}')
+
+
+def following(descriptor, chain, home, network, progress=print):
+    """The descriptor of the version the chain serves; rebuilt locally when owners enacted a grown unit."""
+    from neuroshard.evolution import growth_runtime
+
+    try:
+        return growth_runtime.follow(descriptor, chain.state(), home, descriptor.get('proof_endpoints', []), progress)
+    except Exception as error:  # noqa: BLE001 - keep the pinned version; the action reports any real mismatch
+        progress(f'Serving version check: {error}')
+        return descriptor
+
+
+def host_following(args, chain, network, descriptor, poll=30.0):
+    """Host one shard, and move to each version the owners enact, without anyone publishing a release.
+
+    The served version is checked every ``poll`` seconds; when the chain names a new one, this owner finishes
+    its open work, rebuilds the version from committed growth, loads its stage again and keeps serving."""
+    import threading
+    import time as clock
+
+    mirrored = False
+    while True:
+        served, stage = network.fetch_stage(descriptor, args.shard, args.home)
+        owner = network.Owner(served, stage, args.shard, chain, network.Account(args.home / 'account.key'),
+                              network.signing_key(args.home / f'log-{args.shard}.key'), args.home, args.threads or 8)
+        owner.register(args.endpoint, descriptor.get('faucet'))
+        if args.mirror_port and not mirrored:
+            _, offered = network.serve_artifacts(descriptor, args.home, args.listen, args.mirror_port)
+            print(f'Mirroring {len(offered)} pinned file(s) on port {args.mirror_port}')
+            mirrored = True
+        stop = threading.Event()
+        thread = threading.Thread(target=owner.run, args=(args.listen, int(args.endpoint.rsplit(':', 1)[1]), stop),
+                                  daemon=True)
+        thread.start()
+        while thread.is_alive():
+            clock.sleep(poll)
+            try:
+                root = chain.state()['model_root']
+            except Exception:  # noqa: BLE001 - an unreachable RPC is retried; serving continues meanwhile
+                continue
+            if root != served.root:
+                upgraded = following(descriptor, chain, args.home, network)
+                if network.model_root(upgraded) == root:
+                    print(f'The owners enacted {root[:16]}; switching after open work commits')
+                    stop.set()
+                    thread.join()
+                    if getattr(owner, 'pending_jobs', None):
+                        owner.commit_pending()
+                    descriptor = upgraded
+                    break
+        else:
+            return
 
 
 def govern(args, chain, network):
@@ -294,7 +349,7 @@ def govern(args, chain, network):
     print('committed')
 
 
-def grow(args, chain, network):
+def grow(args, chain, network, descriptor=None):
     """Contributors train growth jobs segment by segment from their own keys; anyone may check a step.
 
     Training state is kept under ``--home/growth/<job>``: ``segment-<i>.state`` after each committed
@@ -308,7 +363,7 @@ def grow(args, chain, network):
     from neuroshard.inference import optimistic as ledger
 
     if args.grow_action == 'agent':
-        return grow_agent(args, chain, network)
+        return grow_agent(args, chain, network, descriptor or {})
     state = chain.state()
     if args.grow_action == 'list':
         for job_id, job in sorted(state.get('growth', {}).items()):
@@ -368,7 +423,7 @@ def grow(args, chain, network):
         (store / f'proof-{proof_root}').write_bytes(payload)
         chain.submit(account, 'growth_challenge', job_id=args.job, segment=segment, step=step, proof_root=proof_root)
         from neuroshard.assistant import audit
-        for endpoint in network.get('proof_endpoints', []):
+        for endpoint in (descriptor or {}).get('proof_endpoints', []):
             audit.post_proof(endpoint, proof_root, payload)
         print(f'challenge posted with proof {proof_root}; prove it after the next block')
         return
@@ -379,7 +434,7 @@ def grow(args, chain, network):
     print('committed')
 
 
-def grow_agent(args, chain, network):
+def grow_agent(args, chain, network, descriptor):
     """Run the autonomous growth loop with this machine's keys: contribute, check, challenge, seal, evaluate.
 
     It acts only through ledger transactions it is allowed to sign, and only on work it can reproduce."""
@@ -399,8 +454,11 @@ def grow_agent(args, chain, network):
     from neuroshard.assistant import audit
 
     def deliver(root, payload):
-        for endpoint in network.get('proof_endpoints', []):
-            audit.post_proof(endpoint, root, payload)
+        for endpoint in descriptor.get('proof_endpoints', []):
+            try:
+                audit.post_proof(endpoint, root, payload)
+            except Exception as error:  # noqa: BLE001 - one store being down does not stop the others
+                print(f'proof store {endpoint}: {error}', flush=True)
 
     class ByRecipe:
         """One protocol trainer per recipe, created on first use, so recipes the network proposes later are trained too."""
@@ -416,9 +474,32 @@ def grow_agent(args, chain, network):
         def replay(self, recipe, job, index, step):
             return self.trainer(recipe).replay(recipe, job, index, step)
 
-    agent = growth_agent.Agent(chain, network.Account(args.home / 'account.key'), args.home / 'growth-agent',
-                               recipes=recipes, trainer=ByRecipe(), deliver=deliver)
-    agent.recipe_stores = list(args.recipe_stores) or list(network.get('proof_endpoints', []))
+        def state_bytes(self, recipe, root):
+            return self.trainer(recipe).fetch(root)
+
+    account = network.Account(args.home / 'account.key')
+    by_recipe = ByRecipe()
+    planner = evaluator = None
+    owner_keys = {network.public_hex(network.signing_key(args.home / f'log-{shard}.key')): account
+                  for shard in args.vote_shards}
+    if args.plan or args.evaluate or owner_keys:
+        from neuroshard.evolution import growth_runtime
+
+        spec = growth_runtime.growth_spec(args.growth_steps)
+        served = growth_runtime.Served(descriptor, args.home, spec)
+        root = chain.state()['model_root']
+        planner = growth_runtime.RoutePlanner(served, served.make_parent, served.tokenizer, served.policies, spec,
+                                              root, served.units)
+        evaluator = growth_runtime.Evaluators(recipes, served, by_recipe, served.policies, descriptor)
+    agent = growth_agent.Agent(chain, account, args.home / 'growth-agent', recipes=recipes, trainer=by_recipe,
+                               deliver=deliver, evaluator=evaluator if (args.evaluate or owner_keys) else None,
+                               owner_keys=owner_keys or None, planner=planner if args.plan else None,
+                               probe_every=args.probe_every)
+    if planner is not None:
+        agent.recipe_check = planner.check
+    if evaluator is not None:
+        evaluator.recipes = agent.recipes  # recipes fetched from the network are evaluated too
+    agent.recipe_stores = list(args.recipe_stores) or list(descriptor.get('proof_endpoints', []))
     while True:
         for action in agent.tick():
             print(json.dumps(action, sort_keys=True), flush=True)
