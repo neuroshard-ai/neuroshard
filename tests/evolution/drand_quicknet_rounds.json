@@ -1,0 +1,12 @@
+[
+ {
+  "round": 33080938,
+  "signature": "afbd3608796407b6e00344af9bb029386b6f34e728b18d4b45d0e8194d230121b6a3fcff0a6bd0928a2521b5607cff96",
+  "randomness": "3d667738c354f38b8fb6bcee10fc4401cb55b799aa0f0536f985796c17882466"
+ },
+ {
+  "round": 33080939,
+  "signature": "8b6fc05a7a8bd377cba6bd0908befebcfb8313c95a8c2f8bfd2644bdfaacaa3aeb524bbfc5fe37e5c15f24fbf7b37539",
+  "randomness": "248ce110eef8d7d0a8ebae2f8ba7cd8a7f900f8aa777329b4e692faf70dd85d8"
+ }
+]

@@ -1,0 +1,3 @@
+# Beacon verification for growth agents (drand quicknet BLS). Install with --no-deps: neuroshard.inference.beacon
+# loads only py_ecc's field, curve, hash-to-curve and point-compression modules, which need nothing else.
+py_ecc==8.0.0 --hash=sha256:c0b2dfc4bde67a55122a392591a10e851a986d5128f680628c80b405f7663e13

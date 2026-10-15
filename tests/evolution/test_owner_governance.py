@@ -105,7 +105,9 @@ def test_a_rejected_proposal_forfeits_its_deposit_after_the_window_and_jobs_bloc
     closed = step(state, carol.sign('model_enact', proposal_id=pid), checker, blocks=21)
     assert closed['model_root'] == MODEL and closed['burned'] == burned + ledger.GOVERNANCE['proposal_deposit'] + PARAMS['fee'] * 2
     ledger.invariant(closed)
-    carol.nonce = state['accounts'][carol.public]['nonce']
+    state = closed  # a model may be proposed again once its earlier proposal has closed
+    for account in (user, alice, bob, carol):
+        account.nonce = state['accounts'][account.public]['nonce']
     second = user.sign('model_propose', model_root=NEXT, quality_root=QUALITY)
     sid = ledger.transaction_id(second)
     state = step(state, second, checker)

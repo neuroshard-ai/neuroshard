@@ -50,7 +50,11 @@ def register(subcommands, root):
     govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
     grow = actions.add_parser('grow', parents=[common],
                               help='Grow the assistant on the network: open, train, challenge or prove a growth job')
-    grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove'))
+    grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove', 'agent'))
+    grow.add_argument('--recipes', type=Path, help='agent: directory of published recipe JSON files to contribute to')
+    grow.add_argument('--state-stores', nargs='*', default=[], help='agent: HTTP stores of committed training states')
+    grow.add_argument('--interval', type=float, default=30, help='agent: seconds between ledger passes')
+    grow.add_argument('--once', action='store_true', help='agent: one pass, then exit')
     grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
     grow.add_argument('--job', help='train/challenge/prove: the growth job ID')
     grow.add_argument('--segment', type=int, help='train/challenge: the segment index')
@@ -287,6 +291,8 @@ def grow(args, chain, network):
     from neuroshard.inference import growth as ledger_growth
     from neuroshard.inference import optimistic as ledger
 
+    if args.grow_action == 'agent':
+        return grow_agent(args, chain, network)
     state = chain.state()
     if args.grow_action == 'list':
         for job_id, job in sorted(state.get('growth', {}).items()):
@@ -355,3 +361,45 @@ def grow(args, chain, network):
             raise ValueError('prove needs --challenge')
         chain.submit(account, 'growth_prove', job_id=args.job, challenge_id=args.challenge)
     print('committed')
+
+
+def grow_agent(args, chain, network):
+    """Run the autonomous growth loop with this machine's keys: contribute, check, challenge, seal, evaluate.
+
+    It acts only through ledger transactions it is allowed to sign, and only on work it can reproduce."""
+    import time as clock
+
+    from neuroshard.evolution import growth_agent, growth_replay
+    from neuroshard.evolution.growth_model import model_factory
+    from neuroshard.evolution.growth_runtime import StateTrainer
+
+    recipes = {}
+    for path in sorted(Path(args.recipes).glob('*.json')) if args.recipes else []:
+        recipe = json.loads(path.read_text())
+        recipes[growth_replay.recipe_root(recipe, recipe['model_root'])] = recipe
+    trainers = {root: StateTrainer(args.home / 'growth-states' / root, model_factory(recipe), args.state_stores)
+                for root, recipe in recipes.items()}
+
+    class ByRecipe:
+        """One protocol trainer per recipe, selected by the job's recipe root."""
+        def segment(self, recipe, job_id, start, first, last):
+            return trainers[growth_replay.recipe_root(recipe, recipe['model_root'])].segment(recipe, job_id, start,
+                                                                                         first, last)
+
+        def replay(self, recipe, job, index, step):
+            return trainers[job['recipe_root']].replay(recipe, job, index, step)
+
+    from neuroshard.assistant import audit
+
+    def deliver(root, payload):
+        for endpoint in network.get('proof_endpoints', []):
+            audit.post_proof(endpoint, root, payload)
+
+    agent = growth_agent.Agent(chain, network.Account(args.home / 'account.key'), args.home / 'growth-agent',
+                               recipes=recipes, trainer=ByRecipe() if recipes else None, deliver=deliver)
+    while True:
+        for action in agent.tick():
+            print(json.dumps(action, sort_keys=True), flush=True)
+        if args.once:
+            return
+        clock.sleep(args.interval)

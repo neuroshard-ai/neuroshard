@@ -75,3 +75,65 @@ The tests check this on the protocol trainer (`growth_replay`):
 - **Proof availability.** As for serving, bundles reach validators' stores out of band. A proof
   commits only if validators with more than two thirds of the voting power hold its bundle.
 - **Not deployed.** The live chain runs neither the growth transitions nor validator governance yet.
+
+## Sealed tests from public randomness, and the autonomous loop
+
+October 15, 2026. In code and tested; not yet run live.
+
+**The problem it removes.** Every sealed test so far was a split the project wrote and kept unopened.
+Whoever holds a sealed set could leak it, train toward it, or choose which one to open.
+
+**Sealed evaluation from drand** (`inference/beacon.py`, `evolution/sealed_evaluation.py`).
+
+- drand is a threshold randomness network run by many independent organisations. Every 3 seconds it
+  publishes a BLS signature; its SHA-256 is that round's randomness.
+- `beacon.verify` checks a beacon against drand quicknet's fixed group key in-process, so no API is
+  trusted.
+- When a growth job settles, the ledger records the block's BFT time, agreed by the validators, and
+  `seal_round`: the first round after that time, plus 20 rounds (about one minute). The trained state is
+  fixed before that randomness exists.
+- The round's randomness seeds every case choice: workspaces, documents, facts, values, dates, topics,
+  constraints, and which published wording template each case uses. The expected outcomes come from the
+  same deterministic builders as every earlier split. Anyone with the beacon derives the identical 132
+  documents and 96 chat cases, and the reference solver solves all of them.
+- What it seals: the content of every case. What it does not seal: the families and the published wording
+  pool. A unit can be trained toward the kinds of questions, never on the cases.
+
+**The loop** (`evolution/growth_agent.py`, `evolution/growth_runtime.py`, `neuroshard assistant grow agent`).
+Anyone runs the agent with their own keys, and it acts only through transactions it may sign:
+
+1. **Contribute:** train the next segment from the committed state, but only if that state reproduces
+   locally, never on top of work it cannot reproduce.
+2. **Check:** re-execute a random step of every other contributor's segment. If it is wrong, find the
+   first wrong step, challenge it with a proof bundle, and prove it.
+3. **Evaluate:** once a job settles and its seal round exists, verify the beacon, derive the sealed set,
+   and run the grown unit beside the serving model on the same cases.
+4. **Propose:** if the unit meets the recipe's minimum and beats the serving model, propose the
+   candidate version with the report's digest.
+5. **Vote** (as an owner): derive the same sealed set, run the evaluation itself, and vote yes only if its
+   own result reproduces the proposal's digest and passes. It never reads the proposer's report and never
+   votes on judgment.
+
+Committed training states are content-addressed files that any store may serve. A contributor accepts
+bytes only if they hash to the root committed on chain.
+
+**Tested** (`tests/evolution/test_growth_loop.py`), on the real ledger state machine, the real protocol
+trainer and recorded drand rounds that the test verifies:
+
+- one agent cheats on a segment, another catches it, proves the first wrong step and is paid half the
+  bond, and the segment reopens;
+- honest agents retrain and check each other;
+- the job settles and its seal round is named;
+- the evaluation is derived from the beacon and the version is proposed;
+- owners recompute the evaluation and vote yes, and the proposal is enacted;
+- an owner whose own evaluation differs from a proposal's evidence votes no.
+
+**Limits.**
+
+- The evaluator runs the model, so owners need the base model and the pinned execution class, as they do
+  for serving.
+- The minimum and the families are part of the recipe, and the recipe is chosen by its sponsor. Owners
+  should judge recipes as well as results.
+- Two consensus-rule changes came with this. Block time feeds the growth seal, and a model already in an
+  open proposal cannot be proposed again until it closes. Validators must run this software before either
+  rule matters on chain.

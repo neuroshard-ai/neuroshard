@@ -155,11 +155,11 @@ class Application(rpc.ABCIServicer):
     def apply(self, state, raw, execute=None):
         return ledger.transition(state, parse_json(raw), execute or self.check)
 
-    def block(self, height, txs, execute=None):
+    def block(self, height, txs, execute=None, time=None):
         """The state after advancing to ``height`` and applying ``txs``; raises on the first that does not apply."""
         if not self.state:
             raise ValueError('Chain has not initialized')
-        state = ledger.advance(self.state, height)
+        state = ledger.advance(self.state, height, time)
         for raw in txs:
             state = self.apply(state, raw, execute)
         return state
@@ -256,7 +256,7 @@ class Application(rpc.ABCIServicer):
                 if len(chosen) >= MAX_BLOCK_TXS or len(raw) > MAX_TX_BYTES:
                     continue
                 try:
-                    self.block(request.height, chosen + [raw])
+                    self.block(request.height, chosen + [raw], time=block_time(request))
                     chosen.append(raw)
                 except INVALID:
                     continue
@@ -271,7 +271,7 @@ class Application(rpc.ABCIServicer):
             if len(request.txs) > MAX_BLOCK_TXS:
                 return pb.ResponseProcessProposal(status=2)
             try:
-                self.block(request.height, list(request.txs))
+                self.block(request.height, list(request.txs), time=block_time(request))
                 return pb.ResponseProcessProposal(status=1)
             except INVALID:
                 return pb.ResponseProcessProposal(status=2)
@@ -287,7 +287,7 @@ class Application(rpc.ABCIServicer):
         with self.lock:
             if not self.state or request.height != self.state['height'] + 1:
                 raise ValueError('Unexpected block height')
-            state, results = ledger.advance(self.state, request.height), []
+            state, results = ledger.advance(self.state, request.height, block_time(request)), []
             before = dict(self.state.get('validators', {}))
             for raw in request.txs:
                 try:
@@ -327,6 +327,11 @@ class Application(rpc.ABCIServicer):
 
     def VerifyVoteExtension(self, request, context):
         return pb.ResponseVerifyVoteExtension(status=1)
+
+
+def block_time(request):
+    """The block's BFT time in whole seconds, as validators agreed it; None when the engine sends none."""
+    return request.time.seconds if request.HasField('time') and request.time.seconds else None
 
 
 def validator_updates(before, after):

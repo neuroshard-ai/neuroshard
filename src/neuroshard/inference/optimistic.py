@@ -234,7 +234,7 @@ def billable(job):
     return [min(job['served'][key], sent) for key in job['owners']]
 
 
-def advance(previous, height):
+def advance(previous, height, time=None):
     """Block boundary: burn the deposits of challenges not proven in time, then settle every job
     whose challenge window has closed and refund jobs never fully committed.
 
@@ -271,7 +271,7 @@ def advance(previous, height):
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
     if 'growth' in state:
-        _growth().advance(sys.modules[__name__], state)
+        _growth().advance(sys.modules[__name__], state, time)
     invariant(state)
     return state
 
@@ -521,6 +521,9 @@ def transition(previous, envelope, execute):
         model, quality = hex_digest(body['model_root']), hex_digest(body['quality_root'])
         if model == state['model_root']:
             raise ValueError('The proposed model is already serving')
+        if any(p.get('model_root') == model and state['height'] <= p['deadline']
+               for p in governance['proposals'].values()):
+            raise ValueError('This model is already proposed and open')
         weights = {key: owner['amount'] for key, owner in sorted(state['owners'].items())
                    if owner['status'] == 'active' and owner['amount'] > 0}
         if not weights:
