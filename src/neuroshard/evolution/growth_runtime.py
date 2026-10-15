@@ -182,10 +182,12 @@ class RouteEvaluator:
         kind = self.recipe['route']
         run = general.documents_episode if kind == 'documents' else general.chat_episode
         rows = {}
-        for name, model in (('candidate', self.grown(result['final_root'])), ('serving', self.serving())):
+        for name in ('candidate', 'serving'):  # one model at a time: an owner's machine also serves its shard
+            model = self.grown(result['final_root']) if name == 'candidate' else self.serving()
             tokenizer = self.serving.tokenizer
             rows[name] = [run(case, cached_responder(model, tokenizer, self.policy), self.policy)['passed']
                           for case in cases['sets'][kind]]
+            del model
         candidate, serving = sum(rows['candidate']), sum(rows['serving'])
         total = len(rows['candidate'])
         passed = candidate / total >= self.minimum and candidate > serving

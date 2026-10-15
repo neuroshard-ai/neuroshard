@@ -98,10 +98,10 @@ def grow(tmp_path, users, contributors):
         chain.submit(account, 'model_vote', proposal_id=lid, log_key=key, approve=True)
     chain.submit(owner1, 'model_enact', proposal_id=lid)
     assert [a['kind'] for a in planner.tick()] == ['recipe'] * 3     # each weak family becomes a recipe
-    assert [a['kind'] for a in owners.tick()] == ['vote'] * 3        # owners re-verify them and vote them in
-    for proposal_id in list(chain.state()['governance']['proposals']):
-        chain.submit(owner1, 'model_enact', proposal_id=proposal_id)
-    assert [q['recipe_root'] for q in chain.state()['growth_queue']] == roots and not chain.state().get('growth')
+    # Owners re-verify them, vote them in, and enact what passed: nobody else needs to act.
+    assert [a['kind'] for a in owners.tick()] == ['vote'] * 3 + ['enact'] * 3
+    assert sorted(q['recipe_root'] for q in chain.state()['growth_queue']) == sorted(roots)
+    assert not chain.state().get('growth')
     opened_at = None
     blocks = 0  # rounds: in each, every user and every node acts once
     def grown():
@@ -127,10 +127,12 @@ def grow(tmp_path, users, contributors):
             result['seal_round'] = seal['round']
     actions = [a['kind'] for worker in workers for a in worker.tick()]
     assert actions.count('propose') == len(roots)                  # each grown unit is evaluated and proposed
-    votes = owners.tick()
-    assert [a['kind'] for a in votes] == ['vote'] * len(roots) and all(a['approve'] for a in votes)
-    enact = next(p for p, v in chain.state()['governance']['proposals'].items() if 'model_root' in v)
-    chain.submit(owner1, 'model_enact', proposal_id=enact)
+    taken = owners.tick()
+    votes = [a for a in taken if a['kind'] == 'vote']
+    assert len(votes) == len(roots) and all(a['approve'] for a in votes)
+    assert [a['kind'] for a in taken if a['kind'] == 'enact'] == ['enact']  # one version switches; the rest wait
+    later = [a['kind'] for a in owners.tick()]
+    assert 'enact' not in later   # the others were grown on the version just replaced: enacting them would undo it
     final = chain.state()
     assert final['model_history'][-1]['authority'] == 'owners' and final['model_root'] != 'ab' * 32
     ledger.invariant(final)
@@ -172,16 +174,15 @@ def test_ledger_rules_for_the_pool_and_the_queue(tmp_path):
     assert before['height'] < chain.state()['height']
     # Queue order is admission order, and a job opens only when the pool covers its whole reward.
     planner.tick()
-    owners.tick()
-    for proposal_id in list(chain.state()['governance']['proposals']):
-        chain.submit(owner1, 'model_enact', proposal_id=proposal_id)
+    owners.tick()  # votes and enacts
+    admitted = [q['recipe_root'] for q in chain.state_value['growth_queue']]  # jobs open in admission order
     while chain.state_value.get('growth_queue'):
         pool, queued = chain.state_value.get('growth_pool', 0), len(chain.state_value['growth_queue'])
         paid_conversations(chain, user, list(keys), 1)
         opened = queued - len(chain.state_value.get('growth_queue', []))
         assert opened == 0 or pool + 200_000 >= REWARD * opened - 1
     jobs = chain.state_value['growth']
-    assert [j['recipe_root'] for j in sorted(jobs.values(), key=lambda j: j['opened'])] == roots
+    assert [j['recipe_root'] for j in sorted(jobs.values(), key=lambda j: j['opened'])] == admitted
     assert all(j['sponsor'] is None and j['funded_by'] == 'pool' for j in jobs.values())
 
 

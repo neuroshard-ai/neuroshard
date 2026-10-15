@@ -65,6 +65,10 @@ def register(subcommands, root):
                       help='agent: vote as the owners of these shards (their log keys in --home), after re-verifying')
     grow.add_argument('--probe-every', type=float, default=6 * 3600, help='agent --plan: seconds between probes')
     grow.add_argument('--growth-steps', type=int, default=32, help='agent --plan: optimizer steps per recipe')
+    grow.add_argument('--reward-per-step', type=int, default=40_000,
+                      help='agent --plan: atoms a recipe pays per step (owners vote on it with the recipe)')
+    grow.add_argument('--minimum', type=float, default=0.9, help='sealed pass rate a grown unit must reach')
+    grow.add_argument('--no-contribute', action='store_true', help='agent: check and judge, never train segments')
     grow.add_argument('--interval', type=float, default=30, help='agent: seconds between ledger passes')
     grow.add_argument('--once', action='store_true', help='agent: one pass, then exit')
     grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
@@ -489,8 +493,8 @@ def grow_agent(args, chain, network, descriptor):
         served = growth_runtime.Served(descriptor, args.home, spec)
         root = chain.state()['model_root']
         planner = growth_runtime.RoutePlanner(served, served.make_parent, served.tokenizer, served.policies, spec,
-                                              root, served.units)
-        evaluator = growth_runtime.Evaluators(recipes, served, by_recipe, served.policies, descriptor)
+                                              root, served.units, reward_per_step=args.reward_per_step)
+        evaluator = growth_runtime.Evaluators(recipes, served, by_recipe, served.policies, descriptor, args.minimum)
     agent = growth_agent.Agent(chain, account, args.home / 'growth-agent', recipes=recipes, trainer=by_recipe,
                                deliver=deliver, evaluator=evaluator if (args.evaluate or owner_keys) else None,
                                owner_keys=owner_keys or None, planner=planner if args.plan else None,
@@ -499,10 +503,16 @@ def grow_agent(args, chain, network, descriptor):
         agent.recipe_check = planner.check
     if evaluator is not None:
         evaluator.recipes = agent.recipes  # recipes fetched from the network are evaluated too
+    agent.contributing = not args.no_contribute
     agent.recipe_stores = list(args.recipe_stores) or list(descriptor.get('proof_endpoints', []))
     while True:
-        for action in agent.tick():
-            print(json.dumps(action, sort_keys=True), flush=True)
+        try:
+            for action in agent.tick():
+                print(json.dumps(action, sort_keys=True), flush=True)
+        except Exception as error:  # noqa: BLE001 - a refused transaction or a dropped RPC: report, retry next pass
+            print(json.dumps({'kind': 'error', 'error': f'{type(error).__name__}: {error}'}), flush=True)
+            if args.once:
+                raise
         if args.once:
             return
         clock.sleep(args.interval)
