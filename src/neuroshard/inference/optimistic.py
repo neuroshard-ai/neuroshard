@@ -49,7 +49,10 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'transfer': {'to', 'amount'}, 'owner_endpoint': {'log_key', 'endpoint'},
           'model_promote': {'model_root', 'quality_root'}, 'governance_handover': {'approval_ppm', 'vote_blocks'},
           'model_propose': {'model_root', 'quality_root'}, 'model_vote': {'proposal_id', 'log_key', 'approve'},
-          'model_enact': {'proposal_id'}, 'validator_propose': {'consensus_key', 'power'}}
+          'model_enact': {'proposal_id'}, 'validator_propose': {'consensus_key', 'power'},
+          'recipe_propose': {'recipe_root', 'start_root', 'steps', 'segment_steps', 'reward'},
+          'growth_levy': {'levy_ppm'}}
+MAX_GROWTH_LEVY_PPM = 300_000  # at most 30% of owner payments fund growth
 MAX_VALIDATOR_POWER = 100
 # Growth jobs (contributors train units; see ``growth``). Their schema is declared here, and the module is
 # imported only when a growth transaction or growth state appears, so published profiles that pin the
@@ -203,6 +206,7 @@ def invariant(state):
     bonded = sum(o['amount'] for o in state['owners'].values())
     escrow = sum(j['price'] + sum(c['deposit'] for c in j['challenges'].values()) for j in state['jobs'].values())
     escrow += sum(p['deposit'] for p in state.get('governance', {}).get('proposals', {}).values())
+    escrow += state.get('growth_pool', 0)
     if state.get('growth'):
         escrow += _growth().escrow(state)
     assert all(a['balance'] >= 0 and a['nonce'] >= 0 for a in state['accounts'].values())
@@ -258,19 +262,27 @@ def advance(previous, height, time=None):
         if job['deadline'] is not None and height > job['deadline']:
             served = billable(job)
             paid = [job['price'] * positions // (job['positions'] * len(job['owners'])) for positions in served]
-            for key, amount in zip(job['owners'], paid):
-                account(state, state['owners'][key]['account'])['balance'] += amount
+            # Usage funds growth: once owners govern, a share of every owner payment goes to the growth pool.
+            levy = state.get('governance', {}).get('growth_levy_ppm', 0)
+            pooled = [amount * levy // 1_000_000 for amount in paid]
+            for key, amount, share in zip(job['owners'], paid, pooled):
+                account(state, state['owners'][key]['account'])['balance'] += amount - share
+            if sum(pooled):
+                state['growth_pool'] = state.get('growth_pool', 0) + sum(pooled)
             refunded = job['price'] - sum(paid)
             account(state, job['user'])['balance'] += refunded
-            remember(state, job_id, {'status': 'settled', 'user': job['user'], 'owners': job['owners'],
-                                     'positions': served, 'paid': paid, 'refunded': refunded})
+            record = {'status': 'settled', 'user': job['user'], 'owners': job['owners'], 'positions': served,
+                      'paid': [a - p for a, p in zip(paid, pooled)], 'refunded': refunded}
+            if levy:
+                record['pooled'] = sum(pooled)
+            remember(state, job_id, record)
             del state['jobs'][job_id]
         elif job['deadline'] is None and height > job['expires']:
             refund(state, job)
             remember(state, job_id, {'status': 'expired', 'user': job['user'], 'owners': job['owners'],
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
-    if 'growth' in state:
+    if 'growth' in state or state.get('growth_queue'):
         _growth().advance(sys.modules[__name__], state, time)
     invariant(state)
     return state
@@ -349,7 +361,8 @@ def admit(previous, envelope):
         blocks = integer(body['vote_blocks'], GOVERNANCE['minimum_vote_blocks'], 1_000_000)
         return body, sender, {'kind': 'governance_handover', 'chain_id': previous['chain_id'], 'signer': sender,
                               'approval_ppm': approval, 'vote_blocks': blocks}
-    if kind in ('model_propose', 'model_vote', 'model_enact', 'validator_propose') and not governed(previous):
+    if kind in ('model_propose', 'model_vote', 'model_enact', 'validator_propose', 'recipe_propose',
+                'growth_levy') and not governed(previous):
         raise ValueError('Owner governance has not been handed over')
     if kind.startswith('growth_'):
         return body, sender, _growth().admit(sys.modules[__name__], previous, body, sender)
@@ -551,6 +564,27 @@ def transition(previous, envelope, execute):
             'kind': 'validator', 'proposer': sender, 'consensus_key': key, 'power': power,
             'deposit': GOVERNANCE['proposal_deposit'], 'opened': state['height'],
             'deadline': state['height'] + governance['vote_blocks'], 'weights': weights, 'votes': {}}
+    elif kind in ('recipe_propose', 'growth_levy'):
+        # What the network learns next, and how much of its usage pays for it, are owner decisions like any other.
+        governance = state['governance']
+        if len(governance['proposals']) >= GOVERNANCE['max_proposals']:
+            raise ValueError('Too many open proposals')
+        if kind == 'recipe_propose':
+            item = {'kind': 'recipe', 'recipe_root': hex_digest(body['recipe_root']),
+                    'start_root': hex_digest(body['start_root']), 'steps': integer(body['steps'], 1, 4096),
+                    'segment_steps': integer(body['segment_steps'], 1, 64), 'reward': integer(body['reward'], 1)}
+            if item['reward'] < item['steps']:
+                raise ValueError('A recipe pays at least one atom per step')
+        else:
+            item = {'kind': 'levy', 'levy_ppm': integer(body['levy_ppm'], 0, MAX_GROWTH_LEVY_PPM)}
+        weights = {k: owner['amount'] for k, owner in sorted(state['owners'].items())
+                   if owner['status'] == 'active' and owner['amount'] > 0}
+        if not weights:
+            raise ValueError('No bonded owner can vote')
+        debit(GOVERNANCE['proposal_deposit'])
+        governance['proposals'][transaction_id(envelope)] = {
+            **item, 'proposer': sender, 'deposit': GOVERNANCE['proposal_deposit'], 'opened': state['height'],
+            'deadline': state['height'] + governance['vote_blocks'], 'weights': weights, 'votes': {}}
     elif kind == 'model_vote':
         proposal = state['governance']['proposals'].get(body['proposal_id'])
         key = body['log_key']
@@ -578,6 +612,16 @@ def transition(previous, envelope, execute):
             state.setdefault('validator_history', []).append({
                 'consensus_key': key, 'power': power, 'height': state['height'], 'proposal_id': body['proposal_id'],
                 'approving_weight': approving, 'total_weight': total})
+            account(state, proposal['proposer'])['balance'] += proposal['deposit']
+        elif passed and proposal.get('kind') in ('recipe', 'levy'):
+            if proposal['kind'] == 'recipe':
+                queue = state.setdefault('growth_queue', [])
+                if len(queue) >= 16:
+                    raise ValueError('The growth queue is full')
+                queue.append({k: proposal[k] for k in ('recipe_root', 'start_root', 'steps', 'segment_steps', 'reward')}
+                             | {'admitted': state['height'], 'proposal_id': body['proposal_id']})
+            else:
+                governance['growth_levy_ppm'] = proposal['levy_ppm']
             account(state, proposal['proposer'])['balance'] += proposal['deposit']
         elif passed:
             if state['jobs']:

@@ -105,6 +105,9 @@ def proof_archive(directory):
     return payload.getvalue()
 
 
+MAX_RECIPE_BYTES = 64 * 1024 * 1024
+
+
 def post_proof(endpoint, root, payload, timeout=60):
     """Deliver content-addressed proof bytes to one proof store."""
     request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
@@ -113,11 +116,33 @@ def post_proof(endpoint, root, payload, timeout=60):
         return json.loads(response.read())
 
 
+def named_recipe(state, root):
+    """Whether a funded recipe proposal, a queued recipe or an open growth job names this recipe root."""
+    return root in ({p['recipe_root'] for p in state.get('governance', {}).get('proposals', {}).values()
+                     if p.get('kind') == 'recipe'} | {q['recipe_root'] for q in state.get('growth_queue', [])}
+                    | {j['recipe_root'] for j in state.get('growth', {}).values()})
+
+
 def receive_proof(payload, root, state, store):
     """Accept bounded content-addressed bytes only after their challenge deposit is committed."""
     from neuroshard.evolution.sharded import granite_audit
 
     ledger.hex_digest(root)
+    if named_recipe(state, root):
+        # A recipe is JSON whose growth root is the address: what a funded recipe proposal or queued job names.
+        from neuroshard.evolution import growth_replay
+
+        if len(payload) > MAX_RECIPE_BYTES:
+            raise ValueError('recipe exceeds its transfer bound')
+        recipe = json.loads(payload)
+        if growth_replay.recipe_root(recipe, recipe['model_root']) != root:
+            raise ValueError('recipe differs from its content address')
+        store = Path(store)
+        store.mkdir(parents=True, exist_ok=True)
+        partial = store / f'.{root}.partial'
+        partial.write_bytes(payload)
+        partial.replace(store / f'{root}.json')
+        return root
     if state.get('growth') and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(state, root):
         # A growth proof is one content-addressed file: the state before the disputed step.
         if len(payload) > MAX_PROOF_BYTES or hashlib.sha256(payload).hexdigest() != root:

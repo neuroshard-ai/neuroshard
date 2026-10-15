@@ -38,7 +38,9 @@ def register(subcommands, root):
     chat.add_argument('--threads', type=int)
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
-    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'vote', 'enact', 'handover'))
+    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy', 'vote',
+                                                  'enact', 'handover'))
+    govern.add_argument('--levy-ppm', type=int, help='propose-levy: share of owner payments that funds growth (ppm)')
     govern.add_argument('--consensus-key', help='propose-validator: the CometBFT ed25519 public key, hex')
     govern.add_argument('--power', type=int, help='propose-validator: voting power, 0 removes')
     govern.add_argument('--model-root', help='propose: the version to serve, as its model root')
@@ -53,6 +55,8 @@ def register(subcommands, root):
     grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove', 'agent'))
     grow.add_argument('--recipes', type=Path, help='agent: directory of published recipe JSON files to contribute to')
     grow.add_argument('--state-stores', nargs='*', default=[], help='agent: HTTP stores of committed training states')
+    grow.add_argument('--recipe-stores', nargs='*', default=[],
+                      help='agent: HTTP stores of proposed recipes (default: the network proof stores)')
     grow.add_argument('--interval', type=float, default=30, help='agent: seconds between ledger passes')
     grow.add_argument('--once', action='store_true', help='agent: one pass, then exit')
     grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
@@ -244,10 +248,16 @@ def govern(args, chain, network):
               f"{governance['approval_ppm'] / 10_000:.4g}% of the bonded weight snapshotted when it opened.")
         for pid, proposal in sorted(governance['proposals'].items()):
             approving, total = ledger.tally(proposal)
-            what = (f"validator {proposal['consensus_key'][:16]} at power {proposal['power']}"
-                    if proposal.get('kind') == 'validator' else
+            kind = proposal.get('kind')
+            what = (f"validator {proposal['consensus_key'][:16]} at power {proposal['power']}" if kind == 'validator'
+                    else f"growth levy {proposal['levy_ppm'] / 10_000:.4g}%" if kind == 'levy'
+                    else f"recipe {proposal['recipe_root'][:16]}: {proposal['steps']} steps for {proposal['reward']}"
+                    if kind == 'recipe' else
                     f"model {proposal['model_root'][:16]}, quality {proposal['quality_root'][:16]}")
             print(f"  {pid}: {what}, {approving}/{total} approving, open until block {proposal['deadline']}")
+        print(f"Growth: levy {governance.get('growth_levy_ppm', 0) / 10_000:.4g}% of owner payments, pool "
+              f"{state.get('growth_pool', 0)}, {len(state.get('growth_queue', []))} recipe(s) queued, "
+              f"{len(state.get('growth', {}))} job(s) open.")
         for key, power in sorted(state.get('validators', {}).items()):
             print(f"  admitted validator {key[:16]}: power {power}")
         return
@@ -264,6 +274,12 @@ def govern(args, chain, network):
         if not args.consensus_key or args.power is None:
             raise ValueError('propose-validator needs --consensus-key and --power')
         envelope = chain.submit(account, 'validator_propose', consensus_key=args.consensus_key, power=args.power)
+        print(f'proposal {ledger.transaction_id(envelope)}')
+        return
+    elif args.govern_action == 'propose-levy':
+        if args.levy_ppm is None:
+            raise ValueError('propose-levy needs --levy-ppm')
+        envelope = chain.submit(account, 'growth_levy', levy_ppm=args.levy_ppm)
         print(f'proposal {ledger.transaction_id(envelope)}')
         return
     elif args.govern_action == 'vote':
@@ -380,23 +396,29 @@ def grow_agent(args, chain, network):
     trainers = {root: StateTrainer(args.home / 'growth-states' / root, model_factory(recipe), args.state_stores)
                 for root, recipe in recipes.items()}
 
-    class ByRecipe:
-        """One protocol trainer per recipe, selected by the job's recipe root."""
-        def segment(self, recipe, job_id, start, first, last):
-            return trainers[growth_replay.recipe_root(recipe, recipe['model_root'])].segment(recipe, job_id, start,
-                                                                                         first, last)
-
-        def replay(self, recipe, job, index, step):
-            return trainers[job['recipe_root']].replay(recipe, job, index, step)
-
     from neuroshard.assistant import audit
 
     def deliver(root, payload):
         for endpoint in network.get('proof_endpoints', []):
             audit.post_proof(endpoint, root, payload)
 
+    class ByRecipe:
+        """One protocol trainer per recipe, created on first use, so recipes the network proposes later are trained too."""
+        def trainer(self, recipe):
+            root = growth_replay.recipe_root(recipe, recipe['model_root'])
+            if root not in trainers:
+                trainers[root] = StateTrainer(args.home / 'growth-states' / root, model_factory(recipe), args.state_stores)
+            return trainers[root]
+
+        def segment(self, recipe, job_id, start, first, last):
+            return self.trainer(recipe).segment(recipe, job_id, start, first, last)
+
+        def replay(self, recipe, job, index, step):
+            return self.trainer(recipe).replay(recipe, job, index, step)
+
     agent = growth_agent.Agent(chain, network.Account(args.home / 'account.key'), args.home / 'growth-agent',
-                               recipes=recipes, trainer=ByRecipe() if recipes else None, deliver=deliver)
+                               recipes=recipes, trainer=ByRecipe(), deliver=deliver)
+    agent.recipe_stores = list(args.recipe_stores) or list(network.get('proof_endpoints', []))
     while True:
         for action in agent.tick():
             print(json.dumps(action, sort_keys=True), flush=True)

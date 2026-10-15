@@ -28,17 +28,22 @@ import time
 
 class Agent:
     def __init__(self, chain, account, home, *, recipes=None, trainer=None, evaluator=None, owner_keys=None,
-                 beacon=None, deliver=None, rng=None, clock=time.time):
+                 beacon=None, deliver=None, rng=None, clock=time.time, planner=None, probe_every=None):
         self.chain, self.account, self.home = chain, account, Path(home)
         self.recipes = recipes or {}          # recipe_root -> recipe (published)
         self.trainer, self.evaluator = trainer, evaluator
         self.owner_keys = owner_keys or {}    # log_key -> owner account, for voting
         self.beacon, self.deliver = beacon, deliver
         self.rng, self.clock = rng or random.Random(), clock
+        # planner(randomness) -> recipe or None: probes the serving version on a sealed set and, if a family is weak,
+        # returns a verified recipe for it. Planning runs every ``probe_every`` seconds at most.
+        self.planner, self.probe_every = planner, probe_every
+        self.recipe_stores = []  # HTTP stores where proposed recipes are published, by recipe root
         self.home.mkdir(parents=True, exist_ok=True)
         self.path = self.home / 'agent-state.json'
         self.memory = json.loads(self.path.read_text()) if self.path.exists() else {'actions': [], 'checked': [],
                                                                                     'evaluated': {}, 'voted': []}
+        self.recipe_check = None  # recipe -> bool: an owner's own re-verification of a proposed recipe
 
     def remember(self, action):
         self.memory['actions'].append({**action, 'unix': self.clock()})
@@ -56,13 +61,61 @@ class Agent:
         for job_id, result in sorted(state.get('results', {}).items()):
             if result.get('status') == 'grown':
                 taken += self.evaluate(job_id, result)
+        taken += self.plan(state)
         taken += self.vote(state)
         return taken
+
+    def plan(self, state):
+        """Propose a recipe for the serving version's weakest families, when none is already queued or open.
+
+        Nothing here needs a person: a fresh drand round seeds the probe; a weak family becomes a recipe; owners'
+        agents vote on it like any proposal; once admitted, the growth pool opens it when usage has paid for it.
+        """
+        from neuroshard.evolution import growth_replay
+        from neuroshard.inference import beacon as drand
+
+        if self.planner is None or 'governance' not in state:
+            return []
+        last = self.memory.get('planned_unix', 0)
+        if self.probe_every is not None and self.clock() - last < self.probe_every:
+            return []
+        pending = [p for p in state['governance']['proposals'].values() if p.get('kind') == 'recipe']
+        if pending or state.get('growth_queue') or state.get('growth'):
+            return []  # one growth round at a time: the next probe measures the version that round produces
+        round_number = drand.round_at(self.clock()) - 1
+        round_number, signature, randomness = (self.beacon or drand.fetch)(round_number)
+        if not drand.verify(round_number, signature, randomness):
+            return []
+        self.memory['planned_unix'] = self.clock()
+        planned = self.planner(randomness)
+        # A planner returns one recipe or several: one per weak family, each trained as its own job, so a growth round
+        # uses as many contributor nodes in parallel as it has weaknesses.
+        recipes = [] if planned is None else planned if isinstance(planned, list) else [planned]
+        if not recipes:
+            self.remember({'kind': 'probed', 'round': round_number, 'weak': []})
+            return [{'kind': 'probed', 'round': round_number, 'weak': []}]
+        actions = []
+        for recipe in recipes:
+            root = growth_replay.recipe_root(recipe, recipe['model_root'])
+            self.recipes[root] = recipe
+            (self.home / 'recipes').mkdir(exist_ok=True)
+            (self.home / 'recipes' / f'{root}.json').write_text(json.dumps(recipe, sort_keys=True))
+            self.chain.submit(self.account, 'recipe_propose', recipe_root=root, start_root=recipe['start_root'],
+                              steps=recipe['steps'], segment_steps=recipe['segment_steps'], reward=recipe['reward'])
+            if self.deliver:  # publish once the proposal funds the store's acceptance
+                try:
+                    self.deliver(root, json.dumps(recipe, sort_keys=True).encode())
+                except Exception:  # noqa: BLE001 - a store being down does not stop the proposal; others can serve it
+                    pass
+            action = {'kind': 'recipe', 'recipe_root': root, 'families': recipe.get('families'), 'round': round_number}
+            self.remember(action)
+            actions.append(action)
+        return actions
 
     def contribute(self, job_id, job):
         from neuroshard.inference import growth
 
-        recipe = self.recipes.get(job['recipe_root'])
+        recipe = self.recipes.get(job['recipe_root']) or self.fetch_recipe(job['recipe_root'])
         if recipe is None or self.trainer is None:
             return []
         index = len(job['commits'])
@@ -81,7 +134,7 @@ class Agent:
 
     def check(self, state, job_id, job):
         """Spot-check one random step of each segment it has not checked; challenge a wrong one."""
-        recipe = self.recipes.get(job['recipe_root'])
+        recipe = self.recipes.get(job['recipe_root']) or self.fetch_recipe(job['recipe_root'])
         if recipe is None or self.trainer is None:
             return []
         out = []
@@ -138,8 +191,14 @@ class Agent:
         actions = [{'kind': 'evaluated', 'job_id': job_id, 'digest': digest, 'passed': report['passed']}]
         (self.home / f'sealed-{job_id}.json').write_text(json.dumps(report, indent=1, sort_keys=True))
         if report['passed'] and report.get('model_root'):
-            self.chain.submit(self.account, 'model_propose', model_root=report['model_root'], quality_root=digest)
-            actions.append({'kind': 'propose', 'job_id': job_id, 'model_root': report['model_root']})
+            open_already = any(p.get('model_root') == report['model_root']
+                               for p in self.chain.state().get('governance', {}).get('proposals', {}).values())
+            if not open_already:
+                try:
+                    self.chain.submit(self.account, 'model_propose', model_root=report['model_root'], quality_root=digest)
+                    actions.append({'kind': 'propose', 'job_id': job_id, 'model_root': report['model_root']})
+                except ValueError:
+                    pass  # another agent proposed the same version first: the outcome is the same
         for action in actions:
             self.remember(action)
         return actions
@@ -163,9 +222,10 @@ class Agent:
             return []
         out = []
         for proposal_id, proposal in sorted(state.get('governance', {}).get('proposals', {}).items()):
-            if proposal.get('kind') == 'validator' or proposal_id in self.memory['voted']:
+            if proposal.get('kind') in ('validator', 'levy') or proposal_id in self.memory['voted']:
                 continue
-            verdict = self.verdict(proposal, state)
+            verdict = (self.recipe_verdict(proposal) if proposal.get('kind') == 'recipe'
+                       else self.verdict(proposal, state))
             if verdict is None:
                 continue
             for key, owner in self.owner_keys.items():
@@ -176,6 +236,38 @@ class Agent:
             self.remember(action)
             out.append(action)
         return out
+
+    def fetch_recipe(self, root):
+        """A proposed recipe from any store, accepted only if it hashes to the root the chain names."""
+        import urllib.request
+
+        from neuroshard.evolution import growth_replay
+
+        for base in self.recipe_stores:
+            try:
+                with urllib.request.urlopen(f"{base.rstrip('/')}/{root}.json", timeout=120) as response:
+                    recipe = json.loads(response.read())
+            except (OSError, ValueError):
+                continue
+            if growth_replay.recipe_root(recipe, recipe.get('model_root')) == root:
+                self.recipes[root] = recipe
+                return recipe
+        return None
+
+    def recipe_verdict(self, proposal):
+        """Yes to a recipe only if this agent holds it, it hashes to the proposal, its start state is the recipe's
+        own, and every demonstration in it re-verifies here; ``recipe_check`` is the owner's own check."""
+        from neuroshard.evolution import growth_replay
+
+        recipe = self.recipes.get(proposal['recipe_root']) or self.fetch_recipe(proposal['recipe_root'])
+        if recipe is None:
+            return None
+        if growth_replay.recipe_root(recipe, recipe['model_root']) != proposal['recipe_root']:
+            return False
+        if recipe.get('start_root') != proposal['start_root'] or recipe.get('steps') != proposal['steps']:
+            return False
+        check = getattr(self, 'recipe_check', None)
+        return bool(check(recipe)) if check else True
 
     def verdict(self, proposal, state):
         """True if this agent's own sealed evaluation of a grown result reproduces the proposal's evidence digest
