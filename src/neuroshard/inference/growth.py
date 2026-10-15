@@ -24,6 +24,7 @@ FIELDS = {'growth_open': {'recipe_root', 'start_root', 'steps', 'segment_steps',
           'growth_commit': {'job_id', 'segment', 'step_roots'},
           'growth_challenge': {'job_id', 'segment', 'step', 'proof_root'},
           'growth_prove': {'job_id', 'challenge_id'}}
+SEAL_MARGIN = 20  # rounds (one minute) after settlement: the trained state is fixed well before the seal exists
 PARAMS = {'growth_bond': 2_000_000, 'growth_challenge_deposit': 1_000_000, 'growth_window_blocks': 40,
           'growth_proof_blocks': 40, 'max_growth_jobs': 8, 'max_segment_steps': 64, 'max_growth_steps': 4096}
 
@@ -88,25 +89,25 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         growth[ledger.transaction_id(envelope)] = {
             'sponsor': sender, 'recipe_root': ledger.hex_digest(body['recipe_root']),
             'start_root': ledger.hex_digest(body['start_root']), 'steps': steps, 'segment_steps': segment,
-            'reward': reward, 'opened': state['height'], 'commits': {}, 'challenges': {}}
+            'reward': reward, 'opened': state['height'], 'commits': [], 'challenges': {}}
     elif kind == 'growth_commit':
         job = growth.get(body['job_id'])
         if job is None:
             raise ValueError('No such growth job')
         index = ledger.integer(body['segment'], 0, segments(job) - 1)
-        if index in job['commits'] or (index > 0 and index - 1 not in job['commits']):
+        if index != len(job['commits']):
             raise ValueError('Segments are committed once each, in order')
         roots = body['step_roots']
         if not isinstance(roots, list) or len(roots) != segment_length(job, index):
             raise ValueError('A segment commit names one state root per step')
         roots = [ledger.hex_digest(root) for root in roots]
         debit(settings['growth_bond'])
-        job['commits'][index] = {'contributor': sender, 'step_roots': roots, 'bond': settings['growth_bond'],
-                                 'deadline': state['height'] + settings['growth_window_blocks']}
+        job['commits'].append({'contributor': sender, 'step_roots': roots, 'bond': settings['growth_bond'],
+                               'deadline': state['height'] + settings['growth_window_blocks']})
     elif kind == 'growth_challenge':
         job = growth.get(body['job_id'])
         index = body['segment']
-        commit = job['commits'].get(index) if job and type(index) is int else None
+        commit = job['commits'][index] if job and type(index) is int and 0 <= index < len(job['commits']) else None
         if commit is None or state['height'] > commit['deadline']:
             raise ValueError('No committed segment in an open window')
         step = ledger.integer(body['step'], 0, len(commit['step_roots']) - 1)
@@ -125,9 +126,9 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         challenge = job['challenges'].pop(body['challenge_id'])
         commit = job['commits'][challenge['segment']]
         # The faulty segment and every later one depend on its roots: all reopen; their bonds are slashed or returned.
-        for index in sorted(i for i in job['commits'] if i >= challenge['segment']):
-            later = job['commits'].pop(index)
-            if index == challenge['segment']:
+        reopened, job['commits'] = job['commits'][challenge['segment']:], job['commits'][:challenge['segment']]
+        for offset, later in enumerate(reopened):
+            if offset == 0:
                 half = later['bond'] // 2
                 ledger.account(state, challenge['challenger'])['balance'] += challenge['deposit'] + half
                 state['burned'] += later['bond'] - half
@@ -143,28 +144,37 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         raise ValueError('unsupported growth transaction')
 
 
-def advance(ledger, state):
-    """Block boundary: forfeit lapsed growth challenges and settle complete, unchallenged jobs."""
+def advance(ledger, state, time=None):
+    """Block boundary: forfeit lapsed growth challenges and settle complete, unchallenged jobs.
+
+    ``time`` is the block's BFT time (validator-agreed, as CometBFT computes it). A settled job records it
+    and the first drand round after it plus ``SEAL_MARGIN``: that round's randomness seals the job's
+    evaluation, and it did not exist when the trained state was fixed.
+    """
     for job_id in sorted(jobs(state)):
         job = state['growth'][job_id]
         for challenge_id in sorted(job['challenges']):
             if state['height'] > job['challenges'][challenge_id]['deadline']:
                 state['burned'] += job['challenges'].pop(challenge_id)['deposit']
         done = len(job['commits']) == segments(job) and not job['challenges'] and all(
-            state['height'] > commit['deadline'] for commit in job['commits'].values())
+            state['height'] > commit['deadline'] for commit in job['commits'])
         if not done:
             continue
         paid = 0
-        for index in sorted(job['commits']):
-            commit = job['commits'][index]
+        for commit in job['commits']:
             share = job['reward'] * len(commit['step_roots']) // job['steps']
             ledger.account(state, commit['contributor'])['balance'] += share + commit['bond']
             paid += share
         ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid
-        final = job['commits'][segments(job) - 1]['step_roots'][-1]
-        ledger.remember(state, job_id, {'status': 'grown', 'recipe_root': job['recipe_root'],
-                                        'start_root': job['start_root'], 'final_root': final, 'steps': job['steps'],
-                                        'contributors': sorted({c['contributor'] for c in job['commits'].values()})})
+        final = job['commits'][-1]['step_roots'][-1]
+        record = {'status': 'grown', 'recipe_root': job['recipe_root'], 'start_root': job['start_root'],
+                  'final_root': final, 'steps': job['steps'],
+                  'contributors': sorted({c['contributor'] for c in job['commits']})}
+        if time is not None:
+            from neuroshard.inference import beacon
+
+            record.update(settled_unix=int(time), seal_round=beacon.round_at(int(time)) + SEAL_MARGIN)
+        ledger.remember(state, job_id, record)
         del state['growth'][job_id]
     if 'growth' in state and not state['growth']:
         del state['growth']
@@ -172,7 +182,7 @@ def advance(ledger, state):
 
 def escrow(state):
     """Growth funds held by the ledger: rewards, bonds and challenge deposits."""
-    return sum(job['reward'] + sum(c['bond'] for c in job['commits'].values())
+    return sum(job['reward'] + sum(c['bond'] for c in job['commits'])
                + sum(c['deposit'] for c in job['challenges'].values()) for job in jobs(state).values())
 
 

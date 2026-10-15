@@ -136,7 +136,7 @@ def test_a_proven_wrong_step_slashes_its_segment_and_reopens_it_and_a_framing_fo
     assert seen[-1]['before_root'] == '01' * 32 and seen[-1]['step'] == 1 and seen[-1]['recipe_root'] == 'cd' * 32
     assert seen[-1]['proof_root'] == 'aa' * 32 and ledger_growth.open_proof(state, 'aa' * 32)
     job = proven['growth'][job_id]
-    assert job['commits'] == {} and proven['growth_faults'][-1]['contributor'] == alice.public
+    assert job['commits'] == [] and proven['growth_faults'][-1]['contributor'] == alice.public
     bond, deposit = ledger_growth.PARAMS['growth_bond'], ledger_growth.PARAMS['growth_challenge_deposit']
     assert proven['accounts'][challenger.public]['balance'] == paid - PARAMS['fee'] + deposit + bond // 2
     ledger.invariant(proven)

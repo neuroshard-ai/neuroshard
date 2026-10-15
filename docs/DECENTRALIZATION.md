@@ -70,3 +70,12 @@ These are true of the live network today, in the order they should be removed.
    version as the first `model_propose`. Bonded owners vote, and anyone enacts.
 4. Add mirrors and RPCs to the descriptor as independent operators offer them.
 5. Then A5: a validator-set update path and four independent validators.
+
+## October 15, 2026: who holds the sealed test
+
+- **Before:** the project wrote every sealed split and decided when to open it.
+- **Now (in code):** a growth job's sealed set is derived from a drand round that did not exist when the
+  unit's training state was fixed. Anyone recomputes it, and owners vote only on evaluations they reproduce
+  themselves ([growth on the network](NETWORK_GROWTH.md#sealed-tests-from-public-randomness-and-the-autonomous-loop)).
+- **Still open:** the recipe's families and minimum are chosen by its sponsor, and owners still run the
+  evaluation on their own hardware.

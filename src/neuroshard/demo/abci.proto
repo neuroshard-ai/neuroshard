@@ -48,15 +48,16 @@ message RequestLoadSnapshotChunk {}
 message ResponseLoadSnapshotChunk { bytes chunk = 1; }
 message RequestApplySnapshotChunk {}
 message ResponseApplySnapshotChunk { int32 result = 1; }
-message RequestPrepareProposal { int64 max_tx_bytes = 1; repeated bytes txs = 2; int64 height = 5; }
+message Timestamp { int64 seconds = 1; int32 nanos = 2; }
+message RequestPrepareProposal { int64 max_tx_bytes = 1; repeated bytes txs = 2; int64 height = 5; Timestamp time = 6; }
 message ResponsePrepareProposal { repeated bytes txs = 1; }
-message RequestProcessProposal { repeated bytes txs = 1; int64 height = 5; }
+message RequestProcessProposal { repeated bytes txs = 1; int64 height = 5; Timestamp time = 6; }
 message ResponseProcessProposal { int32 status = 1; }
 message RequestExtendVote {}
 message ResponseExtendVote { bytes vote_extension = 1; }
 message RequestVerifyVoteExtension {}
 message ResponseVerifyVoteExtension { int32 status = 1; }
-message RequestFinalizeBlock { repeated bytes txs = 1; bytes hash = 4; int64 height = 5; }
+message RequestFinalizeBlock { repeated bytes txs = 1; bytes hash = 4; int64 height = 5; Timestamp time = 6; }
 message ExecTxResult { uint32 code = 1; string log = 3; }
 // CometBFT 0.38 field numbers: crypto.PublicKey and abci.ValidatorUpdate are wire-identical here.
 message PublicKey { oneof sum { bytes ed25519 = 1; bytes secp256k1 = 2; } }
