@@ -105,11 +105,30 @@ def proof_archive(directory):
     return payload.getvalue()
 
 
+def post_proof(endpoint, root, payload, timeout=60):
+    """Deliver content-addressed proof bytes to one proof store."""
+    request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
+                                     headers={'Content-Type': 'application/octet-stream'})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read())
+
+
 def receive_proof(payload, root, state, store):
     """Accept bounded content-addressed bytes only after their challenge deposit is committed."""
     from neuroshard.evolution.sharded import granite_audit
 
     ledger.hex_digest(root)
+    if state.get('growth') and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(state, root):
+        # A growth proof is one content-addressed file: the state before the disputed step.
+        if len(payload) > MAX_PROOF_BYTES or hashlib.sha256(payload).hexdigest() != root:
+            raise ValueError('growth proof bytes differ from their content address or bound')
+        store = Path(store)
+        store.mkdir(parents=True, exist_ok=True)
+        if not (store / root).exists():
+            partial = store / f'.{root}.partial'
+            partial.write_bytes(payload)
+            partial.replace(store / root)
+        return root
     if not any(challenge['proof_root'] == root for job in state['jobs'].values()
                for challenge in job['challenges'].values()):
         raise ValueError('no funded open challenge names this proof')

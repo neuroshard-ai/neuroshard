@@ -1,0 +1,142 @@
+{
+  "format": "neuroshard-assistant-general-c1-report/1",
+  "source_commit": "d8ea606034b469c08b47367b4092f5248687ca22",
+  "ci_run": 38414086745,
+  "gpu": "NVIDIA A10G",
+  "chat_experience": {
+    "cases": 560,
+    "passed": 548,
+    "by_family": {
+      "bullets": 68,
+      "short": 70,
+      "json": 69,
+      "include": 70,
+      "exclude": 67,
+      "ending": 69,
+      "lowercase": 70,
+      "arithmetic": 65
+    },
+    "by_attempt": {
+      "0": 533,
+      "2": 7,
+      "1": 14,
+      "3": 3
+    },
+    "replay_sha256": "360f817b0d9cf1b9fbcd99115b6bae412075e70c7886647004884043b79a78c6"
+  },
+  "chat_replay": {
+    "cases": 320,
+    "passed": 298,
+    "by_family": {
+      "bullets": 40,
+      "short": 40,
+      "json": 35,
+      "include": 40,
+      "exclude": 32,
+      "ending": 34,
+      "lowercase": 40,
+      "arithmetic": 37
+    },
+    "by_attempt": {
+      "0": 302
+    },
+    "replay_sha256": "7e7d9a85c8e6152cfaa3601bd35a5c57da6d67a3195fb8eab76b6e0cd29e5a2e"
+  },
+  "phases": {
+    "demonstrate": 1220.84873297,
+    "replay": 621.853979303,
+    "train": 332.1281136570001,
+    "integrate": 168.21983207500034
+  },
+  "training": {
+    "trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f",
+    "tokens_processed": 1506682,
+    "final_losses": [
+      0.02326549252757104,
+      0.05167414783500135,
+      0.03296755630117332,
+      0.03971219030790962,
+      0.024555500983865386,
+      0.03533033009875908,
+      0.03343106135855578,
+      0.050395502359606326
+    ]
+  },
+  "module": {
+    "trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f",
+    "file_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f",
+    "bytes": 4197776
+  },
+  "integration_file": "config/experiments/assistant-general-c1-integration.json.gz",
+  "integration_sha256": "20097467355e78db398a94304073528b861fcbe8103fb7a006e741a7bab66c78",
+  "integration_gz_sha256": "2a965b033d63b731796618f79a25b987556fba5fa005d2633ce3a4d9c1781694",
+  "integration": {
+    "parent": {
+      "passed": 42,
+      "cases": 48,
+      "families": {
+        "arithmetic": "5/6",
+        "bullets": "6/6",
+        "ending": "4/6",
+        "exclude": "4/6",
+        "include": "6/6",
+        "json": "5/6",
+        "lowercase": "6/6",
+        "short": "6/6"
+      }
+    },
+    "C1": {
+      "passed": 45,
+      "cases": 48,
+      "families": {
+        "arithmetic": "5/6",
+        "bullets": "6/6",
+        "ending": "6/6",
+        "exclude": "4/6",
+        "include": "6/6",
+        "json": "6/6",
+        "lowercase": "6/6",
+        "short": "6/6"
+      }
+    }
+  },
+  "rates": {
+    "C1": 0.9375,
+    "parent": 0.875
+  },
+  "C1_against_parent": {
+    "gained": [
+      "json-03",
+      "ending-01",
+      "ending-04"
+    ],
+    "lost": []
+  },
+  "checks": {
+    "more_chat_than_parent": true,
+    "chat_minimum": true
+  },
+  "advances": true,
+  "findings": {
+    "chat": "C1 45/48 against the parent 42/48 under the same chat-tools/1 policy; both call check_text in about 40 of 48 cases.",
+    "misses": "exclude 4/6: once C1 wrote the opposite rule (include:and for \"never the word and\") and its check passed; once it revised eight times without removing \"and\" and ran out of turns. One arithmetic reply wrote calls as text instead of the native format.",
+    "experience": "548 of 560 cases yielded a passing parent reply (533 greedy, 24 sampled); every learned assistant message is the parent's own."
+  },
+  "decision": "Advances, as declared. C1 is pinned and goes to the sealed confirmation6 with L7 for documents under version 2.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T15:50:40.652825+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-05798bfcbf035dd0a"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 3055.166167,
+    "conservative_compute_usd": 1.0285726095566667,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 1.0285726095566667,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

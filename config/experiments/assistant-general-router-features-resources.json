@@ -1,0 +1,38 @@
+{
+  "format": "neuroshard-assistant-general-router-features-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 4,
+  "planning_cap_usd": 7.5,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-general-router-features",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 268435456,
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-general-l9-confirmation-report.json",
+    "sha256": "468c13cb1c6717d0092d02c089aaccb390a4e1298c0d8493d18a5d496073f615"
+  },
+  "budget_scope": "Router features for the four-route served version, one CPU host: the parent computes the accepted router feature for 3,180 user turns; 4-hour expiry and $7.50 allowance. No upload, no serving, no training.",
+  "prior_attempts": []
+}

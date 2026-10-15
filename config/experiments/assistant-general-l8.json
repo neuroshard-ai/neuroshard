@@ -1,0 +1,53 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Does the evidence interface (an answer must quote the documents that state it), learned from demonstrations in every wording style to date, lift not-found to the minimum on a new style while documents and chat hold?",
+  "why": "confirmation4: documents 127/132 and chat 90/96 passed; not-found 20/24 failed. All four misses presuppose the flight (\"I have a flight home from Osaka; tell me when it departs\") and L7 answered with the outbound time. Two changes. (1) workspace-documents/3: submit_answer must carry verbatim quotes from the documents it cites, the workspace refuses any quote it cannot find, and only a submitted answer counts; the policy states that a request may assume something the documents do not contain. (2) Experience in every style: generated-train, generated-train-extra and generated-train-styles (the spent development, development2 and confirmation4 wordings, on new workspaces), each demonstrated under version 3. L8 is judged on generated-development3, a fifth style no unit has seen.",
+  "unit": {
+    "name": "L8",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "verified version-3 demonstrations of 660 generated-train, 90 generated-train-extra and 330 generated-train-styles cases",
+    "replay": "the parent's own greedy chat replies on the 320 generated-train chat cases (values quoted) under the chat2 policy, replayed only where they pass"
+  },
+  "splits": {
+    "experience": [
+      "generated-train",
+      "generated-train-extra",
+      "generated-train-styles"
+    ],
+    "replay": "generated-train",
+    "documents_development": "generated-development3",
+    "chat_development": "generated-development3"
+  },
+  "phrasings": [
+    "config/experiments/assistant-general-phrasings.json",
+    "config/experiments/assistant-general-phrasings-development2.json",
+    "config/experiments/assistant-general-phrasings-round3.json"
+  ],
+  "training": {
+    "steps": 320,
+    "seed": 27101314,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection. 320 steps (L7: 256) for 1,080 demonstrations against 750, so each is seen about as often; mixture and replay are L7's."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents4.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L8 greedily on the 66 documents and 48 chat generated-development3 cases on the same GPU; the parent serves under the same version-3 documents policy",
+  "next_gate": "L8 advances to the sealed confirmation5 on the canonical CPU runtime only if, on generated-development3, it solves more documents cases than the parent, loses no more than one chat case, and every minimum (documents 85%, chat 90%, not-found 90%) holds.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10,
+  "prior": {
+    "path": "config/experiments/assistant-general-l7-confirmation-report.json",
+    "sha256": "48d697de4822fc6999bca40a78157ef3ec35ff613dfb8fb976a8a39d31aceed4"
+  }
+}

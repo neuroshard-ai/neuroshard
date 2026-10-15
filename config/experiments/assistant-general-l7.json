@@ -1,0 +1,52 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Do 90 further contrasting flight demonstrations lift not-found to the minimum without costing documents or chat, on development wording no unit has seen?",
+  "why": "L6 met every minimum on generated-development except not-found (10/12): both misses ask whether the files have \"anything about flying back from X\" and L6 answers with the outbound itinerary. L7 is L6 plus 60 more return-flight not-found demonstrations and 30 more outbound flight-time demonstrations, on fresh workspaces and on the training templates generated-train used least. Because L6's development misses were read to design L7, L7 is judged on generated-development2: templates generated after L6, in a third style, none equal to any committed template.",
+  "unit": {
+    "name": "L7",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "the verified demonstrations of the 660 generated-train cases and the 90 generated-train-extra cases (60 not-found-return, 30 flight-time)",
+    "replay": "the parent's own greedy chat replies on the 320 generated-train chat cases (values quoted) under the chat2 policy, replayed only where they pass"
+  },
+  "splits": {
+    "experience": [
+      "generated-train",
+      "generated-train-extra"
+    ],
+    "replay": "generated-train",
+    "documents_development": "generated-development2",
+    "chat_development": "generated-development2"
+  },
+  "phrasings": [
+    "config/experiments/assistant-general-phrasings.json",
+    "config/experiments/assistant-general-phrasings-development2.json"
+  ],
+  "training": {
+    "steps": 256,
+    "seed": 27101213,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection. Steps, mixture, replay and layers are L6's."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents3.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L7 greedily on the 66 documents and 48 chat generated-development2 cases on the same GPU",
+  "next_gate": "L7 advances to the sealed confirmation4 on the canonical CPU runtime only if, on generated-development2, it solves more documents cases than the parent, loses no more than one chat case, and every minimum (documents 85%, chat 90%, not-found 90%) holds.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10,
+  "prior": {
+    "path": "config/experiments/assistant-general-l6-report.json",
+    "sha256": "928721cf6078824c0f2f0cedb4ed58496f36a8051420cbe016f5c328be1b9420"
+  },
+  "development2_note": "Only one refund-arithmetic template survived the 280-character limit in the background-first style, so development2's two refund cases share it with different values."
+}

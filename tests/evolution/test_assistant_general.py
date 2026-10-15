@@ -1,0 +1,210 @@
+import json
+import subprocess
+import sys
+
+import pytest
+
+from neuroshard.evolution import assistant_chat_data as chat
+from neuroshard.evolution import assistant_documents as documents
+from neuroshard.evolution import assistant_documents_data as docs
+from neuroshard.evolution import assistant_general as general
+from neuroshard.evolution import assistant_general_baseline as baseline
+from neuroshard.evolution.modular_reference_execution import ROOT, read, sha256
+
+from test_assistant_growth_baseline import cloud_module
+
+
+def policy(name):
+    return read(ROOT / baseline.POLICIES[name])
+
+
+def reply(text):
+    return {'text': text, 'terminated': True, 'executed': True, 'input_token_ids': [1], 'token_ids': [2]}
+
+
+def solve(case):
+    """A scripted correct episode: search, read the cited documents, submit or report."""
+    expected = case['turns'][0]['expected']
+    texts = ['<tool_call>{"name": "search_documents", "arguments": {"query": %s}}</tool_call>'
+             % json.dumps(case['turns'][0]['user'])]
+    if expected.get('not_found'):
+        texts.append('<tool_call>{"name": "report_not_found", "arguments": {"reason": "not in the documents"}}'
+                     '</tool_call>')
+    else:
+        for key in expected['source_ids']:
+            texts.append('<tool_call>{"name": "read_document", "arguments": {"document_id": "%s"}}</tool_call>' % key)
+        texts.append('<tool_call>{"name": "submit_answer", "arguments": {"answer": %s, "source_ids": %s}}</tool_call>'
+                     % (json.dumps(' and '.join(expected['facts'])), json.dumps(expected['source_ids'])))
+    return texts + ['Done.']
+
+
+def test_every_documents_case_is_solvable_and_scored_from_its_transcript():
+    for split, name in ((s, n) for s in docs.SPLITS for n in ('documents', 'documents2')):
+        for case in docs.cases(split):
+            texts = iter(solve(case))
+            path = baseline.POLICIES['documents'] if name == 'documents' else 'config/experiments/assistant-general-policy-documents2.json'
+            row = general.documents_episode(case, lambda m, t: reply(next(texts)), read(ROOT / path))
+            assert row['passed'], case['id']
+            assert general.rescore([case], [row], 'documents') == 1
+
+
+def test_documents_scoring_rejects_wrong_facts_sources_and_guesses():
+    case = next(c for c in docs.cases('development') if c['family'] == 'invoice-sum')
+    expected = case['turns'][0]['expected']
+    world = documents.Workspace(case['world'])
+    for key in expected['source_ids']:
+        world.execute({'name': 'read_document', 'arguments': {'document_id': key}})
+    world.execute({'name': 'submit_answer', 'arguments': {'answer': 'You owe 1.', 'source_ids': expected['source_ids']}})
+    assert not documents.score_round(world.snapshot(), expected, True, 'ok')
+    world.execute({'name': 'submit_answer', 'arguments': {'answer': expected['facts'][0],
+                                                         'source_ids': expected['source_ids'][:1]}})
+    assert not documents.score_round(world.snapshot(), expected, True, 'ok')
+    unread = documents.Workspace(case['world'])
+    assert 'error' in unread.execute({'name': 'submit_answer', 'arguments': {'answer': 'x', 'source_ids': ['doc-x']}})
+    missing = next(c for c in docs.cases('development') if c['family'] == 'not-found-insurance')
+    guess = documents.Workspace(missing['world'])
+    guess.execute({'name': 'read_document', 'arguments': {'document_id': missing['world']['documents'][0]['id']}})
+    guess.execute({'name': 'submit_answer', 'arguments': {'answer': 'Policy 123',
+                                                         'source_ids': [missing['world']['documents'][0]['id']]}})
+    assert not documents.score_round(guess.snapshot(), missing['turns'][0]['expected'], True, 'ok')
+
+
+def test_search_is_deterministic_and_finds_the_current_document_first_for_its_title_words():
+    case = next(c for c in docs.cases('development') if c['family'] == 'flight-time')
+    world = documents.Workspace(case['world'])
+    city = next(d['title'] for d in case['world']['documents'] if d['title'].startswith('Itinerary ')
+                and 'superseded' not in d['title']).split()[1]
+    first, second = world.search(f'current itinerary {city}'), world.search(f'current itinerary {city}')
+    assert first == second and first['results'][0]['id'] == case['turns'][0]['expected']['source_ids'][0]
+    with pytest.raises(ValueError):
+        world.search('zzzz qqqq')
+
+
+def test_chat_constraints_are_exact():
+    assert chat.check({'kind': 'bullets', 'n': 3}, '- a\n- b\n- c') and not chat.check({'kind': 'bullets', 'n': 3}, '- a')
+    assert chat.check({'kind': 'json_keys', 'keys': ['a']}, '{"a": 1}') and not chat.check(
+        {'kind': 'json_keys', 'keys': ['a']}, 'Here: {"a": 1}')
+    assert chat.check({'kind': 'max_words', 'n': 3}, 'one two three') and not chat.check(
+        {'kind': 'max_words', 'n': 3}, 'one two three four')
+    assert chat.check({'kind': 'number', 'value': 126}, 'So the total is 126.')
+    assert not chat.check({'kind': 'number', 'value': 126}, '126 minus 6 is 120.')
+    assert chat.check({'kind': 'exclude', 'word': 'the'}, 'There they go.') and not chat.check(
+        {'kind': 'exclude', 'word': 'the'}, 'See the cat.')
+    assert chat.check({'kind': 'lowercase'}, 'all small') and not chat.check({'kind': 'lowercase'}, 'Not small')
+
+
+def test_splits_are_disjoint_and_the_confirmation_wording_is_held_out():
+    for module in (docs, chat):
+        texts = {s: {t['user'] for c in module.cases(s) for t in c['turns']} for s in module.SPLITS}
+        assert not texts['confirmation'] & (texts['train'] | texts['development'])
+        assert len({c['id'] for s in module.SPLITS for c in module.cases(s)}) == sum(
+            len(module.cases(s)) for s in module.SPLITS)
+    assert set(baseline.feature_texts()) == {t['user'] for m in (docs, chat) for s in ('train', 'development')
+                                             for c in m.cases(s) for t in c['turns']}
+
+
+def test_the_general_route_runs_through_the_granite_chat_template(tmp_path):
+    torch = pytest.importorskip('torch')
+    from test_assistant_experience import TEMPLATE, tiny_model
+    from test_granite_tokenizer import granite_like, load_tiny
+    from neuroshard.evolution.assistant_serving import cached_responder
+
+    directory = granite_like(tmp_path)
+    (directory / 'chat_template.jinja').write_text(TEMPLATE)
+    tokenizer = load_tiny(directory)[0]
+    model = tiny_model(tokenizer, seed=1)
+    small = {**policy('documents'), 'generation': {'max_input_tokens': 6144, 'max_new_tokens': 4}}
+    row = general.documents_episode(docs.cases('development')[0], cached_responder(model, tokenizer, small), small)
+    assert not row['passed'] and row['generations'] and general.rescore(docs.cases('development')[:1], [row],
+                                                                         'documents') == 0
+    talk = {**policy('chat'), 'generation': {'max_input_tokens': 4096, 'max_new_tokens': 4}}
+    answer = general.chat_episode(chat.cases('development')[0], cached_responder(model, tokenizer, talk), talk)
+    assert general.rescore(chat.cases('development')[:1], [answer], 'chat') == int(answer['passed'])
+    del torch
+
+
+@pytest.mark.parametrize('profile', sorted(baseline.PROFILES))
+def test_execution_pins_sources_and_one_cpu_host_within_its_allowance(profile):
+    execution = read(ROOT / baseline.PROFILES[profile][1])
+    for name, digest in execution['contracts'].items():
+        assert sha256(ROOT / name) == digest
+    assert baseline.SCRIPT in execution['sources'] and not execution['training_authorized']
+    probe = ('import os, sys; import neuroshard.evolution.assistant_general_baseline as b; assert "torch" not in sys.modules; '
+             'import neuroshard.evolution.assistant_general, neuroshard.evolution.assistant_growth_round4, '
+             'neuroshard.evolution.assistant_growth_run, neuroshard.evolution.granite_reference, '
+             'neuroshard.evolution.granite_tokenizer, neuroshard.evolution.router_scaling_granite, '
+             'neuroshard.evolution.assistant_serving, neuroshard.evolution.assistant_workflow_canonical; b.feature_texts(); '
+             'root = os.path.abspath("src"); print("\\n".join(sorted(os.path.relpath(x.__file__) '
+             'for x in list(sys.modules.values()) if getattr(x, "__file__", None) and '
+             'os.path.abspath(x.__file__).startswith(root))))')
+    imported = subprocess.check_output([sys.executable, '-c', probe], cwd=ROOT, text=True,
+                                       env={'PYTHONPATH': str(ROOT / 'src')}).split()
+    assert set(imported) <= set(execution['sources']), sorted(set(imported) - set(execution['sources']))
+    declaration = read(ROOT / baseline.PROFILES[profile][0])
+    for _, _, path, _ in baseline.runs(declaration):
+        assert path in execution['sources']
+    cloud = cloud_module()
+    resources = cloud.resources(profile)
+    assert not resources['gpu']
+    if 'modules' in declaration:
+        assert set(resources['upload']['files']) == {f'{m}/{f}' for m in declaration['modules']
+                                                     for f in ('manifest.json', 'trainable.safetensors')}
+        assert cloud.UPLOAD_PROFILES[profile] == baseline.UPLOADED
+    else:
+        assert 'upload' not in resources
+    assert (execution['prepare_seconds'] + execution['worker_seconds'] + resources['setup_seconds']
+            + resources['copy_seconds'] + 600 <= resources['hours'] * 3600)
+    command = cloud.remote_command(profile)
+    assert command[1].endswith(baseline.SCRIPT) and command[-2:] == ['--profile', profile]
+
+
+def test_version_two_accepts_cited_prose_and_found_sources_but_still_refuses_guesses():
+    case = next(c for c in docs.cases('development') if c['family'] == 'owner')
+    expected = case['turns'][0]['expected']
+    world = documents.Workspace(case['world'], 2)
+    world.execute({'name': 'search_documents', 'arguments': {'query': case['turns'][0]['user']}})
+    cited = expected['source_ids'][0].replace('-', '\u2011')
+    final = f"The vendor shortlist is owned by **{expected['facts'][0]}** ({cited})."
+    assert documents.score_round(world.snapshot(), expected, True, final)
+    assert not documents.score_round(world.snapshot(), expected, True, final, version=1)
+    assert not documents.score_round(world.snapshot(), expected, True, f"Owned by {expected['facts'][0]}.")
+    unseen = documents.Workspace(case['world'], 2)
+    assert not documents.score_round(unseen.snapshot(), expected, True, final)
+    missing = next(c for c in docs.cases('development') if c['family'] == 'not-found-return')
+    prose = documents.Workspace(missing['world'], 2)
+    assert not documents.score_round(prose.snapshot(), missing['turns'][0]['expected'], True, 'I could not find it.')
+
+
+def test_the_published_baseline_rescores_under_version_one():
+    report = read(ROOT / 'config/experiments/assistant-general-baseline-report.json')
+    episodes = read(ROOT / 'config/experiments/assistant-general-baseline-episodes.json')
+    assert sha256(ROOT / 'config/experiments/assistant-general-baseline-episodes.json') == report['episodes_sha256']
+    assert general.rescore(docs.cases('development'), episodes['documents'], 'documents') == report['documents']['passed'] == 18
+    assert general.rescore(chat.cases('development'), episodes['chat'], 'chat') == report['chat']['passed'] == 48
+
+
+def test_the_confirmation_is_recorded_against_its_declared_gate():
+    report = read(ROOT / 'config/experiments/assistant-general-confirmation-report.json')
+    episodes = read(ROOT / 'config/experiments/assistant-general-confirmation-episodes.json')
+    gate = read(ROOT / 'config/experiments/assistant-general-confirmation.json')['gate']
+    assert sha256(ROOT / 'config/experiments/assistant-general-confirmation-episodes.json') == report['episodes_sha256']
+    assert general.rescore(docs.cases('confirmation'), episodes['documents-confirmation'], 'documents') == 118
+    assert general.rescore(chat.cases('confirmation'), episodes['chat-confirmation'], 'chat') == 84
+    assert report['checks'] == {'documents': 118 / 132 >= gate['documents_minimum'],
+                                'chat': 84 / 96 >= gate['chat_minimum'],
+                                'not_found': 21 / 24 >= gate['not_found_minimum']}
+    assert not report['passed']
+
+
+def test_chat_with_a_calculator_scores_the_final_reply_after_tool_calls():
+    talk = read(ROOT / 'config/experiments/assistant-general-policy-chat2.json')
+    case = next(c for c in chat.cases('confirmation2') if c['family'] == 'arithmetic')
+    value = case['turns'][0]['expected']['constraints'][0]['value']
+    texts = iter(['<tool_call>{"name": "calculate", "arguments": {"operation": "multiply", "left": %d, "right": 1}}'
+                  '</tool_call>' % value, f'You spent {value}.'])
+    row = general.chat_episode(case, lambda m, t: reply(next(texts)), talk)
+    assert row['passed'] and row['calls'][0]['result'] == {'value': value}
+    assert general.rescore([case], [row], 'chat') == 1
+    other = chat.cases('confirmation2')[0]
+    plain = general.chat_episode(other, lambda m, t: reply('no'), talk)
+    assert not plain['passed'] and plain['calls'] == []

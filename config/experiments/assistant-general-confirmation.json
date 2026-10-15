@@ -1,0 +1,39 @@
+{
+  "format": "neuroshard-assistant-general-confirmation/1",
+  "question": "The general route as it would ship: the unchanged parent under workspace-documents/2 and the documents2 policy, and under the chat policy, on the sealed confirmation splits, opened once.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation",
+      "policy": "config/experiments/assistant-general-policy-documents2.json"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation",
+      "policy": "config/experiments/assistant-general-policy-chat.json"
+    }
+  ],
+  "policies_sha256": {
+    "config/experiments/assistant-general-policy-documents2.json": "66925067164de52b5729c4d9ec01307c9b26dcab2866aa78fbaba3580150c1cd",
+    "config/experiments/assistant-general-policy-chat.json": "47a98bb2919601259d2386ede53818a2ba9e92795649a0383f98bb42a9800839"
+  },
+  "frozen_before_opening": {
+    "documents_cases": 132,
+    "chat_cases": 96,
+    "documents_case_ids_sha256": "7d04e08db42b56ad05a37f1a9e22e4cc6c4bb353859eaec6de5ae3029d5c5f03"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9,
+    "meaning": "The general route ships behind the three-way router if both minimums hold, with not-found reported at least 90% of the time it should be. Below them it does not ship, and the failures define the next learned unit."
+  },
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false,
+  "prior": {
+    "path": "config/experiments/assistant-general-documents2-report.json",
+    "sha256": "ee5019bd3b252cb13c2aa6001c8a8c0bd9344d9f983db73848eba99a725fad16"
+  }
+}

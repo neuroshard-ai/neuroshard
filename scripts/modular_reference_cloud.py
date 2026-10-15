@@ -44,10 +44,22 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "assistant-growth-round4-gpu": "config/experiments/assistant-growth-round4-resources.json",
                      "assistant-growth-round5-gpu": "config/experiments/assistant-growth-round5-resources.json",
                      "assistant-growth-cohort3-gpu": "config/experiments/assistant-growth-cohort3-resources.json",
+                     "assistant-general-l4-gpu": "config/experiments/assistant-general-l4-resources.json",
+                     "assistant-general-l5-gpu": "config/experiments/assistant-general-l5-resources.json",
+                     "assistant-general-l6-gpu": "config/experiments/assistant-general-l6-resources.json",
+                     "assistant-general-l7-gpu": "config/experiments/assistant-general-l7-resources.json",
+                     "assistant-general-l8-gpu": "config/experiments/assistant-general-l8-resources.json",
+                     "assistant-general-c1-gpu": "config/experiments/assistant-general-c1-resources.json",
+                     "assistant-general-l9-gpu": "config/experiments/assistant-general-l9-resources.json",
                      "assistant-growth-router": "config/experiments/assistant-growth-router2-resources.json",
                      "assistant-growth-router3": "config/experiments/assistant-growth-router3-resources.json",
                      "assistant-growth-router4": "config/experiments/assistant-growth-router4-resources.json",
                      "router-scaling-granite": "config/experiments/router-scaling-granite-resources.json",
+                     "assistant-general-baseline": "config/experiments/assistant-general-baseline-resources.json",
+                     "assistant-general-documents2": "config/experiments/assistant-general-documents2-resources.json",
+                     "assistant-general-confirmation": "config/experiments/assistant-general-confirmation-resources.json",
+                     **{f"assistant-general-{n}": f"config/experiments/assistant-general-{n}-resources.json"
+                        for n in ("v3-development", "v3-confirmation", "l4-confirmation", "l7-confirmation", "l8-confirmation", "c1-confirmation", "l9-confirmation", "router-features")},
                      "router-scaling-episodes": "config/experiments/router-scaling-episodes-resources.json",
                      "router-scaling-episodes-originals": "config/experiments/router-scaling-episodes-originals-resources.json",
                      **{profile: f"config/experiments/{profile}-resources.json"
@@ -85,10 +97,22 @@ GRANITE_PROFILES = {
     "assistant-growth-round4-gpu": ("assistant_growth_round4", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-round5-gpu": ("assistant_growth_round5", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-cohort3-gpu": ("assistant_growth_cohort3", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l4-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l5-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l6-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l7-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l8-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-c1-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
+    "assistant-general-l9-gpu": ("assistant_general_l4", "docs/assistant-experience-requirements.txt"),
     "assistant-growth-router": ("assistant_growth_router", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router3": ("assistant_growth_router3", "docs/granite-reference-requirements.txt"),
     "assistant-growth-router4": ("assistant_growth_router4", "docs/granite-reference-requirements.txt"),
     "router-scaling-granite": ("router_scaling_granite", "docs/granite-reference-requirements.txt"),
+    "assistant-general-baseline": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
+    "assistant-general-documents2": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
+    "assistant-general-confirmation": ("assistant_general_baseline", "docs/granite-reference-requirements.txt"),
+    **{f"assistant-general-{n}": ("assistant_general_baseline", "docs/granite-reference-requirements.txt")
+       for n in ("v3-development", "v3-confirmation", "l4-confirmation", "l7-confirmation", "l8-confirmation", "c1-confirmation", "l9-confirmation", "router-features")},
     "router-scaling-episodes": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     "router-scaling-episodes-originals": ("router_scaling_episodes", "docs/granite-reference-requirements.txt"),
     **{profile: ("assistant_growth_eval", "docs/granite-reference-requirements.txt") for profile in GROWTH_DEVELOPMENT},
@@ -117,13 +141,15 @@ GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3",
     "assistant-experience-compose-compose1", "assistant-experience-compose-compose2", "assistant-growth-gpu",
     "assistant-growth-resume-gpu", "assistant-growth-round2-gpu", "assistant-growth-round3-gpu",
-    "assistant-growth-round4-gpu", "assistant-growth-round5-gpu", "assistant-growth-cohort3-gpu")}
+    "assistant-growth-round4-gpu", "assistant-growth-round5-gpu", "assistant-growth-cohort3-gpu",
+    "assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu", "assistant-general-c1-gpu", "assistant-general-l9-gpu")}
 UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growth-baseline": ".arms",
                    "assistant-growth-gpu": ".growth", "assistant-growth-resume-gpu": ".growth",
                    "assistant-growth-round2-gpu": ".growth", "assistant-growth-round3-gpu": ".growth",
                    "assistant-growth-round4-gpu": ".growth", "assistant-growth-round5-gpu": ".growth",
                    "assistant-growth-cohort3-gpu": ".growth", "router-scaling-episodes": ".units",
                    "router-scaling-episodes-originals": ".units",
+                   "assistant-general-l4-confirmation": ".units", "assistant-general-l7-confirmation": ".units", "assistant-general-l8-confirmation": ".units", "assistant-general-c1-confirmation": ".units", "assistant-general-l9-confirmation": ".units",
                    **{profile: ".units" for profile in GROWTH_DEVELOPMENT + GROWTH_CONFIRMATION
                       + (COHORT3_DEVELOPMENT,) + COHORT3_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
@@ -135,6 +161,8 @@ LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-grow
                      "assistant-growth-router3": (2, 5.5), "assistant-growth-router4": (2, 5.5),
                      **{profile: (6, 9.4) for profile in GROWTH_CONFIRMATION + COHORT3_CONFIRMATION},
                      COHORT3_DEVELOPMENT: (3, 6), "router-scaling-episodes": (3.25, 6.5),
+                     "assistant-general-baseline": (4, 7.5), "assistant-general-confirmation": (3.5, 7), "assistant-general-v3-confirmation": (3.5, 7),
+                     "assistant-general-l4-confirmation": (5, 8.5), "assistant-general-l7-confirmation": (5, 8.5), "assistant-general-l8-confirmation": (5, 8.5), "assistant-general-c1-confirmation": (5, 8.5), "assistant-general-l9-confirmation": (5, 8.5), "assistant-general-router-features": (4, 7.5),
                      "granite-shard-owner": (4, 8),
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8), "granite-shard-serving-update": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
@@ -182,6 +210,9 @@ def source_freeze(profile):
     if profile == "assistant-growth-cohort3-gpu":
         from neuroshard.evolution.assistant_growth_cohort3 import committed_sources as upgrade_sources
         return upgrade_sources()
+    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu", "assistant-general-c1-gpu", "assistant-general-l9-gpu"):
+        from neuroshard.evolution.assistant_general_l4 import committed_sources as l4_sources
+        return l4_sources(profile=profile)
     if profile == "assistant-growth-router":
         from neuroshard.evolution.assistant_growth_router import committed_sources as router_sources
         return router_sources()
@@ -194,6 +225,9 @@ def source_freeze(profile):
     if profile == "router-scaling-granite":
         from neuroshard.evolution.router_scaling_granite import committed_sources as scaling_sources
         return scaling_sources()
+    if profile.startswith("assistant-general-"):
+        from neuroshard.evolution.assistant_general_baseline import committed_sources as general_sources
+        return general_sources(profile=profile)
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):
         from neuroshard.evolution.router_scaling_episodes import committed_sources as episode_sources
         return episode_sources(profile=profile)
@@ -337,15 +371,18 @@ def retire(home, ec2=None):
 
 
 def placement_subnets(ec2, source, instance_type):
-    """The controller's subnet when its zone offers the type; otherwise offering subnets in its VPC."""
+    """The controller's subnet first when its zone offers the type, then the other offering subnets in its VPC.
+
+    A capacity refusal in one zone is common for single GPUs; the next zone is tried before the next type.
+    """
     offered = {row["Location"] for row in ec2.describe_instance_type_offerings(
         LocationType="availability-zone", Filters=[{"Name": "instance-type", "Values": [instance_type]}]
     )["InstanceTypeOfferings"]}
-    if source["Placement"]["AvailabilityZone"] in offered:
-        return [source["SubnetId"]]
     subnets = sorted(ec2.describe_subnets(Filters=[{"Name": "vpc-id", "Values": [source["VpcId"]]}])["Subnets"],
                      key=lambda row: (row["AvailabilityZone"], row["SubnetId"]))
     candidates = [row["SubnetId"] for row in subnets if row["AvailabilityZone"] in offered and row["State"] == "available"]
+    if source["Placement"]["AvailabilityZone"] in offered:
+        candidates = [source["SubnetId"]] + [subnet for subnet in candidates if subnet != source["SubnetId"]]
     if not candidates:
         raise ValueError(f"{instance_type} is not offered in any subnet of the controller VPC")
     return candidates
@@ -442,6 +479,14 @@ def ssh(home, allocation, args, *, data=None, timeout=60):
         input=data, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, timeout=timeout)
 
 
+def remote_freeze(module, profile):
+    """The host's first check: the profile's own freeze, where its module serves several profiles."""
+    return (f"import inspect, neuroshard.evolution.{module} as m; "
+            f"args = ({profile!r},) if 'profile' in inspect.signature(m.freeze).parameters and "
+            f"{profile!r} in getattr(m, 'PROFILES', {{}}) else (); "
+            "m.configure(*args); print(m.freeze(*args)['commit'])")
+
+
 def bootstrap(home, allocation, source, profile=PROFILE):
     stop = time.monotonic() + 300
     while True:
@@ -478,9 +523,7 @@ def bootstrap(home, allocation, source, profile=PROFILE):
             shlex.join(["git", "-C", ".upstream/granite-switch", "remote", "add", "origin", upstream["repo"]]),
             shlex.join(["git", "-C", ".upstream/granite-switch", "fetch", "--depth=1", "origin", upstream["commit"]]),
             "git -C .upstream/granite-switch checkout --detach FETCH_HEAD",
-            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(
-                f"from neuroshard.evolution.{module} import configure,freeze; "
-                "configure(); print(freeze()['commit'])")]
+            "PYTHONPATH=src .venv/bin/python -c " + shlex.quote(remote_freeze(module, profile))]
     else:
         setup_lines += ["python3 -m venv .venv",
             ".venv/bin/python -m pip install -r docs/evolution-requirements.txt",
@@ -644,6 +687,9 @@ def remote_command(profile):
     if profile == "assistant-growth-cohort3-gpu":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_cohort3.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile in ("assistant-general-l4-gpu", "assistant-general-l5-gpu", "assistant-general-l6-gpu", "assistant-general-l7-gpu", "assistant-general-l8-gpu", "assistant-general-c1-gpu", "assistant-general-l9-gpu"):
+        return [PYTHON, REMOTE + "/scripts/run_assistant_general_l4.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile == "assistant-growth-router":
         return [PYTHON, REMOTE + "/scripts/run_assistant_growth_router.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
@@ -656,6 +702,9 @@ def remote_command(profile):
     if profile == "router-scaling-granite":
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_granite.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile.startswith("assistant-general-"):
+        return [PYTHON, REMOTE + "/scripts/run_assistant_general_baseline.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile in ("router-scaling-episodes", "router-scaling-episodes-originals"):
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_episodes.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]

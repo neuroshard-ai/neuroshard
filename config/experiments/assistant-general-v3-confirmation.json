@@ -1,0 +1,40 @@
+{
+  "format": "neuroshard-assistant-general-v3-confirmation/1",
+  "question": "Version 3 of the general route (chat with a calculator, documents policy 3) on the confirmation2 split.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation2",
+      "policy": "config/experiments/assistant-general-policy-documents3.json"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation2",
+      "policy": "config/experiments/assistant-general-policy-chat2.json"
+    }
+  ],
+  "policies_sha256": {
+    "config/experiments/assistant-general-policy-documents3.json": "d48a3787b1636434e9e542edfa8eb9769737c5b7eca6332937bd3003988275c3",
+    "config/experiments/assistant-general-policy-chat2.json": "7eb6283519e81520e520145078386ae434aa39f725538c804bd8c2d075a8d18b"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "features": false,
+  "training": false,
+  "checklist_credit": false,
+  "prior": {
+    "path": "config/experiments/assistant-general-confirmation-report.json",
+    "sha256": "83390b27c9f241377dfdaaa45591d5ae6c398caee8d910d7592adb46f090f744"
+  },
+  "opens_confirmation": true,
+  "opens_only_if": "the v3 development run meets every minimum below on its development cases",
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "77cb5a4380412849dbba4e44d8e98ce32949e38c53a492040e7cb09893795bd4",
+    "chat_case_ids_sha256": "b2c611f766b401acc53a6d5f248845a32035ebefd7e929ffe9ccad769e4547e0",
+    "documents_cases": 132,
+    "chat_cases": 96
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "format": "neuroshard-assistant-general-l8-confirmation-report/1",
+  "source_commit": "d9b3cfae2a8edd40127d371f4bf0134809e63ee3",
+  "ci_run": 38364116163,
+  "episodes_file": "config/experiments/assistant-general-l8-confirmation-episodes.json.gz",
+  "episodes_gz_sha256": "b5b10148e56c90a2a6a90524b37fd6b867d1c6dcedcd378f197dc67f23d575a1",
+  "documents_L8": {
+    "passed": 123,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "9/12",
+      "deposit": "12/12",
+      "flight-time": "11/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "12/12",
+      "leave-days": "10/12",
+      "not-found-insurance": "11/12",
+      "not-found-return": "11/12",
+      "notice": "11/12",
+      "owner": "12/12"
+    }
+  },
+  "chat": {
+    "passed": 86,
+    "cases": 96,
+    "families": {
+      "arithmetic": "11/12",
+      "bullets": "12/12",
+      "ending": "11/12",
+      "exclude": "6/12",
+      "include": "11/12",
+      "json": "11/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "documents_L7_v2_comparison": {
+    "passed": 126,
+    "cases": 132,
+    "families": {
+      "battery": "12/12",
+      "claim-deadline": "11/12",
+      "deposit": "12/12",
+      "flight-time": "11/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "12/12",
+      "leave-days": "10/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "11/12",
+      "notice": "11/12",
+      "owner": "12/12"
+    }
+  },
+  "rescored": {
+    "documents_L8": 123,
+    "chat": 86,
+    "documents_L7": 126
+  },
+  "frozen_cases_matched": true,
+  "rates": {
+    "documents": 0.9318181818181818,
+    "chat": 0.8958333333333334,
+    "not_found": 0.9166666666666666
+  },
+  "checks": {
+    "documents": true,
+    "chat": false,
+    "not_found": true
+  },
+  "passed": false,
+  "comparison": {
+    "L7_v2": {
+      "documents": 0.9545454545454546,
+      "not_found": 0.9583333333333334
+    },
+    "L8_vs_L7": {
+      "L8_only": 0,
+      "L7_only": 3
+    }
+  },
+  "findings": {
+    "chat": "86/96 (89.6%), one case below the 87 needed. Exclude 6/12: every miss uses the forbidden word (\"and\", \"the\", \"really\", \"very\"). The chat route is the unchanged parent with a calculator; exclude has failed in every split.",
+    "documents": "L8 123/132 (93.2%), not-found 22/24 (91.7%): both pass. L8 missed one return flight (answered with the outbound time) and one insurance case (cited the policy sentence as a policy number).",
+    "over-caution": "Four of L8's nine document misses report not-found for a present fact when the request carries a belief to check (\"I believe I booked a morning departure\", \"at least four weeks\"); the risk recorded before opening.",
+    "L7 comparison": "L7 under version 2 scored 126/132 and not-found 23/24 on the same cases, and solved every case L8 solved plus three more. On this style the evidence interface added nothing over L7 and cost three cases. On confirmation4, L7 failed only the presupposing requests version 3 targeted; together the two confirmations do not show version 3 to be better."
+  },
+  "decision": "Not shipped, as declared: chat 89.6% is below 90%. Documents and not-found pass. confirmation5 is spent. Chat is now the failing route and has never had a learned unit or a check of its own.",
+  "resources_finished": {
+    "finished_utc": "2026-10-13T11:00:23.276738+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0b93a467151a1921c"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 9316.805565,
+    "conservative_compute_usd": 2.7391408361100003,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 2.7391408361100003,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}

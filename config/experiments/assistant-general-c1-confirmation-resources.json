@@ -1,0 +1,48 @@
+{
+  "format": "neuroshard-assistant-general-c1-confirmation-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 5,
+  "planning_cap_usd": 8.5,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "assistant-general-c1-confirmation",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 268435456,
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-general-c1-report.json",
+    "sha256": "f8eead9186544fada336457b515fa6d3a496d2f518c42eda8ce20b160439197b"
+  },
+  "budget_scope": "Version 7 of the general route on the sealed confirmation6, one CPU host, opened once: parent+L7 on 132 documents cases, parent+C1 on 96 chat cases, parent with calculator on 96 chat cases for comparison; 5-hour expiry and $8.50 allowance. Uploads only L7 and C1. No GPU or training.",
+  "prior_attempts": [],
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/assistant-general-c1-inputs",
+    "files": [
+      "C1/manifest.json",
+      "C1/trainable.safetensors",
+      "L7/manifest.json",
+      "L7/trainable.safetensors"
+    ],
+    "maximum_bytes": 16777216
+  }
+}

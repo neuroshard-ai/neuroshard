@@ -1,0 +1,54 @@
+{
+  "format": "neuroshard-assistant-general-l7-confirmation/1",
+  "question": "Version 5 of the general route (documents with L7 on the parent, chat with a calculator on the parent) on the sealed confirmation4, opened once: wording written in a style no training or development set used.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation4",
+      "policy": "config/experiments/assistant-general-policy-documents3.json",
+      "module": "L7"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation4",
+      "policy": "config/experiments/assistant-general-policy-chat2.json"
+    },
+    {
+      "set": "documents",
+      "split": "confirmation4",
+      "policy": "config/experiments/assistant-general-policy-documents3.json"
+    }
+  ],
+  "modules": {
+    "L7": {
+      "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+      "report": {
+        "path": "config/experiments/assistant-general-l7-report.json",
+        "sha256": "d26b486b8dd5fb96ca40b69ea23179b4fdd4c6953071d86c134f4dab86de457e"
+      }
+    }
+  },
+  "judged": {
+    "documents": "documents-confirmation4-L7",
+    "chat": "chat-confirmation4",
+    "comparison": "documents-confirmation4 (the parent alone, reported)"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "46607067840f7873c2893ffe0e47a60101d290f8df20ddb95f10ecb5315baeef",
+    "chat_case_ids_sha256": "42a597470cff2c7f4483c058562fd15186e0518044f0c81a80911bfc3836d39b",
+    "documents_cases_sha256": "bb746561a695ea5cfb277cfae9176dee00f297d72ed32cf1a1f71d8531c5e4ba",
+    "chat_cases_sha256": "e723122eedff7a2b64af282b144143425e97fef448a4dde812f49e657de9b562",
+    "phrasings_sha256": "d0d517791dc16323c016bc715e9e5b9f95a8f69d7f3e251d650b331a88a270ab"
+  },
+  "meaning": "If every minimum holds for the judged sets, version 5 is the general route the next served version ships; otherwise its failures define the next round.",
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false,
+  "chat_checker": "Generated chat cases quote the constrained value and strip emphasis around a required ending (declared in L5/L6, before this opening)."
+}

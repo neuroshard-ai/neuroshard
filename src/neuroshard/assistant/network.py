@@ -32,7 +32,7 @@ NEURO = 1_000_000
 SUPPLY = 1_000_000 * NEURO
 PARAMS = {**ledger.PARAMS, 'job_blocks': 3600, 'challenge_blocks': 600, 'proof_blocks': 300, 'max_jobs': 256,
           'max_results': 1024}
-PORTS = {'p2p': 26656, 'rpc': 26657, 'owner': 28700, 'faucet': 28780}
+PORTS = {'p2p': 26656, 'rpc': 26657, 'owner': 28700, 'faucet': 28780, 'artifacts': 28790}
 PEER_TIMEOUT = 600
 HANDSHAKE_SECONDS = 5
 MAX_HANDSHAKES = 16
@@ -64,6 +64,7 @@ class Version:
         self.world = len(self.boundaries) - 1
         self.arm_rank = self.world - 1
         self.policies = policies
+        self.routes, self.files = {}, set()
 
 
 def version(network):
@@ -78,8 +79,19 @@ def version(network):
     for name, pin in network.get('policies', {}).items():
         if sha256(ROOT / pin['path']) != pin['sha256']:
             raise ValueError(f'the {name} policy differs from the accepted version')
-    return Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
-                   plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None), plan
+    served = Version(network['version'], plan['boundaries'], learning['training'], read(ROOT / learning['policy']),
+                     plan['eos_ids'], plan['max_boundary_tokens'], model_root(network), policies or None)
+    served.files = set(network['files'])
+    served.routes = route_table(network.get('routing'))
+    served.route_names = {name: row['route'] for name, row in (network.get('routing') or {}).items()
+                          if isinstance(row, dict) and 'route' in row}
+    if served.policies and not served.routes:
+        raise ValueError('a routed version names its routes')
+    for unit, _ in served.routes.values():
+        for name in ('manifest.json', 'trainable.safetensors'):
+            if f'{unit}/{name}' not in network['files']:
+                raise ValueError(f'route unit {unit} has no pinned {name}')
+    return served, plan
 
 
 def digest_file(path):
@@ -121,12 +133,101 @@ def download(url, path, pin, opener=urllib.request.urlopen):
         partial.unlink(missing_ok=True)
 
 
+def sources(network):
+    """Every base URL a released file may come from: the descriptor's ``assets`` and its ``mirrors``.
+
+    Each file is pinned by size and SHA-256, so any source is safe; one that serves different bytes is
+    refused and the next is tried. A peer running ``serve_artifacts`` is a mirror like any other.
+    """
+    listed = ([network['assets']] if isinstance(network.get('assets'), str) else list(network.get('assets', [])))
+    listed += list(network.get('mirrors', []))
+    if not listed or not all(isinstance(url, str) and url.startswith(('http://', 'https://', 'file:///'))
+                             and url.endswith('/') for url in listed):
+        raise ValueError('a network names at least one http(s) or file artifact source ending in /')
+    return list(dict.fromkeys(listed))
+
+
+def fetch(network, name, path, progress=print, opener=urllib.request.urlopen):
+    """One pinned released file from the first source that serves exactly its bytes."""
+    pin, failures = network['files'][name], []
+    for base in sources(network):
+        try:
+            download(base + pin['asset'], path, pin, opener)
+            return base
+        except (OSError, ValueError) as error:
+            failures.append(f'{base}: {error}')
+            progress(f'  {base} failed for {name}; trying the next source')
+    raise ValueError(f'no source served {name} with its pinned digest: ' + '; '.join(failures))
+
+
+def serve_artifacts(network, home, host, port):
+    """Serve this machine's verified copies of the released files to peers, by asset name, read-only.
+
+    Only files whose size and digest match the descriptor's pins are offered, so a peer cannot be handed
+    anything the network did not pin, and an owner can mirror without being trusted.
+    """
+    store = Path(home) / network['version']
+    offered = {}
+    for name, pin in network['files'].items():
+        for rank in range(0, 64):
+            path = store / f'stage-{rank}' / name
+            if path.is_file() and matches(path, pin):
+                offered[pin['asset']] = (path, pin)
+                break
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            item = offered.get(self.path.lstrip('/'))
+            if item is None:
+                self.send_response(404)
+                self.end_headers()
+                return
+            path, pin = item
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/octet-stream')
+            self.send_header('Content-Length', str(pin['bytes']))
+            self.end_headers()
+            with path.open('rb') as handle:
+                for block in iter(lambda: handle.read(CHUNK), b''):
+                    self.wfile.write(block)
+
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer((host, port), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, sorted(offered)
+
+
+def route_table(routing):
+    """``{route index: (unit, base)}`` from a descriptor's ``routing``; base is ``U1`` or ``parent``.
+
+    Every named route (any key whose value has a ``route`` index) is served; A3 names drafting (1, L3)
+    and scheduling (2, L2) on U1. Indices must be distinct and in the protocol range.
+    """
+    from neuroshard.evolution.sharded.granite_serving import MAX_ROUTES
+
+    table = {}
+    for name, row in sorted((routing or {}).items()):
+        if not isinstance(row, dict) or 'route' not in row:
+            continue
+        index, unit, base = row['route'], row['addition'], row.get('base', 'U1')
+        if type(index) is not int or not 1 <= index <= MAX_ROUTES or index in table:
+            raise ValueError(f'route {name} needs a distinct index from 1 to {MAX_ROUTES}')
+        if base not in ('U1', 'parent') or not isinstance(unit, str) or '/' in unit or unit in ('', '.', '..'):
+            raise ValueError(f'route {name} names an invalid unit or base')
+        table[index] = (unit, base)
+    return table
+
+
 def stage_files(served, rank):
     if rank == 0:
-        return ['integration.json'] + (['router.json'] if served.policies else [])
+        extra = ['general-router.json'] if 'general-router.json' in served.files else []
+        return ['integration.json'] + (['router.json'] + extra if served.policies else [])
     if rank == served.arm_rank:
+        units = sorted({unit for unit, _ in served.routes.values()})
         return (['update-checkpoint/manifest.json', 'update-checkpoint/trainable.safetensors']
-                + ([f'{unit}/{name}' for unit in ('L2', 'L3') for name in ('manifest.json', 'trainable.safetensors')]
+                + ([f'{unit}/{name}' for unit in units for name in ('manifest.json', 'trainable.safetensors')]
                    if served.policies else []))
     return []
 
@@ -148,16 +249,19 @@ def fetch_stage(network, rank, home, progress=print):
         pin, path = network['files'][name], local_path(store, name)
         if not matches(path, pin):
             progress(f'Downloading {name} ({pin["bytes"] / 2 ** 20:.1f} MiB)')
-            download(network['assets'] + pin['asset'], path, pin)
+            fetch(network, name, path, progress)
     stage = {'config': store / 'config', 'shard': store / 'shard'}
     if rank == 0:
         stage.update(tokenizer=store / 'config', gate=read(store / 'integration.json')['arms']['update']['gate'])
         if served.policies:
             stage['router'] = read(store / 'router.json')['gate']
+            if 'general-router.json' in served.files:
+                stage['general_router'] = read(store / 'general-router.json')
     if rank == served.arm_rank:
         stage['arm'] = store / 'update-checkpoint'
         if served.policies:
-            stage['additions'] = {1: store / 'L3', 2: store / 'L2'}
+            stage['additions'] = {index: store / unit for index, (unit, _) in served.routes.items()}
+            stage['parent_routes'] = sorted(index for index, (_, base) in served.routes.items() if base == 'parent')
     return served, stage
 
 
@@ -167,7 +271,8 @@ def load_adapter(partition, served, stage):
     if partition.rank != served.arm_rank:
         return None
     if stage.get('additions'):
-        return serving.AdapterBank(partition, served.spec, stage['arm'], stage['additions'])
+        return serving.AdapterBank(partition, served.spec, stage['arm'], stage['additions'],
+                                   stage.get('parent_routes', ()))
     return serving.Adapter(partition, served.spec, stage['arm'])
 
 
@@ -222,16 +327,57 @@ def public_hex(key):
     return key.public_key().public_bytes_raw().hex()
 
 
+def endpoints(descriptor):
+    """Every ledger RPC a descriptor names: ``rpc`` (one address or a list) followed by any ``rpcs``."""
+    value = descriptor['rpc']
+    listed = ([value] if isinstance(value, str) else list(value)) + list(descriptor.get('rpcs', []))
+    if not listed or not all(isinstance(item, str) and item.startswith(('http://', 'https://')) for item in listed):
+        raise ValueError('a network names at least one http(s) ledger RPC')
+    return list(dict.fromkeys(listed))
+
+
+class Divergence(ValueError):
+    """Two ledger RPCs report different states at the same height: at least one of them is lying or forked."""
+
+
 class Chain:
-    """A ledger RPC: reads state and submits transactions, waiting until a block includes each."""
+    """Ledger RPCs: reads state and submits transactions, waiting until a block includes each.
+
+    With several RPCs, a read checks each reply against its own state root and requires every RPC that
+    reports the same height to agree on it, so one honest RPC exposes a dishonest one. Submissions fail
+    over to the next RPC when one is unreachable.
+    """
 
     def __init__(self, rpc, chain_id):
-        self.rpc, self.chain_id = rpc, chain_id
+        self.rpcs = [rpc] if isinstance(rpc, str) else list(rpc)
+        if not self.rpcs:
+            raise ValueError('at least one ledger RPC')
+        self.rpc, self.chain_id = self.rpcs[0], chain_id
 
     def state(self):
-        value = chain_network.state(self.rpc)
-        if value['chain_id'] != self.chain_id:
-            raise ValueError('the RPC serves another chain')
+        replies, errors = {}, []
+        for address in self.rpcs:
+            try:
+                value = chain_network.state(address)
+            except (OSError, chain_network.Rejected, ValueError) as error:
+                errors.append(f'{address}: {error}')
+                continue
+            if value.get('chain_id') != self.chain_id:
+                raise ValueError(f'{address} serves another chain')
+            body = {key: item for key, item in value.items() if key != 'root'}
+            if 'root' in value and ledger.root(body) != value['root']:
+                raise Divergence(f'{address} returned a state that does not match its own root')
+            root = value.get('root') or ledger.root(body)
+            seen = replies.setdefault(value['height'], {})
+            seen.setdefault(root, (address, value))
+            if len(seen) > 1:
+                raise Divergence(f"ledger RPCs disagree at height {value['height']}: "
+                                 + ', '.join(f'{a} has {r[:16]}' for r, (a, _) in sorted(seen.items())))
+        if not replies:
+            raise OSError('no ledger RPC reachable: ' + '; '.join(errors))
+        height = max(replies)
+        address, value = next(iter(replies[height].values()))
+        self.rpc = address
         return value
 
     def balance(self, account):
@@ -240,9 +386,23 @@ class Chain:
     def nonce(self, account):
         return self.state()['accounts'].get(account.public, {'nonce': 0})['nonce']
 
+    def broadcast(self, envelope):
+        """Admission through the first reachable RPC, starting with the one that answered last."""
+        order = [self.rpc] + [address for address in self.rpcs if address != self.rpc]
+        failures = []
+        for address in order:
+            try:
+                admitted = chain_network.broadcast(address, envelope)
+            except OSError as error:
+                failures.append(f'{address}: {error}')
+                continue
+            self.rpc = address
+            return admitted
+        raise OSError('no ledger RPC accepted the transaction: ' + '; '.join(failures))
+
     def submit(self, account, kind, nonce=None, timeout=180, **fields):
         envelope = account.sign(self.chain_id, self.nonce(account) if nonce is None else nonce, kind, **fields)
-        admitted = chain_network.broadcast(self.rpc, envelope)
+        admitted = self.broadcast(envelope)
         if admitted['code']:
             raise chain_network.Rejected(admitted['log'])
         key = base64.b64encode(hashlib.sha256(ledger.canonical(envelope)).digest()).decode()
@@ -309,7 +469,10 @@ def serve_faucet(faucet, host, port, proof_store=None):
                     root = self.path.removeprefix('/proofs/')
                     state = faucet.chain.state()
                     ledger.hex_digest(root)
-                    if not any(c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values()):
+                    growing = state.get('growth')
+                    if not ((growing and __import__('neuroshard.inference.growth', fromlist=['open_proof']).open_proof(
+                            state, root)) or any(
+                            c['proof_root'] == root for j in state['jobs'].values() for c in j['challenges'].values())):
                         raise ValueError('no funded open challenge names this proof')
                 deadline, content = time.monotonic() + 30, bytearray()
                 while len(content) < size:
@@ -619,6 +782,36 @@ def choose_owners(state, served, rng=None, probe=reachable):
     return chosen
 
 
+def choose_route(router, served, feature, opening, general=None):
+    """(route name, route index) for one turn.
+
+    With a ``general`` router (the general-route version), it first decides whether a turn belongs to A3's
+    workspace routes (``a3``) or to a general route (``documents``, ``chat``), from the message state with the
+    opening message's state; A3 turns then go to A3's own router, unchanged, so A3's routing does not move.
+    A K-route router (``logistic-context``) reads the same context and sends a low-confidence turn to its
+    fallback; A3's binary router chooses scheduling or drafting.
+    """
+    from neuroshard.evolution import assistant_selector as selector
+
+    if general is not None:
+        from neuroshard.evolution import assistant_turn_router as turn_router
+
+        top = turn_router.route(turn_router.verify(general), turn_router.context_feature(feature, opening))
+        if top != 'a3':
+            if top not in served.route_names:
+                raise ValueError(f'the router chose {top}, which this version does not serve')
+            return top, served.route_names[top]
+    if router.get('rule') == 'logistic-context':
+        from neuroshard.evolution import assistant_turn_router as turn_router
+
+        route = turn_router.route(turn_router.verify(router), turn_router.context_feature(feature, opening))
+        if route not in served.route_names:
+            raise ValueError(f'the router chose {route}, which this version does not serve')
+        return route, served.route_names[route]
+    route = 'scheduling' if selector.choose(router, feature) else 'drafting'
+    return route, served.route_names.get(route, 2 if route == 'scheduling' else 1)
+
+
 class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
@@ -664,11 +857,14 @@ class Conversation:
         ring = relay.DriverRelay(self.sockets, served.world, config.hidden_size, served.max_tokens, signed=True,
                                  budget=self.budget)
         self.driver = serving.ServingDriver(partition, ring, self.link)
+        units = sorted({unit for unit, _ in served.routes.values()})
         self.session = Session(served.policy, world, name=served.name, previous='a2-u1' if served.policies else None,
-                               modules=('U1', 'L2', 'L3') if served.policies else ('U1',),
+                               modules=('U1', *units) if served.policies else ('U1',),
                                route_policies=served.policies)
         self.router, self.responses = stage.get('router'), {}
+        self.general_router = stage.get('general_router')
         self.respond = self.arm = None
+        self.opening = None  # the first message's feature, for a K-route router's context
 
     def say(self, text):
         """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
@@ -684,8 +880,9 @@ class Conversation:
             self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids)
         if self.router is not None:
             feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
-            route = 'scheduling' if selector.choose(self.router, feature) else 'drafting'
-            self.driver.route(2 if route == 'scheduling' else 1, self.arm if route == 'drafting' else True)
+            self.opening = feature if self.opening is None else self.opening
+            route, index = choose_route(self.router, self.served, feature, self.opening, self.general_router)
+            self.driver.route(index, self.arm if route == 'drafting' else True)
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
                                                          self.served.eos_ids)
@@ -739,6 +936,7 @@ def seed(network, home, public_host, served=None, block_seconds=1.0, params=None
                 paths.update(arm=str(stage['arm']), spec=served.spec)
                 if 'additions' in stage:
                     paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
+                    paths['parent_routes'] = list(stage.get('parent_routes', []))
             shards[str(rank)] = paths
         for node in config['validators']:
             path = Path(node['home']) / 'settlement.json'

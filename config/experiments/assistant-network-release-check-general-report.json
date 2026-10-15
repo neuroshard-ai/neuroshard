@@ -1,0 +1,41 @@
+{
+  "format": "neuroshard-assistant-network-release-check-general-report/1",
+  "version": "a4-general",
+  "model_root": "71e2835b8c382604973e8c4834e93a3000cff854175cad61d307c08d6206fbb5",
+  "source_commit": "7f0a97df9f07ed285f4fe94b30ad20ced547a919",
+  "contract_sha256": "96ac0ec6f6474af6f94bfba0aa86de987bd212cf7e643c079e1ec0c1df71da10",
+  "passed": true,
+  "cases": 324,
+  "matched": 324,
+  "by_set": {
+    "a3-cross": 48,
+    "a3-drafting": 24,
+    "a3-scheduling": 24,
+    "chat": 96,
+    "documents": 132
+  },
+  "wall_seconds": 35200.375888461,
+  "seconds_per_conversation": 108.64313545821297,
+  "owner_logs": {
+    "172.31.73.85_owner_logs": "324",
+    "172.31.76.9_owner_logs": "324"
+  },
+  "evidence": {
+    "file": "config/experiments/assistant-network-release-check-general-evidence.json.gz",
+    "sha256": "2a03b42fb8710b5905a84b52c18d314c276a3627be132f80be13cc46f5253b40"
+  },
+  "result_digest": "c36e456907ae36906aa572057bebcb3dfa7d1f8ebc7a5b330c83afe53fb7a7b9",
+  "quality_root": "c36e456907ae36906aa572057bebcb3dfa7d1f8ebc7a5b330c83afe53fb7a7b9",
+  "resources": {
+    "client_instance": "i-0780bdefcde391824",
+    "instance_type": "m7i.2xlarge",
+    "instance_seconds": 38546.796679496765,
+    "client_usd": 4.317241228103638,
+    "retired": true,
+    "protected_services_untouched": true
+  },
+  "independent_operation": false,
+  "training": false,
+  "new_final_opened": false,
+  "meaning": "Deployment equivalence: the general-route version served through paid, separately hosted shards reproduced every one of its 228 accepted confirmation7 conversations and 96 accepted A3 conversations token for token, under the routes they were accepted under. It is the version to propose to owners; it does not establish independent operation."
+}

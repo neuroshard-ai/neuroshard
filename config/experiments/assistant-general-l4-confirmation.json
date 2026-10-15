@@ -1,0 +1,50 @@
+{
+  "format": "neuroshard-assistant-general-l4-confirmation/1",
+  "question": "Version 4 of the general route (documents with L4 on the parent, chat with a calculator on the parent) on a third fresh sealed split, opened once.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation3",
+      "policy": "config/experiments/assistant-general-policy-documents3.json",
+      "module": "L4"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation3",
+      "policy": "config/experiments/assistant-general-policy-chat2.json"
+    },
+    {
+      "set": "documents",
+      "split": "confirmation3",
+      "policy": "config/experiments/assistant-general-policy-documents3.json"
+    }
+  ],
+  "modules": {
+    "L4": {
+      "trainable_sha256": "c96c7bb5f1e488528f71a75e5a43297c292a3cde264b8966a2458bf642acfcfa",
+      "report": {
+        "path": "config/experiments/assistant-general-l4-report.json",
+        "sha256": "e86be8937912d243c07fefcb4cf1cddd73648d1eb4de0d06aed4f3eb439deb40"
+      }
+    }
+  },
+  "judged": {
+    "documents": "documents-confirmation3-L4",
+    "chat": "chat-confirmation3",
+    "comparison": "documents-confirmation3 (the parent alone, reported)"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "cf1eb5627f1aa049a54da8a49076b995a9fad397adbdb3488e5b0f98c1489a3d",
+    "chat_case_ids_sha256": "9f45a1cbf7f957b07532878f682ed11ce4dea334a70f9045be519a057f6c4679"
+  },
+  "meaning": "If every minimum holds for the judged sets, version 4 is the general route the next served version ships; otherwise its failures define the next round.",
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false
+}

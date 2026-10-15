@@ -1,3 +1,4 @@
+import os
 import copy
 
 from neuroshard.assistant.release_check import projection
@@ -31,8 +32,20 @@ def test_the_attempt_two_amendment_keeps_the_workload_and_pins_every_source():
     assert {name: spec['cases'] for name, spec in plan['sets'].items()} == {'cross': 48, 'drafting': 192,
                                                                             'scheduling': 192}
     assert not plan['training_authorized'] and not plan['gpu_launch_authorized'] and not plan['new_final_authorized']
+    # The pins describe the sources A3 was qualified with, at the report's commit. Later versions change
+    # serving code under their own release check, so the pins are verified against that commit's bytes.
+    import hashlib
+    import subprocess
+
+    commit = read(ROOT / 'config/experiments/assistant-network-release-check-report.json')['source_commit']
+    present = subprocess.run(['git', 'cat-file', '-e', f'{commit}^{{commit}}'], cwd=ROOT).returncode == 0
     for name, digest in {**plan['sources'], **plan['contracts']}.items():
-        assert sha256(ROOT / name) == digest, name
+        if present:
+            qualified = subprocess.check_output(['git', 'show', f'{commit}:{name}'], cwd=ROOT)
+            assert hashlib.sha256(qualified).hexdigest() == digest, name
+        if name == release_check.CONTRACT or name.startswith('config/'):
+            assert sha256(ROOT / name) == digest, name  # the contract and its configs never change
+    assert present or os.environ.get('CI') is None, 'CI must fetch the qualified commit'
     assert len(release_check.checked_workload(plan)) == 432
 
 

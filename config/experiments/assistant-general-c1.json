@@ -1,0 +1,63 @@
+{
+  "format": "neuroshard-assistant-general-c1/1",
+  "question": "Does a chat unit learned from the parent's own verified replies, with a check_text tool, raise chat to its minimum on new wording, where the parent alone with a calculator failed on confirmation5?",
+  "why": "confirmation5: documents and not-found passed; chat 86/96 failed by one case. Exclude scored 6/12 and has failed in every split; the chat route never had a check of its own or a learned unit. Two changes. (1) chat-tools/1: check_text lets the model check a draft against the rules it reads in the request (include, exclude, ending, word limit, bullets, JSON keys, lowercase) and revise; the scorer and the hidden constraints are unchanged. (2) C1, a low-rank chat unit on the parent, learned from the parent's own replies that pass the checker, rejection-sampled (greedy, then up to three samples at temperature 0.8) on generated-train and generated-train-styles2 (every spent wording). No other model writes an assistant message. Documents stay on L7 under version 2, which matched or beat L8 on confirmation5.",
+  "unit": {
+    "name": "C1",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha",
+    "route": "chat"
+  },
+  "experience": {
+    "chat": "the parent's first passing reply under chat-tools/1 on the 320 generated-train and 240 generated-train-styles2 chat cases",
+    "sampling": {
+      "temperature": 0.8,
+      "attempts": 4
+    },
+    "replay": "the parent's greedy passing replies under chat-tools/1 on the 320 generated-train chat cases"
+  },
+  "splits": {
+    "experience": [
+      "generated-train",
+      "generated-train-styles2"
+    ],
+    "replay": "generated-train",
+    "documents_development": "generated-development4",
+    "chat_development": "generated-development4"
+  },
+  "phrasings": [
+    "config/experiments/assistant-general-phrasings.json",
+    "config/experiments/assistant-general-phrasings-development2.json",
+    "config/experiments/assistant-general-phrasings-round3.json",
+    "config/experiments/assistant-general-phrasings-round4.json"
+  ],
+  "training": {
+    "steps": 256,
+    "seed": 27101315,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "minimum_experience": 200,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents3.json",
+    "chat": "config/experiments/assistant-general-policy-chat3.json"
+  },
+  "integration": "parent and parent+C1 greedily on the 48 chat generated-development4 cases on the same GPU, both under chat-tools/1",
+  "next_gate": "C1 advances to the sealed confirmation6 (with L7 for documents under version 2) only if, on generated-development4, it solves more chat cases than the parent under the same policy and at least 90% of them; documents are judged on confirmation6 only.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10,
+  "prior": {
+    "path": "config/experiments/assistant-general-l8-confirmation-report.json",
+    "sha256": "1104aed6d51e1da80ce2f689a1669e6efeb13f4b633c2e0730c44c5f894beaf8"
+  },
+  "route": "chat",
+  "integrate": [
+    "chat"
+  ]
+}

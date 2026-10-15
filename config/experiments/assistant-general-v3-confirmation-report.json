@@ -1,0 +1,75 @@
+{
+  "format": "neuroshard-assistant-general-v3-confirmation-report/1",
+  "source_commit": "3dacfd6aacc35c9324c50f56f925dd56f024219d",
+  "ci_run": 38182209584,
+  "episodes_sha256": "f82df946c77e10145f6d4bcf5d83831830faa75dbd9c3c88e0932884a8a85cb5",
+  "documents": {
+    "passed": 108,
+    "cases": 132,
+    "families": {
+      "battery": "11/12",
+      "claim-deadline": "2/12",
+      "deposit": "12/12",
+      "flight-time": "12/12",
+      "hotel-code": "12/12",
+      "invoice-sum": "11/12",
+      "leave-days": "11/12",
+      "not-found-insurance": "12/12",
+      "not-found-return": "1/12",
+      "notice": "12/12",
+      "owner": "12/12"
+    }
+  },
+  "chat": {
+    "passed": 89,
+    "cases": 96,
+    "families": {
+      "arithmetic": "12/12",
+      "bullets": "12/12",
+      "ending": "12/12",
+      "exclude": "6/12",
+      "include": "11/12",
+      "json": "12/12",
+      "lowercase": "12/12",
+      "short": "12/12"
+    }
+  },
+  "rescored": {
+    "documents": 108,
+    "chat": 89
+  },
+  "rates": {
+    "documents": 0.8181818181818182,
+    "chat": 0.9270833333333334,
+    "not_found": 0.5416666666666666
+  },
+  "checks": {
+    "documents": false,
+    "chat": true,
+    "not_found": false
+  },
+  "passed": false,
+  "failures": {
+    "not-found-return": "11/12 wrong on the new wording: the outbound flight reported as the flight home, sometimes with an invented date",
+    "claim-deadline": "10/12 wrong: the policy not read, 30 days assumed, or a correct date given without citing the policy",
+    "chat exclude": "6/12: \"the\" used anyway",
+    "note": "arithmetic, which failed 0/12 in the first confirmation, passed 12/12 with the calculator"
+  },
+  "decision": "Not shipped. Prompt rules do not generalise to new wording on the two document failures; chat passes. The documents route needs a learned unit trained on verified demonstrations, judged on a third fresh sealed split.",
+  "resources_finished": {
+    "finished_utc": "2026-10-12T02:31:37.133220+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-04b78d2cedda03718"
+    ],
+    "instance_type": "r7i.4xlarge",
+    "conservative_instance_seconds": 2918.48972,
+    "conservative_compute_usd": 0.8580359776800001,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.8580359776800001,
+  "checklist_credit": false,
+  "confirmation_opened": true
+}

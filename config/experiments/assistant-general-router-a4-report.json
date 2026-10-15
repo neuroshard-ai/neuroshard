@@ -1,0 +1,37 @@
+{
+  "format": "neuroshard-assistant-general-router-fit/1",
+  "routes": [
+    "a3",
+    "chat",
+    "documents"
+  ],
+  "fit_turns": 2566,
+  "router_sha256": "10f046599214c945b8d5e3b951c3ed594b453092e9e8f802aa0c2580e5e95319",
+  "fit": {
+    "by_route": {
+      "a3": "816/816",
+      "chat": "560/560",
+      "documents": "1190/1190"
+    },
+    "misrouted": [],
+    "misrouted_count": 0
+  },
+  "development": {
+    "by_route": {
+      "a3": "88/88",
+      "chat": "48/48",
+      "documents": "66/66"
+    },
+    "misrouted": [],
+    "misrouted_count": 0
+  },
+  "workload": {
+    "by_route": {
+      "a3": "648/648",
+      "chat": "96/96",
+      "documents": "132/132"
+    },
+    "misrouted": [],
+    "misrouted_count": 0
+  }
+}

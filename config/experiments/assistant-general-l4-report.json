@@ -1,0 +1,156 @@
+{
+  "format": "neuroshard-assistant-general-l4-report/1",
+  "source_commit": "d900b9691dedb5857818f0212b980d6caff92fc2",
+  "ci_run": 38196699449,
+  "gpu": "NVIDIA A10G",
+  "demonstrations": {
+    "cases": 132,
+    "by_family": {
+      "flight-time": 12,
+      "hotel-code": 12,
+      "leave-days": 12,
+      "invoice-sum": 12,
+      "claim-deadline": 12,
+      "notice": 12,
+      "deposit": 12,
+      "battery": 12,
+      "owner": 12,
+      "not-found-insurance": 12,
+      "not-found-return": 12
+    },
+    "trajectories_sha256": "95e8c4a251b7c6dfce93fcdffade1b10f43292e07eb3b5bd1a01fc62f9472db1"
+  },
+  "chat_replay": {
+    "cases": 96,
+    "passed": 93,
+    "by_family": {
+      "bullets": 12,
+      "short": 12,
+      "json": 12,
+      "include": 12,
+      "exclude": 11,
+      "ending": 10,
+      "lowercase": 12,
+      "arithmetic": 12
+    },
+    "replay_sha256": "6bf18be8ee42d399d75dfd3c83e2826761827154f25d52d6c41af8e8db67634e"
+  },
+  "phases": {
+    "demonstrate": 1.2035363600000153,
+    "replay": 37.057702613999965,
+    "train": 502.641409096,
+    "integrate": 210.402564847
+  },
+  "training": {
+    "trainable_sha256": "c96c7bb5f1e488528f71a75e5a43297c292a3cde264b8966a2458bf642acfcfa",
+    "tokens_processed": 2295768,
+    "final_losses": [
+      0.002597455478394295,
+      0.0017496296557055757,
+      0.0009927988850222391,
+      0.00407655830144904,
+      0.0010161423588215257,
+      0.0040569017592133605,
+      0.003141420029123765,
+      0.0006377758338658168
+    ]
+  },
+  "module": {
+    "trainable_sha256": "c96c7bb5f1e488528f71a75e5a43297c292a3cde264b8966a2458bf642acfcfa",
+    "file_sha256": "c96c7bb5f1e488528f71a75e5a43297c292a3cde264b8966a2458bf642acfcfa",
+    "bytes": 4197776
+  },
+  "integration_sha256": "1781aa741d151294443206e696e75992ab5e4f42f2ff601def22f1a86e4741d8",
+  "integration": {
+    "parent": {
+      "documents": {
+        "passed": 64,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "5/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "5/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "6/6",
+          "notice": "6/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 47,
+        "cases": 48,
+        "families": {
+          "arithmetic": "6/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "5/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    },
+    "L4": {
+      "documents": {
+        "passed": 65,
+        "cases": 66,
+        "families": {
+          "battery": "6/6",
+          "claim-deadline": "6/6",
+          "deposit": "6/6",
+          "flight-time": "6/6",
+          "hotel-code": "6/6",
+          "invoice-sum": "6/6",
+          "leave-days": "5/6",
+          "not-found-insurance": "6/6",
+          "not-found-return": "6/6",
+          "notice": "6/6",
+          "owner": "6/6"
+        }
+      },
+      "chat": {
+        "passed": 47,
+        "cases": 48,
+        "families": {
+          "arithmetic": "6/6",
+          "bullets": "6/6",
+          "ending": "6/6",
+          "exclude": "5/6",
+          "include": "6/6",
+          "json": "6/6",
+          "lowercase": "6/6",
+          "short": "6/6"
+        }
+      }
+    }
+  },
+  "checks": {
+    "more_documents_than_parent": true,
+    "chat_loses_at_most_one": true,
+    "documents_minimum": true,
+    "chat_minimum": true,
+    "not_found_minimum": true
+  },
+  "advances": true,
+  "resources_finished": {
+    "finished_utc": "2026-10-12T03:47:00.083748+00:00",
+    "remaining_instances": [],
+    "remaining_volumes": [],
+    "security_group_retired": true,
+    "instance_ids": [
+      "i-0a9c93ed02ba322fb"
+    ],
+    "instance_type": "g5.2xlarge",
+    "conservative_instance_seconds": 1331.738405,
+    "conservative_compute_usd": 0.4483519296833333,
+    "storage_and_transfer_invoice_not_in_compute_total": true
+  },
+  "conservative_compute_usd": 0.4483519296833333,
+  "checklist_credit": false,
+  "confirmation_opened": false
+}

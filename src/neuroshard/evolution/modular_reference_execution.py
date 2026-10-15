@@ -136,10 +136,20 @@ def wait_for_ci(home, commit, seconds=3600):
     home = Path(home)
     save(home / "ci-request.json", {"commit": commit, "seconds": seconds}, exclusive=True)
     deadline = time.monotonic() + seconds
+    failures = 0
     while time.monotonic() < deadline:
-        payload = subprocess.check_output(
-            ["gh", "api", f"repos/neuroshard-ai/neuroshard/actions/runs?head_sha={commit}&event=push&per_page=100"],
-            cwd=ROOT, text=True, timeout=min(30, max(1, deadline - time.monotonic())))
+        try:
+            payload = subprocess.check_output(
+                ["gh", "api", f"repos/neuroshard-ai/neuroshard/actions/runs?head_sha={commit}&event=push&per_page=100"],
+                cwd=ROOT, text=True, timeout=min(30, max(1, deadline - time.monotonic())))
+            failures = 0
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            # A transient API error is no evidence about the run; give up only after repeated failures.
+            failures += 1
+            if failures >= 10:
+                raise
+            time.sleep(min(30, max(0, deadline - time.monotonic())))
+            continue
         runs = [row for row in json.loads(payload)["workflow_runs"]
                 if row["head_sha"] == commit and row["event"] == "push"
                 and row["name"] == "Native release checks"]

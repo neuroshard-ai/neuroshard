@@ -1,0 +1,55 @@
+{
+  "format": "neuroshard-assistant-general-l5-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "candidates": [
+    {
+      "instance_type": "g6e.xlarge",
+      "gpu_name": "NVIDIA L40S",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": "HEU7PA78QPB8SDYY",
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.861
+      }
+    },
+    {
+      "instance_type": "g5.2xlarge",
+      "gpu_name": "NVIDIA A10G",
+      "price": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+        "sku": null,
+        "effective_date": "2026-09-01",
+        "usd_per_hour": 1.212,
+        "source": "published us-east-1 on-demand Linux rate; SKU not retrievable with this role"
+      }
+    }
+  ],
+  "placement": "One GPU host: an A10G (g5.2xlarge) or an L40S (g6e.xlarge), in any controller-VPC subnet whose zone offers it, controller zone first; g5.2xlarge had no capacity in the controller zone on 2026-10-12.",
+  "hours": 3,
+  "planning_cap_usd": 10,
+  "disk_gib": 120,
+  "disk_type": "gp3",
+  "setup_seconds": 1800,
+  "copy_seconds": 1200,
+  "image": {
+    "ImageId": "ami-0efd0f6e601922cad",
+    "Name": "Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04) 20260911",
+    "CreationDate": "2026-09-11T14:09:30.000Z",
+    "OwnerId": "898082745236",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": true,
+  "purpose": "assistant-general-l5-gpu",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 2147483648,
+  "prior_resources": {
+    "path": "config/experiments/assistant-general-l4-confirmation-report.json",
+    "sha256": "f553eefb4394b61ad1aee39098afe43fb7c212c0064da736183ddf7bbb2931d6"
+  },
+  "budget_scope": "L5 on one A10G host: verified demonstrations of 660 generated-train cases and chat replay on 320, training, and generated-development integration of parent and L5; 3-hour expiry and $10 allowance. No upload or sealed data.",
+  "prior_attempts": []
+}

@@ -1,0 +1,102 @@
+{
+ "calibration": {
+  "curve": [
+   {
+    "coverage": 1.0,
+    "kept_accuracy": 1.0
+   },
+   {
+    "coverage": 0.95,
+    "kept_accuracy": 1.0
+   },
+   {
+    "coverage": 0.9,
+    "kept_accuracy": 1.0
+   },
+   {
+    "coverage": 0.8,
+    "kept_accuracy": 1.0
+   },
+   {
+    "coverage": 0.7,
+    "kept_accuracy": 1.0
+   }
+  ],
+  "folds": 4,
+  "held_out_accuracy": 1.0,
+  "held_out_coverage": 1.0,
+  "held_out_kept_accuracy": 1.0,
+  "held_out_turns": 410,
+  "min_coverage": 0.5,
+  "target": 0.99,
+  "target_reachable": true
+ },
+ "checks": {
+  "familiar": {
+   "drafting": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 100
+   },
+   "general": {
+    "abstained": 1.0,
+    "recall": 1.0,
+    "turns": 114
+   },
+   "scheduling": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 104
+   },
+   "turns": 318
+  },
+  "familiar (calibrated)": {
+   "drafting": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 100
+   },
+   "general": {
+    "abstained": 1.0,
+    "recall": 1.0,
+    "turns": 114
+   },
+   "scheduling": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 104
+   }
+  },
+  "reworded-real": {
+   "drafting": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 38
+   },
+   "scheduling": {
+    "abstained": 0.02564102564102564,
+    "recall": 0.9743589743589743,
+    "turns": 39
+   },
+   "turns": 77
+  },
+  "reworded-real (calibrated)": {
+   "drafting": {
+    "abstained": 0.0,
+    "recall": 1.0,
+    "turns": 38
+   },
+   "scheduling": {
+    "abstained": 0.02564102564102564,
+    "recall": 0.9743589743589743,
+    "turns": 39
+   }
+  }
+ },
+ "fit_turns": 410,
+ "routes": [
+  "drafting",
+  "general",
+  "scheduling"
+ ]
+}

@@ -37,3 +37,43 @@ Validation covers unauthorized and wrong-quality rejection, open-job refusal,
 supply conservation, ABCI admission/proposal/commit, routed transcript replay and
 native paid-chat integration. Activation additionally requires the
 [release qualification](ASSISTANT_RELEASE_CHECK.md).
+
+## Amendment 1: owner governance of the serving model
+
+Status: implemented in code and tests on `research/general-route`. Not yet deployed to
+`neuroshard-assistant-1`; deploying it is a validator software upgrade, and enabling it is
+the steward's last promotion-related act.
+
+The stewarded transition leaves one key deciding what every owner serves. This amendment
+adds a one-way exit from it:
+
+- **`governance_handover(approval_ppm, vote_blocks)`.** Only the configured promotion
+  authority can submit it, and only once. The approval share must be a strict majority
+  (at least 500,001 ppm) and the window at least 20 blocks. Afterwards `model_promote` is
+  refused for every signer. No validator configuration can restore the steward, because
+  the chain state, not `settlement.json`, now decides.
+- **`model_propose(model_root, quality_root)`.** Anyone may submit it with a 2 NEURO deposit,
+  held in escrow and counted by the supply invariant. It snapshots the bond of every
+  active owner as its voting weights, so bonding after a proposal opens buys no vote on it.
+  At most four proposals are open at once.
+- **`model_vote(proposal_id, log_key, approve)`.** The account that bonded `log_key` casts one
+  vote per proposal before the deadline.
+- **`model_enact(proposal_id)`.** Anyone may submit it. If the approving weight reaches the
+  share, the model changes (open jobs must be drained, as before), the history records
+  `authority: owners` with the tally, and the deposit returns to the proposer. A proposal
+  that closes without passing burns its deposit.
+
+The people who must restart on the new version, the owners, are the ones who decide it.
+The quality root stays an attestation, not a proof. Owners should check the published
+release-check evidence it names, which anyone can rerun from the committed contract,
+before voting.
+
+This does not decentralise everything:
+
+- One validator still orders the votes. Validator-set changes are separate work (A5 needs
+  four independent operators).
+- An owner majority can still approve a poor model.
+- The quality evidence is still produced by whoever runs the release check.
+
+Tests: `tests/evolution/test_owner_governance.py`. Operators use
+`neuroshard assistant govern list|propose|vote|enact`, all signed by their own keys.

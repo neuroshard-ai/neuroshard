@@ -1,0 +1,59 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Does a documents unit that searches with the request's key terms, learned in every spent wording, find the documents when a request is wrapped in unrelated sentences, on wording no unit has seen?",
+  "why": "confirmation6: chat (C1) 92/96 and not-found 24/24 passed; documents (L7) 110/132 failed by two. In 21 of 22 misses the request opens with unrelated sentences and L7 searched with only that opening sentence. Every demonstration it learned from searched with the whole message. L9 changes the search step: demonstrations search with the request's key terms (its subject and the names, places and products it gives, copied from it), the policy says so (documents5), and experience covers every spent wording, including confirmation6's wrapped requests (generated-train-styles3). Interface version 2, as for L7.",
+  "unit": {
+    "name": "L9",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "verified keyword-search demonstrations of 660 generated-train, 90 generated-train-extra and 440 generated-train-styles3 cases",
+    "replay": "the parent's own greedy chat replies on the 320 generated-train chat cases (values quoted) under the chat2 policy, replayed only where they pass"
+  },
+  "splits": {
+    "experience": [
+      "generated-train",
+      "generated-train-extra",
+      "generated-train-styles3"
+    ],
+    "replay": "generated-train",
+    "documents_development": "generated-development5",
+    "chat_development": "generated-development5"
+  },
+  "phrasings": [
+    "config/experiments/assistant-general-phrasings.json",
+    "config/experiments/assistant-general-phrasings-development2.json",
+    "config/experiments/assistant-general-phrasings-round3.json",
+    "config/experiments/assistant-general-phrasings-round4.json",
+    "config/experiments/assistant-general-phrasings-round5.json"
+  ],
+  "training": {
+    "steps": 320,
+    "seed": 27101316,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection. 320 steps for 1,190 demonstrations; mixture and chat replay as L7."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents5.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L9 greedily on the 66 documents generated-development5 cases on the same GPU, both under documents5",
+  "next_gate": "L9 advances to the sealed confirmation7 (with C1 for chat) only if, on generated-development5, it solves more documents cases than the parent under the same policy, at least 85% of them, and at least 90% of the not-found cases.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10,
+  "prior": {
+    "path": "config/experiments/assistant-general-c1-confirmation-report.json",
+    "sha256": "09b25e035d347232807f12364c83b25550abf583817bf4de04e2456ee9cb3f29"
+  },
+  "development2_note": "Only one refund-arithmetic template survived the 280-character limit in the background-first style, so development2's two refund cases share it with different values.",
+  "integrate": [
+    "documents"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "format": "neuroshard-assistant-general-policy/1",
+  "interface": "chat/1",
+  "system_instruction": "You are a helpful, accurate and concise assistant. Follow the user's formatting and length instructions exactly.",
+  "limits": {
+    "model_turns_per_user_turn": 1,
+    "tool_calls_per_user_turn": 0
+  },
+  "generation": {
+    "max_input_tokens": 4096,
+    "max_new_tokens": 320
+  },
+  "external_effects": false,
+  "model_receives_goals": false
+}

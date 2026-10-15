@@ -1,0 +1,41 @@
+{
+  "format": "neuroshard-assistant-general-l4/1",
+  "question": "Does a low-rank documents module learned from many varied phrasings generalise to new wording where L4, learned from 132 templated demonstrations, did not?",
+  "why": "On confirmation 3, L4 scored 118/132 against the parent's 120 (claim deadlines 3/12 against 8/12): it learned the authored templates. L5 keeps L4's recipe and changes only the experience: 660 cases whose wording comes from 831 Bedrock-written templates (74-76 per kind), judged and disjoint from the sealed confirmation4 templates.",
+  "unit": {
+    "name": "L5",
+    "arm": "addition",
+    "base": "parent (no update)",
+    "layers": "A2 layers and projections, rank and alpha"
+  },
+  "experience": {
+    "documents": "the documents solver's verified demonstration of every one of the 660 generated-train cases",
+    "replay": "the parent's own greedy chat replies on the 320 generated-train chat cases under the chat2 policy, replayed only where they pass"
+  },
+  "splits": {
+    "experience": "generated-train",
+    "replay": "generated-train",
+    "documents_development": "generated-development",
+    "chat_development": "generated-development"
+  },
+  "phrasings": "config/experiments/assistant-general-phrasings.json",
+  "training": {
+    "steps": 256,
+    "seed": 27101211,
+    "mixture": {
+      "experience": 6,
+      "replay": 2
+    },
+    "minimum_replay": 96,
+    "rule": "A2 trainer settings for the low-rank module; terminal step only; no checkpoint selection. Same steps and mixture as L4, so each demonstration is seen about 2.3 times rather than about 11.6."
+  },
+  "policies": {
+    "documents": "config/experiments/assistant-general-policy-documents3.json",
+    "chat": "config/experiments/assistant-general-policy-chat2.json"
+  },
+  "integration": "parent and parent+L5 greedily on the 66 documents and 48 chat generated-development cases (templates held out of training) on the same GPU",
+  "next_gate": "L5 advances to the sealed confirmation4 on the canonical CPU runtime only if, on generated-development, it solves more documents cases than the parent, loses no more than one chat case, and every minimum (documents 85%, chat 90%, not-found 90%) holds.",
+  "opens_confirmation": false,
+  "checklist_credit": false,
+  "budget_usd": 10
+}

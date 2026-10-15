@@ -1,0 +1,85 @@
+{
+  "format": "neuroshard-assistant-general-router-features/1",
+  "question": "The accepted router feature (frozen parent, final layer, mean over the message after the shared drafting-policy prefix) for every turn the four-route router is fitted on, calibrated on, or must route in the release check.",
+  "why": "A served version with the general route needs one router over drafting, scheduling, documents and chat. Serving computes the message feature across owners; this run computes the same feature on one canonical CPU host so the router can be fitted and its release-check routes recorded.",
+  "runs": [],
+  "feature_sets": [
+    [
+      "documents",
+      "generated-train"
+    ],
+    [
+      "documents",
+      "generated-train-extra"
+    ],
+    [
+      "documents",
+      "generated-train-styles3"
+    ],
+    [
+      "documents",
+      "generated-development5"
+    ],
+    [
+      "documents",
+      "confirmation7"
+    ],
+    [
+      "chat",
+      "generated-train"
+    ],
+    [
+      "chat",
+      "generated-train-styles3"
+    ],
+    [
+      "chat",
+      "generated-development5"
+    ],
+    [
+      "chat",
+      "confirmation7"
+    ],
+    [
+      "drafting",
+      "train"
+    ],
+    [
+      "drafting",
+      "development"
+    ],
+    [
+      "drafting",
+      "confirmation6"
+    ],
+    [
+      "scheduling",
+      "train"
+    ],
+    [
+      "scheduling",
+      "development"
+    ],
+    [
+      "scheduling",
+      "confirmation3"
+    ],
+    [
+      "scheduling",
+      "cross-train"
+    ],
+    [
+      "scheduling",
+      "cross-development"
+    ],
+    [
+      "scheduling",
+      "cross-confirmation3"
+    ]
+  ],
+  "features": true,
+  "meaning": "Features only. Nothing is served, trained or scored; no sealed split opens, because the sealed splits used here (A3 confirmation6/confirmation3/cross-confirmation3 and general confirmation7) are already spent.",
+  "opens_confirmation": false,
+  "training": false,
+  "checklist_credit": false
+}

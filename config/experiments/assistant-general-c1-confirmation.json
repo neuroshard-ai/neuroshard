@@ -1,0 +1,63 @@
+{
+  "format": "neuroshard-assistant-general-c1-confirmation/1",
+  "question": "Version 7 of the general route (documents with L7 under version 2; chat with C1 under chat-tools/1) on the sealed confirmation6, opened once: requests wrapped in longer messages, a seventh style.",
+  "runs": [
+    {
+      "set": "documents",
+      "split": "confirmation6",
+      "policy": "config/experiments/assistant-general-policy-documents3.json",
+      "module": "L7"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation6",
+      "policy": "config/experiments/assistant-general-policy-chat3.json",
+      "module": "C1"
+    },
+    {
+      "set": "chat",
+      "split": "confirmation6",
+      "policy": "config/experiments/assistant-general-policy-chat2.json"
+    }
+  ],
+  "modules": {
+    "L7": {
+      "trainable_sha256": "5c4e428badac568731473833a18bb6a36b5702b3a2e54be50d667390b37d44d6",
+      "report": {
+        "path": "config/experiments/assistant-general-l7-report.json",
+        "sha256": "d26b486b8dd5fb96ca40b69ea23179b4fdd4c6953071d86c134f4dab86de457e"
+      }
+    },
+    "C1": {
+      "trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f",
+      "report": {
+        "path": "config/experiments/assistant-general-c1-report.json",
+        "sha256": "f8eead9186544fada336457b515fa6d3a496d2f518c42eda8ce20b160439197b"
+      }
+    }
+  },
+  "judged": {
+    "documents": "documents-confirmation6-L7",
+    "chat": "chat-confirmation6-C1",
+    "comparison": "chat-confirmation6 (version 5 chat: parent with calculator, reported)"
+  },
+  "gate": {
+    "documents_minimum": 0.85,
+    "chat_minimum": 0.9,
+    "not_found_minimum": 0.9
+  },
+  "frozen_before_opening": {
+    "documents_case_ids_sha256": "1a12df893de767733fc93051e0bb640aecc7fe46b4008c2d2d54a34a2a19f706",
+    "chat_case_ids_sha256": "79b999addfa67654dd955afcdd3bc0c1cf46615b2f96304e348aee35ad86d5d6",
+    "documents_cases_sha256": "27b1c9d2be0b480cf909de5417bc60fe0d18eb10b7a6597a3a2ded18aff926c8",
+    "chat_cases_sha256": "454ea07729d90901ab972f45b9fd74d55927af51382182047ca356f16d1b622c",
+    "phrasings_sha256": "143debe114be8d513b20c3d37f0a721559acd18cd2d60bf119eff709bf56a70d"
+  },
+  "meaning": "If every minimum holds for the judged sets, version 7 is the general route the next served version ships; otherwise its failures define the next round.",
+  "features": false,
+  "opens_confirmation": true,
+  "training": false,
+  "checklist_credit": false,
+  "chat_checker": "Generated chat cases quote the constrained value and strip emphasis around a required ending (declared in L5/L6, before this opening).",
+  "known_risk": "On development4, C1 once wrote the opposite rule (include for exclude) and once exhausted its turns revising; recorded before opening."
+}
