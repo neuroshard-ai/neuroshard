@@ -400,8 +400,15 @@ class Served:
             tokenizer = AutoTokenizer.from_pretrained(
                 Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline', local_files_only=True)
         self.tokenizer = tokenizer
+        self.keep = True  # False: load a route's model per use (an owner's machine also serves its shard)
 
     def __call__(self, route):
+        if not self.keep:
+            from neuroshard.evolution import assistant_experience_train as trainer
+
+            model = self.make_parent()
+            trainer.load_trainable(model, 'addition', self.spec, self.directories[route])
+            return model.eval()
         if route not in self.models:
             from neuroshard.evolution import assistant_experience_train as trainer
 

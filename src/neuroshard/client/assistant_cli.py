@@ -69,6 +69,8 @@ def register(subcommands, root):
                       help='agent --plan: atoms a recipe pays per step (owners vote on it with the recipe)')
     grow.add_argument('--minimum', type=float, default=0.9, help='sealed pass rate a grown unit must reach')
     grow.add_argument('--no-contribute', action='store_true', help='agent: check and judge, never train segments')
+    grow.add_argument('--per-family', type=int, default=48, help='agent --plan: fresh cases per weak family')
+    grow.add_argument('--segment-steps', type=int, default=8, help='agent --plan: steps per committed segment')
     grow.add_argument('--interval', type=float, default=30, help='agent: seconds between ledger passes')
     grow.add_argument('--once', action='store_true', help='agent: one pass, then exit')
     grow.add_argument('--recipe', type=Path, help='open/train/prove: the growth recipe JSON (arm, spec, data, base)')
@@ -493,7 +495,9 @@ def grow_agent(args, chain, network, descriptor):
         served = growth_runtime.Served(descriptor, args.home, spec)
         root = chain.state()['model_root']
         planner = growth_runtime.RoutePlanner(served, served.make_parent, served.tokenizer, served.policies, spec,
-                                              root, served.units, reward_per_step=args.reward_per_step)
+                                              root, served.units, reward_per_step=args.reward_per_step,
+                                              per_family=args.per_family, segment_steps=args.segment_steps)
+        served.keep = not owner_keys
         evaluator = growth_runtime.Evaluators(recipes, served, by_recipe, served.policies, descriptor, args.minimum)
     agent = growth_agent.Agent(chain, account, args.home / 'growth-agent', recipes=recipes, trainer=by_recipe,
                                deliver=deliver, evaluator=evaluator if (args.evaluate or owner_keys) else None,
