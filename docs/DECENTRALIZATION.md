@@ -27,8 +27,10 @@ These are true of the live network today, in the order they should be removed.
    owners vote validators in and out, and CometBFT applies the updates; tested on real CometBFT).
    A5 still needs four independent operators to run validators, with none holding a third of the
    voting power.
-2. **The steward key still governs.** The handover is in code, not on chain. It takes effect when
-   validators run software with the new transitions and the steward submits `governance_handover`.
+2. **Done: the steward key no longer governs.** The live chain runs owner governance (validator upgraded
+   October 15, 2026). The steward handed over at block 491756, and consensus refuses its `model_promote`.
+   `a4-general` was the first owner-voted version, enacted at block 491799. Both owners are still the
+   project's, so the vote is the project's until independent owners bond.
 3. **One operator runs every host.** That covers the seed, both owners, the auditor and the proof
    store (`ASSISTANT_NETWORK.md`). Peers can bond and host a shard today. None has yet.
 4. **The faucet holds the whole supply.** Test NEURO has no value. A valued token would need a

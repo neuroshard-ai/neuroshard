@@ -1,19 +1,33 @@
 # The public assistant network
 
-**Status: live test network `neuroshard-assistant-1`, serving the accepted A3 version (`a3-cohort3`)
-since block 205764 on October 11, 2026.**
-The grown assistant is served across machines that each hold part of it, and
+**Status: live test network `neuroshard-assistant-1`, serving `a4-general` since block 491799 on
+October 15, 2026, by owner vote.** It is A3's drafting and scheduling assistant plus a general route:
+questions about your own documents, with search and cited answers, and general chat with a calculator
+and a requirement checker. The grown assistant is served across machines that each hold part of it, and
 every conversation is paid and settled on the native ledger. It follows the
 [verifiable network design](VERIFIABLE_NETWORK_DESIGN.md) and the
 [bonded serving ledger](OPTIMISTIC_SERVING.md).
 
-Until peers join, the project runs both owners: shard 1 on the seed and a
-stand-in for shard 2. A3 was promoted after its [release qualification](ASSISTANT_RELEASE_CHECK.md)
-reproduced all 432 accepted conversations exactly through paid, separately hosted
-shards. A project-funded auditor replays every owner log, and the seed validator
-judges fraud proofs under the served version. Users still trust the seed's RPC,
-and every host has one administrator. Test NEURO has no value. The tasks are the
-fictional drafting and scheduling workspaces A3 was measured on.
+**Who decides the served model.** Since block 491756 the bonded owners decide, not the steward key.
+The steward handed over once and irreversibly (`governance_handover`), and consensus has refused its
+`model_promote` since. `a4-general` was the first owner-decided version:
+
+1. it passed its sealed confirmation ([general route](ASSISTANT_GENERAL_ROUTE.md));
+2. it reproduced all 324 accepted conversations token for token through paid, separately hosted shards
+   ([release check](ASSISTANT_RELEASE_CHECK_GENERAL.md));
+3. it was proposed with that evidence, both owners voted yes (10 of 10 bonded NEURO), and an
+   unprivileged account enacted it ([activation record](../config/experiments/assistant-a4-activation.json)).
+
+Owners can also vote validators in and out, and contributors can be paid to train new units on chain
+([growth on the network](NETWORK_GROWTH.md)). See [decentralization status](DECENTRALIZATION.md) for
+what is still run by one party.
+
+Until peers join, the project runs both owners: shard 1 on the seed and a stand-in for shard 2. That
+means the owner vote is still the project's vote in practice. A project-funded auditor replays every
+owner log, and the seed validator judges fraud proofs under the served version. Users still trust the
+seed's RPC unless they list more, and every host has one administrator. Test NEURO has no value. The
+documents in the samples are fictional; your own documents stay on your device, and only activations
+reach the owners (this is not encryption).
 
 ## Who does what
 

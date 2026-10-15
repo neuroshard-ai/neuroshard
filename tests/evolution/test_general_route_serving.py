@@ -85,9 +85,15 @@ def test_route_tables_reject_bad_rows_and_keep_a3():
                 {'a': {'route': 1, 'addition': 'L3', 'base': 'other'}}):
         with pytest.raises(ValueError):
             network.route_table(bad)
-    served, _ = network.version(network.descriptor())
+    a3 = network.descriptor(ROOT / 'src/neuroshard/client/networks/assistant-testnet-a3.json')
+    served, _ = network.version(a3)
     assert served.routes == {1: ('L3', 'U1'), 2: ('L2', 'U1')} and served.route_names == {'drafting': 1,
                                                                                           'scheduling': 2}
+    assert network.model_root(a3) == 'e3aaf34d2a1c2d16f6b0c2bf28b5525cdf720a86d46f2eee809c591da9741a44'
+    current = network.descriptor()  # the default is the version owners enacted: a4-general
+    assert network.model_root(current) == read(ROOT / 'config/experiments/assistant-a4-activation.json')[
+        'proposal']['model_root']
+    assert network.version(current)[0].routes[3] == ('L9', 'parent')
 
 
 def test_chat_results_render_as_the_accepted_chat_runner_did_and_documents_alone_need_no_drafting_schema():
@@ -130,9 +136,17 @@ def test_the_general_release_contract_pins_its_sources_workload_and_model():
     from neuroshard.assistant import release_check_general as general
     from neuroshard.evolution.modular_reference_execution import sha256
 
+    import hashlib
+    import subprocess
+
     plan = read(ROOT / general.CONTRACT)
+    # Pins describe the sources the version was qualified with, at the report's commit (as for A3's check).
+    commit = read(ROOT / 'config/experiments/assistant-network-release-check-general-report.json')['source_commit']
     for name, digest in {**plan['sources'], **plan['contracts']}.items():
-        assert sha256(ROOT / name) == digest, name
+        qualified = subprocess.check_output(['git', 'show', f'{commit}:{name}'], cwd=ROOT)
+        assert hashlib.sha256(qualified).hexdigest() == digest, name
+        if name.startswith('config/') and not name.endswith('-general.json'):
+            assert sha256(ROOT / name) == digest, name
     descriptor = network.descriptor(ROOT / 'src/neuroshard/client/networks/assistant-release-general.json')
     assert network.model_root(descriptor) == plan['model_root']
     served, _ = network.version(descriptor)

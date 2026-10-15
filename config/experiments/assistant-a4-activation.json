@@ -1,0 +1,293 @@
+{
+ "format": "neuroshard-assistant-a4-activation/1",
+ "chain_id": "neuroshard-assistant-1",
+ "software_upgrade": {
+  "commit": "e615d0e",
+  "from": "cc24424",
+  "chain_backup": "seed:/home/ubuntu/.neuroshard/assistant-seed/before-a4-20261015T0130",
+  "resumed_height": 491393,
+  "note": "validator, both owners and the auditor restarted on owner governance, validator voting, multi-route serving and growth; state root carried over unchanged"
+ },
+ "handover": {
+  "height": 491756,
+  "tx": "bf676522b56b54d8df769694531eff7283467cc34ec52e48bf2f84840b10645a",
+  "approval_ppm": 666667,
+  "vote_blocks": 7200,
+  "by": "026bb33f79fea403a673492fb339e365680e63714f929210105e649a6adcb9f7f3",
+  "after": "model_promote by the former steward key refused by consensus: The serving model is governed by owners; propose it instead"
+ },
+ "proposal": {
+  "id": "e2e2a3d82a26bd5271556f86f0a9ef0286796d865f7445e00a20c5db53eac425",
+  "height": 491771,
+  "model_root": "71e2835b8c382604973e8c4834e93a3000cff854175cad61d307c08d6206fbb5",
+  "quality_root": "c36e456907ae36906aa572057bebcb3dfa7d1f8ebc7a5b330c83afe53fb7a7b9",
+  "votes": {
+   "owner shard 1 (6482a1f7\u2026)": true,
+   "owner shard 2 (5ec129f2\u2026)": true
+  },
+  "approving_weight": 10000000,
+  "total_weight": 10000000
+ },
+ "enactment": {
+  "height": 491799,
+  "previous": "e3aaf34d2a1c2d16f6b0c2bf28b5525cdf720a86d46f2eee809c591da9741a44",
+  "authority": "owners",
+  "open_jobs": 0
+ },
+ "assets": "https://github.com/neuroshard-ai/neuroshard/releases/tag/assistant-a4-general",
+ "validators": "the seed validator approves A2, A3 and a4-general and holds all four routes (3 and 4 parent-based) for fraud replay",
+ "smoke": [
+  {
+   "label": "drafting route",
+   "job_id": "4009f7a3d4f43e15d7a8c57a7618de6859d61562e4caf1a8cf9095a14f7eddc0",
+   "routes": [
+    "drafting",
+    "drafting"
+   ],
+   "completed": [
+    true,
+    true
+   ],
+   "final_text": [
+    "Draft saved for Cedar 6581, addressed to the service team, due 2027-05-23, with a total of 67.",
+    "Draft saved for Cedar 6581, addressed to the service team, due 2027-05-26, with a total of 76."
+   ],
+   "seconds": [
+    88.3,
+    112.8
+   ],
+   "settlement": {
+    "height": 497324,
+    "owners": [
+     "6482a1f732b39cabee4b0b4a8eacfea3f85b3dcf2dff4bfa4f2c5a29d6d55586",
+     "5ec129f28648414fd9934c6e85903789906b60ac835894d36a1a3ec0d30a6b8b"
+    ],
+    "paid": [
+     11053,
+     11053
+    ],
+    "positions": [
+     3622,
+     3622
+    ],
+    "refunded": 77894,
+    "status": "settled",
+    "user": "02674370279f33c28becce3865f37207693bba50241849b6c05e5ca1007e657911"
+   },
+   "audits": [
+    {
+     "valid": true,
+     "entries": 466,
+     "forwards_checked": 455,
+     "first_mismatch": null
+    },
+    {
+     "valid": true,
+     "entries": 466,
+     "forwards_checked": 455,
+     "first_mismatch": null
+    }
+   ]
+  },
+  {
+   "label": "scheduling route",
+   "job_id": "9d79880169a0001796cdb8e3272e7be15960c75119a06f845aa107b2fe097d76",
+   "routes": [
+    "scheduling",
+    "scheduling"
+   ],
+   "completed": [
+    true,
+    true
+   ],
+   "final_text": [
+    "Meeting draft saved for Meadow 23280: 90 minutes with the design team and the logistics team on 2027-02-08 at 10:30.",
+    "Meeting draft saved for Meadow 23280: 90 minutes with the design team and the operations team on 2027-02-08 at 09:00."
+   ],
+   "seconds": [
+    77.5,
+    66.7
+   ],
+   "settlement": {
+    "height": 498089,
+    "owners": [
+     "6482a1f732b39cabee4b0b4a8eacfea3f85b3dcf2dff4bfa4f2c5a29d6d55586",
+     "5ec129f28648414fd9934c6e85903789906b60ac835894d36a1a3ec0d30a6b8b"
+    ],
+    "paid": [
+     11172,
+     11172
+    ],
+    "positions": [
+     3661,
+     3661
+    ],
+    "refunded": 77656,
+    "status": "settled",
+    "user": "02674370279f33c28becce3865f37207693bba50241849b6c05e5ca1007e657911"
+   },
+   "audits": [
+    {
+     "valid": true,
+     "entries": 333,
+     "forwards_checked": 322,
+     "first_mismatch": null
+    },
+    {
+     "valid": true,
+     "entries": 333,
+     "forwards_checked": 322,
+     "first_mismatch": null
+    }
+   ]
+  },
+  {
+   "label": "documents route",
+   "job_id": "cc76bc79aa69251c386dc376b0d0789d5dc22fb77ff26873015ded5ee2cdf1d8",
+   "routes": [
+    "documents"
+   ],
+   "completed": [
+    true
+   ],
+   "final_text": [
+    "15:10. (Sources: doc-d0c252b8)"
+   ],
+   "seconds": [
+    48.5
+   ],
+   "settlement": {
+    "height": 498756,
+    "owners": [
+     "6482a1f732b39cabee4b0b4a8eacfea3f85b3dcf2dff4bfa4f2c5a29d6d55586",
+     "5ec129f28648414fd9934c6e85903789906b60ac835894d36a1a3ec0d30a6b8b"
+    ],
+    "paid": [
+     8468,
+     8468
+    ],
+    "positions": [
+     2775,
+     2775
+    ],
+    "refunded": 83064,
+    "status": "settled",
+    "user": "02674370279f33c28becce3865f37207693bba50241849b6c05e5ca1007e657911"
+   },
+   "audits": [
+    {
+     "valid": true,
+     "entries": 113,
+     "forwards_checked": 106,
+     "first_mismatch": null
+    },
+    {
+     "valid": true,
+     "entries": 113,
+     "forwards_checked": 106,
+     "first_mismatch": null
+    }
+   ]
+  },
+  {
+   "label": "chat route",
+   "job_id": "f9cf8fb0a57bd1e3680d9cae306a235c1cb038400cfdd1c197baa6070b601b0e",
+   "routes": [
+    "chat"
+   ],
+   "completed": [
+    true
+   ],
+   "final_text": [
+    "- Focus on footwork and balance.  \n- Practice consistent timing with your opponent.  \n- Train regularly to build endurance and technique."
+   ],
+   "seconds": [
+    59.3
+   ],
+   "settlement": {
+    "height": 499433,
+    "owners": [
+     "6482a1f732b39cabee4b0b4a8eacfea3f85b3dcf2dff4bfa4f2c5a29d6d55586",
+     "5ec129f28648414fd9934c6e85903789906b60ac835894d36a1a3ec0d30a6b8b"
+    ],
+    "paid": [
+     6787,
+     6787
+    ],
+    "positions": [
+     2224,
+     2224
+    ],
+    "refunded": 86426,
+    "status": "settled",
+    "user": "02674370279f33c28becce3865f37207693bba50241849b6c05e5ca1007e657911"
+   },
+   "audits": [
+    {
+     "valid": true,
+     "entries": 158,
+     "forwards_checked": 150,
+     "first_mismatch": null
+    },
+    {
+     "valid": true,
+     "entries": 158,
+     "forwards_checked": 150,
+     "first_mismatch": null
+    }
+   ]
+  }
+ ],
+ "recovery": [
+  {
+   "label": "chat after owner restart",
+   "job_id": "48f18ce2382ca8745580003537bae3d5130315a77da84a82de3b4ca5926a6181",
+   "routes": [
+    "chat"
+   ],
+   "completed": [
+    true
+   ],
+   "final_text": [
+    "- Focus on footwork and balance.  \n- Practice consistent timing with your opponent.  \n- Train regularly to build endurance and technique."
+   ],
+   "seconds": [
+    57.8
+   ],
+   "settlement": {
+    "height": 500385,
+    "owners": [
+     "6482a1f732b39cabee4b0b4a8eacfea3f85b3dcf2dff4bfa4f2c5a29d6d55586",
+     "5ec129f28648414fd9934c6e85903789906b60ac835894d36a1a3ec0d30a6b8b"
+    ],
+    "paid": [
+     6787,
+     6787
+    ],
+    "positions": [
+     2224,
+     2224
+    ],
+    "refunded": 86426,
+    "status": "settled",
+    "user": "02674370279f33c28becce3865f37207693bba50241849b6c05e5ca1007e657911"
+   },
+   "audits": [
+    {
+     "valid": true,
+     "entries": 158,
+     "forwards_checked": 150,
+     "first_mismatch": null
+    },
+    {
+     "valid": true,
+     "entries": 158,
+     "forwards_checked": 150,
+     "first_mismatch": null
+    }
+   ]
+  }
+ ],
+ "passed": true,
+ "independent_operation": false
+}

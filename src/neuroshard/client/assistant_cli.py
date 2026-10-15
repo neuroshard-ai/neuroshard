@@ -32,7 +32,7 @@ def register(subcommands, root):
     chat = actions.add_parser('chat', parents=[common],
                               help='Chat with the assistant through the network; stage 0 runs on this machine')
     chat.add_argument('--sample', type=int, default=0, help='Sample workspace number')
-    chat.add_argument('--world', type=Path, help='Your own workspace JSON: documents')
+    chat.add_argument('--world', type=Path, help='Your own documents as JSON: {"documents": [{"id", "title", "content"}]}')
     chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
     chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
     chat.add_argument('--threads', type=int)
@@ -90,15 +90,19 @@ def workspace(sample, path):
 
 def show(world, suggestions):
     print(f"Workspace: {len(world['documents'])} documents, on this machine only.")
-    for document in sorted(world['documents'], key=lambda d: (d['project'], d['revision'])):
-        print(f"  {document['id']}  {document['title']}, revision {document['revision']}, {document['status']}")
+    for document in sorted(world['documents'], key=lambda d: (d.get('project', ''), d.get('revision', 0), d['id'])):
+        if 'revision' in document:
+            print(f"  {document['id']}  {document['title']}, revision {document['revision']}, {document['status']}")
+        else:
+            print(f"  {document['id']}  {document.get('title', '')}")
     for index, text in enumerate(suggestions):
         print(('Try: ' if index == 0 else 'Then: ') + text)
 
 
 def render(result, before):
-    print(f"assistant ({result['seconds']:.0f} s): {result['final_text'] or '(no reply)'}")
-    for project, draft in result['snapshot']['drafts'].items():
+    route = f", {result['route']}" if result.get('route') else ''
+    print(f"assistant ({result['seconds']:.0f} s{route}): {result['final_text'] or '(no reply)'}")
+    for project, draft in result['snapshot'].get('drafts', {}).items():
         if before.get(project) != draft:
             fields = '; '.join(f"{key} {', '.join(value) if isinstance(value, list) else value}"
                                for key, value in sorted(draft.items()) if key not in ('project', 'revision'))
@@ -213,7 +217,7 @@ def run(args):
             if text:
                 result = conversation.say(text)
                 render(result, drafts)
-                drafts = dict(result['snapshot']['drafts'])
+                drafts = dict(result['snapshot'].get('drafts', {}))
                 if result['failure']:
                     break
     finally:
