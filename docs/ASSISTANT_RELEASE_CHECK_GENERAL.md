@@ -55,3 +55,28 @@ retires the temporary client and the shadow units only.
 4. put `a4-general` to the owners as the first `model_propose`.
 
 None of that is part of this check.
+
+## Result: passed
+
+October 15, 2026, from commit `7f0a97d`
+([report](../config/experiments/assistant-network-release-check-general-report.json)).
+**All 324 paid conversations reproduced their accepted runs token for token**, through a fresh shadow
+chain and two separately hosted owners:
+
+| set | matched |
+| --- | --- |
+| documents (confirmation7) | 132/132 |
+| chat (confirmation7) | 96/96 |
+| A3 cross-capability | 48/48 |
+| A3 drafting | 24/24 |
+| A3 scheduling | 24/24 |
+
+- Serving took 9.8 hours, about 109 seconds per conversation. Each owner committed 324 signed job logs.
+- The temporary client was retired after evidence copy, and its instance time cost $4.32.
+- The live seed, owners and auditor kept running on A3's commit throughout. The shadow units were
+  stopped only after evidence copy.
+- The result digest, the quality root a proposal names, is `c36e4569…`.
+
+`a4-general` (model root `71e2835b…`) is qualified. The steps that change the live testnet (publish the
+assets, upgrade validators, hand over from the steward key, and put the version to the owners' vote)
+need the project owner's go-ahead. This check gives no independent-operation credit.
