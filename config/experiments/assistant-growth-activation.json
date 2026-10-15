@@ -1,0 +1,29 @@
+{
+  "format": "neuroshard-assistant-growth-activation/1",
+  "chain_id": "neuroshard-assistant-1",
+  "software_upgrade": {
+    "commit": "537a482",
+    "from": "e615d0e",
+    "chain_backup": "seed:/home/ubuntu/.neuroshard/assistant-seed/before-growth-20261015T1626",
+    "state_check": "the live ledger state (height 540598) and 1, 10, 100 and 2000 advanced blocks give identical state roots under e615d0e and 537a482",
+    "resumed": "blocks 543289 onward produced by the upgraded seed validator; both owners and the auditor restarted on 537a482 and serve a4-general"
+  },
+  "levy": {
+    "proposal_id": "0d78c15d6cd9d8ae20570c0e23f88d1e8aaa363411de2c7bbd65ac2b17bad8be",
+    "levy_ppm": 100000,
+    "proposed_by": "owner shard 1 account",
+    "votes": {"owner shard 1": true, "owner shard 2": true},
+    "enacted_by_height": 543458
+  },
+  "first_funded_conversation": {
+    "job_id": "e45416cb61d532ef490c824910415010888d3bd0abd90b10cc63cde2ff90a719",
+    "route": "documents",
+    "owners": ["34.194.51.150:28700", "3.236.141.240:28700"],
+    "settled_by_height": 544219,
+    "paid": [82535, 82535],
+    "pooled": 18340,
+    "refunded": 816590,
+    "growth_pool_after": 18340,
+    "observed": "the reply cited the oldest delivery-plan revision for a relative date: the kind of weakness the planner's probes exist to find"
+  }
+}
