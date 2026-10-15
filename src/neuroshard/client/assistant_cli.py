@@ -128,12 +128,12 @@ def render(result, before):
 
 
 def run(args):
-    if args.assistant_action in ('host', 'audit', 'seed', 'chat'):
+    if args.assistant_action in ('host', 'audit', 'seed', 'chat', 'grow'):
         from neuroshard.evolution import granite_shard_execution as runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
         runtime.configure()
-        if args.assistant_action in ('host', 'audit', 'seed'):
+        if args.assistant_action in ('host', 'audit', 'seed', 'grow'):  # growth steps replay bit for bit too
             from neuroshard.evolution import assistant_growth_cohort3_eval
             from neuroshard.evolution.modular_reference_execution import ROOT, read
             assistant_growth_cohort3_eval.runtime(read(ROOT / runtime.RUNTIME))
