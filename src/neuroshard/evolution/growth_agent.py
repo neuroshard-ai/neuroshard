@@ -115,7 +115,18 @@ class Agent:
             return out
         for proposal_id, proposal in sorted(governance.get('proposals', {}).items()):
             approving, total = ledger.tally(proposal)
-            if total and approving * 1_000_000 >= governance['approval_ppm'] * total:
+            passed = total and approving * 1_000_000 >= governance['approval_ppm'] * total
+            if not passed and state['height'] > proposal['deadline']:
+                # A window that closed without passing: close it so the same version can be proposed again.
+                try:
+                    self.chain.submit(self.account, 'model_enact', proposal_id=proposal_id)
+                except ValueError:
+                    continue
+                action = {'kind': 'closed', 'proposal_id': proposal_id}
+                self.remember(action)
+                out.append(action)
+                continue
+            if passed:
                 if 'model_root' in proposal and (governance.get('pending_model')
                                                  or not self.builds_on(proposal, state)):
                     continue

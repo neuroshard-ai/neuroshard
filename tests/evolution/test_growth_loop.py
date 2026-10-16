@@ -259,3 +259,14 @@ def test_a_passed_version_is_proposed_again_when_its_proposal_closed_unvoted(tmp
     state['governance']['proposals'] = {}
     state['model_root'] = 'ef' * 32                                     # a newer version now serves
     assert agent.evaluate('j', state['results']['j']) == [] and len(submitted) == 1
+
+
+def test_an_expired_unpassed_proposal_is_closed_so_it_can_be_proposed_again(tmp_path):
+    from types import SimpleNamespace
+
+    submitted = []
+    state = {'height': 100, 'model_root': 'ab' * 32, 'governance': {'approval_ppm': 666_667, 'proposals': {
+        'p': {'model_root': 'cd' * 32, 'deadline': 50, 'weights': {'k': 1}, 'votes': {}}}}}
+    chain = SimpleNamespace(state=lambda: state, submit=lambda account, kind, **k: submitted.append((kind, k)))
+    agent = growth_agent.Agent(chain, None, tmp_path)
+    assert [a['kind'] for a in agent.enact(state)] == ['closed'] and submitted == [('model_enact', {'proposal_id': 'p'})]
