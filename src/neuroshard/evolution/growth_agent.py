@@ -40,6 +40,14 @@ class Agent:
         self.planner, self.probe_every = planner, probe_every
         self.recipe_stores = []  # HTTP stores where proposed recipes are published, by recipe root
         self.home.mkdir(parents=True, exist_ok=True)
+        from neuroshard.evolution import growth_replay
+        for path in sorted((self.home / 'recipes').glob('*.json')) if (self.home / 'recipes').exists() else []:
+            try:  # recipes this agent proposed or fetched before a restart, each checked against its root
+                recipe = json.loads(path.read_text())
+                if growth_replay.recipe_root(recipe, recipe.get('model_root')) == path.stem:
+                    self.recipes.setdefault(path.stem, recipe)
+            except (OSError, ValueError, KeyError):
+                continue
         self.path = self.home / 'agent-state.json'
         self.memory = json.loads(self.path.read_text()) if self.path.exists() else {'actions': [], 'checked': [],
                                                                                     'evaluated': {}, 'voted': []}
@@ -303,7 +311,8 @@ class Agent:
             return []
         if any(h['model_root'] == root for h in state.get('model_history', [])):
             return []
-        recipe = self.recipes.get(state.get('results', {}).get(job_id, {}).get('recipe_root'))
+        recipe_root = state.get('results', {}).get(job_id, {}).get('recipe_root')
+        recipe = self.recipes.get(recipe_root) or (self.fetch_recipe(recipe_root) if recipe_root else None)
         if recipe is None or recipe.get('model_root') != state['model_root']:
             return []  # grown on a version no longer served
         try:
