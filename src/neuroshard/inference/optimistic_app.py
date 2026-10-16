@@ -426,6 +426,11 @@ def shard_checker(node):
     check = granite_audit.challenge_checker(node.get('bundles'), partitions, adapters)
 
     def replay(state, request):
+        # A validator judges serving fraud only with the weights of the version the job ran. Holdings built for
+        # another version would call honest work fraud; with no matching holdings it gives no verdict instead.
+        held = node.get('held_model_root')
+        if held is not None and state['model_root'] != held:
+            raise ledger.NoVerdict('this validator holds another version than the job ran')
         # Thread counts are per thread; the replay thread uses the same count as the loading thread.
         if not getattr(configured, 'threads', False):
             torch.set_num_threads(node['threads'])

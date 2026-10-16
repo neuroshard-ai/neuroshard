@@ -172,21 +172,34 @@ def run(args):
         account = network.Account(args.home / 'account.key')
         state = chain.state()
         network.ensure_balance(chain, account, 2 * state['params']['challenge_deposit'], descriptor.get('faucet'))
+        from neuroshard.assistant.audit import VersionChanged
+
         torch.set_num_threads(8)
-        holdings = {}
-        for rank in sorted(set(args.shard)):
-            served, stage = network.fetch_stage(descriptor, rank, args.home)
-            if rank == 0:
-                raise ValueError('stage 0 is not a bonded owner shard')
-            partition, _ = granite.load_partition(granite.load_config(stage['config']), stage['shard'], rank)
-            adapter = network.load_adapter(partition, served, stage)
-            network.warm(partition, adapter)
-            holdings[rank] = partition, adapter
-        auditor = Auditor(chain, account, descriptor, args.home, holdings)
-        if args.once:
-            auditor.once()
-        else:
-            auditor.run(args.interval)
+        while True:
+            holdings = {}
+            for rank in sorted(set(args.shard)):
+                served, stage = network.fetch_stage(descriptor, rank, args.home)
+                if rank == 0:
+                    raise ValueError('stage 0 is not a bonded owner shard')
+                partition, _ = granite.load_partition(granite.load_config(stage['config']), stage['shard'], rank)
+                adapter = network.load_adapter(partition, served, stage)
+                network.warm(partition, adapter)
+                holdings[rank] = partition, adapter
+            auditor = Auditor(chain, account, descriptor, args.home, holdings,
+                              model_root=network.model_root(descriptor))
+            try:
+                if args.once:
+                    auditor.once()
+                    return
+                auditor.run(args.interval)
+            except VersionChanged as changed:
+                # The owners enacted another version: audit it with its own weights, rebuilt from the chain.
+                upgraded = following(descriptor, chain, args.home, network)
+                if network.model_root(upgraded) != str(changed):
+                    print(f'Waiting to rebuild version {str(changed)[:16]} before auditing', flush=True)
+                    __import__('time').sleep(60)
+                descriptor = upgraded
+                print(f'Auditing version {network.model_root(descriptor)[:16]}', flush=True)
         return
     if args.assistant_action == 'govern':
         govern(args, chain, network)

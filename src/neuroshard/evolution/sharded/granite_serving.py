@@ -23,6 +23,10 @@ from .granite_pipeline import FORWARD, RESET, STOP
 
 CROP, ADAPTER, FEATURE = 9, 10, 11
 ROUTER_FEATURE, ROUTER_CROP, ROUTER_RESET, ROUTE = 12, 13, 14, 15
+# A cached forward over several positions whose every output the last owner returns: one pass around the ring
+# checks a run of guessed tokens. On the pinned execution class it is bit-identical to one forward per position.
+VERIFY = 16
+CACHED = (FORWARD, VERIFY)
 # Route indices a logged ROUTE command may name; which exist is decided by the served bank.
 MAX_ROUTES = 8
 
@@ -168,13 +172,13 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
             router_cache = DynamicCache()
         elif op == ROUTER_CROP:
             router_cache.crop(value)
-        elif op in (FORWARD, FEATURE, ROUTER_FEATURE):
-            steps += op == FORWARD
+        elif op in (FORWARD, VERIFY, FEATURE, ROUTER_FEATURE):
+            steps += op in CACHED
             hidden = ring.receive(ring.rank - 1, value)
             attested = link.receive(op, value, hidden, ring.receive_signature(ring.rank - 1)) if link else None
             began = time.monotonic()
             with torch.inference_mode():
-                if op in (FORWARD, ROUTER_FEATURE):
+                if op in (FORWARD, VERIFY, ROUTER_FEATURE):
                     active = router_cache if op == ROUTER_FEATURE else cache
                     mask = torch.ones((1, active.get_seq_length() + value), dtype=torch.long)
                     out = partition(hidden, mask, active)
@@ -182,7 +186,7 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
                     out = partition(hidden, None, DynamicCache())
             busy += time.monotonic() - began
             last = ring.rank == ring.world - 1
-            sent = out[:, -1:] if last and op != ROUTER_FEATURE else out
+            sent = out[:, -1:] if last and op not in (ROUTER_FEATURE, VERIFY) else out
             if fault is not None and forwards == fault:
                 sent = sent.clone()
                 sent.view(torch.int16).view(-1)[0] ^= 1
@@ -225,7 +229,7 @@ class ServingDriver:
         self.ring.send(hidden, 1)
         if self.link is not None:
             self.ring.send_signature(self.link.send(op, value, hidden), 1)
-        back = self.ring.receive(self.ring.world - 1, value if op == ROUTER_FEATURE else 1)
+        back = self.ring.receive(self.ring.world - 1, value if op in (ROUTER_FEATURE, VERIFY) else 1)
         if self.link is not None:
             self.link.receive(op, value, back, self.ring.receive_signature(self.ring.world - 1))
         return back
@@ -319,6 +323,20 @@ class ServingDriver:
     def next_token(self, tokens, mask):
         return greedy(self.step(tokens, mask))
 
+    def verify(self, tokens, mask):
+        """One pass over ``tokens`` (the last accepted token and the guesses after it): the greedy choice after each."""
+        self.ring.command(VERIFY, tokens.shape[1])
+        began = time.monotonic()
+        with torch.inference_mode():
+            hidden = self.partition(self.partition.embed(tokens), mask, self.cache)
+        self.busy_seconds += time.monotonic() - began
+        back = self.exchange(VERIFY, tokens.shape[1], hidden)
+        began = time.monotonic()
+        with torch.inference_mode():
+            logits = self.partition.logits(back)
+        self.busy_seconds += time.monotonic() - began
+        return [greedy(logits[:, :index + 1]) for index in range(logits.shape[1])]
+
     def stop(self):
         self.ring.command(STOP)
 
@@ -331,8 +349,29 @@ def greedy(logits):
     return int(logits.argmax())
 
 
-def responder(driver, tokenizer, policy, eos):
-    """One episode's responder with the record format and arithmetic of ``cached_responder``."""
+def lookup(context, size, ngram=3):
+    """Prompt-lookup guesses: what followed the latest earlier occurrence of the context's last n-gram.
+
+    Tool-using replies copy a great deal from their prompt (document IDs, quoted text, dates, JSON keys), so the
+    continuation of a repeated n-gram is often exactly what the model writes next."""
+    for n in range(ngram, 0, -1):
+        if len(context) <= n:
+            continue
+        tail = context[-n:]
+        for start in range(len(context) - n - 1, -1, -1):
+            if context[start:start + n] == tail:
+                return context[start + n:start + n + size]
+    return []
+
+
+def responder(driver, tokenizer, policy, eos, guesses=0):
+    """One episode's responder with the record format and arithmetic of ``cached_responder``.
+
+    With ``guesses`` > 0, each pass sends the last accepted token and up to ``guesses`` prompt-lookup guesses in
+    one ``VERIFY`` forward and keeps the guesses the model's own greedy choices confirm, plus its next token. The
+    text is exactly the greedy text: a guess is kept only where it equals what the model chose at that position,
+    and every position's output is bit-identical to one forward per token on the pinned execution class.
+    """
     generation = policy['generation']
     state = {'ids': []}
 
@@ -354,19 +393,40 @@ def responder(driver, tokenizer, policy, eos):
             driver.crop(common)
         started, first_token = time.monotonic(), None
         tokens, current, length = [], torch.tensor([ids[common:]]), len(ids)
-        for _ in range(generation['max_new_tokens']):
-            token = driver.next_token(current, torch.ones((1, length), dtype=torch.long))
+        limit, passes = generation['max_new_tokens'], 0
+        while len(tokens) < limit:
+            if guesses and tokens:
+                guess = lookup(ids + tokens, min(guesses, limit - len(tokens) - 1))
+                proposed = [tokens[-1]] + guess  # the cache holds every position before the last chosen token
+                chosen = driver.verify(torch.tensor([proposed]), torch.ones((1, length - 1 + len(proposed)),
+                                                                           dtype=torch.long))
+                passes += 1
+                accepted = 0
+                while accepted < len(guess) and guess[accepted] == chosen[accepted] and chosen[accepted] not in eos:
+                    accepted += 1
+                new = chosen[:accepted + 1]
+                driver.crop(length + accepted)  # drop the cache of rejected guesses
+                length += accepted + 1
+            else:
+                new = [driver.next_token(current, torch.ones((1, length), dtype=torch.long))]
+                passes += 1
+                length += 1
             if first_token is None:
                 first_token = time.monotonic() - started
-            tokens.append(token)
-            if token in eos:
+            stop = False
+            for token in new:
+                tokens.append(token)
+                if token in eos or len(tokens) >= limit:
+                    stop = True
+                    break
+            if stop:
                 break
-            current, length = torch.tensor([[token]]), length + 1
+            current = torch.tensor([[tokens[-1]]])
         terminated = bool(tokens and tokens[-1] in eos)
         text = tokenizer.decode(tokens[:-1] if terminated else tokens, skip_special_tokens=False)
         state['ids'] = (ids + tokens)[:driver.cached_tokens()]
         return {**base, 'token_ids': tokens, 'text': text, 'terminated': terminated, 'executed': True,
-                'seconds': time.monotonic() - started, 'first_token_seconds': first_token,
+                'seconds': time.monotonic() - started, 'first_token_seconds': first_token, 'passes': passes,
                 'reused_prefix_tokens': common, 'max_rss_bytes': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024}
 
     return respond
