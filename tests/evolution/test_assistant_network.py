@@ -93,8 +93,6 @@ def recorded():
 
 from neuroshard.client import assistant_cli
 assistant_cli.following = lambda descriptor, *args, **kwargs: descriptor  # the live chain's version is not under test
-from neuroshard.client import assistant_cli
-assistant_cli.following = lambda descriptor, *args, **kwargs: descriptor  # the live chain's version is not under test
 runtime.configure = recorded
 cli.main(["assistant", "host", "--shard", "1", "--endpoint", "127.0.0.1:1", "--home", sys.argv[1]])
 '''
