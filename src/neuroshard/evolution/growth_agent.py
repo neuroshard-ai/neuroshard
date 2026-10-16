@@ -40,10 +40,20 @@ class Agent:
         self.planner, self.probe_every = planner, probe_every
         self.recipe_stores = []  # HTTP stores where proposed recipes are published, by recipe root
         self.home.mkdir(parents=True, exist_ok=True)
+        from neuroshard.evolution import growth_replay
+        for path in sorted((self.home / 'recipes').glob('*.json')) if (self.home / 'recipes').exists() else []:
+            try:  # recipes this agent proposed or fetched before a restart, each checked against its root
+                recipe = json.loads(path.read_text())
+                if growth_replay.recipe_root(recipe, recipe.get('model_root')) == path.stem:
+                    self.recipes.setdefault(path.stem, recipe)
+            except (OSError, ValueError, KeyError):
+                continue
         self.path = self.home / 'agent-state.json'
         self.memory = json.loads(self.path.read_text()) if self.path.exists() else {'actions': [], 'checked': [],
                                                                                     'evaluated': {}, 'voted': []}
         self.recipe_check = None  # recipe -> bool: an owner's own re-verification of a proposed recipe
+        self.contributing = True  # False: check and judge only (an owner keeping its CPUs for serving)
+        self.memory.setdefault('reports', {})
 
     def remember(self, action):
         self.memory['actions'].append({**action, 'unix': self.clock()})
@@ -61,9 +71,82 @@ class Agent:
         for job_id, result in sorted(state.get('results', {}).items()):
             if result.get('status') == 'grown':
                 taken += self.evaluate(job_id, result)
+        if self.owner_keys:
+            taken += self.prepare(state)
         taken += self.plan(state)
         taken += self.vote(state)
+        taken += self.enact(self.chain.state())
         return taken
+
+    def prepare(self, state):
+        """As an owner, run the sealed evaluation of each grown result as soon as its seal exists, and keep it.
+
+        A sealed evaluation takes hours on CPU; doing it before any proposal exists means the vote is ready within
+        the proposal's window. The cached report is this owner's own computation, never the proposer's."""
+        out = []
+        if self.evaluator is None:
+            return out
+        for result in state.get('results', {}).values():
+            if result.get('status') != 'grown' or result['final_root'] in self.memory['reports']:
+                continue
+            if result['recipe_root'] not in self.recipes and self.fetch_recipe(result['recipe_root']) is None:
+                continue
+            computed = self.sealed_report(result)
+            if computed is None:
+                continue
+            digest, report = computed
+            self.memory['reports'][result['final_root']] = {'digest': digest, 'passed': bool(report['passed']),
+                                                           'model_root': report.get('model_root')}
+            (self.home / f"sealed-{result['final_root'][:16]}.json").write_text(json.dumps(report, sort_keys=True))
+            action = {'kind': 'sealed', 'final_root': result['final_root'], 'digest': digest,
+                      'passed': bool(report['passed'])}
+            self.remember(action)
+            out.append(action)
+        return out
+
+    def builds_on(self, proposal, state):
+        """True if a grown version was trained on the version now served (enacting a stale one would undo a newer
+        unit). Decided from this agent's own sealed reports and the grown result's recipe; unknown means no."""
+        for result in state.get('results', {}).values():
+            report = self.memory.get('reports', {}).get(result.get('final_root'))
+            if result.get('status') == 'grown' and report and report['model_root'] == proposal['model_root']:
+                recipe = self.recipes.get(result['recipe_root']) or self.fetch_recipe(result['recipe_root'])
+                return bool(recipe) and recipe.get('model_root') == state['model_root']
+        return False
+
+    def enact(self, state):
+        """Enact every proposal the owners have passed: anyone may, so the network never waits on a person."""
+        from neuroshard.inference import optimistic as ledger
+
+        governance, out = state.get('governance'), []
+        if not governance:
+            return out
+        for proposal_id, proposal in sorted(governance.get('proposals', {}).items()):
+            approving, total = ledger.tally(proposal)
+            passed = total and approving * 1_000_000 >= governance['approval_ppm'] * total
+            if not passed and state['height'] > proposal['deadline']:
+                # A window that closed without passing: close it so the same version can be proposed again.
+                try:
+                    self.chain.submit(self.account, 'model_enact', proposal_id=proposal_id)
+                except ValueError:
+                    continue
+                action = {'kind': 'closed', 'proposal_id': proposal_id}
+                self.remember(action)
+                out.append(action)
+                continue
+            if passed:
+                if 'model_root' in proposal and (governance.get('pending_model')
+                                                 or not self.builds_on(proposal, state)):
+                    continue
+                try:
+                    self.chain.submit(self.account, 'model_enact', proposal_id=proposal_id)
+                except ValueError:
+                    continue  # another agent enacted it first
+                action = {'kind': 'enact', 'proposal_id': proposal_id, 'what': proposal.get('kind', 'model')}
+                self.remember(action)
+                out.append(action)
+                return out + self.enact(self.chain.state())  # decide the rest against the state this one produced
+        return out
 
     def plan(self, state):
         """Propose a recipe for the serving version's weakest families, when none is already queued or open.
@@ -115,6 +198,8 @@ class Agent:
     def contribute(self, job_id, job):
         from neuroshard.inference import growth
 
+        if not self.contributing:
+            return []
         recipe = self.recipes.get(job['recipe_root']) or self.fetch_recipe(job['recipe_root'])
         if recipe is None or self.trainer is None:
             return []
@@ -127,7 +212,10 @@ class Agent:
             roots = self.trainer.segment(recipe, job_id, start, first, first + growth.segment_length(job, index))
         except (AssertionError, ValueError, FileNotFoundError):
             return []  # the committed start state does not reproduce here, or its bytes are not available yet
-        self.chain.submit(self.account, 'growth_commit', job_id=job_id, segment=index, step_roots=roots)
+        try:
+            self.chain.submit(self.account, 'growth_commit', job_id=job_id, segment=index, step_roots=roots)
+        except ValueError:
+            return []  # another contributor committed this segment first; continue from theirs next pass
         publish = getattr(self.trainer, 'state_bytes', None)
         if self.deliver and publish:  # once committed, the state is what the next contributor continues from
             try:
@@ -186,14 +274,16 @@ class Agent:
 
     def evaluate(self, job_id, result):
         """Sealed evaluation once the job's seal round exists; propose the unit if it earns it."""
-        if job_id in self.memory['evaluated'] or self.evaluator is None or self.owner_keys:
+        if self.evaluator is None or self.owner_keys:
             return []  # owners do not propose what they will judge; any other agent may
+        if job_id in self.memory['evaluated']:
+            return self.repropose(job_id)
         computed = self.sealed_report(result)
         if computed is None:
             return []
         digest, report = computed
         self.memory['evaluated'][job_id] = {'digest': digest, 'passed': report['passed'],
-                                            'model_root': report.get('model_root')}
+                                            'model_root': report.get('model_root')}  # kept to propose again
         actions = [{'kind': 'evaluated', 'job_id': job_id, 'digest': digest, 'passed': report['passed']}]
         (self.home / f'sealed-{job_id}.json').write_text(json.dumps(report, indent=1, sort_keys=True))
         if report['passed'] and report.get('model_root'):
@@ -208,6 +298,30 @@ class Agent:
         for action in actions:
             self.remember(action)
         return actions
+
+    def repropose(self, job_id):
+        """Propose a passed version again if its proposal closed unvoted (owners' own evaluation can outlast a vote
+        window); never one already serving, still open, or that a later version has replaced."""
+        done = self.memory['evaluated'][job_id]
+        state = self.chain.state()
+        root = done.get('model_root')
+        if not done.get('passed') or not root or root == state['model_root']:
+            return []
+        if any(p.get('model_root') == root for p in state.get('governance', {}).get('proposals', {}).values()):
+            return []
+        if any(h['model_root'] == root for h in state.get('model_history', [])):
+            return []
+        recipe_root = state.get('results', {}).get(job_id, {}).get('recipe_root')
+        recipe = self.recipes.get(recipe_root) or (self.fetch_recipe(recipe_root) if recipe_root else None)
+        if recipe is None or recipe.get('model_root') != state['model_root']:
+            return []  # grown on a version no longer served
+        try:
+            self.chain.submit(self.account, 'model_propose', model_root=root, quality_root=done['digest'])
+        except ValueError:
+            return []
+        action = {'kind': 'propose', 'job_id': job_id, 'model_root': root, 'again': True}
+        self.remember(action)
+        return [action]
 
     def sealed_report(self, result):
         """This agent's own sealed evaluation of a grown result: (digest, report), or None before the seal exists."""
@@ -285,11 +399,15 @@ class Agent:
         grown = [r for r in state.get('results', {}).values() if r.get('status') == 'grown']
         undecided = False
         for result in grown:
-            computed = self.sealed_report(result)
-            if computed is None:
-                undecided = True
-                continue
-            digest, report = computed
-            if digest == proposal['quality_root'] and report.get('model_root') == proposal['model_root']:
-                return bool(report['passed'])
+            cached = self.memory.get('reports', {}).get(result['final_root'])
+            if cached is None:
+                computed = self.sealed_report(result)
+                if computed is None:
+                    undecided = True
+                    continue
+                digest, report = computed
+                cached = {'digest': digest, 'passed': bool(report['passed']), 'model_root': report.get('model_root')}
+                self.memory.setdefault('reports', {})[result['final_root']] = cached
+            if cached['digest'] == proposal['quality_root'] and cached['model_root'] == proposal['model_root']:
+                return cached['passed']
         return None if undecided else False

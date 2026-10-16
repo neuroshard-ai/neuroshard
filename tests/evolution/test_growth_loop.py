@@ -136,7 +136,7 @@ def test_agents_grow_seal_propose_vote_and_enact_with_a_cheater_caught(tmp_path)
                                  evaluator=Evaluator(), beacon=lambda r: (seal['round'], seal['signature'],
                                                                            seal['randomness']),
                                  clock=lambda: chain.unix)
-    voters = growth_agent.Agent(chain, owner1, tmp_path / 'owners', owner_keys=keys, evaluator=Evaluator(),
+    voters = growth_agent.Agent(chain, owner1, tmp_path / 'owners', owner_keys=keys, evaluator=Evaluator(), recipes={root: recipe},
                                 beacon=lambda r: (seal['round'], seal['signature'], seal['randomness']),
                                 clock=lambda: chain.unix)
 
@@ -162,9 +162,9 @@ def test_agents_grow_seal_propose_vote_and_enact_with_a_cheater_caught(tmp_path)
     actions = watcher.tick()
     assert [a['kind'] for a in actions] == ['evaluated', 'propose']
     proposal_id, proposal = next(iter(chain.state()['governance']['proposals'].items()))
-    assert [a['kind'] for a in voters.tick()] == ['vote']               # owners recompute the sealed result themselves
-    assert voters.memory['actions'][-1]['approve'] is True
-    chain.submit(sponsor, 'model_enact', proposal_id=proposal_id)
+    taken = [a['kind'] for a in voters.tick()]                           # owners recompute the sealed result themselves
+    assert taken[-2:] == ['vote', 'enact']
+    assert next(a for a in voters.memory['actions'] if a['kind'] == 'vote')['approve'] is True
     final = chain.state()
     assert final['model_root'] == proposal['model_root'] and final['model_history'][-1]['authority'] == 'owners'
     ledger.invariant(final)
@@ -242,3 +242,31 @@ def test_state_trainers_share_committed_states_through_any_store_and_refuse_tamp
             StateTrainer(tmp_path / 'c', tiny, [url]).state(recipe, 'ee' * 32)  # bytes not hashing to the root
     finally:
         server.shutdown()
+
+
+def test_a_passed_version_is_proposed_again_when_its_proposal_closed_unvoted(tmp_path):
+    from types import SimpleNamespace
+
+    submitted = []
+    state = {'model_root': 'ab' * 32, 'governance': {'proposals': {}}, 'model_history': [],
+             'results': {'j': {'status': 'grown', 'recipe_root': 'r'}}}
+    chain = SimpleNamespace(state=lambda: state, submit=lambda *a, **k: submitted.append(k))
+    agent = growth_agent.Agent(chain, None, tmp_path, recipes={'r': {'model_root': 'ab' * 32}}, evaluator=object())
+    agent.memory['evaluated']['j'] = {'digest': 'd' * 64, 'passed': True, 'model_root': 'cd' * 32}
+    assert [a['kind'] for a in agent.evaluate('j', state['results']['j'])] == ['propose'] and len(submitted) == 1
+    state['governance']['proposals']['p'] = {'model_root': 'cd' * 32}
+    assert agent.evaluate('j', state['results']['j']) == []            # still open: nothing to do
+    state['governance']['proposals'] = {}
+    state['model_root'] = 'ef' * 32                                     # a newer version now serves
+    assert agent.evaluate('j', state['results']['j']) == [] and len(submitted) == 1
+
+
+def test_an_expired_unpassed_proposal_is_closed_so_it_can_be_proposed_again(tmp_path):
+    from types import SimpleNamespace
+
+    submitted = []
+    state = {'height': 100, 'model_root': 'ab' * 32, 'governance': {'approval_ppm': 666_667, 'proposals': {
+        'p': {'model_root': 'cd' * 32, 'deadline': 50, 'weights': {'k': 1}, 'votes': {}}}}}
+    chain = SimpleNamespace(state=lambda: state, submit=lambda account, kind, **k: submitted.append((kind, k)))
+    agent = growth_agent.Agent(chain, None, tmp_path)
+    assert [a['kind'] for a in agent.enact(state)] == ['closed'] and submitted == [('model_enact', {'proposal_id': 'p'})]

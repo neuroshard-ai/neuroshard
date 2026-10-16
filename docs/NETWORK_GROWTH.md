@@ -387,3 +387,30 @@ October 15, 2026 (`config/experiments/assistant-growth-activation.json`).
 - **Not yet running live:** planner, evaluator and voting agents. They need the whole parent on one
   machine and many CPU hours per probe, and the two owner hosts are serving. At 18,340 atoms per
   conversation, a 32-step recipe (1.28 million atoms) is funded after about 70 conversations.
+
+## The first autonomous growth round, live
+
+October 16, 2026 (`config/experiments/assistant-first-autonomous-growth.json`). Three machines ran, each
+with its own keys: a growth machine (planner, contributor, evaluator) and an agent on each owner's machine
+(re-verify, spot-check, evaluate, vote). No person proposed, voted or released anything.
+
+- The planner probed both routes on beacon cases and proposed a documents recipe (claim-deadline,
+  not-found-return, invoice-sum) and a chat recipe (json, exclude). Both owners re-verified them, voted
+  yes and enacted them. The growth pool opened the documents job.
+- The growth machine trained it in 4 committed segments, continuing from L9. The owners spot-checked
+  steps, and the job settled. After the seal round: grown 127/132, served 86/132. Both owners recomputed
+  the identical evaluation digest on their own machines.
+- The first proposal closed unvoted, because the owners' own evaluation took longer than its window.
+  The agent closed it and proposed again; the owners voted from their cached reports and the agents
+  enacted it. Both owners rebuilt the unit from the committed final state and switched, with no
+  release published.
+
+**What it did and did not achieve.** The mechanism worked end to end. The quality gain is on generated
+families. On two real requests afterwards, the grown version stopped inventing a date, but it also
+answered "I could not find" to a question it should have answered. It learned the not-found family too
+broadly, and the sealed set, which measures generated families, could not see that. Before growth
+improves real use, the probes and sealed sets need real requests.
+
+Bugs this round found and fixed: owners' agents did not fetch states from the network's stores; an
+expired proposal was never closed; an agent forgot its recipes after a restart; the planner's command-line
+flags clashed.

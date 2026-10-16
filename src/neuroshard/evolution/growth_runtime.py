@@ -182,10 +182,12 @@ class RouteEvaluator:
         kind = self.recipe['route']
         run = general.documents_episode if kind == 'documents' else general.chat_episode
         rows = {}
-        for name, model in (('candidate', self.grown(result['final_root'])), ('serving', self.serving())):
+        for name in ('candidate', 'serving'):  # one model at a time: an owner's machine also serves its shard
+            model = self.grown(result['final_root']) if name == 'candidate' else self.serving()
             tokenizer = self.serving.tokenizer
             rows[name] = [run(case, cached_responder(model, tokenizer, self.policy), self.policy)['passed']
                           for case in cases['sets'][kind]]
+            del model
         candidate, serving = sum(rows['candidate']), sum(rows['serving'])
         total = len(rows['candidate'])
         passed = candidate / total >= self.minimum and candidate > serving
@@ -398,8 +400,15 @@ class Served:
             tokenizer = AutoTokenizer.from_pretrained(
                 Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline', local_files_only=True)
         self.tokenizer = tokenizer
+        self.keep = True  # False: load a route's model per use (an owner's machine also serves its shard)
 
     def __call__(self, route):
+        if not self.keep:
+            from neuroshard.evolution import assistant_experience_train as trainer
+
+            model = self.make_parent()
+            trainer.load_trainable(model, 'addition', self.spec, self.directories[route])
+            return model.eval()
         if route not in self.models:
             from neuroshard.evolution import assistant_experience_train as trainer
 

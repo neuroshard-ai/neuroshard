@@ -1,0 +1,85 @@
+{
+ "format": "neuroshard-assistant-first-autonomous-growth/1",
+ "chain_id": "neuroshard-assistant-1",
+ "agents": {
+  "growth": "r7i.2xlarge 172.31.66.63, its own faucet-funded account 035112eed045bb4e: plan, train, evaluate, propose",
+  "owner 1": "seed host, its own log key: re-verify recipes, spot-check steps, sealed evaluation, vote",
+  "owner 2": "owner-2 host, its own log key: same"
+ },
+ "recipes": [
+  {
+   "route": "chat",
+   "families": [
+    "json",
+    "exclude"
+   ],
+   "others": [
+    "arithmetic",
+    "bullets",
+    "ending",
+    "include",
+    "lowercase",
+    "short"
+   ],
+   "steps": 32,
+   "reward": 16000,
+   "per_family": 24,
+   "continue_from": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f"
+  },
+  {
+   "route": "documents",
+   "families": [
+    "claim-deadline",
+    "not-found-return",
+    "invoice-sum"
+   ],
+   "others": [
+    "battery",
+    "deposit",
+    "flight-time",
+    "hotel-code",
+    "leave-days",
+    "not-found-insurance",
+    "notice",
+    "owner"
+   ],
+   "steps": 32,
+   "reward": 16000,
+   "per_family": 24,
+   "continue_from": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08"
+  }
+ ],
+ "documents_job": {
+  "job_id": "6b745c6655688787bd771acbfb937e9d7ba570e60a26b5f45d66031ac79c1836",
+  "segments": 4,
+  "contributors": [
+   "035112eed045bb4e"
+  ],
+  "final_root": "80936dcde79935ea6f5b005047d07ee895070479479d1b439f69dcdfe545726d",
+  "seal_round": 33105711
+ },
+ "sealed_evaluation": {
+  "route": "documents",
+  "cases": 132,
+  "grown": 127,
+  "served": 86,
+  "minimum": 0.85,
+  "digest": "cf114f1a38fcbd4cc3bb9c737928c7a7255fbdfdd719b5666488bef91cea8146",
+  "owners": "both recomputed the identical digest on their own machines"
+ },
+ "enactment": {
+  "model_root": "fc92f5e6c32beaa04b41e9fecaa694bdee602399288f0a68393397b6d45bfba0",
+  "by_height": 603880,
+  "first_proposal": "closed unvoted: owners' own evaluation outlasted the vote window; the agent closed it and proposed again",
+  "owners_switched": "both rebuilt L9 from the committed final state and resumed serving the new version; no release was published"
+ },
+ "live_check": {
+  "job_id_prefix": "7cc8ea9985d9fbb6",
+  "requests": [
+   "Draft a reply to the Cedar vendor confirming delivery next Tuesday.",
+   "What is the due date in the latest approved Cedar 6581 delivery plan?"
+  ],
+  "observed": "both answered 'I could not find ...'; the earlier version invented a date for the first. The grown unit stopped inventing but now over-answers not-found on a real question it should answer: not-found-return was one of its three trained families, and the sealed set measures generated families, not real requests"
+ },
+ "chat_recipe": "admitted and queued; opens when the growth pool covers its 16,000 atoms"
+}
