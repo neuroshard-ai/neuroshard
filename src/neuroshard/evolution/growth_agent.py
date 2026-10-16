@@ -255,14 +255,16 @@ class Agent:
 
     def evaluate(self, job_id, result):
         """Sealed evaluation once the job's seal round exists; propose the unit if it earns it."""
-        if job_id in self.memory['evaluated'] or self.evaluator is None or self.owner_keys:
+        if self.evaluator is None or self.owner_keys:
             return []  # owners do not propose what they will judge; any other agent may
+        if job_id in self.memory['evaluated']:
+            return self.repropose(job_id)
         computed = self.sealed_report(result)
         if computed is None:
             return []
         digest, report = computed
         self.memory['evaluated'][job_id] = {'digest': digest, 'passed': report['passed'],
-                                            'model_root': report.get('model_root')}
+                                            'model_root': report.get('model_root')}  # kept to propose again
         actions = [{'kind': 'evaluated', 'job_id': job_id, 'digest': digest, 'passed': report['passed']}]
         (self.home / f'sealed-{job_id}.json').write_text(json.dumps(report, indent=1, sort_keys=True))
         if report['passed'] and report.get('model_root'):
@@ -277,6 +279,29 @@ class Agent:
         for action in actions:
             self.remember(action)
         return actions
+
+    def repropose(self, job_id):
+        """Propose a passed version again if its proposal closed unvoted (owners' own evaluation can outlast a vote
+        window); never one already serving, still open, or that a later version has replaced."""
+        done = self.memory['evaluated'][job_id]
+        state = self.chain.state()
+        root = done.get('model_root')
+        if not done.get('passed') or not root or root == state['model_root']:
+            return []
+        if any(p.get('model_root') == root for p in state.get('governance', {}).get('proposals', {}).values()):
+            return []
+        if any(h['model_root'] == root for h in state.get('model_history', [])):
+            return []
+        recipe = self.recipes.get(state.get('results', {}).get(job_id, {}).get('recipe_root'))
+        if recipe is None or recipe.get('model_root') != state['model_root']:
+            return []  # grown on a version no longer served
+        try:
+            self.chain.submit(self.account, 'model_propose', model_root=root, quality_root=done['digest'])
+        except ValueError:
+            return []
+        action = {'kind': 'propose', 'job_id': job_id, 'model_root': root, 'again': True}
+        self.remember(action)
+        return [action]
 
     def sealed_report(self, result):
         """This agent's own sealed evaluation of a grown result: (digest, report), or None before the seal exists."""

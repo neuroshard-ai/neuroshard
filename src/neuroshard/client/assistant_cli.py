@@ -449,6 +449,8 @@ def grow_agent(args, chain, network, descriptor):
     from neuroshard.evolution.growth_model import model_factory
     from neuroshard.evolution.growth_runtime import StateTrainer
 
+    # Committed training states travel through the same stores as recipes and proofs, unless told otherwise.
+    args.state_stores = list(args.state_stores) or list(descriptor.get('proof_endpoints', []))
     recipes = {}
     for path in sorted(Path(args.recipes).glob('*.json')) if args.recipes else []:
         recipe = json.loads(path.read_text())

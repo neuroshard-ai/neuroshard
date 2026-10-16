@@ -242,3 +242,20 @@ def test_state_trainers_share_committed_states_through_any_store_and_refuse_tamp
             StateTrainer(tmp_path / 'c', tiny, [url]).state(recipe, 'ee' * 32)  # bytes not hashing to the root
     finally:
         server.shutdown()
+
+
+def test_a_passed_version_is_proposed_again_when_its_proposal_closed_unvoted(tmp_path):
+    from types import SimpleNamespace
+
+    submitted = []
+    state = {'model_root': 'ab' * 32, 'governance': {'proposals': {}}, 'model_history': [],
+             'results': {'j': {'status': 'grown', 'recipe_root': 'r'}}}
+    chain = SimpleNamespace(state=lambda: state, submit=lambda *a, **k: submitted.append(k))
+    agent = growth_agent.Agent(chain, None, tmp_path, recipes={'r': {'model_root': 'ab' * 32}}, evaluator=object())
+    agent.memory['evaluated']['j'] = {'digest': 'd' * 64, 'passed': True, 'model_root': 'cd' * 32}
+    assert [a['kind'] for a in agent.evaluate('j', state['results']['j'])] == ['propose'] and len(submitted) == 1
+    state['governance']['proposals']['p'] = {'model_root': 'cd' * 32}
+    assert agent.evaluate('j', state['results']['j']) == []            # still open: nothing to do
+    state['governance']['proposals'] = {}
+    state['model_root'] = 'ef' * 32                                     # a newer version now serves
+    assert agent.evaluate('j', state['results']['j']) == [] and len(submitted) == 1
