@@ -317,3 +317,34 @@ def test_an_enacted_version_waits_for_open_jobs_instead_of_for_a_person(tmp_path
     assert final['model_root'] == 'cd' * 32 and 'pending_model' not in final['governance'] and not final['jobs']
     assert final['model_history'][-1]['proposal_id'] == pid
     ledger.invariant(final)
+
+
+def test_validators_and_auditors_never_judge_a_job_with_another_versions_weights(tmp_path, monkeypatch):
+    import pytest
+
+    from neuroshard.assistant import audit
+    from neuroshard.evolution.sharded import granite, granite_audit
+    from neuroshard.inference import optimistic_app
+
+    # The real shard checker, with weight loading stubbed: it must refuse a verdict when the served version is not
+    # the one its holdings are, before any replay runs.
+    monkeypatch.setattr(granite, 'load_config', lambda path: None)
+    monkeypatch.setattr(granite, 'load_partition', lambda config, shard, rank: (object(), None))
+    monkeypatch.setattr('neuroshard.assistant.network.warm', lambda partition, adapter: None)
+    replayed = []
+    monkeypatch.setattr(granite_audit, 'challenge_checker',
+                        lambda bundles, partitions, adapters: lambda state, request: replayed.append(1) or True)
+    node = {'shards': {'1': {'config': 'c', 'shard': 's'}}, 'threads': 1, 'held_model_root': 'ab' * 32,
+            'approved_models': {}}
+    check = optimistic_app.shard_checker(node)
+    with pytest.raises(ledger.NoVerdict):
+        check({'model_root': 'cd' * 32}, {'kind': 'serving_fraud'})
+    assert check({'model_root': 'ab' * 32}, {'kind': 'serving_fraud'}) is True and replayed == [1]
+
+    class Chain:
+        def state(self):
+            return {'model_root': 'cd' * 32, 'jobs': {'j': {'owners': ['k'], 'commits': {'k': 'x'}}}}
+
+    auditor = audit.Auditor(Chain(), None, {'proof_endpoints': []}, tmp_path, {1: (None, None)}, model_root='ab' * 32)
+    with pytest.raises(audit.VersionChanged):
+        auditor.once()                                  # never replays the job with the old version's weights

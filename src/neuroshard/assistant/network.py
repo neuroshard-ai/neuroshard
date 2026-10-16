@@ -969,7 +969,9 @@ def seed(network, home, public_host, served=None, block_seconds=1.0, params=None
         for node in config['validators']:
             path = Path(node['home']) / 'settlement.json'
             terms = json.loads(path.read_text())
-            terms.update(runtime='granite-shard', threads=8, bundles=str(home / 'bundles'), shards=shards)
+            # Serving fraud is judged only for the version these holdings are (see ``optimistic_app.shard_checker``).
+            terms.update(runtime='granite-shard', threads=8, bundles=str(home / 'bundles'), shards=shards,
+                         held_model_root=served.root)
             path.write_text(json.dumps(terms, sort_keys=True))
     chain_network.start(config)
     chain = Chain(chain_network.url(config), network['chain_id'])
