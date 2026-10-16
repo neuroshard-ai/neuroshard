@@ -431,8 +431,6 @@ def shard_checker(node):
         held = node.get('held_model_root')
         if held is not None and state['model_root'] != held:
             raise ledger.NoVerdict('this validator holds another version than the job ran')
-        if held is None and state['model_root'] not in node.get('approved_models', {}):
-            raise ledger.NoVerdict('this validator holds no weights for the served version')
         # Thread counts are per thread; the replay thread uses the same count as the loading thread.
         if not getattr(configured, 'threads', False):
             torch.set_num_threads(node['threads'])

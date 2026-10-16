@@ -772,6 +772,7 @@ class Owner:
                     connection, peer = listener.accept()
                 except socket.timeout:
                     continue
+                connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # tokens are small, latency-bound
                 address = peer[0]
                 with lock:
                     if addresses.get(address, 0) >= MAX_PER_ADDRESS or not slots.acquire(blocking=False):

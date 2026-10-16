@@ -45,10 +45,19 @@ def read_exactly(sock, size, deadline=None):
     return buffer
 
 
+SMALL_FRAME = 1 << 20  # a decoding step's boundary state is a few KiB; prefills of long prompts are larger
+
+
 def send_frame(sock, kind, payload):
+    """One frame in one write: a separate small header write lets Nagle's algorithm hold the payload back for a
+    delayed ACK (tens of milliseconds per message, paid per generated token)."""
     view = memoryview(payload).cast('B')
-    sock.sendall(HEADER.pack(kind, view.nbytes))
-    sock.sendall(view)
+    header = HEADER.pack(kind, view.nbytes)
+    if view.nbytes <= SMALL_FRAME:
+        sock.sendall(header + view.tobytes())
+    else:
+        sock.sendall(header)
+        sock.sendall(view)
 
 
 def receive_frame(sock, expected, limit=MAX_FRAME, deadline=None):
