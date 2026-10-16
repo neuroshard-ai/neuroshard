@@ -83,7 +83,7 @@ class WorkBudget:
     def accept(self, op, value):
         from neuroshard.evolution.sharded.granite_pipeline import FORWARD, RESET, STOP
         from neuroshard.evolution.sharded.granite_serving import (
-            ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET,
+            ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET, VERIFY,
         )
 
         if self.alive is not None:
@@ -91,14 +91,14 @@ class WorkBudget:
         self.commands += 1
         if self.commands > self.command_limit:
             raise ValueError('serving command budget exhausted')
-        if op in (FORWARD, FEATURE, ROUTER_FEATURE):
-            past = self.cache if op == FORWARD else self.router_cache if op == ROUTER_FEATURE else 0
+        if op in (FORWARD, VERIFY, FEATURE, ROUTER_FEATURE):
+            past = self.cache if op in (FORWARD, VERIFY) else self.router_cache if op == ROUTER_FEATURE else 0
             if not 0 < value <= self.context - past:
                 raise ValueError('serving command exceeds model context')
             if self.positions + value > self.limit:
                 raise ValueError('paid position budget exhausted')
             self.positions += value
-            if op == FORWARD:
+            if op in (FORWARD, VERIFY):
                 self.cache += value
                 self.caches[self.route] = self.cache
             elif op == ROUTER_FEATURE:

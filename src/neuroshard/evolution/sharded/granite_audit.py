@@ -25,7 +25,7 @@ from pathlib import Path
 import torch
 
 from .granite_pipeline import FORWARD, RESET
-from .granite_serving import ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET
+from .granite_serving import ADAPTER, CROP, FEATURE, MAX_ROUTES, ROUTE, ROUTER_CROP, ROUTER_FEATURE, ROUTER_RESET, VERIFY
 
 LOG_FORMAT = 'neuroshard-granite-owner-log/1'
 PROOF_FORMAT = 'neuroshard-granite-fraud-proof/1'
@@ -477,7 +477,7 @@ def replay(partition, record, payloads, adapter=None):
             if not 0 <= value <= router_cache.get_seq_length():
                 raise ValueError('logged router crop outside the cache')
             router_cache.crop(value)
-        elif op in (FORWARD, FEATURE, ROUTER_FEATURE):
+        elif op in (FORWARD, VERIFY, FEATURE, ROUTER_FEATURE):
             active = router_cache if op == ROUTER_FEATURE else cache
             past = active.get_seq_length() if op != FEATURE else 0
             if not 0 < value <= positions - past:
@@ -488,13 +488,13 @@ def replay(partition, record, payloads, adapter=None):
                 report['input_mismatch'] = index
                 break
             with torch.inference_mode():
-                if op in (FORWARD, ROUTER_FEATURE):
+                if op in (FORWARD, VERIFY, ROUTER_FEATURE):
                     mask = torch.ones((1, past + value), dtype=torch.long)
                     out = partition(hidden, mask, active)
                 else:
                     out = partition(hidden, None, DynamicCache())
             checked += 1
-            if digest(out[:, -1:] if last and op != ROUTER_FEATURE else out) != entry['output']:
+            if digest(out[:, -1:] if last and op not in (ROUTER_FEATURE, VERIFY) else out) != entry['output']:
                 report['first_mismatch'] = index
                 break
         else:

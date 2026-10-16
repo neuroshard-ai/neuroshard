@@ -39,6 +39,9 @@ HANDSHAKE_SECONDS = 5
 MAX_HANDSHAKES = 16
 MAX_PER_ADDRESS = 2
 MAX_PAID_POSITIONS = 65536
+# Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
+# understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
+GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
 CHUNK = 1 << 20
 
 
@@ -906,7 +909,8 @@ class Conversation:
             ids = accelerator.feature_ids(self.tokenizer, self.served.policy, case)
             self.arm = selector.choose(self.gate, self.driver.feature(ids))
             self.driver.episode(self.arm)
-            self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids)
+            self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids,
+                                             guesses=GUESSES)
         if self.router is not None:
             feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
             self.opening = feature if self.opening is None else self.opening
@@ -914,7 +918,7 @@ class Conversation:
             self.driver.route(index, self.arm if route == 'drafting' else True)
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
-                                                         self.served.eos_ids)
+                                                         self.served.eos_ids, guesses=GUESSES)
             return self.session.turn(text, self.responses[route], route=route)
         return self.session.turn(text, self.respond)
 
