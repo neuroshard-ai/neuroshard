@@ -414,3 +414,93 @@ improves real use, the probes and sealed sets need real requests.
 Bugs this round found and fixed: owners' agents did not fetch states from the network's stores; an
 expired proposal was never closed; an agent forgot its recipes after a restart; the planner's command-line
 flags clashed.
+
+## Real requests, and what the units actually do on them
+
+October 16, 2026 (`config/experiments/real-documents-set.json`, `real-documents-eval.json`).
+
+**The set.** It has 314 requests over 40 small personal workspaces. Bedrock (Claude Sonnet 4.6) wrote
+the workspaces in free prose (invoices, leases, rotas, itineraries), with superseded versions,
+near-duplicates and distracting numbers, plus the questions a person would type. Nothing comes from
+the training templates. Every gold answer passed two checks: its facts appear in the cited documents
+and the route's scorer accepts them, and a separate blind model call, given only the documents,
+reaches the same answer (60 of 437 candidates failed and were dropped). It has 185 lookups, 67
+computed answers and 62 questions the documents cannot answer. Scoring uses the route's own scorer.
+
+**Results** (same machine class, pinned runtime, greedy decoding):
+
+| Model | Passed | Lookup | Computed | Not found | Empty replies |
+| --- | --- | --- | --- | --- | --- |
+| Parent, no unit | 150 | 99/185 | 9/67 | 42/62 | 3 |
+| L9, served until Oct 16 | 117 | 85/185 | 10/67 | 22/62 | 44 |
+| G1, grown by the network | 142 | 73/185 | 17/67 | 52/62 | 3 |
+
+Paired comparisons (two-sided sign test):
+- **G1 vs L9:** 65 wins, 40 losses, p = 0.019.
+- **G1 vs parent:** 47 wins, 55 losses, p = 0.49.
+- **L9 vs parent:** 32 wins, 65 losses, p = 0.001.
+
+**What this says.**
+- **L9 overfit.** It scored 132/132 on template families, and it is significantly worse than no unit
+  on real requests. On unfamiliar documents it garbles tool names (`search_Documents`, `read_ouput`),
+  loops until its turn budget runs out, and sometimes degenerates into repeated characters. Those
+  account for 44 empty replies.
+- **The first network-grown unit fixed most of that.** G1 is significantly better than L9, but only
+  level with the plain parent. It gains on not-found and computed answers and loses on lookups.
+- **The template sealed set was the wrong yardstick.** On it, served L9 scored 86/132 and G1 127/132;
+  the real gap is much smaller.
+
+**What changed because of it.** Sealed evaluation now also draws 48 of these requests by the same
+beacon that seals a job. A grown unit must not do worse on them than the served version. A recipe
+cannot train on them: owners admit only recipes they rebuild exactly from the template builders.
+
+**Next.** Lookups are where both units lose to the parent. Recipes need workspaces and phrasings
+closer to real documents, and the real set needs to keep growing, written independently of the
+training builders.
+
+## Speed
+
+October 16, 2026. Every change below leaves the text unchanged and keeps owners' logs auditable.
+
+- **Where the time went.** A documents turn took about 60 s. Most was decoding: about 390 ms per token,
+  which is three CPU stages of 78–88 ms each plus the ring around them.
+- **Measured:** one stage's forward over 8 positions costs 91 ms, against 87 ms for one, because CPU
+  decoding here is limited by memory bandwidth.
+- **Exact speculative decoding.** The user's device guesses the next tokens by copying from the
+  context (prompt lookup: the continuation of the last repeated n-gram). One `VERIFY` pass around the
+  ring then checks up to 6 guesses and keeps those equal to the model's own greedy choices. On the
+  pinned execution class, a multi-position forward is bit-identical to one forward per position
+  (tested on a live shard), so the reply is exactly the greedy reply and owners' logs replay as
+  before.
+- **No Nagle stalls.** Owners now set `TCP_NODELAY`, and a frame goes out in one write.
+
+**Live, same requests, same owners** (auditor paused so it did not share owner 1's CPUs):
+
+| Request | One token per pass | With guesses | Change |
+| --- | --- | --- | --- |
+| Documents lookup | 60.1 s | 40.9 s | −32% |
+| Drafting | 98.0 s | 60.0 s | −39% |
+| Chat | 54.9 s | 40.0 s | −27% |
+| Documents comparison | 98.1 s | 52.9 s | −46% |
+
+Every reply was identical, and the auditor replayed the speculative jobs clean on both shards.
+**Still slow.** The router's 716-token fixed prefix costs about 5 s per conversation, because each
+job's log must replay from an empty cache. An auditor sharing an owner's CPUs slows that owner by up
+to 40%, so auditors belong on their own machines.
+
+## Incident: an honest owner slashed after the first enacted growth
+
+October 16, 2026, height 604,242. After the owners enacted G1, owner 2 served it correctly. The
+validator and the auditor still held the original L9 weights, because only owners followed enacted
+versions. The auditor replayed the job with L9, proved fraud, and the validator accepted it. Owner 2's
+5 NEURO bond was slashed: 2.5 to the auditor, 2.5 burned.
+
+**Fixed** (`d89f0de`, `cb51cd7`):
+- A validator judges serving fraud only when its holdings are the version the job ran
+  (`held_model_root`). Otherwise it gives no verdict, which can slash no one.
+- An auditor never replays a job with another version's weights; it rebuilds the enacted version and
+  reloads.
+
+The validator now holds G1, and owner 2 bonded a fresh log key, since a slashed key can never bond
+again. Every job since has audited clean on both shards. The slashed bond was not restored: the
+ledger has no way to reverse a slash, and adding one would be a governance decision.

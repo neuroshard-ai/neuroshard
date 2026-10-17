@@ -200,3 +200,12 @@ def test_the_agent_command_line_parses_every_role():
                               '--no-contribute', '--segment-steps', '8', '--per-family', '24', '--minimum', '0.85',
                               '--reward-per-step', '500', '--growth-steps', '32', '--probe-every', '60'])
     assert args.plan and args.evaluate and args.vote_shards == [1] and args.no_contribute and args.segment_steps == 8
+
+
+def test_sealed_sets_carry_a_beacon_chosen_sample_of_real_requests():
+    from neuroshard.evolution import sealed_evaluation as sealed
+
+    one, again, other = (sealed.real_documents(r) for r in ('11' * 32, '11' * 32, '22' * 32))
+    assert one == again and one != other and len(one) == 48
+    assert {c['family'] for c in one} <= {'real-lookup', 'real-computed', 'real-not-found'}
+    assert all(c['split'] == 'sealed-real' and c['world']['documents'] for c in one)
