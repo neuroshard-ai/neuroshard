@@ -26,6 +26,12 @@ import random
 import time
 
 
+def newest_grown(state):
+    """Grown results, the most recently settled first."""
+    return sorted(((job_id, result) for job_id, result in state.get('results', {}).items()
+                   if result.get('status') == 'grown'), key=lambda kv: -kv[1].get('settled_unix', 0))
+
+
 class Agent:
     def __init__(self, chain, account, home, *, recipes=None, trainer=None, evaluator=None, owner_keys=None,
                  beacon=None, deliver=None, rng=None, clock=time.time, planner=None, probe_every=None):
@@ -71,11 +77,12 @@ class Agent:
         if state.get('growth') and self.contributing and self.trainer is not None:
             return taken  # open jobs first: an hours-long evaluation must not keep the network's training waiting
         # Newest results first: an old result's evaluation must not delay the one the network just grew.
-        for job_id, result in sorted(state.get('results', {}).items(), key=lambda kv: -kv[1].get('settled_unix', 0)):
-            if result.get('status') == 'grown':
-                taken += self.evaluate(job_id, result)
-                if taken:
-                    break
+        for job_id, result in newest_grown(state):
+            if job_id not in self.memory['evaluated'] and not self.sealed(result):
+                break  # wait for the newest result's seal rather than start hours of work on an older one
+            taken += self.evaluate(job_id, result)
+            if taken:
+                break
         if self.owner_keys:
             taken += self.prepare(state)
         taken += self.plan(state)
@@ -91,9 +98,11 @@ class Agent:
         out = []
         if self.evaluator is None:
             return out
-        for result in state.get('results', {}).values():
-            if result.get('status') != 'grown' or result['final_root'] in self.memory['reports']:
+        for _, result in newest_grown(state):
+            if result['final_root'] in self.memory['reports']:
                 continue
+            if not self.sealed(result):
+                break  # the newest result first, as soon as its seal exists
             if result['recipe_root'] not in self.recipes and self.fetch_recipe(result['recipe_root']) is None:
                 continue
             computed = self.sealed_report(result)
@@ -107,7 +116,14 @@ class Agent:
                       'passed': bool(report['passed'])}
             self.remember(action)
             out.append(action)
+            break  # one sealed evaluation per pass, so votes and enactments keep moving between them
         return out
+
+    def sealed(self, result):
+        """Whether a grown result's seal round has been reached (its beacon may then be fetched and verified)."""
+        from neuroshard.inference import beacon as drand
+
+        return 'seal_round' in result and self.clock() >= drand.time_of(result['seal_round'])
 
     def builds_on(self, proposal, state):
         """True if a grown version was trained on the version now served (enacting a stale one would undo a newer
