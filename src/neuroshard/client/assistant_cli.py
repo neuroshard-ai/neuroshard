@@ -149,16 +149,29 @@ def run(args):
 
     descriptor = network.descriptor(args.network)
     if args.assistant_action == 'seed':
-        config, _, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
+        from neuroshard.evolution import growth_runtime
+        from neuroshard.inference import optimistic_network
+
+        config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
         stopped = threading.Event()
         signal.signal(signal.SIGTERM, lambda *_: stopped.set())
+
+        def rebuild(current):
+            return growth_runtime.follow(current, chain.state(), args.home, current.get('proof_endpoints', []))
+
+        def restart(config):
+            optimistic_network.stop(config)
+            optimistic_network.start(config)
+
         try:
-            stopped.wait()
+            while not stopped.wait(30):
+                try:  # the validator follows owner-enacted versions too, so it judges each job with its own weights
+                    descriptor = network.follow_validator(config, descriptor, chain, args.home, rebuild, restart)
+                except Exception as error:  # noqa: BLE001 - keep validating; retry on the next pass
+                    print(f'Validator version check: {error}', flush=True)
         except KeyboardInterrupt:
             pass
         finally:
-            from neuroshard.inference import optimistic_network
-
             optimistic_network.stop(config)
         return
     chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])

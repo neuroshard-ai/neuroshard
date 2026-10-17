@@ -985,3 +985,40 @@ def seed(network, home, public_host, served=None, block_seconds=1.0, params=None
                          'faucet': f'http://{public_host}:{faucet_port}/faucet',
                          'persistent_peers': f"{config['validators'][0]['id']}@{public_host}:{p2p_port}"}))
     return config, chain, server
+
+
+def follow_validator(config, descriptor, chain, home, rebuild, restart, progress=print):
+    """Keep a validator's judging weights on the version the chain serves.
+
+    When the owners enact a version, ``rebuild(descriptor)`` returns it rebuilt from committed growth (see
+    ``growth_runtime.follow``), with its grown files under ``home/versions/<root>/files``. Those files replace the
+    holdings of the units they name, ``held_model_root`` moves to the new version, and ``restart(config)`` reloads
+    the validator's app so it judges with them. Until then the app gives no verdict on the new version's jobs,
+    which can slash no one. Returns the descriptor in force.
+    """
+    target = chain.state()['model_root']
+    changed = False
+    for node in config['validators']:
+        path = Path(node['home']) / 'settlement.json'
+        terms = json.loads(path.read_text())
+        if not terms.get('shards') or terms.get('held_model_root') == target:
+            continue
+        upgraded = rebuild(descriptor)
+        if model_root(upgraded) != target:
+            progress(f'Validator waits to rebuild version {target[:16]} before judging it')
+            return descriptor
+        files = Path(home) / 'versions' / target / 'files'
+        for paths in terms['shards'].values():
+            for directory in (paths.get('additions') or {}).values():
+                unit = Path(directory).name
+                for name in ('manifest.json', 'trainable.safetensors'):
+                    source, pin = files / unit / name, upgraded['files'].get(f'{unit}/{name}')
+                    if source.exists() and pin and matches(source, pin):
+                        shutil.copyfile(source, Path(directory) / name)
+        terms['held_model_root'] = target
+        path.write_text(json.dumps(terms, sort_keys=True))
+        descriptor, changed = upgraded, True
+    if changed:
+        progress(f'Validator now judges version {target[:16]}; restarting its app')
+        restart(config)
+    return descriptor
