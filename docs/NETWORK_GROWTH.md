@@ -562,7 +562,7 @@ against that.
 **Limits.**
 - One author model wrote the training corpus and both evaluation sets. Set 2 changes the generation
   procedure, not the author.
-- 67 computed and 1 computed questions are too few to say much about computation.
+- Computed questions are few (67 in set 1, 1 in set 2), too few to say much about computation.
 - G2 was trained offline on one machine with the protocol trainer; it is not yet served. The next
   step is to put it through the network: a corpus recipe that owners verify, a job the pool funds, a
   sealed evaluation that includes real requests, and an owner vote.
