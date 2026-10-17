@@ -125,7 +125,9 @@ def grow(tmp_path, users, contributors):
     for result in chain.state_value['results'].values():
         if result.get('status') == 'grown':
             result['seal_round'] = seal['round']
-    actions = [a['kind'] for worker in workers for a in worker.tick()]
+    actions = []
+    for _ in range(len(roots)):                                     # one evaluation per pass, newest result first
+        actions += [a['kind'] for worker in workers for a in worker.tick()]
     assert actions.count('propose') == len(roots)                  # each grown unit is evaluated and proposed
     taken = owners.tick()
     votes = [a for a in taken if a['kind'] == 'vote']

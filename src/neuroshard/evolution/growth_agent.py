@@ -68,9 +68,14 @@ class Agent:
             # Check before building: never train on top of a segment this agent cannot reproduce.
             taken += self.check(state, job_id, job)
             taken += self.contribute(job_id, self.chain.state().get('growth', {}).get(job_id, job))
-        for job_id, result in sorted(state.get('results', {}).items()):
+        if state.get('growth') and self.contributing and self.trainer is not None:
+            return taken  # open jobs first: an hours-long evaluation must not keep the network's training waiting
+        # Newest results first: an old result's evaluation must not delay the one the network just grew.
+        for job_id, result in sorted(state.get('results', {}).items(), key=lambda kv: -kv[1].get('settled_unix', 0)):
             if result.get('status') == 'grown':
                 taken += self.evaluate(job_id, result)
+                if taken:
+                    break
         if self.owner_keys:
             taken += self.prepare(state)
         taken += self.plan(state)
