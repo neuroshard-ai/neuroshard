@@ -582,6 +582,12 @@ def grow_agent(args, chain, network, descriptor):
     agent.recipe_stores = list(args.recipe_stores) or list(descriptor.get('proof_endpoints', []))
     while True:
         try:
+            # Keep enough to bond the next segment and pay fees; commit bonds return when a job settles.
+            state = chain.state()
+            from neuroshard.inference import growth as ledger_growth
+
+            needed = 2 * ledger_growth.params(state)['growth_bond'] + 8 * state['params']['fee']
+            network.ensure_balance(chain, account, needed, descriptor.get('faucet'), lambda *_: None)
             for action in agent.tick():
                 print(json.dumps(action, sort_keys=True), flush=True)
         except Exception as error:  # noqa: BLE001 - a refused transaction or a dropped RPC: report, retry next pass
