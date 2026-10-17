@@ -71,6 +71,25 @@ def chat(randomness, per_kind=12):
     return out
 
 
+REAL = 'config/experiments/real-documents-set.json'
+
+
+def real_documents(randomness, count=48):
+    """A beacon-chosen sample of the realistic request set (``real_documents``), or [] where it is not shipped.
+
+    Those requests share nothing with the training templates, and a recipe cannot train on them: owners admit
+    only recipes they rebuild exactly from the template builders. So this sample measures what growth does to
+    real use, and a grown unit must not do worse on it than the version it would replace."""
+    from neuroshard.evolution.modular_reference_execution import ROOT
+
+    path = ROOT / REAL
+    if not path.exists():
+        return []
+    cases = json.loads(path.read_text())['cases']
+    ranked = sorted(cases, key=lambda case: seed_of(randomness, f"real:{case['id']}"))
+    return [{**case, 'split': 'sealed-real'} for case in ranked[:count]]
+
+
 def sealed(round_number, signature, randomness_hex, per_kind=12):
     """The verified beacon's evaluation set and its digest; refuses a beacon that does not verify."""
     from neuroshard.inference import beacon
@@ -78,6 +97,9 @@ def sealed(round_number, signature, randomness_hex, per_kind=12):
     if not beacon.verify(round_number, signature, randomness_hex):
         raise ValueError('beacon does not verify')
     sets = {'documents': documents(randomness_hex, per_kind), 'chat': chat(randomness_hex, per_kind)}
+    real = real_documents(randomness_hex)
+    if real:
+        sets['documents-real'] = real
     return {'format': FORMAT, 'round': round_number, 'randomness': randomness_hex, 'sets': sets,
             'sha256': identity(sets), 'case_ids_sha256': hashlib.sha256(
                 json.dumps({k: [c['id'] for c in v] for k, v in sets.items()}).encode()).hexdigest()}

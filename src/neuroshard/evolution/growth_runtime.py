@@ -191,9 +191,22 @@ class RouteEvaluator:
         candidate, serving = sum(rows['candidate']), sum(rows['serving'])
         total = len(rows['candidate'])
         passed = candidate / total >= self.minimum and candidate > serving
+        real = cases['sets'].get(f'{kind}-real', [])
+        report = {}
+        if real:
+            # Non-regression on realistic requests: template families can rise while real use gets worse (L9 did).
+            real_rows = {}
+            for name in ('candidate', 'serving'):
+                model = self.grown(result['final_root']) if name == 'candidate' else self.serving()
+                real_rows[name] = [run(case, cached_responder(model, self.serving.tokenizer, self.policy),
+                                       self.policy)['passed'] for case in real]
+                del model
+            report = {'real_candidate': sum(real_rows['candidate']), 'real_serving': sum(real_rows['serving']),
+                      'real_cases': len(real), 'real_outcomes': real_rows}
+            passed = passed and report['real_candidate'] >= report['real_serving']
         return {'format': 'neuroshard-growth-sealed-report/1', 'round': cases['round'], 'cases_sha256': cases['sha256'],
                 'route': kind, 'final_root': result['final_root'], 'candidate': candidate, 'serving': serving,
-                'cases': total, 'minimum': self.minimum, 'passed': passed,
+                'cases': total, 'minimum': self.minimum, 'passed': passed, **report,
                 'outcomes': rows, 'model_root': self.candidate_root(result['final_root']) if passed else None}
 
     def grown(self, final_root):
