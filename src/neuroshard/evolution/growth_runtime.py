@@ -203,7 +203,10 @@ class RouteEvaluator:
                 del model
             report = {'real_candidate': sum(real_rows['candidate']), 'real_serving': sum(real_rows['serving']),
                       'real_cases': len(real), 'real_outcomes': real_rows}
-            passed = passed and report['real_candidate'] >= report['real_serving']
+            # Real requests decide; template families are a floor. A unit that only lifts the templates (L9 did, and
+            # was worse than no unit on real requests) never passes, and one that helps real use is not blocked by
+            # matching, rather than beating, the served version on templates.
+            passed = (candidate / total >= self.minimum and report['real_candidate'] > report['real_serving'])
         return {'format': 'neuroshard-growth-sealed-report/1', 'round': cases['round'], 'cases_sha256': cases['sha256'],
                 'route': kind, 'final_root': result['final_root'], 'candidate': candidate, 'serving': serving,
                 'cases': total, 'minimum': self.minimum, 'passed': passed, **report,
@@ -292,10 +295,23 @@ class RoutePlanner:
         from neuroshard.evolution import growth_planner as planner
 
         route = recipe.get('route')
-        if route not in self.routes or recipe.get('model_root') != self.model_root or recipe.get('spec') != self.spec:
+        spec = recipe.get('spec') or {}
+        # The trainer settings must be this network's; the number of steps is the recipe's own (the reward pays it).
+        if (route not in self.routes or recipe.get('model_root') != self.model_root
+                or {k: v for k, v in spec.items() if k != 'steps'} != {k: v for k, v in self.spec.items() if k != 'steps'}
+                or not 1 <= spec.get('steps', 0) <= 1024 or spec['steps'] != recipe.get('steps')):
             return False
         if recipe.get('continue_from') != self.units.get(route):
             return False
+        if recipe.get('kind') == 'realistic-corpus' and route == 'documents':
+            from neuroshard.evolution import realistic_training
+
+            def replay_check(sequences):  # the replay must be template demonstrations this owner rebuilds itself
+                families = sorted(planner.sealed.templates('documents'))
+                per = len(sequences) // len(families) if families else 0
+                return per > 0 and sequences == planner.recipe_from(families, 'f0' * 32, self.policies[route],
+                                                                    self.encoder(route), per, 'replay')
+            return realistic_training.verify(recipe, self.policies[route], self.encoder(route), replay_check)
         verify = planner.verify_documents if route == 'documents' else planner.verify_chat
         return verify(recipe, self.policies[route], self.encoder(route))
 

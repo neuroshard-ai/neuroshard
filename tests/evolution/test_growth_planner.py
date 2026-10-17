@@ -209,3 +209,64 @@ def test_sealed_sets_carry_a_beacon_chosen_sample_of_real_requests():
     assert one == again and one != other and len(one) == 48
     assert {c['family'] for c in one} <= {'real-lookup', 'real-computed', 'real-not-found'}
     assert all(c['split'] == 'sealed-real' and c['world']['documents'] for c in one)
+
+
+def test_a_realistic_corpus_recipe_is_verified_by_replay_and_any_tampering_is_refused():
+    import copy
+    import json
+    from pathlib import Path
+
+    from neuroshard.evolution import realistic_training as rt
+
+    policy = json.loads((Path(__file__).resolve().parents[2]
+                         / 'config/experiments/assistant-general-policy-documents5.json').read_text())
+    world = {'documents': [
+        {'id': 'doc-0a1b2c3d', 'title': 'Boiler service invoice', 'content': 'Invoice 4471. Boiler service on 3 May. '
+                                                                               'Total due: 145 pounds.'},
+        {'id': 'doc-1b2c3d4e', 'title': 'Old boiler quote', 'content': 'Quote from March: boiler service 160 pounds.'}]}
+    item = {'user': 'what did the boiler service cost in the end?', 'search': 'boiler service invoice',
+            'facts': ['145 pounds'], 'source_ids': ['doc-0a1b2c3d'], 'answer': 'It cost 145 pounds.'}
+    missing = {'user': 'did they say when the next service is?', 'search': 'boiler service', 'not_found': True,
+               'reason': 'The invoice lists the May service and its total, not a next service date.'}
+    cases = []
+    for number, question in enumerate((item, missing)):
+        replies = rt.replies(world, question)
+        assert replies is not None
+        expected = {'not_found': True} if question.get('not_found') else {'facts': question['facts'],
+                                                                           'source_ids': question['source_ids']}
+        case = {'id': f'realtrain-000-{number}', 'split': 'realistic-train', 'world': world,
+                'family': 'real-not-found' if question.get('not_found') else 'real-lookup',
+                'turns': [{'user': question['user'], 'expected': expected}]}
+        assert rt.episode(case, replies, policy) is not None
+        cases.append({**case, 'replies': replies})
+    corpus = {'cases': cases, 'sha256': __import__('hashlib').sha256(json.dumps(cases, sort_keys=True).encode()).hexdigest()}
+    encode = lambda item: json.dumps(item['messages'], sort_keys=True)  # noqa: E731
+    built = rt.recipe(corpus, policy, {}, 'ab' * 32, encode, ['r'], 'cd' * 32)
+    ok = lambda sequences: sequences == ['r']  # noqa: E731
+    assert rt.verify(built, policy, encode, ok)
+
+    def tampered(change):
+        copied = copy.deepcopy(built)
+        change(copied)
+        return rt.verify(copied, policy, encode, ok)
+
+    assert not tampered(lambda r: r['sources']['experience'].__setitem__(0, 'other bytes'))      # trains on other data
+    assert not tampered(lambda r: r['corpus']['cases'][0]['replies'].__setitem__(-1, 'It cost 160 pounds.'))
+    assert not tampered(lambda r: r['corpus']['cases'][0]['turns'][0]['expected'].update(facts=['160 pounds']))
+    assert not tampered(lambda r: r['sources']['replay'].append('x'))
+
+    def invented(r):  # a self-consistent lie: gold, answer and replies all say 999, which no document states
+        case = r['corpus']['cases'][0]
+        case['turns'][0]['expected']['facts'] = ['999 pounds']
+        case['replies'][-2] = case['replies'][-2].replace('145 pounds', '999 pounds')
+        case['replies'][-1] = case['replies'][-1].replace('145 pounds', '999 pounds')
+        r['corpus']['sha256'] = r['corpus_sha256'] = __import__('hashlib').sha256(
+            json.dumps(r['corpus']['cases'], sort_keys=True).encode()).hexdigest()
+        r['sources']['experience'][0] = encode(__import__('neuroshard.evolution.realistic_train',
+                                                          fromlist=['trajectory']).trajectory(case, policy))
+    assert not tampered(invented)
+    assert rt.replies(world, {**item, 'facts': ['999 pounds'], 'answer': 'It cost 999 pounds.'}) is not None
+    bad = {**item, 'facts': ['999 pounds'], 'answer': 'It cost 999 pounds.'}
+    case = {'id': 'x', 'split': 'realistic-train', 'world': world, 'family': 'real-lookup',
+            'turns': [{'user': bad['user'], 'expected': {'facts': ['145 pounds'], 'source_ids': ['doc-0a1b2c3d']}}]}
+    assert rt.episode(case, rt.replies(world, bad), policy) is None   # a wrong answer never passes the scorer
