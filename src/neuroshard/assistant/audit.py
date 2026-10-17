@@ -207,9 +207,14 @@ def receive_proof(payload, root, state, store):
     return root
 
 
+class VersionChanged(Exception):
+    """The chain serves a version these holdings were not built for; reload before auditing again."""
+
+
 class Auditor:
-    def __init__(self, chain, account, network, home, holdings, progress=print):
+    def __init__(self, chain, account, network, home, holdings, progress=print, model_root=None):
         self.chain, self.account, self.network = chain, account, network
+        self.model_root = model_root  # the version the holdings were built for; None: the descriptor's
         self.home, self.holdings, self.progress = Path(home), holdings, progress
         self.reports = self.home / 'reports.json'
         self.done = json.loads(self.reports.read_text()) if self.reports.exists() else {}
@@ -218,6 +223,11 @@ class Auditor:
         from neuroshard.evolution.sharded import granite_audit
 
         state = self.chain.state()
+        held = self.model_root or __import__('neuroshard.assistant.network', fromlist=['model_root']).model_root(
+            self.network)
+        if state['model_root'] != held:
+            # Never replay a job with another version's weights: that would prove honest work fraudulent.
+            raise VersionChanged(state['model_root'])
         for job_id, job in list(state['jobs'].items()):
             for rank, (partition, adapter) in self.holdings.items():
                 key = job['owners'][rank - 1]

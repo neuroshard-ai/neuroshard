@@ -74,7 +74,8 @@ def test_a_downloaded_committed_log_is_audited_and_a_real_fault_is_delivered_and
     thread.start()
     server = network.serve_faucet(network.Faucet(chain, account), '127.0.0.1', 0, store)
     descriptor = {'proof_endpoints': [f'http://127.0.0.1:{server.server_port}/proofs']}
-    auditor = audit.Auditor(chain, account, descriptor, tmp_path / 'auditor', {1: (partitions[1], None)}, print)
+    auditor = audit.Auditor(chain, account, descriptor, tmp_path / 'auditor', {1: (partitions[1], None)}, print,
+                            model_root=chain.state()['model_root'])
     try:
         auditor.once()
         assert len(auditor.done) == 1
