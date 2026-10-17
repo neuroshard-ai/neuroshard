@@ -158,3 +158,99 @@ def build(count=12, seed=0, cache=None, progress=print):
         progress(f'workspace {index}: {len(cases)} verified so far, rejected {rejected}')
     return {'format': FORMAT, 'model': phrasings.MODEL, 'seed': seed, 'workspaces': count, 'rejected': rejected,
             'cases': cases, 'sha256': hashlib.sha256(json.dumps(cases, sort_keys=True).encode()).hexdigest()}
+
+
+# A second set written a different way, so a unit cannot fit one author's habits: a free-form life story first, its
+# documents from the story, and the questions from a separate call that sees only the documents (never the
+# answers or the story). The gold is then derived by another call and must survive the same two checks.
+STORY = """Write a short, specific account (150 words) of one week in the life of a real-seeming person of your
+choosing: their job, family, money, travel, health or home admin. Seed: {seed}. Only the account, no title."""
+
+DOCUMENTS_FROM_STORY = """Here is an account of someone's week:
+{story}
+
+Write the {count} documents this person would actually have on their computer or phone because of that week
+(emails, receipts, bookings, letters, notes, forms), 30 to 180 words each, with real-looking details. Some
+should mention the same thing differently, and one should be an earlier version of another.
+Reply with only JSON: {{"documents": [{{"id": "doc-xxxxxxxx", "title": "...", "content": "..."}}]}}
+Document IDs are "doc-" followed by 8 lowercase hex characters."""
+
+ASK = """Here are a person's documents:
+{documents}
+
+Write 8 questions this person might type into an assistant about their own documents, the way people really
+type (short, casual, sometimes vague or with a typo). Include 2 that the documents do NOT answer.
+Reply with only JSON: {{"questions": ["...", "..."]}}"""
+
+GOLD = """Here are a person's documents:
+{documents}
+
+Question: {question}
+
+If the documents do not state the answer, reply with only JSON {{"not_found": true}}.
+Otherwise reply with only JSON {{"facts": [the shortest exact string(s) a correct answer must contain, copied
+as the document writes them, or a computed result], "source_ids": [exactly the document IDs needed],
+"computation": "only if the answer needs one: the inputs and the operation"}}."""
+
+
+def build_independent(count=40, seed=0, cache=None, progress=print):
+    """The second evaluation set: story, documents, questions and gold each from a separate call."""
+    bedrock = phrasings.client()
+    cache = Path(cache) if cache else None
+    store = json.loads(cache.read_text()) if cache and cache.exists() else {}
+
+    def ask(key, text, tokens, temperature):
+        if key not in store:
+            store[key] = phrasings.converse(text, bedrock, tokens, temperature)[0]
+            if cache:
+                cache.write_text(json.dumps(store))
+        return store[key]
+
+    cases, rejected = [], {'parse': 0, 'ids': 0, 'gold': 0, 'mechanical': 0, 'blind': 0}
+    for index in range(count):
+        story = ask(f'story:{seed}:{index}', STORY.format(seed=f'{seed}-{index}'), 400, 1.0)
+        try:
+            written = parse(ask(f'docs:{seed}:{index}', DOCUMENTS_FROM_STORY.format(story=story, count=8), 6000, 1.0))
+            world = {'documents': [{k: d[k] for k in ('id', 'title', 'content')} for d in written['documents']]}
+            documents.Workspace(world, 3)
+        except (ValueError, KeyError, TypeError):
+            rejected['parse'] += 1
+            continue
+        if not ids_ok(world):
+            rejected['ids'] += 1
+            continue
+        text = '\n\n'.join(f"[{d['id']}] {d['title']}\n{d['content']}" for d in world['documents'])
+        try:
+            questions = parse(ask(f'ask:{seed}:{index}', ASK.format(documents=text), 800, 1.0))['questions']
+        except (ValueError, KeyError, TypeError):
+            rejected['parse'] += 1
+            continue
+        for number, question in enumerate(questions[:8]):
+            try:
+                gold = parse(ask(f'gold:{seed}:{index}:{number}', GOLD.format(documents=text, question=question),
+                                 400, 0.0))
+            except (ValueError, KeyError, TypeError):
+                rejected['gold'] += 1
+                continue
+            item = {'user': question, **gold}
+            if not mechanical(world, item):
+                rejected['mechanical'] += 1
+                continue
+            key = f'blind2:{seed}:{index}:{number}'
+            if key not in store:
+                store[key] = blind(world, item, bedrock)
+                if cache:
+                    cache.write_text(json.dumps(store))
+            if not store[key]:
+                rejected['blind'] += 1
+                continue
+            expected = ({'not_found': True} if item.get('not_found') else
+                        {'facts': item['facts'], 'source_ids': sorted(item['source_ids'])})
+            cases.append({'id': f'real2-docs-{index:02d}-{number}', 'split': 'real2', 'world': world,
+                          'family': ('real-not-found' if item.get('not_found') else 'real-computed'
+                                     if item.get('computation') else 'real-lookup'),
+                          'turns': [{'user': question, 'expected': expected}]})
+        progress(f'workspace {index}: {len(cases)} verified, rejected {rejected}')
+    return {'format': FORMAT + '+independent', 'model': phrasings.MODEL, 'seed': seed, 'workspaces': count,
+            'rejected': rejected, 'cases': cases,
+            'sha256': hashlib.sha256(json.dumps(cases, sort_keys=True).encode()).hexdigest()}
