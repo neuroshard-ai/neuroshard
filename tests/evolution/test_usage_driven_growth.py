@@ -348,3 +348,47 @@ def test_validators_and_auditors_never_judge_a_job_with_another_versions_weights
     auditor = audit.Auditor(Chain(), None, {'proof_endpoints': []}, tmp_path, {1: (None, None)}, model_root='ab' * 32)
     with pytest.raises(audit.VersionChanged):
         auditor.once()                                  # never replays the job with the old version's weights
+
+
+def test_a_validator_moves_its_judging_weights_to_an_enacted_version(tmp_path):
+    import hashlib
+
+    from neuroshard.assistant import network as client
+
+    holdings = tmp_path / 'holdings' / 'L9'
+    holdings.mkdir(parents=True)
+    (holdings / 'trainable.safetensors').write_bytes(b'old weights')
+    (holdings / 'manifest.json').write_bytes(b'old manifest')
+    node = tmp_path / 'node'
+    node.mkdir()
+    (node / 'settlement.json').write_text(json.dumps({'held_model_root': 'ab' * 32, 'shards': {'2': {
+        'additions': {'3': str(holdings)}}}}))
+    new = {'trainable.safetensors': b'grown weights', 'manifest.json': b'grown manifest'}
+    descriptor = {'format': 'f', 'version': 'v', 'plan_sha256': 'p', 'files': {
+        f'L9/{name}': {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(), 'asset': name}
+        for name, data in new.items()}}
+    target = client.model_root(descriptor)
+    files = tmp_path / 'home' / 'versions' / target / 'files' / 'L9'
+    files.mkdir(parents=True)
+    for name, data in new.items():
+        (files / name).write_bytes(data)
+
+    class Chain:
+        root = 'ab' * 32
+
+        def state(self):
+            return {'model_root': self.root}
+
+    chain, restarts = Chain(), []
+    config = {'validators': [{'home': str(node)}]}
+    kept = client.follow_validator(config, {'files': {}}, chain, tmp_path / 'home', lambda d: descriptor,
+                                   restarts.append, lambda *_: None)
+    assert restarts == [] and kept == {'files': {}}                  # nothing enacted: nothing changes
+    chain.root = target
+    assert client.follow_validator(config, {'files': {}}, chain, tmp_path / 'home', lambda d: descriptor,
+                                   restarts.append, lambda *_: None) == descriptor
+    assert (holdings / 'trainable.safetensors').read_bytes() == b'grown weights' and restarts == [config]
+    assert json.loads((node / 'settlement.json').read_text())['held_model_root'] == target
+    chain.root = 'ef' * 32                                           # a version it cannot rebuild yet: waits
+    assert client.follow_validator(config, descriptor, chain, tmp_path / 'home', lambda d: descriptor,
+                                   restarts.append, lambda *_: None) == descriptor and len(restarts) == 1
