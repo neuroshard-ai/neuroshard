@@ -52,7 +52,8 @@ def register(subcommands, root):
     govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
     grow = actions.add_parser('grow', parents=[common],
                               help='Grow the assistant on the network: open, train, challenge or prove a growth job')
-    grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove', 'agent'))
+    grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove', 'agent', 'propose-corpus'))
+    grow.add_argument('--corpus', type=Path, help='propose-corpus: a realistic training corpus (realistic_training)')
     grow.add_argument('--recipes', type=Path, help='agent: directory of published recipe JSON files to contribute to')
     grow.add_argument('--state-stores', nargs='*', default=[], help='agent: HTTP stores of committed training states')
     grow.add_argument('--recipe-stores', nargs='*', default=[],
@@ -382,6 +383,8 @@ def grow(args, chain, network, descriptor=None):
 
     if args.grow_action == 'agent':
         return grow_agent(args, chain, network, descriptor or {})
+    if args.grow_action == 'propose-corpus':
+        return propose_corpus(args, chain, network, descriptor or {})
     state = chain.state()
     if args.grow_action == 'list':
         for job_id, job in sorted(state.get('growth', {}).items()):
@@ -450,6 +453,47 @@ def grow(args, chain, network, descriptor=None):
             raise ValueError('prove needs --challenge')
         chain.submit(account, 'growth_prove', job_id=args.job, challenge_id=args.challenge)
     print('committed')
+
+
+def propose_corpus(args, chain, network, descriptor):
+    """Propose a documents recipe trained on a published realistic corpus, continuing the served unit.
+
+    The recipe carries the corpus in full, so every owner verifies it by replay before voting
+    (``realistic_training.verify``); it is published to the network's stores by its root."""
+    from neuroshard.assistant import audit
+    from neuroshard.evolution import growth_replay, growth_runtime, realistic_training
+
+    if not args.corpus or not args.steps:
+        raise ValueError('propose-corpus needs --corpus and --steps')
+    spec = growth_runtime.growth_spec(args.steps)
+    served = growth_runtime.Served(descriptor, args.home, spec)
+    root = chain.state()['model_root']
+    planner = growth_runtime.RoutePlanner(served, served.make_parent, served.tokenizer, served.policies, spec, root,
+                                          served.units)
+    encode, policy = planner.encoder('documents'), served.policies['documents']
+    from neuroshard.evolution import growth_planner
+
+    families = sorted(growth_planner.sealed.templates('documents'))
+    replay = growth_planner.recipe_from(families, 'f0' * 32, policy, encode, 16, 'replay')
+    recipe = realistic_training.recipe(json.loads(args.corpus.read_text()), policy, spec, root, encode, replay,
+                                       served.units['documents'])
+    if not planner.check({**recipe, 'steps': args.steps}):
+        raise ValueError('the recipe does not pass the owners\' own check here')
+    start = growth_replay.state_root(*growth_replay.start(served.make_parent(), recipe))
+    recipe.update(start_root=start, steps=args.steps, segment_steps=args.segment_steps or 8,
+                  reward=args.steps * args.reward_per_step)
+    recipe_root = growth_replay.recipe_root(recipe, recipe['model_root'])
+    payload = json.dumps(recipe, sort_keys=True).encode()
+    (args.home / 'growth-agent' / 'recipes').mkdir(parents=True, exist_ok=True)
+    (args.home / 'growth-agent' / 'recipes' / f'{recipe_root}.json').write_bytes(payload)
+    account = network.Account(args.home / 'account.key')
+    envelope = chain.submit(account, 'recipe_propose', recipe_root=recipe_root, start_root=start, steps=args.steps,
+                            segment_steps=recipe['segment_steps'], reward=recipe['reward'])
+    for endpoint in descriptor.get('proof_endpoints', []):
+        audit.post_proof(endpoint, recipe_root, payload, timeout=300)
+    print(json.dumps({'proposal_id': __import__('neuroshard.inference.optimistic', fromlist=['transaction_id'])
+                      .transaction_id(envelope), 'recipe_root': recipe_root, 'start_root': start,
+                      'steps': args.steps, 'reward': recipe['reward'], 'bytes': len(payload)}))
 
 
 def grow_agent(args, chain, network, descriptor):
