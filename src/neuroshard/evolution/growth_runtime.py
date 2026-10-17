@@ -296,6 +296,15 @@ class RoutePlanner:
             return False
         if recipe.get('continue_from') != self.units.get(route):
             return False
+        if recipe.get('kind') == 'realistic-corpus' and route == 'documents':
+            from neuroshard.evolution import realistic_training
+
+            def replay_check(sequences):  # the replay must be template demonstrations this owner rebuilds itself
+                families = sorted(planner.sealed.templates('documents'))
+                per = len(sequences) // len(families) if families else 0
+                return per > 0 and sequences == planner.recipe_from(families, 'f0' * 32, self.policies[route],
+                                                                    self.encoder(route), per, 'replay')
+            return realistic_training.verify(recipe, self.policies[route], self.encoder(route), replay_check)
         verify = planner.verify_documents if route == 'documents' else planner.verify_chat
         return verify(recipe, self.policies[route], self.encoder(route))
 

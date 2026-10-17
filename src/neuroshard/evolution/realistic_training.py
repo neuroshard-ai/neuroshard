@@ -245,3 +245,44 @@ def overlap(training, evaluation, n=8):
         return out
     a, b = grams(training), grams(evaluation)
     return {'training_grams': len(a), 'evaluation_grams': len(b), 'shared': len(a & b)}
+
+
+def recipe(corpus, policy, spec, model_root, encode, replay, continue_from):
+    """A documents growth recipe whose experience is a published realistic corpus, carried in full as evidence."""
+    from neuroshard.evolution.realistic_train import trajectory
+
+    return {'format': 'neuroshard-growth-recipe/1', 'route': 'documents', 'kind': 'realistic-corpus',
+            'families': ['real-lookup', 'real-not-found', 'real-computed'], 'others': [],
+            'corpus': corpus, 'corpus_sha256': corpus['sha256'],
+            'arm': 'addition', 'spec': spec, 'model_root': model_root, 'base': 'granite-parent',
+            'continue_from': continue_from,
+            'sources': {'experience': [encode(trajectory(case, policy)) for case in corpus['cases']], 'replay': replay}}
+
+
+def verify(recipe, policy, encode, replay_check):
+    """An owner's check of a corpus recipe, with no model: every conversation replays through the documents
+    workspace, passes the route's scorer, cites only documents its search found, and re-encodes to exactly the
+    training sequence; the corpus hashes to what the recipe names; ``replay_check(sequences)`` checks the replay."""
+    from neuroshard.evolution.realistic_train import trajectory
+
+    corpus = recipe.get('corpus') or {}
+    cases = corpus.get('cases', [])
+    if hashlib.sha256(json.dumps(cases, sort_keys=True).encode()).hexdigest() != recipe.get('corpus_sha256'):
+        return False
+    if len(cases) != len(recipe['sources']['experience']) or len({c['id'] for c in cases}) != len(cases):
+        return False
+    for case, sequence in zip(cases, recipe['sources']['experience']):
+        try:
+            if case['split'] != 'realistic-train' or episode(case, case['replies'], policy) is None:
+                return False
+            expected = case['turns'][0]['expected']
+            computed = any('"calculate"' in r or '"shift_date"' in r for r in case['replies'])
+            gold = {'facts': expected.get('facts'), 'source_ids': expected.get('source_ids'),
+                    'not_found': expected.get('not_found'), 'computation': computed or None}
+            if not real.mechanical(case['world'], {k: v for k, v in gold.items() if v}):
+                return False  # every fact is in a cited document's text, or comes from a tool computation
+            if encode(trajectory(case, policy)) != sequence:
+                return False
+        except (ValueError, KeyError, TypeError, StopIteration):
+            return False
+    return bool(replay_check(recipe['sources']['replay']))
