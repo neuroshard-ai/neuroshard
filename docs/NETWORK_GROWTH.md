@@ -504,3 +504,65 @@ versions. The auditor replayed the job with L9, proved fraud, and the validator 
 The validator now holds G1, and owner 2 bonded a fresh log key, since a slashed key can never bond
 again. Every job since has audited clean on both shards. The slashed bond was not restored: the
 ledger has no way to reverse a slash, and adding one would be a governance decision.
+
+## Training on realistic documents: the first unit better than the parent on real requests
+
+October 17, 2026 (`config/experiments/realistic-documents-corpus.json`, `real-documents-eval.json`,
+`real-documents-set2.json`).
+
+**The training corpus** (`evolution/realistic_training.py`). Bedrock wrote 200 workspaces in 30
+settings disjoint from the evaluation set's, with a different writing brief. Each question came with
+its search query, answer sentence, tool steps or not-found reason. An item was kept only if:
+- its scripted conversation replays through the real documents workspace;
+- its search finds every cited document;
+- any tool steps produce the gold value;
+- the route's scorer passes the episode;
+- the same blind check as the evaluation set agrees.
+
+That left 1,286 demonstrations (978 lookups, 279 not-found, 29 computed). They share 46 word 8-grams
+with evaluation set 1, all stock phrases such as "if you have any questions please contact".
+
+**A second evaluation set** (`real_documents.build_independent`). It is written another way: a
+free-form life story, then its documents, then questions from a separate call that never sees answers,
+then golds from another call. It has 138 questions, casual and often with typos ("whens my mortgage
+deal up"). Only Claude Sonnet 4.6 is available on this account, so no set has a different author
+model.
+
+**G2.** Trained from G1 for 128 steps with the growth protocol trainer (`realistic_train.py`). Each
+step mixes 6 realistic demonstrations with 2 template demonstrations, so the template families are
+kept.
+
+| Set | Parent | L9 | G1 | G2 |
+| --- | --- | --- | --- | --- |
+| Set 1, 314 | 150 | 117 | 142 | **196** |
+| Lookups, 185 | 99 | 85 | 73 | **121** |
+| Computed, 67 | 9 | 10 | 17 | **22** |
+| Not found, 62 | 42 | 22 | 52 | **53** |
+| Set 2, 138 | 64 | — | 71 | **98** |
+
+Paired sign tests:
+
+| Comparison | Set 1 | Set 2 |
+| --- | --- | --- |
+| G2 vs parent | 68 wins, 22 losses, p ≈ 1e-6 | 42 wins, 8 losses, p ≈ 1e-6 |
+| G2 vs G1 | 82 wins, 28 losses, p ≈ 3e-7 | 37 wins, 10 losses, p ≈ 1e-4 |
+
+**How owners check a corpus recipe** (`realistic_training.verify`). They need no model. Every
+conversation must:
+- replay through the documents workspace;
+- pass the scorer;
+- re-encode to exactly the training bytes;
+- state every fact in a cited document's text, or produce it with a tool in the conversation.
+
+The template replay must be one the owner rebuilds itself. A self-consistent invented answer, or one
+that no document states, is refused; the tests cover this. A corpus whose answers are wrong in ways
+the documents allow is not caught here. The real-request gate in the sealed evaluation is the defence
+against that.
+
+**Limits.**
+- One author model wrote the training corpus and both evaluation sets. Set 2 changes the generation
+  procedure, not the author.
+- 67 computed and 1 computed questions are too few to say much about computation.
+- G2 was trained offline on one machine with the protocol trainer; it is not yet served. The next
+  step is to put it through the network: a corpus recipe that owners verify, a job the pool funds, a
+  sealed evaluation that includes real requests, and an owner vote.
