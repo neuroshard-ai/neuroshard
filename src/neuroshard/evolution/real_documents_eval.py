@@ -51,6 +51,7 @@ def main(argv=None):
     parser.add_argument('--parent', action='store_true', help='also score the parent without any unit')
     parser.add_argument('--policy', type=Path, default=Path('config/experiments/assistant-general-policy-documents5.json'))
     parser.add_argument('--limit', type=int)
+    parser.add_argument('--part', default='0/1', help='I/N: score every Nth case starting at I (split across machines)')
     args = parser.parse_args(argv)
 
     from transformers import AutoTokenizer
@@ -60,7 +61,8 @@ def main(argv=None):
     from neuroshard.evolution.growth_model import model_factory
     from neuroshard.evolution.modular_reference_execution import ROOT
 
-    cases = json.loads(args.set.read_text())['cases'][:args.limit]
+    index, parts = (int(x) for x in args.part.split('/'))
+    cases = json.loads(args.set.read_text())['cases'][:args.limit][index::parts]
     policy = json.loads(args.policy.read_text())
     make = model_factory({'base': 'granite-parent'})
     tokenizer = AutoTokenizer.from_pretrained(ROOT / '.models' / 'baseline', local_files_only=True)
