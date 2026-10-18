@@ -33,7 +33,7 @@ def rpc(address, method, params=None, timeout=5):
 def snapshot(descriptor):
     """Everything the network page shows, read once from the chain."""
     endpoints = client.endpoints(descriptor)
-    chain = client.Chain(endpoints, descriptor['chain_id'])
+    chain = client.chain(descriptor)
     state = chain.state()
     rpcs = []
     for address in endpoints:
@@ -79,7 +79,7 @@ def snapshot(descriptor):
 
 
 def recent(descriptor, limit=30):
-    state = client.Chain(client.endpoints(descriptor), descriptor['chain_id']).state()
+    state = client.chain(descriptor).state()
     rows = []
     for job_id, result in state.get('results', {}).items():
         status = result.get('status')
@@ -99,7 +99,7 @@ def following(descriptor, home):
     """The descriptor of the version the chain serves, rebuilt from committed growth (as every node does)."""
     from neuroshard.evolution import growth_runtime
 
-    chain = client.Chain(client.endpoints(descriptor), descriptor['chain_id'])
+    chain = client.chain(descriptor)
     try:
         return growth_runtime.follow(descriptor, chain.state(), home, descriptor.get('proof_endpoints', []),
                                      lambda *_: None)
@@ -117,7 +117,7 @@ def lookup(descriptor, key):
     key = key.strip().lower()
     if not 40 <= len(key) <= 130 or set(key) - HEX:
         raise KeyError('enter a hex public key: an owner log key, an account key or a consensus key')
-    state = client.Chain(client.endpoints(descriptor), descriptor['chain_id']).state()
+    state = client.chain(descriptor).state()
     out = {'key': key, 'height': state['height'], 'found': []}
     owner = state['owners'].get(key)
     owned = [k for k, o in state['owners'].items() if o['account'] == key]

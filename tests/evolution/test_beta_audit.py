@@ -335,3 +335,98 @@ def test_a_growth_challenge_delivers_after_it_commits_and_then_proves(tmp_path):
     actions = restarted.check(chain.state(), job_id, chain.state()['growth'][job_id])
     assert uploads == ['store unreachable', 'accepted'] and actions[-1]['kind'] == 'prove'
     assert chain.state()['growth_faults'][-1]['contributor'] == cheater.public
+
+
+# Finding 7: a state is accepted only if the validators signed it, whatever height an RPC reports.
+
+def _light_fixture():
+    import json as _json
+    from pathlib import Path
+
+    return _json.loads((Path(__file__).parent / 'fixtures' / 'light-client-806k.json').read_text())
+
+
+def _fake_rpcs(replies):
+    """chain_network.state / rpc answering from recorded replies per RPC address."""
+    def state(address):
+        return copy.deepcopy(replies[address]['state'])
+
+    def rpc(address, method, params=None, timeout=60):
+        reply = replies[address]
+        if method == 'commit':
+            if int(params['height']) != int(reply['commit']['header']['height']):
+                raise OSError('no such commit')
+            return {'signed_header': copy.deepcopy(reply['commit'])}
+        if method == 'validators':
+            return copy.deepcopy(reply['validators'])
+        raise OSError(method)
+    return state, rpc
+
+
+def _trusted(fixture):
+    import base64
+
+    return {base64.b64decode(v['pub_key']['value']).hex(): int(v['voting_power'])
+            for v in fixture['validators']['validators']}
+
+
+def test_a_forged_higher_height_state_is_refused_and_the_honest_one_used():
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    forged = copy.deepcopy(honest)
+    forged['state']['height'] += 1
+    forged['state']['model_root'] = 'ff' * 32
+    forged['commit']['header']['height'] = str(forged['state']['height'] + 1)
+    forged['commit']['commit']['height'] = forged['commit']['header']['height']
+    forged['commit']['header']['app_hash'] = ledger.root(forged['state']).upper()
+    state, rpc = _fake_rpcs({'http://dishonest': forged, 'http://honest': honest})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        chain = network.Chain(['http://dishonest', 'http://honest'], honest['state']['chain_id'], _trusted(honest))
+        read = chain.state()
+        assert read['model_root'] == honest['state']['model_root'] and chain.rpc == 'http://honest'
+        alone = network.Chain(['http://dishonest'], honest['state']['chain_id'], _trusted(honest))
+        with pytest.raises(OSError, match='validators signed'):
+            alone.state()
+
+
+def test_a_state_with_an_altered_balance_or_an_invented_validator_set_is_refused():
+    import base64
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from neuroshard.inference import light, optimistic_network as chain_network
+
+    honest = _light_fixture()
+    altered = copy.deepcopy(honest)
+    someone = next(iter(altered['state']['accounts']))
+    altered['state']['accounts'][someone]['balance'] += 1
+    state, rpc = _fake_rpcs({'http://x': altered})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        with pytest.raises(OSError, match='not the one committed'):
+            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest)).state()
+    # A validator set the RPC invented, signing its own header: refused by the trusted-set rule.
+    keys = [Ed25519PrivateKey.generate() for _ in range(4)]
+    invented = [{'address': light.address(k.public_key().public_bytes_raw()),
+                 'pub_key': {'type': 'tendermint/PubKeyEd25519',
+                             'value': base64.b64encode(k.public_key().public_bytes_raw()).decode()},
+                 'voting_power': '1', 'proposer_priority': '0'} for k in keys]
+    header = copy.deepcopy(honest['commit']['header'])
+    header['validators_hash'] = header['next_validators_hash'] = light.validators_hash(invented)
+    block_id = {'hash': light.header_hash(header), 'parts': {'total': 1, 'hash': 'AA' * 32}}
+    stamp = header['time']
+    signatures = [{'block_id_flag': 2, 'validator_address': light.address(k.public_key().public_bytes_raw()),
+                   'timestamp': stamp, 'signature': base64.b64encode(k.sign(light.vote_sign_bytes(
+                       header['chain_id'], int(header['height']), 0, block_id, stamp))).decode()} for k in keys]
+    signed = {'header': header, 'commit': {'height': header['height'], 'round': 0, 'block_id': block_id,
+                                           'signatures': signatures}}
+    light.verify_commit(signed, invented)  # self-consistent on its own...
+    with pytest.raises(light.Unverified, match='trusted validators'):
+        light.verify_commit(signed, invented, _trusted(honest))  # ...but none of the trusted validators signed it
+
+
+def test_the_bundled_descriptor_pins_genesis_and_validators_without_changing_the_model_root():
+    d = network.descriptor()
+    assert len(d['genesis_sha256']) == 64 and len(d['trusted_validators']) >= 4
+    assert network.model_root(d) == network.model_root({k: v for k, v in d.items()
+                                                         if k not in ('genesis_sha256', 'trusted_validators')})
