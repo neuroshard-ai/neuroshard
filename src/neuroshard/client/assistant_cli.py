@@ -81,6 +81,11 @@ def register(subcommands, root):
     grow.add_argument('--segment-steps', type=int, default=8, help='open: steps per segment')
     grow.add_argument('--reward', default='10', help='open: NEURO escrowed for contributors')
     grow.add_argument('--challenge', help='prove: the challenge ID')
+    validator = actions.add_parser('validator', parents=[common],
+                                   help='Join the chain as a node owners can vote in as a validator; keys stay here')
+    validator.add_argument('--public-host', required=True, help='Address peers reach this machine at')
+    validator.add_argument('--audit-shards', type=int, nargs='*', default=[1, 2],
+                           help='Shards to hold so this validator can judge fraud claims itself')
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
     seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
@@ -134,12 +139,12 @@ def render(result, before):
 
 
 def run(args):
-    if args.assistant_action in ('host', 'audit', 'seed', 'chat', 'grow'):
+    if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.evolution import granite_shard_execution as runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
         runtime.configure()
-        if args.assistant_action in ('host', 'audit', 'seed', 'grow'):  # growth steps replay bit for bit too
+        if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'grow'):  # growth steps replay too
             from neuroshard.evolution import assistant_growth_cohort3_eval
             from neuroshard.evolution.modular_reference_execution import ROOT, read
             assistant_growth_cohort3_eval.runtime(read(ROOT / runtime.RUNTIME))
@@ -148,11 +153,16 @@ def run(args):
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
-    if args.assistant_action == 'seed':
+    if args.assistant_action in ('seed', 'validator'):
         from neuroshard.evolution import growth_runtime
         from neuroshard.inference import optimistic_network
 
-        config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
+        if args.assistant_action == 'seed':
+            config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
+        else:
+            chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+            descriptor = following(descriptor, chain, args.home, network)
+            config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
         stopped = threading.Event()
         signal.signal(signal.SIGTERM, lambda *_: stopped.set())
 

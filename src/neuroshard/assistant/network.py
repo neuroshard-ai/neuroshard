@@ -13,6 +13,7 @@ import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+import sys
 from pathlib import Path, PurePosixPath
 import random
 import secrets
@@ -1022,3 +1023,68 @@ def follow_validator(config, descriptor, chain, home, rebuild, restart, progress
         progress(f'Validator now judges version {target[:16]}; restarting its app')
         restart(config)
     return descriptor
+
+
+def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=PORTS['p2p'], progress=print):
+    """Join the network's chain as a full node that owners can vote in as a validator.
+
+    Everything comes from the public network: the genesis and the seed's address from its RPC; the consensus
+    key is generated here and never leaves the machine. The node replays the chain from height 1 (committed
+    blocks' proof verdicts are taken as committed), holds the audited shards of the version the chain serves so
+    it can judge new fraud claims itself, and prints the consensus key to propose. Returns the chain config.
+    """
+    import base64
+    import subprocess
+
+    from neuroshard.inference import optimistic_network as chain_network
+
+    home = Path(home)
+    rpc = endpoints(network)[0]
+    genesis = chain_network.rpc(rpc, 'genesis')['genesis']
+    status = chain_network.rpc(rpc, 'status')
+    seed_id = status['node_info']['id']
+    seed_port = status['node_info']['listen_addr'].rsplit(':', 1)[1]
+    seed_host = rpc.split('//', 1)[1].rsplit(':', 1)[0]
+    engine = chain_network.engine_path()
+    node_home = home / 'chain' / 'node0'
+    if not (node_home / 'config' / 'priv_validator_key.json').exists():
+        subprocess.run([engine, 'init', '--home', str(node_home)], check=True, stdout=subprocess.DEVNULL)
+    served = version(network)[0]
+    shards = {}
+    for rank in audit_shards:
+        _, stage = fetch_stage(network, rank, home / 'audit-holdings', progress)
+        paths = {name: str(stage[name]) for name in ('config', 'shard')}
+        if 'arm' in stage:
+            paths.update(arm=str(stage['arm']), spec=served.spec)
+            if 'additions' in stage:
+                paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
+                paths['parent_routes'] = list(stage.get('parent_routes', []))
+        shards[str(rank)] = paths
+    settlement = {'promotion_authority': None, 'approved_models': network.get('approved_versions', {}),
+                  'runtime': 'granite-shard', 'threads': 8, 'bundles': str(home / 'bundles'), 'shards': shards,
+                  'held_model_root': served.root}
+    ports = {'p2p': p2p_port, 'rpc': p2p_port + 1, 'abci': p2p_port + 2}
+    chain_network.configure_node(node_home, genesis, settlement, f'{seed_id}@{seed_host}:{seed_port}', ports,
+                                 p2p_host='0.0.0.0')
+    path = node_home / 'config' / 'config.toml'
+    text = chain_network.edit_config(path.read_text(), 'p2p', 'external_address', json.dumps(f'{public_host}:{p2p_port}'))
+    path.write_text(chain_network.edit_config(text, 'p2p', 'allow_duplicate_ip', 'false'))
+    identity = chain_network.identity(engine, node_home)
+    config = {'home': str(home / 'chain'), 'engine': engine, 'chain_id': genesis['chain_id'],
+              'validators': [{'home': str(node_home), 'id': identity['node_id'], **ports}]}
+    (home / 'chain' / 'network.json').write_text(json.dumps(config, sort_keys=True))
+    for name, pid in chain_network.read_pids(config).items():
+        try:
+            os.kill(pid, 0)
+            raise ValueError(f'this node is already running ({name} {pid})')
+        except ProcessLookupError:
+            pass
+    for i, node in enumerate(config['validators']):
+        chain_network.launch(config, f'app{i}', [sys.executable, '-m', 'neuroshard.inference.optimistic_app',
+                                                  '--home', node['home'], '--port', str(node['abci'])])
+        chain_network.launch(config, f'node{i}', [config['engine'], 'start', '--home', node['home']])
+    key = base64.b64decode(identity['pub_key']['value']).hex()
+    progress(json.dumps({'node_id': identity['node_id'], 'consensus_key': key, 'p2p': f'{public_host}:{p2p_port}',
+                         'next': 'once synced, owners vote it in: assistant govern propose-validator '
+                                 f'--consensus-key {key} --power 1'}))
+    return config
