@@ -45,7 +45,7 @@ def register(subcommands, root):
     govern.add_argument('--power', type=int, help='propose-validator: voting power, 0 removes')
     govern.add_argument('--model-root', help='propose: the version to serve, as its model root')
     govern.add_argument('--quality-root', help='propose: digest of the published release-check evidence')
-    govern.add_argument('--proposal', help='vote/enact: the proposal ID')
+    govern.add_argument('--proposal', nargs='+', help='vote/enact: the proposal ID (enact takes several, one block)')
     govern.add_argument('--shard', type=int, help='vote: the shard whose owner log key votes')
     govern.add_argument('--reject', action='store_true', help='vote: vote no')
     govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
@@ -81,6 +81,11 @@ def register(subcommands, root):
     grow.add_argument('--segment-steps', type=int, default=8, help='open: steps per segment')
     grow.add_argument('--reward', default='10', help='open: NEURO escrowed for contributors')
     grow.add_argument('--challenge', help='prove: the challenge ID')
+    validator = actions.add_parser('validator', parents=[common],
+                                   help='Join the chain as a node owners can vote in as a validator; keys stay here')
+    validator.add_argument('--public-host', required=True, help='Address peers reach this machine at')
+    validator.add_argument('--audit-shards', type=int, nargs='*', default=[1, 2],
+                           help='Shards to hold so this validator can judge fraud claims itself')
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
     seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
@@ -134,12 +139,12 @@ def render(result, before):
 
 
 def run(args):
-    if args.assistant_action in ('host', 'audit', 'seed', 'chat', 'grow'):
+    if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.evolution import granite_shard_execution as runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
         runtime.configure()
-        if args.assistant_action in ('host', 'audit', 'seed', 'grow'):  # growth steps replay bit for bit too
+        if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'grow'):  # growth steps replay too
             from neuroshard.evolution import assistant_growth_cohort3_eval
             from neuroshard.evolution.modular_reference_execution import ROOT, read
             assistant_growth_cohort3_eval.runtime(read(ROOT / runtime.RUNTIME))
@@ -148,11 +153,16 @@ def run(args):
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
-    if args.assistant_action == 'seed':
+    if args.assistant_action in ('seed', 'validator'):
         from neuroshard.evolution import growth_runtime
         from neuroshard.inference import optimistic_network
 
-        config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
+        if args.assistant_action == 'seed':
+            config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
+        else:
+            chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+            descriptor = following(descriptor, chain, args.home, network)
+            config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
         stopped = threading.Event()
         signal.signal(signal.SIGTERM, lambda *_: stopped.set())
 
@@ -167,6 +177,11 @@ def run(args):
             while not stopped.wait(30):
                 try:  # the validator follows owner-enacted versions too, so it judges each job with its own weights
                     descriptor = network.follow_validator(config, descriptor, chain, args.home, rebuild, restart)
+                    if args.assistant_action == 'validator' and network.fell_behind(config, chain):
+                        # CometBFT leaves fast sync if its peers drop out for a while (the seed reloading its app),
+                        # then catches up at consensus speed; a restart resumes fast sync.
+                        print('Behind the network outside fast sync; restarting the node', flush=True)
+                        restart(config)
                 except Exception as error:  # noqa: BLE001 - keep validating; retry on the next pass
                     print(f'Validator version check: {error}', flush=True)
         except KeyboardInterrupt:
@@ -373,11 +388,18 @@ def govern(args, chain, network):
         if not (args.proposal and args.shard):
             raise ValueError('vote needs --proposal and --shard')
         key = network.public_hex(network.signing_key(args.home / f'log-{args.shard}.key'))
-        chain.submit(account, 'model_vote', proposal_id=args.proposal, log_key=key, approve=not args.reject)
+        for proposal in args.proposal:
+            chain.submit(account, 'model_vote', proposal_id=proposal, log_key=key, approve=not args.reject)
     else:
         if not args.proposal:
             raise ValueError('enact needs --proposal')
-        chain.submit(account, 'model_enact', proposal_id=args.proposal)
+        # Several enactments are signed with consecutive nonces and broadcast together, so they usually commit in
+        # one block: a validator set grows from one to four at once instead of passing through two of two (which
+        # would need both to sign every block).
+        # The node admits one transaction per account per block (nonces are checked against committed state), so
+        # these are enacted one block apart: a validator set grows by one validator per block.
+        for proposal in args.proposal:
+            chain.submit(account, 'model_enact', proposal_id=proposal)
     print('committed')
 
 
