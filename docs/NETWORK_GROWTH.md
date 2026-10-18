@@ -566,3 +566,24 @@ against that.
 - G2 was trained offline on one machine with the protocol trainer; it is not yet served. The next
   step is to put it through the network: a corpus recipe that owners verify, a job the pool funds, a
   sealed evaluation that includes real requests, and an owner vote.
+
+## G2 grown and enacted by the live network
+
+October 17, 2026 (`config/experiments/assistant-g2-live.json`). G2 went through the network: a
+realistic-corpus recipe, owner-verified by replay; a job funded by the usage pool; 16 committed segments;
+a sealed evaluation that now includes beacon-chosen real requests (27/48 against the served unit's
+20/48); identical report digests from both owners; their votes; enactment at height 744,287. Both
+owners, the validator and the auditor rebuilt it from committed state and switched by themselves.
+
+The job's final state root equals the offline G2 run's, so the served unit is the one measured on the
+two real-request sets: 196/314 and 98/138, against 150 and 64 for the untrained parent.
+
+**On the way, the round stalled three times; each is fixed:**
+- an agent began an hour-long evaluation of an old result before training the open job;
+- an agent ran out of balance for commit bonds at segment 9 of 16;
+- the validator's version was fixed, so after an enactment it would have given no verdicts.
+
+**Limits.**
+- The validator reload takes the RPC offline for one to four minutes.
+- Owners' sealed evaluations share their serving CPUs and slow conversations meanwhile.
+- One machine trained every segment. Other contributors only spot-checked.
