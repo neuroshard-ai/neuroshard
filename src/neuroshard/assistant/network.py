@@ -1088,3 +1088,12 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
                          'next': 'once synced, owners vote it in: assistant govern propose-validator '
                                  f'--consensus-key {key} --power 1'}))
     return config
+
+
+def fell_behind(config, chain, margin=600):
+    """True when the local node believes it is caught up while the network is ``margin`` blocks ahead."""
+    from neuroshard.inference import optimistic_network as chain_network
+
+    local = chain_network.rpc(chain_network.url(config), 'status')['sync_info']
+    network_height = chain.state()['height']
+    return not local['catching_up'] and network_height - int(local['latest_block_height']) > margin
