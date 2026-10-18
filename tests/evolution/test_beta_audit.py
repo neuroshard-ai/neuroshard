@@ -98,3 +98,101 @@ def test_validators_judge_only_the_pinned_parent_unless_configured():
     with pytest.raises(ValueError):
         model_factory({'base': 'tiny-granite', 'base_config': {}}, allowed={'granite-parent'})
     model_factory({'base': 'granite-parent'}, allowed={'granite-parent'})
+
+
+# Finding 2: free faucet tokens must not buy governance.
+
+from unittest.mock import patch
+
+from neuroshard.assistant import network
+from neuroshard.inference import optimistic as ledger
+from test_optimistic_serving import Account, CHAIN, MODEL, bond
+
+
+def _governed_chain(honest=3):
+    steward = Account('audit-steward')
+    owners = [Account(f'audit-owner-{i}') for i in range(honest)]
+    s = ledger.genesis(CHAIN, MODEL, 3, {steward.public: 1_000_000_000, **{a.public: 20_000_000 for a in owners}},
+                       network.PARAMS)
+    keys = []
+    for i, a in enumerate(owners):
+        key, e = bond(a, 1 if i == 0 else 2, f'audit-owner-log-{i}')
+        keys.append(key)
+        s = ledger.transition(s, e, None)
+    s = ledger.transition(s, steward.sign('governance_handover', approval_ppm=666_667, vote_blocks=20),
+                          lambda *_: True)
+    return s, steward, owners, keys
+
+
+def _vote_through(s, proposer, kind, voters, **fields):
+    proposal = proposer.sign(kind, **fields)
+    pid = ledger.transaction_id(proposal)
+    s = ledger.transition(s, proposal, None)
+    for account, key in voters:
+        s = ledger.transition(s, account.sign('model_vote', proposal_id=pid, log_key=key, approve=True), None)
+    return ledger.transition(s, proposer.sign('model_enact', proposal_id=pid), None), pid
+
+
+def test_faucet_funded_bonds_serve_but_cannot_vote():
+    s, steward, owners, keys = _governed_chain()
+    assert set(s['governance']['members']) == set(keys)
+    attackers = [Account(f'audit-attacker-{i}') for i in range(6)]
+    attack_keys = []
+    for i, a in enumerate(attackers):  # far more bonded weight than every honest member together
+        s = ledger.transition(s, steward.sign('transfer', to=a.public, amount=40_000_000), None)
+        key, e = bond(a, 1 + i % 2, f'audit-attacker-log-{i}', 30_000_000)
+        attack_keys.append(key)
+        s = ledger.transition(s, e, None)
+    assert all(s['owners'][k]['status'] == 'active' for k in attack_keys)  # they may serve
+    proposal = attackers[0].sign('model_propose', model_root='ee' * 32, quality_root='dd' * 32)
+    pid = ledger.transaction_id(proposal)
+    s = ledger.transition(s, proposal, None)
+    assert set(s['governance']['proposals'][pid]['weights']) == set(keys)
+    with pytest.raises(ValueError, match='Only an owner bonded when the proposal opened votes'):
+        ledger.transition(s, attackers[0].sign('model_vote', proposal_id=pid, log_key=attack_keys[0], approve=True), None)
+    with pytest.raises(ValueError, match='neither passed nor closed'):
+        ledger.transition(s, attackers[2].sign('model_enact', proposal_id=pid), None)
+    validator = attackers[1].sign('validator_propose', consensus_key='cc' * 32, power=50)
+    s = ledger.transition(s, validator, None)
+    assert set(s['governance']['proposals'][ledger.transaction_id(validator)]['weights']) == set(keys)
+
+
+def test_members_admit_and_remove_owners():
+    s, steward, owners, keys = _governed_chain()
+    newcomer = Account('audit-newcomer')
+    s = ledger.transition(s, steward.sign('transfer', to=newcomer.public, amount=20_000_000), None)
+    key, e = bond(newcomer, 2, 'audit-newcomer-log')
+    s = ledger.transition(s, e, None)
+    assert key not in ledger.voting_weights(s)
+    s, _ = _vote_through(s, owners[0], 'member_propose', list(zip(owners, keys)), log_key=key, admit=True)
+    assert key in s['governance']['members'] and key in ledger.voting_weights(s)
+    assert s['governance']['member_history'][-1]['admit'] is True
+    s, _ = _vote_through(s, owners[0], 'member_propose', list(zip(owners, keys)), log_key=key, admit=False)
+    assert key not in ledger.voting_weights(s)
+
+
+def test_a_minority_of_members_cannot_admit_anyone():
+    s, steward, owners, keys = _governed_chain()
+    outsider = Account('audit-outsider')
+    s = ledger.transition(s, steward.sign('transfer', to=outsider.public, amount=20_000_000), None)
+    key, e = bond(outsider, 1, 'audit-outsider-log')
+    s = ledger.transition(s, e, None)
+    proposal = outsider.sign('member_propose', log_key=key, admit=True)
+    pid = ledger.transaction_id(proposal)
+    s = ledger.transition(s, proposal, None)
+    s = ledger.transition(s, owners[0].sign('model_vote', proposal_id=pid, log_key=keys[0], approve=True), None)
+    with pytest.raises(ValueError, match='neither passed nor closed'):
+        ledger.transition(s, outsider.sign('model_enact', proposal_id=pid), None)
+
+
+def test_membership_starts_at_the_upgrade_height_and_earlier_blocks_replay_unchanged():
+    with patch.dict(ledger.UPGRADE_HEIGHTS, {CHAIN: None}):
+        s, steward, owners, keys = _governed_chain()
+        assert 'members' not in s['governance']
+        legacy = ledger.advance(s, s['height'] + 1)
+        assert 'members' not in legacy['governance']
+    with patch.dict(ledger.UPGRADE_HEIGHTS, {CHAIN: s['height'] + 2}):
+        before = ledger.advance(s, s['height'] + 1)
+        assert ledger.root(before) == ledger.root(legacy)  # identical until the upgrade height
+        after = ledger.advance(before, before['height'] + 1)
+        assert set(after['governance']['members']) == set(keys)

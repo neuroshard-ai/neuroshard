@@ -51,7 +51,7 @@ FIELDS = {'owner_bond': {'model_root', 'shard', 'log_key', 'amount', 'possession
           'model_propose': {'model_root', 'quality_root'}, 'model_vote': {'proposal_id', 'log_key', 'approve'},
           'model_enact': {'proposal_id'}, 'validator_propose': {'consensus_key', 'power'},
           'recipe_propose': {'recipe_root', 'start_root', 'steps', 'segment_steps', 'reward'},
-          'growth_levy': {'levy_ppm'}}
+          'growth_levy': {'levy_ppm'}, 'member_propose': {'log_key', 'admit'}}
 MAX_GROWTH_LEVY_PPM = 300_000  # at most 30% of owner payments fund growth
 MAX_VALIDATOR_POWER = 100
 # Growth jobs (contributors train units; see ``growth``). Their schema is declared here, and the module is
@@ -75,6 +75,18 @@ ENDPOINT = re.compile(r'[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?:[1-9][0-9]{0,4}')
 OWNER_LOG_FORMAT = 'neuroshard-granite-owner-log/2'
 HEADER_FIELDS = {'format', 'rank', 'public_key', 'session', 'upstream'}
 LINK_DOMAIN = 'neuroshard/serving-link/v1'
+
+
+# Consensus-rule upgrades activate at a height per chain, so replaying earlier blocks gives the same state
+# roots. A chain not listed runs every rule from genesis; ``None`` means not yet scheduled.
+# Upgrade 1 (audit, October 2026): governance membership, growth-job expiry and capacity, and the
+# durable version registry.
+UPGRADE_HEIGHTS = {'neuroshard-assistant-1': None}
+
+
+def upgraded(state):
+    height = UPGRADE_HEIGHTS.get(state['chain_id'], 0)
+    return height is not None and state['height'] >= height
 
 
 class NoVerdict(Exception):
@@ -282,6 +294,8 @@ def advance(previous, height, time=None):
             remember(state, job_id, {'status': 'expired', 'user': job['user'], 'owners': job['owners'],
                                      'committed': sorted(job['commits'])})
             del state['jobs'][job_id]
+    if governed(state) and 'members' not in state['governance'] and upgraded(state):
+        found_membership(state)
     pending = state.get('governance', {}).get('pending_model')
     if pending and not state['jobs']:
         switch_model(state, pending)
@@ -374,8 +388,10 @@ def admit(previous, envelope):
         blocks = integer(body['vote_blocks'], GOVERNANCE['minimum_vote_blocks'], 1_000_000)
         return body, sender, {'kind': 'governance_handover', 'chain_id': previous['chain_id'], 'signer': sender,
                               'approval_ppm': approval, 'vote_blocks': blocks}
+    if kind == 'member_propose' and not upgraded(previous):
+        raise ValueError('Governance membership is not active on this chain yet')
     if kind in ('model_propose', 'model_vote', 'model_enact', 'validator_propose', 'recipe_propose',
-                'growth_levy') and not governed(previous):
+                'growth_levy', 'member_propose') and not governed(previous):
         raise ValueError('Owner governance has not been handed over')
     if kind.startswith('growth_'):
         return body, sender, _growth().admit(sys.modules[__name__], previous, body, sender)
@@ -385,6 +401,24 @@ def admit(previous, envelope):
 def governed(state):
     """Whether owners, not the steward key, decide the serving model. Irreversible once true."""
     return state.get('governance', {}).get('mode') == 'owners'
+
+
+def voting_weights(state):
+    """Who votes, and with what weight, on a proposal opened now: active, bonded governance members.
+
+    Bonding is open to anyone, so a bond alone must not be a vote: free test tokens would buy control of the
+    model and the validator set. Once membership is active, only owners the existing members voted in
+    (``member_propose``) vote, each with its bond. Before it, every active owner did.
+    """
+    members = state.get('governance', {}).get('members')
+    return {key: owner['amount'] for key, owner in sorted(state['owners'].items())
+            if owner['status'] == 'active' and owner['amount'] > 0 and (members is None or key in members)}
+
+
+def found_membership(state):
+    """The first members are the owners active when membership starts: at handover, or at the upgrade."""
+    state['governance']['members'] = {key: state['height'] for key, owner in sorted(state['owners'].items())
+                                      if owner['status'] == 'active' and owner['amount'] > 0}
 
 
 def tally(proposal):
@@ -542,6 +576,8 @@ def transition(previous, envelope, execute):
         state['governance'] = {'mode': 'owners', 'approval_ppm': request['approval_ppm'],
                                'vote_blocks': request['vote_blocks'], 'proposals': {},
                                'handed_over': {'height': state['height'], 'by': sender}}
+        if upgraded(state):
+            found_membership(state)
     elif kind == 'model_propose':
         governance = state['governance']
         if len(governance['proposals']) >= GOVERNANCE['max_proposals']:
@@ -552,8 +588,7 @@ def transition(previous, envelope, execute):
         if any(p.get('model_root') == model and state['height'] <= p['deadline']
                for p in governance['proposals'].values()):
             raise ValueError('This model is already proposed and open')
-        weights = {key: owner['amount'] for key, owner in sorted(state['owners'].items())
-                   if owner['status'] == 'active' and owner['amount'] > 0}
+        weights = voting_weights(state)
         if not weights:
             raise ValueError('No bonded owner can vote')
         debit(GOVERNANCE['proposal_deposit'])
@@ -570,13 +605,36 @@ def transition(previous, envelope, execute):
         key, power = ed25519_key(body['consensus_key']), integer(body['power'], 0, MAX_VALIDATOR_POWER)
         if state.get('validators', {}).get(key, None) == power:
             raise ValueError('The validator already has that power')
-        weights = {k: owner['amount'] for k, owner in sorted(state['owners'].items())
-                   if owner['status'] == 'active' and owner['amount'] > 0}
+        weights = voting_weights(state)
         if not weights:
             raise ValueError('No bonded owner can vote')
         debit(GOVERNANCE['proposal_deposit'])
         governance['proposals'][transaction_id(envelope)] = {
             'kind': 'validator', 'proposer': sender, 'consensus_key': key, 'power': power,
+            'deposit': GOVERNANCE['proposal_deposit'], 'opened': state['height'],
+            'deadline': state['height'] + governance['vote_blocks'], 'weights': weights, 'votes': {}}
+    elif kind == 'member_propose':
+        # Who votes is itself decided by a vote of the members: anyone may bond and serve, but a bond becomes
+        # a vote only when the members admit it. Removal works the same way.
+        governance = state['governance']
+        if len(governance['proposals']) >= GOVERNANCE['max_proposals']:
+            raise ValueError('Too many open proposals')
+        key, admit_it = log_key(body['log_key']), body['admit']
+        owner = state['owners'].get(key)
+        if type(admit_it) is not bool or owner is None:
+            raise ValueError('Name a bonded owner and whether to admit or remove it')
+        if admit_it and (owner['status'] != 'active' or key in governance['members']):
+            raise ValueError('Only an active owner that is not yet a member can be admitted')
+        if not admit_it and key not in governance['members']:
+            raise ValueError('Only a member can be removed')
+        if any(p.get('kind') == 'member' and p['log_key'] == key for p in governance['proposals'].values()):
+            raise ValueError('This owner already has an open membership proposal')
+        weights = voting_weights(state)
+        if not weights:
+            raise ValueError('No member can vote')
+        debit(GOVERNANCE['proposal_deposit'])
+        governance['proposals'][transaction_id(envelope)] = {
+            'kind': 'member', 'log_key': key, 'admit': admit_it, 'proposer': sender,
             'deposit': GOVERNANCE['proposal_deposit'], 'opened': state['height'],
             'deadline': state['height'] + governance['vote_blocks'], 'weights': weights, 'votes': {}}
     elif kind in ('recipe_propose', 'growth_levy'):
@@ -592,8 +650,7 @@ def transition(previous, envelope, execute):
                 raise ValueError('A recipe pays at least one atom per step')
         else:
             item = {'kind': 'levy', 'levy_ppm': integer(body['levy_ppm'], 0, MAX_GROWTH_LEVY_PPM)}
-        weights = {k: owner['amount'] for k, owner in sorted(state['owners'].items())
-                   if owner['status'] == 'active' and owner['amount'] > 0}
+        weights = voting_weights(state)
         if not weights:
             raise ValueError('No bonded owner can vote')
         debit(GOVERNANCE['proposal_deposit'])
@@ -627,6 +684,18 @@ def transition(previous, envelope, execute):
             state.setdefault('validator_history', []).append({
                 'consensus_key': key, 'power': power, 'height': state['height'], 'proposal_id': body['proposal_id'],
                 'approving_weight': approving, 'total_weight': total})
+            account(state, proposal['proposer'])['balance'] += proposal['deposit']
+        elif passed and proposal.get('kind') == 'member':
+            key = proposal['log_key']
+            if proposal['admit']:
+                if state['owners'][key]['status'] != 'active':
+                    raise ValueError('The owner is no longer active')
+                governance['members'][key] = state['height']
+            else:
+                governance['members'].pop(key, None)
+            governance.setdefault('member_history', []).append({
+                'log_key': key, 'admit': proposal['admit'], 'height': state['height'],
+                'proposal_id': body['proposal_id'], 'approving_weight': approving, 'total_weight': total})
             account(state, proposal['proposer'])['balance'] += proposal['deposit']
         elif passed and proposal.get('kind') in ('recipe', 'levy'):
             if proposal['kind'] == 'recipe':

@@ -38,8 +38,10 @@ def register(subcommands, root):
     chat.add_argument('--threads', type=int)
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
-    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy', 'vote',
-                                                  'enact', 'handover'))
+    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy',
+                                                  'propose-member', 'vote', 'enact', 'handover'))
+    govern.add_argument('--log-key', help='propose-member: the owner log key to admit as a voting member (or remove)')
+    govern.add_argument('--remove', action='store_true', help='propose-member: remove the member instead')
     govern.add_argument('--levy-ppm', type=int, help='propose-levy: share of owner payments that funds growth (ppm)')
     govern.add_argument('--consensus-key', help='propose-validator: the CometBFT ed25519 public key, hex')
     govern.add_argument('--power', type=int, help='propose-validator: voting power, 0 removes')
@@ -364,6 +366,8 @@ def govern(args, chain, network):
             approving, total = ledger.tally(proposal)
             kind = proposal.get('kind')
             what = (f"validator {proposal['consensus_key'][:16]} at power {proposal['power']}" if kind == 'validator'
+                    else f"{'admit' if proposal['admit'] else 'remove'} member {proposal['log_key'][:16]}"
+                    if kind == 'member'
                     else f"growth levy {proposal['levy_ppm'] / 10_000:.4g}%" if kind == 'levy'
                     else f"recipe {proposal['recipe_root'][:16]}: {proposal['steps']} steps for {proposal['reward']}"
                     if kind == 'recipe' else
@@ -374,6 +378,14 @@ def govern(args, chain, network):
               f"{len(state.get('growth', {}))} job(s) open.")
         for key, power in sorted(state.get('validators', {}).items()):
             print(f"  admitted validator {key[:16]}: power {power}")
+        members = governance.get('members')
+        if members is None:
+            print('Voting: every active bonded owner votes with its bond.')
+        else:
+            print(f'Voting: {len(members)} member(s); a bond alone does not vote until members admit it.')
+            for key in sorted(members):
+                owner = state['owners'].get(key, {})
+                print(f"  member {key[:16]}: shard {owner.get('shard')}, bond {owner.get('amount', 0)}, {owner.get('status')}")
         return
     account = network.Account(args.home / 'account.key')
     if args.govern_action == 'handover':
@@ -388,6 +400,12 @@ def govern(args, chain, network):
         if not args.consensus_key or args.power is None:
             raise ValueError('propose-validator needs --consensus-key and --power')
         envelope = chain.submit(account, 'validator_propose', consensus_key=args.consensus_key, power=args.power)
+        print(f'proposal {ledger.transaction_id(envelope)}')
+        return
+    elif args.govern_action == 'propose-member':
+        if not args.log_key:
+            raise ValueError('propose-member needs --log-key')
+        envelope = chain.submit(account, 'member_propose', log_key=args.log_key, admit=not args.remove)
         print(f'proposal {ledger.transaction_id(envelope)}')
         return
     elif args.govern_action == 'propose-levy':
