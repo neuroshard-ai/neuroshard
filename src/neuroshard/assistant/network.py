@@ -1086,7 +1086,9 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
                                  p2p_host='0.0.0.0')
     path = node_home / 'config' / 'config.toml'
     text = chain_network.edit_config(path.read_text(), 'p2p', 'external_address', json.dumps(f'{public_host}:{p2p_port}'))
-    path.write_text(chain_network.edit_config(text, 'p2p', 'allow_duplicate_ip', 'false'))
+    text = chain_network.edit_config(text, 'p2p', 'allow_duplicate_ip', 'false')
+    # A public RPC, so clients reach the chain through any validator, not only the seed.
+    path.write_text(chain_network.edit_config(text, 'rpc', 'laddr', json.dumps(f'tcp://0.0.0.0:{ports["rpc"]}')))
     identity = chain_network.identity(engine, node_home)
     config = {'home': str(home / 'chain'), 'engine': engine, 'chain_id': genesis['chain_id'],
               'validators': [{'home': str(node_home), 'id': identity['node_id'], **ports}]}

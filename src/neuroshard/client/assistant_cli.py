@@ -396,14 +396,10 @@ def govern(args, chain, network):
         # Several enactments are signed with consecutive nonces and broadcast together, so they usually commit in
         # one block: a validator set grows from one to four at once instead of passing through two of two (which
         # would need both to sign every block).
-        nonce, envelopes = chain.nonce(account), []
-        for offset, proposal in enumerate(args.proposal):
-            envelope = account.sign(chain.chain_id, nonce + offset, 'model_enact', proposal_id=proposal)
-            admitted = chain.broadcast(envelope)
-            if admitted['code']:
-                raise ValueError(admitted['log'])
-            envelopes.append(envelope)
-        chain.settled_transactions(envelopes)
+        # The node admits one transaction per account per block (nonces are checked against committed state), so
+        # these are enacted one block apart: a validator set grows by one validator per block.
+        for proposal in args.proposal:
+            chain.submit(account, 'model_enact', proposal_id=proposal)
     print('committed')
 
 
