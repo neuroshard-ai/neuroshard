@@ -173,7 +173,7 @@ def test_validators_judge_a_growth_proof_from_their_recipe_and_bundle_stores(tmp
     payload = growth.bundle(saved, 1)
     proof_root = hashlib.sha256(payload).hexdigest()
     (tmp_path / 'bundles' / proof_root).write_bytes(payload)
-    check = promotion_or_fraud({'growth_recipes': str(tmp_path / 'recipes'), 'bundles': str(tmp_path / 'bundles')},
+    check = promotion_or_fraud({'growth_recipes': str(tmp_path / 'recipes'), 'bundles': str(tmp_path / 'bundles'), 'growth_bases': ['tiny-granite']},
                                None)
     request = {'kind': 'growth_step', 'recipe_root': root, 'step': 1, 'before_root': first[0],
                'proof_root': proof_root}

@@ -52,7 +52,7 @@ def network(tmp_path, contributors):
     (store / 'recipes' / f'{root}.json').write_text(json.dumps(recipe))
     (store / 'bundles').mkdir()
     checker = promotion_or_fraud({'promotion_authority': steward.public, 'approved_models': {},
-                                  'growth_recipes': str(store / 'recipes'), 'bundles': str(store / 'bundles')}, None)
+                                  'growth_recipes': str(store / 'recipes'), 'bundles': str(store / 'bundles'), 'growth_bases': ['tiny-granite']}, None)
     chain = Chain(state, checker, beacon.time_of(seal['round']) - 2000)
     keys = {}
     for account, shard, name in ((owner1, 1, 'owner1-log'), (owner2, 2, 'owner2-log')):
