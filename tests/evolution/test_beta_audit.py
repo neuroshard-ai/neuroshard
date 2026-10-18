@@ -196,3 +196,49 @@ def test_membership_starts_at_the_upgrade_height_and_earlier_blocks_replay_uncha
         assert ledger.root(before) == ledger.root(legacy)  # identical until the upgrade height
         after = ledger.advance(before, before['height'] + 1)
         assert set(after['governance']['members']) == set(keys)
+
+
+# Finding 5: cheap abandoned growth jobs must not block growth.
+
+def _spam_jobs(s, account, count, reward=1):
+    out = []
+    for i in range(count):
+        e = account.sign('growth_open', recipe_root=f'{i + 1:064x}', start_root='ff' * 32, steps=1, segment_steps=1,
+                         reward=reward)
+        s = ledger.transition(s, e, None)
+        out.append(ledger.transaction_id(e))
+    return s, out
+
+
+def test_the_audit_spam_is_refused_and_sponsored_jobs_cannot_take_every_slot():
+    spammer, cheap, more = (Account(f'audit-growth-spam-{n}') for n in ('a', 'b', 'c'))
+    s = ledger.genesis(CHAIN, MODEL, 3, {a.public: 100_000_000 for a in (spammer, cheap, more)}, network.PARAMS)
+    with pytest.raises(ValueError, match='minimum reward per step'):
+        _spam_jobs(s, cheap, 1)
+    s, _ = _spam_jobs(s, spammer, 4, reward=1000)
+    with pytest.raises(ValueError, match='at capacity'):
+        _spam_jobs(s, more, 1, reward=1000)
+    s['growth_queue'] = [{'recipe_root': 'aa' * 32, 'start_root': 'bb' * 32, 'steps': 1, 'segment_steps': 1,
+                          'reward': 1, 'admitted': 0, 'proposal_id': 'cc' * 32}]
+    s['growth_pool'] = 1
+    s['initial_supply'] += 1
+    s = ledger.advance(s, s['height'] + 1)
+    assert sum(1 for job in s['growth'].values() if job['sponsor'] is None) == 1  # the pool's job opened
+
+
+def test_abandoned_jobs_expire_and_refund():
+    from neuroshard.inference import growth
+
+    spammer = Account('audit-growth-abandon')
+    s = ledger.genesis(CHAIN, MODEL, 3, {spammer.public: 100_000_000}, network.PARAMS)
+    s, ids = _spam_jobs(s, spammer, 4, reward=1000)
+    balance = s['accounts'][spammer.public]['balance']
+    idle = growth.PARAMS['growth_idle_blocks']
+    for _ in range(idle):
+        s = ledger.advance(s, s['height'] + 1)
+    assert len(s['growth']) == 4  # not yet idle long enough
+    s = ledger.advance(s, s['height'] + 1)
+    assert 'growth' not in s
+    assert all(s['results'][i]['status'] == 'growth_expired' for i in ids)
+    assert s['accounts'][spammer.public]['balance'] == balance + 4 * 1000  # rewards back, deposits burned
+    _spam_jobs(s, spammer, 4, reward=1000)  # capacity is free again

@@ -184,7 +184,10 @@ class Agent:
         if self.probe_every is not None and self.clock() - last < self.probe_every:
             return []
         pending = [p for p in state['governance']['proposals'].values() if p.get('kind') == 'recipe']
-        if pending or state.get('growth_queue') or state.get('growth'):
+        # Wait only for the network's own growth (queued or pool-funded): a sponsored job, which anyone may open,
+        # must not stall the network's plan; abandoned ones expire.
+        own = [job for job in state.get('growth', {}).values() if job.get('sponsor') is None]
+        if pending or state.get('growth_queue') or own:
             return []  # one growth round at a time: the next probe measures the version that round produces
         round_number = drand.round_at(self.clock()) - 1
         round_number, signature, randomness = (self.beacon or drand.fetch)(round_number)
