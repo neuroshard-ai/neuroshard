@@ -123,13 +123,13 @@ def named_recipe(state, root):
     return root in ({p['recipe_root'] for p in state.get('governance', {}).get('proposals', {}).values()
                      if p.get('kind') == 'recipe'} | {q['recipe_root'] for q in state.get('growth_queue', [])}
                     | {j['recipe_root'] for j in state.get('growth', {}).values()}
-                    | {r['recipe_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
+                    | {r['recipe_root'] for r in ledger.grown(state)})
 
 
 def named_state(state, root):
     """Whether the chain committed this training state: a segment's last root of an open job, or a grown result."""
     return root in ({c['step_roots'][-1] for j in state.get('growth', {}).values() for c in j['commits']}
-                    | {r['final_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
+                    | {r['final_root'] for r in ledger.grown(state)})
 
 
 def receive_proof(payload, root, state, store):

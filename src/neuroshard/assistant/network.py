@@ -1154,10 +1154,11 @@ def replicate(chain, store, peers, progress=print):
 
     state, store, copied = chain.state(), Path(store), 0
     wanted = []
-    for result in state.get('results', {}).values():
-        if result.get('status') == 'grown':
-            wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
-                       (result['final_root'], f"{result['final_root']}.state")]
+    from neuroshard.inference import optimistic as ledger
+
+    for result in ledger.grown(state):
+        wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
+                   (result['final_root'], f"{result['final_root']}.state")]
     for job in state.get('growth', {}).values():
         wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
         wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]

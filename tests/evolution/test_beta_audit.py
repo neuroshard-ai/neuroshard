@@ -242,3 +242,41 @@ def test_abandoned_jobs_expire_and_refund():
     assert all(s['results'][i]['status'] == 'growth_expired' for i in ids)
     assert s['accounts'][spammer.public]['balance'] == balance + 4 * 1000  # rewards back, deposits burned
     _spam_jobs(s, spammer, 4, reward=1000)  # capacity is free again
+
+
+# Finding 6: a fresh node can rebuild the served model after long history and several route changes.
+
+def test_grown_units_survive_routine_history():
+    from neuroshard.assistant.audit import named_recipe, named_state
+
+    with patch.dict(ledger.UPGRADE_HEIGHTS, {CHAIN: 1}):
+        s = ledger.genesis(CHAIN, MODEL, 3, {}, network.PARAMS)
+        ledger.remember(s, 'grown', {'status': 'grown', 'recipe_root': 'aa' * 32, 'final_root': 'bb' * 32})
+        s = ledger.advance(s, 1)  # the upgrade carries recent grown results into the registry
+        for i in range(network.PARAMS['max_results'] + 10):
+            s['height'] += 1
+            ledger.remember(s, f'result-{i}', {'status': 'expired'})
+        assert 'grown' not in s['results']
+        assert named_recipe(s, 'aa' * 32) and named_state(s, 'bb' * 32)
+        assert [r['final_root'] for r in ledger.grown(s)] == ['bb' * 32]
+
+
+def test_a_fresh_node_rebuilds_a_version_that_changed_two_routes():
+    from neuroshard.evolution import growth_runtime
+
+    desc = {'format': 'neuroshard-assistant-network/1', 'version': 'v0', 'plan_sha256': 'aa' * 32, 'files': {},
+            'policies': {'documents': {}, 'chat': {}},
+            'routing': {'documents': {'addition': 'D'}, 'chat': {'addition': 'C'}}}
+    after_documents = growth_runtime.candidate(desc, 'D', '11' * 32, b'doc-manifest', b'doc-tensors')
+    after_both = growth_runtime.candidate(after_documents, 'C', '22' * 32, b'chat-manifest', b'chat-tensors')
+    state = {'model_root': network.model_root(after_both), 'results': {}, 'grown_units': {
+        '11' * 32: {'status': 'grown', 'recipe_root': '33' * 32, 'final_root': '11' * 32, 'height': 5},
+        '22' * 32: {'status': 'grown', 'recipe_root': '44' * 32, 'final_root': '22' * 32, 'height': 9}}}
+    recipes = {'33' * 32: {'route': 'documents'}, '44' * 32: {'route': 'chat'}}
+
+    def unit_files(_, recipe, root):
+        return (b'doc-manifest', b'doc-tensors') if recipe['route'] == 'documents' else (b'chat-manifest', b'chat-tensors')
+    with patch.object(growth_runtime, 'unit_files', side_effect=unit_files):
+        fresh = growth_runtime.upgrade(desc, state, recipes, lambda *_: b'ignored')
+        assert fresh is not None and network.model_root(fresh[0]) == state['model_root']
+        assert growth_runtime.upgrade(after_documents, state, recipes, lambda *_: b'ignored') is not None

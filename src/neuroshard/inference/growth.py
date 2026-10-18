@@ -218,6 +218,8 @@ def advance(ledger, state, time=None):
 
             record.update(settled_unix=int(time), seal_round=beacon.round_at(int(time)) + SEAL_MARGIN)
         ledger.remember(state, job_id, record)
+        if ledger.upgraded(state):
+            state.setdefault('grown_units', {})[final] = {**record, 'job_id': job_id, 'height': state['height']}
         del state['growth'][job_id]
     fund(ledger, state)
 

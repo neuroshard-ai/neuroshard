@@ -296,6 +296,8 @@ def advance(previous, height, time=None):
             del state['jobs'][job_id]
     if governed(state) and 'members' not in state['governance'] and upgraded(state):
         found_membership(state)
+    if upgraded(state) and 'grown_units' not in state:
+        register_grown(state)
     pending = state.get('governance', {}).get('pending_model')
     if pending and not state['jobs']:
         switch_model(state, pending)
@@ -413,6 +415,29 @@ def voting_weights(state):
     members = state.get('governance', {}).get('members')
     return {key: owner['amount'] for key, owner in sorted(state['owners'].items())
             if owner['status'] == 'active' and owner['amount'] > 0 and (members is None or key in members)}
+
+
+def grown(state):
+    """Every grown unit the chain can still name: the durable registry, then any recent grown result not in it.
+
+    Rebuilding an enacted version needs its unit's recipe and final state long after the job settled, so from the
+    upgrade a grown unit is kept in ``grown_units`` (never pruned with ordinary job results).
+    """
+    units = dict(state.get('grown_units', {}))
+    for result in state.get('results', {}).values():
+        if result.get('status') == 'grown' and result['final_root'] not in units:
+            units[result['final_root']] = result
+    return sorted(units.values(), key=lambda r: (-r.get('settled_unix', 0), -r.get('height', 0), r['final_root']))
+
+
+def register_grown(state):
+    """From the upgrade, carry the grown results still in recent history into the durable registry."""
+    registry = state.setdefault('grown_units', {})
+    for result in state.get('results', {}).values():
+        if result.get('status') == 'grown':
+            registry.setdefault(result['final_root'], dict(result))
+    if not registry:
+        del state['grown_units']
 
 
 def found_membership(state):
