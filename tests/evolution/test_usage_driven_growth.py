@@ -447,3 +447,33 @@ def test_a_store_replicates_what_the_chain_needs_from_other_stores(tmp_path):
     finally:
         source.shutdown()
         source.server_close()
+
+
+def test_the_explorer_lookup_reports_roles_and_refuses_non_keys(monkeypatch):
+    import pytest
+
+    from neuroshard.assistant import explorer, network as client
+
+    state = {'height': 9, 'owners': {'ab' * 32: {'shard': 2, 'status': 'active', 'amount': 5, 'endpoint': None,
+                                                  'account': '02' + 'cd' * 32}},
+             'accounts': {'02' + 'cd' * 32: {'balance': 7, 'nonce': 3}}, 'jobs': {},
+             'results': {'j': {'status': 'settled', 'owners': ['ab' * 32], 'paid': [4]}},
+             'validators': {'ef' * 32: 1}, 'validator_history': [{'consensus_key': 'ef' * 32, 'height': 5}]}
+
+    class Chain:
+        def __init__(self, *a):
+            pass
+
+        def state(self):
+            return state
+
+    monkeypatch.setattr(client, 'Chain', Chain)
+    monkeypatch.setattr(client, 'endpoints', lambda d: ['http://x'])
+    owner = explorer.lookup({'chain_id': 'c'}, 'AB' * 32)
+    assert owner['found'][0] == {**owner['found'][0], 'role': 'owner', 'conversations_served': 1, 'earned': 4}
+    account = explorer.lookup({'chain_id': 'c'}, '02' + 'cd' * 32)
+    assert [f['role'] for f in account['found']] == ['owner', 'account']    # the owner this account bonded, and itself
+    assert explorer.lookup({'chain_id': 'c'}, 'ef' * 32)['found'] == [{'role': 'validator', 'power': 1, 'admitted': 5}]
+    assert explorer.lookup({'chain_id': 'c'}, '12' * 32)['found'] == []
+    with pytest.raises(KeyError):
+        explorer.lookup({'chain_id': 'c'}, "'; drop table")

@@ -1,0 +1,44 @@
+name: I'm running a node
+description: Tell us you joined (or want to join) the assistant network, so owners can vote your validator in and we can help.
+title: "Operator: "
+labels: ["operator"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running a node. **Never paste private keys** — only the public values below.
+        Not sure your machine qualifies? Run `curl -LsSf https://neuroshard.com/join.sh | bash -s -- check` first.
+  - type: dropdown
+    id: role
+    attributes:
+      label: Role
+      options: [Validator, Owner (shard 1), Owner (shard 2), Auditor, Contributor, Just trying chat]
+    validations: { required: true }
+  - type: input
+    id: who
+    attributes:
+      label: Who runs it
+      description: Your name or organization. Independent operators are the point — say if you run other nodes too.
+    validations: { required: true }
+  - type: input
+    id: machine
+    attributes:
+      label: Machine and region
+      placeholder: "AWS r7i.2xlarge, us-west-2 / own server, Germany"
+    validations: { required: true }
+  - type: input
+    id: key
+    attributes:
+      label: Public key (validators: consensus key; owners: log key)
+      description: Printed in `journalctl -u neuroshard-<role>`. Validators need this for the owner vote.
+  - type: dropdown
+    id: state
+    attributes:
+      label: Where are you?
+      options: [Running and synced, Syncing, Installing, Stuck — need help]
+    validations: { required: true }
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: What went well, what was confusing, what failed.

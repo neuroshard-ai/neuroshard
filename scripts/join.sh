@@ -10,12 +10,26 @@
 #   contributor            train segments of growth jobs the network funds, and check others' steps
 #   chat                   only try the assistant (no service is installed)
 #
+#   check                  only report which roles this machine can run; installs nothing
+#
 # Options: --public-host HOST (default: this machine's public address), --home DIR, --branch BRANCH.
 # Everything runs as the current user under systemd. Keys never leave this machine. See
 # docs/OPERATORS.md for what each role needs, earns and risks.
 set -euo pipefail
 
 ROLE="${1:-}"; shift || true
+if [ "$ROLE" = check ] || [ "$ROLE" = "--check" ]; then
+  # Report what this machine can run; install nothing.
+  ok() { printf '  %-12s %s\n' "$1" "$2"; }
+  ARCH="$(uname -s)-$(uname -m)"; MEM=$(awk '/MemTotal/{printf "%d", $2/1048576}' /proc/meminfo 2>/dev/null || echo 0)
+  CPUS=$(nproc 2>/dev/null || echo 1); DISK=$(df -BG --output=avail "$HOME" 2>/dev/null | tail -1 | tr -dc 0-9)
+  AMX=no; grep -q amx_bf16 /proc/cpuinfo 2>/dev/null && AMX=yes
+  echo "This machine: $ARCH, $CPUS threads, ${MEM} GB RAM, ${DISK} GB free disk, AMX: $AMX"
+  [ "$ARCH" = Linux-x86_64 ] || { echo "  Every role needs Linux x86_64."; exit 1; }
+  role() { if [ "$AMX" = yes ] || [ "$2" = any ]; then if [ "$MEM" -ge "$3" ] && [ "${DISK:-0}" -ge "$4" ]; then ok "$1" "yes"; else ok "$1" "no: needs ${3} GB RAM and ${4} GB disk"; fi; else ok "$1" "no: needs an Intel CPU with AMX (e.g. AWS m7i/r7i)"; fi; }
+  role chat any 6 10; role owner amx 8 20; role validator amx 14 60; role auditor amx 14 30; role contributor amx 30 60
+  exit 0
+fi
 SHARD="" ; PUBLIC_HOST="" ; BRANCH="main" ; HOME_DIR="$HOME/.neuroshard/assistant"
 while [ $# -gt 0 ]; do
   case "$1" in
