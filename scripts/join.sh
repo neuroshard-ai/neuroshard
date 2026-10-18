@@ -64,9 +64,16 @@ if ! command -v uv >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/uv" ]; then
 fi
 export PATH="$HOME/.local/bin:$PATH"
 uv python install 3.12.12 >/dev/null
-SRC="$HOME/neuroshard"
-if [ -d "$SRC/.git" ]; then git -C "$SRC" fetch -q origin "$BRANCH" && git -C "$SRC" checkout -q -f --detach FETCH_HEAD
-else git clone -q --branch "$BRANCH" https://github.com/neuroshard-ai/neuroshard.git "$SRC"; fi
+# The code lives in its own directory, managed only by this script, never in a checkout someone works in.
+SRC="$HOME/.neuroshard/release"
+if [ -d "$SRC/.git" ]; then
+  if [ -n "$(git -C "$SRC" status --porcelain --untracked-files=no)" ]; then
+    echo "$SRC has local changes; this script will not overwrite them. Move them away and rerun." >&2; exit 1
+  fi
+  git -C "$SRC" fetch -q origin "$BRANCH" && git -C "$SRC" checkout -q --detach FETCH_HEAD
+elif [ -e "$SRC" ]; then echo "$SRC exists but is not a NeuroShard release; move it away and rerun." >&2; exit 1
+else mkdir -p "$(dirname "$SRC")"; git clone -q --branch "$BRANCH" https://github.com/neuroshard-ai/neuroshard.git "$SRC"; fi
+say "Code at $(git -C "$SRC" rev-parse --short HEAD) ($BRANCH)"
 VENV="$HOME/.venvs/neuroshard"
 [ -x "$VENV/bin/python" ] || uv venv -q -p 3.12.12 "$VENV"
 uv pip install -q --python "$VENV/bin/python" -r "$SRC/docs/granite-shard-chain-requirements.txt"
@@ -81,20 +88,18 @@ ENVIRONMENT="OMP_NUM_THREADS=8 MKL_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 TOKENIZE
 case "$ROLE" in
   owner) ARGS="host --shard $SHARD --endpoint $PUBLIC_HOST:28700 --mirror-port 28781"; PORTS="28700 28781" ;;
   validator)
-    say "CometBFT v0.38.26 for consensus"
-    if [ ! -x "$HOME/.local/bin/cometbft" ]; then
-      # v0.38.26 publishes no binaries; build it from its tagged source with Go's official toolchain.
-      GO=go1.23.4; mkdir -p "$HOME/.local/go-toolchain" "$HOME/.local/bin"
-      [ -x "$HOME/.local/go-toolchain/go/bin/go" ] || curl -LsSf "https://go.dev/dl/$GO.linux-amd64.tar.gz" \
-        | tar -xz -C "$HOME/.local/go-toolchain"
-      GOBIN="$HOME/.local/bin" GOFLAGS=-mod=mod "$HOME/.local/go-toolchain/go/bin/go" install \
-        github.com/cometbft/cometbft/cmd/cometbft@v0.38.26
-    fi
-    [ "$("$HOME/.local/bin/cometbft" version)" = 0.38.26 ] || { echo "CometBFT build failed" >&2; exit 1; }
-    ENVIRONMENT="$ENVIRONMENT COMETBFT_BINARY=$HOME/.local/bin/cometbft"
+    say "CometBFT v0.38.26 for consensus (the repository's reviewed build: pinned Go toolchain and go.sum)"
+    COMETBFT=$("$VENV/bin/python" -c 'from neuroshard.client import runtime; print(runtime.engine())' | tail -1)
+    [ "$("$COMETBFT" version)" = 0.38.26 ] || { echo "CometBFT build failed" >&2; exit 1; }
+    ENVIRONMENT="$ENVIRONMENT COMETBFT_BINARY=$COMETBFT"
+    say "The full parent model, so this validator can judge growth steps (about 7 GB, verified)"
+    $CLI prepare-parent --home "$HOME_DIR"
     ARGS="validator --public-host $PUBLIC_HOST"; PORTS="26656 26657 28780 28781" ;;
   auditor) ARGS="audit --shard 1 --shard 2"; PORTS="" ;;
-  contributor) ARGS="grow agent"; PORTS="" ;;
+  contributor)
+    say "The full parent model contributors train on (about 7 GB, verified)"
+    $CLI prepare-parent --home "$HOME_DIR"
+    ARGS="grow agent"; PORTS="" ;;
 esac
 
 say "Installing neuroshard-$ROLE as a service"

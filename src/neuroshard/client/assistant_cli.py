@@ -15,6 +15,8 @@ def register(subcommands, root):
     common.add_argument('--network', type=Path, help='Network descriptor; defaults to the bundled assistant testnet')
     common.add_argument('--home', type=lambda p: Path(p).expanduser(), default=root / 'assistant',
                         help='Keys, fetched shards and logs')
+    actions.add_parser('prepare-parent', parents=[common],
+                       help='Download and verify the full pinned parent model (planning, evaluation, growth judging)')
     status = actions.add_parser('status', parents=[common], help='The served version, its owners and a job outcome')
     status.add_argument('--job', help='Show the outcome of this job')
     host = actions.add_parser('host', parents=[common],
@@ -142,6 +144,22 @@ def render(result, before):
         print(f"  stopped: {result['failure']}")
 
 
+def prepare_parent():
+    """The full Granite parent, every file checked against the committed inventory (size and digest).
+
+    Contributors, planners, owners' voting agents and validators judging growth steps need the whole model on one
+    machine; serving owners need only their shard. Returns the directory, ``NEUROSHARD_MODELS``/baseline."""
+    import os
+
+    from neuroshard.evolution import assistant_growth_run as growth
+    from neuroshard.evolution.modular_reference_execution import ROOT, read, verify_artifacts
+
+    inventory = read(ROOT / growth.ARTIFACTS)['models']['baseline']
+    directory = Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline'
+    verify_artifacts(directory, inventory, download=True)
+    return directory
+
+
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.evolution import granite_shard_execution as runtime
@@ -157,6 +175,9 @@ def run(args):
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
+    if args.assistant_action == 'prepare-parent':
+        print(f'Pinned parent model verified at {prepare_parent()}')
+        return
     if args.assistant_action in ('seed', 'validator'):
         from neuroshard.evolution import growth_runtime
         from neuroshard.inference import optimistic_network

@@ -1144,9 +1144,12 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
                 paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
                 paths['parent_routes'] = list(stage.get('parent_routes', []))
         shards[str(rank)] = paths
+    # The validator's proof store (``bundles``) also holds the recipes the chain names, which it replicates from
+    # other stores (``replicate``); with the pinned parent (``assistant prepare-parent``) it judges growth steps.
     settlement = {'promotion_authority': None, 'approved_models': network.get('approved_versions', {}),
                   'runtime': 'granite-shard', 'threads': 8, 'bundles': str(home / 'bundles'), 'shards': shards,
-                  'held_model_root': served.root}
+                  'held_model_root': served.root, 'growth_recipes': str(home / 'bundles'),
+                  'growth_bases': ['granite-parent']}
     ports = {'p2p': p2p_port, 'rpc': p2p_port + 1, 'abci': p2p_port + 2}
     chain_network.configure_node(node_home, genesis, settlement, f'{seed_id}@{seed_host}:{seed_port}', ports,
                                  p2p_host='0.0.0.0')
