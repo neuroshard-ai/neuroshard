@@ -86,6 +86,8 @@ def register(subcommands, root):
     validator.add_argument('--public-host', required=True, help='Address peers reach this machine at')
     validator.add_argument('--audit-shards', type=int, nargs='*', default=[1, 2],
                            help='Shards to hold so this validator can judge fraud claims itself')
+    validator.add_argument('--store-port', type=int, default=28780, help='Proof, recipe and state store port')
+    validator.add_argument('--mirror-port', type=int, default=28781, help='Pinned file mirror port')
     seed = actions.add_parser('seed', parents=[common], help="Run the network's seed: first validator, RPC and faucet")
     seed.add_argument('--public-host', required=True)
     seed.add_argument('--audit-shards', type=int, nargs='+', default=[1, 2],
@@ -163,6 +165,13 @@ def run(args):
             chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
             descriptor = following(descriptor, chain, args.home, network)
             config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
+            # Every validator also stores proofs, recipes and states, and mirrors the pinned files it holds:
+            # no network service depends on the seed.
+            network.serve_store(chain, '0.0.0.0', args.store_port, args.home / 'bundles')
+            _, offered = network.serve_artifacts(descriptor, args.home / 'audit-holdings', '0.0.0.0', args.mirror_port)
+            print(json.dumps({'store': f'http://{args.public_host}:{args.store_port}/proofs',
+                              'mirror': f'http://{args.public_host}:{args.mirror_port}/', 'mirrored': len(offered)}),
+                  flush=True)
         stopped = threading.Event()
         signal.signal(signal.SIGTERM, lambda *_: stopped.set())
 

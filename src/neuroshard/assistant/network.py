@@ -1068,6 +1068,10 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     if not (node_home / 'config' / 'priv_validator_key.json').exists():
         subprocess.run([engine, 'init', '--home', str(node_home)], check=True, stdout=subprocess.DEVNULL)
     served = version(network)[0]
+    for name in stage_files(served, 0):  # the user stage's small pinned files too, so this node mirrors every one
+        path = local_path(home / 'audit-holdings' / network['version'] / 'stage-0', name)
+        if not matches(path, network['files'][name]):
+            fetch(network, name, path, progress)
     shards = {}
     for rank in audit_shards:
         _, stage = fetch_stage(network, rank, home / 'audit-holdings', progress)
@@ -1117,3 +1121,22 @@ def fell_behind(config, chain, margin=600):
     local = chain_network.rpc(chain_network.url(config), 'status')['sync_info']
     network_height = chain.state()['height']
     return not local['catching_up'] and network_height - int(local['latest_block_height']) > margin
+
+
+class Store:
+    """The faucet server's store side without a faucet: accepts and serves proofs, recipes and training states."""
+
+    def __init__(self, chain):
+        self.chain = chain
+
+    def grant(self, public, address):
+        raise ValueError('this node runs no faucet')
+
+
+def serve_store(chain, host, port, store):
+    """A content-addressed store for proofs, recipes and training states, as every validator runs one.
+
+    It accepts a file only while the chain names it (a funded challenge, a recipe proposal or queue entry, a
+    committed training state) and only if its bytes match that name, so a store needs no trust and any number of
+    them can run; agents publish to all of them and fetch from whichever answers."""
+    return serve_faucet(Store(chain), host, port, store)

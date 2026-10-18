@@ -394,3 +394,28 @@ def test_a_validator_moves_its_judging_weights_to_an_enacted_version(tmp_path):
     chain.root = 'ef' * 32                                           # a version it cannot rebuild yet: waits
     assert client.follow_validator(config, descriptor, chain, tmp_path / 'home', lambda d: descriptor,
                                    restarts.append, lambda *_: None) == descriptor and len(restarts) == 1
+
+
+def test_a_validator_store_accepts_named_files_and_runs_no_faucet(tmp_path):
+    import urllib.error
+    import urllib.request
+
+    import pytest
+
+    from neuroshard.assistant import network as client
+
+    class Chain:
+        def state(self):
+            return {'jobs': {}, 'results': {}, 'governance': {'proposals': {}}}
+
+    server = client.serve_store(Chain(), '127.0.0.1', 0, tmp_path / 'store')
+    try:
+        request = urllib.request.Request(f'http://127.0.0.1:{server.server_port}/faucet', data=b'{"account": "x"}')
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(request, timeout=10)                       # no faucet on a validator's store
+        request = urllib.request.Request(f'http://127.0.0.1:{server.server_port}/proofs/' + 'ab' * 32, data=b'x')
+        with pytest.raises(urllib.error.HTTPError):
+            urllib.request.urlopen(request, timeout=10)                       # nothing the chain names: refused
+    finally:
+        server.shutdown()
+        server.server_close()
