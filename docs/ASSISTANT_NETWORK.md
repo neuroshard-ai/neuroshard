@@ -51,17 +51,25 @@ reach the owners (this is not encryption).
 
 ## Join
 
-Linux x86_64 with Python 3.12:
+Linux x86_64. Owners, auditors, validators and contributors need exactly Python 3.12.12, the version
+in the pinned runtime. Distribution Pythons differ (Ubuntu 24.04 ships 3.12.3 without `venv`), so
+install it with `uv`. These steps were run on a bare Ubuntu 24.04 machine on October 18, 2026, and
+reached the live network without any other help:
 
 ```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH=$HOME/.local/bin:$PATH
+uv python install 3.12.12
+uv venv -p 3.12.12 ~/.venvs/neuroshard
 git clone --branch main https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
-python3.12 -m venv ~/.venvs/neuroshard
-source ~/.venvs/neuroshard/bin/activate
-python -m pip install -r docs/granite-shard-chain-requirements.txt
-python -m pip install --no-deps -e .
-neuroshard assistant status
+uv pip install --python ~/.venvs/neuroshard/bin/python -r docs/granite-shard-chain-requirements.txt
+uv pip install --python ~/.venvs/neuroshard/bin/python --no-deps -e .
+~/.venvs/neuroshard/bin/neuroshard assistant status
 ```
+
+`status` rebuilds the version the owners last enacted from committed state, so a new machine serves
+what the chain serves, with no release needed.
 
 **Chat.** `neuroshard assistant chat` fetches stage 0, gets test NEURO from the
 faucet, picks one reachable owner per shard from the ledger and opens a paid job.
@@ -77,6 +85,14 @@ current owners' execution class: an Intel CPU with AMX, such as AWS m7i or r7i.
 Owners, auditors and the seed refuse a mismatched canonical runtime. Install
 Python **3.12.12** and the pinned requirements above. The client can run on other
 x86_64 CPUs, but its measured quality and latency can differ.
+
+**Run a validator.** `neuroshard assistant validator --public-host HOST` creates the node's
+consensus key on this machine, takes the genesis and the seed's address from the public RPC, holds the
+audited shards so it can judge fraud claims itself, and replays the chain from block 1 (about 3 hours
+at 57 blocks per second for 750,000 blocks). Inbound TCP 26656 must be open. Once it is synced, owners
+vote it in with `assistant govern propose-validator --consensus-key KEY --power 1`. The key is printed
+at start and is in `chain/node0/config/priv_validator_key.json`. It follows enacted versions like an
+owner. Keep the command running, for example as a systemd service: stopping it stops the node.
 
 **Audit a shard.** `neuroshard assistant audit --shard 2` holds just that shard,
 downloads signed logs inside the challenge window, replays them and delivers a
