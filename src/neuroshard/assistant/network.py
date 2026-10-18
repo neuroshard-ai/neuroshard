@@ -183,8 +183,10 @@ def serve_artifacts(network, home, host, port):
     store = Path(home) / network['version']
     offered = {}
     for name, pin in network['files'].items():
-        for rank in range(0, 64):
-            path = store / f'stage-{rank}' / name
+        # Stage stores, then rebuilt versions' files (a grown unit the chain enacted exists only as rebuilt).
+        candidates = [store / f'stage-{rank}' / name for rank in range(0, 64)]
+        candidates += [local_path(directory, name) for directory in LOCAL_SOURCES]
+        for path in candidates:
             if path.is_file() and matches(path, pin):
                 offered[pin['asset']] = (path, pin)
                 break
