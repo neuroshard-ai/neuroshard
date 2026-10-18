@@ -280,3 +280,58 @@ def test_a_fresh_node_rebuilds_a_version_that_changed_two_routes():
         fresh = growth_runtime.upgrade(desc, state, recipes, lambda *_: b'ignored')
         assert fresh is not None and network.model_root(fresh[0]) == state['model_root']
         assert growth_runtime.upgrade(after_documents, state, recipes, lambda *_: b'ignored') is not None
+
+
+# Finding 4: an automatic growth challenge delivers its proof through the real store contract, then proves.
+
+def test_a_growth_challenge_delivers_after_it_commits_and_then_proves(tmp_path):
+    import json as _json
+
+    from neuroshard.assistant import audit
+    from neuroshard.evolution import growth_agent
+    from neuroshard.inference.optimistic_app import promotion_or_fraud
+    from test_growth_loop import BASE, Chain, Trainer
+    from test_optimistic_serving import PARAMS
+
+    sponsor, cheater, checker = [Account('audit-delivery-' + n) for n in ('sponsor', 'cheater', 'checker')]
+    state = ledger.genesis(CHAIN, MODEL, 3, {a.public: 40_000_000 for a in (sponsor, cheater, checker)}, PARAMS)
+    recipe = {**RECIPE, 'base': 'tiny-granite', 'base_config': BASE, 'base_seed': 0, 'model_root': MODEL}
+    root = g.recipe_root(recipe, MODEL)
+    store = tmp_path / 'store'
+    store.mkdir()
+    (store / f'{root}.json').write_text(_json.dumps(recipe))
+    judge = promotion_or_fraud({'growth_recipes': str(store), 'bundles': str(store), 'growth_bases': ['tiny-granite']},
+                               None)
+    chain = Chain(state, judge, 1800000000)
+    t, o = g.start(tiny(), recipe)
+    e = chain.submit(sponsor, 'growth_open', recipe_root=root, start_root=g.state_root(t, o), steps=6,
+                     segment_steps=3, reward=6_000_000)
+    job_id = ledger.transaction_id(e)
+    shared = tmp_path / 'states'
+    growth_agent.Agent(chain, cheater, tmp_path / 'cheater', recipes={root: recipe}, trainer=Trainer(shared, True)).tick()
+    uploads, down = [], {'first': True}
+
+    def deliver(proof_root, payload):  # the real store admission, and the first attempt finds the store down
+        if down.pop('first', False):
+            uploads.append('store unreachable')
+            return False
+        try:
+            audit.receive_proof(payload, proof_root, chain.state(), store)
+        except ValueError as error:
+            uploads.append(str(error))
+            return False
+        uploads.append('accepted')
+        return True
+
+    home = tmp_path / 'checker'
+    watcher = growth_agent.Agent(chain, checker, home, recipes={root: recipe}, trainer=Trainer(shared), deliver=deliver)
+    assert watcher.check(chain.state(), job_id, chain.state()['growth'][job_id])[0]['kind'] == 'challenge'
+    assert uploads == []  # nothing is uploaded before the challenge commits
+    chain.block()
+    pending = watcher.check(chain.state(), job_id, chain.state()['growth'][job_id])
+    assert {'kind': 'delivery-pending'} .items() <= pending[-1].items() and uploads == ['store unreachable']
+    # A restarted agent resumes from its saved memory and bundle.
+    restarted = growth_agent.Agent(chain, checker, home, recipes={root: recipe}, trainer=Trainer(shared), deliver=deliver)
+    actions = restarted.check(chain.state(), job_id, chain.state()['growth'][job_id])
+    assert uploads == ['store unreachable', 'accepted'] and actions[-1]['kind'] == 'prove'
+    assert chain.state()['growth_faults'][-1]['contributor'] == cheater.public

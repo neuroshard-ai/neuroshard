@@ -63,6 +63,10 @@ class Agent:
 
     def remember(self, action):
         self.memory['actions'].append({**action, 'unix': self.clock()})
+        self.save()
+
+    def save(self):
+        """Persist memory atomically, so a restarted agent resumes delivery and proofs where it stopped."""
         partial = self.path.with_suffix('.partial')
         partial.write_text(json.dumps(self.memory, indent=1, sort_keys=True))
         partial.replace(self.path)
@@ -277,24 +281,53 @@ class Agent:
                     step = first
                     break
             root = hashlib.sha256(bundle).hexdigest()
-            if self.deliver:
-                self.deliver(root, bundle)
+            # Stores accept a proof only once the chain names it in a funded challenge, so: keep the bundle on
+            # disk, open the challenge, then deliver it on every pass until a store holds it, and only then prove.
+            proofs = self.home / 'proofs'
+            proofs.mkdir(parents=True, exist_ok=True)
+            (proofs / root).write_bytes(bundle)
             envelope = self.chain.submit(self.account, 'growth_challenge', job_id=job_id, segment=index, step=step,
                                          proof_root=root)
             from neuroshard.inference import optimistic as ledger
             action = {'kind': 'challenge', 'job_id': job_id, 'segment': index, 'step': step,
-                      'challenge_id': ledger.transaction_id(envelope)}
+                      'challenge_id': ledger.transaction_id(envelope), 'proof_root': root}
             self.remember(action)
-            out.append(action)
+            out.append(dict(action))
         for action in [a for a in self.memory['actions'] if a['kind'] == 'challenge' and not a.get('proven')]:
             if action['job_id'] == job_id and action['challenge_id'] in job['challenges']:
                 opened = job['challenges'][action['challenge_id']]['opened']
-                if state['height'] > opened:
+                if state['height'] <= opened:
+                    continue  # its deposit commits with this block; deliver and prove from the next
+                if not action.get('delivered') and not self.deliver_proof(action):
+                    out.append({'kind': 'delivery-pending', 'challenge_id': action['challenge_id']})
+                    continue
+                try:
                     self.chain.submit(self.account, 'growth_prove', job_id=job_id, challenge_id=action['challenge_id'])
-                    action['proven'] = True
-                    self.remember({'kind': 'prove', 'job_id': job_id, 'challenge_id': action['challenge_id']})
-                    out.append({'kind': 'prove', 'challenge_id': action['challenge_id']})
+                except ValueError as error:
+                    # Validators without the bundle yet give no verdict and refuse to admit it: deliver and retry
+                    # next pass, within the proof window.
+                    out.append({'kind': 'prove-retry', 'challenge_id': action['challenge_id'], 'error': str(error)})
+                    action['delivered'] = False
+                    self.save()
+                    continue
+                action['proven'] = True
+                self.remember({'kind': 'prove', 'job_id': job_id, 'challenge_id': action['challenge_id']})
+                out.append({'kind': 'prove', 'challenge_id': action['challenge_id']})
         return out
+
+    def deliver_proof(self, action):
+        """Deliver a committed challenge's saved bundle to the stores; True once at least one store holds it."""
+        if not self.deliver:
+            action['delivered'] = True  # nothing to deliver to (the validators read this machine's own store)
+            self.save()
+            return True
+        path = self.home / 'proofs' / action.get('proof_root', '')
+        if not action.get('proof_root') or not path.exists():
+            return False
+        delivered = self.deliver(action['proof_root'], path.read_bytes())
+        action['delivered'] = delivered is not False
+        self.save()
+        return action['delivered']
 
     def evaluate(self, job_id, result):
         """Sealed evaluation once the job's seal round exists; propose the unit if it earns it."""

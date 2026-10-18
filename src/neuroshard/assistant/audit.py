@@ -264,11 +264,18 @@ class Auditor:
                                                          log_key=key, proof_root=root)
                             challenge_id = ledger.transaction_id(envelope)
                         payload = proof_archive(proof_dir)
+                        accepted = 0
                         for endpoint in self.network['proof_endpoints']:
                             request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
                                                              headers={'Content-Type': 'application/zip'})
-                            with urllib.request.urlopen(request, timeout=60) as response:
-                                response.read(4096)
+                            try:  # one unavailable store must not stop delivery to the others
+                                with urllib.request.urlopen(request, timeout=60) as response:
+                                    response.read(4096)
+                                accepted += 1
+                            except OSError as error:
+                                self.progress(f'Proof store {endpoint} refused or unreachable: {error}')
+                        if not accepted:
+                            raise ConnectionError('no proof store accepted the bundle yet')
                         self.chain.submit(self.account, 'prove', job_id=job_id,
                                           challenge_id=challenge_id)
                         report['proof_root'] = root

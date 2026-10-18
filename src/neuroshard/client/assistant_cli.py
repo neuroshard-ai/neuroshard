@@ -583,11 +583,15 @@ def grow_agent(args, chain, network, descriptor):
     from neuroshard.assistant import audit
 
     def deliver(root, payload):
+        """Post to every store; True if at least one accepted, so the agent retries until one holds it."""
+        accepted = 0
         for endpoint in descriptor.get('proof_endpoints', []):
             try:
                 audit.post_proof(endpoint, root, payload)
+                accepted += 1
             except Exception as error:  # noqa: BLE001 - one store being down does not stop the others
                 print(f'proof store {endpoint}: {error}', flush=True)
+        return accepted > 0
 
     class ByRecipe:
         """One protocol trainer per recipe, created on first use, so recipes the network proposes later are trained too."""
