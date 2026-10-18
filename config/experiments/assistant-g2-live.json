@@ -1,0 +1,23 @@
+{
+  "format": "neuroshard-assistant-g2-live/1",
+  "chain_id": "neuroshard-assistant-1",
+  "recipe": {"proposal_id": "9f16a295ac64783590aa97159ab6a012062c93a53a61a464e9778154605c4741",
+             "recipe_root": "c9c77a4aba1a7ddd4cdeedc5a8e8a50cf36569fec8fdccae9b1ed14d70f26949",
+             "kind": "realistic-corpus", "corpus": "config/experiments/realistic-documents-corpus.json",
+             "steps": 128, "reward": 256000, "bytes": 39574552,
+             "owners": "both verified it by workspace replay, scoring, exact re-encoding and fact-in-document checks, and voted yes"},
+  "job": {"job_id": "f5ca23d61bc6b550d2d521db706cb6bcd58df7ce03dfc30049ba80157a553ca4", "funded_by": "growth pool (usage levy)",
+          "segments": 16, "final_root": "22789c3646b50f79", "seal_round": 33157718,
+          "reproduces_offline": "the final state root equals the offline G2 run's, so the served unit is the one measured on both real-request sets"},
+  "sealed_evaluation": {"route": "documents", "templates": "128/132 vs served 112/132",
+                        "real_requests": "27/48 vs served 20/48 (beacon-chosen from real-documents-set)", "passed": true,
+                        "owners": "both recomputed the identical report digest on their own machines"},
+  "enactment": {"model_root": "080c9a1098d237a0b90d6cb7e13e8debd774a26f522df2ce050a5a1d5d409824", "by_height": 744287,
+                "followed": "both owners, the validator (held_model_root moved, app reloaded) and the auditor rebuilt G2 from committed state; no release was published"},
+  "first_job": {"job_id_prefix": "313540efabdc", "reply": "The latest approved Cedar 6581 delivery plan has a review interval of 9 calendar days.",
+                "audit": "clean on both shards", "seconds": 154,
+                "note": "slower than the 41 s measured earlier: the owners' agents were finishing their own sealed evaluations on the same CPUs"},
+  "stalls_fixed_on_the_way": ["agent spent an hour evaluating an old result before training (PR #102, #105)",
+                              "agent ran out of balance for commit bonds at segment 9 of 16 (PR #104)",
+                              "validator held a fixed version and would give no verdict after an enactment (PR #101)"]
+}
