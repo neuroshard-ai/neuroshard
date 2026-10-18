@@ -7,22 +7,28 @@ pays contributors through its native ledger. The current product is an
 source under Apache-2.0; keys stay on your machine and no website registration
 is required.
 
-[Run the assistant](docs/ASSISTANT_NETWORK.md) · [Contribute examples](docs/CONTRIBUTOR_ALPHA.md) · [Host independently](docs/OPERATOR_KIT.md) · [Development milestones](TODO_ASSISTANT.md)
+[Run a node](docs/OPERATORS.md) · [Run the assistant](docs/ASSISTANT_NETWORK.md) · [How it grows](docs/NETWORK_GROWTH.md) · [Decentralization status](docs/DECENTRALIZATION.md)
 
-Four of six assistant milestones have evidence: a capable foundation, useful
-learning, three accepted learning cohorts and actual model sharding. The accepted
-Granite 3B system learned drafting and scheduling, then upgraded drafting. On
-its frozen fictional workspaces it solved 192/192 drafting and 192/192 scheduling
-conversations. These are bounded task results, not general assistant benchmarks.
-See [the growth review](docs/A3_REPEATED_GROWTH_REVIEW.md).
+**Live now (October 18, 2026).**
+- **Chain:** `neuroshard-assistant-1`, 4 CometBFT validators. It keeps running with any one of them
+  down.
+- **Serving:** the Granite 4.1 3B model, split across owner machines. Every reply is signed and
+  audited, and a proven fault slashes the owner's bond.
+- **Governance:** owners vote on the served version, on validators and on the growth levy. No single
+  key can change the model.
+- **Growth:** 10% of owner earnings funds a growth pool. The network itself grew, verified and enacted
+  the documents unit it serves now, G2. On 452 independently written, doubly verified realistic
+  document requests, G2 answers 294; the base model answers 214 (two sets, each paired p ≈ 1e-6).
+- **Joining:** anyone can join as validator, owner, auditor or contributor with
+  [one command](docs/OPERATORS.md). A bare machine did so from the public instructions alone.
 
-The live assistant chain serves the accepted A3 system across CPU owners. It was
-promoted on October 11, 2026 after its [release gate](docs/ASSISTANT_RELEASE_CHECK.md)
-reproduced all 432 accepted conversations exactly across machines. Every owner log
-is audited automatically, and A2 is kept for rollback. Test NEURO has no monetary value. All current network hosts have one
-administrator; four independent operators and the public operating soak remain
-open. Peer growth first buys replicas, audits, serving and training capacity.
-Parameters grow only when an admitted candidate improves measured behavior.
+**Not yet.**
+- Every validator and the original owners run on machines the project administers: the network needs
+  independent operators.
+- Test NEURO has no monetary value.
+- Owners, auditors and contributors need Intel CPUs with AMX, so that work replays bit for bit.
+- A reply takes about 35 s on CPU.
+- The network learns from verified generated data, not yet from real users.
 
 Chats run stage 0 locally and send signed intermediate activations to shard
 owners. Activations can leak information; use non-sensitive example data.

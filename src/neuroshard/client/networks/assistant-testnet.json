@@ -70,6 +70,11 @@
     }
   },
   "format": "neuroshard-assistant-network/1",
+  "mirrors": [
+    "http://3.235.99.192:28781/",
+    "http://50.16.17.202:28781/",
+    "http://54.242.226.150:28781/"
+  ],
   "plan": "config/experiments/granite-shard-serving-update.json",
   "plan_sha256": "8456a131bc5a69595e1dcdca1597025c36e87de557c23e7874a1e1aed4a93fad",
   "policies": {
@@ -91,7 +96,10 @@
     }
   },
   "proof_endpoints": [
-    "http://34.194.51.150:28780/proofs"
+    "http://34.194.51.150:28780/proofs",
+    "http://3.235.99.192:28780/proofs",
+    "http://50.16.17.202:28780/proofs",
+    "http://54.242.226.150:28780/proofs"
   ],
   "routing": {
     "chat": {
