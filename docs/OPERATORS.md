@@ -98,3 +98,11 @@ real requests, and owners reproduce that evaluation bit for bit.
 Open a GitHub issue titled `Operator: <name>` with your role, region and machine type. Do not send keys.
 Ask in the same thread if something in `scripts/join.sh` fails on your machine: that is the most useful
 report we can get.
+
+## The website
+
+[neuroshard.com/network](https://neuroshard.com/network) shows this network live: blocks, validators and
+whether they signed, owners and their bonds, every model version and the vote that enacted it, the growth
+pool, and settled conversations and growth jobs. It reads several validators' RPCs through a read-only
+explorer (`python -m neuroshard.assistant.explorer`) that holds no keys. Anyone can run the same explorer
+against their own node. `neuroshard.com/join.sh` serves `scripts/join.sh` from this repository.
