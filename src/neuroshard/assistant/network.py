@@ -434,6 +434,24 @@ class Chain:
             return envelope
         raise TimeoutError(f'transaction {ledger.transaction_id(envelope)} was not committed')
 
+    def settled_transactions(self, envelopes, timeout=180):
+        """Wait for broadcast transactions to commit; raises on the first that failed."""
+        deadline = time.monotonic() + timeout
+        for envelope in envelopes:
+            key = base64.b64encode(hashlib.sha256(ledger.canonical(envelope)).digest()).decode()
+            while True:
+                try:
+                    result = chain_network.rpc(self.rpc, 'tx', {'hash': key})
+                    break
+                except chain_network.Rejected as error:
+                    if 'not found' not in str(error) or time.monotonic() > deadline:
+                        raise
+                    time.sleep(0.5)
+            if result['tx_result'].get('code', 0):
+                raise chain_network.Rejected(result['tx_result'].get('log', 'transaction failed'))
+        return [int(chain_network.rpc(self.rpc, 'tx', {'hash': base64.b64encode(hashlib.sha256(
+            ledger.canonical(e)).digest()).decode()})['height']) for e in envelopes]
+
     def settled(self, job_id, timeout=None, poll=2.0):
         """The job's outcome once the ledger has settled, refunded or voided it; None while it is open."""
         deadline = None if timeout is None else time.monotonic() + timeout

@@ -45,7 +45,7 @@ def register(subcommands, root):
     govern.add_argument('--power', type=int, help='propose-validator: voting power, 0 removes')
     govern.add_argument('--model-root', help='propose: the version to serve, as its model root')
     govern.add_argument('--quality-root', help='propose: digest of the published release-check evidence')
-    govern.add_argument('--proposal', help='vote/enact: the proposal ID')
+    govern.add_argument('--proposal', nargs='+', help='vote/enact: the proposal ID (enact takes several, one block)')
     govern.add_argument('--shard', type=int, help='vote: the shard whose owner log key votes')
     govern.add_argument('--reject', action='store_true', help='vote: vote no')
     govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
@@ -388,11 +388,22 @@ def govern(args, chain, network):
         if not (args.proposal and args.shard):
             raise ValueError('vote needs --proposal and --shard')
         key = network.public_hex(network.signing_key(args.home / f'log-{args.shard}.key'))
-        chain.submit(account, 'model_vote', proposal_id=args.proposal, log_key=key, approve=not args.reject)
+        for proposal in args.proposal:
+            chain.submit(account, 'model_vote', proposal_id=proposal, log_key=key, approve=not args.reject)
     else:
         if not args.proposal:
             raise ValueError('enact needs --proposal')
-        chain.submit(account, 'model_enact', proposal_id=args.proposal)
+        # Several enactments are signed with consecutive nonces and broadcast together, so they usually commit in
+        # one block: a validator set grows from one to four at once instead of passing through two of two (which
+        # would need both to sign every block).
+        nonce, envelopes = chain.nonce(account), []
+        for offset, proposal in enumerate(args.proposal):
+            envelope = account.sign(chain.chain_id, nonce + offset, 'model_enact', proposal_id=proposal)
+            admitted = chain.broadcast(envelope)
+            if admitted['code']:
+                raise ValueError(admitted['log'])
+            envelopes.append(envelope)
+        chain.settled_transactions(envelopes)
     print('committed')
 
 
