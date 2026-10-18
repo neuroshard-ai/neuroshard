@@ -419,3 +419,31 @@ def test_a_validator_store_accepts_named_files_and_runs_no_faucet(tmp_path):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_a_store_replicates_what_the_chain_needs_from_other_stores(tmp_path):
+    from neuroshard.assistant import audit, network as client
+
+    recipe = {**RECIPE, 'model_root': 'ab' * 32}
+    root = growth_replay.recipe_root(recipe, recipe['model_root'])
+    model = tiny()
+    trainable, optimizer = growth_replay.start(model, recipe)
+    payload, final = growth_replay.save(trainable, optimizer), growth_replay.state_root(trainable, optimizer)
+    state = {'jobs': {}, 'governance': {'proposals': {}},
+             'results': {'j': {'status': 'grown', 'recipe_root': root, 'final_root': final}}}
+    audit.receive_proof(json.dumps(recipe, sort_keys=True).encode(), root, state, tmp_path / 'a')
+    audit.receive_proof(payload, final, state, tmp_path / 'a')
+
+    class Chain:
+        def state(self):
+            return state
+
+    source = client.serve_store(Chain(), '127.0.0.1', 0, tmp_path / 'a')
+    try:
+        peers = ['http://127.0.0.1:1/proofs', f'http://127.0.0.1:{source.server_port}/proofs']
+        assert client.replicate(Chain(), tmp_path / 'b', peers, lambda *_: None) == 2
+        assert (tmp_path / 'b' / f'{root}.json').exists() and (tmp_path / 'b' / f'{final}.state').exists()
+        assert client.replicate(Chain(), tmp_path / 'b', peers, lambda *_: None) == 0   # nothing left to copy
+    finally:
+        source.shutdown()
+        source.server_close()

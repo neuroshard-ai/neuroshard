@@ -186,6 +186,9 @@ def run(args):
             while not stopped.wait(30):
                 try:  # the validator follows owner-enacted versions too, so it judges each job with its own weights
                     descriptor = network.follow_validator(config, descriptor, chain, args.home, rebuild, restart)
+                    if args.assistant_action == 'validator':
+                        peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
+                        network.replicate(chain, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator' and network.fell_behind(config, chain):
                         # CometBFT leaves fast sync if its peers drop out for a while (the seed reloading its app),
                         # then catches up at consensus speed; a restart resumes fast sync.

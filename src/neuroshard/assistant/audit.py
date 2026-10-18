@@ -119,9 +119,11 @@ def post_proof(endpoint, root, payload, timeout=60):
 
 def named_recipe(state, root):
     """Whether a funded recipe proposal, a queued recipe or an open growth job names this recipe root."""
+    # A grown result's recipe too: rebuilding an enacted version needs it long after its job settled.
     return root in ({p['recipe_root'] for p in state.get('governance', {}).get('proposals', {}).values()
                      if p.get('kind') == 'recipe'} | {q['recipe_root'] for q in state.get('growth_queue', [])}
-                    | {j['recipe_root'] for j in state.get('growth', {}).values()})
+                    | {j['recipe_root'] for j in state.get('growth', {}).values()}
+                    | {r['recipe_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
 
 
 def named_state(state, root):

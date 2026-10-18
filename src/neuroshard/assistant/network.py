@@ -1142,3 +1142,37 @@ def serve_store(chain, host, port, store):
     committed training state) and only if its bytes match that name, so a store needs no trust and any number of
     them can run; agents publish to all of them and fetch from whichever answers."""
     return serve_faucet(Store(chain), host, port, store)
+
+
+def replicate(chain, store, peers, progress=print):
+    """Fetch, from other stores, the recipes and committed states the chain needs for the version it serves.
+
+    Each is accepted exactly as a direct upload would be (``audit.receive_proof``): only if the chain names it
+    and its bytes match the name. A store that joins late, or misses an upload, ends up with everything needed
+    to rebuild the served version, so that no single store's loss stops new nodes from following the chain."""
+    from neuroshard.assistant import audit
+
+    state, store, copied = chain.state(), Path(store), 0
+    wanted = []
+    for result in state.get('results', {}).values():
+        if result.get('status') == 'grown':
+            wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
+                       (result['final_root'], f"{result['final_root']}.state")]
+    for job in state.get('growth', {}).values():
+        wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
+        wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]
+    for root, name in wanted:
+        if (store / name).exists():
+            continue
+        for peer in peers:
+            try:
+                with urllib.request.urlopen(f"{peer.rstrip('/')}/{name}", timeout=300) as response:
+                    payload = response.read()
+                audit.receive_proof(payload, root, state, store)
+                copied += 1
+                break
+            except (OSError, ValueError):
+                continue
+    if copied:
+        progress(f'Replicated {copied} recipe or state file(s) from other stores')
+    return copied
