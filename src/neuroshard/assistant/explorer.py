@@ -107,6 +107,43 @@ def following(descriptor, home):
         return descriptor
 
 
+HEX = set('0123456789abcdef')
+
+
+def lookup(descriptor, key):
+    """What the chain records about one key: an owner log key, an account, or a validator's consensus key.
+
+    Read-only: everything returned is already public on the ledger."""
+    key = key.strip().lower()
+    if not 40 <= len(key) <= 130 or set(key) - HEX:
+        raise KeyError('enter a hex public key: an owner log key, an account key or a consensus key')
+    state = client.Chain(client.endpoints(descriptor), descriptor['chain_id']).state()
+    out = {'key': key, 'height': state['height'], 'found': []}
+    owner = state['owners'].get(key)
+    owned = [k for k, o in state['owners'].items() if o['account'] == key]
+    for log_key in ([key] if owner else []) + owned:
+        o = state['owners'][log_key]
+        served = [(j, r) for j, r in state.get('results', {}).items() if r.get('status') == 'settled' and log_key in r['owners']]
+        earned = sum(r['paid'][r['owners'].index(log_key)] for _, r in served)
+        out['found'].append({'role': 'owner', 'log_key': log_key, 'shard': o['shard'], 'status': o['status'],
+                             'bond': o['amount'], 'endpoint': o.get('endpoint'), 'account': o['account'],
+                             'conversations_served': len(served), 'earned': earned,
+                             'open_jobs': sum(1 for j in state['jobs'].values() if log_key in j['owners']),
+                             'reachable': client.reachable(o['endpoint']) if o.get('endpoint') and o['status'] == 'active' else None})
+    account = state['accounts'].get(key)
+    if account is not None:
+        out['found'].append({'role': 'account', 'balance': account['balance'], 'nonce': account['nonce']})
+    power = state.get('validators', {}).get(key)
+    if power is not None:
+        out['found'].append({'role': 'validator', 'power': power,
+                             'admitted': next((h['height'] for h in state.get('validator_history', [])
+                                               if h['consensus_key'] == key), None)})
+    grown = [r for r in state.get('results', {}).values() if r.get('status') == 'grown' and key in r.get('contributors', [])]
+    if grown:
+        out['found'].append({'role': 'contributor', 'jobs': len(grown), 'steps': sum(r['steps'] for r in grown)})
+    return out
+
+
 def serve(descriptor, host, port, home=None):
     lock, cache = threading.Lock(), {}
     current = {'descriptor': descriptor, 'at': 0.0}
@@ -131,11 +168,18 @@ def serve(descriptor, host, port, home=None):
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
-            route = routes.get(self.path.split('?', 1)[0])
+            path, _, query = self.path.partition('?')
+            route = routes.get(path)
             try:
-                if route is None:
+                if path == '/assistant/lookup':
+                    from urllib.parse import parse_qs
+
+                    key = (parse_qs(query).get('key') or [''])[0]
+                    payload, code = json.dumps(cached(f'lookup:{key}', lambda: lookup(latest(), key))).encode(), 200
+                elif route is None:
                     raise KeyError('unknown path')
-                payload, code = json.dumps(route()).encode(), 200
+                else:
+                    payload, code = json.dumps(route()).encode(), 200
             except KeyError as error:
                 payload, code = json.dumps({'error': str(error)}).encode(), 404
             except Exception as error:  # noqa: BLE001 - the page shows that the chain could not be read

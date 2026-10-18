@@ -1,0 +1,33 @@
+name: Joining didn't work
+description: join.sh or a node failed on your machine. This is the most useful report we can get.
+title: "Join problem: "
+labels: ["join", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "**Never paste private keys** or the contents of `~/.neuroshard/assistant/*.key`."
+  - type: input
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: "curl -LsSf https://neuroshard.com/join.sh | bash -s -- owner --shard 2"
+    validations: { required: true }
+  - type: textarea
+    id: check
+    attributes:
+      label: Output of the machine check
+      description: "`curl -LsSf https://neuroshard.com/join.sh | bash -s -- check`"
+      render: text
+    validations: { required: true }
+  - type: textarea
+    id: log
+    attributes:
+      label: What happened
+      description: "The last 50 lines of `journalctl -u neuroshard-<role> --no-pager` or the script's output."
+      render: text
+    validations: { required: true }
+  - type: input
+    id: os
+    attributes:
+      label: OS and machine
+      placeholder: "Ubuntu 24.04, AWS m7i.2xlarge"
