@@ -29,6 +29,26 @@ class Unverified(ValueError):
     """The validators' signatures do not establish this state."""
 
 
+class Stale(Unverified):
+    """Genuinely signed, but not current: too old, or older than a state this client already verified."""
+
+
+def header_unix(header):
+    head = header['time'].rstrip('Z').split('.')[0]
+    return int(datetime.fromisoformat(head).replace(tzinfo=timezone.utc).timestamp())
+
+
+def fresh(header, now, max_age, after=None):
+    """Refuse a header older than ``max_age`` seconds (with 30 s clock tolerance) or at a height below ``after``."""
+    age = now - header_unix(header)
+    if age > max_age + 30:
+        raise Stale(f"signed state from height {header['height']} is {int(age)} s old (limit {max_age} s)")
+    if age < -30:
+        raise Stale(f"signed header at height {header['height']} is from the future: check this machine's clock")
+    if after is not None and int(header['height']) < after:
+        raise Stale(f"height {header['height']} is below the verified height {after}: refusing a rollback")
+
+
 # Protobuf encoding (proto3: zero values are omitted).
 
 def _varint(value):

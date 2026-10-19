@@ -343,9 +343,14 @@ def public_hex(key):
     return key.public_key().public_bytes_raw().hex()
 
 
-def chain(descriptor):
-    """The descriptor's ledger, light-client verified against its pinned validators when it names them."""
-    return Chain(endpoints(descriptor), descriptor['chain_id'], descriptor.get('trusted_validators'))
+def chain(descriptor, home=None):
+    """The descriptor's ledger, light-client verified against its pinned validators when it names them.
+
+    Reads must be recent and never below the highest height this machine verified (kept in ``home``, by default
+    ``~/.neuroshard/assistant``), so an RPC cannot hide later changes behind a genuinely signed old state."""
+    home = Path(home) if home else Path.home() / '.neuroshard' / 'assistant'
+    return Chain(endpoints(descriptor), descriptor['chain_id'], descriptor.get('trusted_validators'),
+                 checkpoint=home / 'light-checkpoint.json')
 
 
 def endpoints(descriptor):
@@ -372,11 +377,32 @@ class Chain:
     another height. Submissions fail over to the next RPC when one is unreachable.
     """
 
-    def __init__(self, rpc, chain_id, trusted=None):
+    MAX_AGE = 120  # seconds: a verified state's next header must be this recent (blocks come about every second)
+
+    def __init__(self, rpc, chain_id, trusted=None, checkpoint=None, max_age=None, clock=time.time):
         self.rpcs = [rpc] if isinstance(rpc, str) else list(rpc)
         if not self.rpcs:
             raise ValueError('at least one ledger RPC')
         self.rpc, self.chain_id, self.trusted = self.rpcs[0], chain_id, dict(trusted or {})
+        # ``checkpoint``: a file holding the highest height and hash this client verified. Reads are then monotonic
+        # across restarts: an RPC serving a genuinely signed but older state is refused, as is one that is stale.
+        self.checkpoint, self.clock = (Path(checkpoint) if checkpoint else None), clock
+        self.max_age = self.MAX_AGE if max_age is None else max_age
+        self.verified_height, self.verified_hash = 0, None
+        if self.checkpoint and self.checkpoint.exists():
+            saved = json.loads(self.checkpoint.read_text())
+            if saved.get('chain_id') == chain_id:
+                self.verified_height, self.verified_hash = saved['height'], saved['hash']
+
+    def remember_verified(self, height, block_hash):
+        if height <= self.verified_height:
+            return
+        self.verified_height, self.verified_hash = height, block_hash
+        if self.checkpoint:
+            self.checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            partial = self.checkpoint.with_suffix('.partial')
+            partial.write_text(json.dumps({'chain_id': self.chain_id, 'height': height, 'hash': block_hash}))
+            partial.replace(self.checkpoint)
 
     def verified(self, address, value):
         """``value`` if the validators committed it: its root is the app hash after its height."""
@@ -403,7 +429,12 @@ class Chain:
             if len(validators) >= int(reply['total']) or not reply['validators']:
                 break
             page += 1
-        light.verify_commit(signed, validators, self.trusted)
+        header = light.verify_commit(signed, validators, self.trusted)
+        if int(header['height']) == self.verified_height and self.verified_hash and \
+                signed['commit']['block_id']['hash'].upper() != self.verified_hash:
+            raise light.Unverified(f'{address} signed another block at verified height {self.verified_height}')
+        light.fresh(header, self.clock(), self.max_age, after=self.verified_height)
+        self.remember_verified(int(header['height']), signed['commit']['block_id']['hash'].upper())
         return value
 
     def state(self):

@@ -185,7 +185,7 @@ def run(args):
         if args.assistant_action == 'seed':
             config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
         else:
-            chain = network.chain(descriptor)
+            chain = network.chain(descriptor, args.home)
             descriptor = following(descriptor, chain, args.home, network)
             config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
             # Every validator also stores proofs, recipes and states, and mirrors the pinned files it holds:
@@ -226,7 +226,7 @@ def run(args):
         finally:
             optimistic_network.stop(config)
         return
-    chain = network.chain(descriptor)
+    chain = network.chain(descriptor, args.home)
     descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
         import torch

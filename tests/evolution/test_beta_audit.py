@@ -363,6 +363,12 @@ def _fake_rpcs(replies):
     return state, rpc
 
 
+def _signed_at(fixture):
+    from neuroshard.inference import light
+
+    return light.header_unix(fixture['commit']['header'])
+
+
 def _trusted(fixture):
     import base64
 
@@ -382,10 +388,12 @@ def test_a_forged_higher_height_state_is_refused_and_the_honest_one_used():
     forged['commit']['header']['app_hash'] = ledger.root(forged['state']).upper()
     state, rpc = _fake_rpcs({'http://dishonest': forged, 'http://honest': honest})
     with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
-        chain = network.Chain(['http://dishonest', 'http://honest'], honest['state']['chain_id'], _trusted(honest))
+        chain = network.Chain(['http://dishonest', 'http://honest'], honest['state']['chain_id'], _trusted(honest),
+                              clock=lambda: _signed_at(honest))
         read = chain.state()
         assert read['model_root'] == honest['state']['model_root'] and chain.rpc == 'http://honest'
-        alone = network.Chain(['http://dishonest'], honest['state']['chain_id'], _trusted(honest))
+        alone = network.Chain(['http://dishonest'], honest['state']['chain_id'], _trusted(honest),
+                              clock=lambda: _signed_at(honest))
         with pytest.raises(OSError, match='validators signed'):
             alone.state()
 
@@ -404,7 +412,8 @@ def test_a_state_with_an_altered_balance_or_an_invented_validator_set_is_refused
     state, rpc = _fake_rpcs({'http://x': altered})
     with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
         with pytest.raises(OSError, match='not the one committed'):
-            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest)).state()
+            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                          clock=lambda: _signed_at(honest)).state()
     # A validator set the RPC invented, signing its own header: refused by the trusted-set rule.
     keys = [Ed25519PrivateKey.generate() for _ in range(4)]
     invented = [{'address': light.address(k.public_key().public_bytes_raw()),
@@ -552,3 +561,57 @@ def test_a_cold_machine_rebuilds_a_grown_continuation_unit_from_committed_state(
             g.start(tiny(), {**RECIPE, 'continue_from': 'ee' * 32})  # nothing names that digest
     finally:
         g.UNIT_STORE = g.UNIT_RESOLVER = None
+
+
+
+# Follow-up 3: a genuinely signed state must also be current, and never older than one already verified.
+
+def test_a_signed_but_old_state_is_refused(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    state, rpc = _fake_rpcs({'http://x': honest})
+    signed = _signed_at(honest)
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        chain = lambda now: network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                                          checkpoint=tmp_path / 'cp.json', clock=lambda: now)
+        assert chain(signed + 60).state()['height'] == honest['state']['height']
+        with pytest.raises(OSError, match='s old'):
+            chain(signed + 3600).state()  # the reviewer's case: a real state from hours ago
+
+
+def test_a_rollback_below_the_verified_height_is_refused_across_restarts(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    signed = _signed_at(honest)
+    checkpoint = tmp_path / 'cp.json'
+    checkpoint.write_text(__import__('json').dumps({'chain_id': honest['state']['chain_id'],
+                                                    'height': int(honest['commit']['header']['height']) + 500,
+                                                    'hash': 'AA' * 32}))
+    state, rpc = _fake_rpcs({'http://x': honest})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        chain = network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest), checkpoint=checkpoint,
+                              clock=lambda: signed)
+        with pytest.raises(OSError, match='rollback'):
+            chain.state()
+
+
+def test_the_verified_height_is_kept_and_another_block_at_it_is_refused(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    signed = _signed_at(honest)
+    state, rpc = _fake_rpcs({'http://x': honest})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        first = network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                              checkpoint=tmp_path / 'cp.json', clock=lambda: signed)
+        first.state()
+        saved = __import__('json').loads((tmp_path / 'cp.json').read_text())
+        assert saved['height'] == int(honest['commit']['header']['height'])
+        assert saved['hash'] == honest['commit']['commit']['block_id']['hash'].upper()
+    (tmp_path / 'cp.json').write_text(__import__('json').dumps({**saved, 'hash': 'BB' * 32}))
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        with pytest.raises(OSError, match='another block'):
+            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                          checkpoint=tmp_path / 'cp.json', clock=lambda: signed).state()
