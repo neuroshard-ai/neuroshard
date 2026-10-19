@@ -363,6 +363,12 @@ def _fake_rpcs(replies):
     return state, rpc
 
 
+def _signed_at(fixture):
+    from neuroshard.inference import light
+
+    return light.header_unix(fixture['commit']['header'])
+
+
 def _trusted(fixture):
     import base64
 
@@ -382,10 +388,12 @@ def test_a_forged_higher_height_state_is_refused_and_the_honest_one_used():
     forged['commit']['header']['app_hash'] = ledger.root(forged['state']).upper()
     state, rpc = _fake_rpcs({'http://dishonest': forged, 'http://honest': honest})
     with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
-        chain = network.Chain(['http://dishonest', 'http://honest'], honest['state']['chain_id'], _trusted(honest))
+        chain = network.Chain(['http://dishonest', 'http://honest'], honest['state']['chain_id'], _trusted(honest),
+                              clock=lambda: _signed_at(honest))
         read = chain.state()
         assert read['model_root'] == honest['state']['model_root'] and chain.rpc == 'http://honest'
-        alone = network.Chain(['http://dishonest'], honest['state']['chain_id'], _trusted(honest))
+        alone = network.Chain(['http://dishonest'], honest['state']['chain_id'], _trusted(honest),
+                              clock=lambda: _signed_at(honest))
         with pytest.raises(OSError, match='validators signed'):
             alone.state()
 
@@ -404,7 +412,8 @@ def test_a_state_with_an_altered_balance_or_an_invented_validator_set_is_refused
     state, rpc = _fake_rpcs({'http://x': altered})
     with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
         with pytest.raises(OSError, match='not the one committed'):
-            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest)).state()
+            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                          clock=lambda: _signed_at(honest)).state()
     # A validator set the RPC invented, signing its own header: refused by the trusted-set rule.
     keys = [Ed25519PrivateKey.generate() for _ in range(4)]
     invented = [{'address': light.address(k.public_key().public_bytes_raw()),
@@ -436,3 +445,173 @@ def test_the_live_chain_activates_upgrade_1_at_its_scheduled_height():
     live = {'chain_id': 'neuroshard-assistant-1'}
     assert not ledger.upgraded({**live, 'height': 821_999})
     assert ledger.upgraded({**live, 'height': 822_000})
+
+
+# Follow-up 1: the real RPC rejection, partial delivery, and lost replies.
+
+def _retry_agent(tmp_path, chain, deliver):
+    from neuroshard.evolution.growth_agent import Agent
+
+    agent = Agent(chain, None, tmp_path, recipes={'aa' * 32: {'present': True}}, trainer=object(), deliver=deliver)
+    (tmp_path / 'proofs').mkdir()
+    (tmp_path / 'proofs' / ('bb' * 32)).write_bytes(b'bundle')
+    agent.remember({'kind': 'challenge', 'job_id': 'job', 'segment': 0, 'step': 0, 'challenge_id': 'c',
+                    'proof_root': 'bb' * 32})
+    return agent
+
+
+def test_a_real_rpc_rejection_redelivers_the_proof_before_every_retry(tmp_path):
+    from neuroshard.inference.optimistic_network import Rejected
+
+    class Chain:
+        attempts = 0
+
+        def submit(self, *args, **kwargs):
+            self.attempts += 1
+            if self.attempts < 3:
+                raise Rejected('No verdict on this validator yet: growth recipe or proof bundle not held')
+
+    uploads = []
+    chain = Chain()
+    agent = _retry_agent(tmp_path, chain, lambda root, payload: uploads.append(root) or True)
+    job = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {'c': {'opened': 1}}}
+    kinds = [agent.check({'height': 3}, 'job', job)[-1]['kind'] for _ in range(3)]
+    assert kinds == ['prove-retry', 'prove-retry', 'prove'] and len(uploads) == 3 and chain.attempts == 3
+    # A restarted agent finds it proven and submits nothing more.
+    from neuroshard.evolution.growth_agent import Agent
+    again = Agent(chain, None, tmp_path, recipes={'aa' * 32: {}}, trainer=object(), deliver=lambda *a: True)
+    assert again.check({'height': 4}, 'job', job) == [] and chain.attempts == 3
+
+
+def test_unreachable_stores_and_a_lost_reply_never_duplicate_a_proof(tmp_path):
+    class Chain:
+        attempts = 0
+
+        def submit(self, *args, **kwargs):
+            self.attempts += 1
+            raise TimeoutError('transaction was not committed')  # admitted; the reply was lost
+
+    def deliver(root, payload):
+        raise OSError('every store unreachable')
+
+    chain = Chain()
+    agent = _retry_agent(tmp_path, chain, deliver)
+    job = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {'c': {'opened': 1}}}
+    assert agent.check({'height': 3}, 'job', job)[-1]['kind'] == 'delivery-pending' and chain.attempts == 0
+    agent.deliver = lambda root, payload: True
+    assert agent.check({'height': 4}, 'job', job)[-1]['kind'] == 'prove-unconfirmed'
+    # The proof did land: the challenge is closed and the fault recorded. The agent stops, without resubmitting.
+    closed = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {}}
+    state = {'height': 5, 'growth_faults': [{'job_id': 'job', 'segment': 0}]}
+    assert agent.check(state, 'job', closed)[-1]['kind'] == 'challenge-proven' and chain.attempts == 1
+    assert agent.check(state, 'job', closed) == []
+
+
+# Follow-up 2: a fresh machine obtains any continuation unit a recipe names.
+
+def test_a_cold_machine_rebuilds_a_grown_continuation_unit_from_committed_state(tmp_path, monkeypatch):
+    import json as _json
+
+    from neuroshard.evolution import growth_runtime
+
+    model = tiny()
+    trainable, optimizer = g.start(model, RECIPE)
+    g.train_segment(model, trainable, optimizer, RECIPE, 0, 2)
+    state_bytes = g.save(trainable, optimizer)
+    final = g.bytes_root(state_bytes)
+    recipe = {**RECIPE, 'model_root': MODEL}
+    _, tensors = growth_runtime.unit_files(state_bytes, recipe, final)
+    unit = hashlib.sha256(tensors).hexdigest()
+    store = tmp_path / 'store'
+    store.mkdir()
+    (store / f'{final}.state').write_bytes(state_bytes)
+    root = g.recipe_root(recipe, MODEL)
+    (store / f'{root}.json').write_text(_json.dumps(recipe))
+
+    class Response:
+        def __init__(self, path):
+            self.data = path.read_bytes()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return self.data
+
+    def urlopen(url, timeout=None):  # an HTTP store serving the directory
+        path = store / url.rsplit('/', 1)[1]
+        if not path.exists():
+            raise OSError('404')
+        return Response(path)
+
+    monkeypatch.setattr(growth_runtime.urllib.request, 'urlopen', urlopen)
+    monkeypatch.delenv('NEUROSHARD_UNITS', raising=False)
+    monkeypatch.chdir(tmp_path)  # nothing in the default places
+    chain_state = {'results': {}, 'grown_units': {final: {'status': 'grown', 'recipe_root': root, 'final_root': final}}}
+    try:
+        growth_runtime.provide_units(tmp_path / 'home', {'files': {}}, lambda: chain_state, ['http://store'])
+        continued = {**RECIPE, 'continue_from': unit}
+        started, _ = g.start(tiny(), continued)
+        assert all(torch.equal(started[n], trainable[n].to(started[n].dtype)) for n in started)
+        assert (tmp_path / 'home' / 'units' / f'{unit}.safetensors').exists()  # kept by content
+        with pytest.raises(FileNotFoundError):
+            g.start(tiny(), {**RECIPE, 'continue_from': 'ee' * 32})  # nothing names that digest
+    finally:
+        g.UNIT_STORE = g.UNIT_RESOLVER = None
+
+
+
+# Follow-up 3: a genuinely signed state must also be current, and never older than one already verified.
+
+def test_a_signed_but_old_state_is_refused(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    state, rpc = _fake_rpcs({'http://x': honest})
+    signed = _signed_at(honest)
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        chain = lambda now: network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                                          checkpoint=tmp_path / 'cp.json', clock=lambda: now)
+        assert chain(signed + 60).state()['height'] == honest['state']['height']
+        with pytest.raises(OSError, match='s old'):
+            chain(signed + 3600).state()  # the reviewer's case: a real state from hours ago
+
+
+def test_a_rollback_below_the_verified_height_is_refused_across_restarts(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    signed = _signed_at(honest)
+    checkpoint = tmp_path / 'cp.json'
+    checkpoint.write_text(__import__('json').dumps({'chain_id': honest['state']['chain_id'],
+                                                    'height': int(honest['commit']['header']['height']) + 500,
+                                                    'hash': 'AA' * 32}))
+    state, rpc = _fake_rpcs({'http://x': honest})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        chain = network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest), checkpoint=checkpoint,
+                              clock=lambda: signed)
+        with pytest.raises(OSError, match='rollback'):
+            chain.state()
+
+
+def test_the_verified_height_is_kept_and_another_block_at_it_is_refused(tmp_path):
+    from neuroshard.inference import optimistic_network as chain_network
+
+    honest = _light_fixture()
+    signed = _signed_at(honest)
+    state, rpc = _fake_rpcs({'http://x': honest})
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        first = network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                              checkpoint=tmp_path / 'cp.json', clock=lambda: signed)
+        first.state()
+        saved = __import__('json').loads((tmp_path / 'cp.json').read_text())
+        assert saved['height'] == int(honest['commit']['header']['height'])
+        assert saved['hash'] == honest['commit']['commit']['block_id']['hash'].upper()
+    (tmp_path / 'cp.json').write_text(__import__('json').dumps({**saved, 'hash': 'BB' * 32}))
+    with patch.object(chain_network, 'state', state), patch.object(chain_network, 'rpc', rpc):
+        with pytest.raises(OSError, match='another block'):
+            network.Chain(['http://x'], honest['state']['chain_id'], _trusted(honest),
+                          checkpoint=tmp_path / 'cp.json', clock=lambda: signed).state()

@@ -461,7 +461,7 @@ def test_the_explorer_lookup_reports_roles_and_refuses_non_keys(monkeypatch):
              'validators': {'ef' * 32: 1}, 'validator_history': [{'consensus_key': 'ef' * 32, 'height': 5}]}
 
     class Chain:
-        def __init__(self, *a):
+        def __init__(self, *a, **k):
             pass
 
         def state(self):

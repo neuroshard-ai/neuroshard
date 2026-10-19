@@ -8,7 +8,7 @@ Avoid publishing a working exploit before maintainers can assess it. Maintainers
 
 Relevant boundaries include consensus acceptance, numerical conformance, signing-state recovery, monetary invariants, resource limits, worker authorization, retries, dependency integrity, and genesis/checkpoint trust. Use disposable chains for experiments. Never duplicate a live validator's signing identity.
 
-The assistant client verifies each ledger state it reads against a CometBFT commit signed by more than two thirds of the validators, at least a third of them from the set pinned in the network descriptor (`inference/light.py`). The website explorer is a convenience view; run a node or the client to verify independently. Account inclusion proofs and state-sync snapshots are not implemented.
+The assistant client verifies each ledger state it reads against a CometBFT commit signed by more than two thirds of the validators, at least a third of them from the set pinned in the network descriptor (`inference/light.py`). It also refuses a state whose next header is more than two minutes old, or is below the highest height that machine already verified (`light-checkpoint.json`). The pinned set must be refreshed in the descriptor when validators change by more than two thirds of the power. The website explorer is a convenience view; run a node or the client to verify independently. Account inclusion proofs and state-sync snapshots are not implemented.
 
 ## Dependency review for 0.4.0
 

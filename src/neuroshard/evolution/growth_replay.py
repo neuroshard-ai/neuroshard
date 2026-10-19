@@ -32,10 +32,16 @@ def _optimizer(trainable, spec, arm):
 
 
 UNIT_STORE = None  # directory of published unit tensors, ``<sha256>.safetensors``; default $NEUROSHARD_UNITS or .units
+# resolve(sha256) -> bytes or None: obtains a unit the store lacks (a pinned released file, or a grown unit rebuilt
+# from its committed state). Set by ``growth_runtime.provide_units`` on every machine that trains or judges growth.
+UNIT_RESOLVER = None
 
 
 def unit_tensors(sha256):
-    """A published unit's trainable tensors, accepted only if the file hashes to the pinned digest."""
+    """A published unit's trainable tensors, accepted only if the file hashes to the pinned digest.
+
+    Looked up by content in the unit store, then obtained through ``UNIT_RESOLVER`` and kept in the store as
+    ``<sha256>.safetensors``, so every continuation a recipe names can be trained or judged on a fresh machine."""
     import os
     from pathlib import Path
 
@@ -47,6 +53,13 @@ def unit_tensors(sha256):
             payload = path.read_bytes()
             if hashlib.sha256(payload).hexdigest() == sha256:
                 return load_tensors(payload)
+    payload = UNIT_RESOLVER(sha256) if UNIT_RESOLVER else None
+    if payload is not None and hashlib.sha256(payload).hexdigest() == sha256:
+        store.mkdir(parents=True, exist_ok=True)
+        partial = store / f'.{sha256}.partial'
+        partial.write_bytes(payload)
+        partial.replace(store / f'{sha256}.safetensors')
+        return load_tensors(payload)
     raise FileNotFoundError(f'no published unit with trainable_sha256 {sha256}')
 
 

@@ -383,6 +383,8 @@ def growth_check(node, request):
         raise ledger.ProofUnavailable(f'held recipe is malformed: {error}')
     if growth_replay.recipe_root(recipe, recipe['model_root']) != request['recipe_root']:
         raise ledger.ProofUnavailable('held recipe differs from the job')
+    if node.get('growth_units'):
+        growth_replay.UNIT_STORE = Path(node['growth_units'])  # continuation units the validator provisions
     try:
         make_model = model_factory(recipe, allowed=set(node.get('growth_bases', ['granite-parent'])))
     except ValueError as error:

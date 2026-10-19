@@ -185,7 +185,7 @@ def run(args):
         if args.assistant_action == 'seed':
             config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
         else:
-            chain = network.chain(descriptor)
+            chain = network.chain(descriptor, args.home)
             descriptor = following(descriptor, chain, args.home, network)
             config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
             # Every validator also stores proofs, recipes and states, and mirrors the pinned files it holds:
@@ -212,6 +212,8 @@ def run(args):
                     if args.assistant_action == 'validator':
                         peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
                         network.replicate(chain, args.home / 'bundles', peers)
+                        # The units open recipes continue from, so this validator can judge their steps.
+                        network.provision_units(descriptor, chain, args.home, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator' and network.fell_behind(config, chain):
                         # CometBFT leaves fast sync if its peers drop out for a while (the seed reloading its app),
                         # then catches up at consensus speed; a restart resumes fast sync.
@@ -224,7 +226,7 @@ def run(args):
         finally:
             optimistic_network.stop(config)
         return
-    chain = network.chain(descriptor)
+    chain = network.chain(descriptor, args.home)
     descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
         import torch
@@ -594,6 +596,10 @@ def grow_agent(args, chain, network, descriptor):
 
     # Committed training states travel through the same stores as recipes and proofs, unless told otherwise.
     args.state_stores = list(args.state_stores) or list(descriptor.get('proof_endpoints', []))
+    from neuroshard.evolution.growth_runtime import provide_units
+
+    # Recipes can continue from any published or grown unit: keep a content-addressed store and fill it on demand.
+    provide_units(args.home, descriptor, chain.state, args.state_stores)
     recipes = {}
     for path in sorted(Path(args.recipes).glob('*.json')) if args.recipes else []:
         recipe = json.loads(path.read_text())

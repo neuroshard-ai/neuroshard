@@ -98,6 +98,52 @@ def unit_files(state_bytes, recipe, final_root):
     return json.dumps(manifest, sort_keys=True).encode(), payload
 
 
+def provide_units(home, descriptor, state, stores):
+    """Point growth at a content-addressed unit store under ``home`` and a resolver for what it lacks.
+
+    A recipe may continue from any published or grown unit, not only the one served now. A missing one is found
+    by its ``trainable_sha256``: first among the descriptor's pinned released files (any mirror, checked against
+    the pin), then among the chain's grown units, rebuilt from their committed final states in the network's
+    stores (each checked against its root). Every result is checked again against the digest the recipe names.
+    ``state`` is the ledger state, or a callable returning it."""
+    from neuroshard.assistant import network
+    from neuroshard.inference import optimistic as ledger
+
+    units = Path(home) / 'units'
+
+    def resolve(sha256):
+        for name, pin in sorted(descriptor.get('files', {}).items()):
+            if name.endswith('/trainable.safetensors') and pin.get('sha256') == sha256:
+                path = units / 'released' / name
+                try:
+                    if not network.matches(path, pin):
+                        network.fetch(descriptor, name, path, lambda *_: None)
+                    return path.read_bytes()
+                except (OSError, ValueError):
+                    continue
+        current = state() if callable(state) else state
+        for result in ledger.grown(current):
+            recipe = fetch_recipe(stores, result['recipe_root'])
+            if recipe is None:
+                continue
+            for base in stores:
+                try:
+                    with urllib.request.urlopen(f"{base.rstrip('/')}/{result['final_root']}.state", timeout=300) as response:
+                        payload = response.read()
+                except OSError:
+                    continue
+                if growth_replay.bytes_root(payload) != result['final_root']:
+                    continue
+                _, tensors = unit_files(payload, recipe, result['final_root'])
+                if hashlib.sha256(tensors).hexdigest() == sha256:
+                    return tensors
+                break
+        return None
+
+    growth_replay.UNIT_STORE, growth_replay.UNIT_RESOLVER = units, resolve
+    return units
+
+
 def candidate(descriptor, unit_name, final_root, manifest, payload):
     """The serving descriptor with a grown unit's files pinned in place of ``unit_name``'s."""
     files = dict(descriptor['files'])

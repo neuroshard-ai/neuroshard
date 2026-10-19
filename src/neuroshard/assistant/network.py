@@ -343,9 +343,14 @@ def public_hex(key):
     return key.public_key().public_bytes_raw().hex()
 
 
-def chain(descriptor):
-    """The descriptor's ledger, light-client verified against its pinned validators when it names them."""
-    return Chain(endpoints(descriptor), descriptor['chain_id'], descriptor.get('trusted_validators'))
+def chain(descriptor, home=None):
+    """The descriptor's ledger, light-client verified against its pinned validators when it names them.
+
+    Reads must be recent and never below the highest height this machine verified (kept in ``home``, by default
+    ``~/.neuroshard/assistant``), so an RPC cannot hide later changes behind a genuinely signed old state."""
+    home = Path(home) if home else Path.home() / '.neuroshard' / 'assistant'
+    return Chain(endpoints(descriptor), descriptor['chain_id'], descriptor.get('trusted_validators'),
+                 checkpoint=home / 'light-checkpoint.json')
 
 
 def endpoints(descriptor):
@@ -372,11 +377,32 @@ class Chain:
     another height. Submissions fail over to the next RPC when one is unreachable.
     """
 
-    def __init__(self, rpc, chain_id, trusted=None):
+    MAX_AGE = 120  # seconds: a verified state's next header must be this recent (blocks come about every second)
+
+    def __init__(self, rpc, chain_id, trusted=None, checkpoint=None, max_age=None, clock=time.time):
         self.rpcs = [rpc] if isinstance(rpc, str) else list(rpc)
         if not self.rpcs:
             raise ValueError('at least one ledger RPC')
         self.rpc, self.chain_id, self.trusted = self.rpcs[0], chain_id, dict(trusted or {})
+        # ``checkpoint``: a file holding the highest height and hash this client verified. Reads are then monotonic
+        # across restarts: an RPC serving a genuinely signed but older state is refused, as is one that is stale.
+        self.checkpoint, self.clock = (Path(checkpoint) if checkpoint else None), clock
+        self.max_age = self.MAX_AGE if max_age is None else max_age
+        self.verified_height, self.verified_hash = 0, None
+        if self.checkpoint and self.checkpoint.exists():
+            saved = json.loads(self.checkpoint.read_text())
+            if saved.get('chain_id') == chain_id:
+                self.verified_height, self.verified_hash = saved['height'], saved['hash']
+
+    def remember_verified(self, height, block_hash):
+        if height <= self.verified_height:
+            return
+        self.verified_height, self.verified_hash = height, block_hash
+        if self.checkpoint:
+            self.checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            partial = self.checkpoint.with_suffix('.partial')
+            partial.write_text(json.dumps({'chain_id': self.chain_id, 'height': height, 'hash': block_hash}))
+            partial.replace(self.checkpoint)
 
     def verified(self, address, value):
         """``value`` if the validators committed it: its root is the app hash after its height."""
@@ -403,7 +429,12 @@ class Chain:
             if len(validators) >= int(reply['total']) or not reply['validators']:
                 break
             page += 1
-        light.verify_commit(signed, validators, self.trusted)
+        header = light.verify_commit(signed, validators, self.trusted)
+        if int(header['height']) == self.verified_height and self.verified_hash and \
+                signed['commit']['block_id']['hash'].upper() != self.verified_hash:
+            raise light.Unverified(f'{address} signed another block at verified height {self.verified_height}')
+        light.fresh(header, self.clock(), self.max_age, after=self.verified_height)
+        self.remember_verified(int(header['height']), signed['commit']['block_id']['hash'].upper())
         return value
 
     def state(self):
@@ -1149,7 +1180,7 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     settlement = {'promotion_authority': None, 'approved_models': network.get('approved_versions', {}),
                   'runtime': 'granite-shard', 'threads': 8, 'bundles': str(home / 'bundles'), 'shards': shards,
                   'held_model_root': served.root, 'growth_recipes': str(home / 'bundles'),
-                  'growth_bases': ['granite-parent']}
+                  'growth_bases': ['granite-parent'], 'growth_units': str(home / 'units')}
     ports = {'p2p': p2p_port, 'rpc': p2p_port + 1, 'abci': p2p_port + 2}
     chain_network.configure_node(node_home, genesis, settlement, f'{seed_id}@{seed_host}:{seed_port}', ports,
                                  p2p_host='0.0.0.0')
@@ -1205,6 +1236,34 @@ def serve_store(chain, host, port, store):
     committed training state) and only if its bytes match that name, so a store needs no trust and any number of
     them can run; agents publish to all of them and fetch from whichever answers."""
     return serve_faucet(Store(chain), host, port, store)
+
+
+def provision_units(descriptor, chain, home, store, peers, progress=print):
+    """Fetch, into ``home/units``, every continuation unit named by a recipe the chain may ask this validator to
+    judge (open jobs, queued and proposed recipes), so judging a growth step never waits on a missing unit."""
+    import json as _json
+
+    from neuroshard.evolution import growth_replay, growth_runtime
+
+    state, store = chain.state(), Path(store)
+    roots = {j['recipe_root'] for j in state.get('growth', {}).values()} | {
+        q['recipe_root'] for q in state.get('growth_queue', [])}
+    provided = 0
+    # Grown units rebuild from committed states held by the other stores (this one replicates the same files).
+    growth_runtime.provide_units(home, descriptor, chain.state, list(peers))
+    for root in sorted(roots):
+        path = store / f'{root}.json'
+        if not path.exists():
+            continue
+        unit = _json.loads(path.read_text()).get('continue_from')
+        if not unit:
+            continue
+        try:
+            growth_replay.unit_tensors(unit)
+            provided += 1
+        except FileNotFoundError as error:
+            progress(f'Continuation unit for recipe {root[:16]} not available yet: {error}')
+    return provided
 
 
 def replicate(chain, store, peers, progress=print):
