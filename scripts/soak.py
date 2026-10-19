@@ -54,7 +54,9 @@ def probe(out, descriptor):
             status = rpc(address, 'status')
             heights[address] = int(status['sync_info']['latest_block_height'])
             if signers is None:
-                commit = rpc(address, 'commit')['signed_header']['commit']
+                # Two blocks back: the newest block's commit is the node's seen commit, returned once 2/3 signed.
+                back = int(status['sync_info']['latest_block_height']) - 2
+                commit = rpc(address, f'commit?height={back}')['signed_header']['commit']
                 signers = sum(1 for s in commit['signatures'] if s['block_id_flag'] == 2)
         except (OSError, KeyError, ValueError) as error:
             heights[address] = None
