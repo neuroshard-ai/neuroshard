@@ -10,8 +10,8 @@ is required.
 [Run a node](docs/OPERATORS.md) · [Run the assistant](docs/ASSISTANT_NETWORK.md) · [How it grows](docs/NETWORK_GROWTH.md) · [Decentralization status](docs/DECENTRALIZATION.md)
 
 **Live now (October 18, 2026).**
-- **Chain:** `neuroshard-assistant-1`, 4 CometBFT validators. It keeps running with any one of them
-  down.
+- **Chain:** `neuroshard-assistant-1`, 5 CometBFT validators. It keeps running with any one of them
+  down. Clients verify every state they read against the validators' signatures.
 - **Serving:** the Granite 4.1 3B model, split across owner machines. Every reply is signed and
   audited, and a proven fault slashes the owner's bond.
 - **Governance:** owners vote on the served version, on validators and on the growth levy. No single
@@ -21,10 +21,17 @@ is required.
   document requests, G2 answers 294; the base model answers 214 (two sets, each paired p ≈ 1e-6).
 - **Joining:** anyone can join as validator, owner, auditor or contributor with
   [one command](docs/OPERATORS.md). A bare machine did so from the public instructions alone.
+  Bonding lets an owner serve and earn; voting on the model and validators needs admission by the
+  existing members.
+
+**Status: operator pilot.** An independent audit (October 18, 2026) found integrity defects that made an
+open beta unsafe. They are fixed and tested ([audit and fixes](docs/DECENTRALIZATION.md#october-18-2026-beta-readiness-audit-and-fixes));
+the network is now open to an invited pilot of independent operators, not yet to a general public beta.
 
 **Not yet.**
 - Every validator and the original owners run on machines the project administers: the network needs
   independent operators.
+- One owner serves one conversation at a time; there is no queue or reconnection yet.
 - Test NEURO has no monetary value.
 - Owners, auditors and contributors need Intel CPUs with AMX, so that work replays bit for bit.
 - A reply takes about 35 s on CPU.
