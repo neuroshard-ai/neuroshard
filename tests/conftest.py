@@ -7,7 +7,8 @@ import os
 
 import pytest
 
-ENGINE_SKIP = ('cometbft', 'consensus engine')
+# A missing engine. A test pinned to one past qualification's exact binary may still skip elsewhere, by name.
+ENGINE_SKIP = ('cometbft is not installed', 'cometbft v0.38.26 is not installed', 'needs cometbft')
 
 
 @pytest.hookimpl(hookwrapper=True)

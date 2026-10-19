@@ -149,7 +149,7 @@ def test_validators_create_identities_and_configure_nodes_that_reach_consensus(t
     except ValueError:
         pytest.skip('CometBFT v0.38.26 is not installed')
     if sha256(binary) != PLAN['cometbft']['sha256']:
-        pytest.skip('local CometBFT binary differs from the declared one')
+        pytest.skip('reproduces the declared qualification run, which pins its exact engine binary')
     genesis_chain, _, parties, keys, _ = declared_chain()
     homes, stores, identities, processes = {}, {}, {}, []
     env = {**os.environ, 'PYTHONPATH': str(ROOT / 'src')}
