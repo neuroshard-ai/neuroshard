@@ -436,3 +436,63 @@ def test_the_live_chain_activates_upgrade_1_at_its_scheduled_height():
     live = {'chain_id': 'neuroshard-assistant-1'}
     assert not ledger.upgraded({**live, 'height': 821_999})
     assert ledger.upgraded({**live, 'height': 822_000})
+
+
+# Follow-up 1: the real RPC rejection, partial delivery, and lost replies.
+
+def _retry_agent(tmp_path, chain, deliver):
+    from neuroshard.evolution.growth_agent import Agent
+
+    agent = Agent(chain, None, tmp_path, recipes={'aa' * 32: {'present': True}}, trainer=object(), deliver=deliver)
+    (tmp_path / 'proofs').mkdir()
+    (tmp_path / 'proofs' / ('bb' * 32)).write_bytes(b'bundle')
+    agent.remember({'kind': 'challenge', 'job_id': 'job', 'segment': 0, 'step': 0, 'challenge_id': 'c',
+                    'proof_root': 'bb' * 32})
+    return agent
+
+
+def test_a_real_rpc_rejection_redelivers_the_proof_before_every_retry(tmp_path):
+    from neuroshard.inference.optimistic_network import Rejected
+
+    class Chain:
+        attempts = 0
+
+        def submit(self, *args, **kwargs):
+            self.attempts += 1
+            if self.attempts < 3:
+                raise Rejected('No verdict on this validator yet: growth recipe or proof bundle not held')
+
+    uploads = []
+    chain = Chain()
+    agent = _retry_agent(tmp_path, chain, lambda root, payload: uploads.append(root) or True)
+    job = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {'c': {'opened': 1}}}
+    kinds = [agent.check({'height': 3}, 'job', job)[-1]['kind'] for _ in range(3)]
+    assert kinds == ['prove-retry', 'prove-retry', 'prove'] and len(uploads) == 3 and chain.attempts == 3
+    # A restarted agent finds it proven and submits nothing more.
+    from neuroshard.evolution.growth_agent import Agent
+    again = Agent(chain, None, tmp_path, recipes={'aa' * 32: {}}, trainer=object(), deliver=lambda *a: True)
+    assert again.check({'height': 4}, 'job', job) == [] and chain.attempts == 3
+
+
+def test_unreachable_stores_and_a_lost_reply_never_duplicate_a_proof(tmp_path):
+    class Chain:
+        attempts = 0
+
+        def submit(self, *args, **kwargs):
+            self.attempts += 1
+            raise TimeoutError('transaction was not committed')  # admitted; the reply was lost
+
+    def deliver(root, payload):
+        raise OSError('every store unreachable')
+
+    chain = Chain()
+    agent = _retry_agent(tmp_path, chain, deliver)
+    job = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {'c': {'opened': 1}}}
+    assert agent.check({'height': 3}, 'job', job)[-1]['kind'] == 'delivery-pending' and chain.attempts == 0
+    agent.deliver = lambda root, payload: True
+    assert agent.check({'height': 4}, 'job', job)[-1]['kind'] == 'prove-unconfirmed'
+    # The proof did land: the challenge is closed and the fault recorded. The agent stops, without resubmitting.
+    closed = {'recipe_root': 'aa' * 32, 'commits': [], 'challenges': {}}
+    state = {'height': 5, 'growth_faults': [{'job_id': 'job', 'segment': 0}]}
+    assert agent.check(state, 'job', closed)[-1]['kind'] == 'challenge-proven' and chain.attempts == 1
+    assert agent.check(state, 'job', closed) == []

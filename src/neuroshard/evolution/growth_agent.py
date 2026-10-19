@@ -293,26 +293,49 @@ class Agent:
                       'challenge_id': ledger.transaction_id(envelope), 'proof_root': root}
             self.remember(action)
             out.append(dict(action))
+        from neuroshard.inference.optimistic_network import Rejected
+
         for action in [a for a in self.memory['actions'] if a['kind'] == 'challenge' and not a.get('proven')]:
-            if action['job_id'] == job_id and action['challenge_id'] in job['challenges']:
-                opened = job['challenges'][action['challenge_id']]['opened']
-                if state['height'] <= opened:
-                    continue  # its deposit commits with this block; deliver and prove from the next
-                if not action.get('delivered') and not self.deliver_proof(action):
-                    out.append({'kind': 'delivery-pending', 'challenge_id': action['challenge_id']})
-                    continue
-                try:
-                    self.chain.submit(self.account, 'growth_prove', job_id=job_id, challenge_id=action['challenge_id'])
-                except ValueError as error:
-                    # Validators without the bundle yet give no verdict and refuse to admit it: deliver and retry
-                    # next pass, within the proof window.
-                    out.append({'kind': 'prove-retry', 'challenge_id': action['challenge_id'], 'error': str(error)})
-                    action['delivered'] = False
-                    self.save()
-                    continue
-                action['proven'] = True
-                self.remember({'kind': 'prove', 'job_id': job_id, 'challenge_id': action['challenge_id']})
-                out.append({'kind': 'prove', 'challenge_id': action['challenge_id']})
+            if action['job_id'] != job_id:
+                continue
+            if action['challenge_id'] not in job['challenges']:
+                if not action.get('seen'):
+                    continue  # submitted this pass; it shows in the job once its block commits
+                # Closed: proven (perhaps by a submission whose reply was lost) or lapsed. Never resubmit.
+                faults = [f for f in state.get('growth_faults', []) if f['job_id'] == job_id
+                          and f['segment'] == action['segment']]
+                action['proven'], action['outcome'] = True, 'proven' if faults else 'closed'
+                self.save()
+                out.append({'kind': 'challenge-' + action['outcome'], 'challenge_id': action['challenge_id']})
+                continue
+            if not action.get('seen'):
+                action['seen'] = True
+                self.save()
+            opened = job['challenges'][action['challenge_id']]['opened']
+            if state['height'] <= opened:
+                continue  # its deposit commits with this block; deliver and prove from the next
+            # Deliver before every attempt until the proof commits: a store that refused or was down earlier,
+            # or a validator that still lacks the bundle, gets it again. Stores accept a held bundle idempotently.
+            if not self.deliver_proof(action):
+                out.append({'kind': 'delivery-pending', 'challenge_id': action['challenge_id']})
+                continue
+            try:
+                self.chain.submit(self.account, 'growth_prove', job_id=job_id, challenge_id=action['challenge_id'])
+            except TimeoutError as error:
+                # Admitted but not seen committed: it may still land. The next pass reads the chain and stops if the
+                # challenge closed, so a lost reply never makes a second proof.
+                out.append({'kind': 'prove-unconfirmed', 'challenge_id': action['challenge_id'], 'error': str(error)})
+                continue
+            except (Rejected, ValueError, OSError) as error:
+                # Validators without the bundle give no verdict and refuse to admit it; transport can fail. Deliver
+                # again and retry next pass, within the proof window.
+                action['attempts'] = action.get('attempts', 0) + 1
+                self.save()
+                out.append({'kind': 'prove-retry', 'challenge_id': action['challenge_id'], 'error': str(error)})
+                continue
+            action['proven'], action['outcome'] = True, 'proven'
+            self.remember({'kind': 'prove', 'job_id': job_id, 'challenge_id': action['challenge_id']})
+            out.append({'kind': 'prove', 'challenge_id': action['challenge_id']})
         return out
 
     def deliver_proof(self, action):
@@ -324,8 +347,12 @@ class Agent:
         path = self.home / 'proofs' / action.get('proof_root', '')
         if not action.get('proof_root') or not path.exists():
             return False
-        delivered = self.deliver(action['proof_root'], path.read_bytes())
+        try:
+            delivered = self.deliver(action['proof_root'], path.read_bytes())
+        except Exception:  # noqa: BLE001 - an unreachable store is retried on the next pass
+            delivered = False
         action['delivered'] = delivered is not False
+        action['deliveries'] = action.get('deliveries', 0) + 1
         self.save()
         return action['delivered']
 
