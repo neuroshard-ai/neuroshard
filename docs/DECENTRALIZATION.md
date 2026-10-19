@@ -262,3 +262,73 @@ received no log commitments, expired after 3,600 blocks, and its escrow was refu
 holds its 20 NEURO grant minus one 0.001 fee. The first client's conversation settled normally, with both
 owners paid. So refunds work, but a busy owner gives no explicit busy reply, and a client neither waits nor
 retries. Public clients need both before more than one user per shard.
+
+## October 19, 2026: soak measurement v3
+
+A second review of the soak harness, through 18:05 UTC, found five remaining problems:
+- a failed restoration cancelled its own backup timer;
+- failed connections were not followed to their refund;
+- "correct" was a substring match, so "58 units, not 61" passed;
+- "RPCs agree" could count a single answering RPC;
+- output was truncated.
+
+**Version 3** (run `aa18ae92`, from 18:26 UTC) fixes all five:
+- **Restoration:** it retries the start and keeps every result. It cancels the remote backup timer only after
+  recovery is observed; for a validator, that means caught up and signing again.
+- **Settlement:** each attempt's funded jobs are found through its client account, so a failed connection
+  is followed to its refund. Pending jobs persist across restarts and drain after the workload.
+- **Correctness:** answers are scored by the exact facts they claim, and contradicting answers count as
+  ambiguous.
+- **Agreement:** it is counted over all configured RPCs, with the hashes kept.
+- **Output and scheduling:** each attempt's complete output is stored, and faults have their own scheduler.
+
+The fault schedule stays anchored to the v2 start (13:10 UTC). A live dry run of the fault path on one
+validator (stopped for 20 s) found one more bug: recovery was never observed, because SSH output was cut to
+300 characters before the status JSON was parsed. With that fixed, the dry run observed the stop, the restart,
+catch-up, signing again at block 856,544, and only then cancelled the backup timer.
+
+**v2's two failed burst attempts, reconciled** through the client accounts:
+- Attempt 7 (15:08:53 UTC) funded job `e74024f3…`. It got no commitments, expired at block 851,478, and was
+  refunded.
+- Attempt 13 (17:16:19 UTC) funded job `7423d750…`. It had no commitments at 18:12 and expires at block
+  857,132. v3 is following it to its outcome.
+
+**Every v2 reply rescored exactly:** all 14 completed replies get the same verdict, 7 correct. The served
+model is right on the review interval (9) and the Annex quantity (70). It is wrong every time on facts that
+need the latest approved revision: it reads revision 1, answering 58 units and 2027-05-07 where the right
+answers are 61 and 2027-05-14. These four fixed questions are an availability check, not a quality evaluation.
+
+## October 19, 2026: soak measurement v3
+
+A second review of the soak harness, through 18:05 UTC, found five remaining problems:
+- a failed restoration cancelled its own backup timer;
+- failed connections were not followed to their refund;
+- "correct" was a substring match, so "58 units, not 61" passed;
+- "RPCs agree" could count a single answering RPC;
+- output was truncated.
+
+**Version 3** (run `aa18ae92`, from 18:26 UTC) fixes all five:
+- **Restoration:** it retries the start and keeps every result. It cancels the remote backup timer only after
+  recovery is observed; for a validator, that means caught up and signing again.
+- **Settlement:** each attempt's funded jobs are found through its client account, so a failed connection
+  is followed to its refund. Pending jobs persist across restarts and drain after the workload.
+- **Correctness:** answers are scored by the exact facts they claim, and contradicting answers count as
+  ambiguous.
+- **Agreement:** it is counted over all configured RPCs, with the hashes kept.
+- **Output and scheduling:** each attempt's complete output is stored, and faults have their own scheduler.
+
+The fault schedule stays anchored to the v2 start (13:10 UTC). A live dry run of the fault path on one
+validator (stopped for 20 s) found one more bug: recovery was never observed, because SSH output was cut to
+300 characters before the status JSON was parsed. With that fixed, the dry run observed the stop, the restart,
+catch-up, signing again at block 856,544, and only then cancelled the backup timer.
+
+**v2's two failed burst attempts, reconciled** through the client accounts:
+- Attempt 7 (15:08:53 UTC) funded job `e74024f3…`. It got no commitments, expired at block 851,478, and was
+  refunded.
+- Attempt 13 (17:16:19 UTC) funded job `7423d750…`. It had no commitments at 18:12 and expires at block
+  857,132. v3 is following it to its outcome.
+
+**Every v2 reply rescored exactly:** all 14 completed replies get the same verdict, 7 correct. The served
+model is right on the review interval (9) and the Annex quantity (70). It is wrong every time on facts that
+need the latest approved revision: it reads revision 1, answering 58 units and 2027-05-07 where the right
+answers are 61 and 2027-05-14. These four fixed questions are an availability check, not a quality evaluation.
