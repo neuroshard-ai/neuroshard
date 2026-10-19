@@ -496,3 +496,59 @@ def test_unreachable_stores_and_a_lost_reply_never_duplicate_a_proof(tmp_path):
     state = {'height': 5, 'growth_faults': [{'job_id': 'job', 'segment': 0}]}
     assert agent.check(state, 'job', closed)[-1]['kind'] == 'challenge-proven' and chain.attempts == 1
     assert agent.check(state, 'job', closed) == []
+
+
+# Follow-up 2: a fresh machine obtains any continuation unit a recipe names.
+
+def test_a_cold_machine_rebuilds_a_grown_continuation_unit_from_committed_state(tmp_path, monkeypatch):
+    import json as _json
+
+    from neuroshard.evolution import growth_runtime
+
+    model = tiny()
+    trainable, optimizer = g.start(model, RECIPE)
+    g.train_segment(model, trainable, optimizer, RECIPE, 0, 2)
+    state_bytes = g.save(trainable, optimizer)
+    final = g.bytes_root(state_bytes)
+    recipe = {**RECIPE, 'model_root': MODEL}
+    _, tensors = growth_runtime.unit_files(state_bytes, recipe, final)
+    unit = hashlib.sha256(tensors).hexdigest()
+    store = tmp_path / 'store'
+    store.mkdir()
+    (store / f'{final}.state').write_bytes(state_bytes)
+    root = g.recipe_root(recipe, MODEL)
+    (store / f'{root}.json').write_text(_json.dumps(recipe))
+
+    class Response:
+        def __init__(self, path):
+            self.data = path.read_bytes()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return self.data
+
+    def urlopen(url, timeout=None):  # an HTTP store serving the directory
+        path = store / url.rsplit('/', 1)[1]
+        if not path.exists():
+            raise OSError('404')
+        return Response(path)
+
+    monkeypatch.setattr(growth_runtime.urllib.request, 'urlopen', urlopen)
+    monkeypatch.delenv('NEUROSHARD_UNITS', raising=False)
+    monkeypatch.chdir(tmp_path)  # nothing in the default places
+    chain_state = {'results': {}, 'grown_units': {final: {'status': 'grown', 'recipe_root': root, 'final_root': final}}}
+    try:
+        growth_runtime.provide_units(tmp_path / 'home', {'files': {}}, lambda: chain_state, ['http://store'])
+        continued = {**RECIPE, 'continue_from': unit}
+        started, _ = g.start(tiny(), continued)
+        assert all(torch.equal(started[n], trainable[n].to(started[n].dtype)) for n in started)
+        assert (tmp_path / 'home' / 'units' / f'{unit}.safetensors').exists()  # kept by content
+        with pytest.raises(FileNotFoundError):
+            g.start(tiny(), {**RECIPE, 'continue_from': 'ee' * 32})  # nothing names that digest
+    finally:
+        g.UNIT_STORE = g.UNIT_RESOLVER = None

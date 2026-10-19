@@ -1149,7 +1149,7 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     settlement = {'promotion_authority': None, 'approved_models': network.get('approved_versions', {}),
                   'runtime': 'granite-shard', 'threads': 8, 'bundles': str(home / 'bundles'), 'shards': shards,
                   'held_model_root': served.root, 'growth_recipes': str(home / 'bundles'),
-                  'growth_bases': ['granite-parent']}
+                  'growth_bases': ['granite-parent'], 'growth_units': str(home / 'units')}
     ports = {'p2p': p2p_port, 'rpc': p2p_port + 1, 'abci': p2p_port + 2}
     chain_network.configure_node(node_home, genesis, settlement, f'{seed_id}@{seed_host}:{seed_port}', ports,
                                  p2p_host='0.0.0.0')
@@ -1205,6 +1205,34 @@ def serve_store(chain, host, port, store):
     committed training state) and only if its bytes match that name, so a store needs no trust and any number of
     them can run; agents publish to all of them and fetch from whichever answers."""
     return serve_faucet(Store(chain), host, port, store)
+
+
+def provision_units(descriptor, chain, home, store, peers, progress=print):
+    """Fetch, into ``home/units``, every continuation unit named by a recipe the chain may ask this validator to
+    judge (open jobs, queued and proposed recipes), so judging a growth step never waits on a missing unit."""
+    import json as _json
+
+    from neuroshard.evolution import growth_replay, growth_runtime
+
+    state, store = chain.state(), Path(store)
+    roots = {j['recipe_root'] for j in state.get('growth', {}).values()} | {
+        q['recipe_root'] for q in state.get('growth_queue', [])}
+    provided = 0
+    # Grown units rebuild from committed states held by the other stores (this one replicates the same files).
+    growth_runtime.provide_units(home, descriptor, chain.state, list(peers))
+    for root in sorted(roots):
+        path = store / f'{root}.json'
+        if not path.exists():
+            continue
+        unit = _json.loads(path.read_text()).get('continue_from')
+        if not unit:
+            continue
+        try:
+            growth_replay.unit_tensors(unit)
+            provided += 1
+        except FileNotFoundError as error:
+            progress(f'Continuation unit for recipe {root[:16]} not available yet: {error}')
+    return provided
 
 
 def replicate(chain, store, peers, progress=print):
