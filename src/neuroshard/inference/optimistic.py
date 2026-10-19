@@ -81,7 +81,7 @@ LINK_DOMAIN = 'neuroshard/serving-link/v1'
 # roots. A chain not listed runs every rule from genesis; ``None`` means not yet scheduled.
 # Upgrade 1 (audit, October 2026): governance membership, growth-job expiry and capacity, and the
 # durable version registry.
-UPGRADE_HEIGHTS = {'neuroshard-assistant-1': None}
+UPGRADE_HEIGHTS = {'neuroshard-assistant-1': 822000}
 
 
 def upgraded(state):
