@@ -343,6 +343,11 @@ def public_hex(key):
     return key.public_key().public_bytes_raw().hex()
 
 
+def chain(descriptor):
+    """The descriptor's ledger, light-client verified against its pinned validators when it names them."""
+    return Chain(endpoints(descriptor), descriptor['chain_id'], descriptor.get('trusted_validators'))
+
+
 def endpoints(descriptor):
     """Every ledger RPC a descriptor names: ``rpc`` (one address or a list) followed by any ``rpcs``."""
     value = descriptor['rpc']
@@ -359,18 +364,66 @@ class Divergence(ValueError):
 class Chain:
     """Ledger RPCs: reads state and submits transactions, waiting until a block includes each.
 
-    With several RPCs, a read checks each reply against its own state root and requires every RPC that
-    reports the same height to agree on it, so one honest RPC exposes a dishonest one. Submissions fail
-    over to the next RPC when one is unreachable.
+    With ``trusted`` validators (the network descriptor's ``trusted_validators``: {ed25519 public key hex: power}),
+    every state read is light-client verified: the state's root must be the app hash in a header that more than
+    two thirds of the validators signed, at least a third of them from the trusted set (``inference.light``). Any
+    one RPC then suffices and none is trusted. Without it, replies are only cross-checked: each against its own
+    root, and every RPC reporting the same height must agree, which does not stop a lying RPC that reports
+    another height. Submissions fail over to the next RPC when one is unreachable.
     """
 
-    def __init__(self, rpc, chain_id):
+    def __init__(self, rpc, chain_id, trusted=None):
         self.rpcs = [rpc] if isinstance(rpc, str) else list(rpc)
         if not self.rpcs:
             raise ValueError('at least one ledger RPC')
-        self.rpc, self.chain_id = self.rpcs[0], chain_id
+        self.rpc, self.chain_id, self.trusted = self.rpcs[0], chain_id, dict(trusted or {})
+
+    def verified(self, address, value):
+        """``value`` if the validators committed it: its root is the app hash after its height."""
+        from neuroshard.inference import light
+
+        height = value['height'] + 1
+        for _ in range(20):  # the next header exists about one block later
+            try:
+                signed = chain_network.rpc(address, 'commit', {'height': str(height)}, timeout=20)['signed_header']
+                break
+            except (chain_network.Rejected, OSError, KeyError):
+                time.sleep(0.5)
+        else:
+            raise light.Unverified(f'{address} has no commit for height {height} yet')
+        if signed['header']['chain_id'] != self.chain_id:
+            raise light.Unverified(f'{address} signed header is for another chain')
+        if signed['header']['app_hash'].lower() != ledger.root(value):
+            raise light.Unverified(f'{address} state at {value["height"]} is not the one committed after it')
+        validators, page = [], 1
+        while True:
+            reply = chain_network.rpc(address, 'validators', {'height': str(height), 'page': str(page),
+                                                              'per_page': '100'}, timeout=20)
+            validators += reply['validators']
+            if len(validators) >= int(reply['total']) or not reply['validators']:
+                break
+            page += 1
+        light.verify_commit(signed, validators, self.trusted)
+        return value
 
     def state(self):
+        if self.trusted:
+            from neuroshard.inference import light
+
+            failures = []
+            order = [self.rpc] + [address for address in self.rpcs if address != self.rpc]
+            for address in order:
+                try:
+                    value = chain_network.state(address)
+                    if value.get('chain_id') != self.chain_id:
+                        raise light.Unverified(f'{address} serves another chain')
+                    value = self.verified(address, {k: v for k, v in value.items() if k != 'root'})
+                except (OSError, chain_network.Rejected, ValueError) as error:
+                    failures.append(f'{address}: {error}')
+                    continue
+                self.rpc = address
+                return value
+            raise OSError('no ledger RPC returned a state the validators signed: ' + '; '.join(failures))
         replies, errors = {}, []
         for address in self.rpcs:
             try:
@@ -1061,6 +1114,13 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     home = Path(home)
     rpc = endpoints(network)[0]
     genesis = chain_network.rpc(rpc, 'genesis')['genesis']
+    pinned = network.get('genesis_sha256')
+    if pinned:
+        # The genesis is pinned by the descriptor (committed in the release), so a lying RPC cannot start this
+        # node on another chain. Canonical JSON, as CometBFT returns it, without the generated app_hash.
+        received = hashlib.sha256(json.dumps(genesis, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+        if received != pinned:
+            raise ValueError(f'{rpc} returned a genesis that differs from the pinned one ({received[:16]})')
     status = chain_network.rpc(rpc, 'status')
     seed_id = status['node_info']['id']
     seed_port = status['node_info']['listen_addr'].rsplit(':', 1)[1]
@@ -1084,9 +1144,12 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
                 paths['additions'] = {str(k): str(v) for k, v in stage['additions'].items()}
                 paths['parent_routes'] = list(stage.get('parent_routes', []))
         shards[str(rank)] = paths
+    # The validator's proof store (``bundles``) also holds the recipes the chain names, which it replicates from
+    # other stores (``replicate``); with the pinned parent (``assistant prepare-parent``) it judges growth steps.
     settlement = {'promotion_authority': None, 'approved_models': network.get('approved_versions', {}),
                   'runtime': 'granite-shard', 'threads': 8, 'bundles': str(home / 'bundles'), 'shards': shards,
-                  'held_model_root': served.root}
+                  'held_model_root': served.root, 'growth_recipes': str(home / 'bundles'),
+                  'growth_bases': ['granite-parent']}
     ports = {'p2p': p2p_port, 'rpc': p2p_port + 1, 'abci': p2p_port + 2}
     chain_network.configure_node(node_home, genesis, settlement, f'{seed_id}@{seed_host}:{seed_port}', ports,
                                  p2p_host='0.0.0.0')
@@ -1154,10 +1217,11 @@ def replicate(chain, store, peers, progress=print):
 
     state, store, copied = chain.state(), Path(store), 0
     wanted = []
-    for result in state.get('results', {}).values():
-        if result.get('status') == 'grown':
-            wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
-                       (result['final_root'], f"{result['final_root']}.state")]
+    from neuroshard.inference import optimistic as ledger
+
+    for result in ledger.grown(state):
+        wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
+                   (result['final_root'], f"{result['final_root']}.state")]
     for job in state.get('growth', {}).values():
         wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
         wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]

@@ -149,14 +149,36 @@ def bytes_root(payload):
 
 
 def load(model, recipe, payload):
+    """Restore committed state bytes onto the recipe's own optimizer.
+
+    Only what the state root commits is taken from the bytes: the trainable tensors and the optimizer's
+    per-parameter state. Everything else that affects a step (learning-rate schedule, betas, epsilon, weight
+    decay and the other AdamW settings, and which parameter each state belongs to) comes from the recipe,
+    which ``recipe_root`` commits. Bytes that claim other settings or another parameter order are refused,
+    so uncommitted metadata can never change what a step computes.
+    """
     trainable, optimizer = start(model, recipe)
     saved = torch.load(io.BytesIO(payload), weights_only=True)
     if set(saved['trainable']) != set(trainable):
         raise ValueError('proof state names other tensors than the recipe attaches')
+    index = {id(value): name for name, value in trainable.items()}
+    order = [index[id(p)] for group in optimizer.param_groups for p in group['params']]
+    if saved.get('order') != order:
+        raise ValueError('state orders its optimizer parameters differently from the recipe')
+    fresh = optimizer.state_dict()
+    claimed = saved['optimizer'].get('param_groups', [])
+    if len(claimed) != len(fresh['param_groups']):
+        raise ValueError('state claims other optimizer parameter groups than the recipe')
+    for mine, theirs in zip(fresh['param_groups'], claimed):
+        for key in set(mine) & set(theirs) - {'params', 'lr'}:  # lr is set from the schedule before every step
+            if mine[key] != theirs[key]:
+                raise ValueError(f'state claims optimizer {key} {theirs[key]!r}; the recipe sets {mine[key]!r}')
+        if theirs.get('params') != mine['params']:
+            raise ValueError('state maps optimizer parameters differently from the recipe')
     with torch.no_grad():
         for name, value in trainable.items():
             value.copy_(saved['trainable'][name])
-    optimizer.load_state_dict(saved['optimizer'])
+    optimizer.load_state_dict({'state': saved['optimizer']['state'], 'param_groups': fresh['param_groups']})
     return trainable, optimizer
 
 
@@ -175,20 +197,52 @@ def judge(make_model, recipe, payload, request):
     """
     if hashlib.sha256(payload).hexdigest() != request['proof_root']:
         return False
-    proof = json.loads(payload)
+    try:
+        proof = json.loads(payload)
+        before = bytes.fromhex(proof['before'])
+    except (ValueError, KeyError, TypeError):
+        return False
     if proof.get('format') != 'neuroshard-growth-proof/1' or proof.get('step') != request['step']:
         return False
+    recipe = execution(recipe)
     model = make_model()
-    trainable, optimizer = load(model, recipe, bytes.fromhex(proof['before']))
+    try:
+        trainable, optimizer = load(model, recipe, before)
+    except (ValueError, KeyError, RuntimeError, TypeError):
+        return False  # a bundle that does not restore the committed state under the recipe proves nothing
     if state_root(trainable, optimizer) != request['before_root']:
         return False
     step(model, trainable, optimizer, recipe, request['step'])
     return state_root(trainable, optimizer) != request['claimed_root']
 
 
-def recipe_root(recipe, model_root):
-    """What a ``growth_open`` names: the recipe's arm, spec and data, and the model it trains."""
-    bound = {'model_root': model_root, 'arm': recipe['arm'], 'spec': recipe['spec'], 'sources': recipe['sources']}
+PARENT = 'granite-parent'
+
+
+def execution(recipe, model_root=None):
+    """Exactly the part of a recipe that ``recipe_root`` commits, and the only part execution may read.
+
+    The arm, spec and data; the unit training continues from; the model it grows; and the base model it
+    loads. The pinned Granite parent is the default base, fully determined by the verified artifact store,
+    so it is bound only implicitly and earlier roots are unchanged. Any other base, and its configuration
+    and seed, is bound explicitly. A parent recipe that carries a base configuration or seed is refused:
+    those fields would be ignored, and a recipe must not mean two things.
+    """
+    base = recipe.get('base', PARENT)
+    bound = {'model_root': recipe.get('model_root') if model_root is None else model_root,
+             'arm': recipe['arm'], 'spec': recipe['spec'], 'sources': recipe['sources']}
     if recipe.get('continue_from'):
         bound['continue_from'] = recipe['continue_from']  # bound only when present: earlier roots are unchanged
-    return hashlib.sha256(json.dumps(bound, sort_keys=True).encode()).hexdigest()
+    if base == PARENT:
+        if 'base_config' in recipe or 'base_seed' in recipe:
+            raise ValueError('a recipe on the pinned parent carries no base configuration or seed')
+    else:
+        if not isinstance(base, str) or 'base_config' not in recipe:
+            raise ValueError('a recipe on another base names it and its configuration')
+        bound.update(base=base, base_config=recipe['base_config'], base_seed=recipe.get('base_seed', 0))
+    return bound
+
+
+def recipe_root(recipe, model_root):
+    """What a ``growth_open`` names: every recipe field that affects execution (``execution``)."""
+    return hashlib.sha256(json.dumps(execution(recipe, model_root), sort_keys=True).encode()).hexdigest()

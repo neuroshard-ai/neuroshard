@@ -70,6 +70,7 @@
     }
   },
   "format": "neuroshard-assistant-network/1",
+  "genesis_sha256": "41d9c20ea03bcd8ab03e3627af9967091341b06f4224fca7424997b2ee1bae93",
   "mirrors": [
     "http://3.235.99.192:28781/",
     "http://50.16.17.202:28781/",
@@ -141,5 +142,12 @@
     "http://54.242.226.150:26657",
     "http://54.91.165.201:26657"
   ],
+  "trusted_validators": {
+    "2ad68b4fd4cae6c9c8f1eeeaaa35f2cb2fc5047be33c34cd6db13a1978335297": 1,
+    "41bbee78d3711b0f63955d20441563956259488cf1a9b63eddda6cd10a7bedec": 1,
+    "6575a87bcd7acafc8784493eae493641a012daedaece8be7dd37562bb8eec534": 1,
+    "a182377a0b0d193730dfe82aae72a5d38e400e96b35596b3ad0e7a0c8ce5864b": 1,
+    "d333241be6901e613bc3028e8a237567c27da65c261b3550648ad202167c6e88": 1
+  },
   "version": "a4-general"
 }

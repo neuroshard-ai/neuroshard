@@ -1,6 +1,6 @@
 # Security policy
 
-The supported native release is **0.4.0**. Earlier `0.2.x` packages, the archived registration/observer-ledger stack, and historical prototypes are unsupported. This is an experimental testnet; an independent production security audit has not been completed.
+Supported: the assistant network `neuroshard-assistant-1` at the current `main`, and the native protocol release **0.4.1** (package version). Earlier `0.2.x` packages, the archived registration/observer-ledger stack, and historical prototypes are unsupported. This is an experimental testnet. An independent beta-readiness review was completed on October 18, 2026; its findings and fixes are recorded in [the decentralization status](docs/DECENTRALIZATION.md#october-18-2026-beta-readiness-audit-and-fixes). It is not a production security certification.
 
 Use [GitHub private vulnerability reporting](https://github.com/neuroshard-ai/neuroshard/security/advisories/new), which is enabled for this repository. Include the affected revision, execution profile, impact, and minimal reproduction. Never include real signing keys, credentials, or user records.
 
@@ -8,7 +8,7 @@ Avoid publishing a working exploit before maintainers can assess it. Maintainers
 
 Relevant boundaries include consensus acceptance, numerical conformance, signing-state recovery, monetary invariants, resource limits, worker authorization, retries, dependency integrity, and genesis/checkpoint trust. Use disposable chains for experiments. Never duplicate a live validator's signing identity.
 
-The explorer is a view from a full node. Run your own node to verify independently. Account inclusion proofs and state-sync snapshots are not implemented.
+The assistant client verifies each ledger state it reads against a CometBFT commit signed by more than two thirds of the validators, at least a third of them from the set pinned in the network descriptor (`inference/light.py`). The website explorer is a convenience view; run a node or the client to verify independently. Account inclusion proofs and state-sync snapshots are not implemented.
 
 ## Dependency review for 0.4.0
 

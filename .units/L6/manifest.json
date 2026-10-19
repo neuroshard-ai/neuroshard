@@ -1,0 +1,144 @@
+{
+  "format": "neuroshard-assistant-experience-checkpoint/1",
+  "arm": "addition",
+  "trainable_sha256": "c962d657f6d79b45da449e267deb29323277e8f32118c43870dca5a9b15f5ecf",
+  "trainable_parameters": 1048576,
+  "tensors": {
+    "model.layers.32.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.32.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.32.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.32.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.33.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.33.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.33.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.33.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.34.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.34.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.34.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.34.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.35.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.35.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.35.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.35.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.36.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.36.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.36.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.36.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.37.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.37.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.37.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.37.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.38.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.38.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.38.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.38.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ],
+    "model.layers.39.self_attn.q_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.39.self_attn.q_proj.lora_b": [
+      2560,
+      16
+    ],
+    "model.layers.39.self_attn.v_proj.lora_a": [
+      16,
+      2560
+    ],
+    "model.layers.39.self_attn.v_proj.lora_b": [
+      512,
+      16
+    ]
+  },
+  "steps": 256,
+  "schedule_sha256": "43071f315cfabb005e5688c7c58fb692e8a40d0b247b48f8f6e2eb86d5282849",
+  "final_loss": 0.03854435075868423,
+  "roots": {
+    "experience": "8341d1b8792440cf08025a1f7bf88c6701d4f3be8dd5d7c6ac44b8e35a44d975",
+    "replay": "2d8ec80b15eef3bb5be2ec1fa6f1626fa90d22ea7d8b47fe24b2ecff27c8c1f9",
+    "declaration": "2291a38d6a1149a3bc96161c67d28fa694e2082bb1ca42c4aa9d55fa35818fd6"
+  }
+}

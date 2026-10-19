@@ -7,6 +7,7 @@ CometBFT then reports the new validator in its validator set, and it starts sign
 
 import json
 from pathlib import Path
+import os
 import shutil
 import subprocess
 import time
@@ -18,7 +19,8 @@ from neuroshard.inference import optimistic_network as chain_network
 from test_owner_governance import bond_at
 from test_optimistic_serving import Account
 
-pytestmark = pytest.mark.skipif(not (shutil.which('cometbft') or (chain_network.REPO / '.neuroshard/tools/cometbft').exists()
+pytestmark = pytest.mark.skipif(not (os.environ.get('COMETBFT_BINARY') or shutil.which('cometbft')
+                                     or (chain_network.REPO / '.neuroshard/tools/cometbft').exists()
                                      ),
                                 reason='CometBFT is not installed')
 

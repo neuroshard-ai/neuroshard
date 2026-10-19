@@ -107,7 +107,7 @@ def test_agents_grow_seal_propose_vote_and_enact_with_a_cheater_caught(tmp_path)
     (store / 'recipes' / f'{root}.json').write_text(json.dumps(recipe))
     (store / 'bundles').mkdir()
     checker_fn = promotion_or_fraud({'promotion_authority': steward.public, 'approved_models': {},
-                                     'growth_recipes': str(store / 'recipes'), 'bundles': str(store / 'bundles')}, None)
+                                     'growth_recipes': str(store / 'recipes'), 'bundles': str(store / 'bundles'), 'growth_bases': ['tiny-granite']}, None)
     # Seal round must come after settlement: put the chain clock just before the recorded seal round.
     chain = Chain(state, checker_fn, beacon.time_of(seal['round']) - ledger_growth.SEAL_MARGIN * beacon.PERIOD - 200)
     keys = {}

@@ -136,114 +136,41 @@ version is still a failure mode on these drafting workspaces.
   that work replays bit for bit.
 - NEURO is a test token with no value, so nobody has a reason to run a node except to help test.
 
-## Four validators, and a node joined from public instructions alone
 
-October 18, 2026.
+## October 18, 2026: beta-readiness audit and fixes
 
-**Four validators.** Three new nodes ran `neuroshard assistant validator`. Each:
-- took the genesis and the seed's address from the public RPC;
-- generated its consensus key on its own machine;
-- replayed the 769,000-block chain from block 1, at about 57 blocks per second. Committed blocks'
-  proof verdicts are taken as committed, so syncing needs no model.
+An independent review of commit `981e8ae` concluded the network was not ready for an open beta for users
+and operators. It reproduced eight failure scenarios on local, disposable chains. Every one was confirmed
+on this code and is fixed on `fix/beta-audit`. Each has a regression test in
+`tests/evolution/test_beta_audit.py` that replays the attack and checks that it now fails.
 
-They then held the audited shards of the served version. Owners proposed the three consensus keys
-and voted. The clean-room owner's vote was needed: the project's two owners hold 10 of the 15 million
-bonded, just short of two-thirds. All three proposals were enacted by height 769,716. CometBFT now runs
-4 validators at power 1 each, in us-east-1a, 1b, 1c and 1f.
+| Finding | Severity | What could happen | Fix |
+| --- | --- | --- | --- |
+| Optimizer settings outside the committed training state | Critical | An honest training step could be "proven" fraudulent by editing an uncommitted setting in the proof bundle (e.g. weight decay), slashing an honest contributor | The verifier takes every optimizer setting and parameter mapping from the committed recipe and refuses a bundle claiming others. Root format unchanged |
+| Free faucet tokens became votes | Critical | Two faucet grants could outvote every owner and change the served model or the validator set, without serving anything | From the upgrade height, only **members** vote: the owners active at the upgrade, plus owners the members admit (`govern propose-member`). Anyone can still bond, serve and earn |
+| Recipe root missed base-model fields | High | One recipe root could mean two executions (e.g. another base seed), changing a fraud verdict | The recipe root binds every field that affects execution. A parent recipe carrying base fields is refused. Validators judge only the pinned parent. G2's recipe root is unchanged |
+| Growth proofs uploaded before their challenge | High | Stores refused the proof, the agent never retried, and the challenger lost its deposit while the cheater escaped | Challenge, keep the bundle on disk, deliver it on every pass until a store holds it, then prove. Resumes after a restart. The serving auditor no longer stops at the first unavailable store |
+| Growth jobs never expired | High | Eight jobs costing 0.008 NEURO blocked all growth indefinitely | Idle jobs expire after 2 hours, paying committed steps and refunding the rest. Sponsored jobs post a deposit, pay a minimum reward per step, and use at most 4 of 8 slots, so pool-funded jobs can always open. The planner ignores sponsored jobs |
+| Rebuild data pruned with ordinary history | High | After 1,024 later settlements, or after two routes changed, a fresh node could not rebuild the served model | A durable `grown_units` registry, never pruned. Rebuilding searches combinations of grown units, so it skips intermediate versions |
+| RPC with the highest height won | High | One RPC could forge any state by reporting a higher height | A light client: a state is accepted only if its root is the app hash in a header signed by more than 2/3 of the validators, including at least 1/3 of the set pinned in the descriptor. The descriptor also pins the genesis, and joining validators check it |
 
-- **Losing a validator.** With one stopped for 60 seconds, the chain made 31 blocks (normally ~60) and
-  the stopped node rejoined by itself.
-- **Losing the seed's RPC.** Every validator now serves a public RPC, and the bundled network
-  descriptor lists all four. Clients cross-check them and keep working with the seed unreachable.
+Also fixed:
+- Validators set up the growth-recipe store, and validator and contributor installs download and verify
+  the full parent model (`assistant prepare-parent`).
+- `join.sh` installs into its own directory, refuses to overwrite local changes, and builds CometBFT with
+  the repository's reviewed build (pinned Go and `go.sum`).
+- CI passes the reviewed CometBFT build to the test jobs, and a skipped real-chain test now fails the run.
+- Repeated sections in this document and in [growth](NETWORK_GROWTH.md) are removed.
 
-**A node joined from public instructions alone.** A bare Ubuntu 24.04 machine started with none of
-the project's images, environments or keys. It followed `docs/ASSISTANT_NETWORK.md` and then:
-- installed the pinned runtime;
-- rebuilt the served version, G2, from committed state;
-- bonded as a second owner of shard 2 and served live jobs, audited clean and paid 88,769 atoms
-  each;
-- voted on validators from its own account.
+**Activation.** The membership, growth-capacity and registry rules change consensus, so they activate at a
+height (`optimistic.UPGRADE_HEIGHTS`). Blocks before it replay to identical state roots. Before scheduling
+it, `scripts/replay_live.py` replays live blocks under the new code and compares every root with the app
+hash the validators signed.
 
-From that machine a G2 documents turn took 34 s.
-
-**What the clean-room run fixed.**
-- The instructions assumed a system Python 3.12 with `venv`. Ubuntu 24.04 ships 3.12.3 without it,
-  and the runtime needs 3.12.12, so the instructions now use `uv`.
-- `validator` and `seed` stop their node when the command exits, so they are run as services.
-- A node that falls out of fast sync (because its only peer reloaded) restarts to resume it.
-
-**What went wrong.** The three enactments were meant to land in one block, so the chain would go from
-1 validator straight to 4. The node checks each account's nonce against committed state, so only the
-first was admitted. For about 40 blocks the chain ran on 2 validators, both required, before the other
-two enactments were sent from separate accounts. `govern enact` now enacts one proposal per block,
-and the docs say to send enactments from separate owner accounts.
-
-**Seen in passing.** Asked for the baseline quantity in the latest approved Cedar 6581 plan, G2
-answered 58 (revision 1) rather than 61 (revision 2), citing the older document. Picking the current
-version is still a failure mode on these drafting workspaces.
-
-**What this does not change.**
-- The project administers all four validators, both original owners, the auditor and the faucet. The
-  clean-room machine shares the project's AWS account. Decentralization in fact needs operators who
-  are not the project.
-- The faucet and proof store are still single services on the seed, and model files are hosted on
-  GitHub.
-- Owners, auditors, contributors and judging validators need the same CPU class (Intel with AMX) so
-  that work replays bit for bit.
-- NEURO is a test token with no value, so nobody has a reason to run a node except to help test.
-
-## Four validators, and a node joined from public instructions alone
-
-October 18, 2026.
-
-**Four validators.** Three new nodes ran `neuroshard assistant validator`. Each:
-- took the genesis and the seed's address from the public RPC;
-- generated its consensus key on its own machine;
-- replayed the 769,000-block chain from block 1, at about 57 blocks per second. Committed blocks'
-  proof verdicts are taken as committed, so syncing needs no model.
-
-They then held the audited shards of the served version. Owners proposed the three consensus keys
-and voted. The clean-room owner's vote was needed: the project's two owners hold 10 of the 15 million
-bonded, just short of two-thirds. All three proposals were enacted by height 769,716. CometBFT now runs
-4 validators at power 1 each, in us-east-1a, 1b, 1c and 1f.
-
-- **Losing a validator.** With one stopped for 60 seconds, the chain made 31 blocks (normally ~60) and
-  the stopped node rejoined by itself.
-- **Losing the seed's RPC.** Every validator now serves a public RPC, and the bundled network
-  descriptor lists all four. Clients cross-check them and keep working with the seed unreachable.
-
-**A node joined from public instructions alone.** A bare Ubuntu 24.04 machine started with none of
-the project's images, environments or keys. It followed `docs/ASSISTANT_NETWORK.md` and then:
-- installed the pinned runtime;
-- rebuilt the served version, G2, from committed state;
-- bonded as a second owner of shard 2 and served live jobs, audited clean and paid 88,769 atoms
-  each;
-- voted on validators from its own account.
-
-From that machine a G2 documents turn took 34 s.
-
-**What the clean-room run fixed.**
-- The instructions assumed a system Python 3.12 with `venv`. Ubuntu 24.04 ships 3.12.3 without it,
-  and the runtime needs 3.12.12, so the instructions now use `uv`.
-- `validator` and `seed` stop their node when the command exits, so they are run as services.
-- A node that falls out of fast sync (because its only peer reloaded) restarts to resume it.
-
-**What went wrong.** The three enactments were meant to land in one block, so the chain would go from
-1 validator straight to 4. The node checks each account's nonce against committed state, so only the
-first was admitted. For about 40 blocks the chain ran on 2 validators, both required, before the other
-two enactments were sent from separate accounts. `govern enact` now enacts one proposal per block,
-and the docs say to send enactments from separate owner accounts.
-
-**Seen in passing.** Asked for the baseline quantity in the latest approved Cedar 6581 plan, G2
-answered 58 (revision 1) rather than 61 (revision 2), citing the older document. Picking the current
-version is still a failure mode on these drafting workspaces.
-
-**What this does not change.**
-- The project administers all four validators, both original owners, the auditor and the faucet. The
-  clean-room machine shares the project's AWS account. Decentralization in fact needs operators who
-  are not the project.
-- The faucet and proof store are still single services on the seed, and model files are hosted on
-  GitHub.
-- Owners, auditors, contributors and judging validators need the same CPU class (Intel with AMX) so
-  that work replays bit for bit.
-- NEURO is a test token with no value, so nobody has a reason to run a node except to help test.
+**What the audit's verdict still holds against.** These fixes make an operator pilot safe to run. They do
+not make the network ready for a general public beta. That still needs:
+- independently administered operators;
+- adversarial tests on the live network;
+- a multi-day soak of the exact release;
+- capacity beyond one conversation per owner;
+- evaluation written by people, not generated.

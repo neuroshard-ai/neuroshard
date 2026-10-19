@@ -123,13 +123,13 @@ def named_recipe(state, root):
     return root in ({p['recipe_root'] for p in state.get('governance', {}).get('proposals', {}).values()
                      if p.get('kind') == 'recipe'} | {q['recipe_root'] for q in state.get('growth_queue', [])}
                     | {j['recipe_root'] for j in state.get('growth', {}).values()}
-                    | {r['recipe_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
+                    | {r['recipe_root'] for r in ledger.grown(state)})
 
 
 def named_state(state, root):
     """Whether the chain committed this training state: a segment's last root of an open job, or a grown result."""
     return root in ({c['step_roots'][-1] for j in state.get('growth', {}).values() for c in j['commits']}
-                    | {r['final_root'] for r in state.get('results', {}).values() if r.get('status') == 'grown'})
+                    | {r['final_root'] for r in ledger.grown(state)})
 
 
 def receive_proof(payload, root, state, store):
@@ -264,11 +264,18 @@ class Auditor:
                                                          log_key=key, proof_root=root)
                             challenge_id = ledger.transaction_id(envelope)
                         payload = proof_archive(proof_dir)
+                        accepted = 0
                         for endpoint in self.network['proof_endpoints']:
                             request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
                                                              headers={'Content-Type': 'application/zip'})
-                            with urllib.request.urlopen(request, timeout=60) as response:
-                                response.read(4096)
+                            try:  # one unavailable store must not stop delivery to the others
+                                with urllib.request.urlopen(request, timeout=60) as response:
+                                    response.read(4096)
+                                accepted += 1
+                            except OSError as error:
+                                self.progress(f'Proof store {endpoint} refused or unreachable: {error}')
+                        if not accepted:
+                            raise ConnectionError('no proof store accepted the bundle yet')
                         self.chain.submit(self.account, 'prove', job_id=job_id,
                                           challenge_id=challenge_id)
                         report['proof_root'] = root

@@ -26,7 +26,11 @@ FIELDS = {'growth_open': {'recipe_root', 'start_root', 'steps', 'segment_steps',
           'growth_prove': {'job_id', 'challenge_id'}}
 SEAL_MARGIN = 20  # rounds (one minute) after settlement: the trained state is fixed well before the seal exists
 PARAMS = {'growth_bond': 2_000_000, 'growth_challenge_deposit': 1_000_000, 'growth_window_blocks': 40,
-          'growth_proof_blocks': 40, 'max_growth_jobs': 8, 'max_segment_steps': 64, 'max_growth_steps': 4096}
+          'growth_proof_blocks': 40, 'max_growth_jobs': 8, 'max_segment_steps': 64, 'max_growth_steps': 4096,
+          # From the upgrade (see ``ledger.upgraded``): abandoned jobs expire, sponsored jobs post a deposit and
+          # may hold only part of the capacity, so jobs the usage pool funds can always open.
+          'growth_idle_blocks': 7200, 'growth_open_deposit': 1_000_000, 'max_sponsored_growth_jobs': 4,
+          'growth_min_reward_per_step': 1000}
 
 
 def params(state):
@@ -85,11 +89,18 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         reward = ledger.integer(body['reward'], steps)
         if len(growth) >= settings['max_growth_jobs']:
             raise ValueError('Too many open growth jobs')
+        job = {'sponsor': sender, 'recipe_root': ledger.hex_digest(body['recipe_root']),
+               'start_root': ledger.hex_digest(body['start_root']), 'steps': steps, 'segment_steps': segment,
+               'reward': reward, 'opened': state['height'], 'commits': [], 'challenges': {}}
+        if ledger.upgraded(state):
+            if reward < steps * settings['growth_min_reward_per_step']:
+                raise ValueError('A sponsored growth job pays at least the minimum reward per step')
+            if sum(1 for j in growth.values() if j['sponsor'] is not None) >= settings['max_sponsored_growth_jobs']:
+                raise ValueError('Sponsored growth jobs are at capacity; pool-funded jobs keep the rest')
+            debit(settings['growth_open_deposit'])
+            job['deposit'] = settings['growth_open_deposit']
         debit(reward)
-        growth[ledger.transaction_id(envelope)] = {
-            'sponsor': sender, 'recipe_root': ledger.hex_digest(body['recipe_root']),
-            'start_root': ledger.hex_digest(body['start_root']), 'steps': steps, 'segment_steps': segment,
-            'reward': reward, 'opened': state['height'], 'commits': [], 'challenges': {}}
+        growth[ledger.transaction_id(envelope)] = job
     elif kind == 'growth_commit':
         job = growth.get(body['job_id'])
         if job is None:
@@ -104,6 +115,8 @@ def apply(ledger, state, envelope, body, sender, debit, execute, request):
         debit(settings['growth_bond'])
         job['commits'].append({'contributor': sender, 'step_roots': roots, 'bond': settings['growth_bond'],
                                'deadline': state['height'] + settings['growth_window_blocks']})
+        if ledger.upgraded(state):
+            job['active'] = state['height']
     elif kind == 'growth_challenge':
         job = growth.get(body['job_id'])
         index = body['segment']
@@ -184,6 +197,8 @@ def advance(ledger, state, time=None):
         done = len(job['commits']) == segments(job) and not job['challenges'] and all(
             state['height'] > commit['deadline'] for commit in job['commits'])
         if not done:
+            if ledger.upgraded(state) and abandoned(state, job):
+                expire(ledger, state, job_id, job)
             continue
         paid = 0
         for commit in job['commits']:
@@ -193,7 +208,7 @@ def advance(ledger, state, time=None):
         if job['sponsor'] is None:
             state['growth_pool'] = state.get('growth_pool', 0) + job['reward'] - paid
         else:
-            ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid
+            ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid + job.get('deposit', 0)
         final = job['commits'][-1]['step_roots'][-1]
         record = {'status': 'grown', 'recipe_root': job['recipe_root'], 'start_root': job['start_root'],
                   'final_root': final, 'steps': job['steps'],
@@ -203,13 +218,42 @@ def advance(ledger, state, time=None):
 
             record.update(settled_unix=int(time), seal_round=beacon.round_at(int(time)) + SEAL_MARGIN)
         ledger.remember(state, job_id, record)
+        if ledger.upgraded(state):
+            state.setdefault('grown_units', {})[final] = {**record, 'job_id': job_id, 'height': state['height']}
         del state['growth'][job_id]
     fund(ledger, state)
 
 
+def abandoned(state, job):
+    """No segment committed for ``growth_idle_blocks`` and nothing left to judge: the job can never finish."""
+    last = max(job.get('active', job['opened']), job['opened'])
+    return (not job['challenges'] and state['height'] > last + params(state)['growth_idle_blocks']
+            and all(state['height'] > commit['deadline'] for commit in job['commits']))
+
+
+def expire(ledger, state, job_id, job):
+    """Close an abandoned job. Contributors are paid for the steps they committed, which passed their windows
+    unchallenged, and get their bonds back. The rest of the reward returns to its sponsor or to the pool. A
+    sponsor's opening deposit is burned: abandoning a job is what it paid to rule out. No unit results."""
+    paid = 0
+    for commit in job['commits']:
+        share = job['reward'] * len(commit['step_roots']) // job['steps']
+        ledger.account(state, commit['contributor'])['balance'] += share + commit['bond']
+        paid += share
+    if job['sponsor'] is None:
+        state['growth_pool'] = state.get('growth_pool', 0) + job['reward'] - paid
+    else:
+        ledger.account(state, job['sponsor'])['balance'] += job['reward'] - paid
+        state['burned'] += job.get('deposit', 0)
+    ledger.remember(state, job_id, {'status': 'growth_expired', 'recipe_root': job['recipe_root'],
+                                    'committed_steps': sum(len(c['step_roots']) for c in job['commits']),
+                                    'steps': job['steps']})
+    del state['growth'][job_id]
+
+
 def escrow(state):
-    """Growth funds held by the ledger: rewards, bonds and challenge deposits."""
-    return sum(job['reward'] + sum(c['bond'] for c in job['commits'])
+    """Growth funds held by the ledger: rewards, bonds, challenge and opening deposits."""
+    return sum(job['reward'] + job.get('deposit', 0) + sum(c['bond'] for c in job['commits'])
                + sum(c['deposit'] for c in job['challenges'].values()) for job in jobs(state).values())
 
 

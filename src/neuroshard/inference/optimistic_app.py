@@ -377,10 +377,16 @@ def growth_check(node, request):
     from neuroshard.evolution import growth_replay
     from neuroshard.evolution.growth_model import model_factory
 
-    recipe = json.loads(recipe_path.read_text())
-    make_model = model_factory(recipe)
+    try:
+        recipe = growth_replay.execution(json.loads(recipe_path.read_text()))
+    except (ValueError, KeyError, TypeError) as error:
+        raise ledger.ProofUnavailable(f'held recipe is malformed: {error}')
     if growth_replay.recipe_root(recipe, recipe['model_root']) != request['recipe_root']:
         raise ledger.ProofUnavailable('held recipe differs from the job')
+    try:
+        make_model = model_factory(recipe, allowed=set(node.get('growth_bases', ['granite-parent'])))
+    except ValueError as error:
+        raise ledger.NoVerdict(str(error))
     return growth_replay.judge(make_model, recipe, proof_path.read_bytes(), request)
 
 

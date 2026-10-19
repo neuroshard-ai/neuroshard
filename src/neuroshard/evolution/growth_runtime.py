@@ -117,24 +117,38 @@ def upgrade(descriptor, state, recipes, state_bytes):
     """
     from neuroshard.assistant import network
 
+    import itertools
+
+    from neuroshard.inference import optimistic as ledger
+
     target = state['model_root']
     if network.model_root(descriptor) == target:
         return descriptor, {}
-    grown = sorted((r for r in state.get('results', {}).values() if r.get('status') == 'grown'),
-                   key=lambda r: -r.get('settled_unix', 0))
-    for result in grown:
+    # Each route is either unchanged or carries one grown unit: a version that changed several routes since the
+    # descriptor this machine started from is one combination, found without any intermediate version.
+    options = {}
+    for result in ledger.grown(state):
         recipe = recipes.get(result['recipe_root'])
         route = (recipe or {}).get('route')
         if route not in (descriptor.get('routing') or {}):
             continue
-        unit = descriptor['routing'][route]['addition']
         try:
             manifest, payload = unit_files(state_bytes(recipe, result['final_root']), recipe, result['final_root'])
         except (OSError, ValueError, KeyError):
             continue
-        upgraded = candidate(descriptor, unit, result['final_root'], manifest, payload)
-        if network.model_root(upgraded) == target:
-            return upgraded, {f'{unit}/manifest.json': manifest, f'{unit}/trainable.safetensors': payload}
+        options.setdefault(route, []).append((result['final_root'], manifest, payload))
+    routes = sorted(options)
+    for choice in itertools.islice(itertools.product(*([None, *options[r]] for r in routes)), 1 << 16):
+        upgraded, files = descriptor, {}
+        for route, unit_choice in zip(routes, choice):
+            if unit_choice is None:
+                continue
+            final_root, manifest, payload = unit_choice
+            unit = descriptor['routing'][route]['addition']
+            upgraded = candidate(upgraded, unit, final_root, manifest, payload)
+            files.update({f'{unit}/manifest.json': manifest, f'{unit}/trainable.safetensors': payload})
+        if files and network.model_root(upgraded) == target:
+            return upgraded, files
     return None
 
 
@@ -349,9 +363,11 @@ def follow(descriptor, state, home, stores, progress=print):
         if network.model_root(known) == target:
             install(known, versions / target)
             return known
+    from neuroshard.inference import optimistic as ledger
+
     recipes = {}
-    for result in state.get('results', {}).values():
-        if result.get('status') == 'grown' and result['recipe_root'] not in recipes:
+    for result in ledger.grown(state):
+        if result['recipe_root'] not in recipes:
             recipe = fetch_recipe(stores, result['recipe_root'])
             if recipe is not None:
                 recipes[result['recipe_root']] = recipe

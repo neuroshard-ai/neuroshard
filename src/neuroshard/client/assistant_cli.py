@@ -15,6 +15,8 @@ def register(subcommands, root):
     common.add_argument('--network', type=Path, help='Network descriptor; defaults to the bundled assistant testnet')
     common.add_argument('--home', type=lambda p: Path(p).expanduser(), default=root / 'assistant',
                         help='Keys, fetched shards and logs')
+    actions.add_parser('prepare-parent', parents=[common],
+                       help='Download and verify the full pinned parent model (planning, evaluation, growth judging)')
     status = actions.add_parser('status', parents=[common], help='The served version, its owners and a job outcome')
     status.add_argument('--job', help='Show the outcome of this job')
     host = actions.add_parser('host', parents=[common],
@@ -38,8 +40,10 @@ def register(subcommands, root):
     chat.add_argument('--threads', type=int)
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
-    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy', 'vote',
-                                                  'enact', 'handover'))
+    govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy',
+                                                  'propose-member', 'vote', 'enact', 'handover'))
+    govern.add_argument('--log-key', help='propose-member: the owner log key to admit as a voting member (or remove)')
+    govern.add_argument('--remove', action='store_true', help='propose-member: remove the member instead')
     govern.add_argument('--levy-ppm', type=int, help='propose-levy: share of owner payments that funds growth (ppm)')
     govern.add_argument('--consensus-key', help='propose-validator: the CometBFT ed25519 public key, hex')
     govern.add_argument('--power', type=int, help='propose-validator: voting power, 0 removes')
@@ -140,6 +144,22 @@ def render(result, before):
         print(f"  stopped: {result['failure']}")
 
 
+def prepare_parent():
+    """The full Granite parent, every file checked against the committed inventory (size and digest).
+
+    Contributors, planners, owners' voting agents and validators judging growth steps need the whole model on one
+    machine; serving owners need only their shard. Returns the directory, ``NEUROSHARD_MODELS``/baseline."""
+    import os
+
+    from neuroshard.evolution import assistant_growth_run as growth
+    from neuroshard.evolution.modular_reference_execution import ROOT, read, verify_artifacts
+
+    inventory = read(ROOT / growth.ARTIFACTS)['models']['baseline']
+    directory = Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline'
+    verify_artifacts(directory, inventory, download=True)
+    return directory
+
+
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.evolution import granite_shard_execution as runtime
@@ -155,6 +175,9 @@ def run(args):
     from neuroshard.assistant import network
 
     descriptor = network.descriptor(args.network)
+    if args.assistant_action == 'prepare-parent':
+        print(f'Pinned parent model verified at {prepare_parent()}')
+        return
     if args.assistant_action in ('seed', 'validator'):
         from neuroshard.evolution import growth_runtime
         from neuroshard.inference import optimistic_network
@@ -162,7 +185,7 @@ def run(args):
         if args.assistant_action == 'seed':
             config, chain, _ = network.seed(descriptor, args.home, args.public_host, audit_shards=args.audit_shards)
         else:
-            chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+            chain = network.chain(descriptor)
             descriptor = following(descriptor, chain, args.home, network)
             config = network.join_validator(descriptor, args.home, args.public_host, args.audit_shards)
             # Every validator also stores proofs, recipes and states, and mirrors the pinned files it holds:
@@ -201,7 +224,7 @@ def run(args):
         finally:
             optimistic_network.stop(config)
         return
-    chain = network.Chain(network.endpoints(descriptor), descriptor['chain_id'])
+    chain = network.chain(descriptor)
     descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
         import torch
@@ -364,6 +387,8 @@ def govern(args, chain, network):
             approving, total = ledger.tally(proposal)
             kind = proposal.get('kind')
             what = (f"validator {proposal['consensus_key'][:16]} at power {proposal['power']}" if kind == 'validator'
+                    else f"{'admit' if proposal['admit'] else 'remove'} member {proposal['log_key'][:16]}"
+                    if kind == 'member'
                     else f"growth levy {proposal['levy_ppm'] / 10_000:.4g}%" if kind == 'levy'
                     else f"recipe {proposal['recipe_root'][:16]}: {proposal['steps']} steps for {proposal['reward']}"
                     if kind == 'recipe' else
@@ -374,6 +399,14 @@ def govern(args, chain, network):
               f"{len(state.get('growth', {}))} job(s) open.")
         for key, power in sorted(state.get('validators', {}).items()):
             print(f"  admitted validator {key[:16]}: power {power}")
+        members = governance.get('members')
+        if members is None:
+            print('Voting: every active bonded owner votes with its bond.')
+        else:
+            print(f'Voting: {len(members)} member(s); a bond alone does not vote until members admit it.')
+            for key in sorted(members):
+                owner = state['owners'].get(key, {})
+                print(f"  member {key[:16]}: shard {owner.get('shard')}, bond {owner.get('amount', 0)}, {owner.get('status')}")
         return
     account = network.Account(args.home / 'account.key')
     if args.govern_action == 'handover':
@@ -388,6 +421,12 @@ def govern(args, chain, network):
         if not args.consensus_key or args.power is None:
             raise ValueError('propose-validator needs --consensus-key and --power')
         envelope = chain.submit(account, 'validator_propose', consensus_key=args.consensus_key, power=args.power)
+        print(f'proposal {ledger.transaction_id(envelope)}')
+        return
+    elif args.govern_action == 'propose-member':
+        if not args.log_key:
+            raise ValueError('propose-member needs --log-key')
+        envelope = chain.submit(account, 'member_propose', log_key=args.log_key, admit=not args.remove)
         print(f'proposal {ledger.transaction_id(envelope)}')
         return
     elif args.govern_action == 'propose-levy':
@@ -565,11 +604,15 @@ def grow_agent(args, chain, network, descriptor):
     from neuroshard.assistant import audit
 
     def deliver(root, payload):
+        """Post to every store; True if at least one accepted, so the agent retries until one holds it."""
+        accepted = 0
         for endpoint in descriptor.get('proof_endpoints', []):
             try:
                 audit.post_proof(endpoint, root, payload)
+                accepted += 1
             except Exception as error:  # noqa: BLE001 - one store being down does not stop the others
                 print(f'proof store {endpoint}: {error}', flush=True)
+        return accepted > 0
 
     class ByRecipe:
         """One protocol trainer per recipe, created on first use, so recipes the network proposes later are trained too."""

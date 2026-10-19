@@ -9,8 +9,11 @@ import os
 from pathlib import Path
 
 
-def model_factory(recipe):
+def model_factory(recipe, allowed=None):
+    """``allowed``, if given, is the set of bases this machine accepts: validators accept only the parent."""
     base = recipe.get('base', 'granite-parent')
+    if allowed is not None and base not in allowed:
+        raise ValueError(f'this machine does not judge recipes on base {base}')
     if base == 'tiny-granite':
         def make():
             import torch
