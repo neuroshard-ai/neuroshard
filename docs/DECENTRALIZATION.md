@@ -167,6 +167,13 @@ height (`optimistic.UPGRADE_HEIGHTS`). Blocks before it replay to identical stat
 it, `scripts/replay_live.py` replays live blocks under the new code and compares every root with the app
 hash the validators signed.
 
+**Live (October 19, 2026).** The code was rolled out first with the upgrade unscheduled. The rollout went one
+host at a time, with no downtime and all five validators signing. Replaying 1,020 live blocks under it,
+including paid conversations, gave identical state roots. The upgrade then activated at block **822,000**. All
+five validators committed the same state root after it. Membership was founded with the three active owners,
+and the three grown units, including the served G2, moved into the durable registry. Against a copy of the
+live state after activation, the audit's attack fails: newly bonded owners serve, but they get no vote.
+
 **What the audit's verdict still holds against.** These fixes make an operator pilot safe to run. They do
 not make the network ready for a general public beta. That still needs:
 - independently administered operators;
