@@ -201,3 +201,26 @@ not make the network ready for a general public beta. That still needs:
 - a multi-day soak of the exact release;
 - capacity beyond one conversation per owner;
 - evaluation written by people, not generated.
+
+## October 19, 2026: release frozen, soak started
+
+- **Frozen release.** [`pilot-1`](https://github.com/neuroshard-ai/neuroshard/releases/tag/pilot-1)
+  (`a29b058`) runs every role. Each host checks out the tag and runs the bundled descriptor, including the
+  pinned genesis and validators.
+- **Every role is a managed service.** Five validators, three owners (the clean-room owner now runs as
+  `neuroshard-owner.service`), the auditor, both owners' agents and the growth agent all run under
+  systemd with restart on failure.
+- **While freezing, two services were found with stale local network files.** Owner 2 and the auditor were
+  restarting because their files listed only the seed's RPC, and the light client needs the full validator
+  list. All local network files were replaced with the bundled descriptor; the old ones are kept as
+  `*.pre-pilot-1`. The chain stayed live, and shard 2 kept a second owner serving throughout.
+- **The soak.** `scripts/soak.py` runs as `neuroshard-soak.service` on a machine outside the fleet, for 72
+  hours. Every minute it records each RPC's height, signers and agreement, a light-client verified read,
+  and each owner's reachability. Every 20 minutes it runs a paid conversation, and every sixth round two at
+  once, to measure overload: shard 1 has a single owner, which serves one conversation at a time. It
+  injects controlled faults: a validator stopped for 5 and 15 minutes, the second shard-2 owner stopped for
+  10 and 15 minutes, the auditor stopped for 10 minutes, and the seed restarted. Events and incidents go to
+  `.neuroshard/soak-pilot-1/events.jsonl`, and `scripts/soak.py summary` reports the totals.
+- **Not covered by this soak:** hostile participants, withheld logs or states, saturation beyond two
+  concurrent users, and operators outside the project. The planned live cheating and cost experiments
+  cover some faults; they are not a general adversarial evaluation.
