@@ -224,3 +224,41 @@ not make the network ready for a general public beta. That still needs:
 - **Not covered by this soak:** hostile participants, withheld logs or states, saturation beyond two
   concurrent users, and operators outside the project. The planned live cheating and cost experiments
   cover some faults; they are not a general adversarial evaluation.
+
+## October 19, 2026: soak measurement corrected (v1 → v2)
+
+A review of the soak harness found that its measurements did not support all of its claims:
+- fault commands were logged as done whether or not they worked;
+- a failed client could count as a successful conversation;
+- monitoring compared heights, not block hashes, and stopped while conversations ran (one 307 s gap);
+- runs were summarised together.
+
+Version 2 replaced it at 13:12 UTC, before the first scheduled fault:
+- **Faults:** command status and the service's observed state are checked, restoration always runs (with
+  a remote systemd timer as backup), and observed recovery is logged separately from the restart attempt.
+- **Conversations:** transport, answer correctness against the workspace's known fact, and on-chain
+  settlement are separate outcomes, and every attempt's output is kept.
+- **Monitoring:** it runs in its own thread and compares block IDs and app hashes from every RPC at one
+  finalized height, with per-RPC signers and probe gaps.
+- **Labelling:** every event carries a run ID and measurement version.
+
+**The v1 runs are kept** (`events.jsonl`, labelled by `summary` as measurement 1) and are not counted as part
+of the v2 soak. Their numbers, under v1's own weaker definitions:
+
+| Run | Hours | Probes | Longest probe gap | Conversations | Completed |
+| --- | --- | --- | --- | --- | --- |
+| v1a (before the signer fix) | 0.94 | 54 | 119 s | 3 | 3 |
+| v1b | 3.46 | 182 | 307 s | 11 | 10 |
+
+**Correctness, scored afterwards (approximate).** v1 recorded replies but did not check them. Scored against
+the workspace's documents, 5 of the 14 completed replies were correct. The served model gives the baseline
+quantity from revision 1 (58) instead of the latest approved revision 2 (61), and does not list which
+revisions are approved. This is the known weakness at picking the current version of a document.
+
+**The one failure, diagnosed.** In the first two-user burst (11:30 UTC), both clients opened jobs and chose
+the same, only, shard-1 owner. An owner serves one conversation at a time and silently closes a second
+connection, so the second client reported "the peer closed the serving link". Its job (`30a8250c…`)
+received no log commitments, expired after 3,600 blocks, and its escrow was refunded in full: the account
+holds its 20 NEURO grant minus one 0.001 fee. The first client's conversation settled normally, with both
+owners paid. So refunds work, but a busy owner gives no explicit busy reply, and a client neither waits nor
+retries. Public clients need both before more than one user per shard.
