@@ -168,11 +168,31 @@ it, `scripts/replay_live.py` replays live blocks under the new code and compares
 hash the validators signed.
 
 **Live (October 19, 2026).** The code was rolled out first with the upgrade unscheduled. The rollout went one
-host at a time, with no downtime and all five validators signing. Replaying 1,020 live blocks under it,
+host at a time. The chain stayed live with every validator signing, and paid conversations kept settling. One
+owner was down for about ten minutes: the clean-room owner of shard 2, which runs outside systemd, failed to
+restart on the first attempt. The other owner of shard 2 kept serving that shard meanwhile. Replaying 1,020 live blocks under it,
 including paid conversations, gave identical state roots. The upgrade then activated at block **822,000**. All
 five validators committed the same state root after it. Membership was founded with the three active owners,
 and the three grown units, including the served G2, moved into the durable registry. Against a copy of the
 live state after activation, the audit's attack fails: newly bonded owners serve, but they get no vote.
+
+**Follow-up review (October 19, 2026).** A second, targeted review confirmed the fixes and the activation. It
+found three gaps, all now fixed with regression tests:
+- **Proof retries missed the real RPC error.** The real RPC rejection bypassed the retry handler, so a proof was
+  retried without being delivered again. The bundle is now delivered before every attempt, the real errors
+  are handled, and a submission whose reply is lost is never resubmitted.
+- **Cold machines lacked continuation units.** A fresh machine could not obtain the unit a recipe continues
+  from. Units are now resolved by content: from pinned released files, or rebuilt from a grown unit's
+  committed state. Contributors and validators set this up themselves. G2's continuation unit resolves cold
+  from the live network.
+- **Light-client reads had no freshness check.** A genuinely signed but old state was accepted as current. A
+  verified state's next header must now be at most two minutes old, and never below the highest height this
+  machine already verified, which survives restarts.
+
+**What this pilot is.** Open compute participation with admitted governance. Anyone can run a node, bond,
+serve, audit, train and be paid. Voting on the model, the validators and the levy requires admission by the
+existing members. That is a deliberate choice for a test-token pilot. It is not permissionless governance,
+and its security against Sybil attacks rests on the members' admission decisions.
 
 **What the audit's verdict still holds against.** These fixes make an operator pilot safe to run. They do
 not make the network ready for a general public beta. That still needs:

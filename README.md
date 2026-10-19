@@ -11,7 +11,8 @@ is required.
 
 **Live now (October 18, 2026).**
 - **Chain:** `neuroshard-assistant-1`, 5 CometBFT validators. It keeps running with any one of them
-  down. Clients verify every state they read against the validators' signatures.
+  down. Clients verify every state they read against the validators' signatures and refuse old or
+  rolled-back ones.
 - **Serving:** the Granite 4.1 3B model, split across owner machines. Every reply is signed and
   audited, and a proven fault slashes the owner's bond.
 - **Governance:** owners vote on the served version, on validators and on the growth levy. No single
@@ -21,8 +22,8 @@ is required.
   document requests, G2 answers 294; the base model answers 214 (two sets, each paired p ≈ 1e-6).
 - **Joining:** anyone can join as validator, owner, auditor or contributor with
   [one command](docs/OPERATORS.md). A bare machine did so from the public instructions alone.
-  Bonding lets an owner serve and earn; voting on the model and validators needs admission by the
-  existing members.
+  This is open compute participation with admitted governance: bonding lets an owner serve and earn,
+  while voting on the model and validators needs admission by the existing members.
 
 **Status: operator pilot.** An independent audit (October 18, 2026) found integrity defects that made an
 open beta unsafe. They are fixed and tested ([audit and fixes](docs/DECENTRALIZATION.md#october-18-2026-beta-readiness-audit-and-fixes));
