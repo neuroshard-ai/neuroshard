@@ -430,3 +430,9 @@ def test_the_bundled_descriptor_pins_genesis_and_validators_without_changing_the
     assert len(d['genesis_sha256']) == 64 and len(d['trusted_validators']) >= 4
     assert network.model_root(d) == network.model_root({k: v for k, v in d.items()
                                                          if k not in ('genesis_sha256', 'trusted_validators')})
+
+
+def test_the_live_chain_activates_upgrade_1_at_its_scheduled_height():
+    live = {'chain_id': 'neuroshard-assistant-1'}
+    assert not ledger.upgraded({**live, 'height': 821_999})
+    assert ledger.upgraded({**live, 'height': 822_000})
