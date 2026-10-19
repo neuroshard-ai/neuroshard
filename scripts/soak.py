@@ -301,7 +301,7 @@ def ssh(host, command, timeout=60):
         result = subprocess.run(['ssh', '-i', os.path.expanduser('~/.ssh/id_ed25519'), '-o', 'BatchMode=yes',
                                  '-o', 'ConnectTimeout=15', f'ubuntu@{host}', command],
                                 capture_output=True, text=True, timeout=timeout)
-        return result.returncode, (result.stdout + result.stderr).strip()[-300:]
+        return result.returncode, (result.stdout + result.stderr).strip()  # callers parse it; logs trim it
     except subprocess.TimeoutExpired:
         return 'timeout', ''
 
@@ -349,7 +349,7 @@ def fault(out, name, hold, public_rpc=None, attempts=6, wait=600):
                                    f'--collect systemctl start {unit} && sudo systemctl stop {unit}')
         after = service_state(host, unit)
         log(out, 'fault', name=name, phase='inject', host=host, unit=unit, exit=code, before=before, after=after,
-            output=text)
+            output=text[-300:])
         expected = 'active' if restart else 'inactive'
         if code != 0 or after != expected:
             log(out, 'incident', what='fault injection not observed', name=name, exit=code, state=after)
@@ -363,7 +363,7 @@ def fault(out, name, hold, public_rpc=None, attempts=6, wait=600):
                 tries += 1
                 code, text = ssh(host, f'sudo systemctl start {unit}')  # its result is kept, never masked
                 log(out, 'fault', name=name, phase='restore-attempt', host=host, unit=unit, exit=code, attempt=tries,
-                    output=text)
+                    output=text[-300:])
                 state = service_state(host, unit)
             if state == 'active':
                 if unit == 'neuroshard-validator' and public_rpc:

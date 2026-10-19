@@ -195,3 +195,12 @@ def test_a_rejected_connection_is_reconciled_through_its_account(tmp_path):
     assert record['job'] is None and record['opened'] == [job]
     assert pending.items[0]['job'] == job and pending.items[0]['transport_ok'] is False
     assert soak.Pending(tmp_path / 'pending.json').items[0]['job'] == job  # survives a restart
+
+
+def test_a_long_status_reply_is_parsed_in_full():
+    status = json.dumps({'result': {'node_info': {'other': 'x' * 2000}, 'validator_info': {'address': 'AB'},
+                                    'sync_info': {'catching_up': False, 'latest_block_height': '100'}}})
+    with patch.object(soak.subprocess, 'run', return_value=subprocess.CompletedProcess(['ssh'], 0, status, '')), \
+            patch.object(soak, 'rpc', return_value={'signed_header': {'commit': {'signatures': [
+                {'validator_address': 'AB', 'block_id_flag': 2}]}}}):
+        assert soak.validator_recovered('h', 'http://rpc') == (True, 'signing again at 98')
