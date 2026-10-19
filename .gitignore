@@ -248,3 +248,6 @@ website/playwright-report/
 docs/*.aux
 docs/*.out
 docs/*.synctex.gz
+
+# Paper drafts are written outside the repository
+paper/
