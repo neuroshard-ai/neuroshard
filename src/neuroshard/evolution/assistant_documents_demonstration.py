@@ -67,7 +67,7 @@ def texts(case, version=2, query='message'):
     """
     if case['split'] not in TRAINING:
         raise ValueError('demonstrations are written for training cases only')
-    if version not in (2, 3):
+    if version not in (1, 2, 3):
         # /4 demonstrations need revision-selection cases and calls this solver does not write. Refuse rather than
         # emit calls the interface rejects (DESIGN_LATEST_REVISION.md; review of PR #124).
         raise ValueError(f'demonstrations are not defined for workspace-documents/{version}')

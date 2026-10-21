@@ -291,3 +291,19 @@ def test_v4_demonstrations_are_refused_rather_than_silently_invalid():
             'turns': [{'user': 'q', 'expected': {'facts': ['x'], 'source_ids': ['doc-00000001']}}]}
     with pytest.raises(ValueError, match='not defined for workspace-documents/4'):
         demonstration.texts(case, 4)
+
+
+def test_v1_v2_v3_demonstrations_still_generate_and_only_v4_is_refused():
+    """The /4 guard must not reject the earlier versions' demonstrations (review of 048f034)."""
+    from neuroshard.evolution import assistant_documents_data as data
+    from neuroshard.evolution import assistant_documents_demonstration as demonstration
+    from neuroshard.evolution.modular_reference_execution import ROOT, read
+
+    case = data.cases('train')[0]
+    baseline = read(ROOT / 'config/experiments/assistant-general-policy-documents.json')
+    assert baseline['interface'] == 'workspace-documents/1'
+    assert demonstration.demonstration(case, baseline)['passed'] is True  # the repository's own /1 baseline
+    for version in (1, 2, 3):
+        assert demonstration.texts(case, version)
+    with pytest.raises(ValueError, match='not defined for workspace-documents/4'):
+        demonstration.texts(case, 4)
