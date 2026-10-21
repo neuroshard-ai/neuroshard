@@ -1,6 +1,7 @@
 # Design: admission across shards, bounded waiting, safe retry (revision 3)
 
-Status: **approved (October 21 review of revision 3.1); implemented in the admission PR, under review.** Targets the
+Status: **approved (October 21 review of revision 3.1); implemented in the admission PR, revised after its
+implementation review (notes 8–10).** Targets the
 release after `pilot-1`; the frozen release and the running soak are unchanged. Where the implementation departs
 from this text, it is listed under [Implementation notes](#implementation-notes).
 
@@ -277,17 +278,27 @@ admission and serving handshake, with the model work stubbed out.
 
 Where the implementation differs from the text above:
 
-1. **READY keeps its exact legacy form.** An old client accepts only an exact READY, so READY carries no generation
-   and no signature. Generations are enforced on the owner, which closes (shuts down) the superseded connection
-   before sending READY on the new one, and accepts work only on the current generation's connection. The BUSY and
-   REFUSED replies to a HELLO are signed by the log key.
+1. **READY keeps its exact legacy form for an old client only.** A reserved client's HELLO carries a fresh admission
+   attempt (note 8), and its READY is signed by the log key and echoes that attempt. An old client's HELLO gets the
+   exact legacy READY, carrying no generation and no signature. Generations are enforced on the owner, which closes
+   (shuts down) the superseded connection before sending READY on the new one, and accepts work only on the current
+   generation's connection. The BUSY and REFUSED replies to a HELLO are signed by the log key.
 2. **Legacy mode is explicit.** Silence is never taken as "legacy", and nothing else proves an owner is legacy, so
    legacy mode runs only when the user asks for it (`neuroshard assistant chat --legacy-admission`) and is reported.
    In the default reserved mode, a shard with no capable owner stays busy until the deadline, and nothing is funded.
-3. **The nonce's consumer is found in committed blocks.** The ledger emits no events to search an account's
-   transactions by nonce, so resolution scans the blocks from the height recorded before broadcast, and counts only a
-   transaction that executed (a failed one leaves the nonce unchanged). If that scan finds the turn's own
-   transaction while the index lags, the turn is `funded`.
+3. **Funding is resolved from verified ledger state only** (supersedes the `tx`-index and block-scan steps of §1).
+   CometBFT's `tx`, `block` and `block_results` RPCs are not authenticated against the validators, so none of them
+   decides an outcome. Resolution reads the light-client-verified state:
+   - the job is open or has a result: `funded`;
+   - the account nonce has not passed the envelope's: not executed yet, so the same envelope is broadcast again.
+     An index reporting it failed is only a hint. If it persists, the client consumes the nonce with a 1-unit
+     self-transfer, so whichever transaction executes, the outcome becomes provable from verified state;
+   - the nonce has passed, the job is absent, and no result recorded since the broadcast can have been evicted
+     (results drop oldest first, `max_results`): `unfunded`;
+   - the nonce has passed, the job is absent, and results may have been evicted: **`lapsed`**. If the job ever
+     existed it is already closed, settled or refunded at expiry, and nothing more can happen to its escrow. It
+     is never reported `unfunded`.
+   A read that cannot be verified leaves the turn `unknown`.
 4. **An earlier turn that was funded but not served is left to expire.** A restarted client resolves it, reports it,
    and marks it `abandoned`; its escrow is refunded in full at expiry. The session key is not persisted, so the job
    is not resumed.
@@ -298,3 +309,20 @@ Where the implementation differs from the text above:
 7. **Test 10** is run locally (four concurrent clients, one owner per shard): each is served or reports busy with
    nothing funded, and the conservation invariant is asserted on every block. The rerun of the soak's burst workload
    on the live network still has to be done with a release that includes this change.
+
+Changes after the October 21 review of the implementation (`test_admission_review.py`):
+
+8. **HOLD carries the unsigned transaction** (its body and signer), not the signed envelope. The owner derives the
+   job ID (`transaction_id` excludes the signature) and checks the signer, owner list and session key, but it
+   cannot broadcast the funding. Only the client broadcasts, after every HOLD succeeded. A failed HOLD is abandoned
+   only once verified state shows the envelope's nonce unconsumed. Otherwise the same operation is resolved, and
+   another job is never funded for the turn.
+9. **A reserved HELLO is a fresh admission attempt.** It is signed by the session key and carries an expiry and
+   challenge, which pass through the owner's replay cache. It is bound to the job, rank, owner and live
+   reservation. Only such an attempt admits a reserved job or supersedes an admitted generation. A legacy HELLO
+   (no attempt) is admitted only when this owner holds no lease for the job and has never admitted it. A captured
+   HELLO, replayed whole or stripped to its legacy form, therefore never replaces a connection. Old clients still
+   work through the direct legacy path.
+10. **A job starts on its first complete work frame.** After READY, the owner reads one whole CONTROL command frame
+    within what remains of the idle budget. Only then does it write the `started` record and execute. A partial
+    header, a partial payload or slow bytes stay idle time. When the lease lapses, the connection is closed.

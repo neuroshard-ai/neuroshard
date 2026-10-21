@@ -86,7 +86,7 @@ def test_an_idle_unauthenticated_connection_does_not_block_a_real_user(tmp_path)
     owner.gate = admission.Gate(1, 'owner', tmp_path, None, time.time)
     owner.ticked = time.monotonic() + 3600
     accepted = []
-    def serve(connection, body, job, gen, progress):
+    def serve(connection, body, job, gen, progress, attempt=None):
         accepted.append(body['job_id'])
         relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': 1}))
     owner.serve_authenticated = serve

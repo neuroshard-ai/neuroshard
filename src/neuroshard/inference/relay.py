@@ -147,6 +147,42 @@ def signature_from(payload):
     return bytes(payload)
 
 
+class Prefixed:
+    """A connection whose first bytes were already read (and validated): they are returned again, then the socket."""
+
+    def __init__(self, sock, prefix):
+        self.sock, self.prefix = sock, bytes(prefix)
+
+    def recv_into(self, view, size=0):
+        if self.prefix:
+            count = min(size or len(view), len(self.prefix))
+            view[:count] = self.prefix[:count]
+            self.prefix = self.prefix[count:]
+            return count
+        return self.sock.recv_into(view, size)
+
+    def recv(self, size, flags=0):
+        if self.prefix:
+            chunk, self.prefix = self.prefix[:size], self.prefix[size:]
+            return chunk
+        return self.sock.recv(size, flags)
+
+    def __getattr__(self, name):
+        return getattr(self.sock, name)
+
+
+def first_command(sock, deadline):
+    """The first work frame of a job, read completely before ``deadline`` (monotonic): its raw bytes.
+
+    A partial header or payload is not a command: it raises once the deadline passes, so slow or incomplete input
+    stays idle time. The frame must be a CONTROL frame of exactly one command (as every serving loop begins)."""
+    header = read_exactly(sock, HEADER.size, deadline)
+    kind, size = HEADER.unpack(header)
+    if kind != CONTROL or size != COMMAND.size:
+        raise ValueError('the first work frame is not a serving command')
+    return bytes(header) + bytes(read_exactly(sock, size, deadline))
+
+
 class OwnerRelay:
     """An owner's side of one job: every command and message over its connection to the user's device."""
 
@@ -282,31 +318,38 @@ class OwnerBusy(ConnectionError):
         self.reply = reply
 
 
-def dial(endpoint, body, session_key, timeout=TIMEOUT):
+def dial(endpoint, body, session_key, timeout=TIMEOUT, admission=None, accept_ready=None):
     """Open one owner's link of a job from the user's device, proving it holds the job's session key.
 
-    An owner that cannot admit the job answers with a signed reply (``admission_messages.REPLY``) instead of
-    READY; that raises ``OwnerBusy`` carrying it, for the caller to verify and back off."""
+    With ``admission`` (a fresh session-signed attempt, ``admission_messages``), the owner's READY is signed and
+    must answer that attempt (``accept_ready``). An owner that cannot admit the job answers with a signed reply
+    (``admission_messages.REPLY``) instead of READY; that raises ``OwnerBusy`` carrying it, for the caller to verify
+    and back off."""
     host, port = ledger.endpoint(endpoint).rsplit(':', 1)
     sock = socket.create_connection((host, int(port)), timeout=timeout)
     try:
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        return handshake(sock, body, session_key)
+        return handshake(sock, body, session_key, admission, accept_ready)
     except BaseException:
         sock.close()
         raise
 
 
-def handshake(sock, body, session_key):
+def handshake(sock, body, session_key, admission=None, accept_ready=None):
     """The user's side of a link's hello on a connected socket: returns it once the owner sent READY."""
-    send_frame(sock, HELLO, ledger.canonical({'hello': body, 'signature': session_key.sign(ledger.canonical(body)).hex()}))
+    message = {'hello': body, 'signature': session_key.sign(ledger.canonical(body)).hex()}
+    if admission is not None:
+        message['admission'] = admission
+    send_frame(sock, HELLO, ledger.canonical(message))
     kind, size = HEADER.unpack(read_exactly(sock, HEADER.size))
     if kind == ADMISSION_REPLY and size <= 16384:
         raise OwnerBusy(json.loads(read_exactly(sock, size)))
     if kind != READY or size > MAX_HELLO:
         raise ValueError(f'expected a {READY!r} serving frame, received {kind!r}')
     ready = json.loads(read_exactly(sock, size))
-    if ready != {'format': FORMAT, 'rank': body['rank']}:
+    if admission is not None:
+        accept_ready(ready)  # raises unless the owner signed a READY for this very attempt
+    elif ready != {'format': FORMAT, 'rank': body['rank']}:
         raise ValueError('the owner did not accept this link')
     return sock
 
@@ -315,12 +358,14 @@ def answer(sock, rank, world, session_key_of, *, deadline=None, ready=True, mess
     """Accept one link as owner ``rank``: the hello must name this rank and be signed by the job's session key.
 
     ``session_key_of(chain_id, job_id)`` returns the session key the ledger registered for
-    that job, or raises if the job does not name this owner. Returns the hello.
+    that job, or raises if the job does not name this owner. Returns the hello. A reserved
+    client's hello also carries an ``admission`` attempt, which the caller verifies.
     """
     message = json.loads(receive_frame(sock, HELLO, MAX_HELLO, deadline)) if message is None else message
     body = message.get('hello') if isinstance(message, dict) else None
     if (not isinstance(body, dict) or set(body) != HELLO_FIELDS or body['format'] != FORMAT
-            or body['rank'] != rank or body['world'] != world or set(message) != {'hello', 'signature'}):
+            or body['rank'] != rank or body['world'] != world
+            or set(message) - {'admission'} != {'hello', 'signature'}):
         raise ValueError('invalid serving hello')
     key = session_key_of(body['chain_id'], body['job_id'])
     if not isinstance(message['signature'], str) or not ledger.ed25519_valid(key, ledger.canonical(body),

@@ -162,20 +162,25 @@ class Gate:
                           'charged_until': now, 'tag': ('idle', job_id), 'expires': expires, 'gen': None}
             return {'reservation': reservation, 'expires_in': self.lease['expires'] - now}
 
-    def hold(self, account, reservation, envelope, now=None):
-        """HOLD: the exact signed ``serve_open`` the client is about to broadcast, naming this owner."""
+    def hold(self, account, reservation, transaction, now=None):
+        """HOLD: the unsigned ``serve_open`` (body and signer) the client is about to sign-and-broadcast.
+
+        It carries no signature, so the owner can derive the job ID but never broadcast the funding itself."""
         with self.lock:
             now = self.clock() if now is None else now
             self.settle(now)
             lease = self.lease
             if lease is None or lease['reservation'] != reservation or lease['account'] != account or lease['funded']:
                 raise Refused('unknown', 'no live pre-funding reservation by that id')
-            body, signer = ledger.verify(envelope)
-            owners = body.get('owners')
-            if (signer != account or body.get('kind') != 'serve_open' or body.get('session_key') != lease['session_key']
+            if not isinstance(transaction, dict) or set(transaction) != {'body', 'public_key'} \
+                    or not isinstance(transaction['body'], dict):
+                raise Refused('invalid', 'a hold carries the unsigned transaction: its body and signer only')
+            body, owners = transaction['body'], transaction['body'].get('owners')
+            if (transaction['public_key'] != account or body.get('kind') != 'serve_open'
+                    or body.get('session_key') != lease['session_key'] or type(body.get('nonce')) is not int
                     or not isinstance(owners, list) or len(owners) < self.rank or owners[self.rank - 1] != self.public):
                 raise Refused('invalid', 'the held transaction is not this reservation\'s job for this owner')
-            job_id = ledger.transaction_id(envelope)
+            job_id = ledger.transaction_id(transaction)
             if job_id in self.credited or self.view.job(job_id) is not None:
                 raise Refused('invalid', 'that job is already funded: re-reserve it as a funded job')
             lease.update(state='funding', job_id=job_id, visible_at=None)
@@ -227,20 +232,36 @@ class Gate:
             write_atomic(self.directory / 'credited.json', sorted(self.credited))
 
     # -- serving -----------------------------------------------------------------------------------------------
-    def admit(self, job_id, job, source, closer, now=None):
+    def admit(self, job_id, job, source, closer, reservation=None, now=None):
         """A HELLO for ``job`` (open on chain, session signature verified): the generation it is admitted at.
 
-        A HELLO while the job is already admitted supersedes the earlier generation, whose connection is closed
-        first. A job this owner started is never admitted again. With no lease and a free slot, a client that does
-        not reserve (an older client) is admitted directly, still within the budget."""
+        ``reservation`` is the reservation a reserved client's fresh, session-signed admission attempt names (the
+        caller has verified it and checked it against replay). Only such an attempt for the live lease admits a
+        reserved job, and only it supersedes an admitted generation, whose connection is closed first.
+
+        A legacy HELLO (``reservation=None``, an older client that does not reserve) carries nothing fresh, so a
+        captured one could be replayed: it is admitted only directly, with no lease and no earlier generation of
+        the job here, still within the budget. It never replaces a connection. A job this owner started is never
+        admitted again."""
         with self.lock:
             now = self.clock() if now is None else now
             self.settle(now)
             if job_id in self.started:
                 raise Refused('started', 'this owner started that job before')
+            lease = self.lease
+            if reservation is None:
+                if lease is not None and lease.get('job_id') == job_id or job_id in self.gens:
+                    raise Refused('invalid', 'this job is reserved: a fresh signed admission attempt is required')
+                if lease is not None:
+                    raise self.busy(now)
+            elif lease is None or lease.get('job_id') != job_id:
+                if lease is not None:
+                    raise self.busy(now)
+                raise Refused('unknown', 'no live reservation for that job: re-reserve it')
+            elif lease['reservation'] != reservation:
+                raise Refused('unknown', 'the attempt names another reservation')
             if self.lease is None or self.lease.get('job_id') != job_id or self.lease['state'] != 'funding':
                 self.funded(job_id, job)
-            lease = self.lease
             if lease is None:
                 keys = (('account', job['user']), ('address', source))
                 self.bounded(keys, now, 1)
@@ -248,8 +269,6 @@ class Gate:
                                       'session_key': job['session_key'], 'job_id': job_id, 'funded': True,
                                       'charging': True, 'charged_until': now, 'tag': ('idle', job_id),
                                       'expires': now, 'gen': None}
-            elif lease.get('job_id') != job_id:
-                raise self.busy(now)
             if lease['state'] == 'funding' and lease.get('visible_at') is None:
                 self.visible(lease, job, now)
             elif lease['account'] != job['user'] or lease['session_key'] != job['session_key']:

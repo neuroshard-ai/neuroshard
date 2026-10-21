@@ -23,6 +23,27 @@ MAX_CONTROL = 16384
 LIFETIME = 60  # seconds a signed request stays valid
 REQUESTS = ('caps', 'reserve', 'hold', 'release')
 REPLIES = ('caps', 'offer', 'busy', 'refused', 'held', 'released', 'ready')
+TRANSACTION_FIELDS = {'body', 'public_key'}  # a HOLD's transaction: never its signature
+
+
+def unsigned(envelope):
+    """What a HOLD discloses of the signed ``serve_open``: its body and signer, from which the owner derives the job
+    ID (``ledger.transaction_id`` excludes the signature), but not the signature that would let it broadcast."""
+    return {'body': envelope['body'], 'public_key': envelope['public_key']}
+
+
+def hello_attempt(message, chain_id, now, session_key, job_id, rank, owner):
+    """A reserved HELLO's admission attempt: session-signed, fresh, and bound to this job, rank and owner.
+
+    Returns its body (``challenge``, ``reservation``); the caller passes it through its ``Replays``."""
+    kind, body, (signer, _) = opened(message, chain_id, now)
+    if kind != 'hello' or signer != 'key' or not signed_by(message, session_key):
+        raise ValueError("the admission attempt is not signed by the job's session key")
+    if body.get('job_id') != job_id or body.get('rank') != rank or body.get('owner') != owner:
+        raise ValueError('the admission attempt names another job, rank or owner')
+    if not isinstance(body.get('reservation'), str):
+        raise ValueError('the admission attempt names no reservation')
+    return body
 
 
 def _body(kind, chain_id, fields, clock):

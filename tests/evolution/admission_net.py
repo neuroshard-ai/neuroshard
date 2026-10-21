@@ -159,7 +159,7 @@ class Net:
         return send
 
     def dial(self, address):
-        def connect(endpoint, body, session_key, timeout=10):
+        def connect(endpoint, body, session_key, timeout=10, admission=None, accept_ready=None):
             owner = self.endpoints[endpoint]
             mine, theirs = socket.socketpair()
             mine.settimeout(timeout)
@@ -167,7 +167,7 @@ class Net:
             thread.start()
             self.threads.append(thread)
             try:
-                return relay.handshake(mine, body, session_key)
+                return relay.handshake(mine, body, session_key, admission, accept_ready)
             except BaseException:
                 mine.close()
                 raise
@@ -180,6 +180,28 @@ class Net:
                                          clock=self.clock, sleep=self.sleep, wall=self.clock,
                                          request=self.request(address), dial=self.dial(address), index=index,
                                          progress=lambda *_: None, **kwargs)
+
+    def rehello(self, job_id, rank, session_key, address='10.0.0.1', owner=None):
+        """A reserved client's HELLO for a funded job: a fresh session-signed attempt naming the live lease
+        (re-reserving the job first when this owner holds no lease for it)."""
+        from neuroshard.assistant import admission_messages as messages
+
+        owner = owner or self.owner(rank)
+        endpoint = next(e for e, o in self.endpoints.items() if o is owner)
+        lease = owner.gate.lease
+        if lease is not None and lease.get('job_id') == job_id:
+            reservation = lease['reservation']
+        else:
+            reserve = messages.by_key(session_key, 'reserve', self.chain.chain_id, self.clock, rank=rank,
+                                      owner=owner.public, job_id=job_id)
+            reply = self.request(address)(endpoint, reserve)
+            if reply['body']['kind'] != 'offer':
+                raise relay.OwnerBusy(reply)
+            reservation = reply['body']['reservation']
+        attempt = self.admitter(next(iter(self.accounts)), address).attempt(session_key, job_id, rank, owner.public,
+                                                                            reservation)
+        body = relay.hello(self.chain.chain_id, job_id, rank, SERVED.world, 4, 8)
+        return self.dial(address)(endpoint, body, session_key, **attempt)
 
     def turn(self, name, address='10.0.0.1', wait=600, admitter=None):
         """Open one job for ``name``: (job_id, owners, sockets, session_key)."""

@@ -3,11 +3,13 @@
 1. CAPS: owners that advertise ``admission/1`` are selectable; silence is *unknown*, never legacy.
 2. RESERVE one capable owner per shard, in parallel. A busy shard is offered to another owner of that shard;
    if a shard still has none, every offer is released and the client backs off. Nothing is funded.
-3. HOLD every shard with the exact signed ``serve_open``, persisted first (``funding.Operations``), then broadcast
-   and resolve it from that record (``funding.fund``).
-4. HELLO every shard. If a lease was lost after funding, the *same* named owners are re-reserved for that job
-   (signed by its session key) until the job expires or the user's deadline passes; its escrow is refunded at
-   expiry. A turn never opens a second job.
+3. HOLD every shard with the *unsigned* ``serve_open`` (its body and signer: enough to derive the job ID, not to
+   broadcast it). The signed envelope is persisted first (``funding.Operations``), and only this client broadcasts
+   it, after every HOLD succeeded; it is resolved from that record (``funding.fund``).
+4. HELLO every shard with a fresh, session-signed admission attempt bound to the job, rank, owner and reservation;
+   the owner's READY echoes it, signed. If a lease was lost after funding, the *same* named owners are re-reserved
+   for that job until the job expires or the user's deadline passes; its escrow is refunded at expiry. A turn
+   never opens a second job.
 
 Legacy mode (fund first, as before) is used only when the caller asks for it, and it is reported.
 """
@@ -149,7 +151,7 @@ class Admitter:
     def recover(self):
         """Resolve earlier turns first; a funded one that was not served is reported, then refunded at expiry."""
         for record in funding.recover(self.index, self.operations, self.account.public, sleep=self.sleep,
-                                      clock=self.clock):
+                                      clock=self.clock, supersede=self.supersede):
             if record['state'] == funding.FUNDED:
                 self.operations.mark(record, funding.ABANDONED)
                 self.progress(f"An earlier turn's job {record['job_id'][:16]} was funded but not served; "
@@ -176,7 +178,8 @@ class Admitter:
                                   'nothing funded, waiting')
                 if not backoff.wait(retry_after):
                     raise NetworkBusy('the network stayed busy until the deadline; nothing was funded')
-            record = funding.fund(self.index, self.operations, record, sleep=self.sleep, clock=self.clock)
+            record = funding.fund(self.index, self.operations, record, sleep=self.sleep, clock=self.clock,
+                                  supersede=self.supersede)
             if record['state'] != funding.FUNDED:
                 raise RuntimeError(f"the job was not funded ({record['state']}: {record.get('log')})")
         owners = [(offers[s][0], offers[s][1]) for s in sorted(offers)]
@@ -185,23 +188,47 @@ class Admitter:
         return record['job_id'], owners, sockets
 
     def held(self, offers, state, request_root, session_public, budget):
-        """Persist the exact envelope, then HOLD every shard; None (all released, nothing broadcast) on a refusal."""
+        """Persist the exact envelope, then HOLD every shard with its *unsigned* transaction; None on a refusal.
+
+        An owner learns the job ID and the fields it checks (signer, owners, session key) but never the signature,
+        so it cannot broadcast the job's funding. Only the client broadcasts it, after every HOLD succeeded. A
+        refused or lost HOLD therefore leaves nothing to fund; that is still checked against verified state (the
+        nonce is unconsumed) before the record is abandoned, and any other answer resolves the same operation."""
+        since = self.index.height()
         envelope = self.account.sign(self.chain.chain_id, self.index.account_nonce(self.account.public), 'serve_open',
                                      model_root=self.served.root, owners=[offers[s][0] for s in sorted(offers)],
                                      request_root=request_root, session_key=session_public, price=self.price,
                                      positions=budget)
         record = self.operations.prepare(envelope, session_public, request_root, [offers[s][0] for s in sorted(offers)],
                                          {str(s): offers[s][2] for s in offers})
+        record = self.operations.mark(record, funding.PREPARED, since_height=since)
+        transaction = messages.unsigned(envelope)
         calls = [lambda s=s, o=o, e=e, r=r: self.ask(o, e, messages.by_account(
-            self.account, self.chain.chain_id, 'hold', self.wall, rank=s, owner=o, reservation=r, envelope=envelope))
+            self.account, self.chain.chain_id, 'hold', self.wall, rank=s, owner=o, reservation=r,
+            transaction=transaction))
             for s, (o, e, r) in sorted(offers.items())]
         results = parallel(calls)
         if all(status == 'ok' and reply['kind'] == 'held' and reply.get('job_id') == record['job_id']
                for status, reply in results):
             return record
         self.release(offers)
-        self.operations.mark(record, funding.ABANDONED, log='a shard refused the hold; never broadcast')
+        try:
+            unconsumed = self.index.account_nonce(self.account.public) <= record['nonce']
+        except (OSError, ValueError, KeyError):
+            unconsumed = False
+        if not unconsumed:  # cannot show the envelope is dead: resolve this same operation, never fund another
+            self.progress('A shard did not confirm its hold and the account nonce moved; resolving this turn')
+            return record
+        self.operations.mark(record, funding.ABANDONED,
+                             log='a shard refused the hold; the signed envelope never left this device')
         return None
+
+    def supersede(self, nonce):
+        """Consume ``nonce`` with a 1-unit self-transfer, so a reportedly failed funding becomes provably dead."""
+        envelope = self.account.sign(self.chain.chain_id, nonce, 'transfer', to=self.account.public, amount=1)
+        admitted = self.index.rebroadcast(envelope)
+        if admitted.get('code'):
+            raise ValueError(admitted.get('log') or 'the superseding transfer was refused')
 
     def admit(self, record, offers, session_key, hello, deadline):
         """READY from every named owner. After a lost lease, the *same* owners are re-reserved for this job, all
@@ -216,9 +243,10 @@ class Admitter:
             sockets = {}
             if not missing:
                 for shard in sorted(offers):
-                    owner, endpoint, _ = offers[shard]
+                    owner, endpoint, reservation = offers[shard]
                     try:
-                        sockets[shard] = self.dial(endpoint, hello(job_id, shard), session_key)
+                        sockets[shard] = self.dial(endpoint, hello(job_id, shard), session_key,
+                                                   **self.attempt(session_key, job_id, shard, owner, reservation))
                     except relay.OwnerBusy as busy:
                         body = messages.answer(busy.reply, owner, self.chain.chain_id, self.wall)
                         if body['kind'] == 'refused' and body.get('reason') == 'started':
@@ -239,6 +267,20 @@ class Admitter:
             self.progress(f"Funded, waiting for shard{'s' if len(missing) > 1 else ''} {', '.join(map(str, missing))}")
             if not backoff.wait(retry_after):
                 raise NotServed(job_id, expires, 'the deadline passed')
+
+    def attempt(self, session_key, job_id, shard, owner, reservation):
+        """A fresh admission attempt for one HELLO, and the check that the owner's READY answers *this* attempt."""
+        admission = messages.by_key(session_key, 'hello', self.chain.chain_id, self.wall, rank=shard, owner=owner,
+                                    job_id=job_id, reservation=reservation)
+
+        def accept_ready(message):
+            body = messages.answer(message, owner, self.chain.chain_id, self.wall, kinds=('ready',))
+            if (body.get('attempt') != admission['body']['challenge'] or body.get('job_id') != job_id
+                    or body.get('rank') != shard):
+                raise ValueError('the READY answers another admission attempt')
+            return body
+
+        return {'admission': admission, 'accept_ready': accept_ready}
 
     @staticmethod
     def hang_up(sockets):

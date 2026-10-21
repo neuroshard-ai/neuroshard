@@ -37,28 +37,17 @@ def test_4_a_lost_confirmation_then_a_restart_resolves_to_the_one_job(tmp_path):
     finish(sockets)
 
 
-def test_4_a_commit_between_not_found_and_nonce_advanced_is_funded(tmp_path):
+def test_4_a_commit_between_two_resolution_reads_is_funded(tmp_path):
     net = Net(tmp_path)
     operations, record = prepared(net, 'alice')
     record = operations.mark(record, funding.BROADCAST, since_height=net.chain.s['height'])
-    real, calls = index(net), []
-
-    class Racing:
-        def lookup(self, key):
-            calls.append('lookup')
-            if len(calls) == 1:  # not found yet; the block commits before the nonce read
-                found = None
-                real.rebroadcast(record['envelope'])
-                net.chain.mine()
-                return found
-            return real.lookup(key)
-
-        account_nonce, rebroadcast, nonce_consumer = real.account_nonce, real.rebroadcast, real.nonce_consumer
-
-    assert funding.resolve(Racing(), operations, record)['state'] == funding.FUNDED
+    record = funding.resolve(index(net), operations, record)  # not executed yet: the same envelope is (re)sent
+    assert record['state'] == funding.BROADCAST
+    net.chain.mine()  # it commits before the next read
+    assert funding.resolve(index(net), operations, record)['state'] == funding.FUNDED
 
 
-def test_4_delayed_indexing_is_found_in_blocks_or_stays_unknown_never_unfunded(tmp_path):
+def test_4_delayed_indexing_is_funded_from_verified_state_or_stays_unknown_never_unfunded(tmp_path):
     net = Net(tmp_path)
     operations, record = prepared(net, 'alice')
     record = operations.mark(record, funding.BROADCAST, since_height=net.chain.s['height'])
@@ -73,7 +62,11 @@ def test_4_delayed_indexing_is_found_in_blocks_or_stays_unknown_never_unfunded(t
     net.chain.mine()
     net.chain.unindexed.add(record['tx_hash'])
     blind = index(net)
-    blind.nonce_consumer = lambda *args: None  # block history unavailable too
+
+    def unverified():
+        raise OSError('no verified state: the light client cannot reach a validator')
+
+    blind.verified_state = unverified
     record = funding.resolve(blind, operations, record)
     assert record['state'] == funding.UNKNOWN
     with pytest.raises(funding.Unresolved):
@@ -97,8 +90,7 @@ def test_4_a_nonce_consumed_by_another_transaction_is_unfunded(tmp_path):
 def test_5_a_lost_ready_is_served_at_the_next_generation_and_the_old_link_is_dead(tmp_path):
     net = Net(tmp_path)
     job_id, owners, sockets, session_key = net.turn('alice')
-    hello = relay.hello(net.chain.chain_id, job_id, 1, SERVED.world, 4, 8)
-    again = net.dial('10.0.0.1')(owners[0][1], hello, session_key)  # the client never saw READY: HELLO again
+    again = net.rehello(job_id, 1, session_key)  # the client never saw READY: a fresh attempt HELLOs again
     assert net.owner(1).gate.gens[job_id] == 2
     stale = sockets[1]
     stale.settimeout(5)
@@ -123,8 +115,7 @@ def test_6_a_crash_before_the_write_ahead_record_re_admits_and_after_it_never(tm
     assert job_id not in restarted.gate.started and restarted.gate.gens[job_id] == 1
     net.endpoints[owners[0][1]] = restarted
     finish(sockets)
-    hello = relay.hello(net.chain.chain_id, job_id, 1, SERVED.world, 4, 8)
-    link = net.dial('10.0.0.1')(owners[0][1], hello, session_key)
+    link = net.rehello(job_id, 1, session_key, owner=restarted)
     assert restarted.gate.gens[job_id] == 2
     relay.send_frame(link, relay.CONTROL, b'\0' * 16)
     wait_until(lambda: restarted.worked == [job_id])
@@ -134,7 +125,7 @@ def test_6_a_crash_before_the_write_ahead_record_re_admits_and_after_it_never(tm
     assert job_id in recovered.gate.started and job_id in recovered.served_jobs
     net.endpoints[owners[0][1]] = recovered
     with pytest.raises((relay.OwnerBusy, ValueError, ConnectionError)):
-        net.dial('10.0.0.1')(owners[0][1], hello, session_key)
+        net.rehello(job_id, 1, session_key, owner=recovered)
 
 
 def test_7_two_concurrent_turns_on_one_account_are_serialized(tmp_path):
@@ -170,7 +161,7 @@ def test_8_rotating_accounts_from_one_address_and_unbroadcast_holds_stay_charged
         try:
             offer = gate.reserve_new(net.accounts[name].public, '10.6.6.6', '33' * 32, NEURO)
             _, record = prepared(net, name)
-            gate.hold(net.accounts[name].public, offer['reservation'], record['envelope'])  # never broadcast
+            gate.hold(net.accounts[name].public, offer['reservation'], messages.unsigned(record['envelope']))
             funding.Operations(tmp_path / name).mark(record, funding.ABANDONED)
         except admission.Refused as error:
             assert error.reason == 'limit'
@@ -206,8 +197,7 @@ def test_13_one_funded_job_cannot_monopolize_its_owners_and_is_credited_once(tmp
         if reply['kind'] != 'offer':
             refusal = reply
             break
-        hello = relay.hello(net.chain.chain_id, job_id, 1, SERVED.world, 4, 8)
-        link = net.dial('10.0.0.1')(owners[0][1], hello, session_key)
+        link = net.rehello(job_id, 1, session_key)
         net.clock.now += 5
         idle += 5
         gate.release(reply['reservation'], job_id=job_id)  # release and re-reserve: the clock does not reset

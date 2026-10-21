@@ -811,8 +811,14 @@ class Owner:
             if body['hidden'] != self.config.hidden_size or body['max_tokens'] != self.served.max_tokens:
                 raise ValueError('the hello differs from this owner\'s model')
             job = self.job_of(body['chain_id'], body['job_id'])
+            attempt = None
+            if 'admission' in message:  # reserved admission: a fresh attempt, never a replayed one
+                attempt = messages.hello_attempt(message['admission'], self.chain.chain_id, int(self.gate.clock()),
+                                                 job['session_key'], body['job_id'], self.rank, self.public)
+                self.replays.check(attempt, int(self.gate.clock()))
             try:
-                gen = self.gate.admit(body['job_id'], job, address, lambda: hang_up(connection))
+                gen = self.gate.admit(body['job_id'], job, address, lambda: hang_up(connection),
+                                      reservation=None if attempt is None else attempt['reservation'])
             except admission.Busy as busy:
                 messages.reply(connection, self.log_key, self.chain.chain_id, 'busy', self.gate.clock,
                                retry_after=busy.retry_after)
@@ -825,7 +831,7 @@ class Owner:
             connection.close()
             return None
         try:
-            return self.serve_authenticated(connection, body, job, gen, progress)
+            return self.serve_authenticated(connection, body, job, gen, progress, attempt)
         except Exception as error:
             progress(f'Owner job failed: {type(error).__name__}: {error}')
             return None
@@ -863,7 +869,7 @@ class Owner:
             elif kind == 'reserve':
                 say('offer', **self.gate.reserve_funded(job_id, job, address))
             elif kind == 'hold' and signer == 'account':
-                say('held', **self.gate.hold(account, body.get('reservation'), body.get('envelope')))
+                say('held', **self.gate.hold(account, body.get('reservation'), body.get('transaction')))
             elif kind == 'release':
                 say('released', **self.gate.release(body.get('reservation'), account,
                                                     job_id if signer == 'key' else None))
@@ -878,23 +884,32 @@ class Owner:
         finally:
             connection.close()
 
-    def serve_authenticated(self, connection, body, job, gen, progress):
-        import select
-
+    def serve_authenticated(self, connection, body, job, gen, progress, attempt=None):
         import torch
+        from neuroshard.assistant import admission_messages as messages
         from neuroshard.evolution.sharded import granite_audit, granite_serving as serving
 
         torch.set_num_threads(self.threads)
         job_id = body['job_id']
-        relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': self.rank}))
-        # Admitted, not started: wait for the first work frame within what remains of the unproductive budget.
+        if attempt is None:  # an older client: READY keeps its exact legacy form
+            relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': self.rank}))
+        else:  # READY answers this attempt, signed by the log key
+            relay.send_frame(connection, relay.READY, ledger.canonical(messages.by_key(
+                self.log_key, 'ready', self.chain.chain_id, self.gate.clock, attempt=attempt['challenge'],
+                job_id=job_id, rank=self.rank, gen=gen)))
+        # Admitted, not started: the first *complete* work frame must arrive within what remains of the
+        # unproductive budget. Partial or slow input stays idle time; a lapsed lease closes this connection.
         idle = self.gate.idle_seconds(job_id, gen)
-        readable, _, _ = select.select([connection], [], [], idle) if idle > 0 else ([], [], [])
-        if not readable or not connection.recv(1, socket.MSG_PEEK):
+        if idle <= 0:
             return None
-        if not self.gate.start(job_id, gen):  # superseded by a later HELLO for the same job
+        try:
+            first = relay.first_command(connection, time.monotonic() + idle)
+        except (OSError, ValueError):
+            return None
+        if not self.gate.start(job_id, gen):  # superseded, or the budget ran out while the frame arrived
             return None
         self.served_jobs.add(job_id)
+        connection = relay.Prefixed(connection, first)
         connection.settimeout(PEER_TIMEOUT)
         with self.serving_lock:
             return self.work(connection, job_id, job, progress, granite_audit, serving)
