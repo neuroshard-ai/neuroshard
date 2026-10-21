@@ -3,6 +3,9 @@
 Status: **proposal for review, revised after the October 21 design review. Not implemented.** Targets the release
 after `pilot-1`; the frozen release and the running soak are unchanged.
 
+Revision 3.1 makes clear that escrow does not exempt idle occupancy from the time budget, and that the
+funding credit is applied once (test 13).
+
 Revision 3 (after the review of revision 2) corrects five contracts:
 - owners may be substituted only before funding;
 - an advanced nonce is never taken as proof that funding failed;
@@ -172,13 +175,18 @@ minutes.
 - **Reservation is charged as it is held.** Every second a lease is `offered`, or `funding` while the job is not
   yet visible on chain, is debited from the budget as it elapses.
 - **A hold is bounded by what remains.** Whatever the funding bound, a hold lasts at most the remaining budget.
-  An honest client whose confirmation outlasts that allowance loses the lease and re-reserves its funded job
-  (§2). Such a re-reservation is not charged.
-- **Verified funding is credited.** When the owner sees the held `tx_hash`'s job on chain naming it, that
-  hold's elapsed time is credited back. A hold for a transaction that was never broadcast, or for an invented
-  job, never appears and stays charged.
-- **Reconnects don't reset the clock.** `admitted` without a first work frame is also unproductive and charged.
-  A reconnect continues the same accounting.
+  An honest client whose confirmation outlasts that allowance loses the lease, then re-reserves its funded job
+  (§2) when the budget allows.
+- **Escrow is not an exemption.** Existing escrow removes the need for a second spendable balance; it does
+  not exempt idle occupancy from the time budget. Reservations, and admitted connections without work,
+  consume that budget across releases and reconnects.
+- **Funding is credited once.** When the owner first sees the held `tx_hash`'s job on chain naming it, the
+  elapsed time of that **original pre-funding hold** is credited back, once per job. Later idle time for the
+  same job is never credited: post-funding re-reservations, and admissions without a first work frame. A hold
+  for a transaction that was never broadcast, or for an invented job, never appears and stays charged.
+- **Reconnects don't reset the clock.** `admitted` without a first work frame is unproductive and charged. A
+  reconnect or a release continues the same accounting. Only a first work frame (`started`) ends idle
+  occupancy.
 - **Refused once exhausted.** When the budget is exhausted, RESERVE gets `REFUSED limit` until it recovers.
 
 **What this does not stop.**
@@ -250,6 +258,10 @@ does today, with a different message. The friendly explanation needs the new cli
     (as `Owner.job_of` does today), and the client resolves the job by its named owners or by expiry.
 12. **A post-funding re-reservation needs no second balance:** an account holding only the escrowed job is
     re-admitted.
+13. **One funded job cannot monopolize its owners:** the same funded job repeatedly RESERVEs and HELLOs
+    without sending work. Its total idle occupancy stays within the budget; RESERVE then gets
+    `REFUSED limit`, and other clients are admitted. The funding credit is applied once and cannot be replayed
+    by releasing and re-reserving.
 9. **Capability matrix**, with a dropped CAPS reply: unknown is never treated as legacy.
 10. **The soak burst workload rerun with this protocol:** every request is either served or reports busy before
     funding, and the ledger's conservation invariant holds after every transition.
