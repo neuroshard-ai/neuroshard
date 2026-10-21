@@ -327,9 +327,10 @@ Changes after the October 21 review of the implementation (`test_admission_revie
    - `held` is written only after every shard confirmed its HOLD, and it is the only state from which the client
      may broadcast;
    - `broadcast` is written before the signed bytes are sent, and marks the operation *exposed*.
-   Recovery after a restart never broadcasts. An unexposed operation (`prepared` or `held`) whose nonce is
-   unconsumed is `abandoned`: its signature never left the device, so it can never execute. An exposed one is
-   resolved under its own identity.
+   Recovery after a restart never authorizes a new broadcast. It may re-send the saved signed bytes of an
+   operation already marked `broadcast`: those may have left the device, so re-sending them changes nothing about
+   which job can exist. An unexposed operation (`prepared` or `held`) whose nonce is unconsumed is `abandoned`: its
+   signature never left the device, so it can never execute. An exposed one is resolved under its own identity.
 9. **A reserved HELLO is a fresh admission attempt.** It is signed by the session key and carries an expiry and
    challenge, which pass through the owner's replay cache. It is bound to the job, rank, owner and live
    reservation. Only such an attempt admits a reserved job or supersedes an admitted generation. A legacy HELLO
