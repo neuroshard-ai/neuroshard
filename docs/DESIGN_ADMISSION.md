@@ -1,7 +1,14 @@
-# Design: admission across shards, bounded waiting, safe retry (revision 2)
+# Design: admission across shards, bounded waiting, safe retry (revision 3)
 
 Status: **proposal for review, revised after the October 21 design review. Not implemented.** Targets the release
 after `pilot-1`; the frozen release and the running soak are unchanged.
+
+Revision 3 (after the review of revision 2) corrects five contracts:
+- owners may be substituted only before funding;
+- an advanced nonce is never taken as proof that funding failed;
+- a hold is charged against the budget while it is live;
+- pre-funding messages are signed with the account key;
+- a funded retry uses its existing escrow, and expiry refunds the full escrow.
 
 Revision 2 addresses five review points:
 - leases can lapse while funding confirms (A1);
@@ -34,6 +41,8 @@ can always fail after funding, so neither is true.
 | At most one funded job per user turn, across lost replies and client restarts | Fair or FIFO admission: concurrent clients race, as today |
 | A funded job that cannot be served is either served later or refunded by expiry | That refunds are immediate: expiry takes `job_blocks` (3,600 blocks, about an hour) |
 | An owner never executes work for a job twice, or from a superseded connection | Protection against an adversary with unlimited funded accounts (A4) |
+| A funded job is never reported unfunded | That every funding outcome resolves at once: it can stay `unknown` until the index shows it |
+| A replacement owner can be chosen before funding | Moving a funded job to a different owner: the ledger fixes its owner list |
 
 ## 1. Exactly-once funding (A2)
 
@@ -45,7 +54,8 @@ included. These two facts give exactly-once funding without reading open jobs.
 client home, is written atomically, and is never deleted before resolution. It holds:
 - `turn_id`, a random value chosen by the client;
 - the exact signed `serve_open` envelope, and its `nonce`;
-- `job_id = transaction_id(envelope)`;
+- `job_id = transaction_id(envelope)`, the ledger's ID for the job. This is distinct from `tx_hash`, the
+  SHA-256 of the canonical envelope that CometBFT indexes. Both are recorded and never confused;
 - `request_root`, the session key, the selected owners, and the reservation IDs;
 - `state ∈ {prepared, broadcast, funded, unfunded, served, abandoned}`.
 
@@ -53,16 +63,18 @@ client home, is written atomically, and is never deleted before resolution. It h
 resolves, so concurrent turns never share a nonce or guess at each other's jobs.
 
 **Resolution** uses only the persisted envelope:
-1. Query the transaction by hash (CometBFT `tx`, which `Chain.submit` already uses). If it is included, it is
+1. Query the transaction by `tx_hash` (CometBFT `tx`, which `Chain.submit` already uses). If it is included, it is
    `funded` or failed with its code. This holds even after the job is terminal and evicted from recent results,
    **provided validators keep their transaction index**. They do today, and `Chain.submit` depends on it. The
    design makes that index a stated requirement of the validator role.
 2. If it is not included, read the account's nonce:
    - if the nonce is still ≤ the envelope's, the transaction may be pending, so re-broadcast **the same
      envelope**, which is idempotent;
-   - if the nonce is now greater and step 1 found nothing, the nonce went to another transaction, so this
-     envelope can never be included and the turn is `unfunded`. Under the one-in-flight rule this happens only
-     if the user signed something else from that account, and it is recorded.
+   - if the nonce is now greater, the nonce has been consumed, but not necessarily by another transaction. The
+     transaction may have committed between the two reads, or the index may lag. So **query `tx_hash` again**.
+     If it is now found, the turn is `funded`. If it is still absent, the turn stays **unknown** until a
+     different transaction that consumed that nonce is identified: the account's transactions at that nonce,
+     from the index, at a height at which `tx_hash` is consistently absent. Only then is the turn `unfunded`.
 3. If the transaction index is unavailable or the answer is ambiguous, the state stays **unknown**. The
    client never signs a new `serve_open` for that turn; it shows the user "funding outcome unknown" and
    retries resolution. Absence of evidence is not permission to fund again.
@@ -88,11 +100,21 @@ A client restart reloads every unresolved operation and resolves it before start
 **If any shard is busy or refused before step 2,** the client RELEASEs the others. Nothing is funded, and it
 backs off (§5).
 
+**Owners are chosen only before funding.** The ledger fixes a funded job's ordered owner list, and
+`Owner.job_of` refuses a job that names another owner. So a busy or failed owner can be replaced by another
+owner of its shard only before `serve_open`. Reassigning a funded job would need a separate ledger, proof and
+payment design, which is out of scope.
+
 **If a lease is lost after funding** (it expired, the owner restarted, or confirmation outlasted it), the job
 is funded and keeps its identity. The client then:
-- re-RESERVEs that owner for **that `job_id`**, or tries another owner of the same shard;
+- re-RESERVEs **the same named owners** for that `job_id`;
 - retries with backoff until the job's own expiry, or the user's deadline if earlier;
-- if it never gets admission, lets the job expire, which refunds the escrow minus the transaction fee.
+- if any named owner never admits it, lets the job expire. Expiry returns the **full escrow**; the
+  transaction fee was charged separately when the job was opened, and is not deducted again.
+
+A post-funding RESERVE names the `job_id` and is signed by the job's session key. The owner checks on chain
+that the job is open, names this owner at this rank, and is the account's own. It does **not** require a
+second spendable balance: the job's escrow is its eligibility.
 
 The user is told "funded, waiting for shard N" or "not served, refund at block H". The client never opens a
 second job for the turn.
@@ -130,23 +152,46 @@ free → offered → funding → admitted(gen g) → started → committed
 **The abuse model.** An attacker reserves repeatedly and never funds, to keep owners unavailable. Ephemeral
 keys and socket limits do not stop this.
 
-**Chosen rule: only funded accounts may reserve, within an unproductive-time budget.**
-- RESERVE is signed by an account key, and the owner checks on chain that the account's balance covers the
-  price plus fees. Every reservation is tied to scarce funds, not a free key.
-- Each owner keeps a budget per account and per source address. Unproductive lease time (offered or funding
-  that ended without HELLO) is limited to 60 s in any 10 minutes. Beyond that, RESERVE gets `REFUSED limit`
-  until the budget recovers. A lease that leads to service costs nothing from the budget.
-- `offered` leases are not renewable. Only the `funding` state extends a lease, and it requires a signed HOLD
-  naming a job, which the owner can later check on chain.
-- An owner admits at most one live lease per slot. Leases are cheap to refuse, and the owner keeps no queue.
+**Chosen rule: only accounts that can pay may reserve, within an unproductive-time budget.**
 
-**What this does not stop:** an adversary with many funded accounts. On the test network the faucet's
-per-address rate limit bounds this. A value-bearing network makes it costly, since every account must hold
-the job's price. A refundable reservation deposit on chain would be stronger but adds a transaction per
-attempt. That option is recorded here, not chosen.
+**Authentication before funding.** There is no job on chain yet, so every pre-funding message (RESERVE, HOLD
+and RELEASE) is signed by the client's **account key**. Each message carries:
+- the reservation ID;
+- the operation's `tx_hash` (from HOLD onward);
+- the operation's session key;
+- the rank and owner key, an expiry and a nonce.
 
-**Test:** an adversary rotating many funded accounts and new keys, reserving and abandoning repeatedly. It
-must measure honest clients' admission rate against the budget.
+After funding, the owner checks that the funded job's account, session key and owner list match what was
+held. From HELLO onward, messages are signed by the job's session key.
+
+**Eligibility.** For a new job, the owner checks on chain that the account's spendable balance covers the
+price plus fees. For an existing funded job, the job's escrow is its eligibility (§2).
+
+**Accounting.** Per account and per source address, the budget is 60 s of unproductive slot time in any 10
+minutes.
+- **Reservation is charged as it is held.** Every second a lease is `offered`, or `funding` while the job is not
+  yet visible on chain, is debited from the budget as it elapses.
+- **A hold is bounded by what remains.** Whatever the funding bound, a hold lasts at most the remaining budget.
+  An honest client whose confirmation outlasts that allowance loses the lease and re-reserves its funded job
+  (§2). Such a re-reservation is not charged.
+- **Verified funding is credited.** When the owner sees the held `tx_hash`'s job on chain naming it, that
+  hold's elapsed time is credited back. A hold for a transaction that was never broadcast, or for an invented
+  job, never appears and stays charged.
+- **Reconnects don't reset the clock.** `admitted` without a first work frame is also unproductive and charged.
+  A reconnect continues the same accounting.
+- **Refused once exhausted.** When the budget is exhausted, RESERVE gets `REFUSED limit` until it recovers.
+
+**What this does not stop.**
+- **Capital isn't locked.** A balance check does not lock funds: the same funds can be moved between accounts
+  while earlier holds are live. So the budget bounds each account, not an adversary with many accounts.
+- **The faucet bounds account creation** on the test network, through its per-address limit.
+- **A refundable on-chain reservation deposit,** the unselected option, would add a cost per attempt and lock
+  capital for the hold. It would make a many-account attack more expensive, but would not eliminate it.
+
+**Tests:**
+- an adversary rotating many funded accounts and keys, measuring honest clients' admission rate;
+- HOLDs naming never-broadcast transactions, which must stay charged;
+- a slow-confirmation honest client, which must lose its lease and then be re-admitted for its funded job.
 
 ## 5. Capabilities, waiting and compatibility (A5, A6)
 
@@ -175,14 +220,15 @@ does today, with a different message. The friendly explanation needs the new cli
 | Case | Outcome |
 | --- | --- |
 | Shard 2 busy after shard 1 offered | RELEASE shard 1, back off; nothing funded |
-| Confirmation arrives after the leases expired | Job funded, so re-reserve for that `job_id` until its expiry; else refund at expiry |
+| Confirmation arrives after the leases expired | Job funded, so re-reserve the same named owners for that `job_id` until its expiry; else full escrow refunded at expiry |
 | Confirmation lost | Resolve from the persisted envelope (§1); never a second job |
 | Client restarts after broadcast | Reload the operation and resolve it before any new turn |
-| Owner restarts after funding, before HELLO | Lease lost, so re-reserve that owner or another for the same job |
+| Owner restarts after funding, before HELLO | Lease lost, so re-reserve **that** owner for the same job (the ledger fixes the owner list); else expiry and refund |
 | READY lost | Re-HELLO the same job, gen+1; the old socket is closed first |
 | Old socket delivers work after reconnect | Discarded: wrong generation |
 | Owner crashes around the first frame | Before the write-ahead record: re-admit. After it: `recovered-started`, so commit, settle or expire |
 | Deadline passes with the funding outcome unknown | Report unknown and keep resolving; never fund again for the turn |
+| The funding commits between "not found" and "nonce advanced" | Re-query `tx_hash` and find it: funded, never wrongly reported unfunded |
 | Two turns on one account | Serialized: the second waits for the first's resolution |
 
 ## Acceptance tests
@@ -191,13 +237,19 @@ does today, with a different message. The friendly explanation needs the new cli
    busy before funding. No job is funded while it waits.
 2. **Partial busy:** shard 1 offered and shard 2 busy. Shard 1 is released, and nothing is funded.
 3. **Confirmation after lease expiry:** the same job is admitted later, or refunded at expiry. Never two jobs.
-4. **Lost confirmation, then a client restart:** resolution from the persisted envelope gives one job, or none.
+4. **Lost confirmation, then a client restart; a commit between the "not found" and "nonce advanced" reads;
+   delayed indexing:** resolution from the persisted envelope gives one job or none. A funded job is never
+   reported unfunded.
 5. **Lost READY:** a re-HELLO at gen+1 is served. A frame injected on the gen-g socket is discarded.
 6. **Owner crash just before and just after the write-ahead record:** respectively re-admitted, or
    recovered-started and settled.
 7. **Two concurrent turns on one account:** serialized, and nonces never conflict.
-8. **The rotating-account reservation adversary:** honest admission rate and owner budget enforcement are
-   measured.
+8. **The reservation adversary:** rotating funded accounts, and HOLDs naming never-broadcast transactions.
+   Measured: honest admission rate, and holds that stay charged.
+11. **Owner substitution after funding is refused:** a different owner of the same shard rejects the funded job
+    (as `Owner.job_of` does today), and the client resolves the job by its named owners or by expiry.
+12. **A post-funding re-reservation needs no second balance:** an account holding only the escrowed job is
+    re-admitted.
 9. **Capability matrix**, with a dropped CAPS reply: unknown is never treated as legacy.
 10. **The soak burst workload rerun with this protocol:** every request is either served or reports busy before
     funding, and the ledger's conservation invariant holds after every transition.

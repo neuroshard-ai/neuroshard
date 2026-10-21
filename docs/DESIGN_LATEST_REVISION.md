@@ -1,7 +1,14 @@
-# Design: answering from the latest approved revision of a document (revision 2)
+# Design: answering from the latest approved revision of a document (revision 3)
 
 Status: **proposal for review, revised after the October 21 design review. Not implemented.** It targets the
 release after `pilot-1`.
+
+Revision 3 (after the review of revision 2) makes these changes:
+- families are scoped by `(project, family)`;
+- a demo-fixture migration with explicit family IDs is added;
+- historical selection includes superseded versions, with defined interval outcomes;
+- "in effect now" is separated from "latest approved";
+- the no-approved answer states the actual statuses.
 
 Revision 2 addresses three review points:
 - it separates unknown metadata from "no approved revision" (R1);
@@ -46,10 +53,11 @@ condition 2 below measures that. Every soak reply came through the documents rou
 | `status` | `approved`, `draft` or `superseded` |
 | `effective_from`, `effective_until` | ISO dates; `effective_until` is exclusive |
 
-- **Family identity is explicit.** A family is exactly the set of documents with the same `family` value,
-  compared byte for byte. One project may contain several unrelated families. A document without a `family`
-  belongs to no family: there is no fallback from titles, because titles collide and stripping a revision
-  suffix is not a well-defined rule.
+- **Family identity is explicit and scoped by project.** A family is exactly the set of documents with the same
+  **`(project, family)`** pair, both compared byte for byte. One project may hold several unrelated families,
+  and the same `family` value in two projects names two different families. "Cedar 6581" and "Cedar 6581
+  Annex" are separate. A document without `family` or `project` belongs to no family. There is no fallback
+  from titles, because titles collide and stripping a revision suffix is not a well-defined rule.
 - **Approved** means `status == 'approved'`, exactly. **Revision order** is the integer `revision`.
 - **A family is complete** when every member has `family`, `status` and an integer `revision`.
 
@@ -61,32 +69,64 @@ look authoritative.
 | Outcome | When | Answer |
 | --- | --- | --- |
 | `known_current` | Complete, with exactly one approved member at the highest approved revision | That document, cited |
-| `known_no_approved` | Complete, no approved member | "There is no approved version; the newest is a draft, revision N" |
+| `known_no_approved` | Complete, no approved member | States the actual statuses: for example, "no approved version; revision 3 is a draft" or "every version is superseded; the last approved was revision 2" |
 | `ambiguous` | Complete, two approved members at the highest approved revision | Names both and asks which applies |
 | `incomplete` | Some member lacks `status` or an integer `revision` | Names the unorderable members; no claim of currency |
 | `no_metadata` | No document has a `family` | Answers from text, saying it cannot tell which version is the latest approved |
 
-### Highest approved, and effective on a date
+### Highest approved, effective today, and effective on a date
 
-These are different questions:
-- `current_document(family)` returns the highest approved revision, under the outcomes above.
-- `effective_document(family, date)` returns the approved member whose `[effective_from, effective_until)`
-  contains `date`. It is used only when every approved member has `effective_from`; otherwise it returns
-  `incomplete`, and the answer declines the "as of" inference.
-- A future-dated approval is approved but not yet effective. A superseded member stays readable, but is never
-  current.
-- Reading a named revision ("what did revision 1 say?") reads that document and cites it, and claims nothing
-  about when it applied.
-- Historical approval is only what the fields record. Without effective dates, "what was current in May?" is
-  declined.
+These are three different questions, and each has its own tool:
+
+1. **"The latest approved revision"** → `current_document(project, family)`: the highest approved revision,
+   under the outcomes above. It may be future-effective.
+2. **"What is in effect now"** → `effective_document(project, family, today)`: the date case below, at the
+   user's current date.
+3. **"What applied on a date"** → `effective_document(project, family, date)`.
+
+**What the fields mean historically:**
+- `superseded` means the version was approved and later replaced. Its interval
+  `[effective_from, effective_until)` records when it applied, and that interval is the only evidence of
+  history.
+- A member with `effective_from` but no `effective_until` is open-ended: it applies from its start onward.
+
+**Selection on a date `d`** considers every `approved` or `superseded` member, never a `draft`:
+
+| Situation | Outcome |
+| --- | --- |
+| Exactly one candidate's interval contains `d` | `known_effective`: that document, cited |
+| Two or more intervals contain `d` (overlap) | `ambiguous`: names them; no choice is made |
+| No interval contains `d`, all intervals well formed | `none_effective`: "no recorded version applied on d" |
+| A candidate lacks `effective_from`, or has `effective_until ≤ effective_from` (malformed or reversed) | `incomplete`: the date question is declined |
+| A superseded candidate with no interval | `incomplete`: its period is unknown, so the date question is declined |
+| A future-effective approved member, `d` before its start | Not a candidate for `d`; the earlier member's interval decides |
+
+Reading a named revision ("what did revision 1 say?") reads that document and cites it, and claims nothing
+about when it applied.
+
+### The demo needs a metadata migration
+
+None of the four current demo documents has `family`, so passing the existing fields through would give
+`no_metadata` for all of them, and the promised selection would not happen. The fix:
+
+- **A versioned enriched fixture**, `assistant_workflow_data` sample 0 v2, adds explicit IDs:
+  - `family: "delivery-plan"` on the three Cedar 6581 documents, with `project: "Cedar 6581"`;
+  - `family: "delivery-plan"` on the Cedar 6581 Annex document, with `project: "Cedar 6581 Annex"`.
+
+  They are separate families, because selection uses `(project, family)`. Effective dates are added only
+  where the fixture's authors state them, never derived from document text.
+- **The original fixture is kept unchanged,** so earlier transcripts replay exactly.
+- **All three evaluation conditions use the same enriched fixture.** `/3` ignores the added fields, so
+  condition 1 measures today's interface on identical inputs.
+- **No title inference anywhere in `/4`.** A workspace without explicit IDs stays `no_metadata`.
 
 ## Interface change: `workspace-documents/4`
 
 - `documents_world` passes the metadata fields through, structured, when present. No other fields pass.
 - `search_documents` results include the metadata fields and the family's outcome. `read_document` includes
   the metadata fields.
-- The new tools `current_document(family)` and `effective_document(family, date)` return a document with its
-  outcome, or the outcome alone. They never return a draft as current.
+- The new tools `current_document(project, family)` and `effective_document(project, family, date)` return a
+  document with its outcome, or the outcome alone. They never return a draft as current or effective.
 - A workspace without metadata behaves as `/3`, except that a "latest approved" request is answered with that
   limit stated.
 - **Client requirement:** a `/4` route is served only to clients that declare `/4`. Owners enact it only as
@@ -95,9 +135,14 @@ These are different questions:
 
 ## Policy and training
 
-- The route prompt gains two rules:
-  - for "current" or "latest" questions, call `current_document` and answer from it, citing its id;
-  - for named-revision, comparison or "as of" questions, read those documents, or call `effective_document`.
+- The route prompt gains three rules:
+  - "latest approved" questions call `current_document`;
+  - "in effect now" or "current" questions call `effective_document` with today's date, since the highest
+    approved version may not be in effect yet;
+  - "as of" or "on a date" questions call `effective_document` with that date. Named-revision and comparison
+    questions read those documents.
+
+  Every answer cites the selected id.
 - A new unit is trained on `/4` transcripts through the normal growth loop: a verified recipe, a sealed
   evaluation, and an owner vote. Earlier units are untouched.
 
@@ -106,6 +151,13 @@ These are different questions:
 | Case | Expected behaviour |
 | --- | --- |
 | Rev 3 draft, rev 2 approved, complete | `known_current`, rev 2, cited |
+| Rev 1 superseded `[2027-01-01, 2027-02-01)`, rev 2 approved from 2027-02-01; "what applied on 2027-01-15?" | `known_effective`, rev 1, cited |
+| Two intervals overlap on the date | `ambiguous` |
+| No interval covers the date | `none_effective` |
+| Reversed interval, or superseded member with no interval | `incomplete`; the date question is declined |
+| Rev 3 approved from 2027-06-01; "what is in effect" on 2027-05-20 | `effective_document` returns rev 2, not rev 3 |
+| Complete family, every member superseded | `known_no_approved`, stating that they are superseded |
+| Same `family` value in two projects | Two families; never merged |
 | Complete family, nothing approved | `known_no_approved` |
 | Two approved at rev 2 | `ambiguous`, names both |
 | One member lacks `status` | `incomplete`; no claim of currency |
@@ -143,8 +195,8 @@ These are different questions:
    - the training recipe, the evaluation contract and the scorer are frozen before the set is first run;
    - case-level outputs are never used for training or debugging;
    - if results from the set guide development, a fresh final set is written for the reported result.
-5. **The pilot-1 smoke workload rerun:** Cedar questions answered from revision 2 (61, 2027-05-14), citation
-   checked.
+5. **The pilot-1 smoke workload rerun on the enriched v2 fixture:** Cedar questions answered from revision 2
+   (61, 2027-05-14), citation checked. On the original fixture, `/4` gives `no_metadata`, as specified.
 6. **Every earlier `/3` evaluation and training transcript** replays unchanged on its own version.
 
 These results are reported separately from any claim of improved general capability.
