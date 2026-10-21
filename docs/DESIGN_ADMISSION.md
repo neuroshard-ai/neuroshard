@@ -1,7 +1,7 @@
 # Design: admission across shards, bounded waiting, safe retry (revision 3)
 
 Status: **approved (October 21 review of revision 3.1); implemented in the admission PR, revised after its
-implementation review (notes 8–10).** Targets the
+implementation review (notes 8–11).** Targets the
 release after `pilot-1`; the frozen release and the running soak are unchanged. Where the implementation departs
 from this text, it is listed under [Implementation notes](#implementation-notes).
 
@@ -291,14 +291,20 @@ Where the implementation differs from the text above:
    decides an outcome. Resolution reads the light-client-verified state:
    - the job is open or has a result: `funded`;
    - the account nonce has not passed the envelope's: not executed yet, so the same envelope is broadcast again.
-     An index reporting it failed is only a hint. If it persists, the client consumes the nonce with a 1-unit
-     self-transfer, so whichever transaction executes, the outcome becomes provable from verified state;
+     An index reporting it failed is only a hint. If it persists, the client consumes the nonce with a self-transfer
+     of 1 unit, so whichever transaction executes, the outcome becomes provable from verified state. That
+     self-transfer is an ordinary transaction: when it executes it is charged the network fee, on top of the 1 unit
+     it moves back to the same account. Resolving this way is not free;
    - the nonce has passed, the job is absent, and no result recorded since the broadcast can have been evicted
      (results drop oldest first, `max_results`): `unfunded`;
    - the nonce has passed, the job is absent, and results may have been evicted: **`lapsed`**. If the job ever
      existed it is already closed, settled or refunded at expiry, and nothing more can happen to its escrow. It
      is never reported `unfunded`.
    A read that cannot be verified leaves the turn `unknown`.
+   **"Verified" requires pinned validators.** Only a network descriptor that names `trusted_validators` gets
+   light-client-verified state. Without them, `Chain.state` only cross-checks RPC replies against each other, and
+   funding outcomes then trust those RPCs. The client says so when it starts. The public network's funding
+   guarantees, and any release verification claim about them, require pinned validators.
 4. **An earlier turn that was funded but not served is left to expire.** A restarted client resolves it, reports it,
    and marks it `abandoned`; its escrow is refunded in full at expiry. The session key is not persisted, so the job
    is not resumed.
@@ -317,12 +323,25 @@ Changes after the October 21 review of the implementation (`test_admission_revie
    cannot broadcast the funding. Only the client broadcasts, after every HOLD succeeded. A failed HOLD is abandoned
    only once verified state shows the envelope's nonce unconsumed. Otherwise the same operation is resolved, and
    another job is never funded for the turn.
+   **Broadcasting is a durable phase.** An operation record moves `prepared` → `held` → `broadcast`:
+   - `held` is written only after every shard confirmed its HOLD, and it is the only state from which the client
+     may broadcast;
+   - `broadcast` is written before the signed bytes are sent, and marks the operation *exposed*.
+   Recovery after a restart never broadcasts. An unexposed operation (`prepared` or `held`) whose nonce is
+   unconsumed is `abandoned`: its signature never left the device, so it can never execute. An exposed one is
+   resolved under its own identity.
 9. **A reserved HELLO is a fresh admission attempt.** It is signed by the session key and carries an expiry and
    challenge, which pass through the owner's replay cache. It is bound to the job, rank, owner and live
    reservation. Only such an attempt admits a reserved job or supersedes an admitted generation. A legacy HELLO
    (no attempt) is admitted only when this owner holds no lease for the job and has never admitted it. A captured
    HELLO, replayed whole or stripped to its legacy form, therefore never replaces a connection. Old clients still
-   work through the direct legacy path.
+   work through the direct legacy path. **Upgrading is required for a safe retry after a lost READY:** an old
+   client's HELLO cannot authorize replacing a connection, so a legacy client that loses READY cannot reconnect
+   to that owner for the same job. The owner's replay cache prunes, checks and records each challenge as one atomic
+   step under a lock, so concurrent connections cannot erase each other's accepted attempts.
 10. **A job starts on its first complete work frame.** After READY, the owner reads one whole CONTROL command frame
     within what remains of the idle budget. Only then does it write the `started` record and execute. A partial
     header, a partial payload or slow bytes stay idle time. When the lease lapses, the connection is closed.
+11. **A `lapsed` turn is reported as such** (`FundingLapsed`): the job is no longer open, and the retained state
+    cannot show whether it was funded. If it was, its escrow was already settled or refunded. The client never
+    says it was not funded.

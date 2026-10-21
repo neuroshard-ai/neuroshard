@@ -39,6 +39,17 @@ class NotServed(RuntimeError):
         self.job_id, self.expires = job_id, expires
 
 
+class FundingLapsed(RuntimeError):
+    """The turn's nonce was consumed and its job is not open, but retained ledger state can no longer show whether
+    it was ever funded. Nothing is claimed either way; any escrow it had was already settled or refunded."""
+
+    def __init__(self, job_id):
+        super().__init__(f'job {job_id[:16]} is no longer open, and the retained ledger state cannot show whether '
+                         'it was ever funded; if it was, its escrow has already been settled or refunded. '
+                         'It was not served by this turn.')
+        self.job_id = job_id
+
+
 class Backoff:
     """Jittered exponential waits (1, 2, 4, 8, then 15 s, each ±25%), at least ``retry_after``, within a deadline."""
 
@@ -83,6 +94,9 @@ class Admitter:
         self.rng, self.clock, self.sleep, self.wall = rng or random.Random(), clock, sleep, wall
         self.request, self.dial, self.progress = request, dial, progress
         self.capable = {}  # owner key -> True once its signed CAPS advertised admission/1
+        if getattr(chain, 'trusted', None) == {}:  # a network.Chain without pinned validators
+            progress('This network names no trusted validators: ledger reads are only cross-checked between RPCs, '
+                     'not light-client verified, so funding outcomes trust those RPCs')
 
     # -- requests ----------------------------------------------------------------------------------------------
     def ask(self, owner, endpoint, message):
@@ -156,6 +170,9 @@ class Admitter:
                 self.operations.mark(record, funding.ABANDONED)
                 self.progress(f"An earlier turn's job {record['job_id'][:16]} was funded but not served; "
                               f'its escrow is refunded when it expires')
+            elif record['state'] == funding.LAPSED:
+                self.progress(f"An earlier turn's job {record['job_id'][:16]} is no longer open; the retained ledger "
+                              'state cannot show whether it was funded, and any escrow was already settled or refunded')
 
     def open(self, request_root, session_key, budget, hello, wait=DEFAULT_WAIT):
         """Reserve, fund and admit one job: (job_id, owners [(key, endpoint)], sockets {rank: socket})."""
@@ -179,7 +196,9 @@ class Admitter:
                 if not backoff.wait(retry_after):
                     raise NetworkBusy('the network stayed busy until the deadline; nothing was funded')
             record = funding.fund(self.index, self.operations, record, sleep=self.sleep, clock=self.clock,
-                                  supersede=self.supersede)
+                                  supersede=self.supersede, broadcast=record['state'] == funding.HELD)
+            if record['state'] == funding.LAPSED:
+                raise FundingLapsed(record['job_id'])
             if record['state'] != funding.FUNDED:
                 raise RuntimeError(f"the job was not funded ({record['state']}: {record.get('log')})")
         owners = [(offers[s][0], offers[s][1]) for s in sorted(offers)]
@@ -210,7 +229,9 @@ class Admitter:
         results = parallel(calls)
         if all(status == 'ok' and reply['kind'] == 'held' and reply.get('job_id') == record['job_id']
                for status, reply in results):
-            return record
+            # The durable phase that authorizes broadcasting: every shard confirmed its HOLD. A crash before
+            # this leaves a ``prepared`` record, which recovery abandons and never broadcasts.
+            return self.operations.mark(record, funding.HELD)
         self.release(offers)
         try:
             unconsumed = self.index.account_nonce(self.account.public) <= record['nonce']

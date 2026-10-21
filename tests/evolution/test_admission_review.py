@@ -218,8 +218,9 @@ def test_a_reported_failure_with_a_free_nonce_is_superseded_then_proven_unfunded
     resolver.rebroadcast = lossy
     admitter = net.admitter('alice')
     admitter.index = resolver
+    record = operations.mark(record, funding.HELD)  # every HOLD confirmed: broadcasting is authorized
     record = funding.fund(resolver, operations, record, timeout=30, sleep=net.sleep, clock=net.clock,
-                          supersede=admitter.supersede)
+                          supersede=admitter.supersede, broadcast=True)
     assert record['state'] == funding.UNFUNDED and record['superseded'], record
     assert jobs_of(net, 'alice') == []
 

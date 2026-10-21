@@ -20,9 +20,9 @@ from pathlib import Path
 
 from neuroshard.inference import optimistic as ledger
 
-PREPARED, BROADCAST, FUNDED, UNFUNDED, FAILED, SERVED, ABANDONED, UNKNOWN, LAPSED = (
-    'prepared', 'broadcast', 'funded', 'unfunded', 'failed', 'served', 'abandoned', 'unknown', 'lapsed')
-UNRESOLVED = (PREPARED, BROADCAST, UNKNOWN)
+PREPARED, HELD, BROADCAST, FUNDED, UNFUNDED, FAILED, SERVED, ABANDONED, UNKNOWN, LAPSED = (
+    'prepared', 'held', 'broadcast', 'funded', 'unfunded', 'failed', 'served', 'abandoned', 'unknown', 'lapsed')
+UNRESOLVED = (PREPARED, HELD, BROADCAST, UNKNOWN)
 TERMINAL = (UNFUNDED, FAILED, SERVED, ABANDONED, LAPSED)
 
 
@@ -97,10 +97,12 @@ class Operations:
                   'job_id': ledger.transaction_id(envelope), 'tx_hash': tx_hash(envelope),
                   'request_root': request_root, 'session_key': session_key, 'owners': list(owners),
                   'reservations': dict(reservations or {}), 'state': PREPARED, 'since_height': None,
-                  'height': None, 'log': None, 'updated': time.time()}
+                  'height': None, 'log': None, 'updated': time.time(), 'exposed': False}
         return self.save(record)
 
     def mark(self, record, state, **fields):
+        if state == BROADCAST:
+            fields.setdefault('exposed', True)  # from here on its signed bytes may have left this device
         record = {**record, **fields, 'state': state, 'updated': time.time()}
         return self.save(record)
 
@@ -119,6 +121,10 @@ def resolve(chain, operations, record):
       been evicted (results drop oldest first): it never executed, ``unfunded``;
     - the nonce has passed, the job is absent, but results after ``since_height`` may have been evicted: the job,
       if it ever existed, is closed (expired or settled) and its outcome is no longer provable, ``lapsed``.
+
+    Only an *exposed* operation (one that reached ``broadcast``: its signed bytes may have left this device) is
+    broadcast again. An unexposed one (``prepared``, or ``held`` before its broadcast) whose nonce is unconsumed is
+    ``abandoned``: its signature never left this device, so it can never execute.
     """
     if record['state'] not in UNRESOLVED:
         return record
@@ -129,6 +135,9 @@ def resolve(chain, operations, record):
         if job_id in state['jobs'] or job_id in state['results']:
             return operations.mark(record, FUNDED, height=state['height'], log='present in verified ledger state')
         nonce = state['accounts'].get(public, {'nonce': 0})['nonce']
+        if nonce <= record['nonce'] and not record.get('exposed', True):
+            return operations.mark(record, ABANDONED, log=f'never broadcast (stopped at {record["state"]}); '
+                                                          'its signature never left this device')
         if nonce <= record['nonce']:
             hint = chain.failure_hint(record['tx_hash'])
             admitted = chain.rebroadcast(envelope)  # idempotent: the same signed bytes
@@ -151,15 +160,22 @@ def resolve(chain, operations, record):
         return operations.mark(record, UNKNOWN, log=f'resolution unavailable: {error}')
 
 
-def fund(chain, operations, record, timeout=180, poll=0.5, sleep=time.sleep, clock=time.monotonic, supersede=None):
-    """Broadcast a prepared operation and resolve it until funded, unfunded or lapsed, or the timeout passes.
+def fund(chain, operations, record, timeout=180, poll=0.5, sleep=time.sleep, clock=time.monotonic, supersede=None,
+         broadcast=False):
+    """Resolve an operation until funded, unfunded, lapsed or abandoned, or the timeout passes.
+
+    ``broadcast=True`` authorizes broadcasting a ``held`` operation: its durable ``held`` phase records that every
+    shard confirmed its HOLD. It is never implied: recovery after a restart passes False, so an operation that
+    stopped at ``prepared`` or ``held`` is abandoned (its nonce unconsumed), never funded behind the owners' backs.
 
     ``supersede(nonce)``, if given, signs and broadcasts a self-transfer at the envelope's nonce. It is used only
     when the transaction is reported failing while its nonce is still free: consuming the nonce makes the outcome
     provable from verified state (whichever of the two executes), instead of trusting the failure report.
 
     Raises ``Unresolved`` on timeout; the record stays durable and is resolved again before any new turn."""
-    if record['state'] == PREPARED:
+    if broadcast:
+        if record['state'] != HELD:
+            raise ValueError(f'only a held operation may be broadcast, not one at {record["state"]}')
         since = record.get('since_height')
         record = operations.mark(record, BROADCAST, since_height=chain.height() if since is None else since)
     deadline = clock() + timeout
@@ -197,6 +213,9 @@ class LedgerIndex:
         return self.chain.state()['height']
 
     def verified_state(self):
+        """The ledger state, light-client verified when the network pins its validators (``Chain.trusted``).
+        Without pinned validators ``Chain.state`` only cross-checks RPCs, so these outcomes then trust the RPCs;
+        public-network funding guarantees require pinned validators."""
         return self.chain.state()
 
     def account_nonce(self, public):

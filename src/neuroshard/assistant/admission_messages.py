@@ -11,6 +11,7 @@ Control requests travel on short connections: one ``QUERY`` frame, one ``REPLY``
 import json
 import secrets
 import socket
+import threading
 import time
 
 from neuroshard.inference import optimistic as ledger
@@ -119,13 +120,19 @@ def answer(message, owner_key, chain_id, clock=time.time, kinds=REPLIES):
 
 
 class Replays:
-    """Challenges seen until their message expires: a captured request cannot be replayed."""
+    """Challenges seen until their message expires: a captured request cannot be replayed.
+
+    Owners handle connections on separate threads; pruning, the membership check and the insertion are one atomic
+    step under ``lock``, so no thread can overwrite a challenge another has just accepted."""
 
     def __init__(self):
         self.seen = {}
+        self.lock = threading.Lock()
 
     def check(self, body, now):
-        self.seen = {c: e for c, e in self.seen.items() if e >= now}
-        if body['challenge'] in self.seen:
-            raise ValueError('replayed admission message')
-        self.seen[body['challenge']] = body['expires']
+        with self.lock:
+            for challenge in [c for c, e in self.seen.items() if e < now]:
+                del self.seen[challenge]
+            if body['challenge'] in self.seen:
+                raise ValueError('replayed admission message')
+            self.seen[body['challenge']] = body['expires']
