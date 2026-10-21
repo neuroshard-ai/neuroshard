@@ -67,6 +67,10 @@ def texts(case, version=2, query='message'):
     """
     if case['split'] not in TRAINING:
         raise ValueError('demonstrations are written for training cases only')
+    if version not in (2, 3):
+        # /4 demonstrations need revision-selection cases and calls this solver does not write. Refuse rather than
+        # emit calls the interface rejects (DESIGN_LATEST_REVISION.md; review of PR #124).
+        raise ValueError(f'demonstrations are not defined for workspace-documents/{version}')
     world, turn = case['world'], case['turns'][0]
     question, expected, family = turn['user'], turn['expected'], case['family']
     out = [call('search_documents', query=keywords(case) if query == 'keywords' else question)]
@@ -133,6 +137,11 @@ def demonstration(case, policy):
     row = general.documents_episode(case, respond, policy)
     if not row['passed'] or next(replies, None) is not None:
         raise ValueError(f"the demonstration does not solve {case['id']}")
+    version = general.version_of(policy)
+    written = sum(1 for g in row['generations'] for _ in documents.parse_calls(g['text'], version))
+    if written != len(row['calls']) or any('error' in c['result'] for c in row['calls']):
+        # Every tool call the solver wrote must parse and succeed; a rejected call never passes silently.
+        raise ValueError(f"the demonstration of {case['id']} has a rejected tool call")
     return row
 
 

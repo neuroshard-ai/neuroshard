@@ -6,6 +6,7 @@ the design defines, and a document is never presented as current or effective wi
 """
 
 import datetime
+import re
 
 FIELDS = ('project', 'family', 'revision', 'status', 'effective_from', 'effective_until')
 STATUSES = ('approved', 'draft', 'superseded')
@@ -15,15 +16,23 @@ class Invalid(ValueError):
     """A metadata field has the wrong type or value. Its document then has no usable metadata."""
 
 
+DATE = re.compile(r'\A[0-9]{4}-[0-9]{2}-[0-9]{2}\Z')
+
+
 def _date(value, name):
+    """A calendar date written exactly as ``YYYY-MM-DD`` in ASCII digits, or None.
+
+    The shape is checked here rather than left to ``datetime.date.fromisoformat``, whose accepted syntax differs
+    between supported Python versions (3.11+ also accepts ``20270101`` and ``2027-W01-1``). Tool results must not
+    depend on the interpreter, or recorded transcripts would not replay across versions."""
     if value is None:
         return None
-    if not isinstance(value, str):
-        raise Invalid(f'{name} must be an ISO date')
+    if not isinstance(value, str) or not DATE.match(value):
+        raise Invalid(f'{name} must be a date written YYYY-MM-DD')
     try:
-        return datetime.date.fromisoformat(value)
+        return datetime.date(int(value[:4]), int(value[5:7]), int(value[8:]))
     except ValueError:
-        raise Invalid(f'{name} must be an ISO date') from None
+        raise Invalid(f'{name} must be a calendar date') from None
 
 
 def metadata(document):

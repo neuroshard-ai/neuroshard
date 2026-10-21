@@ -283,8 +283,8 @@ def score_round(snapshot, expected, terminated, final_text, version=2):
     """
     if version == 1:
         return score_round_v1(snapshot, expected, terminated, final_text)
-    if version == 3 and not expected.get('not_found') and snapshot['answer'] is None:
-        return False  # version 3 counts only a submitted, evidenced answer
+    if version in (3, 4) and not expected.get('not_found') and snapshot['answer'] is None:
+        return False  # versions 3 and 4 count only a submitted, evidenced answer
     if not terminated or not isinstance(final_text, str) or not final_text.strip():
         return False
     if expected.get('not_found'):

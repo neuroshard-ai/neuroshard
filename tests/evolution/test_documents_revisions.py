@@ -218,3 +218,76 @@ def test_every_v4_result_survives_a_json_round_trip_so_transcripts_replay():
         c = {'name': name, 'arguments': arguments}
         calls.append({'call': c, 'result': json.loads(json.dumps(w.execute(c)))})
     documents.replay_transcript(interfaces.documents_world(revision_fixtures.demo_v2(), 4), calls, version=4)
+
+
+# Review of PR #124: one date syntax on every interpreter, and the /3 evidence gate kept for /4.
+
+@pytest.mark.parametrize('value', ['20270101', '2027-W01-1', '2027-1-01', '２０２７-01-01', '2027-01-01T00:00',
+                                   '2027-02-30', ' 2027-01-01'])
+def test_only_yyyy_mm_dd_calendar_dates_are_accepted(value):
+    meta = ws(doc(1, revision=1, status='approved', start=value))
+    assert call(meta, 'current_document', project='P', family='plan')['outcome'] == 'incomplete'
+    good = ws(doc(1, revision=1, status='approved', start='2027-01-01'))
+    assert 'error' in call(good, 'effective_document', project='P', family='plan', date=value)
+
+
+CROSS = '''
+import json, sys
+sys.path.insert(0, sys.argv[1])
+from neuroshard.evolution import assistant_documents as d
+docs = [{"id": "doc-00000001", "title": "Plan", "content": "x", "project": "P", "family": "plan", "revision": 1,
+         "status": "approved", "effective_from": sys.argv[2]}]
+w = d.Workspace({"documents": docs}, 4)
+calls = [{"name": "current_document", "arguments": {"project": "P", "family": "plan"}},
+         {"name": "effective_document", "arguments": {"project": "P", "family": "plan", "date": sys.argv[3]}}]
+print(json.dumps([w.execute(c) for c in calls], sort_keys=True))
+'''
+
+
+@pytest.mark.parametrize('stored,asked', [('2027-01-01', '2027-01-15'), ('20270101', '2027-01-15'),
+                                          ('2027-W01-1', '2027-01-15'), ('2027-01-01', '20270115'),
+                                          ('2027-01-01', '2027-W02-5')])
+def test_tool_results_are_identical_on_every_available_interpreter(stored, asked):
+    import shutil
+    import subprocess
+    import sys
+
+    src = str(Path(documents.__file__).resolve().parents[2])
+    found = {sys.executable}
+    for name in ('python3.10', 'python3.11', 'python3.12'):
+        path = shutil.which(name)
+        if path:
+            found.add(path)
+    outputs = {}
+    for python in sorted(found):
+        run = subprocess.run([python, '-c', CROSS, src, stored, asked], capture_output=True, text=True)
+        if run.returncode == 0:
+            outputs[python] = run.stdout
+    assert outputs and len(set(outputs.values())) == 1, outputs
+
+
+def test_v4_counts_only_a_submitted_evidenced_answer():
+    w = ws(doc(1, revision=1, status='approved'))
+    w.documents['doc-00000001']['content'] = 'The baseline quantity is 61 units.'
+    expected = {'facts': ['61 units'], 'source_ids': ['doc-00000001']}
+    call(w, 'search_documents', query='baseline quantity')
+    assert documents.score_round(w.snapshot(), expected, True, '61 units (doc-00000001)', 4) is False
+    call(w, 'current_document', project='P', family='plan')
+    assert documents.score_round(w.snapshot(), expected, True, '61 units (doc-00000001)', 4) is False
+    call(w, 'read_document', document_id='doc-00000001')
+    rejected = call(w, 'submit_answer', answer='61 units', source_ids=['doc-00000001'], evidence=['not in the text'])
+    assert 'error' in rejected
+    assert documents.score_round(w.snapshot(), expected, True, '61 units (doc-00000001)', 4) is False
+    assert call(w, 'submit_answer', answer='61 units', source_ids=['doc-00000001'],
+                evidence=['The baseline quantity is 61 units']) == {'submitted': True}
+    assert documents.score_round(w.snapshot(), expected, True, '61 units (doc-00000001)', 4) is True
+
+
+def test_v4_demonstrations_are_refused_rather_than_silently_invalid():
+    from neuroshard.evolution import assistant_documents_demonstration as demonstration
+
+    case = {'id': 'synthetic', 'family': 'flight-time', 'split': 'train',
+            'world': {'documents': [doc(1, revision=1, status='approved')]},
+            'turns': [{'user': 'q', 'expected': {'facts': ['x'], 'source_ids': ['doc-00000001']}}]}
+    with pytest.raises(ValueError, match='not defined for workspace-documents/4'):
+        demonstration.texts(case, 4)
