@@ -10,7 +10,7 @@ import copy
 
 from neuroshard.evolution import assistant_workflow as workflow
 
-DOCUMENTS = ('workspace-documents/2', 'workspace-documents/3')
+DOCUMENTS = ('workspace-documents/2', 'workspace-documents/3', 'workspace-documents/4')
 CHAT = ('chat-calculator/1', 'chat-tools/1')
 
 
@@ -45,15 +45,23 @@ class ChatWorkspace:
         return {'events': copy.deepcopy(self.tools.events)}
 
 
-def documents_world(world):
-    """The documents workspace's public view of the user's files: id, title and content only."""
+def documents_world(world, version=3):
+    """The documents workspace's public view of the user's files: id, title and content only.
+
+    From ``workspace-documents/4``, the structured revision metadata fields pass through too (never any other
+    field). Earlier versions see exactly what they always saw."""
     rows = []
     for document in world.get('documents', []):
         content = document.get('content')
         if content is None:  # a drafting document: its fields, as text
             content = '; '.join(f'{key}: {value}' for key, value in sorted(document.items())
                                 if key not in ('id', 'title'))
-        rows.append({'id': document['id'], 'title': document.get('title', document['id']), 'content': content})
+        row = {'id': document['id'], 'title': document.get('title', document['id']), 'content': content}
+        if version >= 4:
+            from neuroshard.evolution.document_revisions import FIELDS  # only /4 needs it
+
+            row.update({key: document[key] for key in FIELDS if key in document})
+        rows.append(row)
     return {'documents': rows}
 
 
@@ -66,7 +74,7 @@ def interface(policy):
         version = DOCUMENTS.index(name) + 2
         return Interface(name, 'documents', documents.tools(version),
                          lambda text: documents.parse_calls(text, version),
-                         lambda world: documents.Workspace(documents_world(world), version))
+                         lambda world: documents.Workspace(documents_world(world, version), version))
     if name in CHAT:
         from neuroshard.evolution import assistant_general as general
         from neuroshard.evolution import assistant_workspace as base
