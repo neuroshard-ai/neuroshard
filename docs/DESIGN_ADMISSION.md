@@ -1,7 +1,8 @@
 # Design: admission across shards, bounded waiting, safe retry (revision 3)
 
-Status: **proposal for review, revised after the October 21 design review. Not implemented.** Targets the release
-after `pilot-1`; the frozen release and the running soak are unchanged.
+Status: **approved (October 21 review of revision 3.1); implemented in the admission PR, under review.** Targets the
+release after `pilot-1`; the frozen release and the running soak are unchanged. Where the implementation departs
+from this text, it is listed under [Implementation notes](#implementation-notes).
 
 Revision 3.1 makes clear that escrow does not exempt idle occupancy from the time budget, and that the
 funding credit is applied once (test 13).
@@ -265,3 +266,35 @@ does today, with a different message. The friendly explanation needs the new cli
 9. **Capability matrix**, with a dropped CAPS reply: unknown is never treated as legacy.
 10. **The soak burst workload rerun with this protocol:** every request is either served or reports busy before
     funding, and the ledger's conservation invariant holds after every transition.
+
+## Implementation notes
+
+Code: `assistant/funding.py` (§1), `assistant/admission.py` (the owner's gate: §2–§4),
+`assistant/admission_messages.py` (signed control messages), `assistant/admission_client.py` (the client sequence,
+§2 and §5), wired into `Owner` and `Conversation` in `assistant/network.py`. Tests: `test_admission.py` and
+`test_admission_recovery.py`, named by acceptance-test number, run the real ledger transition and the real owner
+admission and serving handshake, with the model work stubbed out.
+
+Where the implementation differs from the text above:
+
+1. **READY keeps its exact legacy form.** An old client accepts only an exact READY, so READY carries no generation
+   and no signature. Generations are enforced on the owner, which closes (shuts down) the superseded connection
+   before sending READY on the new one, and accepts work only on the current generation's connection. The BUSY and
+   REFUSED replies to a HELLO are signed by the log key.
+2. **Legacy mode is explicit.** Silence is never taken as "legacy", and nothing else proves an owner is legacy, so
+   legacy mode runs only when the user asks for it (`neuroshard assistant chat --legacy-admission`) and is reported.
+   In the default reserved mode, a shard with no capable owner stays busy until the deadline, and nothing is funded.
+3. **The nonce's consumer is found in committed blocks.** The ledger emits no events to search an account's
+   transactions by nonce, so resolution scans the blocks from the height recorded before broadcast, and counts only a
+   transaction that executed (a failed one leaves the nonce unchanged). If that scan finds the turn's own
+   transaction while the index lags, the turn is `funded`.
+4. **An earlier turn that was funded but not served is left to expire.** A restarted client resolves it, reports it,
+   and marks it `abandoned`; its escrow is refunded in full at expiry. The session key is not persisted, so the job
+   is not resumed.
+5. **A lapsed hold is still credited once.** If a hold lapses before its job appears on chain (confirmation
+   outlasted the budget), the owner remembers the hold for one budget window and credits it, once, when the funded
+   job is first seen naming it.
+6. **A charge stops at its lease's bound,** not when the owner next notices the lease has lapsed.
+7. **Test 10** is run locally (four concurrent clients, one owner per shard): each is served or reports busy with
+   nothing funded, and the conservation invariant is asserted on every block. The rerun of the soak's burst workload
+   on the live network still has to be done with a release that includes this change.

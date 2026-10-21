@@ -21,6 +21,7 @@ from neuroshard.inference import optimistic as ledger
 FORMAT = 'neuroshard-relay/1'
 CONTROL, TENSOR, SIGNATURE, HELLO, READY = b'C', b'T', b'S', b'H', b'R'
 AUDIT, LOG_DATA = b'A', b'L'
+ADMISSION_QUERY, ADMISSION_REPLY = b'Q', b'P'  # admission control (``neuroshard.assistant.admission_messages``)
 HEADER = struct.Struct('>cI')
 COMMAND = struct.Struct('>qq')
 MAX_FRAME = 1 << 28
@@ -272,21 +273,42 @@ def hello(chain_id, job_id, rank, world, hidden_size, max_tokens):
             'hidden': hidden_size, 'max_tokens': max_tokens}
 
 
+class OwnerBusy(ConnectionError):
+    """The owner answered a hello with a signed BUSY or REFUSED reply instead of READY."""
+
+    def __init__(self, reply):
+        body = reply.get('body', {}) if isinstance(reply, dict) else {}
+        super().__init__(f"the owner is {body.get('kind', 'unavailable')}: {body.get('reason') or body.get('retry_after')}")
+        self.reply = reply
+
+
 def dial(endpoint, body, session_key, timeout=TIMEOUT):
-    """Open one owner's link of a job from the user's device, proving it holds the job's session key."""
+    """Open one owner's link of a job from the user's device, proving it holds the job's session key.
+
+    An owner that cannot admit the job answers with a signed reply (``admission_messages.REPLY``) instead of
+    READY; that raises ``OwnerBusy`` carrying it, for the caller to verify and back off."""
     host, port = ledger.endpoint(endpoint).rsplit(':', 1)
     sock = socket.create_connection((host, int(port)), timeout=timeout)
     try:
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        send_frame(sock, HELLO, ledger.canonical({'hello': body,
-                                                  'signature': session_key.sign(ledger.canonical(body)).hex()}))
-        ready = json.loads(receive_frame(sock, READY, MAX_HELLO))
-        if ready != {'format': FORMAT, 'rank': body['rank']}:
-            raise ValueError('the owner did not accept this link')
-        return sock
+        return handshake(sock, body, session_key)
     except BaseException:
         sock.close()
         raise
+
+
+def handshake(sock, body, session_key):
+    """The user's side of a link's hello on a connected socket: returns it once the owner sent READY."""
+    send_frame(sock, HELLO, ledger.canonical({'hello': body, 'signature': session_key.sign(ledger.canonical(body)).hex()}))
+    kind, size = HEADER.unpack(read_exactly(sock, HEADER.size))
+    if kind == ADMISSION_REPLY and size <= 16384:
+        raise OwnerBusy(json.loads(read_exactly(sock, size)))
+    if kind != READY or size > MAX_HELLO:
+        raise ValueError(f'expected a {READY!r} serving frame, received {kind!r}')
+    ready = json.loads(read_exactly(sock, size))
+    if ready != {'format': FORMAT, 'rank': body['rank']}:
+        raise ValueError('the owner did not accept this link')
+    return sock
 
 
 def answer(sock, rank, world, session_key_of, *, deadline=None, ready=True, message=None):

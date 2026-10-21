@@ -73,14 +73,20 @@ def test_slow_handshake_bytes_do_not_extend_the_absolute_deadline():
         thread.join(1)
 
 
-def test_an_idle_unauthenticated_connection_does_not_block_a_real_user():
+def test_an_idle_unauthenticated_connection_does_not_block_a_real_user(tmp_path):
+    from neuroshard.assistant import admission
+
     key = Ed25519PrivateKey.generate()
+    session = key.public_key().public_bytes_raw().hex()
     owner = network.Owner.__new__(network.Owner)
     owner.rank, owner.served = 1, SimpleNamespace(world=2, max_tokens=8, name='tiny')
     owner.config, owner.serving_lock = SimpleNamespace(hidden_size=4), threading.Lock()
-    owner.session_key_of = lambda chain, job: key.public_key().public_bytes_raw().hex()
+    owner.session_key_of = lambda chain, job: session
+    owner.job_of = lambda chain, job: {'user': 'u', 'session_key': session}
+    owner.gate = admission.Gate(1, 'owner', tmp_path, None, time.time)
+    owner.ticked = time.monotonic() + 3600
     accepted = []
-    def serve(connection, body, progress):
+    def serve(connection, body, job, gen, progress):
         accepted.append(body['job_id'])
         relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': 1}))
     owner.serve_authenticated = serve

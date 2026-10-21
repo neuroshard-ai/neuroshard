@@ -74,7 +74,9 @@ def configure_node(node_home, genesis, settlement, peers, ports, block_seconds=1
                                 ('p2p', 'persistent_peers', json.dumps(peers)), ('p2p', 'allow_duplicate_ip', 'true'),
                                 ('p2p', 'addr_book_strict', 'false'),
                                 ('consensus', 'timeout_commit', f'"{int(block_seconds * 1000)}ms"'),
-                                ('consensus', 'timeout_propose', '"3s"'), ('consensus', 'create_empty_blocks', 'true')):
+                                ('consensus', 'timeout_propose', '"3s"'), ('consensus', 'create_empty_blocks', 'true'),
+                                # Clients resolve a turn's funding from this index (DESIGN_ADMISSION.md §1).
+                                ('tx_index', 'indexer', '"kv"')):
         text = edit_config(text, section, key, value)
     path.write_text(text)
     (path.parent / 'genesis.json').write_text(json.dumps(genesis, sort_keys=True))
