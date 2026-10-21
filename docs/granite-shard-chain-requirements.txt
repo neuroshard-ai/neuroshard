@@ -1,7 +1,7 @@
 # Isolated A1 research runtime; never install into a ledger environment.
 annotated-doc==0.0.5
 anyio==4.15.1
-certifi==2026.7.22
+certifi==2026.10.19
 click==8.5.0
 filelock==3.32.3
 fsspec==2026.7.0
