@@ -1,0 +1,2058 @@
+{
+ "calls": [
+  {
+   "arguments": {
+    "query": "Cedar 6581 plan"
+   },
+   "name": "search_documents"
+  },
+  {
+   "arguments": {
+    "query": "baseline quantity"
+   },
+   "name": "search_documents"
+  },
+  {
+   "arguments": {
+    "query": "review interval Annex"
+   },
+   "name": "search_documents"
+  },
+  {
+   "arguments": {
+    "query": "nothing here zzz"
+   },
+   "name": "search_documents"
+  },
+  {
+   "arguments": {
+    "document_id": "doc-9e6d7ba44d"
+   },
+   "name": "read_document"
+  },
+  {
+   "arguments": {
+    "document_id": "doc-35d32ed303"
+   },
+   "name": "read_document"
+  },
+  {
+   "arguments": {
+    "document_id": "doc-88b36697f8"
+   },
+   "name": "read_document"
+  },
+  {
+   "arguments": {
+    "document_id": "doc-292283f7a9"
+   },
+   "name": "read_document"
+  },
+  {
+   "arguments": {
+    "document_id": "doc-missing"
+   },
+   "name": "read_document"
+  },
+  {
+   "arguments": {
+    "expression": "58 + 6"
+   },
+   "name": "calculate"
+  },
+  {
+   "arguments": {
+    "date": "2027-05-14",
+    "days": 9
+   },
+   "name": "shift_date"
+  },
+  {
+   "arguments": {
+    "answer": "61 units",
+    "evidence": [
+     "The baseline quantity is 61 units"
+    ],
+    "source_ids": [
+     "doc-88b36697f8"
+    ]
+   },
+   "name": "submit_answer"
+  },
+  {
+   "arguments": {
+    "answer": "61 units",
+    "source_ids": [
+     "doc-88b36697f8"
+    ]
+   },
+   "name": "submit_answer"
+  },
+  {
+   "arguments": {
+    "reason": "not in these documents"
+   },
+   "name": "report_not_found"
+  },
+  {
+   "arguments": {
+    "family": "delivery-plan",
+    "project": "Cedar 6581"
+   },
+   "name": "current_document"
+  }
+ ],
+ "versions": {
+  "1": {
+   "results": [
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      },
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      }
+     ]
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-9e6d7ba44d",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-35d32ed303",
+     "title": "Cedar 6581 Annex delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-88b36697f8",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-292283f7a9",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "submitted": true
+    },
+    {
+     "reported": true
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    }
+   ],
+   "snapshot": {
+    "answer": null,
+    "events": [
+     {
+      "before_root": "7ee0d7098dbc6cb008d861a9cf5976d39d9afe5e34282b7b4cc5e4ee66b17af6",
+      "call": {
+       "arguments": {
+        "query": "Cedar 6581 plan"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "37c1be095ce8e040c0ac98590b37b1b323f2a33cba8892127ce84da875e310ca",
+      "call": {
+       "arguments": {
+        "query": "baseline quantity"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "09b247cb78ac4784037c12c621aa35e3b5f813089cf38435e833cdcf6a495010",
+      "call": {
+       "arguments": {
+        "query": "review interval Annex"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        },
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "4acfedaaba337fa1dbdf797488382f8d4f92b9cb05193f399e2f4abf2595c1c7",
+      "call": {
+       "arguments": {
+        "query": "nothing here zzz"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "a76b423681d43c55d9c1c0c53c4e64ee41fe5f3bbcb99e2146aefacca7e8fbe9",
+      "call": {
+       "arguments": {
+        "document_id": "doc-9e6d7ba44d"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-9e6d7ba44d",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "60596789e7ef0666e46a51098e658980521eaf2ae146d7fa5f1969f1873b8b8a",
+      "call": {
+       "arguments": {
+        "document_id": "doc-35d32ed303"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-35d32ed303",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     },
+     {
+      "before_root": "e5e499b6273a60045a30dd58f479ade1b88b98e9bdb6f3d5bf9c46658e1a7049",
+      "call": {
+       "arguments": {
+        "document_id": "doc-88b36697f8"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-88b36697f8",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d2ac987abfb320e99e8dc44992da96b51cda9841056e22018603e8c5f11ff4c",
+      "call": {
+       "arguments": {
+        "document_id": "doc-292283f7a9"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-292283f7a9",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d9fb507f8e89164f6a3e79a16e05cc5e95bb40bdcf63f4a252f6ee1a24c5134",
+      "call": {
+       "arguments": {
+        "document_id": "doc-missing"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "3eddd10c6a1c36b82dfd139f6b670ddc2b4e91d090989650d4b76d55e029a148",
+      "call": {
+       "arguments": {
+        "expression": "58 + 6"
+       },
+       "name": "calculate"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "8e60f4d004fa1158549dff8db526e3f8152170e79d1eea552e27be455ea515e8",
+      "call": {
+       "arguments": {
+        "date": "2027-05-14",
+        "days": 9
+       },
+       "name": "shift_date"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "340e2a11c779424abbce89e4c1d883814827e5123bc23916c3c69ab34f533a46",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "evidence": [
+         "The baseline quantity is 61 units"
+        ],
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "bea95afd822f83a4b2ddf9dc9970950f8da3a88764a5f41a94d6dc54767836f2",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "submitted": true
+      }
+     },
+     {
+      "before_root": "10f5e291f44352caaae4a773a65f08d12ab0f4fc319b6eadf748bd7dc3f57bc8",
+      "call": {
+       "arguments": {
+        "reason": "not in these documents"
+       },
+       "name": "report_not_found"
+      },
+      "result": {
+       "reported": true
+      }
+     },
+     {
+      "before_root": "29aa154c38462e812d3f89ec9feafad07f383619f05e9018b27fb84e71d989a9",
+      "call": {
+       "arguments": {
+        "family": "delivery-plan",
+        "project": "Cedar 6581"
+       },
+       "name": "current_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     }
+    ],
+    "found_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "not_found": {
+     "reason": "not in these documents"
+    },
+    "read_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "world_root": "3a513f537169e8160af2d3aac3e01f18f1af2710e6b85224db71231eb0e64d00"
+   },
+   "tools": [
+    {
+     "function": {
+      "description": "Search the user's documents by keywords; returns up to five IDs, titles and snippets. Read a document before relying on it.",
+      "name": "search_documents",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "query": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "query"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Read the full text of one document by its ID.",
+      "name": "read_document",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "document_id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "document_id"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Perform exact integer addition, subtraction or multiplication.",
+      "name": "calculate",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "left": {
+         "type": "integer"
+        },
+        "operation": {
+         "enum": [
+          "add",
+          "subtract",
+          "multiply"
+         ],
+         "type": "string"
+        },
+        "right": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "operation",
+        "left",
+        "right"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Shift an ISO YYYY-MM-DD date by a signed number of calendar days.",
+      "name": "shift_date",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "days": {
+         "type": "integer"
+        },
+        "start_date": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "start_date",
+        "days"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Give the final answer to the user's question, citing the IDs of every document it relies on; each must have been found or read in this conversation.",
+      "name": "submit_answer",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "answer": {
+         "type": "string"
+        },
+        "source_ids": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "required": [
+        "answer",
+        "source_ids"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Say that the documents do not contain the answer, after searching them.",
+      "name": "report_not_found",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "reason"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    }
+   ]
+  },
+  "2": {
+   "results": [
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      },
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      }
+     ]
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-9e6d7ba44d",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-35d32ed303",
+     "title": "Cedar 6581 Annex delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-88b36697f8",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-292283f7a9",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "submitted": true
+    },
+    {
+     "reported": true
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    }
+   ],
+   "snapshot": {
+    "answer": null,
+    "events": [
+     {
+      "before_root": "7ee0d7098dbc6cb008d861a9cf5976d39d9afe5e34282b7b4cc5e4ee66b17af6",
+      "call": {
+       "arguments": {
+        "query": "Cedar 6581 plan"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "37c1be095ce8e040c0ac98590b37b1b323f2a33cba8892127ce84da875e310ca",
+      "call": {
+       "arguments": {
+        "query": "baseline quantity"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "09b247cb78ac4784037c12c621aa35e3b5f813089cf38435e833cdcf6a495010",
+      "call": {
+       "arguments": {
+        "query": "review interval Annex"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        },
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "4acfedaaba337fa1dbdf797488382f8d4f92b9cb05193f399e2f4abf2595c1c7",
+      "call": {
+       "arguments": {
+        "query": "nothing here zzz"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "a76b423681d43c55d9c1c0c53c4e64ee41fe5f3bbcb99e2146aefacca7e8fbe9",
+      "call": {
+       "arguments": {
+        "document_id": "doc-9e6d7ba44d"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-9e6d7ba44d",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "60596789e7ef0666e46a51098e658980521eaf2ae146d7fa5f1969f1873b8b8a",
+      "call": {
+       "arguments": {
+        "document_id": "doc-35d32ed303"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-35d32ed303",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     },
+     {
+      "before_root": "e5e499b6273a60045a30dd58f479ade1b88b98e9bdb6f3d5bf9c46658e1a7049",
+      "call": {
+       "arguments": {
+        "document_id": "doc-88b36697f8"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-88b36697f8",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d2ac987abfb320e99e8dc44992da96b51cda9841056e22018603e8c5f11ff4c",
+      "call": {
+       "arguments": {
+        "document_id": "doc-292283f7a9"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-292283f7a9",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d9fb507f8e89164f6a3e79a16e05cc5e95bb40bdcf63f4a252f6ee1a24c5134",
+      "call": {
+       "arguments": {
+        "document_id": "doc-missing"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "3eddd10c6a1c36b82dfd139f6b670ddc2b4e91d090989650d4b76d55e029a148",
+      "call": {
+       "arguments": {
+        "expression": "58 + 6"
+       },
+       "name": "calculate"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "8e60f4d004fa1158549dff8db526e3f8152170e79d1eea552e27be455ea515e8",
+      "call": {
+       "arguments": {
+        "date": "2027-05-14",
+        "days": 9
+       },
+       "name": "shift_date"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "340e2a11c779424abbce89e4c1d883814827e5123bc23916c3c69ab34f533a46",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "evidence": [
+         "The baseline quantity is 61 units"
+        ],
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "bea95afd822f83a4b2ddf9dc9970950f8da3a88764a5f41a94d6dc54767836f2",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "submitted": true
+      }
+     },
+     {
+      "before_root": "10f5e291f44352caaae4a773a65f08d12ab0f4fc319b6eadf748bd7dc3f57bc8",
+      "call": {
+       "arguments": {
+        "reason": "not in these documents"
+       },
+       "name": "report_not_found"
+      },
+      "result": {
+       "reported": true
+      }
+     },
+     {
+      "before_root": "29aa154c38462e812d3f89ec9feafad07f383619f05e9018b27fb84e71d989a9",
+      "call": {
+       "arguments": {
+        "family": "delivery-plan",
+        "project": "Cedar 6581"
+       },
+       "name": "current_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     }
+    ],
+    "found_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "not_found": {
+     "reason": "not in these documents"
+    },
+    "read_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "world_root": "3a513f537169e8160af2d3aac3e01f18f1af2710e6b85224db71231eb0e64d00"
+   },
+   "tools": [
+    {
+     "function": {
+      "description": "Search the user's documents by keywords; returns up to five IDs, titles and snippets. Read a document before relying on it.",
+      "name": "search_documents",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "query": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "query"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Read the full text of one document by its ID.",
+      "name": "read_document",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "document_id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "document_id"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Perform exact integer addition, subtraction or multiplication.",
+      "name": "calculate",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "left": {
+         "type": "integer"
+        },
+        "operation": {
+         "enum": [
+          "add",
+          "subtract",
+          "multiply"
+         ],
+         "type": "string"
+        },
+        "right": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "operation",
+        "left",
+        "right"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Shift an ISO YYYY-MM-DD date by a signed number of calendar days.",
+      "name": "shift_date",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "days": {
+         "type": "integer"
+        },
+        "start_date": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "start_date",
+        "days"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Give the final answer to the user's question, citing the IDs of every document it relies on; each must have been found or read in this conversation.",
+      "name": "submit_answer",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "answer": {
+         "type": "string"
+        },
+        "source_ids": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "required": [
+        "answer",
+        "source_ids"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Say that the documents do not contain the answer, after searching them.",
+      "name": "report_not_found",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "reason"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    }
+   ]
+  },
+  "3": {
+   "results": [
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     ]
+    },
+    {
+     "results": [
+      {
+       "id": "doc-35d32ed303",
+       "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 Annex delivery plan"
+      },
+      {
+       "id": "doc-292283f7a9",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-88b36697f8",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      },
+      {
+       "id": "doc-9e6d7ba44d",
+       "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "title": "Cedar 6581 delivery plan"
+      }
+     ]
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-9e6d7ba44d",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-35d32ed303",
+     "title": "Cedar 6581 Annex delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-88b36697f8",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+     "id": "doc-292283f7a9",
+     "title": "Cedar 6581 delivery plan"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "submitted": true
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    },
+    {
+     "reported": true
+    },
+    {
+     "error": "invalid tool arguments or unavailable workspace object"
+    }
+   ],
+   "snapshot": {
+    "answer": null,
+    "events": [
+     {
+      "before_root": "7ee0d7098dbc6cb008d861a9cf5976d39d9afe5e34282b7b4cc5e4ee66b17af6",
+      "call": {
+       "arguments": {
+        "query": "Cedar 6581 plan"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "37c1be095ce8e040c0ac98590b37b1b323f2a33cba8892127ce84da875e310ca",
+      "call": {
+       "arguments": {
+        "query": "baseline quantity"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "09b247cb78ac4784037c12c621aa35e3b5f813089cf38435e833cdcf6a495010",
+      "call": {
+       "arguments": {
+        "query": "review interval Annex"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "results": [
+        {
+         "id": "doc-35d32ed303",
+         "snippet": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 Annex delivery plan"
+        },
+        {
+         "id": "doc-292283f7a9",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-88b36697f8",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        },
+        {
+         "id": "doc-9e6d7ba44d",
+         "snippet": "lan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+         "title": "Cedar 6581 delivery plan"
+        }
+       ]
+      }
+     },
+     {
+      "before_root": "4acfedaaba337fa1dbdf797488382f8d4f92b9cb05193f399e2f4abf2595c1c7",
+      "call": {
+       "arguments": {
+        "query": "nothing here zzz"
+       },
+       "name": "search_documents"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "a76b423681d43c55d9c1c0c53c4e64ee41fe5f3bbcb99e2146aefacca7e8fbe9",
+      "call": {
+       "arguments": {
+        "document_id": "doc-9e6d7ba44d"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-9e6d7ba44d",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "60596789e7ef0666e46a51098e658980521eaf2ae146d7fa5f1969f1873b8b8a",
+      "call": {
+       "arguments": {
+        "document_id": "doc-35d32ed303"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-35d32ed303",
+       "title": "Cedar 6581 Annex delivery plan"
+      }
+     },
+     {
+      "before_root": "e5e499b6273a60045a30dd58f479ade1b88b98e9bdb6f3d5bf9c46658e1a7049",
+      "call": {
+       "arguments": {
+        "document_id": "doc-88b36697f8"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-88b36697f8",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d2ac987abfb320e99e8dc44992da96b51cda9841056e22018603e8c5f11ff4c",
+      "call": {
+       "arguments": {
+        "document_id": "doc-292283f7a9"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+       "id": "doc-292283f7a9",
+       "title": "Cedar 6581 delivery plan"
+      }
+     },
+     {
+      "before_root": "5d9fb507f8e89164f6a3e79a16e05cc5e95bb40bdcf63f4a252f6ee1a24c5134",
+      "call": {
+       "arguments": {
+        "document_id": "doc-missing"
+       },
+       "name": "read_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "3eddd10c6a1c36b82dfd139f6b670ddc2b4e91d090989650d4b76d55e029a148",
+      "call": {
+       "arguments": {
+        "expression": "58 + 6"
+       },
+       "name": "calculate"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "8e60f4d004fa1158549dff8db526e3f8152170e79d1eea552e27be455ea515e8",
+      "call": {
+       "arguments": {
+        "date": "2027-05-14",
+        "days": 9
+       },
+       "name": "shift_date"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "340e2a11c779424abbce89e4c1d883814827e5123bc23916c3c69ab34f533a46",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "evidence": [
+         "The baseline quantity is 61 units"
+        ],
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "submitted": true
+      }
+     },
+     {
+      "before_root": "5a29d6c962f687ce33f4246a662ac3b437f04d21912ba2612cb51301e19da206",
+      "call": {
+       "arguments": {
+        "answer": "61 units",
+        "source_ids": [
+         "doc-88b36697f8"
+        ]
+       },
+       "name": "submit_answer"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     },
+     {
+      "before_root": "63d6ed21a701ff02b6a367f49aa9f444ae8059483c11f8007d36910b3c5985bf",
+      "call": {
+       "arguments": {
+        "reason": "not in these documents"
+       },
+       "name": "report_not_found"
+      },
+      "result": {
+       "reported": true
+      }
+     },
+     {
+      "before_root": "5cd00832808349fbc62c0bcade6856e76ae32eb03c3291805bd795828edac547",
+      "call": {
+       "arguments": {
+        "family": "delivery-plan",
+        "project": "Cedar 6581"
+       },
+       "name": "current_document"
+      },
+      "result": {
+       "error": "invalid tool arguments or unavailable workspace object"
+      }
+     }
+    ],
+    "found_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "not_found": {
+     "reason": "not in these documents"
+    },
+    "read_ids": [
+     "doc-292283f7a9",
+     "doc-35d32ed303",
+     "doc-88b36697f8",
+     "doc-9e6d7ba44d"
+    ],
+    "world_root": "3a513f537169e8160af2d3aac3e01f18f1af2710e6b85224db71231eb0e64d00"
+   },
+   "tools": [
+    {
+     "function": {
+      "description": "Search the user's documents by keywords; returns up to five IDs, titles and snippets. Read a document before relying on it.",
+      "name": "search_documents",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "query": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "query"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Read the full text of one document by its ID.",
+      "name": "read_document",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "document_id": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "document_id"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Perform exact integer addition, subtraction or multiplication.",
+      "name": "calculate",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "left": {
+         "type": "integer"
+        },
+        "operation": {
+         "enum": [
+          "add",
+          "subtract",
+          "multiply"
+         ],
+         "type": "string"
+        },
+        "right": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "operation",
+        "left",
+        "right"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Shift an ISO YYYY-MM-DD date by a signed number of calendar days.",
+      "name": "shift_date",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "days": {
+         "type": "integer"
+        },
+        "start_date": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "start_date",
+        "days"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Give the final answer to exactly what was asked. Cite the IDs of the documents it relies on (each read in this conversation) and copy, word for word, one to four short quotes from them that state it. If no quote states the exact thing asked, call report_not_found instead.",
+      "name": "submit_answer",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "answer": {
+         "type": "string"
+        },
+        "evidence": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        },
+        "source_ids": {
+         "items": {
+          "type": "string"
+         },
+         "type": "array"
+        }
+       },
+       "required": [
+        "answer",
+        "source_ids",
+        "evidence"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    },
+    {
+     "function": {
+      "description": "Say that the documents do not contain the exact thing asked, after searching and reading the closest document; the reason names what they contain instead.",
+      "name": "report_not_found",
+      "parameters": {
+       "additionalProperties": false,
+       "properties": {
+        "reason": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "reason"
+       ],
+       "type": "object"
+      }
+     },
+     "type": "function"
+    }
+   ]
+  }
+ },
+ "workspace-documents/2": {
+  "tools": [
+   {
+    "function": {
+     "description": "Search the user's documents by keywords; returns up to five IDs, titles and snippets. Read a document before relying on it.",
+     "name": "search_documents",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "query": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "query"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Read the full text of one document by its ID.",
+     "name": "read_document",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "document_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "document_id"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Perform exact integer addition, subtraction or multiplication.",
+     "name": "calculate",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "left": {
+        "type": "integer"
+       },
+       "operation": {
+        "enum": [
+         "add",
+         "subtract",
+         "multiply"
+        ],
+        "type": "string"
+       },
+       "right": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "operation",
+       "left",
+       "right"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Shift an ISO YYYY-MM-DD date by a signed number of calendar days.",
+     "name": "shift_date",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "days": {
+        "type": "integer"
+       },
+       "start_date": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "start_date",
+       "days"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Give the final answer to the user's question, citing the IDs of every document it relies on; each must have been found or read in this conversation.",
+     "name": "submit_answer",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "answer": {
+        "type": "string"
+       },
+       "source_ids": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       }
+      },
+      "required": [
+       "answer",
+       "source_ids"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Say that the documents do not contain the answer, after searching them.",
+     "name": "report_not_found",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "reason": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "reason"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   }
+  ]
+ },
+ "workspace-documents/3": {
+  "tools": [
+   {
+    "function": {
+     "description": "Search the user's documents by keywords; returns up to five IDs, titles and snippets. Read a document before relying on it.",
+     "name": "search_documents",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "query": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "query"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Read the full text of one document by its ID.",
+     "name": "read_document",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "document_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "document_id"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Perform exact integer addition, subtraction or multiplication.",
+     "name": "calculate",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "left": {
+        "type": "integer"
+       },
+       "operation": {
+        "enum": [
+         "add",
+         "subtract",
+         "multiply"
+        ],
+        "type": "string"
+       },
+       "right": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "operation",
+       "left",
+       "right"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Shift an ISO YYYY-MM-DD date by a signed number of calendar days.",
+     "name": "shift_date",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "days": {
+        "type": "integer"
+       },
+       "start_date": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "start_date",
+       "days"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Give the final answer to exactly what was asked. Cite the IDs of the documents it relies on (each read in this conversation) and copy, word for word, one to four short quotes from them that state it. If no quote states the exact thing asked, call report_not_found instead.",
+     "name": "submit_answer",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "answer": {
+        "type": "string"
+       },
+       "evidence": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       "source_ids": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       }
+      },
+      "required": [
+       "answer",
+       "source_ids",
+       "evidence"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   },
+   {
+    "function": {
+     "description": "Say that the documents do not contain the exact thing asked, after searching and reading the closest document; the reason names what they contain instead.",
+     "name": "report_not_found",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "reason": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "reason"
+      ],
+      "type": "object"
+     }
+    },
+    "type": "function"
+   }
+  ]
+ },
+ "world": {
+  "documents": [
+   {
+    "content": "The plan for Cedar 6581 starts on 2027-05-26. The baseline quantity is 86 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+    "id": "doc-9e6d7ba44d",
+    "title": "Cedar 6581 delivery plan"
+   },
+   {
+    "content": "The plan for Cedar 6581 Annex starts on 2027-05-16. The baseline quantity is 70 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+    "id": "doc-35d32ed303",
+    "title": "Cedar 6581 Annex delivery plan"
+   },
+   {
+    "content": "The plan for Cedar 6581 starts on 2027-05-14. The baseline quantity is 61 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+    "id": "doc-88b36697f8",
+    "title": "Cedar 6581 delivery plan"
+   },
+   {
+    "content": "The plan for Cedar 6581 starts on 2027-05-07. The baseline quantity is 58 units. The review interval is 9 calendar days. Use the status and revision in the document metadata to choose a version.",
+    "id": "doc-292283f7a9",
+    "title": "Cedar 6581 delivery plan"
+   }
+  ]
+ }
+}

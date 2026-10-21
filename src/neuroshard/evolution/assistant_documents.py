@@ -11,6 +11,12 @@ Version 3 (``workspace-documents/3``) requires evidence: ``submit_answer`` carri
 each copied verbatim from a document it cites and has read, and the workspace refuses a quote it cannot
 find there. Only a submitted answer counts. Versions 1 and 2 are unchanged, so every recorded episode
 rescores as it was scored.
+
+Version 4 (``workspace-documents/4``) adds structured revision metadata and deterministic selection
+(``document_revisions``; DESIGN_LATEST_REVISION.md). Documents may carry ``project``, ``family``, ``revision``,
+``status``, ``effective_from`` and ``effective_until``; search and read results include them, and two tools,
+``current_document`` and ``effective_document``, select a revision or state why none can be selected. Versions
+1 to 3 are unchanged.
 """
 
 import copy
@@ -21,7 +27,14 @@ import unicodedata
 from neuroshard.evolution import assistant_workspace as base
 from neuroshard.evolution.modular_reference_execution import identity
 
-INTERFACES = ('workspace-documents/1', 'workspace-documents/2', 'workspace-documents/3')
+def _revisions():
+    # Imported only by version 4, so the source set that earlier, pinned executions import is unchanged.
+    from neuroshard.evolution import document_revisions
+
+    return document_revisions
+
+
+INTERFACES = ('workspace-documents/1', 'workspace-documents/2', 'workspace-documents/3', 'workspace-documents/4')
 INTERFACE = INTERFACES[1]
 STRING, INTEGER = base.STRING, base.INTEGER
 MAX_DOCUMENTS, MAX_BYTES, TOP = 64, 16384, 5
@@ -48,6 +61,16 @@ TOOLS_V3 = TOOLS[:4] + [
               'and reading the closest document; the reason names what they contain instead.', {'reason': STRING}),
 ]
 REGISTRY_V3 = {item['function']['name']: item['function']['parameters'] for item in TOOLS_V3}
+TOOLS_V4 = TOOLS_V3 + [
+    base.tool('current_document', 'The latest approved revision of one document family, chosen from the documents\' '
+              'revision and status fields, or why none can be chosen. For "latest approved" questions.',
+              {'project': STRING, 'family': STRING}),
+    base.tool('effective_document', 'The revision of one document family in effect on a date (YYYY-MM-DD), from its '
+              'effective dates, or why none can be chosen. For "in effect now" (use today\'s date) or "as of" questions.',
+              {'project': STRING, 'family': STRING, 'date': STRING}),
+]
+REGISTRY_V4 = {item['function']['name']: item['function']['parameters'] for item in TOOLS_V4}
+REGISTRIES = {1: REGISTRY, 2: REGISTRY, 3: REGISTRY_V3, 4: REGISTRY_V4}
 MIN_QUOTE, MAX_QUOTE = 8, 300
 WORD = re.compile(r'[a-z0-9]+')
 CITATION = re.compile(r'doc-[0-9a-f]{8}')
@@ -55,11 +78,11 @@ HYPHENS = dict.fromkeys(map(ord, '\u2010\u2011\u2012\u2013\u2014\u2212'), '-')
 
 
 def tools(version=2):
-    return TOOLS_V3 if version == 3 else TOOLS
+    return {3: TOOLS_V3, 4: TOOLS_V4}.get(version, TOOLS)
 
 
 def parse_calls(text, version=2):
-    return base.parse_calls(text, REGISTRY_V3 if version == 3 else REGISTRY)
+    return base.parse_calls(text, REGISTRIES[version])
 
 
 def quoted(quote, content):
@@ -75,16 +98,22 @@ class Workspace:
     registry = REGISTRY
 
     def __init__(self, public_world, version=2):
-        if version not in (1, 2, 3):
+        if version not in (1, 2, 3, 4):
             raise ValueError('unknown documents workspace version')
         self.version = version
-        self.registry = REGISTRY_V3 if version == 3 else REGISTRY
+        self.registry = REGISTRIES[version]
         if set(public_world) != {'documents'}:
             raise ValueError('workspace accepts public documents only, not scoring metadata')
         self.documents = {}
         for document in copy.deepcopy(public_world['documents']):
-            if set(document) != {'id', 'title', 'content'}:
-                raise ValueError('a document has exactly an id, a title and content')
+            allowed = {'id', 'title', 'content'} | (set(_revisions().FIELDS) if version == 4 else set())
+            if not {'id', 'title', 'content'} <= set(document) <= allowed:
+                raise ValueError('a document has exactly an id, a title and content'
+                                 + (', and optional revision metadata' if version == 4 else ''))
+            if version == 4:
+                fields, problems = _revisions().metadata(document)
+                document = {key: document[key] for key in ('id', 'title', 'content')}
+                document['metadata'], document['problems'] = fields, problems
             if (not isinstance(document['id'], str) or not document['id'] or document['id'] in self.documents
                     or not isinstance(document['title'], str) or not isinstance(document['content'], str)
                     or len(document['content'].encode()) > MAX_BYTES):
@@ -131,8 +160,26 @@ class Workspace:
             text = self.documents[key]['content']
             first = min((text.lower().find(t) for t in query_terms if t in text.lower()), default=0)
             start = max(0, first - 80)
-            rows.append({'id': key, 'title': self.documents[key]['title'], 'snippet': text[start:start + 200]})
+            row = {'id': key, 'title': self.documents[key]['title'], 'snippet': text[start:start + 200]}
+            if self.version == 4:
+                row.update(self.reference(key))
+            rows.append(row)
         return {'results': rows}
+
+    def reference(self, key):
+        """A version-4 document's metadata and its family's latest-approved outcome, as results show it."""
+        document = self.documents[key]
+        meta = document['metadata']
+        out = {'metadata': dict(meta)}
+        if document['problems']:
+            out['invalid_metadata'] = list(document['problems'])
+        if 'project' in meta and 'family' in meta:
+            outcome, _, _ = _revisions().current(_revisions().members(self.documents.values(), meta['project'],
+                                                                meta['family']))
+            out['family_outcome'] = outcome
+        else:
+            out['family_outcome'] = 'no_metadata'
+        return out
 
     def execute(self, call):
         before = identity(self.snapshot())
@@ -154,11 +201,25 @@ class Workspace:
         if name == 'read_document':
             document = self.documents[args['document_id']]
             self.read_ids.add(document['id'])
+            if self.version == 4:
+                return {**{key: document[key] for key in ('id', 'title', 'content')}, **self.reference(document['id'])}
             return copy.deepcopy(document)
+        if name in ('current_document', 'effective_document') and self.version == 4:
+            revisions = _revisions()
+            group = revisions.members(self.documents.values(), args['project'], args['family'])
+            if name == 'current_document':
+                outcome, chosen, detail = revisions.current(group)
+            else:
+                outcome, chosen, detail = revisions.effective(group, args['date'])
+            result = {'outcome': outcome, **detail}
+            if chosen is not None:
+                result['document'] = revisions.describe(chosen)
+                self.found_ids.add(chosen['id'])
+            return result
         if name in ('calculate', 'shift_date'):
             helper = base.Workspace.__new__(base.Workspace)
             return base.Workspace._apply(helper, name, args)
-        if name == 'submit_answer' and self.version == 3:
+        if name == 'submit_answer' and self.version in (3, 4):
             ids, quotes = args['source_ids'], args['evidence']
             if (not 1 <= len(args['answer']) <= 2000 or not 1 <= len(ids) <= 4 or len(set(ids)) != len(ids)
                     or not set(ids) <= self.read_ids):
@@ -222,8 +283,8 @@ def score_round(snapshot, expected, terminated, final_text, version=2):
     """
     if version == 1:
         return score_round_v1(snapshot, expected, terminated, final_text)
-    if version == 3 and not expected.get('not_found') and snapshot['answer'] is None:
-        return False  # version 3 counts only a submitted, evidenced answer
+    if version in (3, 4) and not expected.get('not_found') and snapshot['answer'] is None:
+        return False  # versions 3 and 4 count only a submitted, evidenced answer
     if not terminated or not isinstance(final_text, str) or not final_text.strip():
         return False
     if expected.get('not_found'):
