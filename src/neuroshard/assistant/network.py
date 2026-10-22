@@ -318,6 +318,7 @@ class Account:
         path = Path(path)
         if not path.exists():
             private_file(path, secrets.token_hex(32))
+        self.path = path
         self.key = derive_keypair_from_token(path.read_text().strip())
         self.public = self.key.public_key_bytes.hex()
 
@@ -684,6 +685,34 @@ def ensure_balance(chain, account, needed, faucet_url, progress=print):
         time.sleep(1)
 
 
+def hang_up(connection):
+    """Close a link another thread may be waiting on: shutdown wakes its select or recv, close alone may not."""
+    try:
+        connection.shutdown(socket.SHUT_RDWR)
+    except OSError:
+        pass
+    connection.close()
+
+
+class OwnerView:
+    """The admission gate's view of the ledger, through the owner's verified chain reads."""
+
+    def __init__(self, owner):
+        self.owner = owner
+
+    def job(self, job_id):
+        try:
+            return self.owner.job_of(self.owner.chain.chain_id, job_id)
+        except ValueError:
+            return None
+
+    def spendable(self, account):
+        return self.owner.chain.state()['accounts'].get(account, {'balance': 0})['balance']
+
+    def fee(self):
+        return self.owner.chain.state()['params']['fee']
+
+
 class Owner:
     """One shard of the served version on this machine: bonded, reachable at its endpoint, serving jobs that name it."""
 
@@ -707,6 +736,13 @@ class Owner:
         logs = self.home / 'logs'
         self.served_jobs = {path.name for path in logs.iterdir()} if logs.exists() else set()
         self.pending_jobs = set(self.served_jobs)
+        from neuroshard.assistant import admission
+        from neuroshard.assistant.admission_messages import Replays
+
+        self.gate = admission.Gate(rank, self.public, self.home, OwnerView(self), time.time)
+        self.served_jobs |= self.gate.started  # recovered-started jobs are never admitted again
+        self.replays = Replays()
+        self.ticked = 0.0
 
     def register(self, endpoint, faucet_url=None, bond=None, progress=print):
         """Bond this shard once, and publish where users reach it."""
@@ -730,8 +766,9 @@ class Owner:
             self.chain.submit(self.account, 'owner_endpoint', log_key=self.public, endpoint=endpoint)
             progress(f'Published endpoint {endpoint}')
 
-    def job_of(self, chain_id, job_id):
-        state = self.chain.state() if chain_id == self.chain.chain_id else {}
+    def job_of(self, chain_id, job_id, state=None):
+        if state is None:
+            state = self.chain.state() if chain_id == self.chain.chain_id else {}
         job = state.get('jobs', {}).get(job_id)
         if (job is None or job['deadline'] is not None or len(job['owners']) != self.served.world - 1
                 or job['owners'][self.rank - 1] != self.public or state['height'] > job['expires']
@@ -746,13 +783,20 @@ class Owner:
     def session_key_of(self, chain_id, job_id):
         return self.job_of(chain_id, job_id)['session_key']
 
-    def serve(self, connection, progress=print):
-        """Serve one job over one connection, then commit its signed log; returns what was served, or None."""
-        from neuroshard.evolution.sharded import granite_audit, granite_serving as serving
+    def serve(self, connection, progress=print, address='unknown'):
+        """Serve one connection: an admission query, an audit, or one job's link; returns what was served, or None."""
+        from neuroshard.assistant import admission
+        from neuroshard.assistant import admission_messages as messages
 
         try:
             deadline = time.monotonic() + HANDSHAKE_SECONDS
-            message = json.loads(relay.receive_frame(connection, (relay.HELLO, relay.AUDIT), relay.MAX_HELLO, deadline))
+            kind, size = relay.HEADER.unpack(relay.read_exactly(connection, relay.HEADER.size, deadline))
+            if kind not in (relay.HELLO, relay.AUDIT, relay.ADMISSION_QUERY) or size > messages.MAX_CONTROL:
+                raise ValueError('unexpected first frame')
+            message = json.loads(relay.read_exactly(connection, size, deadline))
+            if kind == relay.ADMISSION_QUERY:
+                self.control(connection, message, address)
+                return None
             if (isinstance(message, dict) and isinstance(message.get('body'), dict)
                     and message['body'].get('kind') == 'audit_log'):
                 from neuroshard.assistant.audit import serve_log
@@ -766,31 +810,112 @@ class Owner:
                                 deadline=deadline, ready=False, message=message)
             if body['hidden'] != self.config.hidden_size or body['max_tokens'] != self.served.max_tokens:
                 raise ValueError('the hello differs from this owner\'s model')
+            job = self.job_of(body['chain_id'], body['job_id'])
+            attempt = None
+            if 'admission' in message:  # reserved admission: a fresh attempt, never a replayed one
+                attempt = messages.hello_attempt(message['admission'], self.chain.chain_id, int(self.gate.clock()),
+                                                 job['session_key'], body['job_id'], self.rank, self.public)
+                self.replays.check(attempt, int(self.gate.clock()))
+            try:
+                gen = self.gate.admit(body['job_id'], job, address, lambda: hang_up(connection),
+                                      reservation=None if attempt is None else attempt['reservation'])
+            except admission.Busy as busy:
+                messages.reply(connection, self.log_key, self.chain.chain_id, 'busy', self.gate.clock,
+                               retry_after=busy.retry_after)
+                raise ValueError('busy')
+            except admission.Refused as refused:
+                messages.reply(connection, self.log_key, self.chain.chain_id, 'refused', self.gate.clock,
+                               reason=refused.reason)
+                raise ValueError(str(refused))
         except (ValueError, KeyError, TypeError, ConnectionError, OSError):
             connection.close()
             return None
-        if not self.serving_lock.acquire(blocking=False):
-            connection.close()
-            return None
         try:
-            return self.serve_authenticated(connection, body, progress)
+            return self.serve_authenticated(connection, body, job, gen, progress, attempt)
         except Exception as error:
             progress(f'Owner job failed: {type(error).__name__}: {error}')
             return None
         finally:
             connection.close()
-            self.serving_lock.release()
+            self.gate.finish(body['job_id'], gen)
 
-    def serve_authenticated(self, connection, body, progress):
+    def control(self, connection, message, address):
+        """One admission request (CAPS, RESERVE, HOLD, RELEASE), answered with one signed reply."""
+        from neuroshard.assistant import admission
+        from neuroshard.assistant import admission_messages as messages
+
+        chain_id, clock = self.chain.chain_id, self.gate.clock
+
+        def say(kind, **fields):
+            messages.reply(connection, self.log_key, chain_id, kind, clock, **fields)
+
+        try:
+            kind, body, (signer, account) = messages.opened(message, chain_id, int(clock()))
+            if kind == 'caps':
+                say('caps', challenge=body['challenge'], versions=[relay.FORMAT, messages.VERSION], rank=self.rank,
+                    model_root=self.served.root)
+                return
+            if kind not in messages.REQUESTS or body.get('rank') != self.rank or body.get('owner') != self.public:
+                raise admission.Refused('invalid', 'the request names another owner or rank')
+            job_id = body.get('job_id')
+            if signer == 'key':  # after funding: signed by the job's session key
+                job = self.job_of(chain_id, job_id) if isinstance(job_id, str) else None
+                if job is None or not messages.signed_by(message, job['session_key']):
+                    raise admission.Refused('invalid', "not signed by the funded job's session key")
+            self.replays.check(body, int(clock()))
+            if kind == 'reserve' and signer == 'account':
+                say('offer', **self.gate.reserve_new(account, address, body.get('session_key'),
+                                                     ledger.integer(body.get('price'), 1)))
+            elif kind == 'reserve':
+                say('offer', **self.gate.reserve_funded(job_id, job, address))
+            elif kind == 'hold' and signer == 'account':
+                say('held', **self.gate.hold(account, body.get('reservation'), body.get('transaction')))
+            elif kind == 'release':
+                say('released', **self.gate.release(body.get('reservation'), account,
+                                                    job_id if signer == 'key' else None))
+            else:
+                raise admission.Refused('invalid', 'unsupported request')
+        except admission.Busy as busy:
+            say('busy', retry_after=busy.retry_after)
+        except admission.Refused as refused:
+            say('refused', reason=refused.reason)
+        except (ValueError, KeyError, TypeError) as error:
+            say('refused', reason='invalid', detail=str(error)[:200])
+        finally:
+            connection.close()
+
+    def serve_authenticated(self, connection, body, job, gen, progress, attempt=None):
         import torch
+        from neuroshard.assistant import admission_messages as messages
         from neuroshard.evolution.sharded import granite_audit, granite_serving as serving
 
         torch.set_num_threads(self.threads)
-        connection.settimeout(PEER_TIMEOUT)
         job_id = body['job_id']
-        job = self.job_of(body['chain_id'], job_id)
+        if attempt is None:  # an older client: READY keeps its exact legacy form
+            relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': self.rank}))
+        else:  # READY answers this attempt, signed by the log key
+            relay.send_frame(connection, relay.READY, ledger.canonical(messages.by_key(
+                self.log_key, 'ready', self.chain.chain_id, self.gate.clock, attempt=attempt['challenge'],
+                job_id=job_id, rank=self.rank, gen=gen)))
+        # Admitted, not started: the first *complete* work frame must arrive within what remains of the
+        # unproductive budget. Partial or slow input stays idle time; a lapsed lease closes this connection.
+        idle = self.gate.idle_seconds(job_id, gen)
+        if idle <= 0:
+            return None
+        try:
+            first = relay.first_command(connection, time.monotonic() + idle)
+        except (OSError, ValueError):
+            return None
+        if not self.gate.start(job_id, gen):  # superseded, or the budget ran out while the frame arrived
+            return None
         self.served_jobs.add(job_id)
-        relay.send_frame(connection, relay.READY, ledger.canonical({'format': relay.FORMAT, 'rank': self.rank}))
+        connection = relay.Prefixed(connection, first)
+        connection.settimeout(PEER_TIMEOUT)
+        with self.serving_lock:
+            return self.work(connection, job_id, job, progress, granite_audit, serving)
+
+    def work(self, connection, job_id, job, progress, granite_audit, serving):
+        """The started job's serving, then its signed log's commitment."""
         session = {'chain_id': self.chain.chain_id, 'job_id': job_id, 'request_root': job['request_root'],
                    'session_key': job['session_key'], 'log_keys': job['owners']}
         upstream = job['session_key'] if self.rank == 1 else job['owners'][self.rank - 2]
@@ -855,7 +980,7 @@ class Owner:
 
         def handle(connection, address):
             try:
-                outcome = self.serve(connection, progress)
+                outcome = self.serve(connection, progress, address)
                 if outcome:
                     progress(f"Served job {outcome['job_id'][:12]}: {outcome['positions']} positions; log committed")
             finally:
@@ -876,6 +1001,12 @@ class Owner:
                         self.commit_pending()
                     except Exception as error:
                         progress(f'Pending commitment will retry: {error}')
+                if getattr(self, 'gate', None) is not None and time.monotonic() - getattr(self, 'ticked', 0) >= 2:
+                    self.ticked = time.monotonic()  # lapse leases; notice held jobs funded on chain
+                    try:
+                        self.gate.tick()
+                    except Exception as error:  # noqa: BLE001 - a read failure retries on the next tick
+                        progress(f'Admission check will retry: {error}')
                 try:
                     connection, peer = listener.accept()
                 except socket.timeout:
@@ -953,7 +1084,7 @@ class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
     def __init__(self, served, stage, chain, account, world, budget=16384, price=NEURO, faucet_url=None,
-                 progress=print, rng=None, probe=reachable, threads=None):
+                 progress=print, rng=None, probe=reachable, threads=None, mode='reserved', wait=600, home=None):
         import torch
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -970,26 +1101,38 @@ class Conversation:
         state = chain.state()
         if state['model_root'] != served.root:
             raise ValueError('the ledger serves another version than this device holds')
-        self.owners = choose_owners(state, served, rng, probe)
         ensure_balance(chain, account, price + 2 * state['params']['fee'], faucet_url, progress)
         session_key = Ed25519PrivateKey.generate()
         request_root = ledger.digest({'domain': 'neuroshard/assistant-request/v1', 'world': ledger.digest(world),
                                       'nonce': secrets.token_hex(16)})
-        envelope = chain.submit(account, 'serve_open', model_root=served.root, owners=[key for key, _ in self.owners],
-                                request_root=request_root, session_key=public_hex(session_key), price=price,
-                                positions=budget)
-        self.job_id = ledger.transaction_id(envelope)
+        self.sockets, self.mode = {}, mode
+        hello = lambda job_id, rank: relay.hello(chain.chain_id, job_id, rank, served.world,  # noqa: E731
+                                                 config.hidden_size, served.max_tokens)
+        if mode == 'reserved':
+            from neuroshard.assistant import admission_client
+
+            admitter = admission_client.Admitter(chain, account, served, home or account.path.parent, price,
+                                                 rng=rng, progress=progress)
+            self.job_id, self.owners, self.sockets = admitter.open(request_root, session_key, budget, hello, wait)
+        elif mode == 'legacy':
+            progress('Legacy mode: the job is funded before any owner is contacted, so a busy owner can leave it '
+                     'unserved until it expires and is refunded')
+            self.owners = choose_owners(state, served, rng, probe)
+            envelope = chain.submit(account, 'serve_open', model_root=served.root,
+                                    owners=[key for key, _ in self.owners], request_root=request_root,
+                                    session_key=public_hex(session_key), price=price, positions=budget)
+            self.job_id = ledger.transaction_id(envelope)
+            try:
+                for rank, (_, endpoint) in enumerate(self.owners, start=1):
+                    self.sockets[rank] = relay.dial(endpoint, hello(self.job_id, rank), session_key)
+            except BaseException:
+                self.close()
+                raise
+        else:
+            raise ValueError(f'unknown admission mode {mode!r}')
         session = {'chain_id': chain.chain_id, 'job_id': self.job_id, 'request_root': request_root,
                    'session_key': public_hex(session_key), 'log_keys': [key for key, _ in self.owners]}
         self.link = granite_audit.Link(session, 0, served.world, session_key, self.owners[-1][0])
-        self.sockets = {}
-        try:
-            for rank, (_, endpoint) in enumerate(self.owners, start=1):
-                self.sockets[rank] = relay.dial(endpoint, relay.hello(chain.chain_id, self.job_id, rank, served.world,
-                                                                      config.hidden_size, served.max_tokens), session_key)
-        except BaseException:
-            self.close()
-            raise
         self.budget = relay.WorkBudget(budget, config.max_position_embeddings)
         ring = relay.DriverRelay(self.sockets, served.world, config.hidden_size, served.max_tokens, signed=True,
                                  budget=self.budget)

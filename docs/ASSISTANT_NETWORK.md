@@ -93,6 +93,8 @@ at 57 blocks per second for 750,000 blocks). Inbound TCP 26656 must be open. Onc
 vote it in with `assistant govern propose-validator --consensus-key KEY --power 1`. The key is printed
 at start and is in `chain/node0/config/priv_validator_key.json`. It follows enacted versions like an
 owner. Keep the command running, for example as a systemd service: stopping it stops the node.
+A validator that serves RPC must keep CometBFT's transaction index (`[tx_index] indexer = "kv"`, which the
+command sets): clients resolve whether a conversation was funded from it, and never fund a turn twice.
 
 **Audit a shard.** `neuroshard assistant audit --shard 2` holds just that shard,
 downloads signed logs inside the challenge window, replays them and delivers a

@@ -38,6 +38,10 @@ def register(subcommands, root):
     chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
     chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
     chat.add_argument('--threads', type=int)
+    chat.add_argument('--wait', type=int, default=600,
+                      help='Seconds to wait for a busy network before funding anything (default 600)')
+    chat.add_argument('--legacy-admission', action='store_true',
+                      help='Fund before contacting owners, for shards whose owners do not reserve yet')
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
     govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy',
@@ -296,7 +300,9 @@ def run(args):
     world, suggestions = workspace(args.sample, args.world)
     show(world, suggestions)
     conversation = network.Conversation(served, stage, chain, network.Account(args.home / 'account.key'), world,
-                                        args.budget, price, descriptor.get('faucet'), threads=args.threads)
+                                        args.budget, price, descriptor.get('faucet'), threads=args.threads,
+                                        mode='legacy' if args.legacy_admission else 'reserved', wait=args.wait,
+                                        home=args.home)
     print(f"Job {conversation.job_id[:16]}: shards served by "
           f"{', '.join(endpoint for _, endpoint in conversation.owners)}. Type a request; /quit ends the job.")
     drafts = {}
