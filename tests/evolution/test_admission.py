@@ -149,32 +149,118 @@ def test_12_a_funded_job_is_re_reserved_without_a_second_balance(tmp_path):
         assert net.request('10.0.0.1')(endpoint, message)['body']['kind'] == 'offer'
 
 
-def test_10_a_burst_is_served_or_busy_before_funding_with_conservation_after_every_block(tmp_path):
-    names = ('alice', 'bob', 'carol', 'dave')
-    net = Net(tmp_path, users=names)
-    lock, outcomes = threading.Lock(), {}
+def test_overlapping_waits_overlap_in_simulated_time(tmp_path):
+    """The harness itself: two clients each waiting 10 s from t0 both wake at t0+10, not one at t0+20."""
+    net = Net(tmp_path)
+    start, height = net.clock.now, net.chain.s['height']
 
-    def turn(name, address):
+    def wait():
+        net.sleep(10)
+        return net.clock.now - start
+
+    woke = [value for _, value in net.concurrently([wait, wait])]
+    assert woke == [10, 10] and net.clock.now - start == 10
+    assert net.chain.s['height'] - height == 10, 'one block per simulated second, mined once'
+
+
+BURST = ('alice', 'bob', 'carol', 'dave')
+
+
+def burst(tmp_path, seed, wait=40):
+    """Four clients at once against one owner per shard, under one scheduler of simulated time (each client's
+    backoff seeded). Returns the net and each client's outcome: ('served', job_id) or ('busy', None)."""
+    import random
+
+    net = Net(tmp_path, users=BURST)
+
+    def turn(index, name):
+        admitter = net.admitter(name, f'10.0.0.{index}', rng=random.Random(seed * 100 + index))
         try:
-            job_id, _, sockets, _ = net.turn(name, address, wait=40)
-            start_work(sockets)
-            wait_until(lambda: all(job_id in o.worked for o in net.owners))
-            finish(sockets)
-            result = ('served', job_id)
+            job_id, _, sockets, _ = net.turn(name, f'10.0.0.{index}', wait=wait, admitter=admitter)
         except admission_client.NetworkBusy:
-            result = ('busy', None)
-        with lock:
-            outcomes[name] = result
+            return 'busy', None
+        start_work(sockets)
+        wait_until(lambda: all(job_id in o.worked for o in net.owners))
+        finish(sockets)
+        return 'served', job_id
 
-    threads = [threading.Thread(target=turn, args=(n, f'10.0.0.{i}')) for i, n in enumerate(names, 1)]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join(120)
-    assert len(outcomes) == len(names) and any(kind == 'served' for kind, _ in outcomes.values())
+    results = net.concurrently([lambda i=i, n=n: turn(i, n) for i, n in enumerate(BURST, 1)])
+    errors = [value for status, value in results if status == 'error']
+    assert not errors, errors
+    return net, dict(zip(BURST, (value for _, value in results)))
+
+
+@pytest.mark.parametrize('seed', range(5))
+def test_10_a_burst_funds_nothing_for_a_busy_client_and_conserves_the_ledger(tmp_path, seed):
+    """Safety, evaluated on its own: a liveness failure elsewhere never hides it."""
+    net, outcomes = burst(tmp_path, seed)
     for name, (kind, job_id) in outcomes.items():
         assert jobs_of(net, name) == ([job_id] if kind == 'served' else []), (name, kind)
     ledger.invariant(net.chain.s)  # also asserted on every mined block
+
+
+@pytest.mark.parametrize('seed', range(5))
+def test_10_a_burst_with_capacity_free_again_makes_progress(tmp_path, seed):
+    """Progress: each served conversation ends and frees its owners, so within the deadline every client of the
+    burst is served in turn (300 of 300 seeded bursts served all four when issue #126 was diagnosed)."""
+    _, outcomes = burst(tmp_path, seed)
+    assert all(kind == 'served' for kind, _ in outcomes.values()), outcomes
+
+
+def test_busy_hints_estimate_when_the_slot_frees_not_the_worst_case_bound(tmp_path):
+    """Issue #126: a hint of a lease's full bound (20 s offered, 60 s admitted) sent every contender past its
+    deadline, though such leases end within moments."""
+    net = Net(tmp_path)
+    gate = net.owner(1).gate
+    gate.reserve_new(net.accounts['alice'].public, '10.0.0.1', 'cd' * 32, NEURO)
+    with pytest.raises(admission.Busy) as offered:
+        gate.reserve_new(net.accounts['bob'].public, '10.0.0.2', 'ef' * 32, NEURO)
+    assert offered.value.retry_after <= admission.PENDING_RETRY
+    gate.lease = None
+    job_id, _, sockets, _ = net.turn('alice')  # admitted: READY sent, no work yet
+    with pytest.raises(admission.Busy) as admitted:
+        net.owner(1).gate.reserve_new(net.accounts['bob'].public, '10.0.0.2', 'ef' * 32, NEURO)
+    assert net.owner(1).gate.lease['state'] == 'admitted' and admitted.value.retry_after <= admission.PENDING_RETRY
+    start_work(sockets)
+    wait_until(lambda: net.owner(1).gate.lease['state'] == 'started')
+    with pytest.raises(admission.Busy) as started:
+        net.owner(1).gate.reserve_new(net.accounts['bob'].public, '10.0.0.2', 'ef' * 32, NEURO)
+    assert started.value.retry_after == admission.STARTED_RETRY
+    finish(sockets)
+
+
+def test_contenders_given_the_same_hint_do_not_retry_in_lockstep():
+    import random
+
+    waits = []
+    for seed in range(8):
+        backoff = admission_client.Backoff(10 ** 6, random.Random(seed), clock=lambda: 0, sleep=waits.append)
+        assert backoff.wait(retry_after=15)
+    assert min(waits) >= 15 and len(set(waits)) == len(waits), 'honoured, and spread apart'
+    backoff = admission_client.Backoff(30, random.Random(0), clock=lambda: 0, sleep=waits.append)
+    assert not backoff.wait(retry_after=40), 'a wait past the deadline is not taken'
+
+
+def test_10_a_waiting_client_is_served_once_a_contender_releases_its_partial_reservation(tmp_path):
+    """An explicit schedule: carol holds shard 2 only (a partial reservation), so bob finds the network busy and
+    funds nothing; carol releases at t+10 s; bob, still within his deadline, is then served."""
+    net = Net(tmp_path, users=('bob', 'carol'))
+    held = net.owner(2).gate.reserve_new(net.accounts['carol'].public, '10.9.9.9', 'cd' * 32, NEURO)
+    start, released, busy_seen = net.clock.now, [], []
+
+    def release_at_ten():
+        if not released and net.clock.now - start >= 10:
+            busy_seen.append(jobs_of(net, 'bob'))
+            net.owner(2).gate.release(held['reservation'], net.accounts['carol'].public)
+            released.append(net.clock.now)
+
+    net.hooks.append(release_at_ten)
+    (status, value), = net.concurrently([lambda: net.turn('bob', '10.0.0.2', wait=60)])
+    assert status == 'ok', value
+    job_id, _, sockets, _ = value
+    assert released and busy_seen == [[]], 'bob waited, funding nothing, until carol released'
+    assert jobs_of(net, 'bob') == [job_id]
+    finish(sockets)
 
 
 def test_an_old_client_reaching_a_busy_new_owner_fails_on_the_busy_frame(tmp_path):

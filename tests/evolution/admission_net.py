@@ -4,6 +4,7 @@ Blocks are produced when the shared fake clock advances (``Net.sleep``), so the 
 bounds and funding confirmation move together, deterministically.
 """
 import base64
+import contextlib
 import copy
 import hashlib
 import json
@@ -32,21 +33,81 @@ class Clock:
         return self.now
 
 
+class Scheduler:
+    """The one scheduler of simulated time and block production.
+
+    Outside a concurrent section a sleep advances time at once, as a single-threaded test expects. Inside one
+    (``Net.concurrently``), each participant registers its wake time and blocks; time advances, to the earliest wake
+    time, only once every participant is waiting, so overlapping waits overlap instead of adding up, and no
+    client's backoff moves time under another client that is still mid-request. Advancing time (mining, ticking
+    owner gates, running hooks) happens on one thread at a time."""
+
+    STALL = 30  # wall seconds with no participant progress before a test is failed instead of hanging
+
+    def __init__(self, advance):
+        self.advance, self.cond = advance, threading.Condition()
+        self.participants, self.waking = set(), {}
+        self.clock = None
+
+    def enter(self):
+        with self.cond:
+            self.participants.add(threading.get_ident())
+
+    def leave(self):
+        with self.cond:
+            self.participants.discard(threading.get_ident())
+            self.cond.notify_all()
+
+    def sleep(self, seconds):
+        me = threading.get_ident()
+        with self.cond:
+            if me not in self.participants:
+                self.advance(seconds)
+                self.cond.notify_all()
+                return
+            wake = self.clock.now + seconds
+            self.waking[me] = wake
+            self.cond.notify_all()
+            stalled = time.monotonic()
+            try:
+                while self.clock.now < wake:
+                    earliest = min(self.waking.values())
+                    if set(self.waking) >= self.participants and earliest > self.clock.now:
+                        self.advance(earliest - self.clock.now)  # everyone is asleep: time moves on
+                        self.cond.notify_all()
+                        stalled = time.monotonic()
+                        continue
+                    # Someone is running, or is due now and must reacquire the lock to leave: yield to it.
+                    if not self.cond.wait(0.05) and time.monotonic() - stalled > self.STALL:
+                        raise AssertionError('simulated time stalled: a participant neither ran nor slept')
+            finally:
+                del self.waking[me]
+                self.cond.notify_all()
+
+
 class Ledger:
-    """``network.Chain``'s surface over an in-memory state; a block per ``mine``."""
+    """``network.Chain``'s surface over an in-memory state; a block per ``mine``. Every read and mutation is
+    serialized, as consensus applies one block at a time."""
 
     def __init__(self, state):
         self.s, self.chain_id, self.rpc = state, state['chain_id'], 'memory'
         self.mempool, self.receipts, self.blocks = [], {}, {}
         self.paused, self.unindexed = False, set()
+        self.lock = threading.RLock()
 
     def state(self):
-        return copy.deepcopy(self.s)
+        with self.lock:
+            return copy.deepcopy(self.s)
 
     def nonce(self, account):
-        return self.s['accounts'].get(account.public, {'nonce': 0})['nonce']
+        with self.lock:
+            return self.s['accounts'].get(account.public, {'nonce': 0})['nonce']
 
     def broadcast(self, envelope):
+        with self.lock:
+            return self._broadcast(envelope)
+
+    def _broadcast(self, envelope):
         raw = ledger.canonical(envelope)
         key = hashlib.sha256(raw).hexdigest().upper()
         if key in self.receipts or raw in self.mempool:
@@ -59,6 +120,10 @@ class Ledger:
         return {'code': 0, 'log': '', 'hash': key}
 
     def mine(self):
+        with self.lock:
+            self._mine()
+
+    def _mine(self):
         if self.paused:
             return
         height = self.s['height'] + 1
@@ -74,6 +139,10 @@ class Ledger:
         self.s, self.mempool, self.blocks[height] = state, [], (txs, results)
 
     def call(self, address, method, params):
+        with self.lock:
+            return self._call(address, method, params)
+
+    def _call(self, address, method, params):
         if method == 'tx':
             key = base64.b64decode(params['hash']).hex().upper()
             if key not in self.receipts or key in self.unindexed:
@@ -125,6 +194,38 @@ class Net:
                 self.add_owner(shard, index)
         self.chain.mine()
         self.threads = []
+        self.scheduler = Scheduler(self.advance)
+        self.scheduler.clock = self.clock
+
+    @contextlib.contextmanager
+    def participant(self):
+        """Run the enclosed client as a participant of simulated time (see ``Scheduler``)."""
+        self.scheduler.enter()
+        try:
+            yield
+        finally:
+            self.scheduler.leave()
+
+    def concurrently(self, calls):
+        """Run every call on its own thread as a participant of simulated time; returns their results or errors."""
+        results = [None] * len(calls)
+        ready = threading.Barrier(len(calls))
+
+        def run(index, call):
+            with self.participant():
+                ready.wait()  # all are registered before anyone can sleep: none starts alone
+                try:
+                    results[index] = ('ok', call())
+                except BaseException as error:  # noqa: BLE001 - reported per participant
+                    results[index] = ('error', error)
+
+        threads = [threading.Thread(target=run, args=(i, c), daemon=True) for i, c in enumerate(calls)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(120)
+        assert not any(thread.is_alive() for thread in threads), 'a participant did not finish'
+        return results
 
     def add_owner(self, shard, index):
         owner = Owner(self.chain, shard, self.tmp / f'owner-{shard}-{index}', self.clock)
@@ -141,6 +242,11 @@ class Net:
         return [o for o in self.owners if o.rank == shard][index]
 
     def sleep(self, seconds):
+        """A client's wait: through the one scheduler of simulated time."""
+        self.scheduler.sleep(seconds)
+
+    def advance(self, seconds):
+        """Move simulated time on (one caller at a time: the scheduler's): blocks, owner gates, then hooks."""
         self.clock.now += seconds
         for _ in range(max(1, int(seconds))):
             self.chain.mine()

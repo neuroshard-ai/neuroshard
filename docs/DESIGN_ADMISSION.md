@@ -221,6 +221,15 @@ does today, with a different message. The friendly explanation needs the new cli
 
 **Bounded waiting.**
 - The client retries with jittered backoff (1, 2, 4, 8 s, then a 15 s cap, each ±25%), honouring `retry_after`.
+  A wait set by `retry_after` is jittered too, up to 25% longer, because owners give every contender the same
+  hint. A wait that would pass the deadline is not taken: an attempt at the very deadline could fund a job with
+  no time left to admit it.
+- `retry_after` is an **estimate** of when the slot frees, not its lease's worst-case bound. An offered,
+  funding or admitted lease normally ends within moments: it is held or released within a round trip, confirmed
+  within a few blocks, or started on the first work frame. Its hint is capped at 2 s. A started job serves a
+  whole conversation, and its hint is 15 s. (Issue #126: hinting the full bounds, 20 s or 60 s, sent every
+  contender of a burst past its deadline at once. They then retried in lockstep, and a scheduled four-client
+  burst served nobody in 74 of 300 runs.)
 - It waits until the user's deadline, which defaults to the expected time for the conversation ahead plus one
   conversation, at least 300 s. The soak's turns take 62–253 s.
 - Jitter only spreads out retries. It guarantees nothing about fairness.
@@ -312,9 +321,12 @@ Where the implementation differs from the text above:
    outlasted the budget), the owner remembers the hold for one budget window and credits it, once, when the funded
    job is first seen naming it.
 6. **A charge stops at its lease's bound,** not when the owner next notices the lease has lapsed.
-7. **Test 10** is run locally (four concurrent clients, one owner per shard): each is served or reports busy with
-   nothing funded, and the conservation invariant is asserted on every block. The rerun of the soak's burst workload
-   on the live network still has to be done with a release that includes this change.
+7. **Test 10** is run locally (four concurrent clients, one owner per shard), under one scheduler of simulated
+   time: a waiting client registers its wake time, and time advances only when every client waits. Its safety
+   result (each client served, or busy with nothing funded; conservation on every block) and its progress result
+   (every client served within its deadline as capacity frees) are separate tests. An explicit schedule also
+   covers a contender releasing a partial reservation. The rerun of the soak's burst workload on the live network
+   still has to be done with a release that includes this change.
 
 Changes after the October 21 review of the implementation (`test_admission_review.py`):
 
