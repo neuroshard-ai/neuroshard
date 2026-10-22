@@ -51,7 +51,11 @@ class FundingLapsed(RuntimeError):
 
 
 class Backoff:
-    """Jittered exponential waits (1, 2, 4, 8, then 15 s, each ±25%), at least ``retry_after``, within a deadline."""
+    """Jittered exponential waits (1, 2, 4, 8, then 15 s, each ±25%), never shorter than ``retry_after``, within a
+    deadline. A wait set by ``retry_after`` is jittered too (up to 25% longer): owners give every contender the
+    same hint, and without jitter they would all retry at the same instant and collide again. A wait that would
+    pass the deadline is not taken: an attempt at the very deadline could fund a job with no time left to admit
+    it, which is worse than reporting busy with nothing funded."""
 
     def __init__(self, deadline, rng=None, clock=time.monotonic, sleep=time.sleep):
         self.deadline, self.rng, self.clock, self.sleep, self.attempt = deadline, rng or random.Random(), clock, sleep, 0
@@ -59,7 +63,7 @@ class Backoff:
     def wait(self, retry_after=0):
         base = SCHEDULE[min(self.attempt, len(SCHEDULE) - 1)]
         self.attempt += 1
-        delay = max(base * self.rng.uniform(0.75, 1.25), retry_after)
+        delay = max(base * self.rng.uniform(0.75, 1.25), retry_after * self.rng.uniform(1.0, 1.25))
         if self.clock() + delay > self.deadline:
             return False
         self.sleep(delay)

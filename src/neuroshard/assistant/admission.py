@@ -26,6 +26,7 @@ VISIBLE_GRACE = 30   # a funding lease whose job is visible lapses if no HELLO a
 BUDGET_SECONDS = 60
 BUDGET_WINDOW = 600
 STARTED_RETRY = 15   # retry_after while the slot serves a started job
+PENDING_RETRY = 2    # at most this while it is offered, funding or admitted: each normally ends within moments
 
 
 class Busy(Exception):
@@ -118,8 +119,17 @@ class Gate:
         return now + min(seconds, remaining)
 
     def busy(self, now):
+        """BUSY's ``retry_after``: an estimate of when the slot may be free, not the lease's worst-case bound.
+
+        Every pre-start state normally ends within moments: an offered lease is held or released within a round
+        trip, a funding lease is confirmed within a few blocks, an admitted one starts on its first work frame. A
+        hint of their full bounds (20 s, up to 240 s, 60 s) sends every contender away for that long, past most
+        users' deadlines. Their hints are capped at ``PENDING_RETRY`` (still never past the lease's own bound); a
+        started job, which serves a whole conversation, at ``STARTED_RETRY``."""
         lease = self.lease
-        return Busy(STARTED_RETRY if lease['state'] == 'started' else max(1, int(lease['expires'] - now) + 1))
+        if lease['state'] == 'started':
+            return Busy(STARTED_RETRY)
+        return Busy(min(max(1, int(lease['expires'] - now) + 1), PENDING_RETRY))
 
     def record(self, job_id, gen, state):
         write_atomic(self.directory / f'{job_id}.json', {'job_id': job_id, 'gen': gen, 'state': state})
