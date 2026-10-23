@@ -53,6 +53,7 @@ def main():
         except importlib.metadata.PackageNotFoundError:
             versions[name] = None
     record = {'python': platform.python_version(), 'torch_threads': None,
+              'step_threads': __import__('neuroshard.evolution.growth_replay', fromlist=['STEP_THREADS']).STEP_THREADS,
               'packages_differing_from_pin': {k: [v, versions[k]] for k, v in pinned.items() if versions[k] != v},
               'first': args.first, 'last': args.last, 'expect': args.expect}
     torch.set_num_threads(8)
