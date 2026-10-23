@@ -19,10 +19,8 @@ Today the project administers every validator and every original owner. This pag
 - **Use the current release, not `main`.** Owners must run the same protocol as the rest of their shard:
   clients select only owners that answer the admission capability check, which `pilot-1` owners don't.
   The command below pins `--branch pilot-2-rc1`; the maintainers will name the next release in your issue.
-- **Joining as an owner is a commitment you can't yet undo from the CLI.** The service bonds 5 test NEURO
-  and starts serving paid jobs at once. The ledger supports unbonding (`owner_unbond`, then
-  `owner_withdraw` after the challenge window), but the CLI has no command for it yet. Ask in your issue
-  thread before you stop permanently.
+- **Joining as an owner bonds 5 test NEURO and starts serving paid jobs at once.** You can leave at any
+  time with `neuroshard assistant leave` (see *Leave the network* below).
 - **Check your machine first.** It installs nothing:
 
   ```bash
@@ -126,6 +124,22 @@ real requests, and owners reproduce that evaluation bit for bit.
   never served twice: it is committed from its log, or it expires and is refunded.
 - Restore that directory from backup onto a new machine to keep the same owner identity.
 - Never run two machines with the same owner home at once.
+
+**Leave the network.** Two steps, with the same `--home` and `--shard` the service uses:
+
+```bash
+sudo systemctl disable --now neuroshard-owner        # stop serving first
+neuroshard assistant leave status --shard N --home ~/.neuroshard/assistant
+neuroshard assistant leave unbond --shard N --home ~/.neuroshard/assistant
+# after the challenge window (600 blocks, about 10 minutes), while the bond can still be challenged:
+neuroshard assistant leave withdraw --shard N --home ~/.neuroshard/assistant
+```
+
+- `unbond` stops new jobs from naming the owner. The ledger refuses it while a job naming this owner is
+  unsettled: wait for those jobs to settle (`leave status` lists them).
+- `withdraw` returns the bond to your account once the window has passed. A proven fault in that window
+  would still slash it.
+- A withdrawn log key can never bond again. To host again, start a new `--home`.
 
 **Known failures and what they mean.**
 - `this log key is no longer bonded; start a new owner home`: this owner was slashed or unbonded. Its bond
