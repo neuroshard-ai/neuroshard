@@ -30,6 +30,6 @@ sympy==1.14.0
 tokenizers==0.22.2
 torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl#sha256=ee40b8a4b4b2cf0670c6fd4f35a7ef23871af956fecb238fbf5da15a72650b1d
 tqdm==4.70.1
-transformers==5.5.4
+transformers==5.10.1
 typer==0.27.2
 typing_extensions==4.16.0
