@@ -218,6 +218,14 @@ def main(argv=None):
                 print(json.dumps(value) if args.json else f'Submitted transfer: {value["hash"]}. Check the ledger for final acceptance.')
     except (OSError,ValueError,KeyError) as exc:
         parser.exit(1,f'NeuroShard: {exc}\n')
+    except Exception as exc:
+        # Expected admission and funding outcomes (busy before funding, funded but not served, an unresolved or
+        # lapsed funding outcome) are reported like any other refusal. Anything else keeps its traceback.
+        from neuroshard.assistant import admission_client,funding
+        if isinstance(exc,(admission_client.NetworkBusy,admission_client.NotServed,admission_client.FundingLapsed,
+                           funding.Unresolved)):
+            parser.exit(1,f'NeuroShard: {exc}\n')
+        raise
     except KeyboardInterrupt:parser.exit(130,'\nStopped. Your key and node history remain on disk.\n')
 
 
