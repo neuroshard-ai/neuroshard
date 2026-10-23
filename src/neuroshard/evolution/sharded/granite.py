@@ -54,6 +54,23 @@ def load_config(directory):
     return config
 
 
+
+def causal_mask(config, hidden, attention_mask, positions, cache, position_ids):
+    """``transformers.masking_utils.create_causal_mask`` across the pinned runtimes.
+
+    transformers 5.10 removed its ``cache_position`` argument (it now derives positions from ``past_key_values``
+    and ``position_ids``); 5.5 requires it. It is passed only where the installed version accepts it, and every
+    other argument by keyword, so one call is correct on both. Which runtime computes the same numbers is decided by
+    replaying committed owner logs (``scripts/replay_owner_logs.py``), not by this function."""
+    import inspect
+
+    from transformers.masking_utils import create_causal_mask
+
+    keywords = {'past_key_values': cache, 'position_ids': position_ids}
+    if 'cache_position' in inspect.signature(create_causal_mask).parameters:
+        keywords['cache_position'] = positions
+    return create_causal_mask(config, hidden, attention_mask, **keywords)
+
 class Partition(nn.Module):
     def __init__(self, config, boundaries, rank, *, dtype=torch.bfloat16, device='cpu'):
         from transformers.models.granite.modeling_granite import (
@@ -132,13 +149,10 @@ class Partition(nn.Module):
         return self.embedding(ids) * self.config.embedding_multiplier
 
     def forward(self, hidden, attention_mask=None, cache=None):
-        from transformers.masking_utils import create_causal_mask
-
         past = cache.get_seq_length() if cache is not None else 0
         positions = torch.arange(past, past + hidden.shape[1], device=hidden.device)
         position_ids = positions.unsqueeze(0)
-        mask = create_causal_mask(self.config, hidden, attention_mask, positions,
-                                  past_key_values=cache, position_ids=position_ids)
+        mask = causal_mask(self.config, hidden, attention_mask, positions, cache, position_ids)
         rotary = self.rotary(hidden, position_ids)
         for layer in self.layers:
             out = layer(hidden, attention_mask=mask, position_ids=position_ids, past_key_values=cache,

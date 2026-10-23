@@ -8,8 +8,15 @@ showed across owners) and a dishonest one is provable.
 A state root covers everything the next step depends on: every trainable tensor and the optimizer's
 moments and step counts, as raw bytes in name order. The recipe fixes the model, arm, spec, data and
 schedule; the step index fixes the microbatch.
+
+**Thread count.** A step's rounding depends on the number of CPU threads it runs on, so the protocol pins it:
+every step runs on ``STEP_THREADS`` threads, whatever the calling process or thread is set to, and the caller's
+setting is restored afterwards. Without the pin, a contributor training at torch's default (four on an
+eight-vCPU host) and a validator that set eight threads for its shards compute different roots for the same
+honest step, and the validator would prove fraud that never happened.
 """
 
+import contextlib
 import hashlib
 import io
 import json
@@ -17,6 +24,20 @@ import json
 import torch
 
 from neuroshard.evolution import assistant_experience_train as trainer
+
+# Every committed live growth step was trained at torch's default on the pinned eight-vCPU class: four threads.
+STEP_THREADS = 4
+
+
+@contextlib.contextmanager
+def step_threads():
+    """Run the enclosed work on ``STEP_THREADS`` torch threads (a per-thread setting); restore the caller's."""
+    previous = torch.get_num_threads()
+    torch.set_num_threads(STEP_THREADS)
+    try:
+        yield
+    finally:
+        torch.set_num_threads(previous)
 
 
 def updates(recipe):
@@ -102,7 +123,13 @@ def state_root(trainable, optimizer):
 
 
 def step(model, trainable, optimizer, recipe, index, schedule=None):
-    """Exactly one optimizer step ``index`` of the recipe's schedule; the loop body of ``trainer.train``."""
+    """Exactly one optimizer step ``index`` of the recipe's schedule, on the pinned ``STEP_THREADS`` threads."""
+    with step_threads():
+        return _step(model, trainable, optimizer, recipe, index, schedule)
+
+
+def _step(model, trainable, optimizer, recipe, index, schedule=None):
+    """The loop body of ``trainer.train``."""
     spec, arm, sources = recipe['spec'], recipe['arm'], recipe['sources']
     batch = (schedule or updates(recipe))[index]
     for group in optimizer.param_groups:

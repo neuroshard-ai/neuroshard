@@ -180,14 +180,12 @@ def prepare_parent():
 
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
-        from neuroshard.evolution import granite_shard_execution as runtime
+        from neuroshard.client import live_runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
-        runtime.configure()
+        live_runtime.configure()
         if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'grow'):  # growth steps replay too
-            from neuroshard.evolution import assistant_growth_cohort3_eval
-            from neuroshard.evolution.modular_reference_execution import ROOT, read
-            assistant_growth_cohort3_eval.runtime(read(ROOT / runtime.RUNTIME))
+            live_runtime.check()
             if getattr(args, 'threads', None) not in (None, 8):
                 raise ValueError('auditable owners require the pinned eight-thread execution class')
     from neuroshard.assistant import network

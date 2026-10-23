@@ -82,7 +82,7 @@ else mkdir -p "$(dirname "$SRC")"; git clone -q --branch "$BRANCH" https://githu
 say "Code at $(git -C "$SRC" rev-parse --short HEAD) ($BRANCH)"
 VENV="$HOME/.venvs/neuroshard"
 [ -x "$VENV/bin/python" ] || uv venv -q -p 3.12.12 "$VENV"
-uv pip install -q --python "$VENV/bin/python" -r "$SRC/docs/granite-shard-chain-requirements.txt"
+uv pip install -q --python "$VENV/bin/python" -r "$SRC/docs/assistant-runtime-2-requirements.txt"
 uv pip install -q --python "$VENV/bin/python" --no-deps --require-hashes -r "$SRC/docs/beacon-requirements.txt"
 uv pip install -q --python "$VENV/bin/python" --no-deps -e "$SRC"
 CLI="$VENV/bin/neuroshard assistant"

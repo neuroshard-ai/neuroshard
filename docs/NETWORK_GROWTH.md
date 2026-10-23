@@ -65,8 +65,15 @@ The tests check this on the protocol trainer (`growth_replay`):
 
 ## Limits
 
-- **Execution class.** Bit-exact replay holds within one pinned CPU instruction class and runtime.
-  Contributors and judging validators must share it.
+- **Execution class.** Bit-exact replay holds within one pinned CPU instruction class, runtime and
+  thread count. Contributors and judging validators must share it. The thread count is pinned inside the
+  step itself (`growth_replay.STEP_THREADS`, four), because a step's rounding depends on it. Until
+  pilot-2-rc2 it was not pinned: the growth agent trained at torch's default (four threads on an eight-vCPU
+  host), while a replay at eight threads computed different roots for the same honest steps. That replay
+  could have been a validator that set eight threads for its shards. Any challenge of a live growth step
+  would then have slashed an honest contributor. No challenge was ever made. With the pin, the committed
+  live steps of job `c8e0fc69` replay to every committed root, and a validator judging at eight threads
+  clears the honest step and proves a forged one.
 - **Recipes are inputs.** The data a recipe names is what the unit learns from. A sponsor can name poor
   data. Owners vote on the result after its sealed evaluation, and that vote is the defence.
 - **Validators must hold the base model** to judge a disputed step of a Granite-scale recipe, as they

@@ -183,3 +183,31 @@ def test_validators_judge_a_growth_proof_from_their_recipe_and_bundle_stores(tmp
         promotion_or_fraud({}, None)({}, {**request, 'claimed_root': 'ab' * 32})
     with pytest.raises(ledger.ProofUnavailable):
         check({}, {**request, 'recipe_root': 'ee' * 32, 'claimed_root': 'ab' * 32})
+
+
+def test_a_step_runs_on_the_pinned_thread_count_whatever_the_caller_set():
+    """Contributors and validators set different thread counts for their other work; a step must not care.
+
+    Live finding: the growth agent trained at torch's default (four threads on an eight-vCPU host), and a
+    replay at eight threads computed another root for the same honest step, which a validator would have
+    proven as fraud."""
+    observed = []
+    original = growth._step
+
+    def spy(*args, **kwargs):
+        observed.append(torch.get_num_threads())
+        return original(*args, **kwargs)
+
+    roots = {}
+    for caller in (1, 8, growth.STEP_THREADS):
+        torch.set_num_threads(caller)
+        model = tiny()
+        trainable, optimizer = growth.start(model, RECIPE)
+        growth._step = spy
+        try:
+            roots[caller] = growth.train_segment(model, trainable, optimizer, RECIPE, 0, 2)
+        finally:
+            growth._step = original
+        assert torch.get_num_threads() == caller  # the caller's setting is restored
+    assert set(observed) == {growth.STEP_THREADS}
+    assert roots[1] == roots[8] == roots[growth.STEP_THREADS]

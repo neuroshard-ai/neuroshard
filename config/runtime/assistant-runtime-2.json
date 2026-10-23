@@ -1,0 +1,78 @@
+{
+  "format": "neuroshard-assistant-live-runtime/1",
+  "name": "assistant-runtime-2",
+  "purpose": "The numerical runtime of the live network roles (owner, auditor, validator, seed, growth agent, client) from pilot-2-rc2. Experiments and historical contracts keep the runtime they ran with.",
+  "supersedes": {
+    "file": "config/experiments/assistant-workflow-canonical-execution.json",
+    "sha256": "369b545708e39e40af7f0fa3b7a379c4b7d654c04e4e03ad9b03a072eeaeebbb"
+  },
+  "changes": {
+    "transformers": {
+      "from": "5.5.4",
+      "to": "5.10.1"
+    },
+    "certifi": {
+      "from": "2026.7.22",
+      "to": "2026.10.19"
+    },
+    "fsspec": {
+      "from": "2026.7.0",
+      "to": "2026.9.0"
+    },
+    "setuptools": {
+      "from": "78.1.0",
+      "to": "84.2.1"
+    }
+  },
+  "reason": "security: certifi (critical, compromised CA intermediates), transformers (high: save_pretrained path traversal, custom generation code before trust consent), setuptools (high and medium); fsspec routine",
+  "qualification": "bit-identical replay of committed live owner logs (both shards) and committed growth steps under this runtime; see .neuroshard/runtime-2-qualification/",
+  "python": "3.12.12",
+  "required_cpu_flags": [
+    "amx_bf16",
+    "avx512_bf16"
+  ],
+  "environment": {
+    "ATEN_CPU_CAPABILITY": null,
+    "MKL_ENABLE_INSTRUCTIONS": null,
+    "OMP_NUM_THREADS": "8",
+    "MKL_NUM_THREADS": "8",
+    "OPENBLAS_NUM_THREADS": "8",
+    "TOKENIZERS_PARALLELISM": "false"
+  },
+  "packages": {
+    "h11": "0.16.0",
+    "hf-xet": "1.6.0",
+    "markdown-it-py": "4.2.0",
+    "fsspec": "2026.9.0",
+    "rich": "15.0.0",
+    "certifi": "2026.10.19",
+    "shellingham": "1.5.4",
+    "numpy": "2.2.6",
+    "httpx": "0.28.1",
+    "httpcore": "1.0.9",
+    "transformers": "5.10.1",
+    "safetensors": "0.7.0",
+    "idna": "3.20",
+    "click": "8.5.0",
+    "packaging": "26.3",
+    "annotated-doc": "0.0.5",
+    "Jinja2": "3.1.6",
+    "tqdm": "4.70.1",
+    "typer": "0.27.2",
+    "sympy": "1.14.0",
+    "typing_extensions": "4.16.0",
+    "tokenizers": "0.22.2",
+    "mpmath": "1.3.0",
+    "PyYAML": "6.0.3",
+    "networkx": "3.6.1",
+    "torch": "2.10.0+cpu",
+    "filelock": "3.32.3",
+    "anyio": "4.15.1",
+    "regex": "2026.9.10",
+    "huggingface_hub": "1.33.0",
+    "mdurl": "0.1.2",
+    "setuptools": "84.2.1",
+    "MarkupSafe": "3.0.3",
+    "Pygments": "2.21.0"
+  }
+}

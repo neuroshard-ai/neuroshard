@@ -403,9 +403,9 @@ def shard_checker(node):
         return promotion_or_fraud(node, judge_nothing)
     if node.get('runtime') == 'granite-shard':
         # Replays must run in the owners' numerical environment, set before torch loads.
-        from neuroshard.evolution import granite_shard_execution as shard
+        from neuroshard.client import live_runtime
 
-        shard.configure()
+        live_runtime.configure()
     import torch
 
     from neuroshard.evolution.sharded import granite, granite_audit, granite_serving

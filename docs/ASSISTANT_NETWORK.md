@@ -63,7 +63,7 @@ uv python install 3.12.12
 uv venv -p 3.12.12 ~/.venvs/neuroshard
 git clone --branch main https://github.com/neuroshard-ai/neuroshard.git
 cd neuroshard
-uv pip install --python ~/.venvs/neuroshard/bin/python -r docs/granite-shard-chain-requirements.txt
+uv pip install --python ~/.venvs/neuroshard/bin/python -r docs/assistant-runtime-2-requirements.txt
 uv pip install --python ~/.venvs/neuroshard/bin/python --no-deps -e .
 ~/.venvs/neuroshard/bin/neuroshard assistant status
 ```
