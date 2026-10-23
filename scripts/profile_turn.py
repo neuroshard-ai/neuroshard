@@ -136,8 +136,12 @@ def instrument():
     torch; the CLI's own later call is then skipped (it would refuse once torch is loaded)."""
     with REC.span('setup.import'):
         from neuroshard.evolution import granite_shard_execution as runtime
-        runtime.configure()
-        runtime.configure = lambda: None  # applied identically above, before torch loaded
+        configured = 'torch' not in sys.modules
+        if configured:  # the client process: apply the pinned environment before torch loads
+            runtime.configure()
+        # Recorded, so a run whose environment was not applied here is visible, never silently mixed in.
+        REC.event('runtime', pinned_environment_applied_by_profiler=configured)
+        runtime.configure = lambda: None  # applied identically above (or by an earlier caller in this process)
         from neuroshard.assistant import admission_client, network, public
         from neuroshard.client import cli
         from neuroshard.evolution import granite_tokenizer
@@ -152,12 +156,13 @@ def instrument():
             loaded = original_load(*args, **kwargs)
         partition = loaded[0] if isinstance(loaded, tuple) else loaded  # (partition, manifest)
         timed(partition, 'warm_up', 'setup.init.warm_up')
-        for method in ('embed', 'norm', 'logits'):
-            timed(partition, method, 'local.partition')
-        # The partition's forward (``partition(...)``) is its class's __call__: wrap it on this instance's class.
-        cls = type(partition)
-        if not getattr(cls.__call__, '__wrapped__', None):
-            timed(cls, '__call__', 'local.partition')
+        # ``embed``, ``forward`` and ``logits`` are Partition methods; ``norm`` is a submodule (an nn.Module, whose
+        # own class's ``forward`` is timed), so nothing is assigned onto the module. Class-level wrappers, once;
+        # nested calls (``logits`` applying ``norm``) count once, at the outermost span.
+        for cls, method in ((type(partition), 'embed'), (type(partition), 'forward'), (type(partition), 'logits'),
+                            (type(getattr(partition, 'norm', None)), 'forward')):
+            if cls is not type(None) and not hasattr(getattr(cls, method), '__wrapped__'):
+                timed(cls, method, 'local.partition')
         return loaded
 
     granite.load_partition = load_partition

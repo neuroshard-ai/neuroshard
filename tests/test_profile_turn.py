@@ -157,3 +157,50 @@ def test_a_nonzero_cli_exit_is_not_a_completed_run(prof, tmp_path, monkeypatch):
         raise SystemExit(1)
     code, report, _ = run_main(prof, tmp_path, monkeypatch, refuse)
     assert code == 1 and report['outcome'] == 'client-exit'
+
+
+def test_partition_instrumentation_on_a_real_module_assigns_nothing_onto_it(prof):
+    """The failed matched runs: assigning a wrapper to ``partition.norm`` (a submodule) raised in torch."""
+    import torch
+    from torch import nn
+
+    class Norm(nn.Module):
+        def forward(self, x):
+            return x * 2
+
+    class Partition(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.norm = Norm()
+
+        def embed(self, ids):
+            return ids.float()
+
+        def forward(self, hidden, mask=None, cache=None):
+            return hidden + 1
+
+        def logits(self, hidden):
+            return self.norm(hidden)
+
+        def warm_up(self):
+            pass
+
+    import neuroshard.evolution.sharded.granite as granite
+    original = granite.load_partition
+    try:
+        granite.load_partition = lambda *a, **k: (Partition(), {})
+        prof.instrument()
+        partition, _ = granite.load_partition(None, None, 0)
+        assert isinstance(partition.norm, Norm), 'the submodule is untouched'
+        with prof.REC.span('turn'):
+            with prof.REC.span('pass'):
+                partition.logits(partition(partition.embed(torch.ones(1, 2))))
+        turn, = prof.analyse(prof.REC.spans, prof.REC.events)['turns']
+        assert turn['local_partition_s'] > 0 and not prof.analyse(prof.REC.spans, prof.REC.events)['invariant_violations']
+    finally:
+        granite.load_partition = original
+        for cls in (Partition, Norm):
+            for name in ('embed', 'forward', 'logits'):
+                method = cls.__dict__.get(name)
+                if hasattr(method, '__wrapped__'):
+                    setattr(cls, name, method.__wrapped__)
