@@ -35,4 +35,4 @@ is always empty: a session is not a transaction.
 
 It does not open a public endpoint, take payment or complete A6. Quality
 monitoring, funding and the operating soak wait on A5. Join and recovery for
-operators are in [ASSISTANT_JOIN_RECOVERY.md](ASSISTANT_JOIN_RECOVERY.md).
+operators are in [OPERATORS.md](OPERATORS.md).
