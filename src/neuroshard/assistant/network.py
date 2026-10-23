@@ -955,12 +955,15 @@ class Owner:
         budget = relay.WorkBudget(job['positions'], self.config.max_position_embeddings, alive)
         ring = relay.OwnerRelay(connection, self.rank, self.served.world, self.config.hidden_size,
                                 self.served.max_tokens, budget, deadline=time.monotonic() + 3600)
+        started, served, ended = time.monotonic(), None, None
         try:
-            serving.serve(self.partition, ring, self.adapter, log, None, link)
+            served = serving.serve(self.partition, ring, self.adapter, log, None, link)
         except (ConnectionError, OSError, ValueError) as error:
+            ended = f'{type(error).__name__}: {error}'[:200]
             progress(f'Job {job_id[:12]} ended before its stop: {error}')
         finally:
             connection.close()
+            self.save_timing(job_id, time.monotonic() - started, served, ended)
         if log.attested is None:
             return None
         directory = self.home / 'logs' / job_id
@@ -972,6 +975,22 @@ class Owner:
         self.chain.submit(self.account, 'log_commit', job_id=job_id, log_signature=signature, **commitment)
         self.pending_jobs.discard(job_id)
         return {'job_id': job_id, 'positions': log.attested['positions']}
+
+    def save_timing(self, job_id, seconds, served, ended):
+        """This owner's elapsed time for a job, by activity, in ``<home>/timing/<job>.json``.
+
+        Operator diagnostics only: kept apart from ``logs/`` (the signed, committed audit evidence), never signed,
+        committed or sent. A job that ended before its stop has no per-activity breakdown, only its total. A failure
+        to write it never affects serving."""
+        try:
+            record = {'job_id': job_id, 'rank': self.rank, 'serving_seconds': seconds, 'ended_early': ended,
+                      'steps': (served or {}).get('steps'), 'timing': (served or {}).get('timing'),
+                      'threads': self.threads, 'unix': time.time()}
+            directory = self.home / 'timing'
+            directory.mkdir(parents=True, exist_ok=True)
+            (directory / f'{job_id}.json').write_text(json.dumps(record, sort_keys=True))
+        except Exception:  # noqa: BLE001 - diagnostics must never interfere with a paid job
+            pass
 
     def commit_pending(self):
         """Recover saved commitments after a process restart or a lost RPC reply."""

@@ -26,7 +26,13 @@ if [ "$ROLE" = check ] || [ "$ROLE" = "--check" ]; then
   AMX=no; grep -q amx_bf16 /proc/cpuinfo 2>/dev/null && AMX=yes
   echo "This machine: $ARCH, $CPUS threads, ${MEM} GB RAM, ${DISK} GB free disk, AMX: $AMX"
   [ "$ARCH" = Linux-x86_64 ] || { echo "  Every role needs Linux x86_64."; exit 1; }
-  role() { if [ "$AMX" = yes ] || [ "$2" = any ]; then if [ "$MEM" -ge "$3" ] && [ "${DISK:-0}" -ge "$4" ]; then ok "$1" "yes"; else ok "$1" "no: needs ${3} GB RAM and ${4} GB disk"; fi; else ok "$1" "no: needs an Intel CPU with AMX (e.g. AWS m7i/r7i)"; fi; }
+  role() {
+    if [ "$AMX" != yes ] && [ "$2" != any ]; then ok "$1" "no: needs an Intel CPU with AMX (e.g. AWS m7i/r7i)"; return; fi
+    short=""
+    [ "$MEM" -ge "$3" ] || short="${3} GB RAM (has ${MEM})"
+    [ "${DISK:-0}" -ge "$4" ] || short="${short:+$short and }${4} GB free disk (has ${DISK:-0})"
+    if [ -z "$short" ]; then ok "$1" "yes"; else ok "$1" "no: needs $short"; fi
+  }
   role chat any 6 10; role owner amx 8 20; role validator amx 14 60; role auditor amx 14 30; role contributor amx 30 60
   exit 0
 fi
@@ -118,7 +124,9 @@ RestartSec=30
 WantedBy=multi-user.target
 UNIT
 sudo systemctl daemon-reload
-sudo systemctl enable -q --now "neuroshard-$ROLE"
+sudo systemctl enable -q "neuroshard-$ROLE"
+# restart, not start: on a rerun (an upgrade or rollback) the running service must load the code just installed.
+sudo systemctl restart "neuroshard-$ROLE"
 sleep 5
 systemctl is-active "neuroshard-$ROLE" >/dev/null && say "neuroshard-$ROLE is running" || { journalctl -u "neuroshard-$ROLE" -n 20 --no-pager; exit 1; }
 [ -n "$PORTS" ] && echo "Open inbound TCP $PORTS to this machine so peers and users reach it."

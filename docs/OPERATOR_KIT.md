@@ -1,3 +1,5 @@
+> **Superseded.** This page describes the earlier A5 operator plan. The current instructions for joining, upgrading and recovering are in [OPERATORS.md](OPERATORS.md). Kept for the record.
+
 # Run one of the first four independent NeuroShard nodes
 
 NeuroShard serves a learned assistant across machines and settles payment for that

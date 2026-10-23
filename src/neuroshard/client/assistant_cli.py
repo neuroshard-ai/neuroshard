@@ -58,6 +58,13 @@ def register(subcommands, root):
     govern.add_argument('--reject', action='store_true', help='vote: vote no')
     govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
     govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
+    leave = actions.add_parser('leave', parents=[common],
+                               help="Stop being an owner: unbond (no new jobs), then withdraw the bond after the "
+                                    "challenge window")
+    leave.add_argument('leave_action', choices=('status', 'unbond', 'withdraw'),
+                       help='status: show this owner and what it can do now; unbond: start withdrawal; '
+                            'withdraw: return the bond once the challenge window has passed')
+    leave.add_argument('--shard', type=int, required=True, help='The shard this home hosts')
     faucet = actions.add_parser('faucet', parents=[common],
                                 help="Run a faucet that grants test NEURO from this home's own account")
     faucet.add_argument('--listen', default='0.0.0.0', help='Local address to listen on')
@@ -300,6 +307,9 @@ def run(args):
     if args.assistant_action == 'host':
         host_following(args, chain, network, descriptor)
         return
+    if args.assistant_action == 'leave':
+        leave(args, chain, network)
+        return
     if args.assistant_action == 'faucet':
         run_faucet(args, chain, network)
         return
@@ -389,6 +399,48 @@ def host_following(args, chain, network, descriptor, poll=30.0):
             return
 
 
+def leave(args, chain, network):
+    """Unbond, then withdraw, this home's owner bond: two signed transactions from this machine's own keys.
+
+    The ledger refuses both while a job naming this owner is unsettled, and refuses the withdrawal until
+    ``challenge_blocks`` after the unbond, while the bond can still be challenged. Stop the host service first:
+    a leaving owner is no longer selected, but one still running would keep trying to serve."""
+    key_path = args.home / f'log-{args.shard}.key'
+    if not key_path.exists():
+        raise ValueError(f'no owner log key for shard {args.shard} in {args.home}')
+    public = network.public_hex(network.signing_key(key_path))
+    account = network.Account(args.home / 'account.key')
+    state = chain.state()
+    owner = state['owners'].get(public)
+    if owner is None:
+        raise ValueError(f'log key {public[:16]} is not bonded on {state["chain_id"]}')
+    if owner['account'] != account.public:
+        raise ValueError('this home\'s account did not bond that owner')
+    pending = sorted(job_id for job_id, job in state['jobs'].items() if public in job['owners'])
+    height, release = state['height'], owner.get('release_height')
+    print(f"Owner {public[:16]} (shard {owner['shard']}): {owner['status']}, bond {owner['amount'] / network.NEURO:g} "
+          f"NEURO, block {height}" + (f', withdrawable from block {release}' if release else ''))
+    if pending:
+        print(f'  named in {len(pending)} unsettled job(s); the ledger refuses to unbond or withdraw until they settle')
+    if args.leave_action == 'status':
+        return
+    if pending:
+        raise ValueError('wait for the jobs naming this owner to settle, then rerun')
+    if args.leave_action == 'unbond':
+        if owner['status'] != 'active':
+            raise ValueError(f"only an active owner can unbond; this one is {owner['status']}")
+        chain.submit(account, 'owner_unbond', log_key=public)
+        owner = chain.state()['owners'][public]
+        print(f"Unbonding: no new jobs will name this owner. Withdraw the bond from block {owner['release_height']} "
+              f"with: neuroshard assistant leave withdraw --shard {args.shard} --home {args.home}")
+        return
+    if owner['status'] != 'leaving':
+        raise ValueError(f"withdraw follows unbond; this owner is {owner['status']}")
+    if height < release:
+        raise ValueError(f'the bond can still be challenged until block {release} (now {height})')
+    chain.submit(account, 'owner_withdraw', log_key=public)
+    print(f"Withdrawn: {owner['amount'] / network.NEURO:g} NEURO returned to {account.public[:16]}. "
+          'This log key can never bond again; a new owner needs a new home.')
 def run_faucet(args, chain, network):
     """An operator's own faucet: grants test NEURO from this home's account, with the same per-account and
     per-address limits as the seed's. Clients find it through the descriptor's ``faucets`` or

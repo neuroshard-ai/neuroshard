@@ -144,10 +144,15 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
 
     cache, steps, busy, forwards = DynamicCache(), 0, 0.0, 0
     caches, route, router_cache = {1: cache}, 1, DynamicCache()
+    # Elapsed time by activity (seconds), for operator diagnostics only: never logged, signed or committed.
+    timing = {'waiting_for_command': 0.0, 'receiving_tensor': 0.0, 'verifying_link': 0.0, 'partition': 0.0,
+              'recording_log': 0.0, 'sending_tensor': 0.0, 'signing_link': 0.0, 'passes': 0}
     while True:
+        mark = time.monotonic()
         op, value = ring.command(0)
+        timing['waiting_for_command'] += time.monotonic() - mark
         if op == STOP:
-            return {'steps': steps, 'busy_seconds': busy}
+            return {'steps': steps, 'busy_seconds': busy, 'timing': timing}
         if op in (RESET, CROP, ADAPTER, ROUTE, ROUTER_CROP, ROUTER_RESET):
             if log is not None:
                 log.command(op, value)
@@ -174,8 +179,13 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
             router_cache.crop(value)
         elif op in (FORWARD, VERIFY, FEATURE, ROUTER_FEATURE):
             steps += op in CACHED
+            mark = time.monotonic()
             hidden = ring.receive(ring.rank - 1, value)
-            attested = link.receive(op, value, hidden, ring.receive_signature(ring.rank - 1)) if link else None
+            signature = ring.receive_signature(ring.rank - 1) if link else None
+            timing['receiving_tensor'] += time.monotonic() - mark
+            mark = time.monotonic()
+            attested = link.receive(op, value, hidden, signature) if link else None
+            timing['verifying_link'] += time.monotonic() - mark
             began = time.monotonic()
             with torch.inference_mode():
                 if op in (FORWARD, VERIFY, ROUTER_FEATURE):
@@ -184,18 +194,30 @@ def serve(partition, ring, adapter=None, log=None, fault=None, link=None):
                     out = partition(hidden, mask, active)
                 else:
                     out = partition(hidden, None, DynamicCache())
-            busy += time.monotonic() - began
+            elapsed = time.monotonic() - began
+            busy += elapsed
+            timing['partition'] += elapsed
+            timing['passes'] += 1
             last = ring.rank == ring.world - 1
             sent = out[:, -1:] if last and op not in (ROUTER_FEATURE, VERIFY) else out
             if fault is not None and forwards == fault:
                 sent = sent.clone()
                 sent.view(torch.int16).view(-1)[0] ^= 1
             forwards += 1
+            mark = time.monotonic()
             if log is not None:
                 log.forward(op, value, hidden, sent, attested)
+            timing['recording_log'] += time.monotonic() - mark
+            mark = time.monotonic()
             ring.send(sent, (ring.rank + 1) % ring.world)
+            timing['sending_tensor'] += time.monotonic() - mark
             if link is not None:
-                ring.send_signature(link.send(op, value, sent), (ring.rank + 1) % ring.world)
+                mark = time.monotonic()
+                signed = link.send(op, value, sent)
+                timing['signing_link'] += time.monotonic() - mark
+                mark = time.monotonic()
+                ring.send_signature(signed, (ring.rank + 1) % ring.world)
+                timing['sending_tensor'] += time.monotonic() - mark
         else:
             raise ValueError('unknown serving command')
 
