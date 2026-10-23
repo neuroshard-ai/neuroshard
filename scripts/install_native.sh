@@ -17,7 +17,7 @@ if [[ ! -x venv_build/bin/python ]]; then
 fi
 venv_build/bin/python -m pip install --disable-pip-version-check -r docs/llm-requirements.txt
 venv_build/bin/python -m pip install --disable-pip-version-check --no-deps -e .
-venv_build/bin/python -m pip install --disable-pip-version-check pytest==9.1.1 boto3==1.41.5 ijson==3.4.0
+venv_build/bin/python -m pip install --disable-pip-version-check pytest==9.1.1 boto3==1.41.5 ijson==3.5.1
 NEUROSHARD_STATE_DIR="$neuroshard_repo_dir/.neuroshard" \
   venv_build/bin/python -c 'from neuroshard.client.runtime import engine; print("Consensus executable:", engine())'
 venv_build/bin/python scripts/neuroshard_chain.py --help
