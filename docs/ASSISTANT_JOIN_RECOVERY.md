@@ -1,3 +1,5 @@
+> **Superseded.** This page describes the earlier A5 operator plan. The current instructions for joining, upgrading and recovering are in [OPERATORS.md](OPERATORS.md). Kept for the record.
+
 # Join and recover an independent assistant node
 
 **Status: instructions for the A5 soak. Not authorized until four operators
