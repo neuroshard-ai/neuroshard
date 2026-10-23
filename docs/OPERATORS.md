@@ -80,12 +80,30 @@ before the pool funds it. Owners' agents verify each recipe themselves before vo
 A new version goes live only if it beats the served version on a beacon-sealed evaluation that includes
 real requests, and owners reproduce that evaluation bit for bit.
 
+## Run a faucet (optional)
+
+New users and operators get test NEURO from a faucet. Any operator can run one from its own account, so
+joining does not depend on the project's seed:
+
+```bash
+neuroshard assistant faucet --home ~/.neuroshard/faucet --port 28782
+```
+
+- It grants 20 NEURO per request to accounts holding less than 10, once per account per hour and five times
+  per source address per hour (`--amount`, `--floor`, `--per-address`). It refuses to start without enough
+  NEURO to grant.
+- It only transfers its own account's balance, so nothing about it has to be trusted. Fund that account
+  first, from your own balance or another faucet.
+- Open the port, and name it in your operator issue. Clients try the descriptor's `faucet`, then its
+  `faucets` list, then any URLs in `NEUROSHARD_FAUCETS` (comma-separated), until one grants.
+
 ## What still depends on the project
 
 - **Administration:** every validator, the two original owners, the auditor and the faucet run on
   machines the project administers. Independent operators are the point of this page.
 - **Single services:**
-  - The faucet: one, on the seed.
+  - The faucet: the descriptor names one, on the seed. Clients fall through to any other faucet they are
+    given (see *Run a faucet*), but no independent faucet is listed yet.
   - Model files: the pinned files are mirrored by every validator, so GitHub is no longer required.
     The base model's tensors still come from Hugging Face at a pinned revision.
   - The ledger RPC is served by all four validators, and clients cross-check them.

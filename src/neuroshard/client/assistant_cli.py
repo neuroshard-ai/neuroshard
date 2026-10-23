@@ -58,6 +58,13 @@ def register(subcommands, root):
     govern.add_argument('--reject', action='store_true', help='vote: vote no')
     govern.add_argument('--approval-ppm', type=int, default=666_667, help='handover: approving bond share needed')
     govern.add_argument('--vote-blocks', type=int, default=600, help='handover: blocks a proposal stays open')
+    faucet = actions.add_parser('faucet', parents=[common],
+                                help="Run a faucet that grants test NEURO from this home's own account")
+    faucet.add_argument('--listen', default='0.0.0.0', help='Local address to listen on')
+    faucet.add_argument('--port', type=int, default=28782, help='Port to serve /faucet on (default 28782)')
+    faucet.add_argument('--amount', default='20', help='NEURO granted per request (default 20)')
+    faucet.add_argument('--floor', default='10', help='Grant only to accounts holding less than this (default 10)')
+    faucet.add_argument('--per-address', type=int, default=5, help='Grants per source address per hour (default 5)')
     grow = actions.add_parser('grow', parents=[common],
                               help='Grow the assistant on the network: open, train, challenge or prove a growth job')
     grow.add_argument('grow_action', choices=('list', 'open', 'train', 'challenge', 'prove', 'agent', 'propose-corpus'))
@@ -241,7 +248,7 @@ def run(args):
             raise ValueError('audit interval must be at least one second')
         account = network.Account(args.home / 'account.key')
         state = chain.state()
-        network.ensure_balance(chain, account, 2 * state['params']['challenge_deposit'], descriptor.get('faucet'))
+        network.ensure_balance(chain, account, 2 * state['params']['challenge_deposit'], network.faucets(descriptor))
         from neuroshard.assistant.audit import VersionChanged
 
         torch.set_num_threads(8)
@@ -293,6 +300,9 @@ def run(args):
     if args.assistant_action == 'host':
         host_following(args, chain, network, descriptor)
         return
+    if args.assistant_action == 'faucet':
+        run_faucet(args, chain, network)
+        return
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
         raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
     price = atoms(args.price)
@@ -300,7 +310,7 @@ def run(args):
     world, suggestions = workspace(args.sample, args.world)
     show(world, suggestions)
     conversation = network.Conversation(served, stage, chain, network.Account(args.home / 'account.key'), world,
-                                        args.budget, price, descriptor.get('faucet'), threads=args.threads,
+                                        args.budget, price, network.faucets(descriptor), threads=args.threads,
                                         mode='legacy' if args.legacy_admission else 'reserved', wait=args.wait,
                                         home=args.home)
     print(f"Job {conversation.job_id[:16]}: shards served by "
@@ -350,7 +360,7 @@ def host_following(args, chain, network, descriptor, poll=30.0):
         served, stage = network.fetch_stage(descriptor, args.shard, args.home)
         owner = network.Owner(served, stage, args.shard, chain, network.Account(args.home / 'account.key'),
                               network.signing_key(args.home / f'log-{args.shard}.key'), args.home, args.threads or 8)
-        owner.register(args.endpoint, descriptor.get('faucet'))
+        owner.register(args.endpoint, network.faucets(descriptor))
         if args.mirror_port and not mirrored:
             _, offered = network.serve_artifacts(descriptor, args.home, args.listen, args.mirror_port)
             print(f'Mirroring {len(offered)} pinned file(s) on port {args.mirror_port}')
@@ -377,6 +387,28 @@ def host_following(args, chain, network, descriptor, poll=30.0):
                     break
         else:
             return
+
+
+def run_faucet(args, chain, network):
+    """An operator's own faucet: grants test NEURO from this home's account, with the same per-account and
+    per-address limits as the seed's. Clients find it through the descriptor's ``faucets`` or
+    ``NEUROSHARD_FAUCETS``; it only ever transfers its own balance."""
+    account = network.Account(args.home / 'account.key')
+    amount, floor = atoms(args.amount), atoms(args.floor)
+    balance = chain.balance(account)
+    if balance < amount + chain.state()['params']['fee']:
+        raise ValueError(f'this account ({account.public[:16]}) holds {balance / network.NEURO:g} NEURO; '
+                         f'a faucet granting {amount / network.NEURO:g} needs at least that plus a fee')
+    grants = network.Faucet(chain, account, amount=amount, floor=floor, per_address=args.per_address)
+    server = network.serve_faucet(grants, args.listen, args.port)
+    print(f'Faucet for {chain.chain_id} on {args.listen}:{args.port}/faucet, granting {amount / network.NEURO:g} '
+          f'NEURO from {account.public[:16]} ({balance / network.NEURO:g} held). Ctrl-C stops it.', flush=True)
+    try:
+        signal.pause()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.shutdown()
 
 
 def govern(args, chain, network):
@@ -676,7 +708,7 @@ def grow_agent(args, chain, network, descriptor):
             from neuroshard.inference import growth as ledger_growth
 
             needed = 2 * ledger_growth.params(state)['growth_bond'] + 8 * state['params']['fee']
-            network.ensure_balance(chain, account, needed, descriptor.get('faucet'), lambda *_: None)
+            network.ensure_balance(chain, account, needed, network.faucets(descriptor), lambda *_: None)
             for action in agent.tick():
                 print(json.dumps(action, sort_keys=True), flush=True)
         except Exception as error:  # noqa: BLE001 - a refused transaction or a dropped RPC: report, retry next pass
