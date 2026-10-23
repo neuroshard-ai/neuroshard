@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -r docs/evolution-requirements.txt pytest==9.1.1 boto3==1.41.5 ijson==3.4.0 pyarrow==25.0.1
+      - run: python -m pip install -r docs/evolution-requirements.txt pytest==9.1.1 boto3==1.41.5 ijson==3.5.1 pyarrow==25.0.1
       - run: python -m pip install --no-deps --require-hashes -r docs/beacon-requirements.txt
       - run: python -m pip install --no-deps .
       - uses: actions/download-artifact@v8
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m pip install 'build>=1.2,<2' 'twine>=6,<7'
+      - run: python -m pip install 'build>=1.2,<2' 'twine>=6,<8'
       - run: python -m build --outdir "$RUNNER_TEMP/neuroshard-dist"
       - run: python scripts/check_distribution.py "$RUNNER_TEMP/neuroshard-dist"
       - run: python -m twine check "$RUNNER_TEMP/neuroshard-dist/"*
