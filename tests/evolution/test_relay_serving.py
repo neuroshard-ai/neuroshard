@@ -107,6 +107,13 @@ def test_owners_reached_through_the_users_relay_serve_and_log_exactly_as_on_the_
         assert not granite_audit.unattested(on_relay)
     assert relay_results[0]['attestation'] == ring[0]['attestation']
     assert relay_results[0]['attestation']['positions'] < BUDGET
+    for rank in (1, 2):  # each owner's own elapsed time, by activity: diagnostics beside, never inside, the log
+        timing = relay_results[rank]['timing']
+        assert timing['passes'] > 0 and timing['partition'] > 0
+        assert all(timing[k] >= 0 for k in ('waiting_for_command', 'receiving_tensor', 'verifying_link',
+                                            'recording_log', 'sending_tensor', 'signing_link'))
+        assert abs(timing['partition'] - relay_results[rank]['busy_seconds']) < 1e-9
+        assert 'timing' not in json.dumps(granite_audit.load(tmp_path / 'relay' / f'log-{rank}')[0])
 
 
 def test_frames_keep_their_order_and_bounds():
