@@ -2,6 +2,7 @@
 real ledger transition; refused while a job names it, before the window, or out of order."""
 import io
 from contextlib import redirect_stdout
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -121,3 +122,26 @@ def test_a_leaving_owner_is_not_selected_for_new_jobs(tmp_path):
     leave(net, home, 'unbond')
     admitter = net.admitter('alice')
     assert public not in [key for key, _ in admitter.candidates(net.chain.state(), 1)]
+
+
+@pytest.mark.parametrize('action', ['leave', 'faucet'])
+def test_the_cli_dispatches_leave_and_faucet_and_stops_there(monkeypatch, action):
+    """A dispatch that fell through into the chat path after leave/faucet would download a stage and fund a job.
+    The chat path begins by reading ``args.budget``: that read must never happen."""
+    calls = []
+
+    class Args(SimpleNamespace):
+        def __getattr__(self, name):  # only for attributes not set: the first one past dispatch
+            calls.append(f'read {name} past dispatch')
+            raise AttributeError(name)
+
+    monkeypatch.setattr(assistant_cli, 'leave', lambda *a: calls.append('leave'))
+    monkeypatch.setattr(assistant_cli, 'run_faucet', lambda *a: calls.append('faucet'))
+    monkeypatch.setattr(network, 'chain', lambda *a, **k: SimpleNamespace(state=lambda: {}))
+    monkeypatch.setattr(assistant_cli, 'following', lambda descriptor, *a, **k: descriptor)
+    args = Args(assistant_action=action, network=None, home=Path('/tmp/unused'), shard=1)
+    try:
+        assistant_cli.run(args)
+    except AttributeError:
+        pass
+    assert calls == [action], calls

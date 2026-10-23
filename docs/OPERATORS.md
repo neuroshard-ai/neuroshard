@@ -151,6 +151,22 @@ neuroshard assistant leave withdraw --shard N --home ~/.neuroshard/assistant
   shard was serving. That is the designed overload behaviour, not a fault of your node.
 - Model-file downloads failing: the pinned files are mirrored by every validator. Retrying usually
   succeeds, since another mirror is tried.
+## Run a faucet (optional)
+
+New users and operators get test NEURO from a faucet. Any operator can run one from its own account, so
+joining does not depend on the project's seed:
+
+```bash
+neuroshard assistant faucet --home ~/.neuroshard/faucet --port 28782
+```
+
+- It grants 20 NEURO per request to accounts holding less than 10, once per account per hour and five times
+  per source address per hour (`--amount`, `--floor`, `--per-address`). It refuses to start without enough
+  NEURO to grant.
+- It only transfers its own account's balance, so nothing about it has to be trusted. Fund that account
+  first, from your own balance or another faucet.
+- Open the port, and name it in your operator issue. Clients try the descriptor's `faucet`, then its
+  `faucets` list, then any URLs in `NEUROSHARD_FAUCETS` (comma-separated), until one grants.
 
 ## What still depends on the project
 
@@ -160,7 +176,8 @@ neuroshard assistant leave withdraw --shard N --home ~/.neuroshard/assistant
   project-run. Bonding and serving need no permission; voting needs members to admit you
   (`govern propose-member`).
 - **Single services:**
-  - The faucet: one, on the seed.
+  - The faucet: the descriptor names one, on the seed. Clients fall through to any other faucet they are
+    given (see *Run a faucet*), but no independent faucet is listed yet.
   - Model files: the pinned files are mirrored by every validator, so GitHub is no longer required.
     The base model's tensors still come from Hugging Face at a pinned revision.
   - The ledger RPC is served by all five validators. Clients verify each state read against the pinned

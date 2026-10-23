@@ -671,18 +671,40 @@ def fund(url, account, timeout=180):
         raise ValueError(json.loads(error.read() or b'{}').get('error', str(error))) from None
 
 
+def faucets(descriptor):
+    """Every faucet a client may ask, in order: the descriptor's ``faucet``, its ``faucets`` list, then any named in
+    ``NEUROSHARD_FAUCETS`` (comma-separated). Any operator holding test NEURO can run one (``assistant faucet``);
+    a faucet only transfers its own tokens, so none has to be trusted."""
+    listed = [descriptor.get('faucet')] + list(descriptor.get('faucets') or [])
+    listed += [url.strip() for url in os.environ.get('NEUROSHARD_FAUCETS', '').split(',')]
+    return list(dict.fromkeys(url for url in listed if url))
+
+
 def ensure_balance(chain, account, needed, faucet_url, progress=print):
+    """Fund ``account`` up to ``needed`` from a faucet. ``faucet_url`` is one URL or a list (``faucets``), tried in
+    order until one grants; one faucet being down or exhausted does not stop a new user or operator."""
     if chain.balance(account) >= needed:
         return
-    if not faucet_url:
+    urls = [faucet_url] if isinstance(faucet_url, str) else [url for url in (faucet_url or []) if url]
+    if not urls:
         raise ValueError('this account needs test NEURO and the network names no faucet')
-    progress('Requesting test NEURO from the faucet')
-    fund(faucet_url, account)
-    deadline = time.monotonic() + 120
-    while chain.balance(account) < needed:
-        if time.monotonic() > deadline:
-            raise TimeoutError('the faucet grant did not reach this account')
-        time.sleep(1)
+    failures = []
+    for url in urls:
+        progress('Requesting test NEURO from the faucet' + (f' ({url})' if len(urls) > 1 else ''))
+        try:
+            fund(url, account)
+        except (OSError, ValueError) as error:  # unreachable, refused or exhausted: try the next faucet
+            failures.append(f'{url}: {error}')
+            continue
+        deadline = time.monotonic() + 120
+        while chain.balance(account) < needed:
+            if time.monotonic() > deadline:
+                break
+            time.sleep(1)
+        if chain.balance(account) >= needed:
+            return
+        failures.append(f'{url}: the grant did not cover {needed} within 120 s')
+    raise ValueError('no faucet funded this account: ' + '; '.join(failures))
 
 
 def hang_up(connection):
