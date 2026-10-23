@@ -10,7 +10,7 @@ Today the project administers every validator and every original owner. This pag
 - Chain `neuroshard-assistant-1`, 5 validators, more than 1,060,000 blocks.
 - Model: Granite 4.1 3B with a documents unit grown by the network itself (version `a4-general` and its
   owner-enacted growth).
-- Two shards, three owners, all on the release candidate **`pilot-2-rc1`**. One owner was set up from these
+- Two shards, three owners, all on the release candidate **`pilot-2-rc2`**. One owner was set up from these
   instructions alone on a bare machine. Every node is still administered by the project.
 - An experimental, project-operated pilot. Test tokens only: NEURO has **no monetary value**.
 
@@ -18,7 +18,7 @@ Today the project administers every validator and every original owner. This pag
 
 - **Use the current release, not `main`.** Owners must run the same protocol as the rest of their shard:
   clients select only owners that answer the admission capability check, which `pilot-1` owners don't.
-  The command below pins `--branch pilot-2-rc1`; the maintainers will name the next release in your issue.
+  The command below pins `--branch pilot-2-rc2`; the maintainers will name the next release in your issue.
 - **Joining as an owner bonds 5 test NEURO and starts serving paid jobs at once.** You can leave at any
   time with `neuroshard assistant leave` (see *Leave the network* below).
 - **Check your machine first.** It installs nothing:
@@ -35,7 +35,7 @@ Today the project administers every validator and every original owner. This pag
 On Linux x86_64 with an Intel CPU that has AMX (for example AWS `m7i` or `r7i`):
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/scripts/join.sh | bash -s -- ROLE --branch pilot-2-rc1
+curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/scripts/join.sh | bash -s -- ROLE --branch pilot-2-rc2
 ```
 
 The script:
