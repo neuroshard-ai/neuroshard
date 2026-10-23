@@ -79,14 +79,13 @@ def test_the_host_command_sets_the_pinned_numerical_environment_before_torch_loa
     code = '''
 import sys
 from neuroshard.client import cli
-from neuroshard.evolution import granite_shard_execution as runtime
+from neuroshard.client import live_runtime as runtime
 seen, configure = [], runtime.configure
 
 def recorded():
     seen.append("torch" in sys.modules)
     configure()
-    from neuroshard.evolution import assistant_growth_cohort3_eval
-    assistant_growth_cohort3_eval.runtime = lambda _: None
+    runtime.check = lambda: None  # this test checks ordering, not the machine's installed packages
     from neuroshard.assistant import network
     network.fetch_stage = lambda *args, **kwargs: (print("ordered" if seen == [False] else "torch-before-configure"),
                                                    sys.exit(0))
