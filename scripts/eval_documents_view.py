@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--home', type=Path, required=True)
     parser.add_argument('--view', choices=('before', 'after'), required=True)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--follow', action='store_true', help='evaluate the version the live chain serves now')
     args = parser.parse_args()
 
     from neuroshard.client import live_runtime
@@ -44,6 +45,9 @@ def main():
     if args.view == 'before':
         interfaces.superseded = lambda documents: set()
     descriptor = network.descriptor(args.network)
+    if args.follow:  # the version the chain serves now, rebuilt from committed growth, as every node follows it
+        chain = network.chain(descriptor, args.home)
+        descriptor = growth_runtime.follow(descriptor, chain.state(), args.home, descriptor.get('proof_endpoints', []))
     served_version = network.version(descriptor)[0]
     served = growth_runtime.Served(descriptor, args.home, served_version.spec, routes=('documents',))
     model, policy = served('documents'), served.policies['documents']
