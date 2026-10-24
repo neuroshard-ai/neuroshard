@@ -31,7 +31,11 @@ import signal
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import gate_rules  # noqa: E402
 
 # Stages of the proposed rollout order (model holders first). Which validators run rc2, which hold the model.
 # Index 0-4 stand for the live validators in rollout order: .8.86, .91.19, .30.33 (the 3 model holders), .47.8, seed.
@@ -46,7 +50,11 @@ STAGES = {
     'forbidden-4-legacy-holders': {'rc2': [], 'model': [0, 1, 2, 3]},
 }
 CASES = ('honest', 'forged', 'legacy8')
+MEASUREMENT = 2  # 2: real store delivery, explicit pass/fail, recovery against peers, timing and latency
 HONEST_ROOT_KEY, LEGACY_ROOT_KEY = 'honest_root', 'legacy8_root'
+
+
+HARNESS = hashlib.sha256(Path(__file__).read_bytes() + (Path(__file__).parent / 'gate_rules.py').read_bytes()).hexdigest()[:16]
 
 
 def run_cmd(cmd, **kw):
@@ -101,7 +109,7 @@ class Gate:
 
     def log(self, kind, **fields):
         self.out.mkdir(parents=True, exist_ok=True)
-        row = {'kind': kind, 'unix': round(time.time(), 3), **fields}
+        row = {'kind': kind, 'unix': round(time.time(), 3), 'measurement': MEASUREMENT, 'harness': HARNESS, **fields}
         with self.events.open('a') as f:
             f.write(json.dumps(row, sort_keys=True) + '\n')
         print(json.dumps(row, sort_keys=True)[:400], flush=True)
@@ -122,7 +130,7 @@ class Gate:
                 self.nonce += 1
                 return {'body': body, 'public_key': self.public,
                         'signature': ecdsa_sign(ledger.canonical(body).decode(), self.key.private_key_bytes)}
-        return {n: Account(f'gate5b-{run}-{n}') for n in ('sponsor', 'contributor', 'challenger')}
+        return {n: Account(f'gate5b-{run}-{n}') for n in ('sponsor', 'contributor', 'challenger', 'bystander')}
 
     def node(self, i, stage, home):
         store = home / f'store{i}'
@@ -147,7 +155,9 @@ class Gate:
             if old.exists():
                 shutil.rmtree(old)
         self.accts = self.accounts(run)
-        params = {**self.ledger.PARAMS, 'growth_window_blocks': self.args.window, 'growth_proof_blocks': self.args.window}
+        params = dict(self.ledger.PARAMS)  # growth params default to the live ones (growth.PARAMS: 40 and 40 blocks)
+        if self.args.window:
+            params.update(growth_window_blocks=self.args.window, growth_proof_blocks=self.args.window)
         terms = {'chain_id': self.chain_id, 'model_root': 'ab' * 32, 'shards': 3,
                  'allocations': {a.public: 100_000_000 for a in self.accts.values()}, 'params': params}
         stores = self.out / 'stores' / run  # outside the chain home, which initialize() requires to be empty
@@ -222,108 +232,255 @@ class Gate:
             time.sleep(0.5)
         raise TimeoutError(kind)
 
-    # -- scenario ---------------------------------------------------------------------------------------------
-    def scenario(self, stage, case, offline=None, recover=False):
-        run = f'{stage}-{case}' + (f'-off{offline}' if offline is not None else '') + f'-{int(time.time())}'
-        recipe, roots = self.recipe, self.roots
-        claimed = {'honest': roots[HONEST_ROOT_KEY], 'forged': 'cd' * 32, 'legacy8': roots[LEGACY_ROOT_KEY]}[case]
+    # -- scenario (measurement 2) ----------------------------------------------------------------------------
+    def chain_view(self, i):
+        """What a validator's own proof store reads: its node's current state (as ``network.Chain.state``)."""
+        net, config = self.net, self.config
+
+        class View:
+            def state(self):
+                return net.state(net.url(config, i))
+        return View()
+
+    def start_store(self, i):
+        from neuroshard.assistant import network
+        port = self.args.base_port + i * 10 + 5
+        self.servers[i] = network.serve_store(self.chain_view(i), '127.0.0.1', port, self.stores / f'store{i}' / 'bundles')
+        self.log('store-started', run=self.run, index=i, port=port)
+
+    def stop_store(self, i):
+        server = self.servers.pop(i, None)
+        if server is not None:
+            server.shutdown()
+            server.server_close()
+
+    def deliver(self, root, payload, holders):
+        """Post content-addressed bytes to every running store that does not hold them yet, as an agent does."""
+        from neuroshard.assistant import audit
+        for i in range(5):
+            if i in holders or i not in self.servers:
+                continue
+            endpoint = f'http://127.0.0.1:{self.args.base_port + i * 10 + 5}/proofs'
+            try:
+                audit.post_proof(endpoint, root, payload, timeout=60)
+                holders[i] = time.time()
+                self.log('delivered', run=self.run, index=i, root=root[:16], bytes=len(payload))
+            except Exception as error:  # noqa: BLE001 - a refusing or absent store is retried
+                self.log('delivery-refused', run=self.run, index=i, root=root[:16], error=str(error)[:160])
+
+    def sampler(self, stop):
+        """Peak memory of every app, sampled once a second from before any material arrives until the end."""
+        while not stop.is_set():
+            for name, proc in list(self.procs.items()):
+                if name.startswith('app') and proc.poll() is None:
+                    self.peak[name] = max(self.peak.get(name, 0), rss_mb(proc.pid))
+            stop.wait(1)
+
+    def bystander(self, stop, online):
+        """Ordinary transactions throughout: a self-transfer every few seconds; records each inclusion latency."""
+        acct = self.accts['bystander']
+        while not stop.is_set():
+            rpc = next(i for i in range(5) if online(i))
+            try:
+                state = self.net.state(self.net.url(self.config, rpc))
+                nonce = acct.nonce = state['accounts'].get(acct.public, {'nonce': 0})['nonce']
+                envelope = acct.sign('transfer', to=acct.public, amount=1)
+                sent = time.time()
+                admitted = self.net.broadcast(self.net.url(self.config, rpc), envelope)
+                if admitted['code'] != 0:
+                    self.ordinary.append({'sent': sent, 'admission': admitted['code'], 'log': admitted['log'][:120]})
+                else:
+                    while not stop.is_set():
+                        now = self.net.state(self.net.url(self.config, rpc))
+                        if now['accounts'].get(acct.public, {'nonce': 0})['nonce'] > nonce:
+                            self.ordinary.append({'sent': sent, 'latency': round(time.time() - sent, 2),
+                                                  'height': now['height']})
+                            break
+                        if time.time() - sent > 600:
+                            self.ordinary.append({'sent': sent, 'latency': None, 'note': 'not included in 600 s'})
+                            break
+                        time.sleep(0.5)
+            except Exception as error:  # noqa: BLE001 - recorded; the next one is tried
+                self.ordinary.append({'sent': time.time(), 'error': str(error)[:120]})
+            stop.wait(self.args.ordinary_every)
+
+    def block_times(self, rpc, first, last):
+        times, unreadable = {}, []
+        for h in range(max(1, first), last + 1):
+            try:
+                header = self.net.rpc(self.net.url(self.config, rpc), 'block', {'height': str(h)})['block']['header']
+                times[h] = datetime.fromisoformat(header['time'][:26].rstrip('Z')).replace(tzinfo=timezone.utc).timestamp()
+            except Exception:  # noqa: BLE001 - recorded as incomplete evidence
+                unreadable.append(h)
+        return times, unreadable
+
+    def proof_blocks(self, rpc, first, last):
+        carried, unreadable = [], []
+        for h in range(max(1, first), last + 1):
+            try:
+                block = self.net.rpc(self.net.url(self.config, rpc), 'block', {'height': str(h)})['block']
+            except Exception:  # noqa: BLE001
+                unreadable.append(h)
+                continue
+            for raw in block['data'].get('txs') or []:
+                if json.loads(base64.b64decode(raw)).get('body', {}).get('kind') == 'growth_prove':
+                    carried.append(h)
+        return carried, unreadable
+
+    def scenario(self, stage, case, offline=None, recover=False, missing_store=(), store_delay=None):
+        import threading
+        run = f'{stage}-{case}' + (f'-off{offline}' if offline is not None else '') + (
+            f'-nostore{"".join(map(str, missing_store))}' if missing_store else '') + (
+            f'-late{store_delay[0]}' if store_delay else '') + f'-{int(time.time())}'
+        self.run, self.servers, self.peak, self.ordinary = run, {}, {}, []
+        claimed = {'honest': self.roots[HONEST_ROOT_KEY], 'forged': 'cd' * 32, 'legacy8': self.roots[LEGACY_ROOT_KEY]}[case]
+        stop = threading.Event()
+        down = {offline} if offline is not None else set()
+        result = {'run': run, 'stage': stage, 'case': case, 'offline': offline, 'missing_store': list(missing_store),
+                  'store_delay': store_delay}
         try:
             self.start(stage, run)
-            rroot = self.recipe_root
-            for i in range(5):  # every validator holds the recipe, the proof bundle and units (delivery is not tested)
-                bundles = self.stores / f'store{i}' / 'bundles'
-                (bundles / f'{rroot}.json').write_text(json.dumps(recipe))
-                (bundles / self.proof_root).write_bytes(self.bundle)
+            validators = [{'flavour': v['flavour'], 'model': v['model']} for v in self.config['validators']]
+            result['expected_verdicts'] = expected = gate_rules.expected_verdicts(
+                validators, case, offline=down, missing_store=set(missing_store),
+                late_store={store_delay[0]} if store_delay else set())
+            result['expected_penalty'] = gate_rules.expect_penalty(expected)
+            self.log('scenario-plan', **result)
+            for i in range(5):  # stores, except the ones this scenario keeps away; units are provisioned in advance
                 for sha, payload in self.units.items():
                     (self.stores / f'store{i}' / 'units' / f'{sha}.safetensors').write_bytes(payload)
-            opened, _ = self.submit('sponsor', 'growth_open', recipe_root=rroot, start_root=recipe['start_root'],
-                                    steps=1, segment_steps=1, reward=1_000_000)
+                if i not in missing_store and not (store_delay and store_delay[0] == i):
+                    self.start_store(i)
+            threading.Thread(target=self.sampler, args=(stop,), daemon=True).start()
+            threading.Thread(target=self.bystander, args=(stop, lambda i: i not in down), daemon=True).start()
+
+            opened, _ = self.submit('sponsor', 'growth_open', recipe_root=self.recipe_root,
+                                    start_root=self.recipe['start_root'], steps=1, segment_steps=1, reward=1_000_000)
             job = self.ledger.transaction_id(opened)
+            recipe_holders = {}
+            self.deliver(self.recipe_root, json.dumps(self.recipe).encode(), recipe_holders)  # as replication would
             self.submit('contributor', 'growth_commit', job_id=job, segment=0, step_roots=[claimed])
             challenge, _ = self.submit('challenger', 'growth_challenge', job_id=job, segment=0, step=0,
                                        proof_root=self.proof_root)
             challenge_id = self.ledger.transaction_id(challenge)
+            state = self.net.state(self.net.url(self.config, 0))
+            opened_at = state['growth'][job]['challenges'][challenge_id]['opened']
+            deadline = state['growth'][job]['challenges'][challenge_id]['deadline']
+            challenged_unix = time.time()
+            result.update(job=job, challenge_opened=opened_at, deadline=deadline)
+            self.log('challenge-committed', run=run, opened=opened_at, deadline=deadline, window=deadline - opened_at)
             if offline is not None:
-                os.killpg(self.procs[f'node{offline}'].pid, signal.SIGTERM)
-                os.killpg(self.procs[f'app{offline}'].pid, signal.SIGTERM)
+                self.stop_store(offline)
+                for name in (f'node{offline}', f'app{offline}'):
+                    os.killpg(self.procs[name].pid, signal.SIGTERM)
                 self.log('validator-offline', run=run, index=offline)
-            rpc = next(i for i in range(5) if i != offline)
-            before = self.net.state(self.net.url(self.config, rpc))
-            h0 = before['height']
-            # The proof: every validator's worker judges it when it reaches CheckTx/PrepareProposal/ProcessProposal.
-            started = time.monotonic()
-            # A determined challenger sends the proof to every validator: one that refuses it at CheckTx does not
-            # gossip it, so submitting to a single node would understate how far a proof can get.
-            envelope, admitted = self.submit('challenger', 'growth_prove', rpc=rpc, wait=False, job_id=job,
-                                             challenge_id=challenge_id)
-            admissions = {rpc: admitted}
-            for i in range(5):
-                if i not in (rpc, offline):
-                    try:
-                        admissions[i] = self.net.broadcast(self.net.url(self.config, i), envelope)
-                    except Exception as error:  # noqa: BLE001 - recorded
-                        admissions[i] = {'error': str(error)[:200]}
-            self.log('prove-submitted', run=run, admission={str(k): {'code': v.get('code'), 'log': v.get('log', v.get('error', ''))[:160]}
-                                                              for k, v in admissions.items()})
-            # Poll: did the proof commit (challenge popped with a fault), or did the challenge lapse? Blocks must
-            # keep coming either way. Peak memory is sampled meanwhile.
-            peak, outcome, judged_at = {}, None, None
-            deadline = time.monotonic() + self.args.judge_timeout
-            while time.monotonic() < deadline:
-                for name, proc in self.procs.items():
-                    if name.startswith('app') and proc.poll() is None:
-                        peak[name] = max(peak.get(name, 0), rss_mb(proc.pid))
+            rpc = next(i for i in range(5) if i not in down)
+
+            # Deliver and prove as an agent does: deliver to every store that lacks the bundle, then send the proof
+            # to every online validator, repeating both until the challenge closes.
+            holders, admissions, outcome, last_send = {}, [], 'undecided', 0.0
+            give_up = time.monotonic() + self.args.judge_timeout
+            while time.monotonic() < give_up:
+                if store_delay and store_delay[0] not in self.servers and time.time() - challenged_unix >= store_delay[1]:
+                    self.start_store(store_delay[0])
                 now = self.net.state(self.net.url(self.config, rpc))
-                gjob = now.get('growth', {}).get(job)
+                if now['height'] > opened_at:
+                    # Recipes replicate between stores and agents publish to every store, so a store that comes up
+                    # late gets the recipe as well as the bundle.
+                    self.deliver(self.recipe_root, json.dumps(self.recipe).encode(), recipe_holders)
+                    self.deliver(self.proof_root, self.bundle, holders)
+                    if holders and time.time() - last_send >= self.args.prove_every:
+                        last_send = time.time()
+                        acct = self.accts['challenger']
+                        acct.nonce = now['accounts'][acct.public]['nonce']
+                        envelope = acct.sign('growth_prove', job_id=job, challenge_id=challenge_id)
+                        for i in range(5):
+                            if i in down:
+                                continue
+                            sent = time.time()
+                            try:
+                                r = self.net.broadcast(self.net.url(self.config, i), envelope)
+                                admissions.append({'index': i, 'sent': sent, 'seconds': round(time.time() - sent, 2),
+                                                   'code': r['code'], 'log': r['log'][:120], 'height': now['height']})
+                            except Exception as error:  # noqa: BLE001
+                                admissions.append({'index': i, 'sent': sent, 'error': str(error)[:120]})
+                now = self.net.state(self.net.url(self.config, rpc))
                 faults = [f for f in now.get('growth_faults', []) if f['job_id'] == job]
                 if faults:
-                    outcome = 'penalty-committed'
+                    outcome, result['fault_height'] = 'penalty-committed', faults[-1]['height']
                     break
+                gjob = now.get('growth', {}).get(job)
                 if gjob is None or challenge_id not in gjob.get('challenges', {}):
-                    outcome = 'challenge-lapsed-or-settled'
+                    # The challenge closed without a fault: it lapsed. The full window has passed by construction.
+                    deadline_wait = time.monotonic() + 120
+                    while job in now.get('growth', {}) and time.monotonic() < deadline_wait:
+                        time.sleep(1)  # the one-step job settles in the next block
+                        now = self.net.state(self.net.url(self.config, rpc))
+                    if job not in now.get('growth', {}):
+                        outcome = 'lapsed-and-settled'
                     break
-                # Decided without a commit: every validator that can judge has judged, and SETTLE more blocks have
-                # committed since, without the proof. (A proof is judged once per validator and cached; nothing
-                # later changes a verdict, so no later block can carry it either.)
-                verdicts = self.verdicts()
-                holders = [i for i in range(5) if self.config['validators'][i]['model'] and i != offline]
-                if all(verdicts[i] in ('True', 'False') for i in holders):
-                    judged_at = judged_at or now['height']
-                    if now['height'] >= judged_at + self.args.settle_blocks:
-                        outcome = 'not-committed-after-all-verdicts'
-                        break
-                time.sleep(2)
-            seconds = round(time.monotonic() - started, 1)
+                time.sleep(1)
+            stop.set()
             time.sleep(3)  # let every app flush its verdict line
             after = self.net.state(self.net.url(self.config, rpc))
-            carried = []
-            for h in range(h0 + 1, after['height'] + 1):
-                try:
-                    block = self.net.rpc(self.net.url(self.config, rpc), 'block', {'height': str(h)})['block']
-                except Exception:  # noqa: BLE001
-                    continue
-                for raw in block['data'].get('txs') or []:
-                    if json.loads(base64.b64decode(raw)).get('body', {}).get('kind') == 'growth_prove':
-                        carried.append(h)
-            balances = {n: after['accounts'].get(a.public, {}).get('balance') for n, a in self.accts.items()}
-            verdicts = self.verdicts()
-            self.log('outcome', run=run, stage=stage, case=case, offline=offline, outcome=outcome or 'undecided',
-                     seconds=seconds, heights=[h0, after['height']], blocks_during=after['height'] - h0,
-                     balances=balances, burned=after.get('burned'), verdicts=verdicts, peak_app_rss_mb=peak,
-                     proof_in_blocks=carried, rejected_proposals=self.rejections(),
-                     claimed=claimed[:16])
+            times, unreadable_t = self.block_times(rpc, opened_at - 3, after['height'])
+            carried, unreadable_b = self.proof_blocks(rpc, opened_at, after['height'])
+            verdicts = {i: ('offline' if i in down else log_verdict((self.stores / f'app{i}.log').read_text(errors='replace')))
+                        for i in range(5)}
+            result.update(
+                outcome=outcome, verdicts=verdicts, final_height=after['height'], proof_in_blocks=carried,
+                blocks_complete=not (unreadable_t or unreadable_b), unreadable_heights=sorted(set(unreadable_t + unreadable_b)),
+                balances={n: after['accounts'].get(a.public, {}).get('balance') for n, a in self.accts.items()},
+                nonces={n: after['accounts'].get(a.public, {}).get('nonce', 0) for n, a in self.accts.items()},
+                burned=after.get('burned'), gaps=gate_rules.block_gaps(times),
+                timeline=self.timeline(times, opened_at, deadline, holders, recipe_holders, admissions, result.get('fault_height')),
+                ordinary=self.ordinary_summary(), peak_app_rss_mb=dict(self.peak),
+                rejected_proposals=self.rejections(), seconds=round(time.time() - challenged_unix, 1))
             if offline is not None and recover:
-                self.recover(run, offline)
-            return outcome
+                result['recovery'] = self.recover(run, offline)
+            result['gate'], result['reasons'] = gate_rules.judge_scenario(result)
+            self.log('scenario-result', **result)
+            return result
+        except Exception as error:  # noqa: BLE001 - a harness failure is an inconclusive scenario, never a pass
+            result.update(gate='inconclusive', reasons=[f'harness error: {type(error).__name__}: {error}'[:300]])
+            self.log('scenario-result', **result)
+            return result
         finally:
+            stop.set()
+            for i in list(getattr(self, 'servers', {})):
+                self.stop_store(i)
             self.stop()
 
+    def timeline(self, times, opened_at, deadline, holders, recipe_holders, admissions, fault_height):
+        """Challenge, material, replay and inclusion times: what the proof window is spent on."""
+        replays = {}
+        for i in range(5):
+            text = (self.stores / f'app{i}.log').read_text(errors='replace')
+            m = re.findall(r'^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d+) INFO \S+ verification \w+ verdict (True|False) in ([\d.]+) s', text, re.M)
+            if m:
+                end = datetime.strptime(m[-1][0], '%Y-%m-%d %H:%M:%S,%f').replace(tzinfo=timezone.utc).timestamp()
+                replays[i] = {'end': round(end, 2), 'start': round(end - float(m[-1][2]), 2), 'seconds': float(m[-1][2])}
+        return {'challenge_height': opened_at, 'challenge_time': times.get(opened_at), 'deadline_height': deadline,
+                'deadline_blocks': deadline - opened_at, 'bundle_accepted': {i: round(t, 2) for i, t in holders.items()},
+                'recipe_accepted': {i: round(t, 2) for i, t in recipe_holders.items()}, 'replays': replays,
+                'admissions': admissions[:60], 'inclusion_height': fault_height,
+                'inclusion_time': times.get(fault_height) if fault_height else None,
+                'blocks_to_inclusion': (fault_height - opened_at) if fault_height else None}
+
+    def ordinary_summary(self):
+        lat = sorted(o['latency'] for o in self.ordinary if o.get('latency') is not None)
+        return {'sent': len(self.ordinary), 'included': len(lat), 'not_included': sum(1 for o in self.ordinary if 'latency' in o and o['latency'] is None),
+                'refused': sum(1 for o in self.ordinary if 'admission' in o), 'errors': sum(1 for o in self.ordinary if 'error' in o),
+                'median_s': lat[len(lat) // 2] if lat else None, 'max_s': lat[-1] if lat else None, 'all': self.ordinary}
+
     def recover(self, run, index):
+        """Restart a stopped validator with its own data and signing state; establish recovery against its peers."""
         v = self.config['validators'][index]
-        flavour = v['flavour']
-        tree, venv = self.trees[flavour]
-        env = {**os.environ, 'PYTHONPATH': f'{tree}/src', 'NEUROSHARD_MODELS': self.args.models, 'PYTHONUNBUFFERED': '1',
+        tree, venv = self.trees[v['flavour']]
+        env = {**os.environ, 'PYTHONPATH': f'{tree}/src', 'PYTHONUNBUFFERED': '1',
+               'NEUROSHARD_MODELS': self.args.models if v['model'] else str(self.stores / f'no-model-{index}'),
                'NEUROSHARD_UNITS': str(self.stores / f'store{index}' / 'units')}
+        restarted = time.time()
         log = open(self.stores / f'app{index}.log', 'ab')
         self.procs[f'app{index}'] = subprocess.Popen(
             [f'{venv}/bin/python', '-m', 'neuroshard.inference.optimistic_app', '--home', v['home'],
@@ -331,25 +488,45 @@ class Gate:
         deadline = time.monotonic() + 900
         while (self.stores / f'app{index}.log').read_text(errors='replace').count('ABCI listening') < 2:
             if time.monotonic() > deadline:
-                raise RuntimeError(f'app{index} did not restart')
+                return {'result': 'timeout', 'detail': 'app did not restart'}
             time.sleep(2)
         log = open(self.stores / f'node{index}.log', 'ab')
         self.procs[f'node{index}'] = subprocess.Popen([self.config['engine'], 'start', '--home', v['home']],
                                                       stdout=log, stderr=log, start_new_session=True)
-        target = self.height((index + 1) % 5) + 3
-        deadline, caught = time.monotonic() + 600, False
+        address = json.loads((Path(v['home']) / 'config' / 'priv_validator_key.json').read_text())['address']
+        peers = [i for i in range(5) if i != index]
+        rpc = lambda i, m, p=None: self.net.rpc(self.net.url(self.config, i), m, p or {})  # noqa: E731
+        first_fresh = None
+        decision = ('timeout', 'no observation')
+        observations = []
+        deadline = time.monotonic() + 900
         while time.monotonic() < deadline:
             try:
-                mine, theirs = (self.net.state(self.net.url(self.config, i)) for i in (index, (index + 1) % 5))
-                if mine['height'] >= target and self.ledger.root(mine) == self.ledger.root(
-                        self.net.state(self.net.url(self.config, index))):
-                    caught = mine.get('growth_faults') == theirs.get('growth_faults')
+                status = rpc(index, 'status')['sync_info']
+                mine = {'height': int(status['latest_block_height']), 'catching_up': status['catching_up']}
+                peer_heights = [{'height': int(rpc(i, 'status')['sync_info']['latest_block_height'])} for i in peers]
+                first_fresh = first_fresh or max(p['height'] for p in peer_heights)
+                common_h = min([mine['height']] + [p['height'] for p in peer_heights]) - 1
+                hashes = lambda i: (lambda b: (b['block_id']['hash'], b['block']['header']['app_hash']))(  # noqa: E731
+                    rpc(i, 'block', {'height': str(common_h)}))
+                common = {'height': common_h, 'mine': hashes(index), 'peers': [hashes(i) for i in peers]}
+                signatures = {}
+                for h in range(first_fresh + 1, common_h + 1):
+                    commit = rpc(peers[0], 'commit', {'height': str(h)})['signed_header']['commit']
+                    signatures[h] = [s['validator_address'] for s in commit['signatures'] if s.get('block_id_flag') == 2]
+                sample = {'mine': mine, 'peers': peer_heights, 'common': common, 'signatures': signatures}
+                decision = gate_rules.recovery_decision(sample, address)
+                observations.append({'unix': round(time.time(), 1), 'mine': mine, 'peer_top': max(p['height'] for p in peer_heights),
+                                     'common_height': common_h, 'decision': decision[0]})
+                if decision[0] in ('recovered', 'disagreement'):
                     break
-            except Exception:  # noqa: BLE001 - still starting
-                pass
-            time.sleep(2)
-        self.log('validator-recovered', run=run, index=index, caught_up=caught,
-                 height=self.height(index) if caught else None)
+            except Exception as error:  # noqa: BLE001 - still starting
+                decision = ('timeout', f'last error: {str(error)[:120]}')
+            time.sleep(3)
+        result = {'result': decision[0] if decision[0] != 'pending' else 'timeout', 'detail': decision[1],
+                  'seconds': round(time.time() - restarted, 1), 'address': address, 'observations': observations[-20:]}
+        self.log('validator-recovery', run=run, index=index, **{k: v for k, v in result.items() if k != 'observations'})
+        return result
 
     def rejections(self):
         """Per validator: proposals it rejected because it could not judge a proof (ProcessProposal NoVerdict)."""
@@ -371,7 +548,14 @@ class Gate:
         self.base = self.recipe.get('base', 'granite-parent')
         from neuroshard.evolution import growth_replay as g
         self.recipe_root = g.recipe_root(self.recipe, self.recipe['model_root'])
+        # The material is evidence: copy it, with its hash, beside the results and the exact harness sources.
+        evidence = self.out / 'evidence'
+        evidence.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(self.args.material, evidence / 'material.json')
+        for source in ('growth_quorum_gate.py', 'gate_rules.py', 'make_gate_material.py'):
+            shutil.copyfile(Path(__file__).parent / source, evidence / source)
         self.log('material', recipe_root=self.recipe_root, proof_root=self.proof_root, base=self.base,
+                 material_sha256=hashlib.sha256(Path(self.args.material).read_bytes()).hexdigest(),
                  roots={k: v for k, v in self.roots.items()}, provenance=self.provenance,
                  versions={k: versions(*v) for k, v in self.trees.items()})
 
@@ -389,23 +573,34 @@ def main():
     go.add_argument('--stage', action='append', required=True, choices=sorted(STAGES))
     go.add_argument('--case', action='append', choices=CASES)
     go.add_argument('--offline', type=int, help='stop this validator after the challenge, before the proof')
-    go.add_argument('--recover', action='store_true', help='restart the offline validator and check it catches up')
-    go.add_argument('--window', type=int, default=400, help='growth window and proof blocks')
+    go.add_argument('--recover', action='store_true', help='restart the offline validator; establish recovery vs peers')
+    go.add_argument('--missing-store', type=int, action='append', default=[],
+                    help='run no proof store for this validator (it never receives the bundle)')
+    go.add_argument('--late-store', help='INDEX:SECONDS start this validator\'s store late, after the challenge')
+    go.add_argument('--window', type=int, help='override growth window and proof blocks (default: live, 40)')
     go.add_argument('--judge-timeout', type=int, default=1500)
-    go.add_argument('--settle-blocks', type=int, default=120, help='blocks after the last verdict before concluding')
+    go.add_argument('--prove-every', type=float, default=5.0, help='seconds between proof resubmissions')
+    go.add_argument('--ordinary-every', type=float, default=5.0, help='seconds between ordinary transactions')
     go.add_argument('--validator-threads', type=int, help='OMP_NUM_THREADS for validator apps')
     go.add_argument('--shards', help="JSON file: a live validator's settlement 'shards' entry, paths rewritten")
     go.add_argument('--base-port', type=int, default=29650)
     args = parser.parse_args()
     if args.action == 'plan':
-        print(json.dumps({'stages': STAGES, 'cases': CASES}, indent=1))
-        return
+        print(json.dumps({'stages': STAGES, 'cases': CASES, 'measurement': MEASUREMENT, 'harness': HARNESS}, indent=1))
+        return 0
     gate = Gate(args)
     gate.prepare()
-    for stage in args.stage:
-        for case in args.case or CASES:
-            gate.scenario(stage, case, args.offline, args.recover)
+    late = tuple(int(x) for x in args.late_store.split(':')) if args.late_store else None
+    plan = [(stage, case) for stage in args.stage for case in (args.case or CASES)]
+    gate.log('plan', scenarios=[{'stage': s, 'case': c} for s, c in plan], argv=sys.argv[1:])
+    results = [gate.scenario(stage, case, args.offline, args.recover, tuple(args.missing_store), late)
+               for stage, case in plan]
+    verdicts = [r['gate'] for r in results]
+    overall = 'fail' if 'fail' in verdicts else 'inconclusive' if 'inconclusive' in verdicts or len(results) != len(plan) else 'pass'
+    gate.log('gate-result', overall=overall, scenarios=[{k: r.get(k) for k in ('run', 'stage', 'case', 'gate', 'reasons')}
+                                                         for r in results])
+    return {'pass': 0, 'fail': 1, 'inconclusive': 2}[overall]
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
