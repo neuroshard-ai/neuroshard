@@ -103,7 +103,9 @@ class Gate:
     def __init__(self, args):
         self.args, self.out = args, Path(args.out).resolve()
         self.trees = {'pilot1': args.pilot1.split(':'), 'rc2': args.rc2.split(':')}
-        sys.path.insert(0, f'{self.trees["rc2"][0]}/src')
+        # The harness process (and with --agent the growth agent it drives) imports --agent-src if given, else the
+        # rc2 validator tree. Validator apps always run their own tree and venv.
+        sys.path.insert(0, args.agent_src or f'{self.trees["rc2"][0]}/src')
         from neuroshard.inference import optimistic as ledger, optimistic_network as net
         self.ledger, self.net = ledger, net
         self.events = self.out / 'events.jsonl'
@@ -369,7 +371,7 @@ class Gate:
         stop = threading.Event()
         down = {offline} if offline is not None else set()
         result = {'run': run, 'stage': stage, 'case': case, 'offline': offline, 'missing_store': list(missing_store),
-                  'store_delay': store_delay, 'prover': 'released-agent' if self.args.agent else 'harness'}
+                  'store_delay': store_delay, 'prover': ('agent:' + (self.args.agent_src or 'rc2-tree')) if self.args.agent else 'harness'}
         try:
             self.start(stage, run)
             validators = [{'flavour': v['flavour'], 'model': v['model']} for v in self.config['validators']]
@@ -704,7 +706,12 @@ class Gate:
         shutil.copyfile(self.args.material, evidence / 'material.json')
         for source in ('growth_quorum_gate.py', 'gate_rules.py', 'make_gate_material.py'):
             shutil.copyfile(Path(__file__).parent / source, evidence / source)
-        self.log('material', recipe_root=self.recipe_root, proof_root=self.proof_root, base=self.base,
+        from neuroshard.assistant import network as _network
+        from neuroshard.evolution import growth_agent as _agent
+        agent_code = {m.__name__: {'file': m.__file__, 'sha256': hashlib.sha256(Path(m.__file__).read_bytes()).hexdigest()[:16]}
+                      for m in (_network, _agent)}
+        agent_code['submit_everywhere'] = hasattr(_network.Chain, 'submit_everywhere')
+        self.log('material', recipe_root=self.recipe_root, proof_root=self.proof_root, base=self.base, agent_code=agent_code,
                  material_sha256=hashlib.sha256(Path(self.args.material).read_bytes()).hexdigest(),
                  roots={k: v for k, v in self.roots.items()}, provenance=self.provenance,
                  versions={k: versions(*v) for k, v in self.trees.items()})
@@ -732,7 +739,8 @@ def main():
     go.add_argument('--window', type=int, help='override growth window and proof blocks (default: live, 40)')
     go.add_argument('--judge-timeout', type=int, default=1500)
     go.add_argument('--prove-every', type=float, default=5.0, help='seconds between proof resubmissions')
-    go.add_argument('--agent', action='store_true', help='prove with the released growth agent instead of the harness')
+    go.add_argument('--agent', action='store_true', help='prove with the growth agent instead of the harness')
+    go.add_argument('--agent-src', help='source tree the growth agent is imported from (default: the rc2 tree)')
     go.add_argument('--agent-interval', type=float, default=5.0, help='seconds between agent passes (live: --interval)')
     go.add_argument('--ordinary-every', type=float, default=5.0, help='seconds between ordinary transactions')
     go.add_argument('--validator-threads', type=int, help='OMP_NUM_THREADS for validator apps')
