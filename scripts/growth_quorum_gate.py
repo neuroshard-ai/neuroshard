@@ -51,7 +51,7 @@ STAGES = {
     'forbidden-4-legacy-holders': {'rc2': [], 'model': [0, 1, 2, 3]},
 }
 CASES = ('honest', 'forged', 'legacy8')
-MEASUREMENT = 3  # 2: delivery, pass/fail, recovery vs peers, timing; 3: proof sent to all validators at once
+MEASUREMENT = 4  # 2: delivery, pass/fail, recovery vs peers, timing; 3: proof to all at once; 4: delivery on its own thread
 HONEST_ROOT_KEY, LEGACY_ROOT_KEY = 'honest_root', 'legacy8_root'
 
 
@@ -113,7 +113,7 @@ class Gate:
         row = {'kind': kind, 'unix': round(time.time(), 3), 'measurement': MEASUREMENT, 'harness': HARNESS, **fields}
         with self.events.open('a') as f:
             f.write(json.dumps(row, sort_keys=True) + '\n')
-        print(json.dumps(row, sort_keys=True)[:400], flush=True)
+        print(json.dumps(row, sort_keys=True), flush=True)  # complete: the console log is a second copy
 
     # -- chain ------------------------------------------------------------------------------------------------
     def accounts(self, run):
@@ -377,19 +377,28 @@ class Gate:
                 self.log('validator-offline', run=run, index=offline)
             rpc = next(i for i in range(5) if i not in down)
 
-            # Deliver and prove as an agent does: deliver to every store that lacks the bundle, then send the proof
-            # to every online validator, repeating both until the challenge closes.
+            # Deliver and prove as an agent does, until the challenge closes:
+            # - delivery runs on its own thread, every 2 s, to every store that lacks the recipe or the bundle (a store
+            #   that comes up late gets both), and a late store starts on its own timer;
+            # - so neither waits behind a proof submission, which returns only after that validator's replay.
             holders, admissions, outcome, last_send = {}, [], 'undecided', 0.0
+
+            def delivery():
+                while not stop.is_set():
+                    if store_delay and store_delay[0] not in self.servers and time.time() - challenged_unix >= store_delay[1]:
+                        self.start_store(store_delay[0])
+                    try:
+                        if self.net.state(self.net.url(self.config, rpc))['height'] > opened_at:
+                            self.deliver(self.recipe_root, json.dumps(self.recipe).encode(), recipe_holders)
+                            self.deliver(self.proof_root, self.bundle, holders)
+                    except Exception as error:  # noqa: BLE001 - retried
+                        self.log('delivery-error', run=run, error=str(error)[:160])
+                    stop.wait(2)
+            threading.Thread(target=delivery, daemon=True).start()
             give_up = time.monotonic() + self.args.judge_timeout
             while time.monotonic() < give_up:
-                if store_delay and store_delay[0] not in self.servers and time.time() - challenged_unix >= store_delay[1]:
-                    self.start_store(store_delay[0])
                 now = self.net.state(self.net.url(self.config, rpc))
                 if now['height'] > opened_at:
-                    # Recipes replicate between stores and agents publish to every store, so a store that comes up
-                    # late gets the recipe as well as the bundle.
-                    self.deliver(self.recipe_root, json.dumps(self.recipe).encode(), recipe_holders)
-                    self.deliver(self.proof_root, self.bundle, holders)
                     if holders and time.time() - last_send >= self.args.prove_every:
                         last_send = time.time()
                         acct = self.accts['challenger']
