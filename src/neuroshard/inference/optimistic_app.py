@@ -26,6 +26,7 @@ import argparse
 import faulthandler
 import json
 import logging
+import os
 import signal
 import sqlite3
 import threading
@@ -43,6 +44,8 @@ LOG = logging.getLogger('neuroshard.settlement')
 MAX_TX_BYTES = 16_384
 MAX_BLOCK_TXS = 16
 NO_VERDICT = 3
+# Prototype (proposal, not released): replays never block CheckTx/PrepareProposal/ProcessProposal.
+NONBLOCKING = os.environ.get('NEUROSHARD_NONBLOCKING_PROOFS') == '1'
 
 
 def parse_json(raw):
@@ -111,6 +114,13 @@ class cached:
         with self.lock:
             if key in self.verdicts:
                 return self.verdicts[key]
+        if NONBLOCKING:
+            # Consensus never waits on a replay: start it in the background and answer "no verdict yet" now.
+            # A proposer then leaves the proof out and a voter rejects a block carrying it, until its own verdict is
+            # cached; the challenger resubmits, and the proof commits in the first round after enough validators
+            # have judged it. Blocks keep coming meanwhile.
+            self.prefetch(state, request)
+            raise ledger.NoVerdict('replay in progress on this validator')
         return self.worker.submit(self.judge, state, request, key).result()
 
     def prefetch(self, state, request):
@@ -180,6 +190,14 @@ class Application(rpc.ABCIServicer):
             for challenge_id in sorted(job['challenges']):
                 request = ledger.challenge_request(self.state, job_id, job['challenges'][challenge_id])
                 self.check.prefetch(self.state, request)
+        if NONBLOCKING and self.state.get('growth'):
+            from neuroshard.inference import growth
+            for job_id, job in sorted(self.state['growth'].items()):
+                for challenge in job['challenges'].values():
+                    if self.state['height'] > challenge['opened']:  # its deposit is committed
+                        request = growth.step_request(self.state, job_id, challenge['segment'], challenge['step'],
+                                                      challenge['proof_root'])
+                        self.check.prefetch(self.state, request)
 
     def Echo(self, request, context):
         return pb.ResponseEcho(message=request.message)
