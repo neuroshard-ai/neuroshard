@@ -31,6 +31,7 @@ import signal
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,7 +51,7 @@ STAGES = {
     'forbidden-4-legacy-holders': {'rc2': [], 'model': [0, 1, 2, 3]},
 }
 CASES = ('honest', 'forged', 'legacy8')
-MEASUREMENT = 2  # 2: real store delivery, explicit pass/fail, recovery against peers, timing and latency
+MEASUREMENT = 3  # 2: delivery, pass/fail, recovery vs peers, timing; 3: proof sent to all validators at once
 HONEST_ROOT_KEY, LEGACY_ROOT_KEY = 'honest_root', 'legacy8_root'
 
 
@@ -394,16 +395,18 @@ class Gate:
                         acct = self.accts['challenger']
                         acct.nonce = now['accounts'][acct.public]['nonce']
                         envelope = acct.sign('growth_prove', job_id=job, challenge_id=challenge_id)
-                        for i in range(5):
-                            if i in down:
-                                continue
-                            sent = time.time()
+                        # broadcast_tx_sync returns only after that validator's CheckTx, which runs the replay. Sent
+                        # to every online validator at once, as a challenger can, so all judge within the window.
+                        def send(i, sent=time.time(), height=now['height'], envelope=envelope):
                             try:
                                 r = self.net.broadcast(self.net.url(self.config, i), envelope)
-                                admissions.append({'index': i, 'sent': sent, 'seconds': round(time.time() - sent, 2),
-                                                   'code': r['code'], 'log': r['log'][:120], 'height': now['height']})
+                                return {'index': i, 'sent': sent, 'seconds': round(time.time() - sent, 2),
+                                        'code': r['code'], 'log': r['log'][:120], 'height': height}
                             except Exception as error:  # noqa: BLE001
-                                admissions.append({'index': i, 'sent': sent, 'error': str(error)[:120]})
+                                return {'index': i, 'sent': sent, 'error': str(error)[:120]}
+                        senders = [i for i in range(5) if i not in down]
+                        with ThreadPoolExecutor(max_workers=len(senders)) as pool:
+                            admissions += list(pool.map(send, senders))
                 now = self.net.state(self.net.url(self.config, rpc))
                 faults = [f for f in now.get('growth_faults', []) if f['job_id'] == job]
                 if faults:
