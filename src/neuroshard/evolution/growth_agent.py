@@ -319,8 +319,11 @@ class Agent:
             if not self.deliver_proof(action):
                 out.append({'kind': 'delivery-pending', 'challenge_id': action['challenge_id']})
                 continue
+            # Send the proof to every validator at once, so a validator that cannot judge it yet (no bundle, no
+            # model) never stands between it and the ones that can. A chain without that path uses ``submit``.
+            submit = getattr(self.chain, 'submit_everywhere', None) or self.chain.submit
             try:
-                self.chain.submit(self.account, 'growth_prove', job_id=job_id, challenge_id=action['challenge_id'])
+                submit(self.account, 'growth_prove', job_id=job_id, challenge_id=action['challenge_id'])
             except TimeoutError as error:
                 # Admitted but not seen committed: it may still land. The next pass reads the chain and stops if the
                 # challenge closed, so a lost reply never makes a second proof.

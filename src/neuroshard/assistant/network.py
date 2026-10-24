@@ -501,6 +501,57 @@ class Chain:
             return admitted
         raise OSError('no ledger RPC accepted the transaction: ' + '; '.join(failures))
 
+    def submit_everywhere(self, account, kind, timeout=180, **fields):
+        """Sign once and send the same envelope to every validator RPC at once; for transactions validators judge.
+
+        A growth proof is admitted only by a validator that can replay it. One that lacks the bundle or the model
+        answers "no verdict" (code 3), and ``broadcast`` would stop at that first reachable RPC, while validators
+        that could admit it are never asked.
+        - Every RPC is tried concurrently with the identical envelope, so the transaction keeps one identity
+          and nonce, and a resubmission after a lost reply can never commit twice.
+        - It is admitted once any validator admits it; mempool gossip then reaches the rest.
+        - Raises ``Rejected`` with every validator's answer if none admits it (the caller retries, within the
+          proof window), and ``TimeoutError`` if admitted but not seen committed (the caller reads the chain
+          before resubmitting).
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        envelope = account.sign(self.chain_id, self.nonce(account), kind, **fields)
+        answers, admitted_at = {}, None
+        pool = ThreadPoolExecutor(max_workers=len(self.rpcs))
+        try:
+            futures = {pool.submit(chain_network.broadcast, address, envelope): address for address in self.rpcs}
+            for future in as_completed(futures):
+                address = futures[future]
+                try:
+                    reply = future.result()
+                except OSError as error:
+                    answers[address] = f'unreachable: {error}'
+                    continue
+                answers[address] = (reply['log'] or f"code {reply['code']}") if reply['code'] else 'admitted'
+                if not reply['code']:
+                    admitted_at = address
+                    break  # the others keep judging in the background; their answers are not needed
+        finally:
+            pool.shutdown(wait=False, cancel_futures=False)
+        if admitted_at is None:
+            raise chain_network.Rejected('no validator admitted the transaction: '
+                                         + '; '.join(f'{a}: {r}' for a, r in sorted(answers.items())))
+        self.rpc = admitted_at
+        key = base64.b64encode(hashlib.sha256(ledger.canonical(envelope)).digest()).decode()
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            for address in [admitted_at] + [a for a in self.rpcs if a != admitted_at]:
+                try:
+                    result = chain_network.rpc(address, 'tx', {'hash': key})
+                except (chain_network.Rejected, OSError):
+                    continue
+                if result['tx_result'].get('code', 0):
+                    raise chain_network.Rejected(result['tx_result'].get('log', 'transaction failed'))
+                return envelope
+            time.sleep(0.5)
+        raise TimeoutError(f'transaction {ledger.transaction_id(envelope)} was not committed')
+
     def submit(self, account, kind, nonce=None, timeout=180, **fields):
         envelope = account.sign(self.chain_id, self.nonce(account) if nonce is None else nonce, kind, **fields)
         admitted = self.broadcast(envelope)
