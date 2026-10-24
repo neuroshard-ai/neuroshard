@@ -34,37 +34,29 @@ VERDICT = {  # (flavour, case) -> what a validator holding the model and the bun
 
 
 def expected_verdicts(validators, case, offline=(), missing_store=(), late_store=()):
-    """Per validator index: 'True', 'False', 'no-verdict', 'offline', or 'X|no-verdict'.
+    """Per validator index: 'True', 'False', 'no-verdict' or 'offline'.
 
-    The last form is for a validator whose store comes up late: it judges only if the proof is still open when its
-    material arrives, so either answer is correct. ``validators`` is a list of {'flavour', 'model'}."""
+    A validator whose store comes up late (within the scenario's delivery budget) **must** still receive the
+    material and judge before the deadline. Its verdict is required like any other, so a late-recovery scenario
+    passes only if the late validator actually restores the quorum. A store that never comes up is
+    ``missing_store``. ``validators`` is a list of {'flavour', 'model'}."""
     out = {}
     for i, v in enumerate(validators):
         if i in offline:
             out[i] = 'offline'
         elif not v['model'] or i in missing_store:
             out[i] = 'no-verdict'
-        elif i in late_store:
-            out[i] = VERDICT[(v['flavour'], case)] + '|no-verdict'
         else:
             out[i] = VERDICT[(v['flavour'], case)]
     return out
 
 
 def expect_penalty(verdicts):
-    """True if a penalty must commit, False if it must not, None if it depends on timing (late material).
-
-    A penalty commits exactly when enough validators find fraud to accept a block carrying the proof."""
-    certain = sum(1 for v in verdicts.values() if v == 'True')
-    possible = certain + sum(1 for v in verdicts.values() if v.startswith('True|'))
-    if certain >= QUORUM:
-        return True
-    return False if possible < QUORUM else None
+    """A penalty commits exactly when enough validators find fraud to accept a block carrying the proof."""
+    return sum(1 for v in verdicts.values() if v == 'True') >= QUORUM
 
 
 def verdict_matches(expected, observed):
-    if '|' in expected:
-        return any(verdict_matches(option, observed) for option in expected.split('|'))
     if expected == 'no-verdict':
         return observed.startswith('no-verdict') or observed == 'not-judged'
     if expected == 'offline':
@@ -105,8 +97,6 @@ def judge_scenario(obs):
             # A validator that could judge but never did is incomplete evidence, not a contradiction.
             (unsure if got == 'not-judged' else fail).append(f'validator {i}: expected {want}, observed {got}')
     want_penalty = expect_penalty(obs['expected_verdicts'])
-    if want_penalty is None:  # timing decides it: the observed verdicts must explain the observed outcome
-        want_penalty = sum(1 for v in obs['verdicts'].values() if v == 'True') >= QUORUM
     outcome = obs['outcome']
     if outcome == 'undecided':
         unsure.append('no decisive event (penalty, or lapse then settlement) before the timeout')
@@ -123,6 +113,15 @@ def judge_scenario(obs):
             fail.append(f'burned {obs["burned"]} != expected {burned}')
     if not obs['blocks_complete']:
         unsure.append('some blocks of the scenario could not be read')
+    late = obs.get('late_store')
+    if late is not None:  # the late store must have come up within its budget and received both files in time
+        if late.get('started_after_s') is None or late['started_after_s'] > late['budget_s']:
+            fail.append(f"late store started after {late.get('started_after_s')} s, budget {late['budget_s']} s")
+        if not late.get('bundle_received') or not late.get('recipe_received'):
+            fail.append('late store never received the recipe and the bundle')
+    ordinary = obs.get('ordinary')
+    if ordinary is not None and ordinary.get('unreconciled'):
+        unsure.append(f"{ordinary['unreconciled']} ordinary transfer(s) not reconciled with the chain")
     recovery = obs.get('recovery')
     if recovery is not None:
         if recovery['result'] == 'disagreement':

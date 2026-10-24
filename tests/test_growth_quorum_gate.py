@@ -143,14 +143,49 @@ def test_block_gaps_report_the_longest_pauses():
     assert gaps['max_seconds'] == 52.5 and gaps['largest'][0] == {'seconds': 52.5, 'from': 2, 'to': 3}
 
 
-def test_a_late_store_may_or_may_not_judge_but_the_outcome_must_follow_the_verdicts():
-    expected = rules.expected_verdicts([RC2] * 5, 'forged', late_store={3})
-    assert expected[3] == 'True|no-verdict' and rules.expect_penalty(expected) is True  # four others suffice
-    two_late = rules.expected_verdicts([RC2] * 5, 'forged', offline={4}, late_store={3})
-    assert rules.expect_penalty(two_late) is None  # three certain plus one late: timing decides
-    obs = observation('forged', 'penalty-committed', offline=(4,))
-    obs['expected_verdicts'] = two_late
-    obs['verdicts'][3] = 'no-verdict (ProofUnavailable)'  # then only three found fraud: a penalty cannot be right
-    assert rules.judge_scenario(obs)[0] == 'fail'
-    obs['verdicts'][3] = 'True'
-    assert rules.judge_scenario(obs)[0] == 'pass'
+def test_late_recovery_requires_the_late_validator_to_judge_and_restore_quorum():
+    """The reviewer's negative control: a late store that never judges, so a forgery settles, must not pass."""
+    expected = rules.expected_verdicts([RC2] * 5, 'forged', offline={4}, late_store={3})
+    assert expected[3] == 'True' and rules.expect_penalty(expected)
+    late = {'budget_s': 20, 'started_after_s': 15.2, 'bundle_received': True, 'recipe_received': True}
+    escaped = observation('forged', 'lapsed-and-settled', offline=(4,), late_store=late)
+    escaped['expected_verdicts'] = expected
+    escaped['verdicts'][3] = 'no-verdict (ProofUnavailable)'
+    assert rules.judge_scenario(escaped)[0] == 'fail'
+    restored = observation('forged', 'penalty-committed', offline=(4,), late_store=late)
+    assert rules.judge_scenario(restored)[0] == 'pass'
+
+
+def test_a_late_store_outside_its_budget_or_without_material_fails():
+    for late in ({'budget_s': 20, 'started_after_s': 58.2, 'bundle_received': True, 'recipe_received': True},
+                 {'budget_s': 20, 'started_after_s': 15.0, 'bundle_received': False, 'recipe_received': True}):
+        obs = observation('forged', 'penalty-committed', offline=(4,), late_store=late)
+        assert rules.judge_scenario(obs)[0] == 'fail'
+
+
+def test_unreconciled_ordinary_transfers_make_the_evidence_incomplete():
+    obs = observation(ordinary={'unreconciled': 1})
+    assert rules.judge_scenario(obs)[0] == 'inconclusive'
+
+
+def test_the_ordinary_transfer_monitor_records_an_attempt_before_sending_and_never_drops_it():
+    """The reviewer's control: stopping while a send is in flight must not drop it, and reconciliation counts it."""
+    import threading
+    from types import SimpleNamespace
+    stop, sent = threading.Event(), []
+
+    def broadcast(address, envelope):
+        sent.append(envelope)
+        stop.set()  # stop arrives while this send is in flight
+        return {'code': 0, 'log': ''}
+    runner = object.__new__(gate.Gate)
+    runner.accts = {'bystander': SimpleNamespace(public='b', nonce=0, sign=lambda kind, **f: {'body': {'kind': kind}})}
+    runner.config, runner.ordinary = {}, []
+    runner.args = SimpleNamespace(ordinary_every=0.01)
+    runner.net = SimpleNamespace(url=lambda *a: 'stub', broadcast=broadcast)
+    runner.bystander(stop, lambda i: True)
+    assert len(sent) == 1 and len(runner.ordinary) == 1 and runner.ordinary[0]['admission'] == 0
+    summary = runner.ordinary_summary(final_nonce=1)
+    assert summary['attempts'] == 1 and summary['committed'] == 1 and summary['unreconciled'] == 0
+    assert summary['confirmation_unobserved'] == 1  # committed, but its confirmation time was not observed
+    assert runner.ordinary_summary(final_nonce=2)['unreconciled'] == 1  # the chain committed one we never sent

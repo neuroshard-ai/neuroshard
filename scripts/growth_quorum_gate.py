@@ -51,7 +51,7 @@ STAGES = {
     'forbidden-4-legacy-holders': {'rc2': [], 'model': [0, 1, 2, 3]},
 }
 CASES = ('honest', 'forged', 'legacy8')
-MEASUREMENT = 4  # 2: delivery, pass/fail, recovery vs peers, timing; 3: proof to all at once; 4: delivery on its own thread
+MEASUREMENT = 5  # 3: proof to all at once; 4: delivery thread; 5: mandatory late recovery, fixed-rate reconciled transfers, observed commit times, agent path
 HONEST_ROOT_KEY, LEGACY_ROOT_KEY = 'honest_root', 'legacy8_root'
 
 
@@ -278,32 +278,62 @@ class Gate:
             stop.wait(1)
 
     def bystander(self, stop, online):
-        """Ordinary transactions throughout: a self-transfer every few seconds; records each inclusion latency."""
+        """Ordinary transactions on a fixed arrival schedule: one self-transfer every ``ordinary_every`` seconds.
+
+        Each attempt is recorded *before* it is sent, with its nonce. Scheduling stops at ``stop``; sends already
+        in flight finish. ``reconcile_ordinary`` then matches every attempt against the chain's committed nonce,
+        so none can silently disappear.
+        """
+        acct = self.accts['bystander']
+        nonce = 0
+        start = time.time()
+        k = 0
+        while not stop.is_set():
+            due = start + k * self.args.ordinary_every
+            if time.time() < due:
+                stop.wait(due - time.time())
+                continue
+            k += 1
+            rpc = next(i for i in range(5) if online(i))
+            acct.nonce = nonce
+            envelope = acct.sign('transfer', to=acct.public, amount=1)
+            attempt = {'nonce': nonce, 'scheduled': round(due, 3), 'sent': round(time.time(), 3), 'rpc': rpc}
+            self.ordinary.append(attempt)  # recorded before the send, so a stop or error can never drop it
+            try:
+                admitted = self.net.broadcast(self.net.url(self.config, rpc), envelope)
+                attempt.update(admission=admitted['code'], admitted_at=round(time.time(), 3), log=admitted['log'][:120])
+                if admitted['code'] == 0:
+                    nonce += 1  # the next transfer follows this one; the chain orders them by nonce
+            except Exception as error:  # noqa: BLE001
+                attempt.update(error=str(error)[:120])
+        self.ordinary_rpc = next(i for i in range(5) if online(i))
+
+    def watch_ordinary(self, stop, online):
+        """Observed confirmation time per admitted transfer: the first poll at which the chain's nonce exceeds it."""
         acct = self.accts['bystander']
         while not stop.is_set():
-            rpc = next(i for i in range(5) if online(i))
             try:
+                rpc = next(i for i in range(5) if online(i))
                 state = self.net.state(self.net.url(self.config, rpc))
-                nonce = acct.nonce = state['accounts'].get(acct.public, {'nonce': 0})['nonce']
-                envelope = acct.sign('transfer', to=acct.public, amount=1)
-                sent = time.time()
-                admitted = self.net.broadcast(self.net.url(self.config, rpc), envelope)
-                if admitted['code'] != 0:
-                    self.ordinary.append({'sent': sent, 'admission': admitted['code'], 'log': admitted['log'][:120]})
-                else:
-                    while not stop.is_set():
-                        now = self.net.state(self.net.url(self.config, rpc))
-                        if now['accounts'].get(acct.public, {'nonce': 0})['nonce'] > nonce:
-                            self.ordinary.append({'sent': sent, 'latency': round(time.time() - sent, 2),
-                                                  'height': now['height']})
-                            break
-                        if time.time() - sent > 600:
-                            self.ordinary.append({'sent': sent, 'latency': None, 'note': 'not included in 600 s'})
-                            break
-                        time.sleep(0.5)
-            except Exception as error:  # noqa: BLE001 - recorded; the next one is tried
-                self.ordinary.append({'sent': time.time(), 'error': str(error)[:120]})
-            stop.wait(self.args.ordinary_every)
+                committed = state['accounts'].get(acct.public, {'nonce': 0})['nonce']
+                now = round(time.time(), 3)
+                for attempt in self.ordinary:
+                    if attempt.get('admission') == 0 and 'confirmed_at' not in attempt and attempt['nonce'] < committed:
+                        attempt.update(confirmed_at=now, height=state['height'],
+                                       latency=round(now - attempt['scheduled'], 2))
+            except Exception:  # noqa: BLE001 - polled again
+                pass
+            stop.wait(0.5)
+
+    def reconcile_ordinary(self, final_nonce):
+        """Every admitted attempt below the committed nonce is committed; the rest are explicitly not."""
+        for attempt in self.ordinary:
+            if attempt.get('admission') == 0:
+                attempt['committed'] = attempt['nonce'] < final_nonce
+            elif 'error' in attempt:
+                attempt['committed'] = attempt['nonce'] < final_nonce  # a lost reply may still have committed
+            else:
+                attempt['committed'] = False
 
     def block_times(self, rpc, first, last):
         times, unreadable = {}, []
@@ -332,13 +362,14 @@ class Gate:
         import threading
         run = f'{stage}-{case}' + (f'-off{offline}' if offline is not None else '') + (
             f'-nostore{"".join(map(str, missing_store))}' if missing_store else '') + (
-            f'-late{store_delay[0]}' if store_delay else '') + f'-{int(time.time())}'
+            f'-late{store_delay[0]}' if store_delay else '') + ('-agent' if self.args.agent else '') + f'-{int(time.time())}'
         self.run, self.servers, self.peak, self.ordinary = run, {}, {}, []
+        self.late_started = self.fault_seen = None
         claimed = {'honest': self.roots[HONEST_ROOT_KEY], 'forged': 'cd' * 32, 'legacy8': self.roots[LEGACY_ROOT_KEY]}[case]
         stop = threading.Event()
         down = {offline} if offline is not None else set()
         result = {'run': run, 'stage': stage, 'case': case, 'offline': offline, 'missing_store': list(missing_store),
-                  'store_delay': store_delay}
+                  'store_delay': store_delay, 'prover': 'released-agent' if self.args.agent else 'harness'}
         try:
             self.start(stage, run)
             validators = [{'flavour': v['flavour'], 'model': v['model']} for v in self.config['validators']]
@@ -353,7 +384,11 @@ class Gate:
                 if i not in missing_store and not (store_delay and store_delay[0] == i):
                     self.start_store(i)
             threading.Thread(target=self.sampler, args=(stop,), daemon=True).start()
-            threading.Thread(target=self.bystander, args=(stop, lambda i: i not in down), daemon=True).start()
+            ordinary_stop = threading.Event()  # stops scheduling; in-flight sends finish before the summary
+            sender = threading.Thread(target=self.bystander, args=(ordinary_stop, lambda i: i not in down), daemon=True)
+            watcher = threading.Thread(target=self.watch_ordinary, args=(stop, lambda i: i not in down), daemon=True)
+            sender.start()
+            watcher.start()
 
             opened, _ = self.submit('sponsor', 'growth_open', recipe_root=self.recipe_root,
                                     start_root=self.recipe['start_root'], steps=1, segment_steps=1, reward=1_000_000)
@@ -383,10 +418,15 @@ class Gate:
             # - so neither waits behind a proof submission, which returns only after that validator's replay.
             holders, admissions, outcome, last_send = {}, [], 'undecided', 0.0
 
+            if store_delay:  # the late store starts on its own timer, never behind a blocking call
+                def late_start():
+                    if not stop.wait(max(0.0, challenged_unix + store_delay[1] - time.time())):
+                        self.late_started = time.time()
+                        self.start_store(store_delay[0])
+                threading.Thread(target=late_start, daemon=True).start()
+
             def delivery():
                 while not stop.is_set():
-                    if store_delay and store_delay[0] not in self.servers and time.time() - challenged_unix >= store_delay[1]:
-                        self.start_store(store_delay[0])
                     try:
                         if self.net.state(self.net.url(self.config, rpc))['height'] > opened_at:
                             self.deliver(self.recipe_root, json.dumps(self.recipe).encode(), recipe_holders)
@@ -394,11 +434,18 @@ class Gate:
                     except Exception as error:  # noqa: BLE001 - retried
                         self.log('delivery-error', run=run, error=str(error)[:160])
                     stop.wait(2)
-            threading.Thread(target=delivery, daemon=True).start()
+            if self.args.agent:
+                # The released growth agent proves, not this harness: its own check() loop, its saved bundle, its
+                # deliver() to every store and Chain.submit_everywhere, through a light-client-verified Chain.
+                agent_thread = threading.Thread(target=self.run_agent, args=(stop, job, challenge_id, holders, recipe_holders),
+                                                daemon=True)
+                agent_thread.start()
+            else:
+                threading.Thread(target=delivery, daemon=True).start()
             give_up = time.monotonic() + self.args.judge_timeout
             while time.monotonic() < give_up:
                 now = self.net.state(self.net.url(self.config, rpc))
-                if now['height'] > opened_at:
+                if now['height'] > opened_at and not self.args.agent:
                     if holders and time.time() - last_send >= self.args.prove_every:
                         last_send = time.time()
                         acct = self.accts['challenger']
@@ -420,6 +467,7 @@ class Gate:
                 faults = [f for f in now.get('growth_faults', []) if f['job_id'] == job]
                 if faults:
                     outcome, result['fault_height'] = 'penalty-committed', faults[-1]['height']
+                    self.fault_seen = time.time()
                     break
                 gjob = now.get('growth', {}).get(job)
                 if gjob is None or challenge_id not in gjob.get('challenges', {}):
@@ -432,8 +480,11 @@ class Gate:
                         outcome = 'lapsed-and-settled'
                     break
                 time.sleep(1)
+            ordinary_stop.set()
+            sender.join(timeout=120)  # drain: the last in-flight transfer is recorded either way
+            time.sleep(3)  # let the last confirmations be observed and every app flush its verdict line
             stop.set()
-            time.sleep(3)  # let every app flush its verdict line
+            watcher.join(timeout=10)
             after = self.net.state(self.net.url(self.config, rpc))
             times, unreadable_t = self.block_times(rpc, opened_at - 3, after['height'])
             carried, unreadable_b = self.proof_blocks(rpc, opened_at, after['height'])
@@ -446,7 +497,8 @@ class Gate:
                 nonces={n: after['accounts'].get(a.public, {}).get('nonce', 0) for n, a in self.accts.items()},
                 burned=after.get('burned'), gaps=gate_rules.block_gaps(times),
                 timeline=self.timeline(times, opened_at, deadline, holders, recipe_holders, admissions, result.get('fault_height')),
-                ordinary=self.ordinary_summary(), peak_app_rss_mb=dict(self.peak),
+                ordinary=self.ordinary_summary(after['accounts'].get(self.accts['bystander'].public, {}).get('nonce', 0)),
+                peak_app_rss_mb=dict(self.peak), late_store=self.late_summary(store_delay, challenged_unix, holders, recipe_holders),
                 rejected_proposals=self.rejections(), seconds=round(time.time() - challenged_unix, 1))
             if offline is not None and recover:
                 result['recovery'] = self.recover(run, offline)
@@ -463,6 +515,81 @@ class Gate:
                 self.stop_store(i)
             self.stop()
 
+    def agent_chain(self):
+        """A ``network.Chain`` over this isolated chain's RPCs, light-client verified against its genesis validators."""
+        from neuroshard.assistant import network
+        genesis = json.loads((Path(self.config['validators'][0]['home']) / 'config' / 'genesis.json').read_text())
+        trusted = {base64.b64decode(v['pub_key']['value']).hex(): int(v['power']) for v in genesis['validators']}
+        return network.Chain([self.net.url(self.config, i) for i in range(5)], self.chain_id, trusted)
+
+    def run_agent(self, stop, job_id, challenge_id, holders, recipe_holders):
+        """Drive the released ``growth_agent.Agent`` for an open challenge it made, until the challenge closes.
+
+        The agent's memory holds the challenge (as after ``check`` opened it) and its bundle is on disk where
+        ``check`` writes it. Each pass is the agent's own ``check``: deliver to every store, then prove. Its
+        ``deliver`` is the CLI's: post to every store, True once one accepts.
+        """
+        from neuroshard.assistant import audit
+        from neuroshard.evolution import growth_agent
+        home = self.stores / 'agent'
+        (home / 'proofs').mkdir(parents=True, exist_ok=True)
+        (home / 'proofs' / self.proof_root).write_bytes(self.bundle)
+        stores = [f'http://127.0.0.1:{self.args.base_port + i * 10 + 5}/proofs' for i in range(5)]
+
+        def deliver(root, payload):
+            accepted = 0
+            for i, endpoint in enumerate(stores):
+                try:
+                    audit.post_proof(endpoint, root, payload)
+                    holders.setdefault(i, time.time())
+                    accepted += 1
+                except Exception as error:  # noqa: BLE001 - one store being down does not stop the others
+                    self.log('agent-delivery-refused', run=self.run, index=i, error=str(error)[:120])
+            return accepted > 0
+
+        class Key:  # the challenger's test key, behind network.Account's signing interface
+            def __init__(self, acct):
+                self.acct, self.public = acct, acct.public
+
+            def sign(self, chain_id, nonce, kind, **fields):
+                self.acct.nonce = nonce
+                return self.acct.sign(kind, **fields)
+        chain = self.agent_chain()
+        agent = growth_agent.Agent(chain, Key(self.accts['challenger']), home, recipes={self.recipe_root: self.recipe},
+                                   trainer=object(), deliver=deliver)
+        agent.memory['actions'] = [{'kind': 'challenge', 'job_id': job_id, 'segment': 0, 'step': 0,
+                                    'challenge_id': challenge_id, 'proof_root': self.proof_root}]
+        agent.memory['checked'] = [f'{job_id}/0/' + hashlib.sha256(json.dumps(
+            self.net.state(self.net.url(self.config, 0))['growth'][job_id]['commits'][0]['step_roots']).encode()).hexdigest()[:16]]
+        # Recipes reach stores by replication from wherever they were published; the agent publishes the bundle.
+        recipe = json.dumps(self.recipe).encode()
+        while not stop.is_set():
+            self.deliver(self.recipe_root, recipe, recipe_holders)
+            try:
+                state = chain.state()
+                job = state.get('growth', {}).get(job_id)
+                if job is None:
+                    break
+                for item in agent.check(state, job_id, job):
+                    self.log('agent', run=self.run, action=item.get('kind'),
+                             **{k: (str(v)[:200] if k == 'error' else v) for k, v in item.items() if k != 'kind'})
+                    if item['kind'] in ('prove', 'challenge-proven', 'challenge-closed'):
+                        self.agent_done = item['kind']
+                        return
+            except Exception as error:  # noqa: BLE001 - the agent's next pass retries, as in its own loop
+                self.log('agent-pass-error', run=self.run, error=f'{type(error).__name__}: {error}'[:200])
+            stop.wait(self.args.agent_interval)
+
+    def late_summary(self, store_delay, challenged_unix, holders, recipe_holders):
+        if not store_delay:
+            return None
+        index, delay = store_delay
+        started = getattr(self, 'late_started', None)
+        return {'index': index, 'configured_delay_s': delay, 'budget_s': self.args.late_budget,
+                'started_after_s': round(started - challenged_unix, 1) if started else None,
+                'recipe_received': index in recipe_holders, 'bundle_received': index in holders,
+                'bundle_received_after_s': round(holders[index] - challenged_unix, 1) if index in holders else None}
+
     def timeline(self, times, opened_at, deadline, holders, recipe_holders, admissions, fault_height):
         """Challenge, material, replay and inclusion times: what the proof window is spent on."""
         replays = {}
@@ -476,14 +603,25 @@ class Gate:
                 'deadline_blocks': deadline - opened_at, 'bundle_accepted': {i: round(t, 2) for i, t in holders.items()},
                 'recipe_accepted': {i: round(t, 2) for i, t in recipe_holders.items()}, 'replays': replays,
                 'admissions': admissions[:60], 'inclusion_height': fault_height,
-                'inclusion_time': times.get(fault_height) if fault_height else None,
+                'inclusion_header_time': times.get(fault_height) if fault_height else None,
+                'inclusion_observed_time': round(self.fault_seen, 3) if getattr(self, 'fault_seen', None) else None,
                 'blocks_to_inclusion': (fault_height - opened_at) if fault_height else None}
 
-    def ordinary_summary(self):
-        lat = sorted(o['latency'] for o in self.ordinary if o.get('latency') is not None)
-        return {'sent': len(self.ordinary), 'included': len(lat), 'not_included': sum(1 for o in self.ordinary if 'latency' in o and o['latency'] is None),
-                'refused': sum(1 for o in self.ordinary if 'admission' in o), 'errors': sum(1 for o in self.ordinary if 'error' in o),
-                'median_s': lat[len(lat) // 2] if lat else None, 'max_s': lat[-1] if lat else None, 'all': self.ordinary}
+    def ordinary_summary(self, final_nonce):
+        """Offered load, outcome of every attempt, and confirmation latency (scheduled time to observed commit)."""
+        self.reconcile_ordinary(final_nonce)
+        committed = [a for a in self.ordinary if a.get('committed')]
+        lat = sorted(a['latency'] for a in committed if a.get('latency') is not None)
+        unobserved = [a for a in committed if a.get('latency') is None]  # committed, but confirmation not seen
+        accounted = sum(1 for a in self.ordinary if a.get('committed')) == final_nonce
+        return {'offered_every_s': self.args.ordinary_every, 'attempts': len(self.ordinary),
+                'committed': len(committed), 'chain_nonce': final_nonce,
+                'refused': sum(1 for a in self.ordinary if a.get('admission') not in (None, 0)),
+                'errors': sum(1 for a in self.ordinary if 'error' in a),
+                'confirmation_unobserved': len(unobserved),
+                'unreconciled': 0 if accounted else abs(final_nonce - len(committed)),
+                'median_s': lat[len(lat) // 2] if lat else None, 'p95_s': lat[int(len(lat) * 0.95)] if lat else None,
+                'max_s': lat[-1] if lat else None, 'all': self.ordinary}
 
     def recover(self, run, index):
         """Restart a stopped validator with its own data and signing state; establish recovery against its peers."""
@@ -589,9 +727,13 @@ def main():
     go.add_argument('--missing-store', type=int, action='append', default=[],
                     help='run no proof store for this validator (it never receives the bundle)')
     go.add_argument('--late-store', help='INDEX:SECONDS start this validator\'s store late, after the challenge')
+    go.add_argument('--late-budget', type=float, default=30.0,
+                    help='seconds after the challenge by which a late store must be up (late recovery must restore quorum)')
     go.add_argument('--window', type=int, help='override growth window and proof blocks (default: live, 40)')
     go.add_argument('--judge-timeout', type=int, default=1500)
     go.add_argument('--prove-every', type=float, default=5.0, help='seconds between proof resubmissions')
+    go.add_argument('--agent', action='store_true', help='prove with the released growth agent instead of the harness')
+    go.add_argument('--agent-interval', type=float, default=5.0, help='seconds between agent passes (live: --interval)')
     go.add_argument('--ordinary-every', type=float, default=5.0, help='seconds between ordinary transactions')
     go.add_argument('--validator-threads', type=int, help='OMP_NUM_THREADS for validator apps')
     go.add_argument('--shards', help="JSON file: a live validator's settlement 'shards' entry, paths rewritten")
