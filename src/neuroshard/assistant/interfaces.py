@@ -45,13 +45,49 @@ class ChatWorkspace:
         return {'events': copy.deepcopy(self.tools.events)}
 
 
+def superseded(documents):
+    """IDs of documents an earlier interface must not offer: older or unapproved revisions of a family that has
+    one latest approved revision, judged from the user's own metadata (``project``, ``title``, ``revision``,
+    ``status``).
+
+    Interfaces before ``workspace-documents/4`` show the model only id, title and content, so revisions of one
+    document look identical. The model then answers from whichever ranks first: in the pilot-2-rc2 soak, revision
+    1 of the demo delivery plan instead of its approved revision 2, on every run. The selection reuses
+    ``document_revisions.current`` (the /4 design's rule), applied on this device before the route sees the
+    files. A family that rule does not decide is left as it was: no approved revision, a tie, incomplete or
+    invalid metadata, or no metadata at all. So nothing is hidden unless a single current revision is known.
+    """
+    from neuroshard.evolution import document_revisions as revisions
+
+    groups = {}
+    for document in documents:
+        if 'revision' in document and 'status' in document:
+            key = (document.get('project'), document.get('family', document.get('title')))
+            fields, problems = revisions.metadata(document)
+            groups.setdefault(key, []).append({'id': document['id'], 'metadata': fields, 'problems': problems})
+    hidden = set()
+    for members in groups.values():
+        if len(members) < 2:
+            continue
+        outcome, chosen, _ = revisions.current(members)
+        if outcome == 'known_current':
+            hidden |= {m['id'] for m in members if m['id'] != chosen['id']}
+    return hidden
+
+
 def documents_world(world, version=3):
     """The documents workspace's public view of the user's files: id, title and content only.
 
     From ``workspace-documents/4``, the structured revision metadata fields pass through too (never any other
-    field). Earlier versions see exactly what they always saw."""
+    field), and the model selects among revisions with the /4 tools. Earlier versions cannot see revision
+    metadata, so they are offered only the latest approved revision of each document whose metadata decides one
+    (``superseded``); documents without such metadata are offered exactly as before."""
+    documents = world.get('documents', [])
+    hidden = superseded(documents) if version < 4 else set()
     rows = []
-    for document in world.get('documents', []):
+    for document in documents:
+        if document['id'] in hidden:
+            continue
         content = document.get('content')
         if content is None:  # a drafting document: its fields, as text
             content = '; '.join(f'{key}: {value}' for key, value in sorted(document.items())

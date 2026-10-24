@@ -37,7 +37,7 @@ import uuid
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-MEASUREMENT_VERSION = 3
+MEASUREMENT_VERSION = 4  # 4: answers also scored for citing the latest approved document
 # The demo workspace (``assistant chat`` sample 0) and the fact a correct reply must state.
 # (question, kind, expected): the reply's claims of that kind must be exactly the expected one.
 QUESTIONS = [
@@ -46,6 +46,10 @@ QUESTIONS = [
     ('When does the latest approved Cedar 6581 plan start?', 'date', '2027-05-14'),
     ('What is the baseline quantity in the latest approved Cedar 6581 Annex plan?', 'number', '70'),
 ]
+# The document each answer must come from: the latest approved revision. Every revision of the delivery plan has
+# the same review interval, so the number alone cannot tell a right answer from a lucky one.
+SOURCES = {QUESTIONS[0][0]: 'doc-88b36697f8', QUESTIONS[1][0]: 'doc-88b36697f8', QUESTIONS[2][0]: 'doc-88b36697f8',
+           QUESTIONS[3][0]: 'doc-35d32ed303'}
 MONTHS = {m: i for i, m in enumerate(('january february march april may june july august september october '
                                       'november december').split(), 1)}
 
@@ -62,6 +66,17 @@ def claims(reply, kind):
     text = re.sub(r'\b\d{4}-\d{2}-\d{2}\b', ' ', text)
     text = re.sub(r'Cedar \d+|revision \d+|rev\.? ?\d+', ' ', text, flags=re.I)
     return set(re.findall(r'(?<![\w.])(\d+)(?!\w|\.\d)', text))  # '61.' at a sentence end is 61; '6.5' is not
+
+
+def cited(reply):
+    """The document IDs a reply cites."""
+    return set(re.findall(r'doc-[0-9a-f]+', reply))
+
+
+def grounded(reply, question):
+    """True if the reply cites the latest approved document and no other revision of it; None if no source is known."""
+    source = SOURCES.get(question)
+    return None if source is None else cited(reply) == {source}
 
 
 def score(reply, kind, expected):
@@ -220,6 +235,7 @@ def conversation(out, index, question, expect, command, home, pending, account=N
         opened.add(job)
     record = log(out, 'conversation', index=index, question=question, job=job, opened=sorted(opened),
                  seconds=seconds, exit=code, transport_ok=transport, fact=fact, correct=fact == 'match',
+                 grounded=grounded(reply, question) if transport else False,
                  expected=expected, claimed=sorted(claims(reply, kind)) if reply else [], reply=reply,
                  stopped=stopped, output_file=str(outputs / f'{index}.txt'),
                  output_sha256=hashlib.sha256(text.encode()).hexdigest())
@@ -501,6 +517,9 @@ def summary(args):
             'conversations': len(talks),
             'transport_ok': sum(1 for e in talks if e.get('transport_ok', e.get('ok'))),
             'correct': sum(1 for e in talks if e.get('correct')) if talks and 'correct' in talks[0] else None,
+            # Right fact *and* cited from the latest approved document; a right number from another revision is not.
+            'correct_and_grounded': (sum(1 for e in talks if e.get('correct') and e.get('grounded'))
+                                     if talks and 'grounded' in talks[0] else None),
             'facts': {f: sum(1 for e in talks if e.get('fact') == f) for f in ('match', 'ambiguous', 'mismatch', 'none')}
             if talks and 'fact' in talks[0] else None,
             'attempts_unreconciled': sum(1 for e in items if e['kind'] == 'incident'

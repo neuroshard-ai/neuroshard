@@ -307,3 +307,32 @@ def test_v1_v2_v3_demonstrations_still_generate_and_only_v4_is_refused():
         assert demonstration.texts(case, version)
     with pytest.raises(ValueError, match='not defined for workspace-documents/4'):
         demonstration.texts(case, 4)
+
+
+def test_interfaces_before_v4_offer_only_the_latest_approved_revision_their_metadata_decides():
+    """Soak finding (pilot-2-rc2): /2 hid revision metadata, so the model answered from revision 1 of the demo
+    delivery plan (first by search tie-break) instead of approved revision 2, on every run."""
+    world = revision_fixtures.original()
+    offered = {d['id'] for d in interfaces.documents_world(world, 2)['documents']}
+    by_id = {d['id']: d for d in world['documents']}
+    plan = [d for d in world['documents'] if d['title'] == 'Cedar 6581 delivery plan']
+    assert {d['revision'] for d in plan} == {1, 2, 3}
+    chosen = [d for d in plan if d['id'] in offered]
+    assert [(d['revision'], d['status']) for d in chosen] == [(2, 'approved')]
+    assert all(by_id[i]['title'] != 'Cedar 6581 delivery plan' or i == chosen[0]['id'] for i in offered)
+    ws = documents.Workspace(interfaces.documents_world(world, 2), 2)
+    assert ws.search('Cedar 6581 delivery plan baseline quantity')['results'][0]['id'] == chosen[0]['id']
+    # /4 still sees every revision, with metadata, and selects with its own tools.
+    assert {d['id'] for d in interfaces.documents_world(world, 4)['documents']} == set(by_id)
+
+
+def test_nothing_is_hidden_unless_one_current_revision_is_known():
+    base = {'project': 'P', 'title': 'Plan', 'content': 'x'}
+    two_drafts = [{**base, 'id': 'a', 'revision': 1, 'status': 'draft'}, {**base, 'id': 'b', 'revision': 2, 'status': 'draft'}]
+    tie = [{**base, 'id': 'a', 'revision': 2, 'status': 'approved'}, {**base, 'id': 'b', 'revision': 2, 'status': 'approved'}]
+    invalid = [{**base, 'id': 'a', 'revision': 'two', 'status': 'approved'}, {**base, 'id': 'b', 'revision': 1, 'status': 'approved'}]
+    plain = [{'id': 'a', 'title': 'Plan', 'content': 'x'}, {'id': 'b', 'title': 'Plan', 'content': 'y'}]
+    for documents_ in (two_drafts, tie, invalid, plain):
+        assert interfaces.superseded(documents_) == set()
+    newer_draft = [{**base, 'id': 'a', 'revision': 1, 'status': 'approved'}, {**base, 'id': 'b', 'revision': 2, 'status': 'draft'}]
+    assert interfaces.superseded(newer_draft) == {'b'}  # the approved one is current; the newer draft is not

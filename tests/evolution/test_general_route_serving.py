@@ -40,7 +40,10 @@ def test_every_route_interface_resolves_and_a3_bindings_are_unchanged():
 
 def test_a_session_keeps_one_workspace_per_route_group_and_switches_by_route():
     files = world()
-    first = files['documents'][0]
+    # A document the documents route offers: interfaces before /4 show only the latest approved revision of a
+    # document with revision metadata (``interfaces.superseded``), and the first file here is a superseded draft.
+    hidden = interfaces.superseded(files['documents'])
+    first = next(d for d in files['documents'] if d['id'] not in hidden)
     session = Session(POLICIES['drafting'], files, name='a4-general', modules=('U1', 'L2', 'L3', 'L7', 'C1'),
                       route_policies=POLICIES)
     assert session.worlds == {}  # each route group's workspace is built when the route is first used
