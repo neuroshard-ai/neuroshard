@@ -43,6 +43,9 @@ MAX_PAID_POSITIONS = 65536
 # Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
 # understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
+# Experimental, off by default: the router's fixed prefix is computed by the owners as soon as the job opens,
+# while the user types, instead of on the first message. Same forward, same cache: routing and replies are unchanged.
+FAST_START = os.environ.get('NEUROSHARD_FAST_START') == '1'
 CHUNK = 1 << 20
 
 
@@ -1121,6 +1124,32 @@ def choose_route(router, served, feature, opening, general=None):
     return route, served.route_names.get(route, 2 if route == 'scheduling' else 1)
 
 
+class Primer:
+    """``driver.prime_router`` on a background thread; ``wait()`` joins it and re-raises its error.
+
+    Nothing else may use the driver until ``wait()`` returns: ``Conversation.say`` and ``close`` call it first."""
+
+    def __init__(self, driver, tokenizer, policy):
+        self.error, self.seconds = None, None
+        began = time.monotonic()
+
+        def run():
+            try:
+                driver.prime_router(tokenizer, policy)
+            except BaseException as error:  # noqa: BLE001 - re-raised on the caller's thread
+                self.error = error
+            finally:
+                self.seconds = time.monotonic() - began
+
+        self.thread = threading.Thread(target=run, name='router-prefix', daemon=True)
+        self.thread.start()
+
+    def wait(self):
+        self.thread.join()
+        if self.error is not None:
+            raise self.error
+
+
 class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
@@ -1186,8 +1215,16 @@ class Conversation:
         self.general_router = stage.get('general_router')
         self.respond = self.arm = None
         self.opening = None  # the first message's feature, for a K-route router's context
+        self.priming = None
+        if FAST_START and self.router is not None:
+            # The router's fixed prefix holds no user text, so owners can compute it while the user types. It is
+            # the same single forward into the same cache as on the first message, so routing is unchanged.
+            self.priming = Primer(self.driver, self.tokenizer, self.served.policies['drafting'])
 
     def say(self, text):
+        if self.priming is not None:
+            self.priming, priming = None, self.priming
+            priming.wait()
         """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
         from neuroshard.evolution import assistant_experience_run as accelerator
         from neuroshard.evolution import assistant_selector as selector
@@ -1213,6 +1250,12 @@ class Conversation:
 
     def close(self):
         """Stop the owners, which then commit their logs; the job settles after its challenge window."""
+        if getattr(self, 'priming', None) is not None:
+            self.priming, priming = None, self.priming
+            try:
+                priming.wait()
+            except Exception:  # noqa: BLE001 - closing still stops the owners
+                pass
         try:
             if getattr(self, 'driver', None) is not None:
                 self.driver.stop()
