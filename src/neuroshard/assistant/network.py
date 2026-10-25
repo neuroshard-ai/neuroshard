@@ -43,6 +43,8 @@ MAX_PAID_POSITIONS = 65536
 # Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
 # understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
+# Warm the client's stage while admission runs (off by default until measured on the live network).
+OVERLAP_WARMUP = os.environ.get('NEUROSHARD_OVERLAP_WARMUP') == '1'
 CHUNK = 1 << 20
 
 
@@ -1137,8 +1139,26 @@ class Conversation:
         self.served, self.chain, self.world, self.gate = served, chain, world, stage['gate']
         self.tokenizer, _ = granite_tokenizer.load(stage['tokenizer'], parent_digest=stage.get('parent_tokenizer_digest'))
         config = granite.load_config(stage['config'])
+        # Load (and check the manifest of) this device's stage before anything is funded: a stage that cannot load
+        # must never cost the user a job. Its warm-up passes then run while admission waits on the network, and
+        # are finished before the first work frame; owners allow 60 s of admitted idle time, warm-up takes ~10 s.
         partition, _ = granite.load_partition(config, stage['shard'], 0)
-        partition.warm_up()
+        warming = None
+        if OVERLAP_WARMUP:
+            import threading
+
+            failure = []
+
+            def warm():
+                try:
+                    torch.set_num_threads(threads or min(8, os.cpu_count() or 1))  # per thread
+                    partition.warm_up()
+                except BaseException as error:  # noqa: BLE001 - re-raised before any work frame
+                    failure.append(error)
+            warming = threading.Thread(target=warm, name='stage0-warm-up', daemon=True)
+            warming.start()
+        else:
+            partition.warm_up()
         state = chain.state()
         if state['model_root'] != served.root:
             raise ValueError('the ledger serves another version than this device holds')
@@ -1171,6 +1191,11 @@ class Conversation:
                 raise
         else:
             raise ValueError(f'unknown admission mode {mode!r}')
+        if warming is not None:
+            warming.join()
+            if failure:
+                self.close()  # the job stays unstarted and is refunded after its expiry
+                raise failure[0]
         session = {'chain_id': chain.chain_id, 'job_id': self.job_id, 'request_root': request_root,
                    'session_key': public_hex(session_key), 'log_keys': [key for key, _ in self.owners]}
         self.link = granite_audit.Link(session, 0, served.world, session_key, self.owners[-1][0])
