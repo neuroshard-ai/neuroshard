@@ -77,6 +77,11 @@ It needs about 6 GB of RAM. `--sample N` picks another workspace, and `--world
 FILE` loads your own documents. `/quit` ends the job; the owners then commit
 their logs and the job settles after its challenge window.
 
+*Experimental, off by default:* `NEUROSHARD_FAST_START=1` has the owners compute the router's
+fixed prefix, which contains no user text, as soon as the job opens, while you type. Replies are
+unchanged. Those 716 positions are paid even if you `/quit` before asking anything: about 0.044 of
+the default 1 NEURO escrow, and the rest is refunded.
+
 **Host a shard.** `neuroshard assistant host --shard 2 --endpoint HOST:28700`
 fetches only that shard's tensors, bonds 5 test NEURO and serves jobs. `HOST`
 must be your public address, and inbound TCP 28700 must be open. An owner needs

@@ -43,6 +43,12 @@ MAX_PAID_POSITIONS = 65536
 # Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
 # understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
+# Experimental, off by default: the router's fixed prefix is computed by the owners as soon as the job opens,
+# while the user types, instead of on the first message. Same forward, same cache: routing and replies are unchanged.
+# Cost: those positions (716 for the served version) are paid even if the job closes before any question: with the
+# default 1 NEURO for 16,384 positions, about 0.044 NEURO of the escrow, shared by the two owners; the rest is
+# refunded. Without fast start, a job closed before any question pays nothing.
+FAST_START = os.environ.get('NEUROSHARD_FAST_START') == '1'
 # Stage 0 runs with the execution class's eight intra-op threads on every device, whatever its core count. With
 # AMX, PyTorch's BF16 kernels split work by thread count, so four threads compute different numbers from eight and
 # can change a reply: a 4-core client looped to the token limit on a question the 8-thread path answers. Without
@@ -1126,6 +1132,45 @@ def choose_route(router, served, feature, opening, general=None):
     return route, served.route_names.get(route, 2 if route == 'scheduling' else 1)
 
 
+class Primer:
+    """``driver.prime_router`` on a background thread. The worker itself signals completion, as its last act.
+
+    Completion is never inferred from ``Thread.is_alive()``: a real SIGINT during ``Thread.join()`` can leave the
+    Thread object marked stopped while its worker still runs (CPython 3.10 and 3.12), so only ``finished``, set in
+    the worker's ``finally``, authorizes another driver command. ``Conversation.say`` waits for it before routing
+    and keeps the reference until it is set, so an interrupted wait leaves ``close`` to coordinate."""
+
+    def __init__(self, driver, tokenizer, policy):
+        self.error, self.seconds = None, None
+        self.finished = threading.Event()
+        began = time.monotonic()
+
+        def run():
+            try:
+                driver.prime_router(tokenizer, policy)
+            except BaseException as error:  # noqa: BLE001 - re-raised on the caller's thread
+                self.error = error
+            finally:
+                self.seconds = time.monotonic() - began
+                self.finished.set()
+
+        self.thread = threading.Thread(target=run, name='router-prefix', daemon=True)
+        self.thread.start()
+
+    def done(self):
+        return self.finished.is_set()
+
+    def wait(self, timeout=None):
+        """Wait for the worker's own completion signal (up to ``timeout`` seconds); True once it has finished.
+
+        Re-raises its error. A KeyboardInterrupt during the wait propagates and leaves ``done()`` truthful."""
+        if not self.finished.wait(timeout):
+            return False
+        if self.error is not None:
+            raise self.error
+        return True
+
+
 class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
@@ -1194,9 +1239,21 @@ class Conversation:
         self.general_router = stage.get('general_router')
         self.respond = self.arm = None
         self.opening = None  # the first message's feature, for a K-route router's context
+        self.priming = None
+        if FAST_START and self.router is not None:
+            # The router's fixed prefix holds no user text, so owners can compute it while the user types. It is
+            # the same single forward into the same cache as on the first message, so routing is unchanged.
+            self.priming = Primer(self.driver, self.tokenizer, self.served.policies['drafting'])
 
     def say(self, text):
         """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
+        if self.priming is not None:
+            try:
+                self.priming.wait()
+            finally:
+                # Only a worker that signalled completion is released; after an interrupted wait ``close`` sees it.
+                if self.priming.done():
+                    self.priming = None
         from neuroshard.evolution import assistant_experience_run as accelerator
         from neuroshard.evolution import assistant_selector as selector
         from neuroshard.evolution.sharded import granite_serving as serving
@@ -1219,15 +1276,51 @@ class Conversation:
             return self.session.turn(text, self.responses[route], route=route)
         return self.session.turn(text, self.respond)
 
+    PRIMER_GRACE = 120  # seconds close() waits for a running primer before abandoning the owners' STOP
+    CANCEL_GRACE = 30  # seconds close() then waits for a cancelled primer (its socket I/O fails at once; local
+    # computation, at most one 716-token stage-0 forward, finishes in a few seconds)
+
     def close(self):
-        """Stop the owners, which then commit their logs; the job settles after its challenge window."""
+        """Stop the owners, which then commit their logs; the job settles after its challenge window.
+
+        With fast start, the router prefix may still be in flight (for example after Ctrl-C interrupted the first
+        message). No driver command is sent until the primer's worker has itself signalled completion: close waits
+        for it, up to ``PRIMER_GRACE``. If it does not finish, or the wait is interrupted again, close sends no
+        STOP; it shuts every socket down (which wakes a receive already blocked on it) and closes it, then waits up
+        to ``CANCEL_GRACE`` for the worker to end. The owners see a lost client, and an unsettled job is refunded
+        at expiry less fees. Returns True if no primer is left running."""
+        stop = True
+        primer = getattr(self, 'priming', None)
+        if primer is not None:
+            try:
+                finished = primer.wait(self.PRIMER_GRACE)
+            except KeyboardInterrupt:
+                finished = False
+            except Exception:  # noqa: BLE001 - its error was the primer's own; the worker has ended
+                finished = True
+            finished = finished and primer.done()
+            stop = finished
+            if finished:
+                self.priming = None
         try:
-            if getattr(self, 'driver', None) is not None:
+            if stop and getattr(self, 'driver', None) is not None:
                 self.driver.stop()
         finally:
             for sock in self.sockets.values():
-                sock.close()
+                for end in (lambda: sock.shutdown(socket.SHUT_RDWR), sock.close):
+                    try:  # shutdown first: close alone does not wake another thread's blocked receive on Linux
+                        end()
+                    except OSError:  # already shut down or closed
+                        pass
             self.sockets = {}
+            if primer is not None and not stop:
+                try:  # its sockets are shut down, so socket I/O fails at once; local work gets a bounded wait
+                    primer.wait(self.CANCEL_GRACE)
+                except BaseException:  # noqa: BLE001 - its transport error is expected; never mask cleanup
+                    pass
+                if primer.done():
+                    self.priming = None
+        return getattr(self, 'priming', None) is None
 
 
 def seed(network, home, public_host, served=None, block_seconds=1.0, params=None, p2p_port=PORTS['p2p'],

@@ -64,6 +64,10 @@ def test_route_modules_features_caches_and_audits_match_the_complete_models(upda
         for user in ('Schedule a review.', 'Create a draft.'):
             expected = routing.message_feature(parent, tokenizer, policy, user, 'cpu', prefix)
             assert driver.message_feature(tokenizer, policy, user) == expected
+        # Priming again is a no-op once the prefix is cached (the fast-start path calls it before the first message).
+        driver.prime_router(tokenizer, policy)
+        assert driver.message_feature(tokenizer, policy, 'Schedule a review.') == \
+            routing.message_feature(parent, tokenizer, policy, 'Schedule a review.', 'cpu', prefix)
         reference_caches = {}
         for index in (1, 2, 1):
             driver.route(index)
@@ -87,6 +91,92 @@ def test_route_modules_features_caches_and_audits_match_the_complete_models(upda
     finally:
         for connection in sockets.values():
             connection.close()
+
+
+def ring_of_three(update_world, tmp_path, label):  # noqa: F811
+    """A signed three-shard ring on the tiny update world: (driver, finish) where finish() stops it and returns
+    each owner's (record, inputs)."""
+    config = granite.load_config(update_world['config'])
+    partitions = {rank: granite.load_partition(config, update_world['shards'], rank)[0] for rank in (0, 1, 2)}
+    bank = serving.Adapter(partitions[2], SPEC, update_world['arm'])
+    keys = {rank: Ed25519PrivateKey.generate() for rank in (0, 1, 2)}
+    public = {rank: key.public_key().public_bytes_raw().hex() for rank, key in keys.items()}
+    session = {'chain_id': 'test', 'job_id': '12' * 32, 'request_root': 'cd' * 32,
+               'session_key': public[0], 'log_keys': [public[1], public[2]]}
+    sockets, threads, errors = {}, [], []
+
+    def owner(rank, connection):
+        try:
+            ring = relay.OwnerRelay(connection, rank, 3, config.hidden_size, 100000,
+                                    relay.WorkBudget(65536, config.max_position_embeddings))
+            log = granite_audit.OwnerLog(rank)
+            link = granite_audit.Link(session, rank, 3, keys[rank], public[rank - 1])
+            serving.serve(partitions[rank], ring, bank if rank == 2 else None, log, None, link)
+            log.save(tmp_path / f'{label}-{rank}', keys[rank], session)
+        except Exception as error:
+            errors.append(error)
+        finally:
+            connection.close()
+    for rank in (1, 2):
+        sockets[rank], connection = socket.socketpair()
+        sockets[rank].settimeout(30)
+        thread = threading.Thread(target=owner, args=(rank, connection), daemon=True)
+        thread.start()
+        threads.append(thread)
+    ring = relay.DriverRelay(sockets, 3, config.hidden_size, 100000, True,
+                             relay.WorkBudget(65536, config.max_position_embeddings))
+    driver = serving.ServingDriver(partitions[0], ring, granite_audit.Link(session, 0, 3, keys[0], public[2]))
+
+    def finish():
+        driver.stop()
+        for thread in threads:
+            thread.join(30)
+        for connection in sockets.values():
+            connection.close()
+        assert not errors and not any(thread.is_alive() for thread in threads)
+        out = {}
+        for rank in (1, 2):
+            record, inputs = granite_audit.load(tmp_path / f'{label}-{rank}')
+            assert not granite_audit.unattested(record)
+            assert granite_audit.replay(partitions[rank], record, inputs, bank if rank == 2 else None)['valid']
+            out[rank] = (record, inputs)
+        return out
+
+    return driver, finish
+
+
+def test_priming_the_router_before_the_first_message_changes_no_feature_reply_or_log_tensor(update_world, tmp_path):  # noqa: F811
+    """Fast start: the router prefix forwarded while the user types gives the same features and the same replies,
+    and every owner tensor is bit-identical to priming on the first message. Owner logs replay either way."""
+    from neuroshard.assistant import network
+
+    torch.set_num_threads(1)
+    tokenizer, policy = update_world['tokenizer'], bounded()
+    runs = {}
+    for label in ('lazy', 'early'):
+        driver, finish = ring_of_three(update_world, tmp_path, label)
+        try:
+            if label == 'early':
+                primer = network.Primer(driver, tokenizer, policy)
+                primer.wait()
+                assert primer.seconds is not None and driver.router_prefix
+            features = [driver.message_feature(tokenizer, policy, user)
+                        for user in ('Schedule a review.', 'Create a draft.')]
+            driver.episode(True)
+            respond = serving.responder(driver, tokenizer, policy, {tokenizer.eos_token_id})
+            reply = respond([{'role': 'user', 'content': 'Create a draft.'}], None)
+        finally:
+            logs = finish()
+        runs[label] = features, reply['token_ids'], logs
+    assert runs['early'][0] == runs['lazy'][0]
+    assert runs['early'][1] == runs['lazy'][1]
+    for rank in (1, 2):
+        (_, lazy_inputs), (_, early_inputs) = runs['lazy'][2][rank], runs['early'][2][rank]
+        # Logged inputs are keyed by command position. The early path sends one extra ADAPTER 0 (a no-op: the
+        # parent is already selected) before the prefix, so positions shift; the forwarded tensors, in order, do not.
+        order = lambda inputs: [inputs[name] for name in sorted(inputs, key=lambda n: int(str(n).split('.')[0]))]  # noqa: E731
+        lazy, early = order(lazy_inputs), order(early_inputs)
+        assert len(lazy) == len(early) and all(torch.equal(a, b) for a, b in zip(lazy, early))
 
 
 def test_a_parent_based_route_serves_and_replays_beside_update_based_routes(update_world, tmp_path):

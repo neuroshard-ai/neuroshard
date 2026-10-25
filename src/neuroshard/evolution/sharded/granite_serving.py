@@ -291,18 +291,7 @@ class ServingDriver:
 
         self.control(ADAPTER, 0)
         ids = routing.turn_ids(tokenizer, policy, user)
-        if self.router_prefix is None:
-            first = routing.turn_ids(tokenizer, policy, 'Schedule')
-            second = routing.turn_ids(tokenizer, policy, 'Create')
-            common = 0
-            for left, right in zip(first, second):
-                if left != right:
-                    break
-                common += 1
-            self.router_prefix = first[:common]
-            if not self.router_prefix:
-                raise ValueError('router prefix is empty')
-            self.router_forward(self.router_prefix)
+        self.prime_router(tokenizer, policy, set_adapter=False)  # ADAPTER 0 was just sent
         length = len(self.router_prefix)
         if ids[:length] != self.router_prefix or len(ids) <= length:
             raise ValueError('router turn does not extend the accepted prefix')
@@ -312,6 +301,30 @@ class ServingDriver:
         finally:
             self.control(ROUTER_CROP, length)
             self.router_cache.crop(length)
+
+    def prime_router(self, tokenizer, policy, set_adapter=True):
+        """Fill the router cache with the router's fixed prefix (no user text), once per job.
+
+        ``message_feature`` does this on the first message; calling it earlier, for example while the user types,
+        sends the same tokens in the same single chunk into the same cache, so every later number is unchanged.
+        The parent model computes it (``ADAPTER`` 0), as ``message_feature`` does."""
+        from neuroshard.evolution import assistant_routing as routing
+
+        if self.router_prefix is not None:
+            return
+        first = routing.turn_ids(tokenizer, policy, 'Schedule')
+        second = routing.turn_ids(tokenizer, policy, 'Create')
+        common = 0
+        for left, right in zip(first, second):
+            if left != right:
+                break
+            common += 1
+        if not common:
+            raise ValueError('router prefix is empty')
+        if set_adapter:
+            self.control(ADAPTER, 0)
+        self.router_forward(first[:common])
+        self.router_prefix = first[:common]
 
     def router_forward(self, ids):
         self.ring.command(ROUTER_FEATURE, len(ids))
