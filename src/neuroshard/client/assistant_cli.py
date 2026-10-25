@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
 import signal
+import sys
 import threading
 
 
@@ -38,6 +39,9 @@ def register(subcommands, root):
     chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
     chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
     chat.add_argument('--threads', type=int)
+    chat.add_argument('--experimental-cpu', action='store_true',
+                      help='Continue without asking on a CPU the replies were not evaluated on (anything but Linux '
+                           'x86_64 with AMX)')
     chat.add_argument('--wait', type=int, default=600,
                       help='Seconds to wait for a busy network before funding anything (default 600)')
     chat.add_argument('--legacy-admission', action='store_true',
@@ -314,6 +318,18 @@ def run(args):
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
         raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
     price = atoms(args.price)
+    from neuroshard.client import live_runtime
+
+    warning = live_runtime.client_warning(live_runtime.client_compatibility())
+    if warning:
+        # Before anything is downloaded, funded or sent to an owner.
+        print(warning)
+        if not getattr(args, 'experimental_cpu', False):
+            if not sys.stdin.isatty():
+                raise ValueError('this CPU is experimental for the client; pass --experimental-cpu to continue')
+            if input('Continue and pay for this conversation? [y/N] ').strip().lower() not in ('y', 'yes'):
+                print('Stopped. Nothing was paid.')
+                return
     served, stage = network.fetch_stage(descriptor, 0, args.home)
     world, suggestions = workspace(args.sample, args.world)
     show(world, suggestions)
