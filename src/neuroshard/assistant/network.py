@@ -43,6 +43,11 @@ MAX_PAID_POSITIONS = 65536
 # Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
 # understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
+# Stage 0 runs with the execution class's eight intra-op threads on every device, whatever its core count. With
+# AMX, PyTorch's BF16 kernels split work by thread count, so four threads compute different numbers from eight and
+# can change a reply: a 4-core client looped to the token limit on a question the 8-thread path answers. Without
+# AMX (other Intel, AMD, AVX2-only), stage 0 measured identical at 4 and 8 threads. Owners and audits pin 8 too.
+CLIENT_THREADS = 8
 CHUNK = 1 << 20
 
 
@@ -1133,7 +1138,10 @@ class Conversation:
         from neuroshard.evolution import granite_tokenizer
         from neuroshard.evolution.sharded import granite, granite_audit, granite_serving as serving
 
-        torch.set_num_threads(threads or min(8, os.cpu_count() or 1))
+        if threads not in (None, CLIENT_THREADS):
+            progress(f'Running stage 0 with {threads} threads instead of {CLIENT_THREADS}: on Intel CPUs with AMX '
+                     'this changes its numbers, so replies can differ from the evaluated ones (and can fail)')
+        torch.set_num_threads(threads or CLIENT_THREADS)
         self.served, self.chain, self.world, self.gate = served, chain, world, stage['gate']
         self.tokenizer, _ = granite_tokenizer.load(stage['tokenizer'], parent_digest=stage.get('parent_tokenizer_digest'))
         config = granite.load_config(stage['config'])
