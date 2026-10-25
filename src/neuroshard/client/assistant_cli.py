@@ -317,10 +317,14 @@ def run(args):
     served, stage = network.fetch_stage(descriptor, 0, args.home)
     world, suggestions = workspace(args.sample, args.world)
     show(world, suggestions)
+    families = None
+    if args.world is None and args.sample == 0:  # the demo's authoritative revision families (revision_fixtures)
+        from neuroshard.evolution import revision_fixtures
+        families = revision_fixtures.DEMO_V2_FAMILIES
     conversation = network.Conversation(served, stage, chain, network.Account(args.home / 'account.key'), world,
                                         args.budget, price, network.faucets(descriptor), threads=args.threads,
                                         mode='legacy' if args.legacy_admission else 'reserved', wait=args.wait,
-                                        home=args.home)
+                                        home=args.home, document_families=families)
     print(f"Job {conversation.job_id[:16]}: shards served by "
           f"{', '.join(endpoint for _, endpoint in conversation.owners)}. Type a request; /quit ends the job.")
     drafts = {}

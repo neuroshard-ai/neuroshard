@@ -307,3 +307,77 @@ def test_v1_v2_v3_demonstrations_still_generate_and_only_v4_is_refused():
         assert demonstration.texts(case, version)
     with pytest.raises(ValueError, match='not defined for workspace-documents/4'):
         demonstration.texts(case, 4)
+
+
+def label_doc(i, **extra):
+    return {'id': f'doc-{i:010x}', 'project': 'P', 'family': 'plan', 'title': 'Plan', 'revision': i,
+            'status': 'approved', 'content': f'The recorded amount is {i * 10}.', **extra}
+
+
+def test_an_opt_in_labelled_view_keeps_every_document_and_labels_only_decided_families():
+    """Soak finding (pilot-2-rc2): /2 hid revision metadata, so the model answered from revision 1 of the demo plan.
+    Review of PR #143: nothing hidden; explicit identity only; earlier interfaces unchanged unless opted in."""
+    original = revision_fixtures.original()
+    view = interfaces.labelled_files(original, revision_fixtures.DEMO_V2_FAMILIES)
+    assert [d['id'] for d in view['documents']] == [d['id'] for d in original['documents']]  # nothing hidden
+    assert all(set(a) == set(b) for a, b in zip(view['documents'], original['documents']))  # same fields
+    titles = {d['id']: d['title'] for d in view['documents']}
+    assert titles['doc-88b36697f8'].endswith('(revision 2, approved; latest approved)')
+    assert titles['doc-292283f7a9'].endswith('(revision 1, approved)')
+    assert titles['doc-9e6d7ba44d'].endswith('(revision 3, draft)')
+    assert titles['doc-35d32ed303'].endswith('(revision 2, approved; latest approved)')  # a family of one is decided too
+    ws = documents.Workspace(interfaces.documents_world(view, 2), 2)
+    assert ws.search('What is the baseline quantity in the latest approved Cedar 6581 plan?')['results'][0]['id'] \
+        == 'doc-88b36697f8'
+    assert 'content' in ws.execute({'name': 'read_document', 'arguments': {'document_id': 'doc-292283f7a9'}})
+    # Without the opt-in, earlier interfaces see exactly what they always saw.
+    assert interfaces.documents_world(revision_fixtures.demo_v2(), 2) == interfaces.documents_world(original, 2)
+    assert interfaces.labelled_files(original, {}) == original  # no families given: nothing changes
+
+
+def test_no_label_without_explicit_identity_or_complete_metadata():
+    def labels(rows):
+        return interfaces.revision_labels(rows)
+    no_family = [label_doc(1), label_doc(2)]
+    for row in no_family:
+        del row['family']
+    assert labels(no_family) == {}  # same title and project, but no family: never grouped
+    no_project = [label_doc(1), label_doc(2)]
+    for row in no_project:
+        del row['project']
+    assert labels(no_project) == {}
+    for field in ('status', 'revision'):
+        rows = [label_doc(1), label_doc(2), label_doc(3)]
+        del rows[-1][field]
+        assert labels(rows) == {}, field  # an incomplete family is undecided, as /4 says
+    assert labels([label_doc(1), label_doc(2), label_doc(3, project='')]) == {}  # malformed would-be member
+    for field in ('project', 'family'):
+        rows = [label_doc(1), label_doc(2, **{field: ['bad-type']})]
+        interfaces.documents_world({'documents': rows}, 2)  # opens, as before
+        assert labels(rows) == {}
+    assert labels([label_doc(1, revision=2), label_doc(2)]) == {}  # a tie is ambiguous
+
+
+def test_history_drafts_and_effective_dates_stay_readable():
+    world = {'documents': [label_doc(1, status='superseded', effective_from='2027-01-01', effective_until='2027-06-01'),
+                           label_doc(2, effective_from='2027-06-01'), label_doc(3, status='draft')]}
+    view = interfaces.labelled_files(world, {})
+    ws = documents.Workspace(interfaces.documents_world(view, 2), 2)
+    for i in (1, 2, 3):
+        assert 'content' in ws.execute({'name': 'read_document', 'arguments': {'document_id': f'doc-{i:010x}'}})
+    w4 = documents.Workspace(interfaces.documents_world(world, 4), 4)
+    effective = w4.execute({'name': 'effective_document',
+                            'arguments': {'project': 'P', 'family': 'plan', 'date': '2027-05-20'}})
+    assert effective['document']['id'] == 'doc-0000000001'
+
+
+def test_explicit_families_beside_the_files_reach_only_the_documents_route():
+    from neuroshard.assistant.public import Session
+    from test_general_route_serving import POLICIES
+    session = Session(POLICIES['drafting'], revision_fixtures.original(), name='a4-general',
+                      modules=('U1', 'L2', 'L3', 'L7', 'C1'), route_policies=POLICIES,
+                      document_families=revision_fixtures.DEMO_V2_FAMILIES)
+    for route in POLICIES:  # drafting and scheduling accept exactly their own fields
+        session.workspace(interfaces.interface(POLICIES[route]))
+    titles = [d['title'] for d in session.worlds['documents'].documents.values()]
+    assert any(t.endswith('latest approved)') for t in titles)
