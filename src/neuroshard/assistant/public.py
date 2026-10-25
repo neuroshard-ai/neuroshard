@@ -40,7 +40,7 @@ def bind(policy, *, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'),
 
 class Session:
     def __init__(self, policy, world, *, consent=None, name=CURRENT, previous=PREVIOUS, modules=('U1', 'L2', 'L3'),
-                 route_policies=None):
+                 route_policies=None, document_families=None):
         consent = default_consent() if consent is None else dict(consent)
         extra = set(consent) - set(default_consent())
         missing = set(default_consent()) - set(consent)
@@ -54,6 +54,11 @@ class Session:
         self.consent = consent
         self.tools = interfaces.interface(policy)
         self.files, self.worlds = copy.deepcopy(world), {}
+        # Explicit revision-family IDs for the user's documents ({document id: family}), given beside the files:
+        # the drafting and calendar workspaces accept exactly their own fields, so these never enter the files.
+        # Only the documents route uses them: /4 gets the family field, earlier interfaces a labelled view
+        # (``interfaces.labelled_files``). Nothing is inferred from titles.
+        self.document_families = dict(document_families or {})
         if route_policies:
             # Drafting and scheduling share one calendar workspace, as served since A3; the documents and chat
             # routes each have their own, built from the same files on this device when a route first needs it,
@@ -74,6 +79,15 @@ class Session:
                 calendar = [item for item in self.route_policies.values()
                             if interfaces.interface(item).group == 'calendar']
                 self.worlds['calendar'] = assistant_routing.workspace(calendar).Workspace(copy.deepcopy(self.files))
+            elif tools.group == 'documents' and self.document_families and tools.name != 'workspace-documents/4':
+                # Opt-in labelled view (``interfaces.labelled_files``): same documents, titles carry revision status.
+                self.worlds[tools.group] = tools.Workspace(interfaces.labelled_files(self.files, self.document_families))
+            elif tools.group == 'documents' and self.document_families:
+                files = copy.deepcopy(self.files)
+                for document in files.get('documents', []):
+                    if document.get('id') in self.document_families:
+                        document['family'] = self.document_families[document['id']]
+                self.worlds[tools.group] = tools.Workspace(files)
             else:
                 self.worlds[tools.group] = tools.Workspace(copy.deepcopy(self.files))
         return self.worlds[tools.group]

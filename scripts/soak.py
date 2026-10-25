@@ -68,15 +68,24 @@ def claims(reply, kind):
     return set(re.findall(r'(?<![\w.])(\d+)(?!\w|\.\d)', text))  # '61.' at a sentence end is 61; '6.5' is not
 
 
+DOCUMENT_IDS = {'doc-292283f7a9', 'doc-88b36697f8', 'doc-9e6d7ba44d', 'doc-35d32ed303'}  # the demo workspace
+
+
 def cited(reply):
-    """The document IDs a reply cites."""
-    return set(re.findall(r'doc-[0-9a-f]+', reply))
+    """Complete document IDs a reply cites: ``doc-`` and ten hex digits, not part of a longer token."""
+    return set(re.findall(r'(?<![\w-])(doc-[0-9a-f]{10})(?![\w-])', reply))
 
 
 def grounded(reply, question):
-    """True if the reply cites the latest approved document and no other revision of it; None if no source is known."""
+    """Expected-source-ID match: the reply cites exactly the latest approved document, and only real IDs.
+
+    A narrow check of the cited ID, not verification that the reply is supported by it; ``score`` is likewise a
+    fact-token match (it accepts a negated sentence). None if no source is known for the question."""
     source = SOURCES.get(question)
-    return None if source is None else cited(reply) == {source}
+    if source is None:
+        return None
+    ids = cited(reply)
+    return ids == {source} and ids <= DOCUMENT_IDS
 
 
 def score(reply, kind, expected):
@@ -517,7 +526,7 @@ def summary(args):
             'conversations': len(talks),
             'transport_ok': sum(1 for e in talks if e.get('transport_ok', e.get('ok'))),
             'correct': sum(1 for e in talks if e.get('correct')) if talks and 'correct' in talks[0] else None,
-            # Right fact *and* cited from the latest approved document; a right number from another revision is not.
+            # Fact-token match *and* expected-source-ID match (see ``grounded``); a number from another revision fails.
             'correct_and_grounded': (sum(1 for e in talks if e.get('correct') and e.get('grounded'))
                                      if talks and 'grounded' in talks[0] else None),
             'facts': {f: sum(1 for e in talks if e.get('fact') == f) for f in ('match', 'ambiguous', 'mismatch', 'none')}

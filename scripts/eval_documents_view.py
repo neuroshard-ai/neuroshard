@@ -7,8 +7,8 @@ documents route, exactly as ``assistant chat`` runs it, scored as the soak score
 - ``fact``: the claimed number or date;
 - ``grounded``: the latest approved document is cited.
 
-``--view before`` patches ``interfaces.superseded`` to hide nothing, which is the pilot-2-rc2 behaviour.
-``--view after`` uses this checkout's selection. Nothing is sent to the network.
+``--view before`` shows the files as pilot-2-rc2 does. ``--view after`` opts into the labelled view
+(``interfaces.labelled_files`` with the demo's explicit families). Nothing is sent to the network.
 
     NEUROSHARD_MODELS=... python scripts/eval_documents_view.py --network NET.json --home H --view after --out R.json
 """
@@ -35,15 +35,16 @@ def main():
     import torch
 
     import soak
-    from neuroshard.assistant import interfaces, network
+    from neuroshard.assistant import network
     from neuroshard.assistant.public import Session
     from neuroshard.client.assistant_cli import workspace
     from neuroshard.evolution import growth_runtime
     from neuroshard.evolution.assistant_serving import cached_responder
 
     torch.set_num_threads(8)
-    if args.view == 'before':
-        interfaces.superseded = lambda documents: set()
+    from neuroshard.evolution import revision_fixtures
+    # before: the files as pilot-2-rc2 shows them. after: the opt-in labelled view (explicit demo families).
+    families = revision_fixtures.DEMO_V2_FAMILIES if args.view == 'after' else None
     descriptor = network.descriptor(args.network)
     if args.follow:  # the version the chain serves now, rebuilt from committed growth, as every node follows it
         chain = network.chain(descriptor, args.home)
@@ -54,7 +55,8 @@ def main():
     world, _ = workspace(0, None)
     rows = []
     for question, kind, expected in soak.QUESTIONS:
-        session = Session(policy, world, name=served_version.name, route_policies=served.policies)
+        session = Session(policy, world, name=served_version.name, route_policies=served.policies,
+                          document_families=families)
         started = time.monotonic()
         result = session.turn(question, cached_responder(model, served.tokenizer, policy), route='documents')
         reply = result['final_text'] or ''

@@ -1125,7 +1125,8 @@ class Conversation:
     """One paid job: stage 0 runs here, each later shard on the owner the job names, tools in a local workspace."""
 
     def __init__(self, served, stage, chain, account, world, budget=16384, price=NEURO, faucet_url=None,
-                 progress=print, rng=None, probe=reachable, threads=None, mode='reserved', wait=600, home=None):
+                 progress=print, rng=None, probe=reachable, threads=None, mode='reserved', wait=600, home=None,
+                 document_families=None):
         import torch
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -1181,7 +1182,7 @@ class Conversation:
         units = sorted({unit for unit, _ in served.routes.values()})
         self.session = Session(served.policy, world, name=served.name, previous='a2-u1' if served.policies else None,
                                modules=('U1', *units) if served.policies else ('U1',),
-                               route_policies=served.policies)
+                               route_policies=served.policies, document_families=document_families)
         self.router, self.responses = stage.get('router'), {}
         self.general_router = stage.get('general_router')
         self.respond = self.arm = None
