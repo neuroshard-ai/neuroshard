@@ -92,3 +92,46 @@ def test_speculative_decoding_writes_the_greedy_tokens_in_fewer_passes_and_its_l
     speculative = sum(r['passes'] for r in outputs['speculative'])
     greedy = sum(r['passes'] for r in outputs['greedy'])
     assert speculative < greedy  # guesses landed: fewer passes around the ring for the same tokens
+
+
+def test_a_small_model_drafter_changes_no_token_and_its_logs_replay(update_world, tmp_path):  # noqa: F811
+    """A drafter proposes; the owners verify. The reply is the greedy reply, and every owner's log replays clean."""
+    from transformers import AutoModelForCausalLM
+
+    torch.set_num_threads(1)
+    tokenizer, policy = update_world['tokenizer'], {**bounded(), 'generation': {**bounded()['generation'],
+                                                                                'max_new_tokens': 40}}
+    eos = {tokenizer.eos_token_id}
+    turns = [{'role': 'user', 'content': 'Repeat after me: the delivery plan for Cedar starts on 2027-05-14.'}]
+    # The tiny checkpoint itself drafts (perfect proposals where it matches the served arm); a differently seeded
+    # one would propose badly. Both must leave the reply unchanged.
+    draft = AutoModelForCausalLM.from_pretrained(update_world['checkpoint'], dtype=torch.bfloat16,
+                                                 attn_implementation='eager', local_files_only=True).eval()
+    outputs = {}
+    for name, guesses, proposer in (('greedy', 0, None), ('drafted', 6, serving.Drafter(draft, tokenizer, tokenizer))):
+        driver, close, partitions, adapter = ring_driver(update_world, tmp_path, name)
+        try:
+            driver.episode(True)
+            respond = serving.responder(driver, tokenizer, policy, eos, guesses=guesses, proposer=proposer)
+            first = respond(turns, None)
+            second = respond(turns + [{'role': 'assistant', 'content': first['text']},
+                                      {'role': 'user', 'content': 'And once more.'}], None)
+            outputs[name] = (first, second)
+        finally:
+            logs = close()
+        for rank in (1, 2):
+            record, inputs = logs[rank]
+            assert not granite_audit.unattested(record)
+            assert granite_audit.replay(partitions[rank], record, inputs, adapter if rank == 2 else None)['valid']
+    for got, want in zip(outputs['drafted'], outputs['greedy']):
+        assert got['token_ids'] == want['token_ids'] and got['text'] == want['text']
+    assert sum(r['passes'] for r in outputs['drafted']) < sum(r['passes'] for r in outputs['greedy'])
+
+
+def test_a_drafter_with_other_token_ids_is_refused():
+    import pytest as _pytest
+    from types import SimpleNamespace
+    served = SimpleNamespace(get_vocab=lambda: {'a': 0, 'b': 1}, all_special_ids=[0])
+    other = SimpleNamespace(get_vocab=lambda: {'a': 0, 'c': 1}, all_special_ids=[0])
+    with _pytest.raises(ValueError, match='other token IDs'):
+        serving.Drafter(object(), other, served)

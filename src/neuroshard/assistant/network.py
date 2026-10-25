@@ -43,6 +43,10 @@ MAX_PAID_POSITIONS = 65536
 # Prompt-lookup guesses checked per pass around the owner ring (exact: the text is the greedy text). Owners must
 # understand VERIFY; set NEUROSHARD_GUESSES=0 to talk to owners on an older release.
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
+# Experimental, off by default: guesses from a small model on this device instead of prompt lookup. The value is
+# the draft model's directory; its tokenizer must give the served model's exact token IDs. Replies are unchanged
+# (owners verify every guess). Whether it is faster depends on this device and the owners' pass time.
+DRAFTER = os.environ.get('NEUROSHARD_DRAFTER') or None
 CHUNK = 1 << 20
 
 
@@ -1182,6 +1186,10 @@ class Conversation:
         self.session = Session(served.policy, world, name=served.name, previous='a2-u1' if served.policies else None,
                                modules=('U1', *units) if served.policies else ('U1',),
                                route_policies=served.policies)
+        self.proposer = None
+        if DRAFTER:
+            self.proposer = serving.Drafter.load(DRAFTER, self.tokenizer)
+            progress(f'Drafting guesses with the small model in {DRAFTER}')
         self.router, self.responses = stage.get('router'), {}
         self.general_router = stage.get('general_router')
         self.respond = self.arm = None
@@ -1199,7 +1207,7 @@ class Conversation:
             self.arm = selector.choose(self.gate, self.driver.feature(ids))
             self.driver.episode(self.arm)
             self.respond = serving.responder(self.driver, self.tokenizer, self.served.policy, self.served.eos_ids,
-                                             guesses=GUESSES)
+                                             guesses=GUESSES, proposer=self.proposer)
         if self.router is not None:
             feature = self.driver.message_feature(self.tokenizer, self.served.policies['drafting'], text)
             self.opening = feature if self.opening is None else self.opening
@@ -1207,7 +1215,7 @@ class Conversation:
             self.driver.route(index, self.arm if route == 'drafting' else True)
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
-                                                         self.served.eos_ids, guesses=GUESSES)
+                                                         self.served.eos_ids, guesses=GUESSES, proposer=self.proposer)
             return self.session.turn(text, self.responses[route], route=route)
         return self.session.turn(text, self.respond)
 

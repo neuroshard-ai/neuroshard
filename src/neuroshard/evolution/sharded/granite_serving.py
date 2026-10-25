@@ -386,14 +386,83 @@ def lookup(context, size, ngram=3):
     return []
 
 
-def responder(driver, tokenizer, policy, eos, guesses=0):
+class Drafter:
+    """Guesses from a small model on the user's device, for the owners to verify. The reply never changes.
+
+    A guess counts only where it equals the served model's own greedy choice (``responder``), so a different
+    proposer changes how many tokens each ring pass yields, never which tokens. The drafter must use the served
+    tokenizer's exact token IDs (checked on load).
+    - It keeps its own KV cache across passes: the shared context is prefilled once per turn and each guess costs
+      one step.
+    - A rejected guess is cropped away; a model whose cache cannot be cropped is re-prefilled.
+    """
+
+    def __init__(self, model, tokenizer=None, served_tokenizer=None):
+        if tokenizer is not None and served_tokenizer is not None and (
+                tokenizer.get_vocab() != served_tokenizer.get_vocab()
+                or tokenizer.all_special_ids != served_tokenizer.all_special_ids):
+            raise ValueError('the draft model uses other token IDs than the served model')
+        self.model, self.ids, self.cache = model, [], None
+        self.seconds = 0.0
+        self.proposed = 0
+
+    @classmethod
+    def load(cls, directory, served_tokenizer):
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        tokenizer = AutoTokenizer.from_pretrained(directory, local_files_only=True)
+        model = AutoModelForCausalLM.from_pretrained(directory, dtype=torch.bfloat16, local_files_only=True).eval()
+        return cls(model, tokenizer, served_tokenizer)
+
+    def _forward(self, ids):
+        out = self.model(input_ids=torch.tensor([ids]), past_key_values=self.cache, use_cache=True)
+        self.cache = out.past_key_values
+        self.ids += ids
+        return out.logits[0, -1]
+
+    def __call__(self, context, size):
+        if size <= 0:
+            return []
+        began = time.monotonic()
+        with torch.inference_mode():
+            common = 0
+            for cached, new in zip(self.ids, context):
+                if cached != new:
+                    break
+                common += 1
+            if common < len(self.ids):
+                try:  # attention caches crop; a hybrid model's recurrent state cannot, so it starts over
+                    self.cache.crop(common)
+                    self.ids = self.ids[:common]
+                except Exception:  # noqa: BLE001
+                    self.cache, self.ids = None, []
+            fresh = context[len(self.ids):]
+            if not fresh:  # the whole context is cached: step back one to get its next-token logits
+                self.cache, self.ids, fresh = None, [], list(context)
+            logits = self._forward(fresh)
+            guess = []
+            for _ in range(size):
+                token = int(logits.argmax())
+                guess.append(token)
+                if len(guess) < size:
+                    logits = self._forward([token])
+        self.seconds += time.monotonic() - began
+        self.proposed += len(guess)
+        return guess
+
+
+def responder(driver, tokenizer, policy, eos, guesses=0, proposer=None):
     """One episode's responder with the record format and arithmetic of ``cached_responder``.
 
-    With ``guesses`` > 0, each pass sends the last accepted token and up to ``guesses`` prompt-lookup guesses in
-    one ``VERIFY`` forward and keeps the guesses the model's own greedy choices confirm, plus its next token. The
-    text is exactly the greedy text: a guess is kept only where it equals what the model chose at that position,
-    and every position's output is bit-identical to one forward per token on the pinned execution class.
+    With ``guesses`` > 0, each pass sends the last accepted token and up to ``guesses`` guesses in one ``VERIFY``
+    forward and keeps the guesses the model's own greedy choices confirm, plus its next token. The text is exactly
+    the greedy text: a guess is kept only where it equals what the model chose at that position, and every
+    position's output is bit-identical to one forward per token on the pinned execution class.
+
+    ``proposer(context, size)`` makes the guesses. By default it is prompt lookup (``lookup``); a ``Drafter``
+    proposes from a small model instead. Either way the owners verify the same way.
     """
+    propose = proposer or lookup
     generation = policy['generation']
     state = {'ids': []}
 
@@ -418,7 +487,7 @@ def responder(driver, tokenizer, policy, eos, guesses=0):
         limit, passes = generation['max_new_tokens'], 0
         while len(tokens) < limit:
             if guesses and tokens:
-                guess = lookup(ids + tokens, min(guesses, limit - len(tokens) - 1))
+                guess = propose(ids + tokens, min(guesses, limit - len(tokens) - 1))
                 proposed = [tokens[-1]] + guess  # the cache holds every position before the last chosen token
                 chosen = driver.verify(torch.tensor([proposed]), torch.ones((1, length - 1 + len(proposed)),
                                                                            dtype=torch.long))
