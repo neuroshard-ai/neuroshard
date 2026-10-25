@@ -19,7 +19,7 @@ it's written by people, kept apart from training, and frozen before its first ru
 
 One small workspace, written like real paperwork (leases, invoices, rotas, policies, letters), and one question
 phrased the way a person would type it. JSON, one object per case, in a file with `"format":
-"neuroshard-protected-documents-set/1"` and a `"cases"` list:
+"neuroshard-protected-documents-set/2"` and a `"cases"` list:
 
 ```json
 {
@@ -76,24 +76,84 @@ At least **8 cases in each category**, about 150 in total, spread over at least 
 Vary the wording: "latest approved", "the one we signed", "current", "final", and questions that never say which
 version. Typos and casual phrasing are welcome.
 
+## When the selection code disagrees with your gold
+
+For `latest_approved` and `effective` golds, the kit compares your expected document with what the deterministic
+selection code chooses (`selector_report`). **A disagreement never changes your gold, and you never edit a gold to
+match the code.** The case's checker (not its writer) decides from the documents and the specification
+(`docs/DESIGN_LATEST_REVISION.md`), and records it in the case:
+
+```json
+"adjudication": {"by": "Checker's name", "decision": "gold_correct", "note": "Rev 2 is the highest approved"}
+```
+
+- **`gold_correct`:** the code is wrong. The case stays, and it counts as a confirmed selection-code error.
+- **`unresolved`:** the specification doesn't decide it. The case stays, is listed and is reported separately.
+- **The gold itself was wrong:** the checker rewrites it from the documents and the specification, never from the
+  code's output, and checks it again.
+
+The set can't be frozen while any disagreement has no recorded decision.
+
 ## Checking and freezing
 
 ```bash
 python -c "import json,sys; from neuroshard.evolution import protected_documents as p; \
-  print(p.check_set(json.load(open(sys.argv[1]))['cases']))" SET.json
+  print(p.check_set(json.load(open(sys.argv[1]))['cases'])); \
+  print(p.selector_report(json.load(open(sys.argv[1]))['cases']))" SET.json
 python -c "import sys; from neuroshard.evolution import protected_documents as p; \
-  print(p.freeze(sys.argv[1], sys.argv[2]))" SET.json MANIFEST.json
+  print(p.freeze(*sys.argv[1:]))" SET.json PROTOCOL.json MANIFEST.json
 ```
 
-`check_set` refuses a case whose facts are in none of its cited documents, whose gold differs from what the
-selection code chooses, or that has the same writer and checker. Fix the case, never the code. Commit only
-`MANIFEST.json`.
+**What the machine checks (`check_set`):**
+- IDs are well formed and unique, and every case has two different people.
+- Every gold fact is a whole value in a cited document.
+- Each case has the structure its category claims. For example, `latest_approved_with_newer_draft` needs a draft
+  newer than the latest approved revision; `ambiguous_versions` needs two approved documents at one revision, and
+  its `kind` must be `decline`.
+- At least 8 cases and 4 distinct workspaces per category, and 30 distinct workspaces overall. A workspace is
+  identified by its documents' content, so copies don't count.
+- No question is asked twice of the same workspace.
+
+**What people attest:** realistic phrasing, semantic diversity, and the correctness of each gold. The report
+lists the two kinds of coverage separately.
+
+**The protocol file** names every condition to be compared, each with its interface, policy file and model root,
+plus the seed of the human audit. For example:
+
+```json
+{"seed": 20261026, "conditions": [
+  {"name": "served", "interface": "workspace-documents/2",
+   "policy": "config/experiments/assistant-general-policy-documents5.json", "model_root": "080c9a10…"},
+  {"name": "trained-v4", "interface": "workspace-documents/4", "policy": "…", "model_root": "…"}]}
+```
+
+**What `freeze` records** (no case content):
+- the set's digest and the protocol's;
+- the git commit, and the digest of every file the score and the selection depend on: this kit, the documents
+  tools, `document_revisions.py`, `interfaces.py`, `public.py` and the episode loop;
+- each condition's policy digest.
+
+It refuses uncommitted changes to any of those files. `verify` checks all of them again before each run. Commit
+only `MANIFEST.json` and the protocol.
 
 ## How it's scored
 
-The primary score (`protected_documents.score`) treats every condition alike:
-- **Answer cases:** every fact appears, and the cited IDs are exactly the gold sources.
-- **Not-found cases:** not found is reported.
-- **Decline cases:** the required documents are named, and no forbidden value is stated.
+The score reads **the reply the user sees** under every condition. A structured answer, if the condition makes
+one, must agree with it: the same cited documents, and the same gold facts.
 
-The route's own stricter scorer (quoted evidence under `/3` and `/4`) is reported beside it.
+| Kind | Passes when |
+| --- | --- |
+| `answer` | Every gold fact is stated as a whole value and not negated just before it, the cited IDs are exactly the gold sources, and nothing in `must_not_state` is stated |
+| `not_found` | The reply says the documents don't contain it, submits no answer, and states nothing in `must_not_state` |
+| `decline` | The reply names every `must_cite` document, says why none can be chosen, and states nothing in `must_not_state` |
+
+**How values and citations are compared.** Values are compared by type: numbers as numbers (12,000 isn't 1,200),
+dates as dates (14 May 2027 is 2027-05-14), and words at word boundaries. Citations must be complete IDs of
+documents in the case.
+
+**Human audit.** A mechanical rule can't tell whether a sentence really asserts a fact. So a pass that mentions a
+value from another version, or negates the gold somewhere, is marked contested. Every contested reply, plus a fixed
+20% random sample of all the others, is judged by a person who can't see which condition produced it
+(`audit_sample`). The reported result is the machine score corrected by those judgments, with their agreement rate.
+Protocol correctness (the route's own scorer, which under `/3` and `/4` also requires quoted evidence) is reported
+separately.
