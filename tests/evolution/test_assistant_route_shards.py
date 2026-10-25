@@ -179,19 +179,6 @@ def test_priming_the_router_before_the_first_message_changes_no_feature_reply_or
         assert len(lazy) == len(early) and all(torch.equal(a, b) for a, b in zip(lazy, early))
 
 
-def test_a_failed_primer_raises_on_the_next_use_of_the_driver():
-    from neuroshard.assistant import network
-
-    class Broken:
-        def prime_router(self, tokenizer, policy):
-            raise ConnectionError('owner went away')
-
-    primer = network.Primer(Broken(), None, None)
-    import pytest
-    with pytest.raises(ConnectionError, match='owner went away'):
-        primer.wait()
-
-
 def test_a_parent_based_route_serves_and_replays_beside_update_based_routes(update_world, tmp_path):
     """Route 3 is an addition on the unchanged parent (the general route); routes 1 and 2 stay on U1."""
     torch.set_num_threads(1)

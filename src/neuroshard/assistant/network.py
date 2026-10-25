@@ -45,6 +45,9 @@ MAX_PAID_POSITIONS = 65536
 GUESSES = int(os.environ.get('NEUROSHARD_GUESSES', '6'))
 # Experimental, off by default: the router's fixed prefix is computed by the owners as soon as the job opens,
 # while the user types, instead of on the first message. Same forward, same cache: routing and replies are unchanged.
+# Cost: those positions (716 for the served version) are paid even if the job closes before any question: with the
+# default 1 NEURO for 16,384 positions, about 0.044 NEURO of the escrow, shared by the two owners; the rest is
+# refunded. Without fast start, a job closed before any question pays nothing.
 FAST_START = os.environ.get('NEUROSHARD_FAST_START') == '1'
 CHUNK = 1 << 20
 
@@ -1127,7 +1130,8 @@ def choose_route(router, served, feature, opening, general=None):
 class Primer:
     """``driver.prime_router`` on a background thread; ``wait()`` joins it and re-raises its error.
 
-    Nothing else may use the driver until ``wait()`` returns: ``Conversation.say`` and ``close`` call it first."""
+    Nothing else may use the driver while the worker runs. ``Conversation.say`` waits for it before routing, and
+    keeps the reference until the worker has finished, so an interrupted wait leaves ``close`` to coordinate."""
 
     def __init__(self, driver, tokenizer, policy):
         self.error, self.seconds = None, None
@@ -1144,10 +1148,17 @@ class Primer:
         self.thread = threading.Thread(target=run, name='router-prefix', daemon=True)
         self.thread.start()
 
-    def wait(self):
-        self.thread.join()
+    def done(self):
+        return not self.thread.is_alive()
+
+    def wait(self, timeout=None):
+        """Join the worker (up to ``timeout`` seconds); True once it has finished. Re-raises its error."""
+        self.thread.join(timeout)
+        if self.thread.is_alive():
+            return False
         if self.error is not None:
             raise self.error
+        return True
 
 
 class Conversation:
@@ -1223,8 +1234,12 @@ class Conversation:
 
     def say(self, text):
         if self.priming is not None:
-            self.priming, priming = None, self.priming
-            priming.wait()
+            try:
+                self.priming.wait()
+            finally:
+                # Only a finished worker is released; after an interrupted wait ``close`` still sees it.
+                if self.priming.done():
+                    self.priming = None
         """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
         from neuroshard.evolution import assistant_experience_run as accelerator
         from neuroshard.evolution import assistant_selector as selector
@@ -1248,21 +1263,44 @@ class Conversation:
             return self.session.turn(text, self.responses[route], route=route)
         return self.session.turn(text, self.respond)
 
+    PRIMER_GRACE = 120  # seconds close() waits for a running primer before abandoning the owners' STOP
+
     def close(self):
-        """Stop the owners, which then commit their logs; the job settles after its challenge window."""
-        if getattr(self, 'priming', None) is not None:
-            self.priming, priming = None, self.priming
+        """Stop the owners, which then commit their logs; the job settles after its challenge window.
+
+        With fast start, the router prefix may still be in flight (for example after Ctrl-C interrupted the first
+        message). No driver command is sent while it runs: close waits for it, up to ``PRIMER_GRACE``. If it does
+        not finish, or the wait is interrupted again, close sends no STOP and only closes the sockets, which ends
+        the worker; the owners then see a lost client, and an unsettled job is refunded at expiry less fees."""
+        stop = True
+        primer = getattr(self, 'priming', None)
+        if primer is not None:
             try:
-                priming.wait()
-            except Exception:  # noqa: BLE001 - closing still stops the owners
-                pass
+                finished = primer.wait(self.PRIMER_GRACE)
+            except KeyboardInterrupt:
+                finished = False
+            except Exception:  # noqa: BLE001 - its error was the primer's own; the worker has ended
+                finished = True
+            stop = finished
+            if finished:
+                self.priming = None
         try:
-            if getattr(self, 'driver', None) is not None:
+            if stop and getattr(self, 'driver', None) is not None:
                 self.driver.stop()
         finally:
             for sock in self.sockets.values():
-                sock.close()
+                try:
+                    sock.close()
+                except OSError:
+                    pass
             self.sockets = {}
+            if primer is not None and not stop:
+                try:  # its sockets are closed, so the worker fails fast; its transport error is expected
+                    primer.wait(5)
+                except BaseException:  # noqa: BLE001
+                    pass
+                if primer.done():
+                    self.priming = None
 
 
 def seed(network, home, public_host, served=None, block_seconds=1.0, params=None, p2p_port=PORTS['p2p'],
