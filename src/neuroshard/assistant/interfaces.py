@@ -51,7 +51,7 @@ def revision_labels(documents):
     Those interfaces show the model only id, title and content, so revisions of one document look identical (the
     pilot-2-rc2 soak answered from revision 1 of the demo plan instead of approved revision 2). Nothing is hidden:
     every document stays readable for history, comparison and effective-date questions. Only documents in a family
-    the /4 design's own rules decide get a label:
+    the /4 design's own rules decide get a label (a family of one included: its only revision is decided):
     - identity is an explicit ``(project, family)``, never a title (``document_revisions.families``/``members``,
       which also pull in malformed would-be members);
     - selection is ``document_revisions.current``; a family that is ``incomplete``, ``ambiguous`` or has no
@@ -71,7 +71,7 @@ def revision_labels(documents):
     for (project, family) in revisions.families(parsed):
         group = revisions.members(parsed, project, family)
         outcome, chosen, _ = revisions.current(group)
-        if outcome != 'known_current' or len(group) < 2:
+        if outcome != 'known_current':
             continue
         for member in group:
             meta = member['metadata']

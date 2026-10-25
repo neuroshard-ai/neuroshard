@@ -325,7 +325,7 @@ def test_an_opt_in_labelled_view_keeps_every_document_and_labels_only_decided_fa
     assert titles['doc-88b36697f8'].endswith('(revision 2, approved; latest approved)')
     assert titles['doc-292283f7a9'].endswith('(revision 1, approved)')
     assert titles['doc-9e6d7ba44d'].endswith('(revision 3, draft)')
-    assert titles['doc-35d32ed303'] == 'Cedar 6581 Annex delivery plan'  # a family of one: unlabelled
+    assert titles['doc-35d32ed303'].endswith('(revision 2, approved; latest approved)')  # a family of one is decided too
     ws = documents.Workspace(interfaces.documents_world(view, 2), 2)
     assert ws.search('What is the baseline quantity in the latest approved Cedar 6581 plan?')['results'][0]['id'] \
         == 'doc-88b36697f8'
