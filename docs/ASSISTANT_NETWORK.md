@@ -77,6 +77,19 @@ It needs about 6 GB of RAM. `--sample N` picks another workspace, and `--world
 FILE` loads your own documents. `/quit` ends the job; the owners then commit
 their logs and the job settles after its challenge window.
 
+**Chat in a browser.** `neuroshard assistant web` serves the same conversation as a page on this
+machine, for people who would rather not use a terminal. It takes the same options as `chat`
+(`--sample`, `--world`, `--budget`, `--price`, `--wait`, `--threads`, `--legacy-admission`) plus
+`--port` (default 8765). It prints a link such as `http://127.0.0.1:8765/?t=...`; open it in your
+browser. The page lists the workspace documents, shows what the network is doing (connecting, the
+admitted job, thinking with elapsed seconds, or a one-line error) and has an **End conversation**
+button, which closes the job and shows the `assistant status --job` command to check its
+settlement. Nothing is paid until the first message is sent; Ctrl-C in the terminal also ends the
+conversation. The page is served only on loopback and only with the random token in its link, which
+changes on every launch; requests from other sites are refused. `--host` with a non-loopback address
+is refused unless `--allow-remote` is also given, because anyone reaching the page could read your
+documents and chat on your budget. Replies arrive whole, not token by token.
+
 **Host a shard.** `neuroshard assistant host --shard 2 --endpoint HOST:28700`
 fetches only that shard's tensors, bonds 5 test NEURO and serves jobs. `HOST`
 must be your public address, and inbound TCP 28700 must be open. An owner needs
@@ -153,7 +166,7 @@ log of all three jobs without a mismatch.
    needs no inbound connections. On small fixtures it matches single-host serving
    token for token, with owner logs equal to the experiments' in-datacenter ring.
 3. **Owner node:** `neuroshard assistant host`.
-4. **User client:** `neuroshard assistant chat`.
+4. **User client:** `neuroshard assistant chat`, or `neuroshard assistant web` in a browser.
 5. **Seed and genesis.** The seed runs on AWS; the descriptor is
    [`assistant-testnet.json`](../src/neuroshard/client/networks/assistant-testnet.json),
    and owners' module files are in the
