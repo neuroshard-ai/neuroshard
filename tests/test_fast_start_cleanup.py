@@ -49,23 +49,98 @@ def socket_pair():
 
 
 def test_an_interrupted_first_message_never_stops_the_owners_while_the_primer_runs():
-    driver = Driver(block=True)
+    """A real SIGINT during ``say``'s wait (in a subprocess, so the signal hits only it). CPython can mark the
+    interrupted Thread stopped while its worker runs; completion must come from the worker's own signal."""
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    child = r'''
+import json, os, signal, threading
+from neuroshard.assistant import network
+active, release, finished = threading.Event(), threading.Event(), threading.Event()
+calls = []
+class Driver:
+    def prime_router(self, *args):
+        active.set()
+        try:
+            release.wait(10)
+        finally:
+            active.clear(); finished.set()
+    def stop(self):
+        calls.append(active.is_set())
+driver = Driver()
+primer = network.Primer(driver, None, None)
+assert active.wait(5)
+talk = network.Conversation.__new__(network.Conversation)
+talk.priming, talk.driver, talk.sockets = primer, driver, {}
+threading.Timer(0.3, lambda: os.kill(os.getpid(), signal.SIGINT)).start()
+try:
+    talk.say("hello")
+    interrupted = False
+except KeyboardInterrupt:
+    interrupted = True
+state = {"interrupted": interrupted, "worker_active": active.is_set(), "done": primer.done(),
+         "kept": talk.priming is primer}
+threading.Timer(0.3, release.set).start()  # the worker finishes while close waits for it
+state["clean"] = talk.close()
+state["stop_saw_worker_active"] = calls
+assert finished.wait(5)
+print(json.dumps(state))
+'''
+    source = Path(network.__file__).resolve().parents[2]
+    result = subprocess.run([sys.executable, '-c', child], capture_output=True, text=True, timeout=60,
+                            env={'PYTHONPATH': str(source), 'PATH': '/usr/bin:/bin'})
+    assert result.returncode == 0, result.stderr[-2000:]
+    state = json.loads(result.stdout.strip().splitlines()[-1])
+    assert state['interrupted'] and state['worker_active']
+    assert not state['done'] and state['kept']  # the worker has not signalled; the primer is kept
+    assert state['clean'] and state['stop_saw_worker_active'] == [False]  # STOP only after it finished
+
+
+def test_close_wakes_a_primer_blocked_in_socket_io_and_sends_no_stop(monkeypatch):
+    """A worker genuinely blocked in ``recv_into`` on the job's socket (serving's 600 s timeout)."""
+    import time
+
+    mine, peer = socket_pair()
+    mine.settimeout(600)
+    calls = []
+
+    class Blocked:
+        def prime_router(self, tokenizer, policy):
+            mine.recv_into(bytearray(5))
+
+        def stop(self):
+            calls.append('stop')
+
+    driver = Blocked()
+    primer = network.Primer(driver, None, None)
+    time.sleep(0.2)  # into the real receive
+    assert not primer.done()
+    talk = conversation(driver, primer, {1: mine})
+    monkeypatch.setattr(network.Conversation, 'PRIMER_GRACE', 0.1)
+    began = time.monotonic()
+    assert talk.close() is True
+    assert time.monotonic() - began < 5
+    assert primer.done() and talk.priming is None and calls == []
+    assert talk.sockets == {} and mine.fileno() == -1
+    peer.close()
+
+
+def test_a_primer_busy_in_local_work_gets_a_bounded_wait_and_no_stop(monkeypatch):
+    """Shutting sockets down cannot interrupt local computation; close waits a bounded time and reports it."""
+    driver = Driver(block=True)  # ignores sockets, like a stage-0 forward in progress
     primer = network.Primer(driver, None, None)
     assert driver.active.wait(2)
     mine, theirs = socket_pair()
     talk = conversation(driver, primer, {1: mine})
-    with patch.object(primer.thread, 'join', side_effect=KeyboardInterrupt):
-        with pytest.raises(KeyboardInterrupt):
-            talk.say('Hello')
-    assert talk.priming is primer  # kept: the worker is still running
-
-    def finish_soon():
-        driver.release.set()
-
-    threading.Timer(0.3, finish_soon).start()
-    talk.close()
-    assert driver.calls == [('stop', False)]  # STOP only after the primer finished
-    assert talk.sockets == {} and mine.fileno() == -1
+    monkeypatch.setattr(network.Conversation, 'PRIMER_GRACE', 0.1)
+    monkeypatch.setattr(network.Conversation, 'CANCEL_GRACE', 0.2)
+    assert talk.close() is False  # still running: reported, kept, and no STOP raced it
+    assert driver.calls == [] and talk.priming is primer and mine.fileno() == -1
+    driver.release.set()
+    assert primer.wait(5)
     theirs.close()
 
 
@@ -109,7 +184,8 @@ def test_a_primer_that_never_finishes_within_the_grace_sends_no_stop(monkeypatch
     assert driver.active.wait(2)
     talk = conversation(driver, primer)
     monkeypatch.setattr(network.Conversation, 'PRIMER_GRACE', 0.2)
-    talk.close()
+    monkeypatch.setattr(network.Conversation, 'CANCEL_GRACE', 0.2)
+    assert talk.close() is False
     assert driver.calls == []
     driver.release.set()
     primer.wait(5)
