@@ -93,7 +93,7 @@ x86_64 CPUs, but its measured quality and latency can differ.
 
 **Client CPUs.** Replies were evaluated with stage 0 on Linux x86_64 with AMX (Intel Sapphire Rapids
 or newer). Other clients (Intel without AMX, AMD, Arm, macOS) are experimental for the pilot. Before
-anything is downloaded or paid, `chat` says why and asks whether to continue; scripts pass
+`chat` reads the chain, follows a grown version, downloads anything or pays, it says why and asks whether to continue; scripts pass
 `--experimental-cpu`. On the CPUs measured, the facts and cited documents matched, but replies were
 worded differently. That was one question, not a validated workload.
 

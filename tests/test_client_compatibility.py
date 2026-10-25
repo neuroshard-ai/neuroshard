@@ -68,7 +68,7 @@ EXPERIMENTAL = {'class': 'experimental', 'reasons': ['CPU without amx_bf16']}
 def test_an_experimental_client_is_asked_before_anything_is_fetched_or_paid(monkeypatch, tmp_path):
     fetched, printed = chat(monkeypatch, tmp_path, EXPERIMENTAL, answer='n')
     assert fetched == []
-    assert printed[0].startswith('Experimental client:') and printed[-1] == 'Stopped. Nothing was paid.'
+    assert printed[0].startswith('Experimental client:') and printed[-1] == 'Stopped. Nothing was downloaded or paid.'
 
 
 def test_an_experimental_client_continues_when_the_user_agrees(monkeypatch, tmp_path):
@@ -86,3 +86,54 @@ def test_a_script_on_an_experimental_cpu_must_opt_in(monkeypatch, tmp_path):
 def test_an_evaluated_client_is_neither_warned_nor_asked(monkeypatch, tmp_path):
     fetched, printed = chat(monkeypatch, tmp_path, {'class': 'evaluated', 'reasons': []}, tty=False)
     assert len(fetched) == 1 and printed == []
+
+
+def test_declining_on_a_newly_grown_version_downloads_no_recipe_or_state(monkeypatch, tmp_path):
+    """The ledger serves a version this machine has not built: the real ``following`` would fetch its recipe and
+    committed state. Declining must come first. Only remote boundaries are stubbed, as in the review's probe."""
+    import io
+
+    from neuroshard.assistant import network
+    from neuroshard.client import assistant_cli as cli
+    from neuroshard.evolution import growth_runtime as growth
+    from neuroshard.inference import optimistic as ledger
+
+    events = []
+
+    class Chain:
+        def state(self):
+            events.append('chain read')
+            return {'model_root': 'new'}
+
+    def recipe(*args):
+        events.append('fetch growth recipe')
+        return {}
+
+    def download(*args, **kwargs):
+        events.append('download committed growth state')
+        return io.BytesIO(b'state')
+
+    def upgrade(descriptor, state, recipes, state_bytes):
+        state_bytes({}, 'final-root')
+        return {'root': 'new'}, {}
+
+    monkeypatch.setattr(live_runtime, 'configure', lambda: None)
+    monkeypatch.setattr(live_runtime, 'client_compatibility', lambda: EXPERIMENTAL)
+    monkeypatch.setattr(network, 'descriptor', lambda path=None: {'root': 'old', 'proof_endpoints': ['http://x/p']})
+    monkeypatch.setattr(network, 'chain', lambda descriptor, home: events.append('chain opened') or Chain())
+    monkeypatch.setattr(network, 'model_root', lambda d: d['root'])
+    monkeypatch.setattr(network, 'fetch_stage', lambda *a, **k: events.append('fetch stage 0'))
+    monkeypatch.setattr(ledger, 'grown', lambda *a, **k: [{'recipe_root': 'recipe'}])
+    monkeypatch.setattr(growth, 'fetch_recipe', recipe)
+    monkeypatch.setattr(growth, 'upgrade', upgrade)
+    monkeypatch.setattr(growth, 'install', lambda *a, **k: None)
+    monkeypatch.setattr(growth.growth_replay, 'bytes_root', lambda *a, **k: 'final-root')
+    monkeypatch.setattr(growth.urllib.request, 'urlopen', download)
+    monkeypatch.setattr(cli.sys.stdin, 'isatty', lambda: True, raising=False)
+    monkeypatch.setattr('builtins.input', lambda prompt='': events.append('prompt') or 'n')
+    monkeypatch.setattr('builtins.print', lambda *a, **k: events.append(' '.join(map(str, a))))
+    parser = cli.argparse.ArgumentParser()
+    cli.register(parser.add_subparsers(dest='command'), tmp_path)
+    cli.run(parser.parse_args(['assistant', 'chat', '--home', str(tmp_path)]))
+    assert events[0].startswith('Experimental client:') and events[1] == 'prompt'
+    assert events[2:] == ['Stopped. Nothing was downloaded or paid.']

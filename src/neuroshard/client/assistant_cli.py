@@ -182,6 +182,27 @@ def prepare_parent():
     return directory
 
 
+def experimental_client_agrees(args):
+    """On a CPU the replies were not evaluated on, say so and ask; True to continue. Evaluated clients: True.
+
+    ``chat`` asks this before it reads the chain or follows a grown version, so declining downloads no model or
+    growth state and pays nothing. Scripts (no terminal) continue only with ``--experimental-cpu``."""
+    from neuroshard.client import live_runtime
+
+    warning = live_runtime.client_warning(live_runtime.client_compatibility())
+    if not warning:
+        return True
+    print(warning)
+    if getattr(args, 'experimental_cpu', False):
+        return True
+    if not sys.stdin.isatty():
+        raise ValueError('this CPU is experimental for the client; pass --experimental-cpu to continue')
+    if input('Continue and pay for this conversation? [y/N] ').strip().lower() in ('y', 'yes'):
+        return True
+    print('Stopped. Nothing was downloaded or paid.')
+    return False
+
+
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.client import live_runtime
@@ -246,6 +267,8 @@ def run(args):
         finally:
             optimistic_network.stop(config)
         return
+    if args.assistant_action == 'chat' and not experimental_client_agrees(args):
+        return  # asked before the chain is read, a grown version rebuilt, or anything downloaded or paid
     chain = network.chain(descriptor, args.home)
     descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
@@ -318,18 +341,6 @@ def run(args):
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
         raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
     price = atoms(args.price)
-    from neuroshard.client import live_runtime
-
-    warning = live_runtime.client_warning(live_runtime.client_compatibility())
-    if warning:
-        # Before anything is downloaded, funded or sent to an owner.
-        print(warning)
-        if not getattr(args, 'experimental_cpu', False):
-            if not sys.stdin.isatty():
-                raise ValueError('this CPU is experimental for the client; pass --experimental-cpu to continue')
-            if input('Continue and pay for this conversation? [y/N] ').strip().lower() not in ('y', 'yes'):
-                print('Stopped. Nothing was paid.')
-                return
     served, stage = network.fetch_stage(descriptor, 0, args.home)
     world, suggestions = workspace(args.sample, args.world)
     show(world, suggestions)
