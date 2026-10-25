@@ -33,15 +33,15 @@ def register(subcommands, root):
     audit.add_argument('--interval', type=float, default=10)
     chat = actions.add_parser('chat', parents=[common],
                               help='Chat with the assistant through the network; stage 0 runs on this machine')
-    chat.add_argument('--sample', type=int, default=0, help='Sample workspace number')
-    chat.add_argument('--world', type=Path, help='Your own documents as JSON: {"documents": [{"id", "title", "content"}]}')
-    chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
-    chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
-    chat.add_argument('--threads', type=int)
-    chat.add_argument('--wait', type=int, default=600,
-                      help='Seconds to wait for a busy network before funding anything (default 600)')
-    chat.add_argument('--legacy-admission', action='store_true',
-                      help='Fund before contacting owners, for shards whose owners do not reserve yet')
+    chat_arguments(chat)
+    web = actions.add_parser('web', parents=[common],
+                             help='Chat in your browser: a local web page for the same paid conversation')
+    chat_arguments(web)
+    web.add_argument('--port', type=int, default=8765, help='Local port for the page (default 8765)')
+    web.add_argument('--host', default='127.0.0.1',
+                     help='Address to serve the page on (default 127.0.0.1, this machine only)')
+    web.add_argument('--allow-remote', action='store_true',
+                     help='Allow a non-loopback --host; this exposes your documents to anyone holding the link')
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
     govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy',
@@ -116,6 +116,20 @@ def register(subcommands, root):
                       help='Shard holdings used to judge fraud proofs; defaults to both network owner shards')
 
 
+def chat_arguments(parser):
+    """The options ``chat`` and ``web`` share: the workspace and what the conversation may spend."""
+    parser.add_argument('--sample', type=int, default=0, help='Sample workspace number')
+    parser.add_argument('--world', type=Path,
+                        help='Your own documents as JSON: {"documents": [{"id", "title", "content"}]}')
+    parser.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
+    parser.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
+    parser.add_argument('--threads', type=int)
+    parser.add_argument('--wait', type=int, default=600,
+                        help='Seconds to wait for a busy network before funding anything (default 600)')
+    parser.add_argument('--legacy-admission', action='store_true',
+                        help='Fund before contacting owners, for shards whose owners do not reserve yet')
+
+
 def atoms(value):
     from neuroshard.assistant.network import NEURO
 
@@ -179,7 +193,7 @@ def prepare_parent():
 
 
 def run(args):
-    if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
+    if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'web', 'grow'):
         from neuroshard.client import live_runtime
 
         # Audits replay an owner's log bit for bit only in the pinned numerical environment, set before torch loads.
@@ -311,6 +325,9 @@ def run(args):
     if args.assistant_action == 'faucet':
         run_faucet(args, chain, network)
         return
+    if args.assistant_action == 'web':
+        web(args, chain, network, descriptor)
+        return
     if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
         raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
     price = atoms(args.price)
@@ -342,6 +359,30 @@ def run(args):
         conversation.close()
     print(f'The owners commit their logs now; the job settles after its challenge window. '
           f'Check it with: neuroshard assistant status --job {conversation.job_id}')
+
+
+def web(args, chain, network, descriptor):
+    """``chat`` in a local browser page: same workspace and spending limits; the job opens on the first message."""
+    from neuroshard.client import web_chat
+
+    web_chat.check_bind(args.host, args.allow_remote, warn=lambda _: None)  # refuse before downloading; warn at start
+    if not 1 <= args.budget <= network.MAX_PAID_POSITIONS:
+        raise ValueError(f'budget must be between 1 and {network.MAX_PAID_POSITIONS} positions')
+    if not 0 <= args.port <= 65535:
+        raise ValueError('port must be between 0 and 65535')
+    price = atoms(args.price)
+    served, stage = network.fetch_stage(descriptor, 0, args.home)
+    world, suggestions = workspace(args.sample, args.world)
+    show(world, suggestions)
+    account = network.Account(args.home / 'account.key')
+
+    def conversation(progress):
+        return network.Conversation(served, stage, chain, account, world, args.budget, price,
+                                    network.faucets(descriptor), progress=progress, threads=args.threads,
+                                    mode='legacy' if args.legacy_admission else 'reserved', wait=args.wait,
+                                    home=args.home)
+
+    web_chat.run(world, suggestions, conversation, host=args.host, port=args.port, allow_remote=args.allow_remote)
 
 
 def following(descriptor, chain, home, network, progress=print):
