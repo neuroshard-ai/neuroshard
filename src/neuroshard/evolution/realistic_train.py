@@ -47,7 +47,7 @@ def main(argv=None):
 
     import torch
     from safetensors.torch import save as save_tensors
-    from transformers import AutoTokenizer
+    from neuroshard.evolution import granite_tokenizer
 
     from neuroshard.evolution import assistant_documents as documents
     from neuroshard.evolution import assistant_experience_train as trainer
@@ -56,7 +56,7 @@ def main(argv=None):
     from neuroshard.evolution.modular_reference_execution import ROOT
 
     policy = json.loads(args.policy.read_text())
-    tokenizer = AutoTokenizer.from_pretrained(ROOT / '.models' / 'baseline', local_files_only=True)
+    tokenizer, _ = granite_tokenizer.load(ROOT / '.models' / 'baseline')  # the served splitting
     tools = documents.tools(2)
     corpus = json.loads(args.corpus.read_text())
     experience = [trainer.encode(tokenizer, trajectory(case, policy), tools) for case in corpus['cases']]

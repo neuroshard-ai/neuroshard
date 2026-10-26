@@ -484,12 +484,12 @@ class Served:
         if tokenizer is None:
             import os
 
-            from transformers import AutoTokenizer
-
+            from neuroshard.evolution import granite_tokenizer
             from neuroshard.evolution.modular_reference_execution import ROOT
 
-            tokenizer = AutoTokenizer.from_pretrained(
-                Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline', local_files_only=True)
+            # The served splitting, exactly as the client encodes requests (``network.Conversation``): transformers'
+            # AutoTokenizer on 5.5.x splits Granite text with GPT-2's byte regex (granite_tokenizer's docstring).
+            tokenizer, _ = granite_tokenizer.load(Path(os.environ.get('NEUROSHARD_MODELS', ROOT / '.models')) / 'baseline')
         self.tokenizer = tokenizer
         self.keep = True  # False: load a route's model per use (an owner's machine also serves its shard)
 
