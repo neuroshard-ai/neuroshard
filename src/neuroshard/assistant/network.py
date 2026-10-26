@@ -1245,8 +1245,12 @@ class Conversation:
             # the same single forward into the same cache as on the first message, so routing is unchanged.
             self.priming = Primer(self.driver, self.tokenizer, self.served.policies['drafting'])
 
-    def say(self, text):
-        """One user turn: the gate chooses the module once, from the first turn, then tools run here."""
+    def say(self, text, recall=None, skip_memory=False):
+        """One user turn: the gate chooses the module once, from the first turn, then tools run here.
+
+        ``recall`` (``memory.Recall``) puts the user's relevant saved notes in front of the message on documents and
+        chat turns. The gate and the router read ``text`` alone, so routing never depends on memory; the result's
+        ``memory`` lists the items sent and their tokens, which the client discloses."""
         if self.priming is not None:
             try:
                 self.priming.wait()
@@ -1273,8 +1277,21 @@ class Conversation:
             if route not in self.responses:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
                                                          self.served.eos_ids, guesses=GUESSES)
-            return self.session.turn(text, self.responses[route], route=route)
-        return self.session.turn(text, self.respond)
+            block, items = recall.block(route, text, skip_memory) if recall is not None else ('', [])
+            limit = self.served.policies[route]['generation']['max_input_tokens']
+
+            def fits(messages, tools):
+                prompt = self.tokenizer.apply_chat_template(messages, tools=tools, add_generation_prompt=True,
+                                                            tokenize=False)
+                return len(self.tokenizer(prompt, add_special_tokens=False)['input_ids']) <= limit
+
+            result = self.session.turn(text, self.responses[route], route=route, context=block,
+                                       fits=fits if block else None)
+            if not result.get('context_sent'):
+                return {**result, 'memory': {'items': [], 'tokens': 0, 'dropped': [i['id'] for i in items]}}
+            recall.sent(items)  # only notes that reached the owners are recorded and disclosed
+            return {**result, 'memory': {'items': [i['id'] for i in items], 'tokens': recall.count_tokens(block)}}
+        return {**self.session.turn(text, self.respond), 'memory': {'items': [], 'tokens': 0}}
 
     PRIMER_GRACE = 120  # seconds close() waits for a running primer before abandoning the owners' STOP
     CANCEL_GRACE = 30  # seconds close() then waits for a cancelled primer (its socket I/O fails at once; local

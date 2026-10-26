@@ -46,6 +46,11 @@ def register(subcommands, root):
                       help='Seconds to wait for a busy network before funding anything (default 600)')
     chat.add_argument('--legacy-admission', action='store_true',
                       help='Fund before contacting owners, for shards whose owners do not reserve yet')
+    chat.add_argument('--no-memory', action='store_true', help='Use no saved notes in this conversation')
+    remember = actions.add_parser('memory', parents=[common],
+                                  help='Your saved notes on this machine: list, add, forget, on, off, wipe')
+    remember.add_argument('memory_action', choices=('list', 'add', 'forget', 'on', 'off', 'wipe'))
+    remember.add_argument('text', nargs='*', help='add: [fact|preference|context:] TEXT; forget: an item ID')
     govern = actions.add_parser('govern', parents=[common],
                                 help='Owner governance of the served version: propose, vote, enact, or list proposals')
     govern.add_argument('govern_action', choices=('list', 'propose', 'propose-validator', 'propose-levy',
@@ -203,6 +208,24 @@ def experimental_client_agrees(args):
     return False
 
 
+def manage_memory(args):
+    from neuroshard.assistant import memory
+    from neuroshard.client import memory_cli
+
+    store, text = memory.Store(args.home), ' '.join(args.text)
+    if args.memory_action == 'list':
+        print(memory_cli.listing(store))
+    elif args.memory_action == 'add':
+        print(memory_cli.remember(store, text, input))
+    elif args.memory_action == 'forget':
+        print(memory_cli.forget(store, text, input))
+    elif args.memory_action in ('on', 'off'):
+        store.enable(args.memory_action == 'on')
+        print(f'Memory is {args.memory_action}.' + (f' {memory.DISCLOSURE}' if args.memory_action == 'on' else ''))
+    else:
+        print(memory_cli.forget(store, 'all', input))
+
+
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.client import live_runtime
@@ -215,6 +238,9 @@ def run(args):
                 raise ValueError('auditable owners require the pinned eight-thread execution class')
     from neuroshard.assistant import network
 
+    if args.assistant_action == 'memory':
+        manage_memory(args)  # local only: no chain, no download, no payment
+        return
     descriptor = network.descriptor(args.network)
     if args.assistant_action == 'prepare-parent':
         print(f'Pinned parent model verified at {prepare_parent()}')
@@ -350,6 +376,15 @@ def run(args):
                                         home=args.home)
     print(f"Job {conversation.job_id[:16]}: shards served by "
           f"{', '.join(endpoint for _, endpoint in conversation.owners)}. Type a request; /quit ends the job.")
+    from neuroshard.assistant import memory
+    from neuroshard.client import memory_cli
+
+    store = memory.Store(args.home)
+    count = lambda text: len(conversation.tokenizer(text, add_special_tokens=False)['input_ids'])  # noqa: E731
+    recall = None if args.no_memory else memory.Recall(store, count)
+    if recall is not None and store.enabled:
+        print(f'Memory is on: relevant saved notes are added to chat messages. {memory.DISCLOSURE} '
+              '/help lists the memory commands.')
     drafts = {}
     try:
         while True:
@@ -359,9 +394,22 @@ def run(args):
                 break
             if text in ('/quit', '/exit'):
                 break
+            skip = False
+            if text.startswith('/'):
+                handled, message, plain = memory_cli.command(store, text, input, count)
+                if message:
+                    print(message)
+                if plain is None:
+                    if not handled:
+                        print('Unknown command; /help lists them.')
+                    continue
+                text, skip = plain, True
             if text:
-                result = conversation.say(text)
+                result = conversation.say(text, recall=recall, skip_memory=skip)
                 render(result, drafts)
+                line = memory_cli.disclosure(result.get('memory'))
+                if line:
+                    print(line)
                 drafts = dict(result['snapshot'].get('drafts', {}))
                 if result['failure']:
                     break

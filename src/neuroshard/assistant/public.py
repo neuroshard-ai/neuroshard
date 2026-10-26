@@ -105,7 +105,12 @@ class Session:
             payload['memory'] = copy.deepcopy(self.memory)
         return payload
 
-    def turn(self, user, respond, route=None):
+    def turn(self, user, respond, route=None, context='', fits=None):
+        """One user turn. ``context`` (the user's saved notes, from ``memory``) goes in front of ``user`` in this
+        turn's model requests only: the conversation's history keeps ``user`` alone, so no later turn, route or
+        memory-off message receives it. ``fits(request, tools)`` says whether a request is within the route's input
+        limit; a request that fits only without ``context`` is sent without it. ``context_sent`` in the result
+        says whether any request of this turn carried it. ``request_sha256`` names each request as actually sent."""
         if not isinstance(user, str) or not user.strip():
             raise ValueError('user turn must be non-empty text')
         if route is None and self.world is None:
@@ -116,14 +121,22 @@ class Session:
             self.world = self.workspace(self.tools)
             self.messages[0] = {'role': 'system', 'content': self.policy['system_instruction']}
         self.messages.append({'role': 'user', 'content': user})
+        asked, context_sent = len(self.messages) - 1, False
         used, final, completed, failure = 0, '', False, None
         started = time.monotonic()
         generations = 0
         responses = []
         for _ in range(self.policy['limits']['model_turns_per_user_turn']):
-            generated = respond(copy.deepcopy(self.messages), copy.deepcopy(self.tools.TOOLS))
+            request = copy.deepcopy(self.messages)
+            if context:
+                request[asked] = {'role': 'user', 'content': context + user}
+                if fits is not None and not fits(request, self.tools.TOOLS):
+                    request[asked] = {'role': 'user', 'content': user}  # notes never push a request over its limit
+                else:
+                    context_sent = True
+            generated = respond(request, copy.deepcopy(self.tools.TOOLS))
             generated = {**generated,
-                         'request_sha256': identity({'messages': self.messages, 'tools': self.tools.TOOLS})}
+                         'request_sha256': identity({'messages': request, 'tools': self.tools.TOOLS})}
             generations += 1
             responses.append(generated)
             if not generated['terminated']:
@@ -150,7 +163,7 @@ class Session:
                 self.messages.append({'role': 'tool', 'content': self.tools.result_text(response)})
         if not completed and failure is None:
             failure = 'model-turn budget exhausted'
-        return {'completed': completed, 'final_text': final, 'failure': failure,
+        return {'completed': completed, 'final_text': final, 'failure': failure, 'context_sent': context_sent,
                 'snapshot': self.world.snapshot(), 'version': self.version['name'],
                 'seconds': time.monotonic() - started, 'generations': generations,
                 'responses': responses, 'route': route}
