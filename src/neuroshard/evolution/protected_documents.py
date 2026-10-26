@@ -8,12 +8,14 @@ committed, before the set is first run.
 ``submit_answer``, when a condition has one, must agree with it; protocol correctness (the route's own scorer) is
 reported separately, never in place of this score.
 
-**The machine score is conservative and bounded, not a judgment of meaning.** Values are compared as typed values
-(numbers, dates, words at word boundaries), never as substrings, so 12,000 is not 1,200. A value that is negated
-nearby, or a competing value from another version of the same family, fails the case. Citations are complete
-document IDs that exist in the case. Because no mechanical rule establishes that a sentence asserts a fact, every
-contested reply and a fixed random sample are also judged by a person, blind to the condition (``audit_sample``);
-both scores are reported, with their agreement.
+**The reported result is blinded human grading of every reply, in every condition** (``grading_sheet``,
+``ingest_grades``, ``accuracy``). The machine score (``score``) is a separate, reported measure: typed values
+(numbers with their sign, dates, words at word boundaries), exact citation IDs, negation and competing values. It
+is not a judgment of meaning: a reply can state the gold and then contradict it in words, and only a person can
+tell. Graders see only the case and the reply, never the condition or the machine verdict; the agreement between
+the two scores is reported.
+
+**Unresolved golds are excluded, by ID,** from grading and from every condition's numerator and denominator.
 
 **The selection code never decides a gold.** ``selector_report`` compares each latest-approved or effective gold
 with what the deterministic ``/4`` selection chooses. A disagreement must be adjudicated by the case's checker and
@@ -39,11 +41,6 @@ CATEGORIES = ('latest_approved_with_newer_draft', 'latest_approved_newest', 'sin
 MINIMUM_PER_CATEGORY = 8
 MINIMUM_WORKSPACES = 30
 MINIMUM_WORKSPACES_PER_CATEGORY = 4
-AUDIT_FRACTION = 0.2
-# Every file the score or the selection depends on; their digests are frozen and checked before each run.
-IMPLEMENTATION = ('src/neuroshard/evolution/protected_documents.py', 'src/neuroshard/evolution/assistant_documents.py',
-                  'src/neuroshard/evolution/document_revisions.py', 'src/neuroshard/assistant/interfaces.py',
-                  'src/neuroshard/assistant/public.py', 'src/neuroshard/evolution/assistant_general.py')
 ROOT = Path(__file__).resolve().parents[3]
 
 ID = re.compile(r'\Adoc-[0-9a-f]{8,}\Z')
@@ -54,7 +51,7 @@ MONTHS = {m: i for i, m in enumerate('january february march april may june july
                                      'november december'.split(), 1)}
 NAMED_DATE = re.compile(r'\b(\d{1,2})\s+(' + '|'.join(MONTHS) + r'),?\s+(\d{4})\b|\b(' + '|'.join(MONTHS)
                         + r')\s+(\d{1,2}),?\s+(\d{4})\b', re.I)
-NUMBER = re.compile(r'(?<![\w.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?![\w]|[.,]\d)')
+NUMBER = re.compile(r'(?<![\w.,\-\u2212])[-\u2212]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?![\w]|[.,]\d)')
 WORDS = re.compile(r"[a-z0-9]+(?:'[a-z]+)?")
 NEGATIONS = {'not', 'no', 'never', "isn't", "wasn't", "aren't", "weren't", "doesn't", "didn't", "isnt", "wasnt",
              'neither', 'nor', 'instead', 'rather', 'except', 'without', 'unlike', 'formerly', 'previously'}
@@ -74,13 +71,18 @@ class Invalid(ValueError):
 def kind_of(value):
     if ISO.fullmatch(value.strip()) or NAMED_DATE.fullmatch(value.strip()):
         return 'date'
-    if NUMBER.fullmatch(value.strip().lstrip('£$€').rstrip('%')):
+    if NUMBER.fullmatch(value.strip().replace('£', '').replace('$', '').replace('€', '').rstrip('%')):
         return 'number'
     return 'text'
 
 
 def _number(token):
-    return token.replace(',', '').rstrip('0').rstrip('.') if '.' in token else token.replace(',', '')
+    """A number's value as text, sign kept: -1,200 and 1,200 differ; 1,200.00 and 1200 do not."""
+    token = token.replace('\u2212', '-').replace(',', '')
+    sign, digits = ('-', token[1:]) if token.startswith('-') else ('', token)
+    if '.' in digits:
+        digits = digits.rstrip('0').rstrip('.')
+    return sign + (digits.lstrip('0') or '0')
 
 
 def _iso(match):
@@ -103,7 +105,7 @@ def occurrences(text, value):
         return spans + [(m.start(), m.end()) for m in NAMED_DATE.finditer(text) if _iso(m) == want]
     masked = ISO.sub(lambda m: ' ' * len(m.group()), NAMED_DATE.sub(lambda m: ' ' * len(m.group()), text))
     if kind == 'number':
-        want = _number(value.strip().lstrip('£$€').rstrip('%'))
+        want = _number(value.strip().replace('£', '').replace('$', '').replace('€', '').rstrip('%'))
         return [(m.start(), m.end()) for m in NUMBER.finditer(masked) if _number(m.group()) == want]
     words = WORDS.findall(value.lower())
     if not words:
@@ -355,13 +357,13 @@ def selector_report(cases):
         if [chosen] == list(expected['source_ids']):
             continue
         decision = case.get('adjudication') or {}
-        valid = decision.get('decision') in ADJUDICATIONS and decision.get('by') and \
-            decision.get('by') != case['written_by']
+        valid = decision.get('decision') in ADJUDICATIONS and decision.get('by') == case['checked_by']
         rows.append({'case': case['id'], 'gold': expected['source_ids'], 'selected': chosen, 'outcome': outcome,
                      'adjudication': decision.get('decision') if valid else None})
-    return {'disagreements': rows, 'confirmed_code_errors': sum(r['adjudication'] == 'gold_correct' for r in rows),
-            'unresolved': sum(r['adjudication'] == 'unresolved' for r in rows),
-            'not_adjudicated': [r['case'] for r in rows if r['adjudication'] is None]}
+    return {'disagreements': rows,
+            'confirmed_code_errors': sorted(r['case'] for r in rows if r['adjudication'] == 'gold_correct'),
+            'unresolved': sorted(r['case'] for r in rows if r['adjudication'] == 'unresolved'),
+            'not_adjudicated': sorted(r['case'] for r in rows if r['adjudication'] is None)}
 
 
 def score(case, final_text, terminated=True, submitted=None, reported=None):
@@ -410,6 +412,12 @@ def score(case, final_text, terminated=True, submitted=None, reported=None):
     else:
         if submitted is not None:
             reasons.append('submitted an answer')
+        values = {v for d in case['documents'] for v in NUMBER.findall(d['content'])} | \
+            {m.group() for d in case['documents'] for m in ISO.finditer(d['content'])}
+        stated = sorted(v for v in values if asserted(text, v))
+        if stated:
+            # A refusal that then states a value from the documents is an answer; graders decide its merit.
+            contested.append('states values from the documents: ' + ', '.join(stated))
         if expected['kind'] == 'not_found':
             if not has_phrase(text, REFUSALS):
                 reasons.append('does not say the documents do not contain it')
@@ -423,85 +431,221 @@ def score(case, final_text, terminated=True, submitted=None, reported=None):
             'notes': contested}
 
 
-def audit_sample(results, seed, fraction=AUDIT_FRACTION):
-    """The blinded human audit: every contested pass and a ``fraction`` of the rest, shuffled, condition hidden.
+GRADES = ('correct', 'incorrect')
+ROLES = ('served', 'served-v4', 'candidate-v4')  # the design's three conditions, in order
+ROOT_HEX = re.compile(r'\A[0-9a-f]{64}\Z')
 
-    ``results`` are dicts with 'condition', 'case', 'final_text' and 'machine' (``score``'s result). Returns
-    (sheet, key): the sheet holds only an opaque item ID, the case ID and the reply; the key, kept from raters,
-    maps items back to conditions and machine verdicts. A person judges each item correct or not against the
-    case's documents and question; the reported result is the machine score corrected by these judgments, with
-    their agreement."""
+
+def grading_sheet(results, seed, excluded=()):
+    """The blinded human grading sheet: **every** reply of every condition, shuffled, condition hidden.
+
+    ``results`` are dicts with 'condition', 'case', 'final_text' and 'machine' (``score``'s result). Cases in
+    ``excluded`` (unresolved golds, from the manifest) are left out of grading and of every accuracy. Returns
+    (sheet, key): the sheet holds only an opaque item ID, the case ID and the reply; the key, kept from graders,
+    maps items back to their condition and machine verdict. A grader judges each reply ``correct`` or
+    ``incorrect`` against the case's question, documents and gold; that grade is the reported result."""
     rng = random.Random(seed)
-    chosen = [r for r in results if r['machine'].get('contested')]
-    rest = [r for r in results if not r['machine'].get('contested')]
-    chosen += rng.sample(rest, round(len(rest) * fraction)) if rest else []
-    rng.shuffle(chosen)
+    rows = [r for r in results if r['case'] not in set(excluded)]
+    order = list(range(len(rows)))
+    rng.shuffle(order)
     sheet, key = [], {}
-    for index, row in enumerate(chosen):
-        item = hashlib.sha256(f'{seed}:{index}'.encode()).hexdigest()[:12]
+    for position, index in enumerate(order):
+        row = rows[index]
+        item = hashlib.sha256(f'{seed}:{position}:{row["condition"]}:{row["case"]}'.encode()).hexdigest()[:12]
         sheet.append({'item': item, 'case': row['case'], 'reply': row['final_text']})
-        key[item] = {'condition': row['condition'], 'machine': row['machine']['verdict'],
-                     'contested': row['machine'].get('contested', False)}
+        key[item] = {'condition': row['condition'], 'case': row['case'], 'machine': row['machine']['verdict']}
     return sheet, key
+
+
+def ingest_grades(sheet, key, grades):
+    """Check a returned grading is complete, then join it to the key: one row per reply with both scores.
+
+    ``grades`` is a list of {'item', 'grade', 'grader'}. Every sheet item must be graded exactly once with one of
+    ``GRADES``; no unknown item may appear. Refuses anything else, so no reply is silently left ungraded."""
+    items = {row['item'] for row in sheet}
+    seen = {}
+    for grade in grades:
+        item = grade.get('item')
+        if item not in items:
+            raise Invalid(f'grade for an unknown item {item!r}')
+        if item in seen:
+            raise Invalid(f'item {item} graded twice')
+        if grade.get('grade') not in GRADES or not grade.get('grader'):
+            raise Invalid(f'item {item}: a grade is correct or incorrect, with the grader named')
+        seen[item] = grade
+    missing = sorted(items - set(seen))
+    if missing:
+        raise Invalid(f'{len(missing)} replies are ungraded, for example {missing[:3]}')
+    return [{**key[item], 'item': item, 'human': seen[item]['grade'], 'grader': seen[item]['grader']}
+            for item in sorted(items)]
+
+
+def wilson(k, n, z=1.96):
+    if not n:
+        return (0.0, 0.0)
+    p = k / n
+    centre, half = (p + z * z / (2 * n)) / (1 + z * z / n), z * ((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5 / (1 + z * z / n)
+    return (round(centre - half, 4), round(centre + half, 4))
+
+
+def sign_test(wins, losses):
+    """Two-sided exact sign test p-value."""
+    from math import comb
+
+    n, k = wins + losses, min(wins, losses)
+    if not n:
+        return 1.0
+    return min(1.0, 2 * sum(comb(n, i) for i in range(k + 1)) / 2 ** n)
+
+
+def accuracy(graded, manifest):
+    """Per condition: human accuracy (the reported result), machine accuracy, their agreement, and paired tests.
+
+    Excluded cases are already absent from ``graded``; this checks so, and that every condition graded the same
+    cases, so numerators and denominators are comparable."""
+    excluded = set(manifest['excluded_cases'])
+    if any(row['case'] in excluded for row in graded):
+        raise Invalid('graded rows include an excluded (unresolved) case')
+    names = [c['name'] for c in manifest['conditions']]
+    by = {name: {row['case']: row for row in graded if row['condition'] == name} for name in names}
+    cases = set(by[names[0]])
+    if any(set(rows) != cases for rows in by.values()):
+        raise Invalid('every condition must be graded on the same cases')
+    out = {'cases': len(cases), 'excluded_cases': sorted(excluded), 'conditions': {}, 'paired': {}}
+    for name in names:
+        rows = by[name].values()
+        human = sum(r['human'] == 'correct' for r in rows)
+        machine = sum(r['machine'] == 'pass' for r in rows)
+        agree = sum((r['human'] == 'correct') == (r['machine'] == 'pass') for r in rows)
+        out['conditions'][name] = {'human_correct': human, 'human_interval': wilson(human, len(cases)),
+                                   'machine_pass': machine, 'agreement': agree, 'n': len(cases)}
+    base = names[0]
+    for name in names[1:]:
+        wins = sum(by[name][c]['human'] == 'correct' and by[base][c]['human'] != 'correct' for c in cases)
+        losses = sum(by[name][c]['human'] != 'correct' and by[base][c]['human'] == 'correct' for c in cases)
+        out['paired'][f'{name} vs {base}'] = {'wins': wins, 'losses': losses, 'p': sign_test(wins, losses)}
+    return out
 
 
 def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def tree_state(paths):
-    """(commit, {path: sha256}) for the implementation; refuses uncommitted changes to any of it."""
-    dirty = subprocess.run(['git', 'status', '--porcelain', '--', *paths], cwd=ROOT, capture_output=True,
-                           text=True, check=True).stdout.strip()
+def source_tree():
+    """(commit, {path: sha256}) of every tracked file under ``src/`` as it is on disk; refuses uncommitted changes.
+
+    The whole source tree, not a hand-picked list: the score and the tools depend on modules (for example
+    ``assistant_workspace``'s argument validation) that a list can omit."""
+    def git(*args):
+        return subprocess.run(['git', *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+
+    dirty = git('status', '--porcelain', '--', 'src').strip()
     if dirty:
-        raise Invalid('commit the implementation before freezing; uncommitted: ' + dirty.replace('\n', '; '))
-    commit = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True,
-                            check=True).stdout.strip()
-    return commit, {p: sha256(ROOT / p) for p in paths}
+        raise Invalid('commit the source before freezing or running; uncommitted: ' + dirty.replace('\n', '; '))
+    files = sorted(line for line in git('ls-files', '--', 'src').splitlines() if line)
+    return git('rev-parse', 'HEAD').strip(), {path: sha256(ROOT / path) for path in files}
+
+
+def tree_digest(files):
+    return hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+
+
+def conditions_of(protocol):
+    """Validate the three conditions against their actual policies; returns them with policy digests.
+
+    Roles, in order: ``served`` (the served model with its current policy), ``served-v4`` (the same model with the
+    ``/4`` policy) and ``candidate-v4`` (the trained candidate with that same ``/4`` policy). Each condition's
+    interface must be the one its policy file declares, and each model root a real 64-hex root."""
+    conditions = protocol.get('conditions') or []
+    if [c.get('role') for c in conditions] != list(ROLES):
+        raise Invalid('the protocol names exactly three conditions, with roles ' + ', '.join(ROLES) + ', in order')
+    out = []
+    for c in conditions:
+        if not {'name', 'role', 'interface', 'policy', 'model_root', 'unit_sha256'} <= set(c):
+            raise Invalid(f'{c.get("name")}: a condition has name, role, interface, policy, model_root, unit_sha256')
+        if not ROOT_HEX.match(str(c['model_root'])) or not ROOT_HEX.match(str(c['unit_sha256'])):
+            raise Invalid(f'{c["name"]}: model_root and unit_sha256 are 64-hex digests')
+        policy = json.loads((ROOT / c['policy']).read_text())
+        if policy.get('interface') != c['interface']:
+            raise Invalid(f'{c["name"]}: its policy declares {policy.get("interface")}, not {c["interface"]}')
+        out.append({**c, 'policy_sha256': sha256(ROOT / c['policy'])})
+    served, served_v4, candidate = out
+    if len({c['name'] for c in out}) != 3:
+        raise Invalid('condition names must differ')
+    if served_v4['interface'] != 'workspace-documents/4' or candidate['interface'] != 'workspace-documents/4':
+        raise Invalid('served-v4 and candidate-v4 use a workspace-documents/4 policy')
+    if served['interface'] == 'workspace-documents/4':
+        raise Invalid('served uses the current, pre-/4 policy')
+    if (served['model_root'], served['unit_sha256']) != (served_v4['model_root'], served_v4['unit_sha256']):
+        raise Invalid('served and served-v4 are the same model')
+    if candidate['unit_sha256'] == served['unit_sha256'] or candidate['model_root'] == served['model_root']:
+        raise Invalid('candidate-v4 is a different, trained unit')
+    if candidate['policy_sha256'] != served_v4['policy_sha256']:
+        raise Invalid('served-v4 and candidate-v4 use the same /4 policy, so only training differs')
+    return out
 
 
 def freeze(set_path, protocol_path, out_path):
     """Check the set and its selector disagreements, then record every digest a run depends on. No case content.
 
-    ``protocol_path`` names each condition (``name``, ``interface``, ``policy`` path, ``model_root``) and the audit
-    ``seed``. The manifest pins the set, the protocol, every implementation file and each condition's policy."""
+    Unresolved golds are listed by ID in ``excluded_cases``: never graded, never in any accuracy. The manifest
+    pins the set, the protocol, the whole source tree and the three conditions (policy, model root, unit)."""
     data = json.loads(Path(set_path).read_text())
     if data.get('format') != FORMAT:
         raise Invalid(f'the set must declare format {FORMAT}')
     coverage = check_set(data['cases'])
     report = selector_report(data['cases'])
     if report['not_adjudicated']:
-        raise Invalid('selector disagreements need the checker\'s adjudication first: '
+        raise Invalid("selector disagreements need the named checker's adjudication first: "
                       + ', '.join(report['not_adjudicated']))
     protocol = json.loads(Path(protocol_path).read_text())
-    conditions = protocol.get('conditions') or []
-    if len(conditions) < 2 or not all({'name', 'interface', 'policy', 'model_root'} <= set(c) for c in conditions):
-        raise Invalid('the protocol names two or more conditions, each with name, interface, policy and model_root')
+    conditions = conditions_of(protocol)
     if not isinstance(protocol.get('seed'), int):
-        raise Invalid('the protocol fixes the audit seed')
-    commit, files = tree_state(IMPLEMENTATION)
+        raise Invalid('the protocol fixes the grading seed')
+    commit, files = source_tree()
     manifest = {'format': FORMAT + '#manifest', 'set_sha256': sha256(set_path), 'protocol_sha256': sha256(protocol_path),
                 'coverage': coverage, 'selector': {k: v for k, v in report.items() if k != 'disagreements'},
-                'commit': commit, 'implementation': files,
-                'conditions': [{**c, 'policy_sha256': sha256(ROOT / c['policy'])} for c in conditions],
-                'seed': protocol['seed']}
+                'excluded_cases': report['unresolved'], 'commit': commit, 'source_tree': tree_digest(files),
+                'source_files': files, 'conditions': conditions, 'seed': protocol['seed']}
     Path(out_path).write_text(json.dumps(manifest, indent=1, sort_keys=True) + '\n')
     return manifest
 
 
 def verify(manifest, set_path, protocol_path):
-    """Before a run: the set, protocol, implementation and policies are exactly the frozen ones."""
+    """Before a run: the set, the protocol, the commit, every source file and each policy are the frozen ones."""
     problems = []
     if sha256(set_path) != manifest['set_sha256']:
         problems.append('the set changed')
     if sha256(protocol_path) != manifest['protocol_sha256']:
         problems.append('the protocol changed')
-    for path, digest in manifest['implementation'].items():
-        if sha256(ROOT / path) != digest:
-            problems.append(f'{path} changed')
+    try:
+        commit, files = source_tree()
+    except Invalid as error:
+        problems.append(str(error))
+    else:
+        if commit != manifest['commit']:
+            problems.append(f'the checkout is at {commit[:12]}, not the frozen {manifest["commit"][:12]}')
+        changed = sorted(p for p in set(files) | set(manifest['source_files'])
+                         if files.get(p) != manifest['source_files'].get(p))
+        if changed:
+            problems.append('source files differ: ' + ', '.join(changed[:5]) + (' …' if len(changed) > 5 else ''))
     for condition in manifest['conditions']:
         if sha256(ROOT / condition['policy']) != condition['policy_sha256']:
             problems.append(f'{condition["name"]}: its policy changed')
     if problems:
         raise Invalid('not the frozen evaluation: ' + '; '.join(problems))
     return True
+
+
+def check_run(manifest, name, loaded):
+    """A run binds to its condition: what the runner actually loaded must be what the manifest froze.
+
+    ``loaded`` is computed by the runner from the loaded model and policy: {'model_root', 'unit_sha256',
+    'interface', 'policy_sha256'}. Returns the condition; raises on any difference."""
+    condition = next((c for c in manifest['conditions'] if c['name'] == name), None)
+    if condition is None:
+        raise Invalid(f'no frozen condition named {name}')
+    wrong = [k for k in ('model_root', 'unit_sha256', 'interface', 'policy_sha256') if loaded.get(k) != condition[k]]
+    if wrong:
+        raise Invalid(f'{name}: the run loaded a different ' + ', '.join(wrong) + ' than the frozen condition')
+    return condition

@@ -37,6 +37,8 @@ def verdict(case, text, **kwargs):
     'The rent is 1,200 a month. (doc-0000000b, doc-0000000c)',  # an extra citation
     'The rent is 1,260 a month. (doc-0000000c)',           # the draft
     'Bananas.',
+    'The rent is -1,200 a month. (doc-0000000b)',          # the gold's digits with the opposite sign
+    'The rent is \u22121,200 a month. (doc-0000000b)',
 ])
 def test_wrong_or_unsupported_answers_fail(text):
     assert verdict(CASE, text)['verdict'] == 'fail'
@@ -102,12 +104,14 @@ def test_the_selection_code_reports_disagreements_but_never_overrules_the_gold(m
     monkeypatch.setattr(document_revisions, 'current', lambda group: ('incomplete', None, {}))
     protected.check_case(CASE)
     report = protected.selector_report([CASE])
-    assert report['not_adjudicated'] == ['p-001'] and report['confirmed_code_errors'] == 0
+    assert report['not_adjudicated'] == ['p-001'] and report['confirmed_code_errors'] == []
     adjudicated = {**copy.deepcopy(CASE), 'adjudication': {'by': 'B', 'decision': 'gold_correct', 'note': 'rev 2'}}
     report = protected.selector_report([adjudicated])
-    assert report['confirmed_code_errors'] == 1 and report['not_adjudicated'] == []
-    self_judged = {**copy.deepcopy(CASE), 'adjudication': {'by': 'A', 'decision': 'gold_correct'}}
-    assert protected.selector_report([self_judged])['not_adjudicated'] == ['p-001']  # not by the writer
+    assert report['not_adjudicated'] == []
+    assert report['confirmed_code_errors'] == ['p-001']
+    for by in ('A', 'C'):  # the writer, or anyone but the named checker
+        other = {**copy.deepcopy(CASE), 'adjudication': {'by': by, 'decision': 'gold_correct'}}
+        assert protected.selector_report([other])['not_adjudicated'] == ['p-001']
 
 
 @pytest.mark.parametrize('change, message', [
@@ -208,47 +212,167 @@ def test_too_few_workspaces_per_category_is_refused():
         protected.check_set(cases)
 
 
-def test_freeze_pins_every_implementation_file_and_condition_and_verify_catches_changes(tmp_path, monkeypatch):
-    path, protocol, out = tmp_path / 'set.json', tmp_path / 'protocol.json', tmp_path / 'manifest.json'
-    path.write_text(json.dumps({'format': protected.FORMAT, 'cases': full_set()}))
-    policy = tmp_path / 'policy.json'
-    policy.write_text('{}')
-    monkeypatch.setattr(protected, 'ROOT', tmp_path)
-    monkeypatch.setattr(protected, 'tree_state', lambda paths: ('abc', {p: 'digest' for p in paths}))
-    protocol.write_text(json.dumps({'seed': 7, 'conditions': [
-        {'name': 'served', 'interface': 'workspace-documents/2', 'policy': 'policy.json', 'model_root': 'r1'},
-        {'name': 'trained', 'interface': 'workspace-documents/4', 'policy': 'policy.json', 'model_root': 'r2'}]}))
-    manifest = protected.freeze(path, protocol, out)
-    assert set(manifest['implementation']) == set(protected.IMPLEMENTATION)
-    assert 'src/neuroshard/evolution/document_revisions.py' in manifest['implementation']
-    assert [c['interface'] for c in manifest['conditions']] == ['workspace-documents/2', 'workspace-documents/4']
-    assert 'Lime Street' not in out.read_text() and 'Rent is' not in out.read_text()
-    for name, digest in manifest['implementation'].items():
+R = {k: f'{k:x}' * 64 for k in range(1, 6)}  # distinct 64-hex roots
+
+
+def protocol(tmp_path, **changes):
+    (tmp_path / 'v2.json').write_text(json.dumps({'interface': 'workspace-documents/2'}))
+    (tmp_path / 'v4.json').write_text(json.dumps({'interface': 'workspace-documents/4'}))
+    conditions = [
+        {'name': 'served', 'role': 'served', 'interface': 'workspace-documents/2', 'policy': 'v2.json',
+         'model_root': R[1], 'unit_sha256': R[2]},
+        {'name': 'served-v4', 'role': 'served-v4', 'interface': 'workspace-documents/4', 'policy': 'v4.json',
+         'model_root': R[1], 'unit_sha256': R[2]},
+        {'name': 'candidate', 'role': 'candidate-v4', 'interface': 'workspace-documents/4', 'policy': 'v4.json',
+         'model_root': R[3], 'unit_sha256': R[4]}]
+    for index, change in changes.items():
+        conditions[int(index[1:])].update(change)
+    path = tmp_path / 'protocol.json'
+    path.write_text(json.dumps({'seed': 7, 'conditions': conditions}))
+    return path
+
+
+@pytest.fixture
+def tree(tmp_path, monkeypatch):
+    """A temporary source tree standing in for the repository: every 'tracked' file, including the tool validator."""
+    for name in ('src/neuroshard/evolution/protected_documents.py', 'src/neuroshard/evolution/document_revisions.py',
+                 'src/neuroshard/evolution/assistant_workspace.py', 'src/neuroshard/assistant/interfaces.py'):
         (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
-        (tmp_path / name).write_text('x')
-    manifest['implementation'] = {name: protected.sha256(tmp_path / name) for name in manifest['implementation']}
-    assert protected.verify(manifest, path, protocol)
-    (tmp_path / 'src/neuroshard/evolution/document_revisions.py').write_text('changed')
-    with pytest.raises(protected.Invalid, match='document_revisions.py changed'):
-        protected.verify(manifest, path, protocol)
+        (tmp_path / name).write_text(name)
+    monkeypatch.setattr(protected, 'ROOT', tmp_path)
+    state = {'commit': 'c' * 40}
+
+    def source_tree():
+        names = sorted(str(p.relative_to(tmp_path)) for p in (tmp_path / 'src').rglob('*.py'))
+        return state['commit'], {n: protected.sha256(tmp_path / n) for n in names}
+
+    monkeypatch.setattr(protected, 'source_tree', source_tree)
+    return state
 
 
-def test_freeze_refuses_unadjudicated_selector_disagreements(tmp_path, monkeypatch):
+def frozen(tmp_path, cases=None, **changes):
+    path = tmp_path / 'set.json'
+    path.write_text(json.dumps({'format': protected.FORMAT, 'cases': cases or full_set()}))
+    proto = protocol(tmp_path, **changes)
+    return protected.freeze(path, proto, tmp_path / 'manifest.json'), path, proto
+
+
+def test_freeze_pins_the_whole_source_tree_and_verify_catches_any_change(tmp_path, tree):
+    manifest, path, proto = frozen(tmp_path)
+    assert 'src/neuroshard/evolution/assistant_workspace.py' in manifest['source_files']
+    assert [c['role'] for c in manifest['conditions']] == list(protected.ROLES)
+    assert 'Lime Street' not in (tmp_path / 'manifest.json').read_text()
+    assert protected.verify(manifest, path, proto)
+    (tmp_path / 'src/neuroshard/evolution/assistant_workspace.py').write_text('changed validator')
+    with pytest.raises(protected.Invalid, match='assistant_workspace.py'):
+        protected.verify(manifest, path, proto)
+
+
+def test_verify_checks_the_commit_and_new_files(tmp_path, tree):
+    manifest, path, proto = frozen(tmp_path)
+    tree['commit'] = 'd' * 40
+    with pytest.raises(protected.Invalid, match='not the frozen'):
+        protected.verify(manifest, path, proto)
+    tree['commit'] = 'c' * 40
+    (tmp_path / 'src/neuroshard/evolution/new_helper.py').write_text('x')
+    with pytest.raises(protected.Invalid, match='new_helper.py'):
+        protected.verify(manifest, path, proto)
+
+
+@pytest.mark.parametrize('changes, message', [
+    ({'c2': {'policy': 'v2.json'}}, 'declares workspace-documents/2, not workspace-documents/4'),  # /4 label, /2 policy
+    ({'c2': {'model_root': 'r2'}}, '64-hex'),                                                     # placeholder roots
+    ({'c2': {'role': 'served-v4'}}, 'exactly three conditions'),
+    ({'c1': {'unit_sha256': R[5]}}, 'served and served-v4 are the same model'),
+    ({'c2': {'unit_sha256': R[2], 'model_root': R[1]}}, 'different, trained unit'),
+    ({'c0': {'interface': 'workspace-documents/4', 'policy': 'v4.json'}}, 'current, pre-/4 policy'),
+])
+def test_freeze_accepts_only_the_approved_three_way_comparison(tmp_path, tree, changes, message):
+    with pytest.raises(protected.Invalid, match=message):
+        frozen(tmp_path, **changes)
+
+
+def test_freeze_refuses_a_two_condition_protocol(tmp_path, tree):
     path = tmp_path / 'set.json'
     path.write_text(json.dumps({'format': protected.FORMAT, 'cases': full_set()}))
+    proto = protocol(tmp_path)
+    data = json.loads(proto.read_text())
+    data['conditions'] = data['conditions'][::2]
+    proto.write_text(json.dumps(data))
+    with pytest.raises(protected.Invalid, match='exactly three conditions'):
+        protected.freeze(path, proto, tmp_path / 'manifest.json')
+
+
+def test_a_run_must_load_exactly_its_frozen_condition(tmp_path, tree):
+    manifest, _, _ = frozen(tmp_path)
+    candidate = manifest['conditions'][2]
+    loaded = {k: candidate[k] for k in ('model_root', 'unit_sha256', 'interface', 'policy_sha256')}
+    assert protected.check_run(manifest, 'candidate', loaded) == candidate
+    with pytest.raises(protected.Invalid, match='unit_sha256'):
+        protected.check_run(manifest, 'candidate', {**loaded, 'unit_sha256': R[2]})
+
+
+def test_freeze_refuses_unadjudicated_selector_disagreements(tmp_path, tree, monkeypatch):
     monkeypatch.setattr(document_revisions, 'current', lambda group: ('incomplete', None, {}))
     with pytest.raises(protected.Invalid, match='adjudication'):
-        protected.freeze(path, tmp_path / 'protocol.json', tmp_path / 'manifest.json')
+        frozen(tmp_path)
 
 
-def test_the_audit_sheet_hides_conditions_and_includes_every_contested_reply():
-    results = [{'condition': c, 'case': f'p-{i}', 'final_text': f'reply {c} {i}',
-                'machine': {'verdict': 'pass', 'contested': i == 3}} for c in ('a', 'b') for i in range(10)]
-    sheet, key = protected.audit_sample(results, seed=7)
-    assert all(set(item) == {'item', 'case', 'reply'} for item in sheet)
-    assert sum(k['contested'] for k in key.values()) == 2
-    assert len(sheet) == 2 + round(18 * protected.AUDIT_FRACTION)
-    assert protected.audit_sample(results, seed=7) == (sheet, key)
+def unresolved_set():
+    """The review's control: an old revision's amount recorded as the gold, adjudicated unresolved."""
+    cases = full_set()
+    first = cases[0]
+    first['expected'].update(source_ids=[first['documents'][0]['id']],
+                             facts=[first['documents'][0]['content'].split()[2]])
+    first['adjudication'] = {'by': 'B', 'decision': 'unresolved', 'note': 'Needs clarification'}
+    return cases, first['id']
+
+
+def test_unresolved_golds_are_excluded_from_grading_and_every_accuracy(tmp_path, tree):
+    cases, disputed = unresolved_set()
+    manifest, _, _ = frozen(tmp_path, cases)
+    assert manifest['excluded_cases'] == [disputed]
+    names = [c['name'] for c in manifest['conditions']]
+    results = [{'condition': n, 'case': c['id'], 'final_text': 'reply', 'machine': {'verdict': 'pass'}}
+               for n in names for c in cases]
+    sheet, key = protected.grading_sheet(results, seed=7, excluded=manifest['excluded_cases'])
+    assert disputed not in {row['case'] for row in sheet}
+    graded = protected.ingest_grades(sheet, key, [{'item': r['item'], 'grade': 'correct', 'grader': 'G'}
+                                                  for r in sheet])
+    report = protected.accuracy(graded, manifest)
+    assert report['cases'] == len(cases) - 1 and report['excluded_cases'] == [disputed]
+    assert all(c['n'] == len(cases) - 1 for c in report['conditions'].values())
+    with pytest.raises(protected.Invalid, match='excluded'):
+        protected.accuracy(graded + [{**graded[0], 'case': disputed}], manifest)
+
+
+def test_every_reply_is_graded_blind_and_incomplete_grading_is_refused():
+    results = [{'condition': c, 'case': f'p-{i}', 'final_text': f'reply {c} {i}', 'machine': {'verdict': 'pass'}}
+               for c in ('served', 'served-v4', 'candidate') for i in range(10)]
+    sheet, key = protected.grading_sheet(results, seed=7)
+    assert len(sheet) == 30 and all(set(row) == {'item', 'case', 'reply'} for row in sheet)
+    assert protected.grading_sheet(results, seed=7) == (sheet, key)
+    grades = [{'item': r['item'], 'grade': 'incorrect', 'grader': 'G'} for r in sheet]
+    with pytest.raises(protected.Invalid, match='1 replies are ungraded'):
+        protected.ingest_grades(sheet, key, grades[:-1])
+    with pytest.raises(protected.Invalid, match='graded twice'):
+        protected.ingest_grades(sheet, key, grades + grades[:1])
+    with pytest.raises(protected.Invalid, match='correct or incorrect'):
+        protected.ingest_grades(sheet, key, [{**grades[0], 'grade': 'maybe'}] + grades[1:])
+
+
+def test_human_grades_are_the_result_even_where_the_machine_passed_a_wrong_reply(tmp_path, tree):
+    """The review's control: 100 known-wrong replies the machine passes. Every one is graded, so none survives."""
+    manifest, _, _ = frozen(tmp_path)
+    cases = [f'p-{i}' for i in range(100)]
+    results = [{'condition': c['name'], 'case': k, 'final_text': 'The rent is 1,200 a month. That amount is wrong.',
+                'machine': {'verdict': 'pass'}} for c in manifest['conditions'] for k in cases]
+    sheet, key = protected.grading_sheet(results, seed=7)
+    graded = protected.ingest_grades(sheet, key, [{'item': r['item'], 'grade': 'incorrect', 'grader': 'G'}
+                                                  for r in sheet])
+    report = protected.accuracy(graded, {**manifest, 'excluded_cases': []})
+    assert all(c['human_correct'] == 0 and c['machine_pass'] == 100 and c['agreement'] == 0
+               for c in report['conditions'].values())
 
 
 def test_the_writers_guide_example_passes_the_checks():

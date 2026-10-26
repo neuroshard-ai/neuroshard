@@ -88,7 +88,10 @@ match the code.** The case's checker (not its writer) decides from the documents
 ```
 
 - **`gold_correct`:** the code is wrong. The case stays, and it counts as a confirmed selection-code error.
-- **`unresolved`:** the specification doesn't decide it. The case stays, is listed and is reported separately.
+- **`unresolved`:** the specification doesn't decide it. The case is listed by ID in the manifest
+  (`excluded_cases`), is never graded, and counts in no condition's accuracy, numerator or denominator.
+
+`by` must be the case's named `checked_by`; a decision by anyone else, including the writer, doesn't count.
 - **The gold itself was wrong:** the checker rewrites it from the documents and the specification, never from the
   code's output, and checks it again.
 
@@ -117,43 +120,66 @@ python -c "import sys; from neuroshard.evolution import protected_documents as p
 **What people attest:** realistic phrasing, semantic diversity, and the correctness of each gold. The report
 lists the two kinds of coverage separately.
 
-**The protocol file** names every condition to be compared, each with its interface, policy file and model root,
-plus the seed of the human audit. For example:
+**The protocol file** names exactly the design's three conditions, in this order, plus the seed of the grading
+sheet:
 
-```json
-{"seed": 20261026, "conditions": [
-  {"name": "served", "interface": "workspace-documents/2",
-   "policy": "config/experiments/assistant-general-policy-documents5.json", "model_root": "080c9a10…"},
-  {"name": "trained-v4", "interface": "workspace-documents/4", "policy": "…", "model_root": "…"}]}
-```
+| Role | Model | Policy |
+| --- | --- | --- |
+| `served` | The served model and documents unit | Its current, pre-`/4` policy (today `workspace-documents/2`) |
+| `served-v4` | The same model and unit | The `/4` policy |
+| `candidate-v4` | The trained candidate unit | The same `/4` policy |
+
+Each condition gives `name`, `role`, `interface`, `policy` (a file in the repository), `model_root` and
+`unit_sha256` (both 64-hex digests). `freeze` refuses:
+- a condition whose interface isn't the one its policy file declares;
+- placeholder roots;
+- a missing or extra role;
+- `served` and `served-v4` on different models;
+- a candidate that is the served unit;
+- `served-v4` and `candidate-v4` on different policies, so that training is the only difference.
 
 **What `freeze` records** (no case content):
 - the set's digest and the protocol's;
-- the git commit, and the digest of every file the score and the selection depend on: this kit, the documents
-  tools, `document_revisions.py`, `interfaces.py`, `public.py` and the episode loop;
-- each condition's policy digest.
+- the git commit, and the digest of **every tracked file under `src/`**, not a hand-picked list;
+- each condition's policy digest, model root and unit digest;
+- the excluded (unresolved) case IDs.
 
-It refuses uncommitted changes to any of those files. `verify` checks all of them again before each run. Commit
-only `MANIFEST.json` and the protocol.
+It refuses uncommitted changes under `src/`. Before each run, `verify` checks the set, the protocol, that the
+checkout is the frozen commit, and every source file and policy. `check_run` then checks that the runner loaded
+exactly its condition's model root, unit, interface and policy. Commit only `MANIFEST.json` and the protocol.
 
 ## How it's scored
 
-The score reads **the reply the user sees** under every condition. A structured answer, if the condition makes
-one, must agree with it: the same cited documents, and the same gold facts.
+**The reported result is human grading of every reply.** Every reply of all three conditions goes on one
+shuffled sheet (`grading_sheet`). The sheet shows only the case and the reply, never the condition or the machine
+verdict, and unresolved cases are left off it. A grader judges each reply `correct` or `incorrect` against the
+case's question, documents and gold, and is named on each grade. `ingest_grades` refuses an ungraded, unknown or
+twice-graded reply.
 
-| Kind | Passes when |
+`accuracy` reports, per condition:
+- the human-graded accuracy with its 95% Wilson interval;
+- the machine score;
+- their agreement;
+- paired sign tests against `served`.
+
+All three conditions are graded on the same cases.
+
+**The machine score is a separate, reported measure**, never a replacement for grading. It reads the reply the
+user sees under every condition. A structured answer, if the condition makes one, must agree with it: the same
+cited documents and the same gold facts.
+
+| Kind | The machine passes it when |
 | --- | --- |
 | `answer` | Every gold fact is stated as a whole value and not negated just before it, the cited IDs are exactly the gold sources, and nothing in `must_not_state` is stated |
 | `not_found` | The reply says the documents don't contain it, submits no answer, and states nothing in `must_not_state` |
 | `decline` | The reply names every `must_cite` document, says why none can be chosen, and states nothing in `must_not_state` |
 
-**How values and citations are compared.** Values are compared by type: numbers as numbers (12,000 isn't 1,200),
-dates as dates (14 May 2027 is 2027-05-14), and words at word boundaries. Citations must be complete IDs of
-documents in the case.
+**How values and citations are compared.** Values are compared by type: numbers as numbers with their sign
+(12,000 and −1,200 aren't 1,200), dates as dates (14 May 2027 is 2027-05-14), and words at word boundaries.
+Citations must be complete IDs of documents in the case.
 
-**Human audit.** A mechanical rule can't tell whether a sentence really asserts a fact. So a pass that mentions a
-value from another version, or negates the gold somewhere, is marked contested. Every contested reply, plus a fixed
-20% random sample of all the others, is judged by a person who can't see which condition produced it
-(`audit_sample`). The reported result is the machine score corrected by those judgments, with their agreement rate.
-Protocol correctness (the route's own scorer, which under `/3` and `/4` also requires quoted evidence) is reported
-separately.
+**Its limits are known.** A reply can state the gold and then contradict it in words, for example "1,200, but
+that amount is incorrect". No phrase list catches every such case, which is why every reply is graded. A pass that
+negates the gold somewhere, or mentions a value from another version, is marked `contested`, so graders and
+readers can see where the two scores are likely to differ. Protocol correctness (the route's own scorer, which
+under `/4` also requires quoted evidence) is reported separately.
