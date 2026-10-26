@@ -54,7 +54,7 @@ def main(argv=None):
     parser.add_argument('--part', default='0/1', help='I/N: score every Nth case starting at I (split across machines)')
     args = parser.parse_args(argv)
 
-    from transformers import AutoTokenizer
+    from neuroshard.evolution import granite_tokenizer
 
     from neuroshard.evolution import assistant_experience_train as trainer
     from neuroshard.evolution import growth_runtime
@@ -65,7 +65,7 @@ def main(argv=None):
     cases = json.loads(args.set.read_text())['cases'][:args.limit][index::parts]
     policy = json.loads(args.policy.read_text())
     make = model_factory({'base': 'granite-parent'})
-    tokenizer = AutoTokenizer.from_pretrained(ROOT / '.models' / 'baseline', local_files_only=True)
+    tokenizer, _ = granite_tokenizer.load(ROOT / '.models' / 'baseline')  # the served splitting
     spec = growth_runtime.growth_spec()
     report = json.loads(args.out.read_text()) if args.out.exists() else {'models': {}}
     models = ([('parent', None)] if args.parent else []) + [tuple(u.split('=', 1)) for u in args.unit]
