@@ -82,6 +82,26 @@ fixed prefix, which contains no user text, as soon as the job opens, while you t
 unchanged. Those 716 positions are paid even if you `/quit` before asking anything: about 0.044 of
 the default 1 NEURO escrow, and the rest is refunded.
 
+**Memory.** The assistant can remember notes you choose, between conversations. It's off
+until you turn it on (`neuroshard assistant memory on`, or `/memory on` in a chat).
+- **Saving:** `/remember preference: Draft emails formally` shows the note and saves it
+  only if you say yes. Nothing is ever saved from your documents or the assistant's
+  replies. A note that looks like a password, key or card number needs a typed `yes`.
+- **Where notes live:** encrypted on this machine (`<home>/memory/`), never on the
+  ledger.
+- **How they're used:** on a documents or chat turn, up to three notes relevant to your
+  message (160 tokens at most) go in front of it, each at most once per conversation.
+  The chat prints which notes it used and how many tokens.
+- **Routing:** the module and route are chosen from your message alone. Drafting and
+  scheduling get no notes.
+- **Managing them:** `/memory` lists them, `/forget ID` deletes one, and `/forget all`
+  deletes every note and the key. `/nomem TEXT` sends one message without notes, and
+  `--no-memory` a whole conversation.
+
+**Notes used in a turn are visible to that turn's operators.** The owners compute on
+them like the rest of your message, and the activations they keep in their logs can be
+turned back into text. Auditors checking the turn can read them too.
+
 **Host a shard.** `neuroshard assistant host --shard 2 --endpoint HOST:28700`
 fetches only that shard's tensors, bonds 5 test NEURO and serves jobs. `HOST`
 must be your public address, and inbound TCP 28700 must be open. An owner needs
