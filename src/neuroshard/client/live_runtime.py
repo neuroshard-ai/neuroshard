@@ -69,3 +69,32 @@ def check():
         raise ValueError(f'this machine differs from the live runtime {runtime["name"]}: ' + '; '.join(problems)
                          + f'. Install it with: pip install -r {REQUIREMENTS} (scripts/join.sh does)')
     return {'runtime': runtime['name'], 'python': platform.python_version()}
+
+
+def client_compatibility(cpuinfo=None, machine=None, system=None):
+    """How this machine's client compares with the evaluated one; it never refuses.
+
+    Replies were evaluated with stage 0 on the live runtime's CPU class: Linux x86_64 with AMX (eight threads).
+    A client elsewhere computes slightly different numbers. On the CPUs measured (Intel without AMX, AMD Zen 4,
+    AVX2-only AMD), the facts and cited documents matched, but replies were worded differently, and that was one
+    question, not a validated workload. Such a client is ``experimental``: allowed for the pilot, with a warning
+    before anything is paid. Returns {'class': 'evaluated' | 'experimental', 'reasons': [...]}."""
+    runtime = pinned()
+    reasons = []
+    if (system or platform.system()) != 'Linux' or (machine or platform.machine()) != 'x86_64':
+        reasons.append(f'{system or platform.system()} {machine or platform.machine()}, not Linux x86_64')
+    if cpuinfo is None:
+        cpuinfo = Path('/proc/cpuinfo').read_text() if Path('/proc/cpuinfo').exists() else ''
+    flags = set(cpuinfo.split())
+    missing = [flag for flag in runtime['required_cpu_flags'] if flag not in flags]
+    if missing:
+        reasons.append('CPU without ' + ', '.join(missing))
+    return {'class': 'experimental' if reasons else 'evaluated', 'reasons': reasons}
+
+
+def client_warning(compatibility):
+    """The pre-payment warning for an experimental client, or None."""
+    if compatibility['class'] == 'evaluated':
+        return None
+    return ('Experimental client: ' + '; '.join(compatibility['reasons']) + '. Replies were evaluated on Intel '
+            'CPUs with AMX; here they can be worded differently, and their quality and speed are not validated.')

@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
 import signal
+import sys
 import threading
 
 
@@ -38,6 +39,9 @@ def register(subcommands, root):
     chat.add_argument('--budget', type=int, default=16384, help='Token positions to buy for this conversation')
     chat.add_argument('--price', default='1', help='NEURO escrowed for the budget; the unused part is refunded')
     chat.add_argument('--threads', type=int)
+    chat.add_argument('--experimental-cpu', action='store_true',
+                      help='Continue without asking on a CPU the replies were not evaluated on (anything but Linux '
+                           'x86_64 with AMX)')
     chat.add_argument('--wait', type=int, default=600,
                       help='Seconds to wait for a busy network before funding anything (default 600)')
     chat.add_argument('--legacy-admission', action='store_true',
@@ -178,6 +182,27 @@ def prepare_parent():
     return directory
 
 
+def experimental_client_agrees(args):
+    """On a CPU the replies were not evaluated on, say so and ask; True to continue. Evaluated clients: True.
+
+    ``chat`` asks this before it reads the chain or follows a grown version, so declining downloads no model or
+    growth state and pays nothing. Scripts (no terminal) continue only with ``--experimental-cpu``."""
+    from neuroshard.client import live_runtime
+
+    warning = live_runtime.client_warning(live_runtime.client_compatibility())
+    if not warning:
+        return True
+    print(warning)
+    if getattr(args, 'experimental_cpu', False):
+        return True
+    if not sys.stdin.isatty():
+        raise ValueError('this CPU is experimental for the client; pass --experimental-cpu to continue')
+    if input('Continue and pay for this conversation? [y/N] ').strip().lower() in ('y', 'yes'):
+        return True
+    print('Stopped. Nothing was downloaded or paid.')
+    return False
+
+
 def run(args):
     if args.assistant_action in ('host', 'audit', 'seed', 'validator', 'chat', 'grow'):
         from neuroshard.client import live_runtime
@@ -242,6 +267,8 @@ def run(args):
         finally:
             optimistic_network.stop(config)
         return
+    if args.assistant_action == 'chat' and not experimental_client_agrees(args):
+        return  # asked before the chain is read, a grown version rebuilt, or anything downloaded or paid
     chain = network.chain(descriptor, args.home)
     descriptor = following(descriptor, chain, args.home, network)
     if args.assistant_action == 'audit':
