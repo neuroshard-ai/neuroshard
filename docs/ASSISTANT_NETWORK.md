@@ -89,11 +89,14 @@ until you turn it on (`neuroshard assistant memory on`, or `/memory on` in a cha
   replies. A note that looks like a password, key or card number needs a typed `yes`.
 - **Where notes live:** encrypted on this machine (`<home>/memory/`), never on the
   ledger.
-- **How they're used:** on a documents or chat turn, up to three notes relevant to your
-  message (160 tokens at most) go in front of it, each at most once per conversation.
-  The chat prints which notes it used and how many tokens.
-- **Routing:** the module and route are chosen from your message alone. Drafting and
-  scheduling get no notes.
+- **How they're used:** on a chat turn, up to three notes relevant to your message (160
+  tokens at most) go in front of that message only. They're not kept in the conversation's
+  history, so later turns, other routes, `/nomem` messages and turns after `/memory off`
+  never receive them. A reply the assistant gave using a note stays in the conversation,
+  like any reply. Notes that would push a request over the input limit are left out, and
+  the chat says so. Otherwise it prints which notes it used and how many tokens.
+- **Routing:** the module and route are chosen from your message alone. Documents,
+  drafting and scheduling get no notes in this first version.
 - **Managing them:** `/memory` lists them, `/forget ID` deletes one, and `/forget all`
   deletes every note and the key. `/nomem TEXT` sends one message without notes, and
   `--no-memory` a whole conversation.

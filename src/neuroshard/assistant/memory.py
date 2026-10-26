@@ -6,22 +6,27 @@ Nothing is saved from documents, tool results or the assistant's replies. Memory
 **Where it lives.** ``<home>/memory/store.bin``, encrypted with AES-256-GCM under ``<home>/memory/memory.key``
 (created with mode 0600). It is never written to the chain, the request root, or a training export.
 
-**What the network sees.** On a documents or chat turn, the few saved items relevant to the message (``select``:
-BM25 over the message, at most ``MAX_ITEMS`` items and ``MAX_TOKENS`` tokens, each item at most once per
-conversation) are put in front of it as a labelled block. Like the rest of a prompt, that block is computed on by the turn's owners, and
+**What the network sees.** On a chat turn, the few saved items relevant to the message (``select``: BM25 over
+the message, at most ``MAX_ITEMS`` items and ``MAX_TOKENS`` tokens) are put in front of it as a labelled block,
+in that turn's requests only. A block that would push a request over the route's input limit is dropped for that
+request, so memory never turns a conversation that fits into one that doesn't. Like the rest of a prompt, that block is computed on by the turn's owners, and
 the activations they receive and keep in their logs can practically be turned back into text. So **items used in
 a turn should be treated as readable by that turn's owners, by auditors during its challenge window, and by anyone
 who later obtains those logs.** The client prints which items it used, and how many tokens, on every such turn.
 
 Routing never sees memory: the gate and the router read the user's message alone, so the chosen route and module
-are exactly those without memory. Drafting and scheduling, whose policies drive strict workflows, receive no
-memory in this milestone.
+are exactly those without memory. Only chat receives memory in this milestone. Documents stays off until a larger
+regression check passes (one development answer changed with a note), and drafting and scheduling drive strict
+workflows. A reply the assistant gave using a note stays in the conversation, like any reply.
 """
+import contextlib
+import fcntl
 import json
 import math
 import os
 import re
 import secrets
+import tempfile
 import time
 from pathlib import Path
 
@@ -31,7 +36,7 @@ MAX_STORE_BYTES = 64 * 1024
 MAX_ITEMS = 3
 MAX_TOKENS = 160
 KINDS = ('fact', 'preference', 'context')
-ROUTES = ('documents', 'chat')  # routes that receive memory in this milestone
+ROUTES = ('chat',)  # milestone 1: chat only; documents stays off until its regression check passes
 HEADER = '[Saved notes the user chose to share for this conversation; use them only if relevant]'
 FOOTER = '[End of notes]'
 DISCLOSURE = ('Items used in a turn are visible to the network operators serving that turn, and to auditors '
@@ -104,7 +109,17 @@ class Store:
         self.directory.mkdir(parents=True, exist_ok=True)
         self.settings_path.write_text(json.dumps({'enabled': bool(on)}) + '\n')
 
-    # Storage -------------------------------------------------------------------------------------------------
+    # Storage: every read-modify-write, and wipe, holds an exclusive lock across processes ---------------------
+    @contextlib.contextmanager
+    def locked(self):
+        self.directory.mkdir(parents=True, exist_ok=True)
+        with open(self.directory / '.lock', 'a') as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
+
     def _key(self, create):
         if not self.key_path.exists():
             if not create:
@@ -115,7 +130,7 @@ class Store:
                 handle.write(secrets.token_bytes(32))
         return self.key_path.read_bytes()
 
-    def items(self):
+    def _read(self):
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
         key = self._key(create=False)
@@ -124,18 +139,29 @@ class Store:
         blob = self.path.read_bytes()
         return json.loads(AESGCM(key).decrypt(blob[:12], blob[12:], b'neuroshard-memory/1'))['items']
 
-    def _save(self, items):
+    def items(self):
+        with self.locked():
+            return self._read()
+
+    def _write(self, items, create_key):
+        """Write ``items`` under the lock. Only adding may create the key: no other change can resurrect a wiped
+        store."""
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+        key = self._key(create=create_key)
+        if key is None:
+            return False
         body = json.dumps({'items': items}, ensure_ascii=False, sort_keys=True).encode()
         if len(body) > MAX_STORE_BYTES:
             raise Invalid(f'memory is full ({MAX_STORE_BYTES // 1024} KB); forget some items first')
         nonce = secrets.token_bytes(12)
-        blob = nonce + AESGCM(self._key(create=True)).encrypt(nonce, body, b'neuroshard-memory/1')
-        partial = self.path.with_suffix('.partial')
-        partial.write_bytes(blob)
+        blob = nonce + AESGCM(key).encrypt(nonce, body, b'neuroshard-memory/1')
+        fd, partial = tempfile.mkstemp(dir=self.directory, prefix='.store-', suffix='.partial')
+        with os.fdopen(fd, 'wb') as handle:
+            handle.write(blob)
         os.chmod(partial, 0o600)
-        partial.replace(self.path)
+        os.replace(partial, self.path)
+        return True
 
     def add(self, text, kind='fact'):
         text = clean(text)
@@ -145,33 +171,40 @@ class Store:
             raise Invalid(f'kind is one of {", ".join(KINDS)}')
         if len(text.encode()) > MAX_ITEM_BYTES:
             raise Invalid(f'an item holds at most {MAX_ITEM_BYTES} bytes')
-        items = self.items()
-        if len(items) >= MAX_STORED:
-            raise Invalid(f'memory holds at most {MAX_STORED} items; forget some first')
-        number = max((int(i['id'][1:]) for i in items), default=0) + 1
-        item = {'id': f'm{number}', 'text': text, 'kind': kind, 'created': time.strftime('%Y-%m-%d'),
-                'last_used': None}
-        self._save(items + [item])
+        with self.locked():
+            items = self._read()
+            if len(items) >= MAX_STORED:
+                raise Invalid(f'memory holds at most {MAX_STORED} items; forget some first')
+            number = max((int(i['id'][1:]) for i in items), default=0) + 1
+            item = {'id': f'm{number}', 'text': text, 'kind': kind, 'created': time.strftime('%Y-%m-%d'),
+                    'last_used': None}
+            self._write(items + [item], create_key=True)
         return item
 
     def remove(self, item_id):
-        items = self.items()
-        kept = [i for i in items if i['id'] != item_id]
-        if len(kept) == len(items):
-            raise Invalid(f'no item {item_id}')
-        self._save(kept)
+        with self.locked():
+            items = self._read()
+            kept = [i for i in items if i['id'] != item_id]
+            if len(kept) == len(items):
+                raise Invalid(f'no item {item_id}')
+            self._write(kept, create_key=False)
 
     def used(self, ids):
+        """Record that ``ids`` were sent. Updates only items that still exist; never recreates a store or key."""
         if not ids:
             return
         today = time.strftime('%Y-%m-%d')
-        self._save([{**i, 'last_used': today} if i['id'] in ids else i for i in self.items()])
+        with self.locked():
+            items = self._read()
+            if items:
+                self._write([{**i, 'last_used': today} if i['id'] in ids else i for i in items], create_key=False)
 
     def wipe(self):
         """Delete the items and the key: nothing can be decrypted afterwards."""
-        for path in (self.path, self.key_path):
-            if path.exists():
-                path.unlink()
+        with self.locked():
+            for path in (self.path, self.key_path):
+                if path.exists():
+                    path.unlink()
 
 
 def words(text):
@@ -217,21 +250,21 @@ def render(items):
 
 
 class Recall:
-    """What a conversation uses: the store, the served tokenizer, and the items already sent in it."""
+    """What one conversation uses: the store and the served tokenizer.
+
+    Notes go in **one turn's** requests only (``Session.turn(context=...)``); the conversation's history keeps the
+    user's message alone, so no later turn, route, ``/nomem`` message or memory-off turn receives them. Only notes
+    that reached an executed request are recorded as used and disclosed."""
 
     def __init__(self, store, count_tokens):
-        self.store, self.count_tokens, self.sent = store, count_tokens, set()
+        self.store, self.count_tokens = store, count_tokens
 
     def block(self, route, text, skip=False):
-        """(block, items) for this turn: the relevant items not yet sent in this conversation, on documents or chat.
-
-        An item sent once stays in the conversation's history, so it is never sent again in the same conversation."""
+        """(block, items) proposed for this turn: relevant notes, on chat turns, when memory is on."""
         if skip or route not in ROUTES or not self.store.enabled:
             return '', []
-        fresh = [i for i in self.store.items() if i['id'] not in self.sent and not secret_check(i['text'])]
-        chosen = select(fresh, text, self.count_tokens)
-        if not chosen:
-            return '', []
-        self.sent |= {i['id'] for i in chosen}
-        self.store.used({i['id'] for i in chosen})
-        return render(chosen), chosen
+        chosen = select([i for i in self.store.items() if not secret_check(i['text'])], text, self.count_tokens)
+        return (render(chosen), chosen) if chosen else ('', [])
+
+    def sent(self, items):
+        self.store.used({i['id'] for i in items})

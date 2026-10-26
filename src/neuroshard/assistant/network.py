@@ -1278,9 +1278,19 @@ class Conversation:
                 self.responses[route] = serving.responder(self.driver, self.tokenizer, self.served.policies[route],
                                                          self.served.eos_ids, guesses=GUESSES)
             block, items = recall.block(route, text, skip_memory) if recall is not None else ('', [])
-            result = self.session.turn(block + text, self.responses[route], route=route)
-            return {**result, 'memory': {'items': [i['id'] for i in items],
-                                         'tokens': recall.count_tokens(block) if block else 0}}
+            limit = self.served.policies[route]['generation']['max_input_tokens']
+
+            def fits(messages, tools):
+                prompt = self.tokenizer.apply_chat_template(messages, tools=tools, add_generation_prompt=True,
+                                                            tokenize=False)
+                return len(self.tokenizer(prompt, add_special_tokens=False)['input_ids']) <= limit
+
+            result = self.session.turn(text, self.responses[route], route=route, context=block,
+                                       fits=fits if block else None)
+            if not result.get('context_sent'):
+                return {**result, 'memory': {'items': [], 'tokens': 0, 'dropped': [i['id'] for i in items]}}
+            recall.sent(items)  # only notes that reached the owners are recorded and disclosed
+            return {**result, 'memory': {'items': [i['id'] for i in items], 'tokens': recall.count_tokens(block)}}
         return {**self.session.turn(text, self.respond), 'memory': {'items': [], 'tokens': 0}}
 
     PRIMER_GRACE = 120  # seconds close() waits for a running primer before abandoning the owners' STOP

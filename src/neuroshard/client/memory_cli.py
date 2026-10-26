@@ -8,7 +8,8 @@ HELP = ('/remember [fact|preference|context:] TEXT   save a note (you confirm it
         '/memory                                   list your notes and whether memory is on\n'
         '/forget ID | /forget all                  delete a note, or every note and the key\n'
         '/memory on | /memory off                  turn memory on or off\n'
-        '/nomem TEXT                               send this message without any notes')
+        '/nomem TEXT                               send this message without any notes\n'
+        'Notes go only into the chat message they are chosen for; replies that used them stay in the conversation.')
 
 
 def listing(store):
@@ -85,7 +86,9 @@ def command(store, line, ask, count_tokens=None):
 
 
 def disclosure(used):
-    """The line printed under a turn that sent notes."""
-    if not used or not used['items']:
-        return None
-    return f"  used memory: {', '.join(used['items'])} ({used['tokens']} tokens sent to this turn's operators)"
+    """The line printed under a turn that sent notes, or that had to leave relevant notes out."""
+    if used and used.get('items'):
+        return f"  used memory: {', '.join(used['items'])} ({used['tokens']} tokens sent to this turn's operators)"
+    if used and used.get('dropped'):
+        return f"  memory not used: {', '.join(used['dropped'])} would not fit this conversation's input limit"
+    return None

@@ -123,17 +123,17 @@ def test_secrets_saved_anyway_are_never_sent(tmp_path):
     assert memory.Recall(s, tokens).block('chat', 'what is my bank password') == ('', [])
 
 
-def test_each_note_is_sent_once_per_conversation_and_only_on_documents_or_chat(tmp_path):
+def test_notes_are_proposed_on_chat_turns_only_and_recorded_only_when_sent(tmp_path):
     s = store(tmp_path, *NOTES)
     recall = memory.Recall(s, tokens)
-    assert recall.block('drafting', 'email my manager') == ('', [])
-    assert recall.block('scheduling', 'meet my manager') == ('', [])
+    for route in ('documents', 'drafting', 'scheduling'):
+        assert recall.block(route, 'email my manager') == ('', [])
     block, items = recall.block('chat', 'email my manager')
     assert [i['id'] for i in items] == ['m1'] and block.startswith(memory.HEADER)
-    assert recall.block('chat', 'email my manager again') == ('', [])  # already in this conversation
-    assert recall.block('chat', 'remind me of my manager', skip=True) == ('', [])
-    assert memory.Recall(s, tokens).block('documents', 'my manager')[1][0]['id'] == 'm1'  # a new conversation
+    assert s.items()[0]['last_used'] is None  # proposed, not yet sent
+    recall.sent(items)
     assert s.items()[0]['last_used'] is not None
+    assert recall.block('chat', 'remind me of my manager', skip=True) == ('', [])
 
 
 # The conversation: routing never sees memory -----------------------------------------------------------------
@@ -165,10 +165,12 @@ def conversation(monkeypatch):
     talk.priming, talk.arm, talk.world, talk.opening = None, None, {}, None
     talk.driver, talk.tokenizer, talk.gate, talk.responses = Driver(), None, None, {}
     talk.router, talk.general_router = 'router', None
-    talk.served = type('Served', (), {'policy': {}, 'policies': {'drafting': {}, 'chat': {}}, 'eos_ids': set()})()
+    talk.served = type('Served', (), {'policy': {}, 'policies': {'drafting': {}, 'chat': {'generation': {
+        'max_input_tokens': 6144}}}, 'eos_ids': set()})()
     sent = []
     talk.session = type('Session', (), {'turn': staticmethod(
-        lambda text, respond, route=None: sent.append(text) or {'final_text': 'ok', 'route': route})})()
+        lambda text, respond, route=None, context='', fits=None: sent.append(context + text) or
+        {'final_text': 'ok', 'route': route, 'context_sent': bool(context)})})()
     gate_inputs = []
     monkeypatch.setattr(accelerator, 'feature_ids', lambda tokenizer, policy, case: gate_inputs.append(
         case['turns'][0]['user']) or [1])
@@ -192,7 +194,7 @@ def test_routing_reads_the_message_alone_and_the_model_gets_the_notes_first(tmp_
 
 def test_without_memory_the_model_gets_exactly_the_message(tmp_path, monkeypatch):
     talk, sent, _ = conversation(monkeypatch)
-    assert talk.say('Email my manager')['memory'] == {'items': [], 'tokens': 0}
+    assert talk.say('Email my manager')['memory'] == {'items': [], 'tokens': 0, 'dropped': []}
     talk.say('Email my manager', recall=memory.Recall(store(tmp_path, *NOTES), tokens), skip_memory=True)
     assert sent == ['Email my manager', 'Email my manager']
 
@@ -253,3 +255,158 @@ def test_the_memory_subcommand_needs_no_network(tmp_path, monkeypatch):
     assert printed[0].startswith('Memory is on.') and printed[1] == 'Saved as m1.'
     assert '(preference) Use metric units' in printed[2]
     assert json.loads((tmp_path / 'memory' / 'settings.json').read_text()) == {'enabled': True}
+
+
+# The review's reproductions (pr150-151-review-20261026/probe_memory.py), with the real Session -----------------
+
+def real_conversation(policies, tokenizer=None):
+    from types import SimpleNamespace
+
+    from neuroshard.assistant import network
+    from neuroshard.assistant.public import Session
+    from neuroshard.evolution import assistant_workflow_data
+
+    world = assistant_workflow_data.cases('development')[0]['world']
+
+    class Ring:
+        features = []
+
+        def message_feature(self, tokenizer, policy, text):
+            self.features.append(text)
+            return [0.0]
+
+        def route(self, *args):
+            pass
+
+    talk = network.Conversation.__new__(network.Conversation)
+    talk.priming, talk.arm, talk.world, talk.opening = None, True, world, None
+    talk.driver, talk.tokenizer, talk.responses = Ring(), tokenizer, {}
+    talk.router, talk.general_router = 'router', None
+    talk.served = SimpleNamespace(policy=policies['drafting'], policies=policies, eos_ids={7})
+    talk.session = Session(policies['drafting'], world, route_policies=policies)
+    return talk
+
+
+def policies():
+    from pathlib import Path
+
+    root = Path(memory.__file__).resolve().parents[3] / 'config' / 'experiments'
+    read = lambda name: json.loads((root / name).read_text())  # noqa: E731
+    return {'drafting': read('assistant-workflow-policy.json'), 'chat': read('assistant-general-policy-chat3.json'),
+            'documents': read('assistant-general-policy-documents5.json')}
+
+
+class Words:
+    """A stand-in tokenizer: one token per word, over the whole rendered request."""
+
+    def apply_chat_template(self, messages, tools=None, **kwargs):
+        return ' '.join(m['content'] for m in messages) + ' ' + json.dumps(tools or [])
+
+    def __call__(self, text, **kwargs):
+        return {'input_ids': list(range(len(text.split())))}
+
+
+def test_a_note_never_reaches_a_later_turn_route_nomem_or_memory_off_turn(tmp_path, monkeypatch):
+    import copy
+
+    from neuroshard.assistant import network
+    from neuroshard.evolution.sharded import granite_serving as serving
+
+    s = store(tmp_path, ('fact', 'My manager is Dana Ruiz'))
+    recall = memory.Recall(s, tokens)
+    talk = real_conversation(policies(), Words())
+    requests = []
+
+    def respond(messages, tools):
+        requests.append(copy.deepcopy(messages))
+        return {'text': 'Okay.', 'terminated': True}
+
+    routes = iter(['chat', 'drafting', 'chat', 'chat', 'chat'])
+    monkeypatch.setattr(network, 'choose_route', lambda *a: (next(routes), 1))
+    monkeypatch.setattr(serving, 'responder', lambda *a, **k: respond)
+    first = talk.say('Who is my manager?', recall=recall)
+    later = [talk.say('Draft an email to my manager.', recall=recall),
+             talk.say('Who is my manager?', recall=recall, skip_memory=True)]
+    s.enable(False)
+    later.append(talk.say('Who is my manager?', recall=recall))
+    s.enable(True)
+    again = talk.say('Who is my manager, again?', recall=recall)
+    reached = ['Dana Ruiz' in json.dumps(r) for r in requests]
+    assert reached == [True, False, False, False, True]
+    assert first['memory']['items'] == ['m1'] and again['memory']['items'] == ['m1']
+    assert all(r['memory']['items'] == [] for r in later)
+    assert 'Dana Ruiz' not in json.dumps(talk.session.messages)  # history keeps what the user typed
+    assert all('Dana Ruiz' not in text for text in talk.driver.features)
+
+
+def test_a_note_that_would_exceed_the_input_limit_is_left_out_and_not_recorded(tmp_path, monkeypatch):
+    import copy
+
+    from neuroshard.assistant import network
+    from neuroshard.evolution.sharded import granite_serving as serving
+
+    p = policies()
+    question = 'Who is my manager?'
+    talk = real_conversation(p, Words())
+    rendered = Words().apply_chat_template([{'content': p['chat']['system_instruction']}, {'content': question}],
+                                           tools=__import__('neuroshard.assistant.interfaces', fromlist=['x'])
+                                           .interface(p['chat']).TOOLS)
+    p['chat'] = copy.deepcopy(p['chat'])
+    p['chat']['generation']['max_input_tokens'] = len(rendered.split())  # fits exactly without a note
+    talk.served.policies = p
+    s = store(tmp_path, ('fact', 'My manager is Dana Ruiz'))
+    requests = []
+
+    def respond(messages, tools):
+        requests.append(copy.deepcopy(messages))
+        return {'text': 'Okay.', 'terminated': True}
+
+    monkeypatch.setattr(network, 'choose_route', lambda *a: ('chat', 1))
+    monkeypatch.setattr(serving, 'responder', lambda *a, **k: respond)
+    result = talk.say(question, recall=memory.Recall(s, tokens))
+    assert result['completed'] and 'Dana Ruiz' not in json.dumps(requests)
+    assert result['memory'] == {'items': [], 'tokens': 0, 'dropped': ['m1']}
+    assert s.items()[0]['last_used'] is None
+    assert 'would not fit' in memory_cli.disclosure(result['memory'])
+
+
+def _hammer_used(home, rounds):
+    s = memory.Store(home)
+    for _ in range(rounds):
+        s.used({'m1'})
+
+
+def test_usage_updates_racing_a_wipe_never_resurrect_the_notes_or_the_key(tmp_path):
+    """The review interleaved a wipe between a usage update's read and write; it restored the note and a new key."""
+    import multiprocessing
+
+    for attempt in range(5):
+        home = tmp_path / f'h{attempt}'
+        s = store(home, ('fact', 'My manager is Dana Ruiz'))
+        worker = multiprocessing.get_context('fork').Process(target=_hammer_used, args=(home, 300))
+        worker.start()
+        s.wipe()
+        worker.join(60)
+        assert worker.exitcode == 0
+        assert not s.key_path.exists() and not s.path.exists() and memory.Store(home).items() == []
+        assert not list(s.directory.glob('*.partial'))
+
+
+def _add_many(home, prefix, count):
+    s = memory.Store(home)
+    for n in range(count):
+        s.add(f'{prefix} note {n}')
+
+
+def test_concurrent_additions_from_two_processes_are_all_kept(tmp_path):
+    import multiprocessing
+
+    store(tmp_path)
+    ctx = multiprocessing.get_context('fork')
+    workers = [ctx.Process(target=_add_many, args=(tmp_path, name, 40)) for name in ('chat', 'cli')]
+    for w in workers:
+        w.start()
+    for w in workers:
+        w.join(60)
+    items = memory.Store(tmp_path).items()
+    assert len(items) == 80 and len({i['id'] for i in items}) == 80

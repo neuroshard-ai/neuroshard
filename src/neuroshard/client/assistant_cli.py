@@ -383,7 +383,7 @@ def run(args):
     count = lambda text: len(conversation.tokenizer(text, add_special_tokens=False)['input_ids'])  # noqa: E731
     recall = None if args.no_memory else memory.Recall(store, count)
     if recall is not None and store.enabled:
-        print(f'Memory is on: relevant saved notes are added to documents and chat messages. {memory.DISCLOSURE} '
+        print(f'Memory is on: relevant saved notes are added to chat messages. {memory.DISCLOSURE} '
               '/help lists the memory commands.')
     drafts = {}
     try:
