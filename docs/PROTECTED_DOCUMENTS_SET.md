@@ -1,0 +1,192 @@
+# Writing the protected documents evaluation set
+
+This set decides whether a documents change actually answers better. It's the only evidence for a quality claim, so
+it's written by people, kept apart from training, and frozen before its first run
+(`docs/DESIGN_LATEST_REVISION.md`, acceptance test 2).
+
+## Rules that keep it protected
+
+- **Writers never see the training corpus, its prompts or its outputs.** The corpus is written by a model
+  (Claude Sonnet 4.6). The set must not be, nor edited from its output.
+- **Each case has two people:** a writer (`written_by`) and a different checker (`checked_by`). The checker answers
+  the question from the documents alone before reading the gold.
+- **The set lives outside this repository** (for example a private bucket). Only `freeze`'s manifest is committed:
+  the set's SHA-256, the scorer's and the document tools'.
+- **Freeze before the first run.** Then run each condition once. Case-level outputs are never used to train or
+  debug; if they guide development, write a fresh set for the reported result.
+
+## What a case is
+
+One small workspace, written like real paperwork (leases, invoices, rotas, policies, letters), and one question
+phrased the way a person would type it. JSON, one object per case, in a file with `"format":
+"neuroshard-protected-documents-set/2"` and a `"cases"` list:
+
+```json
+{
+  "id": "p-001",
+  "category": "latest_approved_with_newer_draft",
+  "written_by": "Initials or name",
+  "checked_by": "A different person",
+  "question": "What's the monthly rent in the lease we actually agreed?",
+  "documents": [
+    {"id": "doc-3f2a91c0", "title": "Lime Street lease", "content": "…Rent is 1,150 a month…",
+     "project": "Lime Street lease", "family": "lease", "revision": 1, "status": "superseded"},
+    {"id": "doc-77b0e4d2", "title": "Lime Street lease", "content": "…Rent is 1,200 a month…",
+     "project": "Lime Street lease", "family": "lease", "revision": 2, "status": "approved"},
+    {"id": "doc-c91d5e07", "title": "Lime Street lease", "content": "…Rent is 1,260 a month…",
+     "project": "Lime Street lease", "family": "lease", "revision": 3, "status": "draft"}
+  ],
+  "expected": {"kind": "answer", "facts": ["1,200"], "source_ids": ["doc-77b0e4d2"],
+               "selection": "latest_approved", "project": "Lime Street lease", "family": "lease"}
+}
+```
+
+- **Document IDs:** `doc-` plus at least 8 hex digits, unique within the case.
+- **Metadata fields** (`project`, `family`, `revision`, `status` from `approved`/`draft`/`superseded`,
+  `effective_from`, `effective_until` as `YYYY-MM-DD`): set them as a user's device would, and leave them out or
+  wrong where the case is about missing or wrong metadata.
+- **`expected.kind`:**
+  - `answer`: `facts` are the exact strings the answer must contain, and `source_ids` exactly the documents it must
+    cite. `selection` says how the right document is chosen: `latest_approved`, `effective` (with `date`),
+    `named` (the question names a revision) or `other`.
+  - `not_found`: the documents don't contain it.
+  - `decline`: no document can honestly be chosen. `must_cite` lists documents the reply must name (for example
+    the two conflicting versions), and `must_not_state` lists values it must not assert.
+
+## Coverage
+
+At least **8 cases in each category**, about 150 in total, spread over at least 30 different workspaces:
+
+| Category | What it tests |
+| --- | --- |
+| `latest_approved_with_newer_draft` | The newest revision is a draft; the answer is the latest approved one |
+| `latest_approved_newest` | The newest revision is the approved one |
+| `single_revision` | A family with one document |
+| `unrelated_families` | Several unrelated families in one project |
+| `ambiguous_versions` | Two approved documents at the same revision (a `decline`) |
+| `no_approved_revision` | Nothing approved yet (a `decline` saying so) |
+| `incomplete_metadata` | A member lacks status or revision (a `decline`, no claim of currency) |
+| `misleading_text` | Text says "approved" or "final" but the status field says draft |
+| `named_revision` | "What did version 1 say?": read that one, no currency claimed |
+| `as_of_date` | "What applied on 3 March?", with effective dates |
+| `same_value_old_and_current` | Old and current hold the same value; only the current may be cited |
+| `shared_titles` | Different families with the same title |
+| `not_found` | The documents don't say |
+
+Vary the wording: "latest approved", "the one we signed", "current", "final", and questions that never say which
+version. Typos and casual phrasing are welcome.
+
+## When the selection code disagrees with your gold
+
+For `latest_approved` and `effective` golds, the kit compares your expected document with what the deterministic
+selection code chooses (`selector_report`). **A disagreement never changes your gold, and you never edit a gold to
+match the code.** The case's checker (not its writer) decides from the documents and the specification
+(`docs/DESIGN_LATEST_REVISION.md`), and records it in the case:
+
+```json
+"adjudication": {"by": "Checker's name", "decision": "gold_correct", "note": "Rev 2 is the highest approved"}
+```
+
+- **`gold_correct`:** the code is wrong. The case stays, and it counts as a confirmed selection-code error.
+- **`unresolved`:** the specification doesn't decide it. The case is listed by ID in the manifest
+  (`excluded_cases`), is never graded, and counts in no condition's accuracy, numerator or denominator.
+
+`by` must be the case's named `checked_by`; a decision by anyone else, including the writer, doesn't count.
+- **The gold itself was wrong:** the checker rewrites it from the documents and the specification, never from the
+  code's output, and checks it again.
+
+The set can't be frozen while any disagreement has no recorded decision.
+
+## Checking and freezing
+
+```bash
+python -c "import json,sys; from neuroshard.evolution import protected_documents as p; \
+  print(p.check_set(json.load(open(sys.argv[1]))['cases'])); \
+  print(p.selector_report(json.load(open(sys.argv[1]))['cases']))" SET.json
+python -c "import sys; from neuroshard.evolution import protected_documents as p; \
+  print(p.freeze(*sys.argv[1:]))" SET.json PROTOCOL.json MANIFEST.json
+```
+
+**What the machine checks (`check_set`):**
+- IDs are well formed and unique, and every case has two different people.
+- Every gold fact is a whole value in a cited document.
+- Each case has the structure its category claims. For example, `latest_approved_with_newer_draft` needs a draft
+  newer than the latest approved revision; `ambiguous_versions` needs two approved documents at one revision, and
+  its `kind` must be `decline`.
+- At least 8 cases and 4 distinct workspaces per category, and 30 distinct workspaces overall. A workspace is
+  identified by its documents' content, so copies don't count.
+- No question is asked twice of the same workspace.
+
+**What people attest:** realistic phrasing, semantic diversity, and the correctness of each gold. The report
+lists the two kinds of coverage separately.
+
+**The protocol file** names exactly the design's three conditions, in this order, plus a recorded seed (blinding
+doesn't use it):
+
+| Role | Model | Policy |
+| --- | --- | --- |
+| `served` | The served model and documents unit | Its current, pre-`/4` policy (today `workspace-documents/2`) |
+| `served-v4` | The same model and unit | The `/4` policy |
+| `candidate-v4` | The trained candidate unit | The same `/4` policy |
+
+Each condition gives `name`, `role`, `interface`, `policy` (a file in the repository), `model_root` and
+`unit_sha256` (both 64-hex digests). `freeze` refuses:
+- a condition whose interface isn't the one its policy file declares;
+- placeholder roots;
+- a missing or extra role;
+- `served` and `served-v4` on different models;
+- a candidate that is the served unit;
+- `served-v4` and `candidate-v4` on different policies, so that training is the only difference.
+
+**What `freeze` records** (no case content):
+- the set's digest and the protocol's;
+- the git commit, and the digest of **every tracked file under `src/`**, not a hand-picked list;
+- each condition's policy digest, model root and unit digest;
+- every case ID, and the excluded (unresolved) ones.
+
+It refuses uncommitted changes under `src/`. Before each run, `verify` checks the set, the protocol, that the
+checkout is the frozen commit, and every source file and policy. `check_run` then checks that the runner loaded
+exactly its condition's model root, unit, interface and policy. Commit only `MANIFEST.json` and the protocol.
+
+## How it's scored
+
+**The reported result is human grading of every reply.**
+- **Complete runs only:** `check_results` refuses a run unless it has exactly one result for every frozen
+  (condition, case) pair. Nothing may be missing, duplicated or unknown, and excluded cases must not have been
+  run. An empty or interrupted run therefore never reaches grading or a report.
+- **Blinding:** every reply of all three conditions goes on one sheet (`grading_sheet`). The order and the item IDs
+  come from the operating system's secure random source, not the protocol's seed, so nothing on the sheet or in
+  the public protocol reveals a condition. The key that maps items back to conditions stays private until grades
+  are locked. Its SHA-256 (the commitment) is published when the sheet is handed out, so the key can be disclosed
+  afterwards and checked.
+- **Grading:** a grader judges each reply `correct` or `incorrect` against the case's question, documents and
+  gold, and is named on each grade. `ingest_grades` refuses an ungraded, unknown or twice-graded reply, and a key
+  that doesn't match the commitment.
+
+`accuracy` reports, per condition:
+- the human-graded accuracy with its 95% Wilson interval;
+- the machine score;
+- their agreement;
+- paired sign tests against `served`.
+
+All three conditions are graded on the same cases.
+
+**The machine score is a separate, reported measure**, never a replacement for grading. It reads the reply the
+user sees under every condition. A structured answer, if the condition makes one, must agree with it: the same
+cited documents and the same gold facts.
+
+| Kind | The machine passes it when |
+| --- | --- |
+| `answer` | Every gold fact is stated as a whole value and not negated just before it, the cited IDs are exactly the gold sources, and nothing in `must_not_state` is stated |
+| `not_found` | The reply says the documents don't contain it, submits no answer, and states nothing in `must_not_state` |
+| `decline` | The reply names every `must_cite` document, says why none can be chosen, and states nothing in `must_not_state` |
+
+**How values and citations are compared.** Values are compared by type: numbers as numbers with their sign
+(12,000 and −1,200 aren't 1,200), dates as dates (14 May 2027 is 2027-05-14), and words at word boundaries.
+Citations must be complete IDs of documents in the case.
+
+**Its limits are known.** A reply can state the gold and then contradict it in words, for example "1,200, but
+that amount is incorrect". No phrase list catches every such case, which is why every reply is graded. A pass that
+negates the gold somewhere, or mentions a value from another version, is marked `contested`, so graders and
+readers can see where the two scores are likely to differ. Protocol correctness (the route's own scorer, which
+under `/4` also requires quoted evidence) is reported separately.
