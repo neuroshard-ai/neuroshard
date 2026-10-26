@@ -33,7 +33,7 @@ if [ "$ROLE" = check ] || [ "$ROLE" = "--check" ]; then
     [ "${DISK:-0}" -ge "$4" ] || short="${short:+$short and }${4} GB free disk (has ${DISK:-0})"
     if [ -z "$short" ]; then ok "$1" "yes"; else ok "$1" "no: needs $short"; fi
   }
-  role chat any 6 10; role owner amx 8 20; role validator amx 14 60; role auditor amx 14 30; role contributor amx 30 60
+  role chat any 8 10; role owner amx 8 20; role validator amx 14 60; role auditor amx 14 30; role contributor amx 30 60
   exit 0
 fi
 SHARD="" ; PUBLIC_HOST="" ; BRANCH="main" ; HOME_DIR="$HOME/.neuroshard/assistant"
