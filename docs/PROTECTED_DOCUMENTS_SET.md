@@ -120,8 +120,8 @@ python -c "import sys; from neuroshard.evolution import protected_documents as p
 **What people attest:** realistic phrasing, semantic diversity, and the correctness of each gold. The report
 lists the two kinds of coverage separately.
 
-**The protocol file** names exactly the design's three conditions, in this order, plus the seed of the grading
-sheet:
+**The protocol file** names exactly the design's three conditions, in this order, plus a recorded seed (blinding
+doesn't use it):
 
 | Role | Model | Policy |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ Each condition gives `name`, `role`, `interface`, `policy` (a file in the reposi
 - the set's digest and the protocol's;
 - the git commit, and the digest of **every tracked file under `src/`**, not a hand-picked list;
 - each condition's policy digest, model root and unit digest;
-- the excluded (unresolved) case IDs.
+- every case ID, and the excluded (unresolved) ones.
 
 It refuses uncommitted changes under `src/`. Before each run, `verify` checks the set, the protocol, that the
 checkout is the frozen commit, and every source file and policy. `check_run` then checks that the runner loaded
@@ -150,11 +150,18 @@ exactly its condition's model root, unit, interface and policy. Commit only `MAN
 
 ## How it's scored
 
-**The reported result is human grading of every reply.** Every reply of all three conditions goes on one
-shuffled sheet (`grading_sheet`). The sheet shows only the case and the reply, never the condition or the machine
-verdict, and unresolved cases are left off it. A grader judges each reply `correct` or `incorrect` against the
-case's question, documents and gold, and is named on each grade. `ingest_grades` refuses an ungraded, unknown or
-twice-graded reply.
+**The reported result is human grading of every reply.**
+- **Complete runs only:** `check_results` refuses a run unless it has exactly one result for every frozen
+  (condition, case) pair. Nothing may be missing, duplicated or unknown, and excluded cases must not have been
+  run. An empty or interrupted run therefore never reaches grading or a report.
+- **Blinding:** every reply of all three conditions goes on one sheet (`grading_sheet`). The order and the item IDs
+  come from the operating system's secure random source, not the protocol's seed, so nothing on the sheet or in
+  the public protocol reveals a condition. The key that maps items back to conditions stays private until grades
+  are locked. Its SHA-256 (the commitment) is published when the sheet is handed out, so the key can be disclosed
+  afterwards and checked.
+- **Grading:** a grader judges each reply `correct` or `incorrect` against the case's question, documents and
+  gold, and is named on each grade. `ingest_grades` refuses an ungraded, unknown or twice-graded reply, and a key
+  that doesn't match the commitment.
 
 `accuracy` reports, per condition:
 - the human-graded accuracy with its 95% Wilson interval;

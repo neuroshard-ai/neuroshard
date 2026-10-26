@@ -26,6 +26,7 @@ import hashlib
 import json
 import random
 import re
+import secrets
 import subprocess
 from pathlib import Path
 
@@ -436,33 +437,71 @@ ROLES = ('served', 'served-v4', 'candidate-v4')  # the design's three conditions
 ROOT_HEX = re.compile(r'\A[0-9a-f]{64}\Z')
 
 
-def grading_sheet(results, seed, excluded=()):
-    """The blinded human grading sheet: **every** reply of every condition, shuffled, condition hidden.
+def check_results(results, manifest):
+    """Exactly one result for every frozen (condition, case) pair: nothing missing, duplicated or unknown.
 
-    ``results`` are dicts with 'condition', 'case', 'final_text' and 'machine' (``score``'s result). Cases in
-    ``excluded`` (unresolved golds, from the manifest) are left out of grading and of every accuracy. Returns
-    (sheet, key): the sheet holds only an opaque item ID, the case ID and the reply; the key, kept from graders,
-    maps items back to their condition and machine verdict. A grader judges each reply ``correct`` or
-    ``incorrect`` against the case's question, documents and gold; that grade is the reported result."""
-    rng = random.Random(seed)
-    rows = [r for r in results if r['case'] not in set(excluded)]
-    order = list(range(len(rows)))
-    rng.shuffle(order)
+    The planned set is the frozen case IDs less the exclusions, for each of the three frozen conditions. An empty,
+    partial or interrupted run is refused here, before any grading sheet is made."""
+    names = [c['name'] for c in manifest['conditions']]
+    planned = sorted(set(manifest['case_ids']) - set(manifest['excluded_cases']))
+    if not planned:
+        raise Invalid('the frozen set has no scored cases')
+    seen, problems = set(), []
+    for row in results:
+        pair = (row.get('condition'), row.get('case'))
+        if pair[0] not in names:
+            problems.append(f'unknown condition {pair[0]!r}')
+        elif pair[1] in manifest['excluded_cases']:
+            problems.append(f'excluded case {pair[1]} was run')
+        elif pair[1] not in planned:
+            problems.append(f'unknown case {pair[1]!r}')
+        elif pair in seen:
+            problems.append(f'{pair[0]}/{pair[1]} appears twice')
+        seen.add(pair)
+    missing = [(n, c) for n in names for c in planned if (n, c) not in seen]
+    if missing:
+        problems.append(f'{len(missing)} of {len(names) * len(planned)} results are missing, for example '
+                        + ', '.join(f'{n}/{c}' for n, c in missing[:3]))
+    if problems:
+        raise Invalid('not the complete frozen run: ' + '; '.join(problems[:6]) + (' …' if len(problems) > 6 else ''))
+    return planned
+
+
+def grading_sheet(results, manifest):
+    """The blinded human grading sheet: every reply of every condition, in a private random order.
+
+    ``results`` (``check_results`` must accept them) are dicts with 'condition', 'case', 'final_text' and
+    'machine'. Returns (sheet, key, commitment). Item IDs are random 96-bit tokens and the order comes from the
+    operating system's secure random source, so nothing on the sheet or in the public protocol reveals a
+    condition. The key maps items to conditions; it is kept from graders until grades are locked. The commitment,
+    the SHA-256 of the key, is published when the sheet is handed out, so the key can be disclosed afterwards
+    and checked against it."""
+    check_results(results, manifest)
+    rng = random.SystemRandom()
+    rows = list(results)
+    rng.shuffle(rows)
     sheet, key = [], {}
-    for position, index in enumerate(order):
-        row = rows[index]
-        item = hashlib.sha256(f'{seed}:{position}:{row["condition"]}:{row["case"]}'.encode()).hexdigest()[:12]
+    for row in rows:
+        item = secrets.token_hex(12)
         sheet.append({'item': item, 'case': row['case'], 'reply': row['final_text']})
         key[item] = {'condition': row['condition'], 'case': row['case'], 'machine': row['machine']['verdict']}
-    return sheet, key
+    return sheet, key, commitment(key)
 
 
-def ingest_grades(sheet, key, grades):
+def commitment(key):
+    return hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()
+
+
+def ingest_grades(sheet, key, grades, committed):
     """Check a returned grading is complete, then join it to the key: one row per reply with both scores.
 
     ``grades`` is a list of {'item', 'grade', 'grader'}. Every sheet item must be graded exactly once with one of
-    ``GRADES``; no unknown item may appear. Refuses anything else, so no reply is silently left ungraded."""
+    ``GRADES``; no unknown item may appear. The key must be the one committed to when the sheet was handed out."""
+    if commitment(key) != committed:
+        raise Invalid('the key differs from the one committed to when the sheet was handed out')
     items = {row['item'] for row in sheet}
+    if set(key) != items:
+        raise Invalid('the key and the sheet name different items')
     seen = {}
     for grade in grades:
         item = grade.get('item')
@@ -501,16 +540,13 @@ def sign_test(wins, losses):
 def accuracy(graded, manifest):
     """Per condition: human accuracy (the reported result), machine accuracy, their agreement, and paired tests.
 
-    Excluded cases are already absent from ``graded``; this checks so, and that every condition graded the same
-    cases, so numerators and denominators are comparable."""
+    ``graded`` must hold exactly one graded row for every frozen (condition, case) pair, excluded cases left out
+    (``check_results``), so numerators and denominators are the planned ones."""
     excluded = set(manifest['excluded_cases'])
-    if any(row['case'] in excluded for row in graded):
-        raise Invalid('graded rows include an excluded (unresolved) case')
+    planned = check_results(graded, manifest)  # exactly the frozen pairs, once each
     names = [c['name'] for c in manifest['conditions']]
     by = {name: {row['case']: row for row in graded if row['condition'] == name} for name in names}
-    cases = set(by[names[0]])
-    if any(set(rows) != cases for rows in by.values()):
-        raise Invalid('every condition must be graded on the same cases')
+    cases = set(planned)
     out = {'cases': len(cases), 'excluded_cases': sorted(excluded), 'conditions': {}, 'paired': {}}
     for name in names:
         rows = by[name].values()
@@ -601,10 +637,11 @@ def freeze(set_path, protocol_path, out_path):
     protocol = json.loads(Path(protocol_path).read_text())
     conditions = conditions_of(protocol)
     if not isinstance(protocol.get('seed'), int):
-        raise Invalid('the protocol fixes the grading seed')
+        raise Invalid('the protocol fixes the seed (recorded; blinding uses private randomness)')
     commit, files = source_tree()
     manifest = {'format': FORMAT + '#manifest', 'set_sha256': sha256(set_path), 'protocol_sha256': sha256(protocol_path),
-                'coverage': coverage, 'selector': {k: v for k, v in report.items() if k != 'disagreements'},
+                'coverage': coverage, 'case_ids': sorted(c['id'] for c in data['cases']),
+                'selector': {k: v for k, v in report.items() if k != 'disagreements'},
                 'excluded_cases': report['unresolved'], 'commit': commit, 'source_tree': tree_digest(files),
                 'source_files': files, 'conditions': conditions, 'seed': protocol['seed']}
     Path(out_path).write_text(json.dumps(manifest, indent=1, sort_keys=True) + '\n')

@@ -328,50 +328,90 @@ def unresolved_set():
     return cases, first['id']
 
 
+def results_for(manifest, cases=None, text='reply', verdict='pass'):
+    cases = cases if cases is not None else sorted(set(manifest['case_ids']) - set(manifest['excluded_cases']))
+    return [{'condition': c['name'], 'case': k, 'final_text': text, 'machine': {'verdict': verdict}}
+            for c in manifest['conditions'] for k in cases]
+
+
+def grade_all(sheet, grade='correct'):
+    return [{'item': row['item'], 'grade': grade, 'grader': 'G'} for row in sheet]
+
+
 def test_unresolved_golds_are_excluded_from_grading_and_every_accuracy(tmp_path, tree):
     cases, disputed = unresolved_set()
     manifest, _, _ = frozen(tmp_path, cases)
     assert manifest['excluded_cases'] == [disputed]
-    names = [c['name'] for c in manifest['conditions']]
-    results = [{'condition': n, 'case': c['id'], 'final_text': 'reply', 'machine': {'verdict': 'pass'}}
-               for n in names for c in cases]
-    sheet, key = protected.grading_sheet(results, seed=7, excluded=manifest['excluded_cases'])
+    results = results_for(manifest)
+    sheet, key, committed = protected.grading_sheet(results, manifest)
     assert disputed not in {row['case'] for row in sheet}
-    graded = protected.ingest_grades(sheet, key, [{'item': r['item'], 'grade': 'correct', 'grader': 'G'}
-                                                  for r in sheet])
+    graded = protected.ingest_grades(sheet, key, grade_all(sheet), committed)
     report = protected.accuracy(graded, manifest)
     assert report['cases'] == len(cases) - 1 and report['excluded_cases'] == [disputed]
     assert all(c['n'] == len(cases) - 1 for c in report['conditions'].values())
-    with pytest.raises(protected.Invalid, match='excluded'):
-        protected.accuracy(graded + [{**graded[0], 'case': disputed}], manifest)
+    with pytest.raises(protected.Invalid, match='excluded case'):
+        protected.grading_sheet(results + [{**results[0], 'case': disputed}], manifest)
 
 
-def test_every_reply_is_graded_blind_and_incomplete_grading_is_refused():
-    results = [{'condition': c, 'case': f'p-{i}', 'final_text': f'reply {c} {i}', 'machine': {'verdict': 'pass'}}
-               for c in ('served', 'served-v4', 'candidate') for i in range(10)]
-    sheet, key = protected.grading_sheet(results, seed=7)
-    assert len(sheet) == 30 and all(set(row) == {'item', 'case', 'reply'} for row in sheet)
-    assert protected.grading_sheet(results, seed=7) == (sheet, key)
-    grades = [{'item': r['item'], 'grade': 'incorrect', 'grader': 'G'} for r in sheet]
-    with pytest.raises(protected.Invalid, match='1 replies are ungraded'):
-        protected.ingest_grades(sheet, key, grades[:-1])
-    with pytest.raises(protected.Invalid, match='graded twice'):
-        protected.ingest_grades(sheet, key, grades + grades[:1])
-    with pytest.raises(protected.Invalid, match='correct or incorrect'):
-        protected.ingest_grades(sheet, key, [{**grades[0], 'grade': 'maybe'}] + grades[1:])
-
-
-def test_human_grades_are_the_result_even_where_the_machine_passed_a_wrong_reply(tmp_path, tree):
-    """The review's control: 100 known-wrong replies the machine passes. Every one is graded, so none survives."""
+@pytest.mark.parametrize('damage, message', [
+    (lambda rows: rows[:3], 'results are missing'),                         # the review's one case per condition
+    (lambda rows: [], 'results are missing'),                               # an empty run
+    (lambda rows: rows + rows[:1], 'appears twice'),
+    (lambda rows: rows + [{**rows[0], 'case': 'not-a-case'}], 'unknown case'),
+    (lambda rows: rows + [{**rows[0], 'condition': 'extra'}], 'unknown condition'),
+    (lambda rows: rows[1:], 'results are missing'),                         # one result lost
+])
+def test_only_the_complete_frozen_run_is_graded_or_reported(tmp_path, tree, damage, message):
     manifest, _, _ = frozen(tmp_path)
-    cases = [f'p-{i}' for i in range(100)]
-    results = [{'condition': c['name'], 'case': k, 'final_text': 'The rent is 1,200 a month. That amount is wrong.',
-                'machine': {'verdict': 'pass'}} for c in manifest['conditions'] for k in cases]
-    sheet, key = protected.grading_sheet(results, seed=7)
-    graded = protected.ingest_grades(sheet, key, [{'item': r['item'], 'grade': 'incorrect', 'grader': 'G'}
-                                                  for r in sheet])
-    report = protected.accuracy(graded, {**manifest, 'excluded_cases': []})
-    assert all(c['human_correct'] == 0 and c['machine_pass'] == 100 and c['agreement'] == 0
+    rows = damage(results_for(manifest))
+    with pytest.raises(protected.Invalid, match=message):
+        protected.grading_sheet(rows, manifest)
+    with pytest.raises(protected.Invalid, match=message):
+        protected.accuracy([{**r, 'human': 'correct', 'machine': 'pass'} for r in rows], manifest)
+
+
+def test_grading_ids_and_order_reveal_nothing_and_the_key_is_committed(tmp_path, tree):
+    """The review recovered every condition by hashing the public seed with each condition name."""
+    import hashlib
+
+    manifest, _, _ = frozen(tmp_path)
+    results = results_for(manifest)
+    sheet, key, committed = protected.grading_sheet(results, manifest)
+    assert all(set(row) == {'item', 'case', 'reply'} and len(row['item']) == 24 for row in sheet)
+    recovered = 0
+    for position, row in enumerate(sheet):
+        for c in manifest['conditions']:
+            guess = hashlib.sha256(f'{manifest["seed"]}:{position}:{c["name"]}:{row["case"]}'.encode()).hexdigest()
+            recovered += guess[:12] == row['item'][:12] or guess[:24] == row['item']
+    assert recovered == 0
+    again, _, _ = protected.grading_sheet(results, manifest)
+    assert [r['item'] for r in again] != [r['item'] for r in sheet]  # private randomness, not the public seed
+    assert committed == protected.commitment(key)
+    with pytest.raises(protected.Invalid, match='committed'):
+        protected.ingest_grades(sheet, {**key, sheet[0]['item']: {**key[sheet[0]['item']], 'condition': 'x'}},
+                                grade_all(sheet), committed)
+
+
+def test_incomplete_grading_is_refused(tmp_path, tree):
+    manifest, _, _ = frozen(tmp_path)
+    sheet, key, committed = protected.grading_sheet(results_for(manifest), manifest)
+    grades = grade_all(sheet, 'incorrect')
+    with pytest.raises(protected.Invalid, match='1 replies are ungraded'):
+        protected.ingest_grades(sheet, key, grades[:-1], committed)
+    with pytest.raises(protected.Invalid, match='graded twice'):
+        protected.ingest_grades(sheet, key, grades + grades[:1], committed)
+    with pytest.raises(protected.Invalid, match='correct or incorrect'):
+        protected.ingest_grades(sheet, key, [{**grades[0], 'grade': 'maybe'}] + grades[1:], committed)
+
+
+def test_human_grades_are_the_result_even_where_the_machine_passed_every_wrong_reply(tmp_path, tree):
+    manifest, _, _ = frozen(tmp_path)
+    results = results_for(manifest, text='The rent is 1,200 a month. That amount is wrong.')
+    sheet, key, committed = protected.grading_sheet(results, manifest)
+    graded = protected.ingest_grades(sheet, key, grade_all(sheet, 'incorrect'), committed)
+    report = protected.accuracy(graded, manifest)
+    n = len(manifest['case_ids'])
+    assert all(c['human_correct'] == 0 and c['machine_pass'] == n and c['agreement'] == 0 and c['n'] == n
                for c in report['conditions'].values())
 
 
