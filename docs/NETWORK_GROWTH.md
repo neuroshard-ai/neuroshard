@@ -469,3 +469,64 @@ two real-request sets: 196/314 and 98/138, against 150 and 64 for the untrained 
 - The validator reload takes the RPC offline for one to four minutes.
 - Owners' sealed evaluations share their serving CPUs and slow conversations meanwhile.
 - One machine trained every segment. Other contributors only spot-checked.
+
+## An offline `/4` candidate (development only, not for release)
+
+October 26, 2026. These are development results, not quality claims. Nothing was served, grown, released or
+voted. Artifacts are under `.neuroshard/documents-v4-train-20261026/` (`REPORT.md`, `SHA256SUMS`).
+
+**The problem.** The served unit (G2) was trained on `/2` transcripts. Offline under `/4` it almost never called
+`current_document`, and a prompt change alone did not fix that (documents-v4-dev-20261025).
+
+**The corpus** (`evolution/revision_training.py`). Bedrock (Claude Sonnet 4.6, the only author this account can
+call) wrote 240 workspaces with explicit version families. Golds come from our code, never the writer:
+- latest-approved and effective-date golds are the `document_revisions` selection;
+- named, draft and comparison golds are exactly the named family members;
+- declines are `report_not_found` with the tool's own outcome and the documents' IDs. That is the only form the
+  v4 scorer accepts without an answer, because evidence quotes cannot state metadata.
+
+An item is kept only if:
+- it replays through the v4 workspace and episode loop;
+- its quotes are found in the cited documents;
+- the v4 scorer passes;
+- it fits the token budget;
+- it claims nothing the fields don't record;
+- a blind check agrees.
+
+That kept 1,398 items. `verify` rechecks all of this without a model. Training also used 450 G2 conversations
+re-rendered as `/4` with mechanically chosen quotes, and 176 template demonstrations re-rendered as `/4`
+(`revision_training.template_replay`). The corpora share no word 8-gram with the development and soak sets, and
+only stock phrases with the real-request sets.
+
+**The candidate** (`evolution/revision_train.py`). It continues the served unit for 128 `growth_replay` steps
+under the development policy `assistant-general-policy-documents7.json`, on one r7i.2xlarge with the live
+runtime, in 10,784 s. Unit sha256 `e0f92d0a…`, final root `a9de1754…`.
+
+**Development evaluation** (`scripts/eval_documents_v4.py`): offline, AMX, 8 threads, live runtime 2.
+
+| Set | Served, `/2` | Served, `/4` prompt | Candidate, `/4` |
+| --- | --- | --- | --- |
+| Soak regression, 4 | 1 | 1 | 3 |
+| Development, 21 | 10 | 12 | 16 (draft-newest 8/8) |
+| Real set 1, 314 | 163 | 134 | 193 (vs served: 54–24, p ≈ 0.001) |
+| Real set 2, 138 | 82 | 67 | 99 (vs served: 25–8, p ≈ 0.005) |
+
+**What the runs show.**
+- The candidate calls `current_document` and answers draft-newest questions from the approved revision.
+- Unlike the prompt-only `/4`, it does not lose lookups to over-reported not-found.
+- **New failure:** for a separate project named "X Annex", it selects from project "X". That accounts for 5 of
+  its 6 development and soak misses.
+- Under live runtime 2, the served unit scores 163/314 and 82/138, below G2's published 196 and 98. Those were
+  recorded on the experiments runtime, and its texts reproduce exactly there. This needs its own check.
+
+**Limits.**
+- One author model wrote everything.
+- The development sets are spent and narrow: no declines, as-of or ambiguity cases among them.
+- The real sets have no metadata.
+
+**Before a growth round, a grown `/4` unit needs:**
+- a `/4` corpus recipe that owners verify;
+- a sealed evaluation with real requests and the protected human-written revision set;
+- the runtime question settled;
+- independently written data for nested project names;
+- an owner vote.
