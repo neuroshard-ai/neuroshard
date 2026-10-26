@@ -6,37 +6,52 @@ grows itself: usage funds training, contributors train, owners verify and vote, 
 to the new version from what the chain committed. What it lacks is **operators who are not the project**.
 Today the project administers every validator and every original owner. This page is for joining.
 
-**Status, October 22, 2026:**
-- Chain `neuroshard-assistant-1`, 5 validators, more than 1,060,000 blocks.
+**Status, October 26, 2026:**
+- Chain `neuroshard-assistant-1`, 5 validators, more than 1,300,000 blocks.
 - Model: Granite 4.1 3B with a documents unit grown by the network itself (version `a4-general` and its
   owner-enacted growth).
-- Two shards, three owners, all on the release candidate **`pilot-2-rc1`**. One owner was set up from these
-  instructions alone on a bare machine. Every node is still administered by the project.
+- Two shards, three owners, all on **`pilot-2-rc2`**, which passed a 72-hour soak under injected faults: 233 of
+  233 paid conversations settled on chain. Every node is still administered by the project.
+- The current release is **`pilot-2`**: `pilot-2-rc2`'s serving code plus three reviewed client fixes (stage 0
+  always uses 8 threads; a warning before payment on CPUs the replies weren't evaluated on; an optional fast
+  start, off by default). Owners on `pilot-2-rc2` and `pilot-2` serve together.
 - An experimental, project-operated pilot. Test tokens only: NEURO has **no monetary value**.
+
+**Who we're inviting now:** a first, small group of **owners**, **auditors** and **users**. **Validators and
+training contributors are on hold**: see *Roles on hold* below.
 
 ## Before you start
 
-- **Use the current release, not `main`.** Owners must run the same protocol as the rest of their shard:
-  clients select only owners that answer the admission capability check, which `pilot-1` owners don't.
-  The command below pins `--branch pilot-2-rc1`; the maintainers will name the next release in your issue.
+- **Use the release, not `main`, for both the installer and the code.** The commands below fetch `join.sh`
+  from the `pilot-2` tag and pass `--branch pilot-2`, so what runs is exactly the reviewed release. `--branch` alone
+  pins only the code the installer checks out, not the installer itself. The maintainers will name later
+  releases in your issue.
+- **Your conversations aren't confidential from the network's operators.** The owners serving a conversation
+  compute on it, and the activations they keep in their signed logs can practically be turned back into text.
+  Auditors can download those logs. Use test documents, not personal or confidential ones.
 - **Joining as an owner bonds 5 test NEURO and starts serving paid jobs at once.** You can leave at any
   time with `neuroshard assistant leave` (see *Leave the network* below).
 - **Check your machine first.** It installs nothing:
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/scripts/join.sh | bash -s -- check
+  curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/pilot-2/scripts/join.sh | bash -s -- check
   ```
 - **Try it as a user first, if you like.** `chat` installs the same runtime and code, starts no service and
   bonds nothing. On a fresh m7i.2xlarge (October 22) it installed in 17 s, and the first answer arrived
   112 s after starting `chat`, including the stage download, model load, faucet grant and admission.
+- **Users on CPUs without AMX** (other Intel, AMD): replies were evaluated on Intel CPUs with AMX. Elsewhere,
+  `chat` says so and asks before it downloads anything or pays; scripts pass `--experimental-cpu`. Replies may be
+  worded differently there, and their quality and speed aren't validated.
 
 ## Join in one command
 
-On Linux x86_64 with an Intel CPU that has AMX (for example AWS `m7i` or `r7i`):
+Owners and auditors need Linux x86_64 with an Intel CPU that has AMX (for example AWS `m7i` or `r7i`):
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/main/scripts/join.sh | bash -s -- ROLE --branch pilot-2-rc1
+curl -LsSf https://raw.githubusercontent.com/neuroshard-ai/neuroshard/pilot-2/scripts/join.sh | bash -s -- ROLE --branch pilot-2
 ```
+
+`ROLE` is `owner --shard 1`, `owner --shard 2`, `auditor` or `chat`.
 
 The script:
 - installs the pinned runtime (Python 3.12.12 through `uv`);
@@ -48,31 +63,25 @@ Keys are generated on your machine and never leave it. Back up `~/.neuroshard/as
 
 | Role | Command | Needs | Open ports |
 | --- | --- | --- | --- |
-| Validator | `validator` | 16 GB RAM, 60 GB disk, AMX, a few hours to replay the chain | 26656, 26657, 28780, 28781 |
 | Owner of a shard | `owner --shard 1` or `--shard 2` | 8 GB RAM, exactly 8 threads, AMX, 20 GB disk | 28700, 28781 |
 | Auditor | `auditor` | 16 GB RAM, AMX | none |
-| Contributor | `contributor` | 32 GB RAM, AMX (it trains the 3B model) | none |
-| Just try it | `chat` | 6 GB RAM, any x86_64 | none |
+| Just try it | `chat` | 8 GB RAM (the installer checks this), Linux x86_64; AMX recommended | none |
 
-The CPU requirement is real. Audits and training checks replay work bit for bit, which holds only on
+The installer still accepts `validator` and `contributor`. Don't use them yet (see *Roles on hold*).
+
+The CPU requirement is real for owners and auditors. Audits replay work bit for bit, which holds only on
 one execution class. A node on another CPU would compute slightly different numbers. It could then be
 accused of fraud it did not commit, or accuse others wrongly.
 
 ## What each role does, earns and risks
 
-**Validator.** Orders transactions and judges fraud proofs. It also stores proofs, recipes and
-training states, and mirrors the model's pinned files.
-- Joining: after the node has caught up, owners vote it in
-  (`govern propose-validator --consensus-key KEY --power 1`; owners vote, anyone enacts). The chain
-  keeps working while any one of its five validators is down.
-- Earns: nothing directly today. Validators are not paid on this test network.
-- Risks: none on chain. A validator that stays offline should be voted out (power 0).
-
 **Owner.** Bonds 5 test NEURO (from the faucet), hosts one shard and serves the paid jobs that pick it.
 Every message is signed, and the owner commits a log of each job.
 - Earns: an equal share of each job's price for the positions it served, minus a 10% growth levy
   (owner-voted) that funds training. A typical documents conversation pays each owner about 0.08 NEURO.
-- Votes: on new model versions, validators and the levy, in proportion to the bond.
+- Votes: only once admitted. Bonding and serving need no permission, but voting on new model versions,
+  validators and the levy requires the existing members to admit you (`govern propose-member`; see
+  *What still depends on the project*). Admitted members vote in proportion to their bond.
 - Risks: the whole bond, if an auditor proves the owner sent wrong work. On October 16, an honest owner
   was slashed because the auditor and validator held an older version's weights. That is fixed: they
   now judge only with the version a job ran. It shows the risk is not theoretical.
@@ -82,21 +91,20 @@ Every message is signed, and the owner commits a log of each job.
 - Risks: a challenge deposit (1 NEURO) that is forfeited if the proof fails.
 - Run it on its own machine: replaying on an owner's CPUs slows that owner by up to 40%.
 
-**Contributor.** Trains segments of growth jobs the network funds from its pool, and spot-checks other
-contributors' steps.
-- Earns: the job's reward for the steps it commits.
-- Risks: a 2 NEURO bond per segment, returned when the job settles and slashed if a step is proven
-  wrong.
-- The agent refuses to build on a state it cannot reproduce.
+**User.** Runs `chat`: stage 0 of the model on your machine, the rest on the owners, paid in test NEURO from
+the faucet. Unused escrow is refunded when the job settles.
 
-**Owners deciding what the network learns.** A recipe (training data plus settings) needs an owner vote
-before the pool funds it. Owners' agents verify each recipe themselves before voting:
-- template recipes are rebuilt from the published builders;
-- corpus recipes are checked by replaying every conversation and confirming each fact appears in a
-  cited document.
+## Roles on hold
 
-A new version goes live only if it beats the served version on a beacon-sealed evaluation that includes
-real requests, and owners reproduce that evaluation bit for bit.
+**Validators and training contributors are not part of this pilot yet.** Please don't run them, even though
+`join.sh` still accepts `validator` and `contributor`.
+- **Validators:** the network is moving to a validator release whose fraud-proof handling changed. That needs its
+  own mixed-version qualification (judging growth proofs with old and new validators together) before any new
+  or upgraded validator joins. Also, don't provision the parent model onto any additional `pilot-1` validator.
+- **Contributors:** outside training contribution depends on that same growth-fraud enforcement, which the
+  serving soak didn't test.
+
+We'll open these roles in a later release, with their own instructions.
 
 ## After you join (owners)
 
@@ -108,7 +116,8 @@ real requests, and owners reproduce that evaluation bit for bit.
   `--public-host HOST`: the script otherwise uses the address `checkip.amazonaws.com` reports.
 
 **Upgrade to a newer release.**
-- Rerun the same command with the new `--branch`. The script fetches that release, checks it out in
+- Rerun the command with the new release in **both** places: the tag in the `join.sh` URL and `--branch`. The
+  script fetches that release, checks it out in
   `~/.neuroshard/release`, reinstalls it into `~/.venvs/neuroshard`, and restarts the service.
 - Check that the service runs the new code: `git -C ~/.neuroshard/release describe --tags` names the
   release, and the journal shows a fresh `is serving` line.
@@ -116,7 +125,8 @@ real requests, and owners reproduce that evaluation bit for bit.
 - Upgrade between jobs: `neuroshard assistant status` shows `open jobs`, and a job cut off mid-conversation
   expires and is refunded to its user.
 
-**Roll back.** Rerun the command with the previous release's `--branch`.
+**Roll back.** Rerun the command with the previous release in both the `join.sh` URL and `--branch`
+(`pilot-2-rc2` is the previous serving release).
 
 **Recover from a crash or reboot.**
 - The service restarts on failure and at boot.
@@ -188,8 +198,9 @@ neuroshard assistant faucet --home ~/.neuroshard/faucet --port 28782
 
 ## Talk to us
 
-Open a GitHub issue titled `Operator: <name>` with your role, region and machine type. Do not send keys.
-Include the output of `join.sh check`.
+Open a GitHub issue titled `Operator: <name>` with your role (owner, auditor or user), region and machine type.
+Do not send keys. Include the output of `join.sh check`. We're starting with two or three operators, so we may ask
+you to wait for a later group.
 Ask in the same thread if something in `scripts/join.sh` fails on your machine: that is the most useful
 report we can get.
 
@@ -199,4 +210,5 @@ report we can get.
 whether they signed, owners and their bonds, every model version and the vote that enacted it, the growth
 pool, and settled conversations and growth jobs. It reads several validators' RPCs through a read-only
 explorer (`python -m neuroshard.assistant.explorer`) that holds no keys. Anyone can run the same explorer
-against their own node. `neuroshard.com/join.sh` serves `scripts/join.sh` from this repository.
+against their own node. `neuroshard.com/join.sh` serves `scripts/join.sh` from `main`, which moves. For a
+reproducible install, use the tagged URL above.
