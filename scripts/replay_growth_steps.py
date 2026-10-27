@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--expect', required=True, nargs='+',
                         help='committed state root(s) the state after step --last must equal (any one of them)')
     parser.add_argument('--units', type=Path, help='unit store directory for continuation recipes')
+    parser.add_argument('--network', type=Path, help='network descriptor: resolve continuation units from the chain')
+    parser.add_argument('--home', type=Path, help='home for --network (chain checkpoint, fetched units)')
     parser.add_argument('--warm', action='store_true',
                         help='first run one discarded step on a separate model, as a long-running trainer is warm')
     parser.add_argument('--out', type=Path, required=True)
@@ -63,6 +65,14 @@ def main():
         raise SystemExit('the recipe does not hash to its committed root')
     if args.units:
         growth_replay.UNIT_STORE = args.units
+    if args.network:  # resolve continuation units as validators do: published files, or rebuilt from the chain
+        from neuroshard.assistant import network
+        from neuroshard.evolution.growth_runtime import provide_units
+        descriptor = network.descriptor(args.network)
+        chain = network.chain(descriptor, args.home)
+        provide_units(args.home, descriptor, chain.state, descriptor.get('proof_endpoints', []))
+        if args.units:
+            growth_replay.UNIT_STORE = args.units
     execution = growth_replay.execution(recipe)
     began = time.monotonic()
     record['warm'] = args.warm
