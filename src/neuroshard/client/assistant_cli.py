@@ -221,9 +221,9 @@ def run(args):
                         restart(config)
                 except Exception as error:  # noqa: BLE001 - keep validating; retry on the next pass
                     import traceback
-                    where = traceback.extract_tb(error.__traceback__)[-1]
-                    print(f'Validator version check: {error} ({Path(where.filename).name}:{where.lineno} in '
-                          f'{where.name})', flush=True)
+                    ours = [f for f in traceback.extract_tb(error.__traceback__) if '/neuroshard/' in f.filename]
+                    where = ' < '.join(f'{Path(f.filename).name}:{f.lineno} {f.name}' for f in reversed(ours[-3:]))
+                    print(f'Validator version check: {error} (at {where})', flush=True)
         except KeyboardInterrupt:
             pass
         finally:
