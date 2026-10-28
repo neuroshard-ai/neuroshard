@@ -389,6 +389,20 @@ def fetch_recipe(stores, root):
     return None
 
 
+# Where the network is reached, as opposed to what it serves: always the operator's current descriptor, never a
+# rebuilt version's copy, which would freeze the endpoints of the day the version was first rebuilt.
+ENDPOINT_FIELDS = ('rpc', 'rpcs', 'mirrors', 'proof_endpoints', 'faucet', 'faucets', 'trusted_validators')
+
+
+def with_current_endpoints(version, descriptor):
+    """``version`` (a rebuilt descriptor) reached through ``descriptor``'s current endpoints."""
+    merged = dict(version)
+    for field in ENDPOINT_FIELDS:
+        if field in descriptor:
+            merged[field] = descriptor[field]
+    return merged
+
+
 def follow(descriptor, state, home, stores, progress=print):
     """The descriptor of the version the chain serves, following owner-enacted growth with no published release.
 
@@ -408,7 +422,7 @@ def follow(descriptor, state, home, stores, progress=print):
         known = json.loads(saved.read_text())
         if network.model_root(known) == target:
             install(known, versions / target)
-            return known
+            return with_current_endpoints(known, descriptor)
     from neuroshard.inference import optimistic as ledger
 
     recipes = {}
@@ -441,7 +455,7 @@ def follow(descriptor, state, home, stores, progress=print):
     saved.write_text(json.dumps(upgraded, indent=2, sort_keys=True))
     install(upgraded, versions / target)
     progress(f'Following the owner-enacted version {target[:16]} (grown unit rebuilt from committed state)')
-    return upgraded
+    return with_current_endpoints(upgraded, descriptor)
 
 
 

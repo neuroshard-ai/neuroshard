@@ -191,3 +191,64 @@ def test_a_store_serves_only_a_complete_bundle_and_a_receiver_rejects_altered_by
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_a_followed_version_is_reached_through_the_current_endpoints_not_those_saved_when_it_was_rebuilt(
+        tmp_path, monkeypatch):
+    """The second live finding (2026-10-28): a rebuilt version's saved descriptor froze the stores and RPCs of the
+    day it was first rebuilt (only the seed's store), so validators replicated proofs only from one place."""
+    from neuroshard.evolution import growth_runtime
+
+    root = 'ab' * 32
+    saved = {'version': 'grown', 'model': 'm', 'rpc': 'http://old:26657', 'rpcs': [],
+             'proof_endpoints': ['http://seed:28780/proofs'], 'mirrors': ['http://gone:28781/']}
+    current = {'version': 'base', 'model': 'm0', 'rpc': 'http://seed:26657', 'rpcs': ['http://v4:26657'],
+               'proof_endpoints': ['http://seed:28780/proofs', 'http://v4:28780/proofs', 'http://v5:28780/proofs'],
+               'mirrors': ['http://v4:28781/'], 'trusted_validators': {'k': 1}}
+    (tmp_path / 'versions' / root).mkdir(parents=True)
+    (tmp_path / 'versions' / root / 'network.json').write_text(json.dumps(saved))
+    monkeypatch.setattr(network, 'model_root', lambda d: root if d.get('version') == 'grown' else 'cd' * 32)
+    monkeypatch.setattr(growth_runtime, 'install', lambda *_: None)
+    followed = growth_runtime.follow(current, {'model_root': root}, tmp_path, current['proof_endpoints'])
+    assert followed['version'] == 'grown' and followed['model'] == 'm'  # what is served: the rebuilt version
+    for field in ('rpc', 'rpcs', 'proof_endpoints', 'mirrors', 'trusted_validators'):  # where: the current one
+        assert followed[field] == current[field]
+    assert json.loads((tmp_path / 'versions' / root / 'network.json').read_text()) == saved  # cache untouched
+
+
+def test_the_proof_follower_fetches_a_new_challenges_bundle_within_seconds(partitions, market, tmp_path):
+    """Run 3 of the live re-test: a proof committed about 20 s after its challenge, before one validator's
+    30-second loop came round, so that validator never judged it. The follower closes that gap."""
+    import time
+
+    torch.set_num_threads(1)
+    session = market['open']('ab' * 32)
+    logs, _ = serve(partitions, session, market['keys'], fault=(1, 0))
+    records = saved(logs, market['keys'], session, tmp_path)
+    for rank in (1, 2):
+        market['state'] = ledger.transition(market['state'], commit(market, rank, session, records[rank][0]), None)
+    chain = Chain(market, None)
+    account = Account(market['people']['auditor'])
+    record, inputs = granite_audit.load(tmp_path / 'log-1')
+    proof_dir = tmp_path / 'proof'
+    granite_audit.save_proof(granite_audit.fraud_proof(record, inputs, granite_audit.replay(
+        partitions[1], record, inputs, None)), proof_dir)
+    root = granite_audit.bundle_root(proof_dir)
+    holder, follower = tmp_path / 'holder', tmp_path / 'follower'
+    server = network.serve_faucet(network.Faucet(chain, account), '127.0.0.1', 0, holder)
+    stopped = threading.Event()
+    thread = threading.Thread(target=network.follow_proofs, daemon=True, args=(
+        chain, follower, lambda: [f'http://127.0.0.1:{server.server_port}/proofs'], stopped, 0.2, lambda *_: None))
+    thread.start()
+    try:
+        chain.submit(account, 'challenge', job_id=session['job_id'], log_key=market['public'][1], proof_root=root)
+        audit.receive_proof(audit.proof_archive(proof_dir), root, chain.state(), holder)  # one store has it
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and not (follower / root).is_dir():
+            time.sleep(0.1)
+        assert granite_audit.read_bundle(follower, root)
+    finally:
+        stopped.set()
+        thread.join(3)
+        server.shutdown()
+        server.server_close()
