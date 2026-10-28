@@ -590,6 +590,26 @@ def serve_faucet(faucet, host, port, proof_store=None):
             # Published recipes are public: any agent fetches one by root and checks its hash itself.
             name = self.path.removeprefix('/proofs/')
             path = Path(proof_store) / name if proof_store is not None else None
+            # A held fraud-proof bundle (a directory named by its root) is served as the same archive an auditor
+            # uploads, so peer stores replicate it and a validator that missed the upload can still judge it.
+            # Its bytes are public evidence; a receiver checks them against the root, so serving needs no trust.
+            if (self.path.startswith('/proofs/') and len(name) == 68 and name.endswith('.zip')
+                    and all(c in '0123456789abcdef' for c in name[:64]) and path is not None):
+                from neuroshard.assistant import audit
+                from neuroshard.evolution.sharded import granite_audit
+                from neuroshard.inference import optimistic
+                try:
+                    granite_audit.read_bundle(proof_store, name[:64])  # only a complete bundle matching its root
+                    payload = audit.proof_archive(Path(proof_store) / name[:64])
+                except (OSError, ValueError, optimistic.ProofUnavailable):  # absent, incomplete or altered
+                    payload = None
+                if payload is not None:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/zip')
+                    self.send_header('Content-Length', str(len(payload)))
+                    self.end_headers()
+                    self.wfile.write(payload)
+                    return
             valid = (self.path.startswith('/proofs/') and len(name) in (69, 70) and name[64:] in ('.json', '.state')
                      and all(c in '0123456789abcdef' for c in name[:64]))
             if not valid or not path.is_file():
@@ -1569,8 +1589,13 @@ def replicate(chain, store, peers, progress=print):
     for job in state.get('growth', {}).values():
         wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
         wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]
+    # The fraud proof of every open serving challenge: without it this validator cannot judge the proof and must
+    # refuse every block that carries it, so a bundle that reached only some stores would let the cheater win.
+    for job in state.get('jobs', {}).values():
+        for challenge in job.get('challenges', {}).values():
+            wanted.append((challenge['proof_root'], f"{challenge['proof_root']}.zip"))
     for root, name in wanted:
-        if (store / name).exists():
+        if (store / name).exists() or (name.endswith('.zip') and (store / root).is_dir()):
             continue
         for peer in peers:
             try:
@@ -1582,5 +1607,5 @@ def replicate(chain, store, peers, progress=print):
             except (OSError, ValueError):
                 continue
     if copied:
-        progress(f'Replicated {copied} recipe or state file(s) from other stores')
+        progress(f'Replicated {copied} recipe, state or proof file(s) from other stores')
     return copied
