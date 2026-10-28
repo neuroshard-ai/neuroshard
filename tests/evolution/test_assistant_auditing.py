@@ -214,3 +214,41 @@ def test_a_followed_version_is_reached_through_the_current_endpoints_not_those_s
     for field in ('rpc', 'rpcs', 'proof_endpoints', 'mirrors', 'trusted_validators'):  # where: the current one
         assert followed[field] == current[field]
     assert json.loads((tmp_path / 'versions' / root / 'network.json').read_text()) == saved  # cache untouched
+
+
+def test_the_proof_follower_fetches_a_new_challenges_bundle_within_seconds(partitions, market, tmp_path):
+    """Run 3 of the live re-test: a proof committed about 20 s after its challenge, before one validator's
+    30-second loop came round, so that validator never judged it. The follower closes that gap."""
+    import time
+
+    torch.set_num_threads(1)
+    session = market['open']('ab' * 32)
+    logs, _ = serve(partitions, session, market['keys'], fault=(1, 0))
+    records = saved(logs, market['keys'], session, tmp_path)
+    for rank in (1, 2):
+        market['state'] = ledger.transition(market['state'], commit(market, rank, session, records[rank][0]), None)
+    chain = Chain(market, None)
+    account = Account(market['people']['auditor'])
+    record, inputs = granite_audit.load(tmp_path / 'log-1')
+    proof_dir = tmp_path / 'proof'
+    granite_audit.save_proof(granite_audit.fraud_proof(record, inputs, granite_audit.replay(
+        partitions[1], record, inputs, None)), proof_dir)
+    root = granite_audit.bundle_root(proof_dir)
+    holder, follower = tmp_path / 'holder', tmp_path / 'follower'
+    server = network.serve_faucet(network.Faucet(chain, account), '127.0.0.1', 0, holder)
+    stopped = threading.Event()
+    thread = threading.Thread(target=network.follow_proofs, daemon=True, args=(
+        chain, follower, lambda: [f'http://127.0.0.1:{server.server_port}/proofs'], stopped, 0.2, lambda *_: None))
+    thread.start()
+    try:
+        chain.submit(account, 'challenge', job_id=session['job_id'], log_key=market['public'][1], proof_root=root)
+        audit.receive_proof(audit.proof_archive(proof_dir), root, chain.state(), holder)  # one store has it
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and not (follower / root).is_dir():
+            time.sleep(0.1)
+        assert granite_audit.read_bundle(follower, root)
+    finally:
+        stopped.set()
+        thread.join(3)
+        server.shutdown()
+        server.server_close()

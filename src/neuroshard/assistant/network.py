@@ -1230,6 +1230,20 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     return config
 
 
+def follow_proofs(chain, store, peers, stopped, interval=3.0, progress=print):
+    """Fetch the bundle of every newly opened serving challenge from peer stores within seconds.
+
+    A validator that lacks a bundle cannot judge its proof and refuses every block carrying it; the proof then
+    commits only once more than two thirds of validators hold it. The validator's 30-second loop also replicates,
+    but a proof is usually submitted within seconds of its challenge, so this keeps every validator in the vote.
+    ``peers`` is a callable returning the current peer list (it changes as the validator follows versions)."""
+    while not stopped.wait(interval):
+        try:
+            replicate(chain, store, peers(), progress, proofs_only=True)
+        except Exception as error:  # noqa: BLE001 - a missed pass is retried in seconds
+            progress(f'Proof follower: {error}')
+
+
 def fell_behind(config, chain, margin=600):
     """True when the local node believes it is caught up while the network is ``margin`` blocks ahead."""
     from neuroshard.inference import optimistic_network as chain_network
@@ -1286,7 +1300,7 @@ def provision_units(descriptor, chain, home, store, peers, progress=print):
     return provided
 
 
-def replicate(chain, store, peers, progress=print):
+def replicate(chain, store, peers, progress=print, proofs_only=False):
     """Fetch, from other stores, the recipes and committed states the chain needs for the version it serves.
 
     Each is accepted exactly as a direct upload would be (``audit.receive_proof``): only if the chain names it
@@ -1298,10 +1312,10 @@ def replicate(chain, store, peers, progress=print):
     wanted = []
     from neuroshard.inference import optimistic as ledger
 
-    for result in ledger.grown(state):
+    for result in [] if proofs_only else ledger.grown(state):
         wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
                    (result['final_root'], f"{result['final_root']}.state")]
-    for job in state.get('growth', {}).values():
+    for job in [] if proofs_only else state.get('growth', {}).values():
         wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
         wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]
     # The fraud proof of every open serving challenge: without it this validator cannot judge the proof and must
