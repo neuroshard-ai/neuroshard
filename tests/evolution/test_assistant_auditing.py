@@ -191,3 +191,26 @@ def test_a_store_serves_only_a_complete_bundle_and_a_receiver_rejects_altered_by
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_a_followed_version_is_reached_through_the_current_endpoints_not_those_saved_when_it_was_rebuilt(
+        tmp_path, monkeypatch):
+    """The second live finding (2026-10-28): a rebuilt version's saved descriptor froze the stores and RPCs of the
+    day it was first rebuilt (only the seed's store), so validators replicated proofs only from one place."""
+    from neuroshard.evolution import growth_runtime
+
+    root = 'ab' * 32
+    saved = {'version': 'grown', 'model': 'm', 'rpc': 'http://old:26657', 'rpcs': [],
+             'proof_endpoints': ['http://seed:28780/proofs'], 'mirrors': ['http://gone:28781/']}
+    current = {'version': 'base', 'model': 'm0', 'rpc': 'http://seed:26657', 'rpcs': ['http://v4:26657'],
+               'proof_endpoints': ['http://seed:28780/proofs', 'http://v4:28780/proofs', 'http://v5:28780/proofs'],
+               'mirrors': ['http://v4:28781/'], 'trusted_validators': {'k': 1}}
+    (tmp_path / 'versions' / root).mkdir(parents=True)
+    (tmp_path / 'versions' / root / 'network.json').write_text(json.dumps(saved))
+    monkeypatch.setattr(network, 'model_root', lambda d: root if d.get('version') == 'grown' else 'cd' * 32)
+    monkeypatch.setattr(growth_runtime, 'install', lambda *_: None)
+    followed = growth_runtime.follow(current, {'model_root': root}, tmp_path, current['proof_endpoints'])
+    assert followed['version'] == 'grown' and followed['model'] == 'm'  # what is served: the rebuilt version
+    for field in ('rpc', 'rpcs', 'proof_endpoints', 'mirrors', 'trusted_validators'):  # where: the current one
+        assert followed[field] == current[field]
+    assert json.loads((tmp_path / 'versions' / root / 'network.json').read_text()) == saved  # cache untouched
