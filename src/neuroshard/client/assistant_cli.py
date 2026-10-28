@@ -220,7 +220,10 @@ def run(args):
                         print('Behind the network outside fast sync; restarting the node', flush=True)
                         restart(config)
                 except Exception as error:  # noqa: BLE001 - keep validating; retry on the next pass
-                    print(f'Validator version check: {error}', flush=True)
+                    import traceback
+                    where = traceback.extract_tb(error.__traceback__)[-1]
+                    print(f'Validator version check: {error} ({Path(where.filename).name}:{where.lineno} in '
+                          f'{where.name})', flush=True)
         except KeyboardInterrupt:
             pass
         finally:
