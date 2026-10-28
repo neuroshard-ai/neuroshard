@@ -1313,8 +1313,9 @@ def replicate(chain, store, peers, progress=print):
         if (store / name).exists() or (name.endswith('.zip') and (store / root).is_dir()):
             continue
         for peer in peers:
-            try:
-                with urllib.request.urlopen(f"{peer.rstrip('/')}/{name}", timeout=300) as response:
+            try:  # a proof is needed within its challenge window: one dead peer must not hold the pass for minutes
+                with urllib.request.urlopen(f"{peer.rstrip('/')}/{name}",
+                                            timeout=30 if name.endswith('.zip') else 300) as response:
                     payload = response.read()
                 audit.receive_proof(payload, root, state, store)
                 copied += 1
