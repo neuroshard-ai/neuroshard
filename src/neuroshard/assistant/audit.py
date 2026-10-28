@@ -264,16 +264,24 @@ class Auditor:
                                                          log_key=key, proof_root=root)
                             challenge_id = ledger.transaction_id(envelope)
                         payload = proof_archive(proof_dir)
-                        accepted = 0
-                        for endpoint in self.network['proof_endpoints']:
-                            request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
-                                                             headers={'Content-Type': 'application/zip'})
-                            try:  # one unavailable store must not stop delivery to the others
-                                with urllib.request.urlopen(request, timeout=60) as response:
-                                    response.read(4096)
-                                accepted += 1
-                            except OSError as error:
-                                self.progress(f'Proof store {endpoint} refused or unreachable: {error}')
+                        # Deliver to every store, retrying while stores still read a state from before the
+                        # challenge: a store refuses a bundle no open challenge names yet. Validators also copy
+                        # bundles from each other (``network.replicate``), so one accepting store suffices.
+                        accepted, deadline = 0, time.monotonic() + 90
+                        while True:
+                            accepted = 0
+                            for endpoint in self.network['proof_endpoints']:
+                                request = urllib.request.Request(endpoint.rstrip('/') + '/' + root, data=payload,
+                                                                 headers={'Content-Type': 'application/zip'})
+                                try:  # one unavailable store must not stop delivery to the others
+                                    with urllib.request.urlopen(request, timeout=20) as response:
+                                        response.read(4096)
+                                    accepted += 1
+                                except OSError as error:
+                                    self.progress(f'Proof store {endpoint} refused or unreachable: {error}')
+                            if accepted == len(self.network['proof_endpoints']) or time.monotonic() > deadline:
+                                break
+                            time.sleep(5)
                         if not accepted:
                             raise ConnectionError('no proof store accepted the bundle yet')
                         self.chain.submit(self.account, 'prove', job_id=job_id,
