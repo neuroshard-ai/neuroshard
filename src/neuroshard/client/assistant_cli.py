@@ -246,13 +246,22 @@ def run(args):
             optimistic_network.stop(config)
             optimistic_network.start(config)
 
+        current = {'descriptor': descriptor}
+        # Every voting role follows proofs, the seed included: a validator without a bundle refuses blocks carrying
+        # its proof, and the seed's store (home/bundles, as for validators) is not always the one an auditor reached.
+        if args.assistant_action in ('seed', 'validator'):
+            threading.Thread(target=network.follow_proofs, daemon=True, args=(
+                chain, args.home / 'bundles',
+                lambda: [e for e in current['descriptor'].get('proof_endpoints', []) if args.public_host not in e],
+                stopped)).start()
         try:
             while not stopped.wait(30):
                 try:  # the validator follows owner-enacted versions too, so it judges each job with its own weights
                     descriptor = network.follow_validator(config, descriptor, chain, args.home, rebuild, restart)
+                    current['descriptor'] = descriptor
+                    peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
+                    network.replicate(chain, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator':
-                        peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
-                        network.replicate(chain, args.home / 'bundles', peers)
                         # The units open recipes continue from, so this validator can judge their steps.
                         network.provision_units(descriptor, chain, args.home, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator' and network.fell_behind(config, chain):
@@ -261,7 +270,10 @@ def run(args):
                         print('Behind the network outside fast sync; restarting the node', flush=True)
                         restart(config)
                 except Exception as error:  # noqa: BLE001 - keep validating; retry on the next pass
-                    print(f'Validator version check: {error}', flush=True)
+                    import traceback
+                    ours = [f for f in traceback.extract_tb(error.__traceback__) if '/neuroshard/' in f.filename]
+                    where = ' < '.join(f'{Path(f.filename).name}:{f.lineno} {f.name}' for f in reversed(ours[-3:]))
+                    print(f'Validator version check: {error} (at {where})', flush=True)
         except KeyboardInterrupt:
             pass
         finally:

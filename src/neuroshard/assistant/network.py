@@ -590,6 +590,26 @@ def serve_faucet(faucet, host, port, proof_store=None):
             # Published recipes are public: any agent fetches one by root and checks its hash itself.
             name = self.path.removeprefix('/proofs/')
             path = Path(proof_store) / name if proof_store is not None else None
+            # A held fraud-proof bundle (a directory named by its root) is served as the same archive an auditor
+            # uploads, so peer stores replicate it and a validator that missed the upload can still judge it.
+            # Its bytes are public evidence; a receiver checks them against the root, so serving needs no trust.
+            if (self.path.startswith('/proofs/') and len(name) == 68 and name.endswith('.zip')
+                    and all(c in '0123456789abcdef' for c in name[:64]) and path is not None):
+                from neuroshard.assistant import audit
+                from neuroshard.evolution.sharded import granite_audit
+                from neuroshard.inference import optimistic
+                try:
+                    granite_audit.read_bundle(proof_store, name[:64])  # only a complete bundle matching its root
+                    payload = audit.proof_archive(Path(proof_store) / name[:64])
+                except (OSError, ValueError, optimistic.ProofUnavailable):  # absent, incomplete or altered
+                    payload = None
+                if payload is not None:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/zip')
+                    self.send_header('Content-Length', str(len(payload)))
+                    self.end_headers()
+                    self.wfile.write(payload)
+                    return
             valid = (self.path.startswith('/proofs/') and len(name) in (69, 70) and name[64:] in ('.json', '.state')
                      and all(c in '0123456789abcdef' for c in name[:64]))
             if not valid or not path.is_file():
@@ -1495,6 +1515,20 @@ def join_validator(network, home, public_host, audit_shards=(1, 2), p2p_port=POR
     return config
 
 
+def follow_proofs(chain, store, peers, stopped, interval=3.0, progress=print):
+    """Fetch the bundle of every newly opened serving challenge from peer stores within seconds.
+
+    A validator that lacks a bundle cannot judge its proof and refuses every block carrying it; the proof then
+    commits only once more than two thirds of validators hold it. The validator's 30-second loop also replicates,
+    but a proof is usually submitted within seconds of its challenge, so this keeps every validator in the vote.
+    ``peers`` is a callable returning the current peer list (it changes as the validator follows versions)."""
+    while not stopped.wait(interval):
+        try:
+            replicate(chain, store, peers(), progress, proofs_only=True)
+        except Exception as error:  # noqa: BLE001 - a missed pass is retried in seconds
+            progress(f'Proof follower: {error}')
+
+
 def fell_behind(config, chain, margin=600):
     """True when the local node believes it is caught up while the network is ``margin`` blocks ahead."""
     from neuroshard.inference import optimistic_network as chain_network
@@ -1551,7 +1585,166 @@ def provision_units(descriptor, chain, home, store, peers, progress=print):
     return provided
 
 
-def replicate(chain, store, peers, progress=print):
+def bounded_download(url, limit, timeout=30, deadline=60):
+    """At most ``limit`` bytes from ``url``, within ``deadline`` seconds overall, including connection setup.
+
+    The deadline is absolute and enforced on the socket itself: a watchdog shuts the connection down when it passes,
+    which ends any blocked read at once, whether in the status line, the headers, chunk framing or the body. A peer
+    that trickles bytes to keep each read alive cannot outlast it. The byte bound holds while streaming: at most
+    ``limit + 1`` bytes are ever held, and a larger declared Content-Length is refused before the body is read.
+
+    Known limit: connection *setup* is not under the absolute deadline. Name resolution is not interrupted, and a
+    hostname resolving to several addresses gives each its own connect timeout. Both are avoided only by proof
+    endpoints that are plain HTTP on literal IP addresses, as the live network's are; for a hostname or HTTPS
+    endpoint the overall bound is the deadline plus resolution and per-address connect time."""
+    import http.client
+    import socket
+    import urllib.parse
+
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme not in ('http', 'https') or not parts.hostname:
+        raise ValueError(f'unsupported store URL {url!r}')
+    path = (parts.path or '/') + (f'?{parts.query}' if parts.query else '')
+    kind = http.client.HTTPSConnection if parts.scheme == 'https' else http.client.HTTPConnection
+    started = time.monotonic()
+    connection = kind(parts.hostname, parts.port, timeout=max(0.05, min(timeout, deadline)))
+    expired, lock, held = threading.Event(), threading.Lock(), {}
+
+    def expire():
+        with lock:
+            expired.set()
+            # The socket captured at connect: http.client forgets connection.sock once a response will close
+            # the connection, but the response keeps reading from that same socket.
+            sock = held.get('sock') or connection.sock
+            if sock is not None:
+                try:
+                    sock.shutdown(socket.SHUT_RDWR)  # ends any read blocked in framing or body
+                except OSError:
+                    pass
+
+    watchdog = threading.Timer(deadline, expire)
+    watchdog.daemon = True
+    watchdog.start()
+    try:
+        connection.connect()  # bounded by the connection timeout, itself no longer than the deadline
+        with lock:
+            held['sock'] = connection.sock
+            if expired.is_set():
+                raise TimeoutError(f'connecting took longer than the {deadline} s deadline')
+        connection.request('GET', path, headers={'Connection': 'close'})
+        response = connection.getresponse()
+        if response.status != 200:
+            raise OSError(f'store answered HTTP {response.status}')
+        declared = response.getheader('Content-Length')
+        if declared is not None and declared.strip().isdigit() and int(declared) > limit:
+            raise ValueError(f'peer declares {declared} bytes, over the {limit}-byte bound')
+        payload = bytearray()
+        while True:
+            # read1 returns what has arrived rather than waiting for a full buffer
+            block = response.read1(min(CHUNK, limit + 1 - len(payload)))
+            if not block:
+                if expired.is_set():
+                    raise TimeoutError(f'transfer exceeded its {deadline} s deadline')
+                return bytes(payload)
+            payload.extend(block)
+            if len(payload) > limit:
+                raise ValueError(f'peer sent more than the {limit}-byte bound')
+    except Exception as error:
+        if expired.is_set() and not isinstance(error, TimeoutError):
+            raise TimeoutError(f'transfer exceeded its {deadline} s deadline '
+                               f'({time.monotonic() - started:.2f} s, {type(error).__name__})') from error
+        raise
+    finally:
+        watchdog.cancel()
+        expire_now = held.get('sock') or connection.sock
+        if expire_now is not None:
+            try:
+                expire_now.shutdown(socket.SHUT_RDWR)  # never drain a refused peer
+            except OSError:
+                pass
+        connection.close()
+
+
+# A serving challenge's deadline is a block height, not a duration. Budgets convert blocks to seconds assuming each
+# block takes at least PROOF_SECONDS_PER_BLOCK, i.e. blocks come no faster than one per second. That is a heuristic,
+# not a guarantee: the live network averages about 1.3 s per block, so it usually under-estimates the time left, but
+# a burst of faster blocks would shrink the real window. Budgets also keep back a quarter of the remaining blocks, at
+# least PROOF_RESERVE_BLOCKS, for judging the proof and submitting it; that reserve is a heuristic too, not a bound
+# that holds for every proof length. The chain is re-read before every attempt, so neither error accumulates.
+PROOF_SECONDS_PER_BLOCK = 1.0
+PROOF_RESERVE_BLOCKS = 3
+PROOF_ATTEMPT_SECONDS = 60  # no single transfer is allowed longer than this
+PROOF_MIN_ATTEMPT_SECONDS = 0.5
+PROOF_PASSES = {}  # (store, proof root) -> passes made so far, for rotating which peer is asked first
+
+
+def open_proofs(state):
+    """{proof root: earliest deadline height} for every open serving challenge."""
+    found = {}
+    for job in state.get('jobs', {}).values():
+        for challenge in job.get('challenges', {}).values():
+            root, deadline = challenge['proof_root'], challenge.get('deadline')
+            if deadline is None:
+                deadline = state.get('height', 0) + (state.get('params') or {}).get('proof_blocks', 20)
+            found[root] = min(deadline, found.get(root, deadline))
+    return found
+
+
+def proof_budget(state, deadline):
+    """Seconds this validator may spend acquiring a proof whose challenge closes at height ``deadline``."""
+    left = deadline - state.get('height', 0)
+    usable = left - max(PROOF_RESERVE_BLOCKS, left // 4)
+    return max(0.0, usable * PROOF_SECONDS_PER_BLOCK)
+
+
+def replicate_proofs(chain, store, peers, state=None, progress=print, rng=None):
+    """Fetch every open serving challenge's bundle from peer stores, most urgent first, within its deadline.
+
+    The deadline that matters is the challenge's, not any transfer's. Before every attempt the chain is read again:
+    a closed challenge is dropped, and the time left is recomputed from its recorded deadline. Each attempt gets a
+    fair share of what is left, divided among the peers not yet tried, so one slow peer cannot use up the window
+    before a healthy one is asked. The first pass for a proof asks peers in list order; each later pass for the same
+    proof starts one peer further on, so the same slow peer is not always asked first.
+    A bundle is accepted only against the freshest state, as a direct upload would be. Returns how many were copied.
+    This bounds the time spent; it cannot make a bundle available if no reachable store holds one in time."""
+    from neuroshard.assistant import audit
+
+    store, copied = Path(store), 0
+    state = state or chain.state()
+    pending = sorted(open_proofs(state).items(), key=lambda item: item[1])
+    for root, _ in pending:
+        if (store / root).is_dir():
+            continue
+        order = list(peers)
+        key = (str(store), root)  # per store: one validator's passes never reorder another's
+        passes = PROOF_PASSES.get(key, 0)
+        PROOF_PASSES[key] = passes + 1
+        if order:
+            shift = (rng.randrange(len(order)) if rng is not None else passes % len(order))
+            order = order[shift:] + order[:shift]
+        for index, peer in enumerate(order):
+            state = chain.state()
+            deadline = open_proofs(state).get(root)
+            if deadline is None:
+                progress(f'Proof {root[:16]}: its challenge closed; stopped fetching it')
+                break
+            budget = proof_budget(state, deadline)
+            if budget <= 0:
+                progress(f'Proof {root[:16]}: no time left before height {deadline} to fetch and judge it')
+                break
+            allowance = min(PROOF_ATTEMPT_SECONDS, max(PROOF_MIN_ATTEMPT_SECONDS, budget / (len(order) - index)))
+            try:  # each peer's failure is its own: the next one is tried
+                payload = bounded_download(f"{peer.rstrip('/')}/{root}.zip", audit.MAX_PROOF_BYTES,
+                                           timeout=min(30, allowance), deadline=allowance)
+                audit.receive_proof(payload, root, chain.state(), store)  # against the current chain
+                copied += 1
+                break
+            except Exception as error:  # noqa: BLE001 - nothing from this peer is kept
+                progress(f'Store {peer} could not provide proof {root[:16]}: {type(error).__name__}: {error}'[:200])
+    return copied
+
+
+def replicate(chain, store, peers, progress=print, proofs_only=False, rng=None):
     """Fetch, from other stores, the recipes and committed states the chain needs for the version it serves.
 
     Each is accepted exactly as a direct upload would be (``audit.receive_proof``): only if the chain names it
@@ -1563,24 +1756,25 @@ def replicate(chain, store, peers, progress=print):
     wanted = []
     from neuroshard.inference import optimistic as ledger
 
-    for result in ledger.grown(state):
+    for result in [] if proofs_only else ledger.grown(state):
         wanted += [(result['recipe_root'], f"{result['recipe_root']}.json"),
                    (result['final_root'], f"{result['final_root']}.state")]
-    for job in state.get('growth', {}).values():
+    for job in [] if proofs_only else state.get('growth', {}).values():
         wanted.append((job['recipe_root'], f"{job['recipe_root']}.json"))
         wanted += [(c['step_roots'][-1], f"{c['step_roots'][-1]}.state") for c in job['commits']]
     for root, name in wanted:
         if (store / name).exists():
             continue
+        limit = audit.MAX_STATE_BYTES if name.endswith('.state') else audit.MAX_RECIPE_BYTES
         for peer in peers:
-            try:
-                with urllib.request.urlopen(f"{peer.rstrip('/')}/{name}", timeout=300) as response:
-                    payload = response.read()
+            try:  # each peer's failure is its own: the next one is tried
+                payload = bounded_download(f"{peer.rstrip('/')}/{name}", limit, timeout=300, deadline=1800)
                 audit.receive_proof(payload, root, state, store)
                 copied += 1
                 break
-            except (OSError, ValueError):
-                continue
+            except Exception as error:  # noqa: BLE001 - nothing from this peer is kept
+                progress(f'Store {peer} could not provide {name[:16]}: {type(error).__name__}: {error}'[:200])
+    copied += replicate_proofs(chain, store, peers, state, progress, rng)
     if copied:
-        progress(f'Replicated {copied} recipe or state file(s) from other stores')
+        progress(f'Replicated {copied} recipe, state or proof file(s) from other stores')
     return copied
