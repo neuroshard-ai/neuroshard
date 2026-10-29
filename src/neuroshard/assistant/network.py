@@ -1300,6 +1300,49 @@ def provision_units(descriptor, chain, home, store, peers, progress=print):
     return provided
 
 
+def bounded_download(url, limit, timeout=30, deadline=60):
+    """At most ``limit`` bytes from ``url``, read in chunks, within ``deadline`` seconds overall.
+
+    The bound holds while streaming: a peer that sends more (whatever its Content-Length says), or keeps a slow
+    transfer alive past the deadline, is cut off after at most ``limit + 1`` bytes are held in memory."""
+    import socket
+
+    ends = time.monotonic() + deadline
+    response = urllib.request.urlopen(url, timeout=timeout)
+    try:
+        declared = response.headers.get('Content-Length') if hasattr(response, 'headers') else None
+        if declared is not None and declared.isdigit() and int(declared) > limit:
+            raise ValueError(f'peer declares {declared} bytes, over the {limit}-byte bound')
+        payload = bytearray()
+        while True:
+            remaining = ends - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(f'transfer exceeded its {deadline} s deadline')
+            raw = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+            if raw is not None:  # no single read may outlast the overall deadline
+                raw.settimeout(min(timeout, remaining))
+            # read1 returns what has arrived; read(n) would wait for all n bytes, so a peer trickling one byte
+            # at a time could hold a single call far past the deadline.
+            reader = getattr(response, 'read1', response.read)
+            block = reader(min(CHUNK, limit + 1 - len(payload)))
+            if not block:
+                return bytes(payload)
+            payload.extend(block)
+            if len(payload) > limit:
+                raise ValueError(f'peer sent more than the {limit}-byte bound')
+    except BaseException:
+        # Drop a refused peer at once: an orderly close would drain or wait on whatever it is still sending.
+        raw = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+        if raw is not None:
+            try:
+                raw.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+        raise
+    finally:
+        response.close()
+
+
 def replicate(chain, store, peers, progress=print, proofs_only=False):
     """Fetch, from other stores, the recipes and committed states the chain needs for the version it serves.
 
@@ -1326,15 +1369,20 @@ def replicate(chain, store, peers, progress=print, proofs_only=False):
     for root, name in wanted:
         if (store / name).exists() or (name.endswith('.zip') and (store / root).is_dir()):
             continue
+        proof = name.endswith('.zip')
+        limit = audit.MAX_PROOF_BYTES if proof else (audit.MAX_STATE_BYTES if name.endswith('.state')
+                                                     else audit.MAX_RECIPE_BYTES)
         for peer in peers:
-            try:  # a proof is needed within its challenge window: one dead peer must not hold the pass for minutes
-                with urllib.request.urlopen(f"{peer.rstrip('/')}/{name}",
-                                            timeout=30 if name.endswith('.zip') else 300) as response:
-                    payload = response.read()
+            # Every failure is this peer's alone: a dead, slow, oversized or malformed peer is skipped and the next
+            # one tried, so one bad store cannot block a healthy one. A proof is needed within its challenge window.
+            try:
+                payload = bounded_download(f"{peer.rstrip('/')}/{name}", limit,
+                                           timeout=30 if proof else 300, deadline=60 if proof else 1800)
                 audit.receive_proof(payload, root, state, store)
                 copied += 1
                 break
-            except (OSError, ValueError):
+            except Exception as error:  # noqa: BLE001 - see above; nothing from this peer is kept
+                progress(f'Store {peer} could not provide {name[:16]}: {type(error).__name__}: {error}'[:200])
                 continue
     if copied:
         progress(f'Replicated {copied} recipe, state or proof file(s) from other stores')

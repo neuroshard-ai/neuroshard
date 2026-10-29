@@ -206,7 +206,9 @@ def run(args):
             optimistic_network.start(config)
 
         current = {'descriptor': descriptor}
-        if args.assistant_action == 'validator':
+        # Every voting role follows proofs, the seed included: a validator without a bundle refuses blocks carrying
+        # its proof, and the seed's store (home/bundles, as for validators) is not always the one an auditor reached.
+        if args.assistant_action in ('seed', 'validator'):
             threading.Thread(target=network.follow_proofs, daemon=True, args=(
                 chain, args.home / 'bundles',
                 lambda: [e for e in current['descriptor'].get('proof_endpoints', []) if args.public_host not in e],
@@ -216,9 +218,9 @@ def run(args):
                 try:  # the validator follows owner-enacted versions too, so it judges each job with its own weights
                     descriptor = network.follow_validator(config, descriptor, chain, args.home, rebuild, restart)
                     current['descriptor'] = descriptor
+                    peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
+                    network.replicate(chain, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator':
-                        peers = [e for e in descriptor.get('proof_endpoints', []) if args.public_host not in e]
-                        network.replicate(chain, args.home / 'bundles', peers)
                         # The units open recipes continue from, so this validator can judge their steps.
                         network.provision_units(descriptor, chain, args.home, args.home / 'bundles', peers)
                     if args.assistant_action == 'validator' and network.fell_behind(config, chain):
