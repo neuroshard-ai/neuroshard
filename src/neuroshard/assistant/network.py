@@ -1306,7 +1306,12 @@ def bounded_download(url, limit, timeout=30, deadline=60):
     The deadline is absolute and enforced on the socket itself: a watchdog shuts the connection down when it passes,
     which ends any blocked read at once, whether in the status line, the headers, chunk framing or the body. A peer
     that trickles bytes to keep each read alive cannot outlast it. The byte bound holds while streaming: at most
-    ``limit + 1`` bytes are ever held, and a larger declared Content-Length is refused before the body is read."""
+    ``limit + 1`` bytes are ever held, and a larger declared Content-Length is refused before the body is read.
+
+    Known limit: connection *setup* is not under the absolute deadline. Name resolution is not interrupted, and a
+    hostname resolving to several addresses gives each its own connect timeout. Both are avoided only by proof
+    endpoints that are plain HTTP on literal IP addresses, as the live network's are; for a hostname or HTTPS
+    endpoint the overall bound is the deadline plus resolution and per-address connect time."""
     import http.client
     import socket
     import urllib.parse
@@ -1375,9 +1380,12 @@ def bounded_download(url, limit, timeout=30, deadline=60):
         connection.close()
 
 
-# A serving challenge's deadline is a block height, not a duration. Budgets assume blocks come no slower than one per
-# PROOF_SECONDS_PER_BLOCK (the live network runs at about 1.3 s, so 1.0 s under-estimates the time left), and keep
-# back a quarter of the remaining blocks, at least PROOF_RESERVE_BLOCKS, for judging the proof and submitting it.
+# A serving challenge's deadline is a block height, not a duration. Budgets convert blocks to seconds assuming each
+# block takes at least PROOF_SECONDS_PER_BLOCK, i.e. blocks come no faster than one per second. That is a heuristic,
+# not a guarantee: the live network averages about 1.3 s per block, so it usually under-estimates the time left, but
+# a burst of faster blocks would shrink the real window. Budgets also keep back a quarter of the remaining blocks, at
+# least PROOF_RESERVE_BLOCKS, for judging the proof and submitting it; that reserve is a heuristic too, not a bound
+# that holds for every proof length. The chain is re-read before every attempt, so neither error accumulates.
 PROOF_SECONDS_PER_BLOCK = 1.0
 PROOF_RESERVE_BLOCKS = 3
 PROOF_ATTEMPT_SECONDS = 60  # no single transfer is allowed longer than this
