@@ -13,4 +13,4 @@ boto3==1.41.5
 requests==2.34.2
 urllib3==2.7.0
 idna==3.19
-filelock==3.32.6
+filelock==4.2.1
