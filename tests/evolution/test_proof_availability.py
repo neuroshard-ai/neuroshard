@@ -12,7 +12,11 @@ import zipfile
 import pytest
 
 from neuroshard.assistant import audit, network
-from neuroshard.client import assistant_cli, live_runtime
+from neuroshard.client import assistant_cli
+try:  # the live runtime check exists from runtime 2 on; older trees have none to stub
+    from neuroshard.client import live_runtime
+except ImportError:
+    live_runtime = None
 from neuroshard.evolution.sharded import granite_audit
 from neuroshard.inference import optimistic_network
 
@@ -74,8 +78,15 @@ def test_both_validator_launch_paths_start_the_proof_follower(role, monkeypatch,
     chain = SimpleNamespace()
     config = {'validators': []}
     started = []
-    monkeypatch.setattr(live_runtime, 'configure', lambda: None)
-    monkeypatch.setattr(live_runtime, 'check', lambda: None)
+    if live_runtime is not None:
+        monkeypatch.setattr(live_runtime, 'configure', lambda: None)
+        monkeypatch.setattr(live_runtime, 'check', lambda: None)
+    try:  # older trees pin the numerical runtime here instead; this test checks dispatch, not the runtime
+        from neuroshard.evolution import assistant_growth_cohort3_eval, granite_shard_execution
+        monkeypatch.setattr(granite_shard_execution, 'configure', lambda: None)
+        monkeypatch.setattr(assistant_growth_cohort3_eval, 'runtime', lambda *_: None)
+    except ImportError:
+        pass
     monkeypatch.setattr(network, 'descriptor', lambda _: descriptor)
     monkeypatch.setattr(network, 'seed', lambda *a, **k: (config, chain, None))
     monkeypatch.setattr(network, 'chain', lambda *a: chain)
