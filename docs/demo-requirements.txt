@@ -9,4 +9,4 @@ requests==2.34.2
 pytest==9.1.1
 urllib3==2.7.0
 idna==3.19
-filelock==3.32.6
+filelock==4.2.1
