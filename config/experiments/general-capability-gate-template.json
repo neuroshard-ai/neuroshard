@@ -1,0 +1,36 @@
+{
+  "format": "neuroshard-general-capability-gate/1",
+  "status": "template: copy, fill every null and commit before the sealed split opens; a filled declaration may not change afterwards",
+  "candidate": null,
+  "incumbent": "a4-general (model root 71e2835b...)",
+  "split": "sealed-1",
+  "split_commitment": null,
+  "level": 0.90,
+  "level_note": "two-sided 90% paired-bootstrap interval, i.e. a one-sided 95% bound for each check",
+  "bootstrap_samples": 10000,
+  "bootstrap_seed": 20261030,
+  "areas": {
+    "reasoning": {"margin": 0.05},
+    "coding": {"margin": 0.05},
+    "writing": {"margin": 0.05},
+    "factual": {"margin": 0.05},
+    "planning": {"margin": 0.05},
+    "tool_use": {"margin": 0.05}
+  },
+  "improvement": {"rule": "macro", "floor": 0.0, "targets": null,
+                  "note": "rule 'targets' with a list of areas instead requires each target's Bonferroni-adjusted lower bound above the floor"},
+  "maximum_extra_unsupported": 0,
+  "maximum_system_errors": 0,
+  "judged": {"rubric": "writing/1", "margin": 0.07, "judge": null, "judge_prompt_sha256": null,
+             "calibration": {"minimum_agreement": 0.75, "minimum_kappa": 0.5, "minimum_position_consistency": 0.8}},
+  "preservation": {
+    "documents": {"cases": 132, "minimum_passed": 113, "source": "general route minimum 85% (docs/ASSISTANT_GENERAL_ROUTE.md)"},
+    "chat": {"cases": 96, "minimum_passed": 87, "source": "general route minimum 90%"},
+    "not_found": {"cases": 24, "minimum_passed": 22, "source": "general route minimum 90%"},
+    "a3_drafting": {"cases": null, "minimum_passed": null, "source": "A3's declared drafting minimum, on a fresh split"},
+    "a3_scheduling": {"cases": null, "minimum_passed": null, "source": "A3's declared scheduling minimum, on a fresh split"},
+    "a3_cross": {"cases": null, "minimum_passed": null, "source": "A3's declared cross-capability minimum, on a fresh split"}
+  },
+  "training_on_evaluation_items": false,
+  "budget_usd": null
+}

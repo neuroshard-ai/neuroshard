@@ -51,6 +51,7 @@ include-package-data = true
 "neuroshard.lab" = ["*.proto"]
 "neuroshard.protos" = ["*.proto"]
 "neuroshard.publicnet" = ["data/*.txt"]
+"neuroshard.evolution.general_eval" = ["data/*/*.jsonl"]
 "neuroshard.client" = ["networks/*.json", "assistant-policy.json", "consensus/go.mod", "consensus/go.sum"]
 
 [tool.pytest.ini_options]
