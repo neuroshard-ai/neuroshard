@@ -437,3 +437,79 @@ pinned canonical one: packages, Python 3.12.12, AMX bf16, and 8 threads.
    No new item starts after 3.6 h of worker time.
 
 The run publishes development numbers only, labelled *development, not a baseline claim*.
+
+### Step 0 result (development, not a baseline claim)
+
+October 30, 2026, from commit `7586607`, after CI run
+[41069989433](https://github.com/neuroshard-ai/neuroshard/actions/runs/41069989433) passed
+([report](../config/experiments/general-eval-development-report.json),
+[transcripts](../config/experiments/general-eval-development-transcripts.json.gz)). It ran on one
+r7i.4xlarge, which was retired by the runner. The numbers describe the open development split and say
+nothing about sealed performance.
+
+**Reproduction first: 10/10.** All ten confirmation7 conversations (five documents, five chat) matched
+their accepted runs in every token, call, result, reply, route and snapshot. The local stack on this host
+is therefore the served one.
+
+| area (20 items each) | passed | Wilson 95% | notes |
+| --- | --- | --- | --- |
+| reasoning | 8 | 22–61% | every failure is a wrong answer except one that ran out of model turns |
+| coding | 16 | 58–92% | 4 wrong solutions; no timeouts |
+| writing (constraints) | 15 | 53–89% | 3 paragraph-count misses, 1 missing word, 1 `check_text` loop that ran out of turns |
+| factual | 18 | 70–97% | the false-premise item answered "1921"; the unknowable item was mis-scored (defect 1) |
+| planning | 4 | 8–42% | constraint violations; 2 items routed to A3's scheduling route, which fail with no user files |
+| tool use, served tools (`documents/2`) | **6/6** | 61–100% | the gated part for served versions |
+| tool use, generic (`fixture/1`, reported separately) | 0/14 | — | all unsupported, as declared |
+
+Overall 67/120, all on development. Every item rescored identically on the controller, including
+re-running every coding item in the sandbox. Route histogram: chat 98, documents 6, scheduling 2,
+unsupported 14. A3's drafting was never chosen.
+
+**Time per item** (106 items that generated, canonical host): mean 59.5 s, maximum 334 s. By area:
+
+| reasoning | coding | writing | factual | planning | documents tools |
+| --- | --- | --- | --- | --- | --- |
+| 37 s | 154 s | 40 s | 21 s | 51 s | 44 s |
+
+The run produced 424 generations and 26,539 generated tokens. The worker took 6,709 s wall (1.86 h),
+with a peak RSS of 23 GB.
+
+**Cost.** Both attempts together used 7,059 conservative instance-seconds: **$2.08** of compute, no
+Bedrock and no other spend.
+
+- **Attempt 1** (`ea3f144`) stopped in the worker before any generation. `assistant_turn_router.py` was
+  outside the declared sparse checkout, because the source probe had stubbed the router. It cost 168 s,
+  $0.05.
+- **Attempt 2** cost 6,890 s, $2.03.
+
+Both receipts show no remaining instance or volume, and a retired security group. EC2 lookups by tag
+afterwards confirmed the instance terminated, with no volume and no security group left.
+
+**Defects found** (none changes a recorded result; fix before sealed-1 is authored):
+
+1. *Scorer, factual abstention.* `factual-dev-020` answered "Answer: Unknown", which is correct, but
+   "unknown" is not among its accepted markers. With it accepted, the total would be 68/120. Abstention
+   items need a broader, pre-declared marker set, or they should be dropped from gated areas.
+2. *Scorer, answer extraction.* `ANSWER_LINE` only finds `Answer:` at the start of a line. In
+   `reasoning-dev-001` it appeared mid-line ("… 191 minutes. Answer: 191."). The numeric fallback took the
+   same wrong number, so the outcome is unchanged, but a text answer written that way would fail. Accept
+   the last `Answer:` anywhere.
+3. *Item wording.* `planning-dev-010` does not say the start times must be `"HH:MM"` strings, and the
+   model gave integers. The plan still fails under a lenient reading (it overlaps the keynote), so the
+   outcome is unchanged.
+4. *Item format robustness (no change).* Three budget plans returned lists of objects (`{"item":
+   "chair", "cost": 180}`) instead of names. They fail under a lenient reading too. The strict rule
+   stays, but sealed items should state the expected shape with an example.
+
+**Served-version findings** (not defects):
+
+- the router sent 2 of 20 planning requests ("Workday 09:00-17:00 …", "Moving day …") to A3's scheduling
+  route;
+- the chat route's `check_text` loop exhausted the 8 model turns in 3 items;
+- the false-premise item was accepted at face value;
+- arithmetic and logic remain the parent's weakest skills, even with the calculator.
+
+**Step 1 re-estimate.** Measured per-area means × 500 items per area come to 48.1 h of canonical-host
+time for sealed-1 (coding is 44% of it). That is **about $51 compute plus about $3 of setup across
+hosts, about $54**, within the earlier $41–83 range (central $55). It needs seven to eight hosts, each
+within the runner's 8 h single-host contract. Step 1 remains unapproved, and no sealed item exists.
