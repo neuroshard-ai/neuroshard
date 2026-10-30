@@ -1,0 +1,471 @@
+{
+  "baseline_claim": false,
+  "format": "neuroshard-general-capability-smoke/1",
+  "items": [
+    "reasoning-dev-001",
+    "reasoning-dev-002",
+    "reasoning-dev-003",
+    "coding-dev-001",
+    "coding-dev-002",
+    "coding-dev-003",
+    "writing-dev-001",
+    "writing-dev-002",
+    "writing-dev-003",
+    "factual-dev-001",
+    "factual-dev-002",
+    "factual-dev-003",
+    "planning-dev-001",
+    "planning-dev-002",
+    "planning-dev-003",
+    "tool_use-dev-001",
+    "tool_use-dev-002",
+    "tool_use-dev-003"
+  ],
+  "purpose": "pipeline check only; no number here describes any served or candidate model",
+  "split": "development",
+  "split_sha256": "1433201b4f0634d4b350bc87c2b34533c6a2dd9431a18c7922ac526fc9887320",
+  "systems": {
+    "oracle": {
+      "areas": {
+        "coding": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "intervals": "1/1",
+            "parsing": "1/1",
+            "strings": "1/1"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        },
+        "factual": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "geography": "1/1",
+            "literature": "1/1",
+            "science": "1/1"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        },
+        "planning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "assignment": "1/1",
+            "order": "1/1",
+            "schedule": "1/1"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        },
+        "reasoning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "algebra": "1/1",
+            "rates": "1/1",
+            "time": "1/1"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        },
+        "tool_use": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "lookup": "1/1",
+            "refusal": "1/1",
+            "state-change": "1/1"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        },
+        "writing": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "email": "1/1",
+            "summary": "2/2"
+          },
+          "passed": 3,
+          "rate": 1.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.4385,
+            1.0
+          ]
+        }
+      },
+      "cost": {
+        "compute_usd": 0.0,
+        "generated_tokens": null,
+        "generations": 23,
+        "host": "local 4 vCPU development box",
+        "judge_calls": 0,
+        "judge_usd": 0.0,
+        "model_seconds": 0.008,
+        "usd_per_hour": 0.0,
+        "wall_seconds": 0.153
+      },
+      "overall": {
+        "cases": 18,
+        "macro_rate": 1.0,
+        "passed": 18
+      },
+      "rescored_passed": 18,
+      "sandbox_isolation": [
+        [
+          "audit-hook",
+          "isolated-python",
+          "netns",
+          "rlimits",
+          "scrubbed-env",
+          "timeout",
+          "tmpdir"
+        ]
+      ],
+      "system": {
+        "kind": "model",
+        "max_calls": 10,
+        "max_steps": 8,
+        "name": "oracle (references)",
+        "system_prompt": "You are a helpful, accurate and concise assistant."
+      }
+    },
+    "tiny-model": {
+      "areas": {
+        "coding": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "intervals": "0/1",
+            "parsing": "0/1",
+            "strings": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "factual": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "geography": "0/1",
+            "literature": "0/1",
+            "science": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "planning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "assignment": "0/1",
+            "order": "0/1",
+            "schedule": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "reasoning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "algebra": "0/1",
+            "rates": "0/1",
+            "time": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "tool_use": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "lookup": "0/1",
+            "refusal": "0/1",
+            "state-change": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "writing": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "email": "0/1",
+            "summary": "0/2"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        }
+      },
+      "cost": {
+        "compute_usd": 0.0,
+        "generated_tokens": 432,
+        "generations": 18,
+        "host": "local 4 vCPU development box",
+        "judge_calls": 0,
+        "judge_usd": 0.0,
+        "model_seconds": 12.019,
+        "usd_per_hour": 0.0,
+        "wall_seconds": 12.019
+      },
+      "overall": {
+        "cases": 18,
+        "macro_rate": 0.0,
+        "passed": 0
+      },
+      "rescored_passed": 0,
+      "sandbox_isolation": [],
+      "system": {
+        "kind": "model",
+        "max_calls": 10,
+        "max_steps": 2,
+        "name": "tiny random Granite-architecture model (test fixture)",
+        "system_prompt": "You are a helpful, accurate and concise assistant."
+      }
+    },
+    "tiny-served": {
+      "areas": {
+        "coding": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "intervals": "0/1",
+            "parsing": "0/1",
+            "strings": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "chat": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "factual": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "geography": "0/1",
+            "literature": "0/1",
+            "science": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "chat": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "planning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "assignment": "0/1",
+            "order": "0/1",
+            "schedule": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "chat": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "reasoning": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "algebra": "0/1",
+            "rates": "0/1",
+            "time": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "chat": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "tool_use": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "lookup": "0/1",
+            "refusal": "0/1",
+            "state-change": "0/1"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "None": 3
+          },
+          "unsupported": 3,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        },
+        "writing": {
+          "cases": 3,
+          "errors": 0,
+          "families": {
+            "email": "0/1",
+            "summary": "0/2"
+          },
+          "passed": 0,
+          "rate": 0.0,
+          "routes": {
+            "chat": 3
+          },
+          "unsupported": 0,
+          "wilson95": [
+            0.0,
+            0.5615
+          ]
+        }
+      },
+      "cost": {
+        "compute_usd": 0.0,
+        "generated_tokens": 360,
+        "generations": 15,
+        "host": "local 4 vCPU development box",
+        "judge_calls": 0,
+        "judge_usd": 0.0,
+        "model_seconds": 11.045,
+        "usd_per_hour": 0.0,
+        "wall_seconds": 11.046
+      },
+      "overall": {
+        "cases": 18,
+        "macro_rate": 0.0,
+        "passed": 0
+      },
+      "rescored_passed": 0,
+      "sandbox_isolation": [],
+      "system": {
+        "kind": "served",
+        "modules": [
+          "tiny"
+        ],
+        "name": "tiny model under a4-general route policies (stand-in router)",
+        "policies_sha256": {
+          "chat": "f482a30f9a36dccf1d8b2d5acfd13e58477174c8824b40498f8805d4e00dec3e",
+          "documents": "482a3b021ad6d40467021ebe5f95dcfa6b34f53f71a8eefca788cb58d4c53058",
+          "drafting": "5a49ad9321e5e82cfef31ab803dff84c4e6a378323852676ee1c50bf537193fb",
+          "scheduling": "0247bbf33c407a62c1353e63c7053d8cf1ab2eb8f0d2e0d6ddfa519684bc451b"
+        }
+      }
+    }
+  }
+}
