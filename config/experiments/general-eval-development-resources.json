@@ -34,7 +34,17 @@
     "sha256": "468c13cb1c6717d0092d02c089aaccb390a4e1298c0d8493d18a5d496073f615"
   },
   "budget_scope": "Step 0 of the general-capability evaluation, approved with a hard $10 compute cap: one r7i.4xlarge for at most 5 hours (the host shuts itself down and is terminated at expiry; 5 h x $1.0584 = $5.29 maximum compute), reproducing ten confirmation7 conversations then running the 120 open development items. Uploads only L9, C1 and the released A3 router. No GPU, no training, no Bedrock, no sealed split.",
-  "prior_attempts": [],
+  "prior_attempts": [
+    {
+      "home": "general-eval-step0-20261030",
+      "instance_ids": [
+        "i-049097a1f4702cf16"
+      ],
+      "conservative_instance_seconds": 168.389547,
+      "conservative_compute_usd": 0.049506526818,
+      "retired": true
+    }
+  ],
   "upload": {
     "local": "/home/ubuntu/neuroshard/.neuroshard/general-eval-step0-inputs",
     "files": [

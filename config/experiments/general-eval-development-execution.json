@@ -160,6 +160,7 @@
     "src/neuroshard/evolution/assistant_schedule_demonstration.py",
     "src/neuroshard/evolution/assistant_selector.py",
     "src/neuroshard/evolution/assistant_serving.py",
+    "src/neuroshard/evolution/assistant_turn_router.py",
     "src/neuroshard/evolution/assistant_workflow.py",
     "src/neuroshard/evolution/assistant_workflow_baseline.py",
     "src/neuroshard/evolution/assistant_workflow_canonical.py",
@@ -173,7 +174,9 @@
     "src/neuroshard/evolution/general_eval/data/development/tool_use.jsonl",
     "src/neuroshard/evolution/general_eval/data/development/writing.jsonl",
     "src/neuroshard/evolution/general_eval/development_run.py",
+    "src/neuroshard/evolution/general_eval/gate.py",
     "src/neuroshard/evolution/general_eval/items.py",
+    "src/neuroshard/evolution/general_eval/judge.py",
     "src/neuroshard/evolution/general_eval/runner.py",
     "src/neuroshard/evolution/general_eval/sandbox.py",
     "src/neuroshard/evolution/general_eval/scorers.py",
@@ -194,7 +197,7 @@
   },
   "training_authorized": false,
   "gpu_launch_authorized": false,
-  "attempts": 1,
+  "attempts": 2,
   "execution": "A preparation worker downloads and verifies the Granite parent; then one fresh worker at the canonical eight threads loads the served a4-general stack (frozen-parent router features, A3 router gate and general router, a4 route policies, parent+L9 for documents and parent+C1 for chat), reproduces ten accepted confirmation7 conversations token for token, and only then runs the 120 development items once each in area round-robin order. New items stop being started once the worker has used worker_seconds - finish_reserve_seconds.",
   "interpretation": "Development numbers, not a baseline claim. No sealed split exists or is opened.",
   "units": {
@@ -206,5 +209,12 @@
       "checkpoint": "C1",
       "trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f"
     }
-  }
+  },
+  "prior_attempts": [
+    {
+      "commit": "ea3f14499bb05422dabcd9ab5885e63dad3118dd",
+      "home": "general-eval-step0-20261030",
+      "outcome": "stopped in the worker before any generation: assistant_turn_router.py was missing from the declared sources (the source probe had stubbed the router); setup, freeze and model loading passed; retired after 168 s, $0.05 conservative compute"
+    }
+  ]
 }

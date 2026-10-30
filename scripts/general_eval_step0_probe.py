@@ -26,14 +26,46 @@ def audit(event, args):
 sys.addaudithook(audit)
 
 
+def static_imports(paths):
+    """The repository modules that the given files import anywhere, including inside functions (one level:
+    the harness's own lazy imports, which a scripted run may not reach)."""
+    import ast
+
+    found = set()
+    for path in paths:
+        for node in ast.walk(ast.parse(Path(path).read_text(), str(path))):
+            names = []
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                names = [node.module] + [f'{node.module}.{alias.name}' for alias in node.names]
+            for name in names:
+                if not name.startswith('neuroshard'):
+                    continue
+                base = ROOT / 'src' / Path(*name.split('.'))
+                for candidate in (base.with_suffix('.py'), base / '__init__.py'):
+                    if candidate.exists():
+                        found.add(str(candidate.relative_to(ROOT)))
+    return found
+
+
 def main():
+    import random
     import tempfile
 
     from neuroshard.evolution.general_eval import development_run as step0
     from neuroshard.evolution.general_eval import items as schema, served
+    from neuroshard.evolution.modular_reference_execution import read
 
     policies, network = served.a4_policies()
-    served.route_names(network)
+    names = served.route_names(network)
+    general = read(ROOT / served.GENERAL_ROUTER)
+    rng = random.Random(0)
+    for _ in range(4):  # the real routing path: general router, then A3's selector
+        width = general['width'] // 2
+        feature = [rng.gauss(0, 1) for _ in range(width)]
+        served.choose_route({'rule': 'constant-parent', 'counts': {}}, names, feature, feature, general)
+        served.choose_route({'rule': 'constant-parent', 'counts': {}}, names, feature, feature, None)
     work = step0.reproduction_work(1)
     split = schema.load_split('development')
 
@@ -59,7 +91,11 @@ def main():
         runner.run(split, system, split='development')
     modules = {str(Path(m.__file__).resolve().relative_to(ROOT)) for m in list(sys.modules.values())
                if getattr(m, '__file__', None) and ROOT in Path(m.__file__).resolve().parents}
-    names = sorted(name for name in opened | modules if '__pycache__' not in name and not name.startswith('/tmp'))
+    modules |= static_imports(sorted((ROOT / 'src/neuroshard/evolution/general_eval').glob('*.py')))
+    import subprocess
+
+    tracked = set(subprocess.check_output(['git', 'ls-files'], cwd=ROOT, text=True).splitlines())
+    names = sorted(name for name in opened | modules if name in tracked)
     print(json.dumps(names, indent=1))
 
 
