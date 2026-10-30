@@ -81,7 +81,8 @@ RESOURCE_PROFILES = {PROFILE: RESOURCES,
                      "granite-shard-determinism": "config/experiments/granite-shard-determinism-resources.json",
                      "granite-shard-audit": "config/experiments/granite-shard-audit-resources.json",
                      "granite-shard-settlement": "config/experiments/granite-shard-settlement-resources.json",
-                     "granite-shard-chain": "config/experiments/granite-shard-chain-resources.json"}
+                     "granite-shard-chain": "config/experiments/granite-shard-chain-resources.json",
+                     "general-eval-development": "config/experiments/general-eval-development-resources.json"}
 GRANITE_PROFILES = {
     "assistant-workflow-baseline": ("assistant_workflow_baseline", "docs/granite-reference-requirements.txt"),
     "assistant-workflow-canonical": ("assistant_workflow_canonical", "docs/granite-reference-requirements.txt"),
@@ -136,6 +137,7 @@ GRANITE_PROFILES = {
     "granite-shard-audit": ("granite_shard_audit", "docs/granite-shard-audit-requirements.txt"),
     "granite-shard-settlement": ("granite_shard_settlement", "docs/granite-shard-audit-requirements.txt"),
     "granite-shard-chain": ("granite_shard_chain", "docs/granite-shard-chain-requirements.txt"),
+    "general-eval-development": ("general_eval.development_run", "docs/granite-reference-requirements.txt"),
 }
 GPU_PROFILES = {profile: ("g6e.xlarge", "g6e.2xlarge", "g5.2xlarge") for profile in (
     "assistant-experience-gpu", "assistant-experience-growth-train2", "assistant-experience-growth-train3",
@@ -154,7 +156,8 @@ UPLOAD_PROFILES = {"assistant-experience-development": ".arms", "assistant-growt
                       + (COHORT3_DEVELOPMENT,) + COHORT3_CONFIRMATION},
                    "assistant-experience-gpu": ".experience",
                    "assistant-experience-confirmation-update": ".arms", "assistant-experience-confirmation-addition": ".arms",
-                   "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms"}
+                   "assistant-experience-confirmation-small": ".arms", "assistant-experience-confirmation-committee": ".arms",
+                   "general-eval-development": ".units"}
 # Sequential per-arm evaluation keeps the canonical one-worker latency conditions; (hours, dollars).
 LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-growth-baseline": (4, 8),
                      **{profile: (3, 6) for profile in GROWTH_DEVELOPMENT}, "assistant-growth-router": (3.5, 7),
@@ -167,7 +170,8 @@ LONG_CPU_PROFILES = {"assistant-experience-development": (4, 8), "assistant-grow
                      "granite-shard-training": (4, 8), "granite-shard-serving": (4, 8), "granite-shard-serving-update": (4, 8),
                      "granite-shard-throughput": (4, 8), "granite-shard-determinism": (4, 8),
                      "granite-shard-audit": (6, 10), "granite-shard-settlement": (6, 10), "granite-shard-chain": (8, 12),
-                     **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition", "small", "committee")}}
+                     **{f"assistant-experience-confirmation-{system}": (8, 12) for system in ("parent", "update", "addition", "small", "committee")},
+                     "general-eval-development": (5, 8.5)}
 REMOTE = "/home/ubuntu/neuroshard-reference"
 PYTHON = REMOTE + "/.venv/bin/python"
 STUDY = REMOTE + "/.study"
@@ -225,6 +229,9 @@ def source_freeze(profile):
     if profile == "router-scaling-granite":
         from neuroshard.evolution.router_scaling_granite import committed_sources as scaling_sources
         return scaling_sources()
+    if profile == "general-eval-development":
+        from neuroshard.evolution.general_eval.development_run import committed_sources as step0_sources
+        return step0_sources(profile=profile)
     if profile.startswith("assistant-general-"):
         from neuroshard.evolution.assistant_general_baseline import committed_sources as general_sources
         return general_sources(profile=profile)
@@ -702,6 +709,9 @@ def remote_command(profile):
     if profile == "router-scaling-granite":
         return [PYTHON, REMOTE + "/scripts/run_router_scaling_granite.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models"]
+    if profile == "general-eval-development":
+        return [PYTHON, REMOTE + "/scripts/run_general_eval_development.py", "run",
+                "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]
     if profile.startswith("assistant-general-"):
         return [PYTHON, REMOTE + "/scripts/run_assistant_general_baseline.py", "run",
                 "--home", STUDY, "--models", REMOTE + "/.models", "--profile", profile]

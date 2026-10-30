@@ -111,37 +111,50 @@ class ServedSystem:
                 'policies_sha256': {k: identity(v) for k, v in sorted(self.policies.items())}}
 
     def episode(self, item):
-        from neuroshard.assistant.public import Session
-
         tool_spec = item['scoring'].get('toolset') if item['area'] == 'tool_use' else None
         if tool_spec == 'fixture/1':
             return {'final_text': '', 'terminated': False, 'snapshot': None, 'route': None, 'generations': [],
-                    'failure': 'unsupported: the served version accepts no caller-defined tools'}
+                    'calls': [], 'failure': 'unsupported: the served version accepts no caller-defined tools'}
         world = item['fixture'] if tool_spec == 'documents/2' else {'documents': []}
+        return self.converse(world, [turn['user'] for turn in item['turns']])
+
+    def converse(self, world, users):
+        """One conversation exactly as ``network.Conversation`` holds it: one Session, a route per turn, one
+        responder per route for the whole conversation."""
+        from neuroshard.assistant.public import Session
+
         session = Session(self.policies[self.entry_policy], world, name=self.name, modules=self.modules,
                           route_policies=self.policies)
         responders, generations, routes, result = {}, [], [], None
-        opening = item['turns'][0]['user']
-        for turn in item['turns']:
-            route = self.route(turn['user'], opening)
+        opening = users[0]
+        for user in users:
+            route = self.route(user, opening)
             routes.append(route)
             if route not in responders:
-                inner = self.responder(route)
-                responders[route] = lambda messages, tools, inner=inner: as_reply(inner(messages, tools))
+                holder = {}
+
+                def respond(messages, tools, route=route, holder=holder):
+                    # Built on first use, so a Session that cannot build its workspace fails first, as in serving.
+                    if 'inner' not in holder:
+                        holder['inner'] = self.responder(route)
+                    return as_reply(holder['inner'](messages, tools))
+
+                responders[route] = respond
             try:
-                result = session.turn(turn['user'], responders[route], route=route)
+                result = session.turn(user, responders[route], route=route)
             except ValueError as error:
                 if route in ('drafting', 'scheduling') and not world.get('documents'):
                     # A general request the router sent to A3's calendar workspace, which needs the user's files.
                     return {'final_text': '', 'terminated': False, 'snapshot': None, 'route': route, 'routes': routes,
-                            'generations': generations, 'failure': f'routed to {route} without a workspace: {error}'}
+                            'generations': generations, 'calls': copy.deepcopy(session.calls),
+                            'failure': f'routed to {route} without a workspace: {error}'}
                 raise
             generations += [as_reply(r) for r in result['responses']]
             if result['failure']:
                 break
         return {'final_text': result['final_text'], 'terminated': bool(result['completed']),
                 'snapshot': result['snapshot'], 'failure': result['failure'], 'route': routes[-1], 'routes': routes,
-                'generations': generations}
+                'generations': generations, 'calls': copy.deepcopy(session.calls)}
 
 
 def score(item, outcome):
@@ -170,11 +183,18 @@ def _tokens(generations):
     return sum(counted) if counted else None
 
 
-def run(items, system, *, split, split_digest=None, commitment=None, cost=None, publish_items=True, progress=None):
-    """Every item once, in order; one failing episode is recorded as a failed item, never retried."""
+def run(items, system, *, split, split_digest=None, commitment=None, cost=None, publish_items=True, progress=None,
+        stop=None):
+    """Every item once, in order; one failing episode is recorded as a failed item, never retried.
+
+    ``progress(done, total, row, transcript)`` sees each item as it finishes; ``stop()`` is asked before each item
+    and ends the run early (the report then records ``stopped_early`` and covers only the items run)."""
     started = time.monotonic()
-    rows, transcripts, isolation = [], [], set()
+    rows, transcripts, isolation, stopped = [], [], set(), False
     for index, item in enumerate(items):
+        if stop is not None and stop():
+            stopped = True
+            break
         began = time.monotonic()
         try:
             outcome = system.episode(item)
@@ -189,14 +209,16 @@ def run(items, system, *, split, split_digest=None, commitment=None, cost=None, 
             isolation.add(tuple(result['detail']['isolation']))
         failure = outcome.get('failure') or ''
         rows.append({'id': item['id'], 'area': item['area'], 'family': item['family'], 'passed': result['passed'],
+                     'toolset': item['scoring'].get('toolset'),
                      'unsupported': failure.startswith('unsupported'), 'error': error, 'route': outcome.get('route'),
                      'seconds': round(seconds, 3), 'generations': len(outcome['generations']),
                      'generated_tokens': _tokens(outcome['generations'])})
         transcripts.append({'id': item['id'], 'outcome': outcome, 'score': result})
         if progress:
-            progress(index + 1, len(items), rows[-1])
+            progress(index + 1, len(items), rows[-1], transcripts[-1])
     report = summarise(rows, system.describe(), split, split_digest, commitment, cost,
                        time.monotonic() - started, isolation)
+    report.update(items_planned=len(items), stopped_early=stopped)
     if publish_items:
         report['per_item'] = rows
     return report, transcripts
@@ -220,6 +242,15 @@ def summarise(rows, system, split, split_digest, commitment, cost, wall_seconds,
                        'families': {k: f'{h}/{t}' for k, (h, t) in sorted(families.items())},
                        'unsupported': sum(r['unsupported'] for r in mine), 'errors': sum(bool(r['error']) for r in mine),
                        'routes': dict(sorted(routes.items()))}
+        toolsets = sorted({r.get('toolset') for r in mine if r.get('toolset')})
+        if toolsets:
+            areas[area]['by_toolset'] = {}
+            for name in toolsets:
+                part = [r for r in mine if r.get('toolset') == name]
+                hit = sum(r['passed'] for r in part)
+                areas[area]['by_toolset'][name] = {
+                    'passed': hit, 'cases': len(part), 'unsupported': sum(r['unsupported'] for r in part),
+                    'wilson95': [round(x, 4) for x in stats.wilson(hit, len(part))]}
     tokens = [r['generated_tokens'] for r in rows if r['generated_tokens'] is not None]
     cost = dict(cost or {})
     usd_per_hour = cost.get('usd_per_hour')

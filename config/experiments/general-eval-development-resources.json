@@ -1,0 +1,49 @@
+{
+  "format": "neuroshard-general-eval-development-resources/1",
+  "region": "us-east-1",
+  "instances": 1,
+  "instance_type": "r7i.4xlarge",
+  "hours": 5,
+  "planning_cap_usd": 8.5,
+  "disk_gib": 80,
+  "disk_type": "gp3",
+  "setup_seconds": 1200,
+  "copy_seconds": 600,
+  "image": {
+    "ImageId": "ami-05a3e9423ae4d7a19",
+    "Name": "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20260904",
+    "CreationDate": "2026-09-04T08:02:48.000Z",
+    "OwnerId": "099720109477",
+    "RootDeviceName": "/dev/sda1"
+  },
+  "source_instance": "i-0d681a8ef83f72619",
+  "gpu": false,
+  "purpose": "general-eval-development",
+  "shutdown_terminates": true,
+  "terminate_after_evidence_copy": true,
+  "attempts": 1,
+  "outbound_upload_cap_bytes": 268435456,
+  "price": {
+    "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+    "sku": "QN6NV26MDYTYVNSE",
+    "effective_date": "2026-09-01",
+    "usd_per_hour": 1.0584
+  },
+  "prior_resources": {
+    "path": "config/experiments/assistant-general-l9-confirmation-report.json",
+    "sha256": "468c13cb1c6717d0092d02c089aaccb390a4e1298c0d8493d18a5d496073f615"
+  },
+  "budget_scope": "Step 0 of the general-capability evaluation, approved with a hard $10 compute cap: one r7i.4xlarge for at most 5 hours (the host shuts itself down and is terminated at expiry; 5 h x $1.0584 = $5.29 maximum compute), reproducing ten confirmation7 conversations then running the 120 open development items. Uploads only L9, C1 and the released A3 router. No GPU, no training, no Bedrock, no sealed split.",
+  "prior_attempts": [],
+  "upload": {
+    "local": "/home/ubuntu/neuroshard/.neuroshard/general-eval-step0-inputs",
+    "files": [
+      "C1/manifest.json",
+      "C1/trainable.safetensors",
+      "L9/manifest.json",
+      "L9/trainable.safetensors",
+      "router.json"
+    ],
+    "maximum_bytes": 20971520
+  }
+}

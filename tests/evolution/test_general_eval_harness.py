@@ -245,3 +245,24 @@ def test_power_numbers_quoted_in_the_design():
     boot = stats.paired_bootstrap([(str(k), 'a') for k in range(10)], {str(k): 1.0 for k in range(10)},
                                   {str(k): 0.0 for k in range(10)}, samples=200)
     assert boot['difference'] == boot['lower'] == boot['upper'] == 1.0
+
+
+def test_generic_tool_items_are_reported_beside_the_gate_not_in_it():
+    plan = declaration(reported_separately={'toolsets': ['fixture/1']})
+    base = {area: 0.6 for area in items.AREAS}
+    incumbent = rows(base)
+    for row in incumbent:
+        if row['area'] == 'tool_use':
+            row['toolset'] = 'fixture/1' if int(row['id'].split('-')[-1]) < 20 else 'documents/2'
+    better = [dict(r, passed=r['passed'] or int(r['id'].split('-')[-1]) % 4 == 0) for r in incumbent]
+    # every generic tool item lost: blocks the gate only if those items are inside it
+    hurt = [dict(r, passed=False) if r.get('toolset') == 'fixture/1' else r for r in better]
+    inside = gate.decide(declaration(reported_separately={}), hurt, incumbent, preservation={'chat': {'passed': 93}})
+    beside = gate.decide(plan, hurt, incumbent, preservation={'chat': {'passed': 93}})
+    assert not inside['checks']['non_regression']['tool_use']
+    assert beside['passed'] and beside['reported_separately']['fixture/1']['candidate'] == 0
+    assert beside['reported_separately']['fixture/1']['cases'] == 20
+    template = json.load(open(items.DATA.parents[4] / 'config/experiments/general-capability-gate-template.json'))
+    assert template['reported_separately']['toolsets'] == ['fixture/1'] and template['improvement']['rule'] == 'macro'
+    assert template['sealed_reuse']['maximum_candidate_openings'] == 3 and template['custodian'] is None
+    assert {a['margin'] for a in template['areas'].values()} == {0.05} and template['judged']['margin'] == 0.07

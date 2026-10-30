@@ -72,6 +72,16 @@ def joint_bootstrap(candidate, incumbent, samples, seed, level):
 
 def decide(declaration, candidate, incumbent, judged=None, preservation=None):
     checks, report = {}, {}
+    separate = set(declaration.get('reported_separately', {}).get('toolsets', ()))
+    if separate:
+        # Decided 2026-10-30: generic function calling is reported beside the gate, not in it, until a served
+        # version accepts caller-defined tools.
+        report['reported_separately'] = {
+            name: {'candidate': sum(r['passed'] for r in candidate if r.get('toolset') == name),
+                   'incumbent': sum(r['passed'] for r in incumbent if r.get('toolset') == name),
+                   'cases': sum(r.get('toolset') == name for r in incumbent)} for name in sorted(separate)}
+        candidate = [r for r in candidate if r.get('toolset') not in separate]
+        incumbent = [r for r in incumbent if r.get('toolset') not in separate]
     same = (sorted(r['id'] for r in candidate) == sorted(r['id'] for r in incumbent)
             and declaration['split_commitment'] is not None)
     checks['same_items'] = same

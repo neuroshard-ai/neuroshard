@@ -21,6 +21,7 @@ from neuroshard.evolution.general_eval.runner import ServedSystem
 from neuroshard.evolution.modular_reference_execution import ROOT, read, sha256
 
 DESCRIPTOR = 'src/neuroshard/client/networks/assistant-testnet-a4.json'
+GENERAL_ROUTER = 'config/experiments/assistant-general-router-a4.json'
 MODULES = ('U1', 'L2', 'L3', 'L9', 'C1')
 
 
@@ -37,18 +38,46 @@ def a4_policies(descriptor=DESCRIPTOR):
     return policies, network
 
 
-def local_route(parent, tokenizer, policies, a3_router, general_router, route_names):
-    """``route(text, opening_text)`` with the accepted message-mean feature, as the device computes it."""
-    from neuroshard.assistant import network
+def route_names(network):
+    return {name: row['route'] for name, row in network['routing'].items() if isinstance(row, dict) and 'route' in row}
+
+
+def routers(network, a3_router_path, general_router_path=GENERAL_ROUTER):
+    """A3's router gate and the general router, as stage 0 loads them, each checked against its release pin."""
+    for name, path in (('router.json', a3_router_path), ('general-router.json', ROOT / general_router_path)):
+        if sha256(path) != network['files'][name]['sha256']:
+            raise ValueError(f'{name} differs from the released pin')
+    return read(a3_router_path)['gate'], read(ROOT / general_router_path)
+
+
+def choose_route(router, names, feature, opening, general=None):
+    """``network.choose_route`` without the network module (whose imports the canonical runtime lacks).
+    ``test_general_eval_step0`` checks that both choose identically."""
+    from neuroshard.evolution import assistant_selector as selector
+    from neuroshard.evolution import assistant_turn_router as turn_router
+
+    if general is not None:
+        top = turn_router.route(turn_router.verify(general), turn_router.context_feature(feature, opening))
+        if top != 'a3':
+            if top not in names:
+                raise ValueError(f'the router chose {top}, which this version does not serve')
+            return top, names[top]
+    if router.get('rule') == 'logistic-context':
+        route = turn_router.route(turn_router.verify(router), turn_router.context_feature(feature, opening))
+        if route not in names:
+            raise ValueError(f'the router chose {route}, which this version does not serve')
+        return route, names[route]
+    route = 'scheduling' if selector.choose(router, feature) else 'drafting'
+    return route, names.get(route, 2 if route == 'scheduling' else 1)
+
+
+def local_route(parent, tokenizer, policies, a3_router, general_router, names):
+    """``route(text, opening_text)`` with the accepted message-mean feature from the frozen parent, as the
+    device computes it (``network.Conversation.say``: the drafting policy's cached prefix, mean final state)."""
     from neuroshard.evolution import assistant_routing as routing
 
     prefix = routing.message_prefix(parent, tokenizer, policies['drafting'], 'cpu')
-    cache = {}
-
-    class Served:
-        pass
-
-    Served.route_names = route_names
+    cache, log = {}, []
 
     def feature(text):
         if text not in cache:
@@ -56,9 +85,11 @@ def local_route(parent, tokenizer, policies, a3_router, general_router, route_na
         return cache[text]
 
     def route(text, opening):
-        name, _ = network.choose_route(a3_router, Served, feature(text), feature(opening), general_router)
+        name, _ = choose_route(a3_router, names, feature(text), feature(opening), general_router)
+        log.append(name)
         return name
 
+    route.log = log
     return route
 
 

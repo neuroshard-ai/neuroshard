@@ -126,11 +126,10 @@ any score. Only the per-area counts, intervals and gate checks are published. Pe
 transcripts stay with the custodian and the auditor, because they reveal items.
 
 **Reuse.** Each candidate is opened once. The project's custom so far, a fresh sealed split for every
-confirmation, would cost about 3,000 newly authored items per candidate. The proposal instead reuses
-sealed-1 for at most three candidate openings, releasing only aggregate counts each time (about 6 × 9
-bits per opening). It is retired after the third opening, or at once if any item-level material leaks.
-It then becomes an open development set, and sealed-2 replaces it. This is an open question for the
-project lead (below).
+confirmation, would cost about 3,000 newly authored items per candidate. **Decided:** sealed-1 is reused
+for at most three candidate openings, releasing only aggregate counts each time (about 6 × 9 bits per
+opening). It is retired after the third opening, or at once if any item-level material leaks. It then
+becomes an open development set, and sealed-2 replaces it.
 
 **Contamination.**
 
@@ -261,7 +260,8 @@ behaviour.
 What this exposes about the served version, all of which is measured rather than worked around:
 
 - **Caller-defined tools are not served.** No route accepts tools from a request, so for a served system
-  `fixture/1` items are recorded as `unsupported` and scored as failures, counted separately. Served tool
+  `fixture/1` items are recorded as `unsupported`. By decision they are reported separately, outside the
+  gated tool-use score. Served tool
   use is the documents route plus the chat route's calculator and `check_text`. A model-level
   approximation (`ModelSystem`: parent + unit under a plain system prompt, given the fixture tools) can
   be reported beside it, labelled as such, and never gated.
@@ -391,17 +391,49 @@ calibration are only needed once a candidate exists.
 - **Fact drift.** Factual items were chosen to be stable. The custodian re-checks the accepted sets
   before each opening.
 
-## Open questions for the project lead
+## Decisions (project lead, October 30, 2026)
 
-1. Is sealed-1 reused for up to three candidate openings with aggregate-only release (the proposal), or
-   is a fresh sealed set authored for every candidate (the strict reading of current practice, with
-   about 3,000 items per candidate)?
-2. Who is the custodian, and who is the auditor? Neither may train candidates.
-3. Should improvement be `macro` (the default), or must each candidate name target areas?
-4. Margins: 5 points for program-checked areas and 7 points for judged writing. Are these acceptable?
-5. Should generic function calling (`fixture/1`) count in the gated tool-use score for served versions
-   now, while it is unsupported, or be reported separately until a version serves caller tools?
-6. Should general items run with an empty user workspace (the design), or with a standard file set that
-   a real user would have? The answer changes what happens when a request is routed to A3.
-7. Approval of steps 0 and 1 above: at most $90 compute and no Bedrock. The judge (hosted or local) and
-   paid human raters are to be decided when the first candidate exists.
+| question | decision |
+| --- | --- |
+| sealed-1 reuse | **Up to three candidates**, one opening each, with only per-area counts, intervals and gate checks released; retired after the third opening or at once on any item-level leak |
+| improvement rule | **`macro`**: the average across areas must improve with its lower bound above 0 |
+| margins | **5 points** per area (one-sided 95%) and **7 points** for judged writing, as proposed |
+| generic function calling (`fixture/1`) | **Reported separately**, not in the gated tool-use score, until a version accepts caller-defined tools (`reported_separately` in the [gate template](../config/experiments/general-capability-gate-template.json); the gated tool-use score for served versions is the `documents/2` items) |
+| user workspace for general items | **Empty**, as designed |
+| custodian and auditor | **Still under discussion.** No sealed item may be authored until both are named |
+| step 0 (development baseline) | **Approved**: about $3, hard cap $10 of compute, no Bedrock, no other AWS spend |
+| step 1 (sealed-1 baseline) | **Not approved yet** |
+
+## Step 0: the development run (declared before execution)
+
+[Declaration](../config/experiments/general-eval-development.json),
+[execution contract](../config/experiments/general-eval-development-execution.json),
+[resources](../config/experiments/general-eval-development-resources.json),
+[driver](../src/neuroshard/evolution/general_eval/development_run.py),
+[entry point](../scripts/run_general_eval_development.py). Profile `general-eval-development` in
+`scripts/modular_reference_cloud.py`.
+
+The run uses one r7i.4xlarge, the canonical CPU host, at $1.0584/h. Its 5-hour expiry makes the host
+shut itself down and terminate, so compute is bounded at $5.29, under the $10 cap. The runtime is the
+pinned canonical one: packages, Python 3.12.12, AMX bf16, and 8 threads.
+
+1. **Load the served stack as serving does:**
+   - the frozen parent computes the router features (`served.local_route`);
+   - the released A3 router gate and the general router are each checked against the a4 descriptor's
+     pins;
+   - the a4 route policies are pinned;
+   - the parent with L9 serves documents and the parent with C1 serves chat, each checked against its
+     digest;
+   - each conversation is one `Session`, with one `cached_responder` per route.
+
+   A3's units are not loaded. A general item routed to drafting or scheduling with no user files fails
+   in the Session before generating, as it would in serving.
+2. **Reproduce first.** Run the first five documents and the first five chat conversations of
+   confirmation7, compared with their accepted runs on every generated token, tool call and result,
+   final reply, chosen route and documents snapshot. Any difference stops the run: `execution_completed`
+   is false and no development item runs. Locally, replaying the accepted generations through the same
+   Session path reproduces all 10 projections exactly (`test_general_eval_step0`).
+3. **Then the 120 development items,** in area round-robin order, each once. Every transcript is written.
+   No new item starts after 3.6 h of worker time.
+
+The run publishes development numbers only, labelled *development, not a baseline claim*.

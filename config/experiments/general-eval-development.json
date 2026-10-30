@@ -1,0 +1,21 @@
+{
+  "format": "neuroshard-general-eval-development/1",
+  "question": "Step 0 of the general-capability evaluation: the served a4-general (router, policies, L9 and C1 on the parent) on the open 120-item development split, after reproducing ten accepted confirmation7 conversations token for token on the same host.",
+  "approved": "Project lead, 2026-10-30: step 0 approved with a hard cap of $10 compute, no Bedrock, no other AWS spend. Step 1 (sealed-1) not approved.",
+  "label": "development, not a baseline claim",
+  "development_split_sha256": "1433201b4f0634d4b350bc87c2b34533c6a2dd9431a18c7922ac526fc9887320",
+  "reproduction_per_route": 5,
+  "reproduction": "First five documents and first five chat conversations of confirmation7 (accepted runs: documents-confirmation7-L9, chat-confirmation7-C1 in config/experiments/assistant-general-l9-confirmation-episodes.json.gz). Every generated input and output token, tool call and result, final reply, chosen route and (documents) workspace snapshot must match; the first mismatch stops the run with execution_completed false and no development item is run.",
+  "routes_loaded": {"documents": "L9", "chat": "C1"},
+  "routes_not_loaded": "drafting (U1+L3) and scheduling (U1+L2): a general item routed there with no user files fails in the Session before generating, as in serving; one that reaches generation is recorded as a3-route-not-loaded (a system error) and reported.",
+  "modules": {
+    "L9": {"trainable_sha256": "58628dc9e6da377154b6eca3dccad7dceff44ad6143ef08abd230afc8acd3b08"},
+    "C1": {"trainable_sha256": "968b7d3fe79980f9a8406c300182f133c03d2282326fd6921aa70cdc36eead9f"}
+  },
+  "routers": {"general-router.json": "config/experiments/assistant-general-router-a4.json", "router.json": "uploaded as .units/router.json; both checked against src/neuroshard/client/networks/assistant-testnet-a4.json"},
+  "generic_tool_items": "The 14 fixture/1 items are run and reported separately as unsupported for the served version; they are not part of the gated tool-use score.",
+  "reported": ["reproduction rows", "per-area counts with Wilson intervals (development, not a baseline claim)", "route histogram", "seconds per item", "generated tokens", "scorer and item defects found", "instance seconds and dollars from the retirement receipt"],
+  "opens_sealed": false,
+  "training": false,
+  "checklist_credit": false
+}
