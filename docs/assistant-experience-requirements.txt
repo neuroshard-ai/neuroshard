@@ -41,7 +41,7 @@ PyYAML==6.0.3
 regex==2026.9.10
 rich==15.0.0
 safetensors==0.7.0
-setuptools==84.0.0
+setuptools==84.1.0
 shellingham==1.5.4
 sympy==1.14.0
 tokenizers==0.22.2
